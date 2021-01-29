@@ -681,11 +681,12 @@ sub observation_units {
         }
 
 		# Get the pedigree of the germplasm
-		my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $obs_unit->{germplasm_stock_id});
+		# TODO: Improve performance and re-enable at some point
+		#my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $obs_unit->{germplasm_stock_id});
 		my $pedigree_string = "";
-		if ($s) {
-			$pedigree_string = $s->get_pedigree_string('Parents');
-		}
+		#if ($s) {
+		#	$pedigree_string = $s->get_pedigree_string('Parents');
+		#}
 
         my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
         push @data_window, {
