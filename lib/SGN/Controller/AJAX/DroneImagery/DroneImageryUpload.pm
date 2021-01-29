@@ -1165,7 +1165,7 @@ sub upload_drone_imagery_POST : Args(0) {
 
             my $dtm_string = '';
             my $ua       = LWP::UserAgent->new();
-            my $response = $ua->post( $c->config->{main_production_site_url}."/RunODMDocker.php", { 'file_path' => $image_path_remaining, 'dtm_string' => $dtm_string } );
+            my $response = $ua->get( $c->config->{main_production_site_url}."/RunODMDocker.php?file_path=$image_path_remaining&dtm_string=$dtm_string" );
             my $content  = $response->decoded_content();
             print STDERR Dumper $content;
 
@@ -1174,7 +1174,7 @@ sub upload_drone_imagery_POST : Args(0) {
             my $odm_b3 = "$image_path_remaining/odm_orthophoto/b3.png";
             my $odm_b4 = "$image_path_remaining/odm_orthophoto/b4.png";
             my $odm_b5 = "$image_path_remaining/odm_orthophoto/b5.png";
-            my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path $image_path_remaining/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5";
+            my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path $image_path_remaining/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5";
             my $odm_status = system($odm_cmd);
 
             @stitched_bands = (
