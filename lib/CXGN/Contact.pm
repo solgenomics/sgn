@@ -129,7 +129,7 @@ sub send_email {
               }
 
             }
-       # }
+        }
    # }
     #else {
      #   print STDERR "CXGN::Contact: Not configured as production server; no email sent from $mailfrom to $mailto.\n";
