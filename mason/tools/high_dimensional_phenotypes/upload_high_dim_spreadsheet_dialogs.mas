@@ -170,11 +170,80 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 <label class="col-sm-3 control-label">Equipment Type: </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="high_dim_data_upload_metabolomics_equipment_type">
-                                        <option value="LCMS">LCMS</option>
-                                        <option value="GCMS">GCMS</option>
+                                        <option value="NMR">NMR</option>
+                                        <option value="MS">MS</option>
                                     </select>
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Phenotype Type: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_phenotype_type" type="text" placeholder="e.g. relative abundance, BLUP, drBLUP, concentration">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Phenotype Units: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_phenotype_units" type="text" placeholder="e.g. ug/g">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="high_dim_data_upload_metabolomics_protocol_ms_div" style="display:none">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Chromatography Type: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="high_dim_data_upload_metabolomics_chromatography_type">
+                                            <option value="LCMS">LCMS</option>
+                                            <option value="GCMS">GCMS</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Chromatography System Brand: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_system_brand" type="text" placeholder="e.g. ThermoFisher MS100 System">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Chromatography Column Brand: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_column_brand" type="text" placeholder="e.g. ThermoFisher MS100 Column">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">MS Brand: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_brand" type="text" placeholder="e.g. ThermoFisher MS100">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">MS Instrument Type: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_instrument_type" type="text" placeholder="e.g. time of flight (TOF), triple quadropole">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">MS Type: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_type" type="text" placeholder="e.g. EI, ESI, APCI, MALDI">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Ion Mode: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="high_dim_data_upload_metabolomics_ion_mode">
+                                            <option value="negative">Negative</option>
+                                            <option value="positive">Positive</option>
+                                            <option value="both">Both</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-horizontal">
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Equipment Description: </label>
                                 <div class="col-sm-9" >
@@ -317,9 +386,6 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 <label class="col-sm-3 control-label">Data Level: </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="upload_metabolomics_spreadsheet_data_level" name="upload_metabolomics_spreadsheet_data_level">
-                                        <option value="plots">Plots</option>
-                                        <option value="plants">Plants</option>
-                                        <option value="subplots">Subplots</option>
                                         <option value="tissue_samples">Tissue Samples</option>
                                     </select>
                                 </div>
@@ -343,6 +409,14 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_equipment_type" name="upload_metabolomics_spreadsheet_protocol_equipment_type" type="text">
                             <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_equipment_description" name="upload_metabolomics_spreadsheet_protocol_equipment_description" type="text">
                             <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_data_process_description" name="upload_metabolomics_spreadsheet_protocol_data_process_description" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_chromatography_system_brand" name="upload_metabolomics_spreadsheet_protocol_chromatography_system_brand" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_chromatography_column_brand" name="upload_metabolomics_spreadsheet_protocol_chromatography_column_brand" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_brand" name="upload_metabolomics_spreadsheet_protocol_ms_brand" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_type" name="upload_metabolomics_spreadsheet_protocol_ms_type" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_instrument_type" name="upload_metabolomics_spreadsheet_protocol_ms_instrument_type" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ion_mode" name="upload_metabolomics_spreadsheet_protocol_ion_mode" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_phenotype_type" name="upload_metabolomics_spreadsheet_protocol_phenotype_type" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_phenotype_units" name="upload_metabolomics_spreadsheet_protocol_phenotype_units" type="text">
                         </form>
 
                         <hr>
@@ -638,6 +712,14 @@ jQuery(document).ready(function() {
         jQuery("#upload_transcriptomics_metabolite_details_spreadsheet_info_dialog").modal("show");
     });
 
+    jQuery('#high_dim_data_upload_metabolomics_equipment_type').change(function(){
+        if (jQuery(this).val() == 'MS') {
+            jQuery('#high_dim_data_upload_metabolomics_protocol_ms_div').show();
+        } else {
+            jQuery('#high_dim_data_upload_metabolomics_protocol_ms_div').hide();
+        }
+    });
+
     jQuery('#high_dim_data_upload_data_protocol_step').click(function(){
 
         var selected = [];
@@ -680,12 +762,25 @@ jQuery(document).ready(function() {
             jQuery('#upload_transcriptomics_spreadsheet_protocol_annotation').val(jQuery('#high_dim_data_upload_transcriptomics_genome_annotation_version_select').val());
         }
         else if (high_dim_data_upload_type == 'Metabolomics') {
+            var metabolomics_equipment_type = jQuery('#high_dim_data_upload_metabolomics_equipment_type').val();
+
             jQuery('#upload_metabolomics_spreadsheet_protocol_id').val(selected[0]);
             jQuery('#upload_metabolomics_spreadsheet_protocol_name').val(high_dim_protocol_name);
             jQuery('#upload_metabolomics_spreadsheet_protocol_desc').val(high_dim_protocol_desc);
-            jQuery('#upload_metabolomics_spreadsheet_protocol_equipment_type').val(jQuery('#high_dim_data_upload_metabolomics_equipment_type').val());
+            jQuery('#upload_metabolomics_spreadsheet_protocol_equipment_type').val(metabolomics_equipment_type);
             jQuery('#upload_metabolomics_spreadsheet_protocol_equipment_description').val(jQuery('#high_dim_data_upload_metabolomics_equipment_description').val());
             jQuery('#upload_metabolomics_spreadsheet_protocol_data_process_description').val(jQuery('#high_dim_data_upload_metabolomics_data_process_description').val());
+            jQuery('#upload_metabolomics_spreadsheet_protocol_phenotype_type').val(jQuery('#high_dim_data_upload_metabolomics_phenotype_type').val());
+            jQuery('#upload_metabolomics_spreadsheet_protocol_phenotype_units').val(jQuery('#high_dim_data_upload_metabolomics_phenotype_units').val());
+
+            if (metabolomics_equipment_type == 'MS') {
+                jQuery('#upload_metabolomics_spreadsheet_protocol_chromatography_system_brand').val(jQuery('#high_dim_data_upload_metabolomics_chromatography_system_brand').val());
+                jQuery('#upload_metabolomics_spreadsheet_protocol_chromatography_column_brand').val(jQuery('#high_dim_data_upload_metabolomics_chromatography_column_brand').val());
+                jQuery('#upload_metabolomics_spreadsheet_protocol_ms_brand').val(jQuery('#high_dim_data_upload_metabolomics_ms_brand').val());
+                jQuery('#upload_metabolomics_spreadsheet_protocol_ms_type').val(jQuery('#high_dim_data_upload_metabolomics_ms_instrument_type').val());
+                jQuery('#upload_metabolomics_spreadsheet_protocol_ms_instrument_type').val(jQuery('#high_dim_data_upload_metabolomics_ms_type').val());
+                jQuery('#upload_metabolomics_spreadsheet_protocol_ion_mode').val(jQuery('#high_dim_data_upload_metabolomics_ion_mode').val());
+            }
         }
 
         Workflow.complete("#high_dim_data_upload_data_protocol_step");
