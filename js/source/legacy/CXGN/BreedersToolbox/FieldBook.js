@@ -25,6 +25,7 @@ jQuery(document).ready(function($) {
         'name': 'html_select_traits_for_trait_file',
         'id': 'html_select_traits_for_trait_file',
         'empty': 1,
+        'multiple': 1,
         'size':10
     });
 
@@ -92,8 +93,9 @@ function generate_trait_file() {
         var trait_names = [];
         jQuery("#html_select_traits_for_trait_file option:selected").each(
             function() {
-                trait_names.push(jQuery("#html_select_traits_for_trait_file option:selected").text());
+               trait_names.push(jQuery(this).text());
             });
+
         trait_list = JSON.stringify(trait_names);
     }
 
@@ -109,7 +111,6 @@ function generate_trait_file() {
         alert("A trait file name is required.");
         return;
     }
-
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/fieldbook/traitfile/create',
