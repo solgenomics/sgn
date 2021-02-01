@@ -58,7 +58,7 @@ sub check_success {
     my $analysis_profile = $output_details->{analysis_profile};
     my $type = $analysis_profile->{analysis_type};
   
-    if ( $analysis_profile->{analysis_type} =~ /population download/ ) 
+    if ( $analysis_profile->{analysis_type} =~ /training dataset/ ) 
     {	
 	$output_details = $self->check_population_download($output_details);
     }
@@ -562,7 +562,7 @@ sub report_status {
     {
     	$analysis_result = $self->single_modeling_message($output_details);
     }
-    elsif ($analysis_type =~ /population download/  ) 
+    elsif ($analysis_type =~ /training dataset/  ) 
     {
     	$analysis_result = $self->population_download_message($output_details);
     }

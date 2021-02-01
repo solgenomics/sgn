@@ -382,7 +382,7 @@ solGS.combinedTrials = {
 	
 	var pageArgs = {
 	    'population_id'   : [ popId],
-	    'analysis_type'   : 'population download',
+	    'analysis_type'   : 'training dataset',
 	    'data_set_type'   : 'single population',
 	    'trait_id'        :  traitId,
 	    'genotyping_protocol_id': args.genotyping_protocol_id,

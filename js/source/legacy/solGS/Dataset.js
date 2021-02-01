@@ -177,7 +177,7 @@ solGS.dataset = {
 	var args = {
 	    'dataset_name'    : datasetName,
 	    'dataset_id'      : datasetId,
-	    'analysis_type'   : 'population download',
+	    'analysis_type'   : 'training dataset',
 	    'data_set_type'   : 'single population',
             'training_pop_id' : popId,
 	    'population_type' : popType,

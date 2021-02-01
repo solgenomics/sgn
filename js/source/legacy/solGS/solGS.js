@@ -549,13 +549,13 @@ solGS.submitJob = {
 	    if (args === undefined) {
 		args = { 
 		    'training_pop_id' : [ urlStr[3] ], 
-		    'analysis_type' : 'population download',
+		    'analysis_type' : 'training dataset',
 		    'data_set_type' : 'single population',
 		    'genotyping_protocol_id': urlStr[5]
 		};
 	    } else {
 		args['training_pop_id'] = [ urlStr[3] ];
-		args['analysis_type'] = 'population download';
+		args['analysis_type'] = 'training dataset';
 		args['data_set_type'] = 'single population';
 		args['genotyping_protocol_id'] = urlStr[5];
 	    }
@@ -742,7 +742,7 @@ solGS.waitPage = function(page, args) {
 }
 
 jQuery(document).ready(function() {
- 
+
      jQuery('#runGS').on('click',  function() {
 	 if (window.Prototype) {
 	     delete Array.prototype.toJSON;
@@ -751,7 +751,7 @@ jQuery(document).ready(function() {
 	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
 	 var popId    = jQuery('#training_pop_id').val();
 	 var protocolId = jQuery('#genotyping_protocol_id').val();
-	 alert('popid ' + popId)
+
 	 if (traitIds.length) {	  
 	     var page;
 	     var analysisType;
