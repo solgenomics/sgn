@@ -1418,7 +1418,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
                 @items = @{$transform->{transform}};
             }
             else {
-		if (defined($ids)) { 
+		if (defined($ids)) {
 		    @items = @$ids;
 		}
             }
