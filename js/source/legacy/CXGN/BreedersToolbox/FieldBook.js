@@ -24,7 +24,7 @@ jQuery(document).ready(function($) {
     get_select_box('traits', 'select_traits_for_trait_file', {
         'name': 'html_select_traits_for_trait_file',
         'id': 'html_select_traits_for_trait_file',
-        'empty': 1,
+        'empty': 0,
         'multiple': 1,
         'size':10
     });
