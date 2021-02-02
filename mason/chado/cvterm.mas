@@ -105,7 +105,7 @@ my $image_subtitle =
    " <a href=\"/image/add?type_id=$cvterm_id&type=cvterm&refering_page=$this_page\">[Add image]</a>" ;
 
 
-my $edit_privs = $curator || $submitter || $sequencer;
+my $edit_privs = $curator ;
 
 </%perl>
 
