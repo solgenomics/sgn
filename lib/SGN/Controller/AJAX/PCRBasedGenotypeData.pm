@@ -131,9 +131,9 @@ sub upload_ssr_protocol_POST : Args(0) {
     }
     my $organism_id = $found_organisms[0];
 
-    print STDERR "PROTOCOL NAME =".Dumper($protocol_name)."\n";
-    print STDERR "PROTOCOL DESCRIPTION =".Dumper($protocol_description)."\n";
-    print STDERR "SPECIES NAME =".Dumper($species_name)."\n";
+ #   print STDERR "PROTOCOL NAME =".Dumper($protocol_name)."\n";
+#    print STDERR "PROTOCOL DESCRIPTION =".Dumper($protocol_description)."\n";
+#    print STDERR "SPECIES NAME =".Dumper($species_name)."\n";
 
     $upload_metadata{'archived_file'} = $archived_filename_with_path;
     $upload_metadata{'archived_file_type'}="ssr upload file";
@@ -144,7 +144,7 @@ sub upload_ssr_protocol_POST : Args(0) {
     $parser = CXGN::Genotype::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
-    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
+#    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
 
     if (!$parsed_data){
         my $return_error = '';
@@ -174,7 +174,7 @@ sub upload_ssr_protocol_POST : Args(0) {
     });
 
     my $protocol_id = $pcr_markers->store_pcr_marker_info();
-    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+#    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
 
     if (!$protocol_id) {
         $c->stash->{rest} = {error_string => "Error saving PCR marker info",};

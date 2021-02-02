@@ -74,7 +74,7 @@ sub store_pcr_marker_info {
 
     my %marker_hash = %$marker_details;
     my @marker_names = keys %marker_hash;
-    print STDERR "MARKER NAMES =".Dumper(\@marker_names)."\n";
+#    print STDERR "MARKER NAMES =".Dumper(\@marker_names)."\n";
 
     my %pcr_marker_info;
     $pcr_marker_info{'marker_type'} = $marker_type;
@@ -107,7 +107,7 @@ sub store_pcr_marker_info {
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($protocol_description, $protocol_id);
 
-	return {success => 1, nd_protocol_id => $protocol_id};
+	return $protocol_id;
 }
 
 1;
