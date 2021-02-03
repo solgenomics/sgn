@@ -607,7 +607,7 @@ sub upload_genotype_verify_POST : Args(0) {
         }
 
         $store_genotypes->store_metadata();
-        $store_genotypes->store_identifiers();
+        $return = $store_genotypes->store_identifiers();
 
     } else {
         print STDERR "Parser plugin $parser_plugin not recognized!\n";
