@@ -95,7 +95,34 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my %stocks;
 
     my $header = <$F>;
-    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1);
+    chomp($header);
+    my ($progeny_name, $female_parent_accession, $male_parent_accession, $type) =split /\t/, $header;
+
+    my %header_errors;
+    
+    if ($progeny_name ne 'progeny name') {
+	$header_errors{'progeny name'} = "First column must have header 'progeny name' (not '$progeny_name'); ";
+    }
+
+    if ($female_parent_accession ne 'female parent accession') {
+	$header_errors{'female parent accession'} = "Second column must have header 'female parent accession' (not '$female_parent_accession'); ";
+    }
+
+    if ($male_parent_accession ne 'male parent accession') {
+	$header_errors{'male parent accession'} = "Third column must have header 'male parent accession' (not '$male_parent_accession'); ";
+    }
+
+    if ($type ne 'type') {
+	$header_errors{'type'} = "Fourth column must have header 'type' (not '$type');";
+    }
+
+    if (%header_errors) {
+	my $error = join "<br />", values %header_errors;
+	$c->stash->{rest} = { error => $error, archived_filename_with_path => $archived_filename_with_path };
+	return;
+    }
+    
+    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1 );
     my %errors;
 
     while (<$F>) {
@@ -119,7 +146,9 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
                 }
             }
         }
+	
         # check if the cross types are recognized...
+	#
         if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) {
             $errors{"not legal cross type: $acc[3] (should be biparental, self, open, sib or polycross)"}=1;
         }

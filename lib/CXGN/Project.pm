@@ -3566,6 +3566,26 @@ sub get_accessions {
 	return \@accessions;
 }
 
+=head2 get_trial_stock_count
+
+ Usage:        my $stock_count = $t->get_trial_stock_count();
+ Desc:         retrieves the count of accessions or family names or cross unique ids used in this trial.
+ Ret:          a scalar of the total count
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_trial_stock_count {
+	my $self = shift;
+
+	my $accessions = $self->get_accessions();
+	my $stock_count = scalar(@{$accessions});
+	
+	return $stock_count;
+}
+
 =head2 get_tissue_sources
 
     Usage:        my $tissue_sources = $t->get_tissue_sources();
