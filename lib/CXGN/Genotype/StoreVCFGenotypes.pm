@@ -699,18 +699,12 @@ sub validate {
     }
 
     my $previous_genotypes_exist;
-    my $genotype_property_type_id;
-    if ($genotyping_data_type eq 'ssr') {
-        $genotype_property_type_id = $pcr_marker_genotypeprop_cvterm_id;
-    } else {
-        $genotype_property_type_id = $snp_genotype_id;
-    }
     my $previous_genotypes_rs = $schema->resultset("Stock::Stock")->search({
         'me.uniquename' => {-in => \@observation_unit_uniquenames_stripped},
         'me.type_id' => $stock_type_id,
         'me.organism_id' => $organism_id,
         'nd_experiment.type_id' => $geno_cvterm_id,
-        'genotype.type_id' => $genotype_property_type_id
+        'genotype.type_id' => $snp_genotype_id
     }, {
         join => {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_genotypes' => 'genotype'}, {'nd_experiment_protocols' => 'nd_protocol'}, {'nd_experiment_projects' => 'project'} ] } },
         '+select' => ['nd_protocol.nd_protocol_id', 'nd_protocol.name', 'project.project_id', 'project.name'],
