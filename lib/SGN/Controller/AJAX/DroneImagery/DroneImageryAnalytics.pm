@@ -339,6 +339,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my (@sorted_trait_names, @unique_accession_names, @unique_plot_names);
 
     for my $iterations (1..$number_iterations) {
+        print STDERR "ITERATION $iterations\n";
 
         my $a_env = rand(1);
         my $b_env = rand(1);
@@ -14760,9 +14761,7 @@ sub _perform_drone_imagery_analytics {
                 my $current_env_row_count = 0;
                 my @row_col_ordered_plots_names;
 
-                open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                    or die "Could not open file '$stats_out_tempfile_residual' $!";
-                
+                open(my $fh_residual, '<', $stats_out_tempfile_residual) or die "Could not open file '$stats_out_tempfile_residual' $!";
                     print STDERR "Opened $stats_out_tempfile_residual\n";
                     my $header_residual = <$fh_residual>;
                     my @header_cols_residual;
@@ -21571,12 +21570,12 @@ sub _perform_drone_imagery_analytics {
 
                 $sim_data_check_5{$current_row_num}->{$current_col_num} = $sim_val;
 
-                if ($current_col_num < $max_col) {
-                    $current_col_num++;
+                if ($current_row_num < $max_row) {
+                    $current_row_num++;
                 }
                 else {
-                    $current_col_num = $min_col;
-                    $current_row_num++;
+                    $current_row_num = $min_row;
+                    $current_col_num++;
                 }
 
                 if ($sim_val < $env_sim_min_5) {
