@@ -287,3 +287,99 @@ sub sequence_metadata_store_POST : Args(0) {
 
     $c->stash->{rest} = { results => $store_results };
 }
+
+
+#
+# Perform a query of sequence metadata for a specific feature and range
+# PATH: GET /ajax/sequence_metadata/query
+# PARAMS:
+#   - feature_id = id of the associated feature
+#   - start = start position of the query range
+#   - end = end position of the query range
+#   - type_id = (optional) cvterm_id of sequence metadata type
+#   - nd_protocol_id = (optional) nd_protocol_id of sequence metadata protocol
+# RETURNS: an array of sequence metadata objects with the following keys:
+#   - feature_id = id of associated feature
+#   - feature_name = name of associated feature
+#   - type_id = cvterm_id of sequence metadata type
+#   - type_name = name of sequence metadata type
+#   - protocol_id = id of associated nd_protocol
+#   - protocol_name = name of associated nd_protocol
+#   - start = start position of sequence metadata
+#   - end = end position of sequence metadata
+#   - score = primary score value of sequence metadata
+#   - attributes = hash of secondary key/value attributes
+#
+sub sequence_metadata_query : Path('/ajax/sequence_metadata/query') : ActionClass('REST') { }
+sub sequence_metadata_query_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    my $feature_id = $c->req->param('feature_id');
+    my $start = $c->req->param('start');
+    my $end = $c->req->param('end');
+    my $type_id = $c->req->param('type_id');
+    my $nd_protocol_id = $c->req->param('nd_protocol_id');
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh();
+
+    # Check Logged In Status
+    if (!$c->user){
+        $c->stash->{rest} = {error => 'You must be logged in to do this!'};
+        $c->detach();
+    }
+
+    # Check required parameters
+    if ( !defined $feature_id || $feature_id eq '' ) {
+        $c->stash->{rest} = {error => 'Feature id must be provided!'};
+        $c->detach();
+    }
+    if ( !defined $start || $start eq '' ) {
+        $c->stash->{rest} = {error => 'Start position must be provided!'};
+        $c->detach();
+    }
+    if ( !defined $end || $end eq '' ) {
+        $c->stash->{rest} = {error => 'End position must be provided!'};
+        $c->detach();
+    }
+
+    # Check if feature_id exists
+    my $feature_rs = $schema->resultset("Sequence::Feature")->find({ feature_id => $feature_id });
+    if ( !defined $feature_rs ) {
+        $c->stash->{rest} = {error => 'Could not find matching feature!'};
+        $c->detach();
+    }
+
+    # Check if type_id exists and is valid type
+    if ( defined $type_id ) {
+        my $cv_rs = $schema->resultset('Cv::Cv')->find({ name => "sequence_metdata_types" });
+        my $cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $type_id, cv_id => $cv_rs->cv_id() });
+        if ( !defined $cvterm_rs ) {
+            $c->stash->{rest} = {error => 'Could not find matching sequence metadata type!'};
+            $c->detach();
+        }
+    }
+
+    # Check if nd_protocol_id exists and is valid type
+    if ( defined $nd_protocol_id ) {
+        my $protocol_cv_rs = $schema->resultset('Cv::Cv')->find({ name => "protocol_type" });
+        my $protocol_cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ name => "sequence_metadata_protocol", cv_id => $protocol_cv_rs->cv_id() });
+        my $protocol_rs = $schema->resultset("NaturalDiversity::NdProtocol")->find({ nd_protocol_id => $nd_protocol_id, type_id => type_id => $protocol_cvterm_rs->cvterm_id() });
+        if ( !defined $protocol_rs ) {
+            $c->stash->{rest} = {error => 'Could not find matching nd_protocol!'};
+            $c->detach();
+        }
+    }
+
+    # Perform query
+    my $smd =  CXGN::Genotype::SequenceMetadata->new(
+        bcs_schema => $schema,
+        type_id => defined $type_id ? $type_id : undef,
+        nd_protocol_id => defined $nd_protocol_id ? $nd_protocol_id : undef
+    );
+    my $results = $smd->query($feature_id, $start, $end);
+
+    # Return results
+    $c->stash->{rest} = { results => $results };
+}

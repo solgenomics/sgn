@@ -11,8 +11,14 @@ my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema);
 my $verification_results = $smd->verify($original_filepath, $processed_filepath);
 
 To store a gff file to the featureprop_json table:
+(bcs_schema, type_id and nd_protocol_id are required)
 my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $cvterm_id, nd_protocol_id => $nd_protocol_id);
 my $store_results = $smd->store($processed_filepath);
+
+To query the stored sequence metadata:
+(bcs_schema is required, type_id and nd_protocol_id are optional filters)
+my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $cvterm_id, nd_protocol_id => $nd_protocol_id);
+my $query_results = $smd->query($feature_id, $start, $end);
 
 =head1 DESCRIPTION
 
@@ -45,12 +51,12 @@ has 'bcs_schema' => (
 );
 
 has 'type_id' => (
-    isa => 'Int',
+    isa => 'Int|Undef',
     is => 'rw'
 );
 
 has 'nd_protocol_id' => (
-    isa => 'Int',
+    isa => 'Int|Undef',
     is => 'rw'
 );
 
@@ -167,11 +173,11 @@ sub store {
 
     # Make sure type_id and nd_protocol_id are set
     if ( !defined $self->type_id || $self->type_id eq '' ) {
-       results{'error'} = "Sequence Metadata type_id not set!";
+       $results{'error'} = "Sequence Metadata type_id not set!";
        return(\%results);
     }
     if ( !defined $self->nd_protocol_id || $self->nd_protocol_id eq '' ) {
-        results{'error'} = "Sequence Metadata nd_protocol_id not set!";
+        $results{'error'} = "Sequence Metadata nd_protocol_id not set!";
         return(\%results);
     }
 
@@ -313,8 +319,104 @@ sub _write_chunk() {
     my $insert = "INSERT INTO public.featureprop_json (feature_id, type_id, nd_protocol_id, start_pos, end_pos, json) VALUES (?, ?, ?, ?, ?, ?);";
     my $ih = $dbh->prepare($insert);
     $ih->execute($feature_id, $type_id, $nd_protocol_id, $chunk_start, $chunk_end, $json_str);
+}
 
-    # print STDERR "...Wrote Chunk #$total\n";
+
+#
+# Query the sequence metadata stored in the featureprop_json table
+# - Optionally filter by sequence metadata type and/or nd_protocol
+# - Return results associated with the provided feature and located within the specified region
+#
+# Arguments:
+# - feature_id = id of feature associated with the sequence metadata
+# - start = start position of query region
+# - end = end position of query region
+#
+# Returns an array of sequence metadata hashes with the following keys:
+# - feature_id = id of associated feature
+# - feature_name = name of associated feature
+# - type_id = cvterm_id of sequence metadata type
+# - type_name = name of sequence metadata type
+# - protocol_id = id of associated nd_protocol
+# - protocol_name = name of associated nd_protocol
+# - start = start position of sequence metadata
+# - end = end position of sequence metadata
+# - score = primary score value of sequence metadata
+# - attributes = hash of secondary key/value attributes
+#
+sub query {
+    my $self = shift;
+    my $feature_id = shift;
+    my $start = shift;
+    my $end = shift;
+
+    my %results = ();
+
+    # Check for required parameters
+    if ( !defined $feature_id || $feature_id eq '' ) {
+        $results{'error'} = "Feature ID not provided!";
+        return(\%results);
+    }
+    if ( !defined $start || $start eq '' ) {
+        $results{'error'} = "Start position not provided!";
+        return(\%results);
+    }
+    if ( !defined $end || $end eq '' ) {
+        $results{'error'} = "End position not provided!";
+        return(\%results);
+    }
+
+    # Build query
+    my $dbh = $self->bcs_schema->storage->dbh();
+    my $query = "SELECT featureprop_json.feature_id, feature.name AS feature_name, featureprop_json.type_id, cvterm.name AS type_name, featureprop_json.nd_protocol_id, nd_protocol.name AS nd_protocol_name, s AS attributes
+FROM featureprop_json
+LEFT JOIN jsonb_array_elements(featureprop_json.json) as s(data) on true
+LEFT JOIN public.feature ON feature.feature_id = featureprop_json.feature_id
+LEFT JOIN public.cvterm ON cvterm.cvterm_id = featureprop_json.type_id
+LEFT JOIN public.nd_protocol ON nd_protocol.nd_protocol_id = featureprop_json.nd_protocol_id
+WHERE featureprop_json.feature_id = ?
+AND (s->>'start')::int >= ? AND (s->>'end')::int <= ?
+AND ((featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (featureprop_json.start_pos >= ? AND featureprop_json.end_pos <= ?))";
+
+    # Add optional filters
+    if ( defined $self->type_id && $self->type_id ne '' ) {
+        $query .= " AND featureprop_json.type_id = " . $self->type_id;
+    }
+    if ( defined $self->nd_protocol_id && $self->nd_protocol_id ne '' ) {
+        $query .= " AND featureprop_json.nd_protocol_id = " . $self->nd_protocol_id;
+    }
+
+    # Perform the search
+    my $h = $dbh->prepare($query);
+    $h->execute($feature_id, $start, $end, $start, $start, $end, $end, $start, $end);
+
+    # Parse the results
+    my @results = ();
+    while (my ($feature_id, $feature_name, $type_id, $type_name, $nd_protocol_id, $nd_protocol_name, $attributes_json) = $h->fetchrow_array()) {
+        my $attributes = decode_json $attributes_json;
+        my $score = $attributes->{score};
+        my $start = $attributes->{start};
+        my $end = $attributes->{end};
+        delete $attributes->{score};
+        delete $attributes->{start};
+        delete $attributes->{end};
+        my %result = (
+            feature_id => $feature_id,
+            feature_name => $feature_name,
+            type_id => $type_id,
+            type_name => $type_name,
+            nd_protocol_id => $nd_protocol_id,
+            nd_protocol_name => $nd_protocol_name,
+            score => $score ne '' ? $score += 0 : '',
+            start => $start += 0,
+            end => $end += 0,
+            attributes => $attributes
+        );
+        push(@results, \%result);
+    }
+
+    # Return the results
+    return(\@results);
 }
 
 
