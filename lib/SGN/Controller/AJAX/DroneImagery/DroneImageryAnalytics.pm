@@ -337,7 +337,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $env_corr_res;
     my $env_iterations;
 
-    my (@sorted_trait_names, @unique_accession_names, @unique_plot_names);
+    my (@sorted_trait_names, @unique_accession_names, @unique_plot_names, %trait_name_encoder, %trait_to_time_map);
 
     for my $iterations (1..$number_iterations) {
         print STDERR "ITERATION $iterations\n";
@@ -355,7 +355,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         };
 
         my (%phenotype_data_original, @data_matrix_original, @data_matrix_phenotypes_original);
-        my (%trait_name_encoder, %trait_name_encoder_rev, %stock_info, %unique_accessions, %seen_days_after_plantings, %seen_times, %trait_to_time_map, %obsunit_row_col, %stock_row_col, %stock_name_row_col, %stock_row_col_id, %seen_rows, %seen_cols, %seen_plots, %seen_plot_names, %plot_id_map, %trait_composing_info, %seen_trial_ids, %seen_trait_names, %unique_traits_ids, @phenotype_header, $header_string);
+        my (%trait_name_encoder_rev, %stock_info, %unique_accessions, %seen_days_after_plantings, %seen_times, %obsunit_row_col, %stock_row_col, %stock_name_row_col, %stock_row_col_id, %seen_rows, %seen_cols, %seen_plots, %seen_plot_names, %plot_id_map, %trait_composing_info, %seen_trial_ids, %seen_trait_names, %unique_traits_ids, @phenotype_header, $header_string);
         my (@sorted_scaled_ln_times, %plot_id_factor_map_reverse, %plot_id_count_map_reverse, %accession_id_factor_map, %accession_id_factor_map_reverse, %time_count_map_reverse, @rep_time_factors, @ind_rep_factors, %plot_rep_time_factor_map, %seen_rep_times, %seen_ind_reps, @legs_header, %polynomial_map);
         my $time_min = 100000000;
         my $time_max = 0;
@@ -1778,8 +1778,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     'sim_env3_', 'simm1_pheno3_', 'effm1_sim3_',
                     'sim_env4_', 'simm1_pheno4_', 'effm1_sim4_',
                     'sim_env5_', 'simm1_pheno5_', 'effm1_sim5_',);
-                    foreach my $type (@types_full_plot_corr) {
-                        foreach my $t (@sorted_trait_names) {
+                    foreach my $t (@sorted_trait_names) {
+                        foreach my $type (@types_full_plot_corr) {
                             push @header_full_plot_corr, $type.$trait_name_encoder{$t};
                         }
                     }
@@ -1836,6 +1836,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 # print STDERR Dumper $cmd;
                 my $status_plotcorr_plot = system($cmd_plotcorr_plot);
                 push @$spatial_effects_plots, [$plot_corr_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
+                push @$spatial_effects_files_store, [$full_plot_level_correlation_tempfile, "datafile_".$statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
             };
 
             eval {
@@ -4213,8 +4214,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     'sim_env3_', 'simm4_pheno3_', 'effm4_sim3_',
                     'sim_env4_', 'simm4_pheno4_', 'effm4_sim4_',
                     'sim_env5_', 'simm4_pheno5_', 'effm4_sim5_');
-                    foreach my $type (@types_full_plot_corr) {
-                        foreach my $t (@sorted_trait_names) {
+                    foreach my $t (@sorted_trait_names) {
+                        foreach my $type (@types_full_plot_corr) {
                             push @header_full_plot_corr, $type.$trait_name_encoder{$t};
                         }
                     }
@@ -4271,6 +4272,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 # print STDERR Dumper $cmd;
                 my $status_plotcorr_plot = system($cmd_plotcorr_plot);
                 push @$spatial_effects_plots, [$plot_corr_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
+                push @$spatial_effects_files_store, [$full_plot_level_correlation_tempfile, "datafile_".$statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
             };
 
             eval {
@@ -6279,8 +6281,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     'sim_env3_', 'simm2_pheno3_', 'effm2_sim3_',
                     'sim_env4_', 'simm2_pheno4_', 'effm2_sim4_',
                     'sim_env5_', 'simm2_pheno5_', 'effm2_sim5_',);
-                    foreach my $type (@types_full_plot_corr) {
-                        foreach my $t (@sorted_trait_names_2) {
+                    foreach my $t (@sorted_trait_names_2) {
+                        foreach my $type (@types_full_plot_corr) {
                             push @header_full_plot_corr, $type.$trait_name_encoder_2{$t};
                         }
                     }
@@ -6339,6 +6341,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 # print STDERR Dumper $cmd;
                 my $status_plotcorr_plot = system($cmd_plotcorr_plot);
                 push @$spatial_effects_plots, [$plot_corr_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
+                push @$spatial_effects_files_store, [$full_plot_level_correlation_tempfile, "datafile_".$statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
             };
 
             eval {
@@ -7304,6 +7307,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 my $status_gen_env5_plot = system($cmd_gen_env5_plot);
                 push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv5line_".$iterations];
             };
+
+            %trait_name_encoder = %trait_name_encoder_2;
+            %trait_to_time_map = %trait_to_time_map_2;
         }
 
         if ($statistics_select_original eq '' || $statistics_select_original eq 'sommer_grm_univariate_spatial_genetic_blups') {
@@ -8338,8 +8344,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     'sim_env3_', 'simm3_pheno3_', 'effm3_sim3_',
                     'sim_env4_', 'simm3_pheno4_', 'effm3_sim4_',
                     'sim_env5_', 'simm3_pheno5_', 'effm3_sim5_');
-                    foreach my $type (@types_full_plot_corr) {
-                        foreach my $t (@sorted_trait_names_2) {
+                    foreach my $t (@sorted_trait_names_2) {
+                        foreach my $type (@types_full_plot_corr) {
                             push @header_full_plot_corr, $type.$trait_name_encoder_2{$t};
                         }
                     }
@@ -8398,6 +8404,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 # print STDERR Dumper $cmd;
                 my $status_plotcorr_plot = system($cmd_plotcorr_plot);
                 push @$spatial_effects_plots, [$plot_corr_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
+                push @$spatial_effects_files_store, [$full_plot_level_correlation_tempfile, "datafile_".$statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
             };
 
             eval {
@@ -9364,6 +9371,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 my $status_gen_env5_plot = system($cmd_gen_env5_plot);
                 push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv5line_".$iterations];
             };
+
+            %trait_name_encoder = %trait_name_encoder_2;
+            %trait_to_time_map = %trait_to_time_map_2;
         }
 
         my $return_inverse_matrix = 0;
@@ -10502,8 +10512,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     'sim_env3_', 'simm5_pheno3_', 'effm5_sim3_',
                     'sim_env4_', 'simm5_pheno4_', 'effm5_sim4_',
                     'sim_env5_', 'simm5_pheno5_', 'effm5_sim5_');
-                    foreach my $type (@types_full_plot_corr) {
-                        foreach my $t (@sorted_trait_names_5) {
+                    foreach my $t (@sorted_trait_names_5) {
+                        foreach my $type (@types_full_plot_corr) {
                             push @header_full_plot_corr, $type.$trait_name_encoder_5{$t};
                         }
                     }
@@ -10560,6 +10570,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 # print STDERR Dumper $cmd;
                 my $status_plotcorr_plot = system($cmd_plotcorr_plot);
                 push @$spatial_effects_plots, [$plot_corr_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
+                push @$spatial_effects_files_store, [$full_plot_level_correlation_tempfile, "datafile_".$statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
             };
 
             eval {
@@ -11526,6 +11537,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 my $status_gen_env5_plot = system($cmd_gen_env5_plot);
                 push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv5line_".$iterations];
             };
+
+            %trait_name_encoder = %trait_name_encoder_5;
+            %trait_to_time_map = %trait_to_time_map_5;
         }
 
         my (%phenotype_data_original_6, @data_matrix_original_6, @data_matrix_phenotypes_original_6);
@@ -12662,8 +12676,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     'sim_env3_', 'simm6_pheno3_', 'effm6_sim3_',
                     'sim_env4_', 'simm6_pheno4_', 'effm6_sim4_',
                     'sim_env5_', 'simm6_pheno5_', 'effm6_sim5_');
-                    foreach my $type (@types_full_plot_corr) {
-                        foreach my $t (@sorted_trait_names_6) {
+                    foreach my $t (@sorted_trait_names_6) {
+                        foreach my $type (@types_full_plot_corr) {
                             push @header_full_plot_corr, $type.$trait_name_encoder_6{$t};
                         }
                     }
@@ -12720,6 +12734,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 # print STDERR Dumper $cmd;
                 my $status_plotcorr_plot = system($cmd_plotcorr_plot);
                 push @$spatial_effects_plots, [$plot_corr_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
+                push @$spatial_effects_files_store, [$full_plot_level_correlation_tempfile, "datafile_".$statistics_select.$sim_env_change_over_time."_fullcorr_".$iterations];
             };
 
             eval {
@@ -13686,6 +13701,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 my $status_gen_env5_plot = system($cmd_gen_env5_plot);
                 push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv5line_".$iterations];
             };
+
+            %trait_name_encoder = %trait_name_encoder_6;
+            %trait_to_time_map = %trait_to_time_map_6;
         }
 
     }
@@ -13697,14 +13715,19 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         $env_corr_res->{$t}->{std} = $env_corr_res_stat->standard_deviation();
         $env_corr_res->{$t}->{mean} = $env_corr_res_stat->mean();
     }
+
     print STDERR Dumper $env_corr_res;
     print STDERR Dumper $env_iterations;
+    print STDERR Dumper \%trait_name_encoder;
+    print STDERR Dumper \%trait_to_time_map;
 
     push @$protocol_result_summary, {
         statistics_select_original => $statistics_select_original,
         number_iterations => $number_iterations,
         env_iterations => $env_iterations,
-        env_correlation_results => $env_corr_res
+        env_correlation_results => $env_corr_res,
+        trait_name_map => \%trait_name_encoder,
+        trait_to_time_map => \%trait_to_time_map
     };
     my $q2 = "UPDATE nd_protocolprop SET value=? WHERE nd_protocolprop_id=?;";
     my $h2 = $schema->storage->dbh()->prepare($q2);
@@ -13732,6 +13755,44 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             return { error => "Could not save file $model_aux_original_name in archive." };
         }
         print STDERR "Archived Analytics Figure File: $archived_aux_filename_with_path\n";
+
+        my $md_row_aux = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+        my $file_row_aux = $metadata_schema->resultset("MdFiles")->create({
+            basename => basename($archived_aux_filename_with_path),
+            dirname => dirname($archived_aux_filename_with_path),
+            filetype => $auxiliary_model_file_archive_type,
+            md5checksum => $md5_aux->hexdigest(),
+            metadata_id => $md_row_aux->metadata_id()
+        });
+
+        my $experiment_files_aux = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+            nd_experiment_id => $analytics_nd_experiment_id,
+            file_id => $file_row_aux->file_id()
+        });
+    }
+
+    foreach my $f (@$spatial_effects_files_store) {
+        my $auxiliary_model_file = $f->[0];
+        my $auxiliary_model_file_archive_type = $f->[1];
+        print STDERR "$auxiliary_model_file_archive_type : $auxiliary_model_file\n";
+
+        my $model_aux_original_name = basename($auxiliary_model_file);
+
+        my $uploader_autoencoder = CXGN::UploadFile->new({
+            tempfile => $auxiliary_model_file,
+            subdirectory => $auxiliary_model_file_archive_type,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $model_aux_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
+        my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
+        if (!$archived_aux_filename_with_path) {
+            return { error => "Could not save file $model_aux_original_name in archive." };
+        }
+        print STDERR "Archived Analytics Data File: $archived_aux_filename_with_path\n";
 
         my $md_row_aux = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
         my $file_row_aux = $metadata_schema->resultset("MdFiles")->create({
