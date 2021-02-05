@@ -61,6 +61,19 @@
                             <option value="sommer_grm_genetic_only_random_regression_gdd_genetic_blups">Sommer Random Regression GBLUPs Y~replicate+GRM+LegendrePoly. Multivariate genetic effects using growing degree days</option-->
 
                         </select>
+
+                        <br/><br/>
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Simulated Environments (Linear, 1D-Normal, 2D-Normal, Random, AR1xAR1): </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="drone_imagery_analytics_select_sim_env_change_over_time_type">
+                                        <option value="">Constant over timepoints</option>
+                                        <option value="changing_gradual">Gradual change over timepoints</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <hr>
@@ -635,7 +648,8 @@ jQuery(document).ready(function() {
                 'legendre_order_number':jQuery('#drone_image_analytics_legendre_order_number_select').val(),
                 'use_area_under_curve':jQuery('#drone_image_analytics_use_area_under_curve_select').val(),
                 'permanent_environment_structure':jQuery('#drone_image_analytics_permanent_env_structure_select').val(),
-                'permanent_environment_structure_phenotype_correlation_traits':JSON.stringify(manage_drone_imagery_analytics_rr_structure_phenotype_correlation)
+                'permanent_environment_structure_phenotype_correlation_traits':JSON.stringify(manage_drone_imagery_analytics_rr_structure_phenotype_correlation),
+                'sim_env_change_over_time':jQuery('#drone_imagery_analytics_select_sim_env_change_over_time_type').val()
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
