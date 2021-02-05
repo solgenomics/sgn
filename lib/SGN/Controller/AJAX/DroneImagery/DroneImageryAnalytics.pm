@@ -21622,7 +21622,7 @@ sub _perform_drone_imagery_analytics {
     my $env_sim_min_5 = 10000000000000;
     my $env_sim_max_5 = -10000000000000;
     my %sim_data_5;
-    my %sim_data_check_5;
+    my %sim_data_check_5_times;
 
     my $col_ro_env = 1 - $row_ro_env;
     my @stock_row_col_id_ordered;
@@ -21637,6 +21637,7 @@ sub _perform_drone_imagery_analytics {
         my $max_row_dim = $max_row - $min_row + 1;
         my $max_col_dim = $max_col - $min_col + 1;
 
+        my $sim_env_change_over_time_num_traits = scalar(@sorted_trait_names);
         my $pe_rel_cmd = 'R -e "library(data.table); library(MASS);
         pr <- '.$row_ro_env.';
         pc <- '.$col_ro_env.';
@@ -21656,6 +21657,19 @@ sub _perform_drone_imagery_analytics {
         }
         Rscr <- kronecker(Rc,Rr)*'.$var_e.';
         Rscr <- round(Rscr, 8);
+        time_corr_matrix <- matrix(NA, ncol='.$sim_env_change_over_time_num_traits.', nrow='.$sim_env_change_over_time_num_traits.');
+        diag(time_corr_matrix) <- rep(1,'.$sim_env_change_over_time_num_traits.');
+        ';
+        if ($sim_env_change_over_time eq 'changing_gradual') {
+            $pe_rel_cmd .= 'time_corr_matrix[lower.tri(time_corr_matrix)] <- rep(0.9,sum(seq(1,'.$sim_env_change_over_time_num_traits.'-1)));
+            time_corr_matrix[upper.tri(time_corr_matrix)] <- rep(0.9,sum(seq(1,'.$sim_env_change_over_time_num_traits.'-1)));
+            ';
+        } else {
+            $pe_rel_cmd .= 'time_corr_matrix[lower.tri(time_corr_matrix)] <- rep(1,sum(seq(1,'.$sim_env_change_over_time_num_traits.'-1)));
+            time_corr_matrix[upper.tri(time_corr_matrix)] <- rep(1,sum(seq(1,'.$sim_env_change_over_time_num_traits.'-1)));
+            ';
+        }
+        $pe_rel_cmd .= 'Rscr <- kronecker(time_corr_matrix,Rscr);
         Resscr <- mvrnorm(1,rep(0,length(Rscr[1,])),Rscr);
         write.table(Rscr, file=\''.$permanent_environment_structure_env_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
         write.table(Resscr, file=\''.$permanent_environment_structure_env_tempfile2.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
@@ -21668,10 +21682,13 @@ sub _perform_drone_imagery_analytics {
 
             my $current_row_num = $min_row;
             my $current_col_num = $min_col;
+            my $current_trait_index = 0;
+            my $current_row_count = 0;
             while (my $sim_val = <$pe_rel_res>) {
                 chomp $sim_val;
 
-                $sim_data_check_5{$current_row_num}->{$current_col_num} = $sim_val;
+                my $t = $sorted_trait_names[$current_trait_index];
+                $sim_data_check_5_times{$t}->{$current_row_num}->{$current_col_num} = $sim_val;
 
                 if ($current_row_num < $max_row) {
                     $current_row_num++;
@@ -21686,6 +21703,17 @@ sub _perform_drone_imagery_analytics {
                 }
                 elsif ($sim_val >= $env_sim_max_5) {
                     $env_sim_max_5 = $sim_val;
+                }
+
+                if ($current_row_count >= scalar(@unique_plot_names)-1) {
+                    $current_trait_index++;
+                    $current_row_count = 0;
+
+                    $current_row_num = $min_row;
+                    $current_col_num = $min_col;
+                }
+                else {
+                    $current_row_count++;
                 }
             }
         close($pe_rel_res);
@@ -21703,11 +21731,13 @@ sub _perform_drone_imagery_analytics {
                     @columns = $csv->fields();
                 }
                 my $stock_id1 = $stock_row_col_id_ordered[$counter1];
-                my $counter2 = 0;
-                foreach my $stock_id2 (@stock_row_col_id_ordered) {
-                    my $val = $columns[$counter2];
-                    $rel_pe_result_hash{$stock_id1}->{$stock_id2} = $val;
-                    $counter2++;
+                if ($stock_id1) {
+                    my $counter2 = 0;
+                    foreach my $stock_id2 (@stock_row_col_id_ordered) {
+                        my $val = $columns[$counter2];
+                        $rel_pe_result_hash{$stock_id1}->{$stock_id2} = $val;
+                        $counter2++;
+                    }
                 }
                 $counter1++;
             }
@@ -21756,7 +21786,7 @@ sub _perform_drone_imagery_analytics {
             foreach my $t (@sorted_trait_names) {
                 if (defined($phenotype_data_altered{$p}->{$t})) {
                     my $new_val = $phenotype_data_altered{$p}->{$t} + 0;
-                    my $sim_val = $sim_data_check_5{$row_number}->{$col_number};
+                    my $sim_val = $sim_data_check_5_times{$t}->{$row_number}->{$col_number};
                     $sim_val = (($sim_val - $env_sim_min_5)/($env_sim_max_5 - $env_sim_min_5))*$env_variance_percent;
                     $new_val += $sim_val;
 
@@ -21834,7 +21864,7 @@ sub _perform_drone_imagery_analytics {
                             }
                         }
 
-                        my $sim_val = $sim_data_check_5{$row_number}->{$col_number};
+                        my $sim_val = $sim_data_check_5_times{$t}->{$row_number}->{$col_number};
                         $sim_val = (($sim_val - $env_sim_min_5)/($env_sim_max_5 - $env_sim_min_5))*$env_variance_percent;
                         $val += $sim_val;
 
@@ -21852,7 +21882,7 @@ sub _perform_drone_imagery_analytics {
                     }
                     else {
                         my $val = $phenotype_data_altered{$p}->{$t} + 0;
-                        my $sim_val = $sim_data_check_5{$row_number}->{$col_number};
+                        my $sim_val = $sim_data_check_5_times{$t}->{$row_number}->{$col_number};
                         $sim_val = (($sim_val - $env_sim_min_5)/($env_sim_max_5 - $env_sim_min_5))*$env_variance_percent;
                         $val += $sim_val;
 
@@ -21918,7 +21948,7 @@ sub _perform_drone_imagery_analytics {
             foreach my $t (@sorted_trait_names) {
                 if (defined($phenotype_data_altered{$p}->{$t})) {
                     my $new_val = $phenotype_data_altered{$p}->{$t} + 0;
-                    my $sim_val = $sim_data_check_5{$row_number}->{$col_number};
+                    my $sim_val = $sim_data_check_5_times{$t}->{$row_number}->{$col_number};
                     $sim_val = (($sim_val - $env_sim_min_5)/($env_sim_max_5 - $env_sim_min_5))*$env_variance_percent;
                     $new_val += $sim_val;
 
