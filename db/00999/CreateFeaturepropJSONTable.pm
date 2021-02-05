@@ -55,8 +55,9 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
 
+
+
     $self->dbh->do(<<EOSQL);
---do your SQL here
 
 -- table definition
 CREATE TABLE IF NOT EXISTS public.featureprop_json (
@@ -75,6 +76,10 @@ CREATE INDEX feaureprop_json_idx2 ON featureprop_json(type_id);
 CREATE INDEX feaureprop_json_idx3 ON featureprop_json(nd_protocol_id);
 CREATE INDEX feaureprop_json_idx4 ON featureprop_json(start_pos);
 CREATE INDEX feaureprop_json_idx5 ON featureprop_json(end_pos);
+
+-- grant usage to web_usr
+GRANT ALL on public.featureprop_json to web_usr;
+GRANT USAGE ON public.featureprop_json_feature_json_id_seq to web_usr;
 
 EOSQL
 
