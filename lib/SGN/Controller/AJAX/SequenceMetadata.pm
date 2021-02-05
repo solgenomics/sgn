@@ -353,7 +353,7 @@ sub sequence_metadata_query_GET : Args(0) {
 
     # Check if type_id exists and is valid type
     if ( defined $type_id ) {
-        my $cv_rs = $schema->resultset('Cv::Cv')->find({ name => "sequence_metdata_types" });
+        my $cv_rs = $schema->resultset('Cv::Cv')->find({ name => "sequence_metadata_types" });
         my $cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $type_id, cv_id => $cv_rs->cv_id() });
         if ( !defined $cvterm_rs ) {
             $c->stash->{rest} = {error => 'Could not find matching sequence metadata type!'};
