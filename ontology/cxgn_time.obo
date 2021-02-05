@@ -573,6 +573,7 @@ name: date of
 synonym: "DCOL" EXACT []
 def: "date of data collection (dd/mm/yyyy)"
 is_a: TIME:0000076
+is_obsolete: true
 
 [Term]
 id: TIME:0000082
