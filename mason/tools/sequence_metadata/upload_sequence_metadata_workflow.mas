@@ -478,7 +478,6 @@ function upload_and_verify() {
       console.log(response);
 
       // Add Response Messages
-      let message_text = "<hr><ul class='list-group'>";
       if ( response && response.error ) {
         add_message("error", response.error);
       }
@@ -575,11 +574,33 @@ function store() {
 
       console.log("STORE RESPONSE");
       console.log(response);
+
+      // Add Response Messages
+      if ( response && response.error ) {
+        add_message("error", response.error);
+      }
+      else if ( response && response.results ) {
+        if ( response.results.stored === 1 ) {
+          add_message("success", "File successfully stored");
+          if ( response.results.chunks ) {
+            add_message("info", response.results.chunks + " chunks written to the database.");
+          }
+        }
+        else {
+          add_message("error", "ERROR: File not stored!");
+        }
+      }
+
+      // Disable the verify and store buttons
+      if ( response && response.results && response.results.stored && response.results.stored === 1 ) {
+        jQuery('#sequence_metadata_upload_verify').attr('disabled', true);
+        jQuery('#sequence_metadata_upload_store').attr('disabled', true);
+      }
+
     },
     error: function() {
       jQuery('#working_msg').html("");
       jQuery('#working_modal').modal("hide");
-
       alert("ERROR: Could not store sequence metadata due to server error!");
     }
   });
@@ -642,24 +663,27 @@ function save_attribute_description() {
  */
 function add_message(type, message) {
   let html = "";
+  let class_name = "danger";
+  let icon_name = "remove";
+  
   if ( type === "success" ) {
-    html += "<li class='list-group-item list-group-item-success'>";
-    html += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
-    html += message;
-    html += "</li>";
+    class_name = "success";
+    icon_name = "ok";
   }
   else if ( type === "warning" ) {
-    html += "<li class='list-group-item list-group-item-warning'>";
-    html += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-    html += message;
-    html += "</li>";
+    class_name = "warning";
+    icon_name = "asterisk";
   }
-  else {
-    html += "<li class='list-group-item list-group-item-danger'>";
-    html += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
-    html += message;
-    html += "</li>";
+  else if ( type === "info" ) {
+    class_name = "info";
+    icon_name = "info-sign";
   }
+
+  html += "<li class='list-group-item list-group-item-" + class_name + "'>";
+  html += "<span class='badge'><span class='glyphicon glyphicon-" + icon_name + "'></span></span>";
+  html += message;
+  html += "</li>";
+
   jQuery('#sequence_metadata_upload_messages_list').append(html);
 }
 </script>
