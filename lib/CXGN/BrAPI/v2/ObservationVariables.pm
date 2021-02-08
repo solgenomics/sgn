@@ -114,22 +114,22 @@ sub search {
     if (scalar(@dbxref_ids) > 0 || scalar(@dbxref_terms)>0) {
         my $cv_id = $self->trait_ontology_cv_id;
 
-        my @sub_and_whereas;
-        push @sub_and_whereas, "cvterm.cv_id = $cv_id";
-        push @sub_and_whereas, "reltype.name='VARIABLE_OF'";
+        my @sub_and_wheres;
+        push @sub_and_wheres, "cvterm.cv_id = $cv_id";
+        push @sub_and_wheres, "reltype.name='VARIABLE_OF'";
         if (scalar(@dbxref_ids)>0){
             # TODO: Should this be OR?
             foreach (@dbxref_ids) {
-                push @sub_and_whereas, "reference_id_prop.value = '$_'";
+                push @sub_and_wheres, "reference_id_prop.value = '$_'";
             }
         }
         if (scalar(@dbxref_terms)>0) {
             foreach (@dbxref_terms) {
-                push @sub_and_whereas, "reference_source_prop.value = '$_'";
+                push @sub_and_wheres, "reference_source_prop.value = '$_'";
             }
         }
 
-        my $sub_and_where_clause = join ' AND ', @sub_and_whereas;
+        my $sub_and_where_clause = join ' AND ', @sub_and_wheres;
 
         $join = "JOIN (" .
             "select cvterm_id, json_agg(json_build_object(" .
