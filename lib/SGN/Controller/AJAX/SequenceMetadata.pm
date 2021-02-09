@@ -7,8 +7,9 @@ use JSON;
 use File::Basename;
 
 use CXGN::UploadFile;
-use CXGN::Genotype::SequenceMetadata;
 use SGN::Model::Cvterm;
+use CXGN::Genotype::SequenceMetadata;
+use CXGN::Genotype::Protocol;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -26,33 +27,29 @@ sub get_reference_genomes : Path('/ajax/sequence_metadata/reference_genomes') :A
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $dbh = $schema->storage->dbh();
 
-    # Get map and organism info
-    my $q = "SELECT map.map_id, map.short_name, map.long_name, map.map_type, map.units, p1o.abbreviation AS parent1_abbreviation, p1o.genus AS parent1_genus, p1o.species AS parent1_species, p2o.abbreviation AS parent2_abbreviation, p2o.genus AS parent2_genus, p2o.species AS parent2_species FROM sgn.map LEFT JOIN public.stock AS p1s ON (p1s.stock_id = map.parent1_stock_id) LEFT JOIN public.organism AS p1o ON (p1o.organism_id = p1s.organism_id) LEFT JOIN public.stock AS p2s ON (p2s.stock_id = map.parent2_stock_id) LEFT JOIN public.organism AS p2o ON (p2o.organism_id = p2s.organism_id);";
-    my $h = $dbh->prepare($q);
-    $h->execute();
+    # Get Genotype Protocols
+    my $protocol_search_result = CXGN::Genotype::Protocol::list_simple($schema);
 
+    # Get reference genomes from the protocols
+    my @rgs = ();
     my @results = ();
-    while ( my ($map_id, $short_name, $long_name, $map_type, $units, $p1_abb, $p1_genus, $p1_species, $p2_abb, $p2_genus, $p2_species) = $h->fetchrow_array()  ) {
-        my %result = (
-            map_id => $map_id,
-            short_name => $short_name,
-            long_name => $long_name,
-            map_type => $map_type,
-            units => $units,
-            parent1_abbreviation => $p1_abb,
-            parent1_genus => $p1_genus,
-            parent1_species => $p1_species,
-            parent2_abbreviation => $p2_abb,
-            parent2_genus => $p2_genus,
-            parent2_species => $p2_species
-        );
-        push(@results, \%result);
+    foreach my $protocol (@$protocol_search_result) {
+        my $name = $protocol->{reference_genome_name};
+        my $species = $protocol->{species_name};
+        if ( not grep $_ eq $name, @rgs ) {
+            my %result = (
+                reference_genome => $name,
+                species_name => $species
+            );
+            push(@results, \%result);
+            push(@rgs, $name);
+        }
     }
 
+    # Return the results
     $c->stash->{rest} = {
-        maps => \@results
+        reference_genomes => \@results
     };
 }
 
@@ -144,7 +141,7 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
 #   - new_protocol_name = name of new protocol
 #   - new_protocol_description = description of new protocol
 #   - new_protocol_sequence_metadata_type = cvterm id of sequence metadata type
-#   - new_protocol_reference_genome = map id of reference genome
+#   - new_protocol_reference_genome = name of reference genome
 #   - new_protocol_score_description = description of score field
 #   - new_protocol_attribute_count = max number of attributes to read (some may be missing if an attribute was removed)
 #   - new_protocol_attribute_key_{n} = key name of nth attribute
@@ -192,7 +189,7 @@ sub sequence_metadata_store_POST : Args(0) {
         my $protocol_name = $c->req->param('new_protocol_name');
         my $protocol_description = $c->req->param('new_protocol_description');
         my $protocol_sequence_metadata_type_id = $c->req->param('new_protocol_sequence_metadata_type');
-        my $protocol_reference_genome_map_id = $c->req->param('new_protocol_reference_genome');
+        my $protocol_reference_genome = $c->req->param('new_protocol_reference_genome');
         my $protocol_score_description = $c->req->param('new_protocol_score_description');
         my $protocol_attribute_count = $c->req->param('new_protocol_attribute_count');
         if ( !defined $protocol_name || $protocol_name eq '' ) {
@@ -207,7 +204,7 @@ sub sequence_metadata_store_POST : Args(0) {
             $c->stash->{rest} = {error => 'The new protocol sequence metadata type must be defined!'};
             $c->detach();
         }
-        if ( !defined $protocol_reference_genome_map_id || $protocol_reference_genome_map_id eq '' ) {
+        if ( !defined $protocol_reference_genome || $protocol_reference_genome eq '' ) {
             $c->stash->{rest} = {error => 'The new protocol reference genome must be defined!'};
             $c->detach();
         }
@@ -217,17 +214,11 @@ sub sequence_metadata_store_POST : Args(0) {
             $c->stash->{rest} = {error => 'Could not find matching CVTerm for sequence metadata type!'};
             $c->detach();
         }
-        my $reference_genome_map = $sgn_schema->resultset('Map')->find({ map_id => $protocol_reference_genome_map_id });
-        if ( !defined $reference_genome_map ) {
-            $c->stash->{rest} = {error => 'Could not find matching Map for reference genome!'};
-            $c->detach();
-        }
 
         my %sequence_metadata_protocol_props = (
             sequence_metadata_type_id => $protocol_sequence_metadata_type_id,
             sequence_metadata_type => $sequence_metadata_type_cvterm->name(),
-            reference_genome_map_id => $protocol_reference_genome_map_id,
-            reference_genome => $reference_genome_map->get_column('short_name')
+            reference_genome => $protocol_reference_genome
         );
         if ( defined $protocol_score_description && $protocol_score_description ne '' ) {
             $sequence_metadata_protocol_props{'score_description'} = $protocol_score_description;

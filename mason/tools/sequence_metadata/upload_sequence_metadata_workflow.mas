@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
 <div class="modal fade" id="upload_sequence_metadata_workflow_modal" name="upload_high_dim_phenotypes_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addHighDimDataDialog">
   <div class="modal-dialog modal-xl" role="document">
@@ -347,20 +347,13 @@ function complete_data_type_step() {
     dataType: 'json',
     url: '/ajax/sequence_metadata/reference_genomes',
     success: function(data) {
-      if ( data && data.maps ) {
+      if ( data && data.reference_genomes ) {
         let options = "";
-        for ( let i = 0; i < data.maps.length; i++ ) {
-          let map_id = data.maps[i].map_id;
-          let map_name = data.maps[i].long_name ? data.maps[i].long_name : data.maps[i].short_name;
-          let map_label = map_name;
-          if ( data.maps[i].parent1_genus || data.maps[i].parent1_species ) {
-            map_label += " (" + data.maps[i].parent1_genus + " " + data.maps[i].parent1_species;
-            if ( data.maps[i].parent2_genus || data.maps[i].parent2_species ) {
-              map_label += " x " + data.maps[i].parent2_genus + " " + data.maps[i].parent2_species;
-            }
-            map_label += ")";
-          }
-          options += "<option value='" + map_id + "'>" + map_label + "</option>";
+        for ( let i = 0; i < data.reference_genomes.length; i++ ) {
+          let rg_name = data.reference_genomes[i].reference_genome;
+          let sp_name = data.reference_genomes[i].species_name;
+          let rg_label = rg_name + " (" + sp_name + ")";
+          options += "<option value='" + rg_name + "'>" + rg_label + "</option>";
         }
         jQuery('#sequence_metadata_upload_protocol_reference_genome').html(options);
         jQuery('#sequence_metadata_upload_protocol_reference_genome').prop('disabled', false);
