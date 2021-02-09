@@ -1195,7 +1195,6 @@ sub upload_info_POST : Args(0) {
     my $user_role;
     my $user_id;
     my $user_name;
-    my $owner_name;
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
@@ -1238,11 +1237,6 @@ sub upload_info_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
-
     my $cross_properties_json = $c->config->{cross_properties};
     my @properties = split ',', $cross_properties_json;
     my $cross_properties = \@properties;
@@ -1270,10 +1264,12 @@ sub upload_info_POST : Args(0) {
         $c->detach();
     }
 
+    my @all_crosses;
     while (my $info_type = shift (@properties)){
         if ($parsed_data->{$info_type}) {
             print STDERR "Handling info type $info_type\n";
             my %info_hash = %{$parsed_data->{$info_type}};
+            @all_crosses = keys %info_hash;
             foreach my $cross_name_key (keys %info_hash){
                 my $value = $info_hash{$cross_name_key};
                 my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
@@ -1283,9 +1279,45 @@ sub upload_info_POST : Args(0) {
                     value => $value,
                 });
                 $cross_add_info->add_info();
+
+                if (!$cross_add_info->add_info()){
+                    $c->stash->{rest} = {error_string => "Error adding cross info",};
+                    return;
+                }
             }
         }
     }
+
+#    print STDERR "FILE =".Dumper($archived_filename_with_path)."\n";
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    my $md5checksum = $md5->hexdigest();
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($archived_filename_with_path),
+        dirname => dirname($archived_filename_with_path),
+        filetype => 'cross_info',
+        md5checksum => $md5checksum,
+        metadata_id => $md_row->metadata_id(),
+    });
+
+    my $file_id = $file_row->file_id();
+    print STDERR "FILE ID =".Dumper($file_id)."\n";
+    print STDERR   "ALL CROSSES =".Dumper(\@all_crosses)."\n";
+    my $cross_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id;
+    my $cross_experiment_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_experiment', 'experiment_type')->cvterm_id;
+
+    foreach my $cross_name (@all_crosses) {
+        my $cross_id = $chado_schema->resultset("Stock::Stock")->find({uniquename => $cross_name, type_id => $cross_cvterm_id})->stock_id();
+        my $cross_nd_experiment_id = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->find({stock_id => $cross_id})->nd_experiment_id();
+         print STDERR "ND EXPERIMENT ID =".Dumper($cross_nd_experiment_id)."\n";
+         my $nd_experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+             nd_experiment_id => $cross_nd_experiment_id,
+             file_id => $file_id,
+         });
+    }
+
 
     $c->stash->{rest} = {success => "1",};
 }
