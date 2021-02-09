@@ -6,6 +6,12 @@ $trial_id
 <& /util/import_javascript.mas, classes => [  ] &>
 
 
+<script src="https://unpkg.com/d3-array@1"></script>
+<script src="https://unpkg.com/d3-collection@1"></script>
+<script src="https://unpkg.com/d3-path@1"></script>
+<script src="https://unpkg.com/d3-shape@1"></script>
+<script src="https://unpkg.com/d3-sankey@0"></script>
+
 <div id="field_trial_to_field_trial_html">
 </div>
 
@@ -13,32 +19,124 @@ $trial_id
 
 jQuery(document).ready(function () {
 
+    // jQuery('#field_trial_from_field_trial_section_onswitch').one("click",  function() {
+    //     jQuery.ajax ({
+    //         url : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_from_field_trial',
+    //         beforeSend: function() {
+    //             jQuery("#working_modal").modal("show");
+    //         },
+    //         success: function(response){
+    //             //console.log(response);
+    //             jQuery("#working_modal").modal("hide");
+    //             var html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Source Field Trial(s) For This Field Trial</th></tr></thead><tbody>';
+    //             var html2 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) Sourced From This Field Trial</th></tr></thead><tbody>';
+    //             for (var i=0; i<response.source_field_trials.length; i++){
+    //                 html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.source_field_trials[i][0]+'">'+response.source_field_trials[i][1]+'</a></td></tr>';
+    //             }
+    //             for (var i=0; i<response.field_trials_sourced.length; i++){
+    //                 html2 = html2 + '<tr><td><a href="/breeders/trial/'+response.field_trials_sourced[i][0]+'">'+response.field_trials_sourced[i][1]+'</a></td></tr>';
+    //             }
+    //             html1 = html1 + '</tbody></table>';
+    //             html2 = html2 + '</tbody></table>';
+    //             jQuery('#field_trial_to_field_trial_html').html(html1+html2);
+    //         },
+    //         error: function(response){
+    //             jQuery("#working_modal").modal("hide");
+    //             alert("Error retrieving field trial to field trial linkage.");
+    //         }
+    //     });
+    // });
+
     jQuery('#field_trial_from_field_trial_section_onswitch').one("click",  function() {
-        jQuery.ajax ({
-            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_from_field_trial',
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                //console.log(response);
-                jQuery("#working_modal").modal("hide");
-                var html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Source Field Trial(s) For This Field Trial</th></tr></thead><tbody>';
-                var html2 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) Sourced From This Field Trial</th></tr></thead><tbody>';
-                for (var i=0; i<response.source_field_trials.length; i++){
-                    html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.source_field_trials[i][0]+'">'+response.source_field_trials[i][1]+'</a></td></tr>';
-                }
-                for (var i=0; i<response.field_trials_sourced.length; i++){
-                    html2 = html2 + '<tr><td><a href="/breeders/trial/'+response.field_trials_sourced[i][0]+'">'+response.field_trials_sourced[i][1]+'</a></td></tr>';
-                }
-                html1 = html1 + '</tbody></table>';
-                html2 = html2 + '</tbody></table>';
-                jQuery('#field_trial_to_field_trial_html').html(html1+html2);
-            },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert("Error retrieving field trial to field trial linkage.");
-            }
-        });
+      $.ajax({
+        url : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_from_field_trial',
+        beforeSend: function() {
+                     jQuery("#working_modal").modal("show");
+        },
+        success: function(r){
+          var nodes = [{"name":"This Trial"}];
+          var links = [];
+
+          //Build data from response: will be an object with two arrays, one of nodes and one of links
+          for (var i = 0; i < r.source_field_trials.length; i++){
+            nodes.push({"name":'<a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a>'});
+            links.push({"source":'<a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a>', "target": "This Trial", "value":1});
+          }
+          for (var i = 0; i < r.field_trials_sourced.length; i++){
+            nodes.push({"name":'<a href="/breeders/trial/'+r.field_trials_sourced[i][0]+'">'+r.field_trials_sourced[i][1]+'</a>'});
+            links.push({"source":"This Trial", "target": '<a href="/breeders/trial/'+r.field_trials_sourced[i][0]+'">'+r.field_trials_sourced[i][1]+'</a>', "value":1});
+          }
+
+          // var nodeMap = {
+          //   "nodes": nodes,
+          //   "links": links
+          // };
+
+          //Set margins and set up svg area
+          var margin = {top: 10, right: 10, bottom: 10, left: 10},
+          width = 600 - margin.left - margin.right,
+          height = 350 - margin.top - margin.bottom;
+
+          var svg = d3.select("#my_dataviz").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+
+          //Create sankey generator
+          var sankey = d3.sankey()
+          .nodeWidth(15)
+          .nodePadding(60);
+
+          sankey.nodes(nodes)
+          .links(links)
+          .layout(1);
+
+          //Render links
+          var link = svg.append("g")
+          .selectAll(".link")
+          .data(links)
+          .enter()
+          .append("path")
+          .attr("class", "link")
+          .attr("d", sankey.link() )
+          .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+          .sort(function(a, b) { return b.dy - a.dy; });
+
+          //Render nodes
+          var node = svg.append("g")
+          .selectAll(".node")
+          .data(nodes)
+          .enter().append("g")
+          .attr("class", "node")
+          .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+          //Create rectangles for nodes
+          node..append("rect")
+          .attr("height", function(d) { return d.dy; })
+          .attr("width", sankey.nodeWidth())
+          .style("fill", "blue" )
+          .style("stroke", "blue" );
+
+          //Titles for nodes
+          node
+          .append("text")
+          .attr("x", -6)
+          .attr("y", function(d) { return d.dy / 2; })
+          .attr("dy", ".35em")
+          .attr("text-anchor", "end")
+          .attr("transform", null)
+          .text(function(d) { return d.name; })
+          .filter(function(d) { return d.x < width / 2; })
+          .attr("x", 6 + sankey.nodeWidth())
+          .attr("text-anchor", "start");
+
+        },
+        error: function(r){
+          jQuery("#working_modal").modal("hide");
+          alert("Error retrieving field trial to field trial linkage.");
+        }
+      });
     });
 
 });
