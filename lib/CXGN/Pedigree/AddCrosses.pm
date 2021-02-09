@@ -33,6 +33,9 @@ use CXGN::Trial;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use File::Basename qw | basename dirname|;
+use CXGN::UploadFile;
+
 
 class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 
@@ -73,6 +76,7 @@ has 'crosses' => (
 has 'user_id' => (
     isa => 'Int',
     is => 'rw',
+    predicate => 'has_user_id',
     required => 1,
 );
 
@@ -86,12 +90,14 @@ has 'crossing_trial_id' => (
 has 'archived_filename' => (
     isa => 'Str',
     is => 'rw',
+    predicate => 'has_archived_filename',
     required => 0,
 );
 
 has 'archived_file_type' => (
     isa => 'Str',
     is => 'rw',
+    predicate => 'has_archived_file_type',
     required => 0,
 );
 
@@ -100,11 +106,13 @@ sub add_crosses {
     my $self = shift;
     my $chado_schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
+    my $metadata_schema = $self->get_metadata_schema();
     my $crossing_trial_id = $self->get_crossing_trial_id();
-    my $owner_id = $self->user_id();
+    my $owner_id = $self->get_user_id();
     my @crosses;
     my $transaction_error;
     my @added_stock_ids;
+    my %nd_experiments;
 
     if (!$self->validate_crosses()) {
         print STDERR "Invalid pedigrees in array.  No crosses will be added\n";
@@ -139,7 +147,6 @@ sub add_crosses {
 		my $geolocation_rs = $chado_schema->resultset("Project::Projectprop")->find({project_id => $crossing_trial_id, type_id => $project_location_cvterm_id});
 
         @crosses = @{$self->get_crosses()};
-        my %nd_experiments;
         foreach my $pedigree (@crosses) {
             my $experiment;
             my $cross_stock;
@@ -343,19 +350,19 @@ sub add_crosses {
     }
 
     #link nd_experiments to uploaded file
-	my $archived_filename_with_path = $self->archived_filename;
+	my $archived_filename_with_path = $self->get_archived_filename;
     print STDERR "FILE =".Dumper($archived_filename_with_path)."\n";
     if ($archived_filename_with_path) {
         print STDERR "Generating md_file entry for cross file...\n";
-        my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $owner_id});
+        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $owner_id});
         $md_row->insert();
         my $upload_file = CXGN::UploadFile->new();
         my $md5 = $upload_file->get_md5($archived_filename_with_path);
         my $md5checksum = $md5->hexdigest();
-        my $file_row = $self->metadata_schema->resultset("MdFiles")->create({
+        my $file_row = $metadata_schema->resultset("MdFiles")->create({
             basename => basename($archived_filename_with_path),
             dirname => dirname($archived_filename_with_path),
-            filetype => $self->archived_file_type,
+            filetype => $self->get_archived_file_type,
             md5checksum => $md5checksum,
             metadata_id => $md_row->metadata_id(),
         });
@@ -364,7 +371,7 @@ sub add_crosses {
         print STDERR "FILE ID =".Dumper($file_id)."\n";
 
         foreach my $nd_experiment_id (keys %nd_experiments) {
-            my $nd_experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")->create({
+            my $nd_experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
                 nd_experiment_id => $nd_experiment_id,
                 file_id => $file_id,
             });
