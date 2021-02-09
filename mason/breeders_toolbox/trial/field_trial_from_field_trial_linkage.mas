@@ -73,11 +73,11 @@ jQuery(document).ready(function () {
           // };
 
           //Set margins and set up svg area
-          var margin = {top: 10, right: 10, bottom: 10, left: 10},
-          width = 600 - margin.left - margin.right,
-          height = 350 - margin.top - margin.bottom;
+          var margin = {top: 10, right: 10, bottom: 10, left: 10};
+          var width = document.querySelector('#field_trial_to_field_trial_html').offsetWidth*0.90;
+          var height = document.querySelector('#field_trial_to_field_trial_html').offsetHeight*0.90;
 
-          var svg = d3.select("#my_dataviz").append("svg")
+          var svg = d3.select("#field_trial_to_field_trial_html").append("svg")
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
           .append("g")
