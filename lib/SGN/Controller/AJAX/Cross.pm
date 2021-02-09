@@ -93,8 +93,6 @@ sub upload_cross_file_POST : Args(0) {
         $upload_type = 'CrossesSimpleExcel';
     }
 
-    my $prefix = $c->req->param('upload_prefix');
-    my $suffix = $c->req->param('upload_suffix');
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
@@ -113,7 +111,6 @@ sub upload_cross_file_POST : Args(0) {
     my $user_id;
     my $user_name;
     my $owner_name;
-    my $upload_file_type = "crosses excel";#get from form when more options are added
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
@@ -156,17 +153,8 @@ sub upload_cross_file_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
-
-    my $cross_properties_json = $c->config->{cross_properties};
-    my @properties = split ',', $cross_properties_json;
-    my $cross_properties = \@properties;
-
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
@@ -195,8 +183,10 @@ sub upload_cross_file_POST : Args(0) {
         dbh => $dbh,
         crossing_trial_id => $crossing_trial_id,
         crosses =>  $parsed_data->{crosses},
-        owner_name => $user_name
-	  });
+        user_id => $user_id,
+        archived_filename => $archived_filename_with_path,
+        archived_file_type => 'crosses'
+    });
 
     #validate the crosses
     if (!$cross_add->validate_crosses()){
@@ -209,52 +199,6 @@ sub upload_cross_file_POST : Args(0) {
         $c->stash->{rest} = {error_string => "Error adding crosses",};
         return;
     }
-
-    #add the progeny
-    if ($parsed_data->{number_of_progeny}) {
-        my %progeny_hash = %{$parsed_data->{number_of_progeny}};
-
-        foreach my $cross_name_key (keys %progeny_hash) {
-            my $progeny_number = $progeny_hash{$cross_name_key};
-            my $progeny_increment = 1;
-            my @progeny_names;
-
-            #create array of progeny names to add for this cross
-            while ($progeny_increment < $progeny_number + 1) {
-                $progeny_increment = sprintf "%03d", $progeny_increment;
-                my $stock_name = $cross_name_key.$prefix.$progeny_increment.$suffix;
-                push @progeny_names, $stock_name;
-                $progeny_increment++;
-            }
-
-            #add array of progeny to the cross
-            my $progeny_add = CXGN::Pedigree::AddProgeny->new ({
-                chado_schema => $chado_schema,
-                phenome_schema => $phenome_schema,
-                dbh => $dbh,
-                cross_name => $cross_name_key,
-                progeny_names => \@progeny_names,
-                owner_name => $owner_name,
-            });
-            if (!$progeny_add->add_progeny()){
-                $c->stash->{rest} = {error_string => "Error adding progeny",};
-                #should delete crosses and other progeny if add progeny fails?
-                return;
-            }
-        }
-    }
-
-#    while (my $info_type = shift (@properties)){
-#        if ($parsed_data->{$info_type}) {
-#            print STDERR "Handling info type $info_type\n";
-#            my %info_hash = %{$parsed_data->{$info_type}};
-#            foreach my $cross_name_key (keys %info_hash) {
-#                my $value = $info_hash{$cross_name_key};
-#                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, key => $info_type, value => $value, } );
-#                $cross_add_info->add_info();
-#            }
-#        }
-#    }
 
     $c->stash->{rest} = {success => "1",};
 }

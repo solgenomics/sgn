@@ -35,42 +35,76 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 
 class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
+
 has 'chado_schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_chado_schema',
-		 required => 1,
-		);
+    is => 'rw',
+    isa => 'DBIx::Class::Schema',
+    predicate => 'has_chado_schema',
+    required => 1,
+);
+
 has 'phenome_schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_phenome_schema',
-		 required => 1,
-		);
+    is => 'rw',
+    isa => 'DBIx::Class::Schema',
+    predicate => 'has_phenome_schema',
+    required => 1,
+);
+
 has 'metadata_schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_metadata_schema',
-		 required => 0,
-		);
-has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
-has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_crosses', required => 1,);
-has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
-has 'crossing_trial_id' =>(isa =>'Int', is => 'rw', predicate => 'has_crossing_trial_id', required => 1,);
+    is => 'rw',
+    isa => 'DBIx::Class::Schema',
+    predicate => 'has_metadata_schema',
+    required => 0,
+);
+
+has 'dbh' => (
+    is  => 'rw',
+    predicate => 'has_dbh',
+    required => 1,
+);
+
+has 'crosses' => (
+    isa =>'ArrayRef[Pedigree]',
+    is => 'rw',
+    predicate => 'has_crosses',
+    required => 1,
+);
+
+has 'user_id' => (
+    isa => 'Int',
+    is => 'rw',
+    required => 1,
+);
+
+has 'crossing_trial_id' => (
+    isa =>'Int',
+    is => 'rw',
+    predicate => 'has_crossing_trial_id',
+    required => 1,
+);
+
+has 'archived_filename' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 0,
+);
+
+has 'archived_file_type' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 0,
+);
+
 
 sub add_crosses {
     my $self = shift;
     my $chado_schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
     my $crossing_trial_id = $self->get_crossing_trial_id();
+    my $owner_sp_person_id = $self->user_id();
     my @crosses;
     my $transaction_error;
     my @added_stock_ids;
-
-    #lookup user by name
-    my $owner_name = $self->get_owner_name();
-    my $dbh = $self->get_dbh();
-    my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
     if (!$self->validate_crosses()) {
         print STDERR "Invalid pedigrees in array.  No crosses will be added\n";
