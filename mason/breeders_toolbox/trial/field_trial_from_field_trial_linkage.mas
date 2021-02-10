@@ -42,7 +42,7 @@ jQuery(document).ready(function () {
     // });
 
     jQuery('#field_trial_from_field_trial_section_onswitch').one("click",  function() {
-      $.ajax({
+      jQuery.ajax({
         url : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_from_field_trial',
         beforeSend: function() {
                      jQuery("#working_modal").modal("show");
