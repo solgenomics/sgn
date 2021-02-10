@@ -96,7 +96,7 @@ jQuery(document).ready(function () {
           .enter()
           .append("path")
           .attr("class", "link")
-          .attr("d", sankey.link() )
+          .attr("d", sankey.links() )
           .style("stroke-width", function(d) { return Math.max(1, d.dy); })
           .sort(function(a, b) { return b.dy - a.dy; });
 
