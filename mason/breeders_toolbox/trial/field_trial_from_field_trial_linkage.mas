@@ -103,7 +103,7 @@ jQuery(document).ready(function () {
           //Render nodes
           var node = svg.append("g")
           .selectAll(".node")
-          .data(nodes)
+          .data(sankey.nodes())
           .enter().append("g")
           .attr("class", "node")
           .attr("transform", function(d) { return "translate(" + (d.x + 0) + "," + (d.y + 0) + ")"; });
