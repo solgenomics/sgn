@@ -186,7 +186,7 @@ sub drone_imagery_analysis_query_POST : Args(0) {
 
     if ($return_format eq 'csv') {
         my $dir = $c->tempfiles_subdir('download');
-        my ($download_file_path, $download_uri) = $c->tempfile( TEMPLATE => 'download/drone_imagery_analysis_csv_'.'XXXXX');
+        my ($download_file_path, $download_uri) = $c->tempfile( TEMPLATE => 'download/drone_imagery_analysis_csv_'.'XXXXX', SUFFIX => ".csv");
         my $file_response = CXGN::BrAPI::FileResponse->new({
             absolute_file_path => $download_file_path,
             absolute_file_uri => $main_production_site.$download_uri,
@@ -197,7 +197,7 @@ sub drone_imagery_analysis_query_POST : Args(0) {
         $return{file} = $data_files[0];
     } elsif ($return_format eq 'xls') {
         my $dir = $c->tempfiles_subdir('download');
-        my ($download_file_path, $download_uri) = $c->tempfile( TEMPLATE => 'download/drone_imagery_analysis_xls_'.'XXXXX');
+        my ($download_file_path, $download_uri) = $c->tempfile( TEMPLATE => 'download/drone_imagery_analysis_xls_'.'XXXXX', SUFFIX => ".xls");
         my $file_response = CXGN::BrAPI::FileResponse->new({
             absolute_file_path => $download_file_path,
             absolute_file_uri => $main_production_site.$download_uri,
