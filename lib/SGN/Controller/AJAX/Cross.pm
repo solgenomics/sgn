@@ -1281,7 +1281,7 @@ sub upload_info_POST : Args(0) {
                 $cross_add_info->add_info();
 
                 if (!$cross_add_info->add_info()){
-                    $c->stash->{rest} = {error_string => "Error adding cross info",};
+                    $c->stash->{rest} = {error => "Error adding cross info",};
                     return;
                 }
             }
@@ -1303,21 +1303,32 @@ sub upload_info_POST : Args(0) {
     });
 
     my $file_id = $file_row->file_id();
-    print STDERR "FILE ID =".Dumper($file_id)."\n";
-    print STDERR   "ALL CROSSES =".Dumper(\@all_crosses)."\n";
+#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+#    print STDERR   "ALL CROSSES =".Dumper(\@all_crosses)."\n";
     my $cross_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id;
     my $cross_experiment_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_experiment', 'experiment_type')->cvterm_id;
 
     foreach my $cross_name (@all_crosses) {
-        my $cross_id = $chado_schema->resultset("Stock::Stock")->find({uniquename => $cross_name, type_id => $cross_cvterm_id})->stock_id();
-        my $cross_nd_experiment_id = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->find({stock_id => $cross_id})->nd_experiment_id();
-         print STDERR "ND EXPERIMENT ID =".Dumper($cross_nd_experiment_id)."\n";
-         my $nd_experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
-             nd_experiment_id => $cross_nd_experiment_id,
-             file_id => $file_id,
-         });
-    }
+        my $q = "SELECT nd_experiment.nd_experiment_id FROM stock
+            JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+            JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id) AND nd_experiment.type_id = ?
+            WHERE stock.uniquename = ?";
 
+        my $h = $chado_schema->storage->dbh()->prepare($q);
+        $h->execute($cross_experiment_cvterm_id, $cross_name);
+        my @nd_experiment_ids= $h->fetchrow_array();
+        if (scalar @nd_experiment_ids == 1) {
+            my $experiment_id = $nd_experiment_ids[0];
+#            print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+            my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+                nd_experiment_id => $experiment_id,
+                file_id => $file_id,
+            });
+        } else {
+            $c->stash->{rest} = {error => "Error storing file metadata",};
+            return;
+        }
+    }
 
     $c->stash->{rest} = {success => "1",};
 }
