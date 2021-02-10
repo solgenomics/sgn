@@ -78,7 +78,7 @@ jQuery(document).ready(function () {
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
           .append("g")
-          .attr("transform","translate(" + margin.left + "," + margin.top + ")");
+          .attr("transform","translate(" + (margin.left) + "," + (margin.top) + ")");
 
           //Create sankey generator
           var sankey = d3.sankey()
@@ -106,7 +106,7 @@ jQuery(document).ready(function () {
           .data(nodes)
           .enter().append("g")
           .attr("class", "node")
-          .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+          .attr("transform", function(d) { return "translate(" + (d.x) + "," + (d.y) + ")"; });
 
           //Create rectangles for nodes
           node.append("rect")
