@@ -69,10 +69,12 @@ jQuery(document).ready(function () {
             links.push({"source":"This Trial", "target": '<a href="/breeders/trial/'+r.field_trials_sourced[i][0]+'">'+r.field_trials_sourced[i][1]+'</a>', "value":1});
           }
 
-          // var nodeMap = {
-          //   "nodes": nodes,
-          //   "links": links
-          // };
+          var nodeMap = {
+            "nodes": nodes,
+            "links": links
+          };
+
+          console.log(nodeMap);
 
           //Set margins and set up svg area
           var margin = {top: 10, right: 10, bottom: 10, left: 10};
