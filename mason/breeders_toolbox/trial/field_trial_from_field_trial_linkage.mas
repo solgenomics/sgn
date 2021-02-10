@@ -86,8 +86,8 @@ jQuery(document).ready(function () {
           .nodePadding(60);
 
           sankey.nodes(nodes)
-          .links(links)
-          .layout(1);
+          .links(links);
+          //.layout(1);
 
           //Render links
           var link = svg.append("g")
