@@ -3,7 +3,7 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, legacy => [ "d3/d3Min.js" ], legacy => [ "d3/d3-sankey/" ]  &>
+<& /util/import_javascript.mas, legacy => [ "d3/d3Min.js" ], legacy => [ "d3/d3-sankey/dist/d3-sankey.min.js" ]  &>
 
 
 <div id="field_trial_to_field_trial_html">
