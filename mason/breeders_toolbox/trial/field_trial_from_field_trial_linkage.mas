@@ -6,11 +6,14 @@ $trial_id
 <& /util/import_javascript.mas, classes => [  ] &>
 
 
-<script src="https://unpkg.com/d3-array@1"></script>
+<!-- <script src="https://unpkg.com/d3-array@1"></script>
 <script src="https://unpkg.com/d3-collection@1"></script>
 <script src="https://unpkg.com/d3-path@1"></script>
 <script src="https://unpkg.com/d3-shape@1"></script>
-<script src="https://unpkg.com/d3-sankey@0"></script>
+<script src="https://unpkg.com/d3-sankey@0"></script> -->
+<script src="/js/source/d3/d3Min.js"></script>
+<script src="/js/node_modules/d3-sankey/dist/d3-sankey.js"></script>
+<script src="/js/node_modules/d3-sankey/dist/d3-sankey.min.js"></script>
 
 <div id="field_trial_to_field_trial_html">
 </div>
