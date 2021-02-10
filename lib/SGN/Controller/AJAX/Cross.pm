@@ -1084,7 +1084,6 @@ sub validate_upload_existing_progenies_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_role;
@@ -1131,10 +1130,6 @@ sub validate_upload_existing_progenies_POST : Args(0) {
         return;
     }
     unlink $upload_tempfile;
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
@@ -1159,23 +1154,32 @@ sub validate_upload_existing_progenies_POST : Args(0) {
             }
 
         }
-        $c->stash->{rest} = {error_string => $return_error, existing_pedigrees => $existing_pedigree, archived_file_name => $archived_filename_with_path};
+        $c->stash->{rest} = {error_string => $return_error, existing_pedigrees => $existing_pedigree, archived_file_name => $archived_filename_with_path, user_id => $user_id};
 }
 
 
 sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_progenies') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $archived_filename = $c->req->param('archived_file_name');
+    my $archived_filename_with_path = $c->req->param('archived_file_name');
+    my $user_id = $c->req->param('user_id');
+#    print STDERR "ARCHIVED FILE NAME =".Dumper($archived_filename_with_path)."\n";
+#    print STDERR "USER ID =".Dumper($user_id)."\n";
     my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $upload_type = 'StoreExistingProgeniesExcel';
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
 
-    my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename);
+    my $upload_type = 'StoreExistingProgeniesExcel';
+    my @all_crosses;
+
+    my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
     my $parsed_data = $parser->parse();
     if ($parsed_data){
         my %progeny_hash = %{$parsed_data};
+        @all_crosses = keys %progeny_hash;
         foreach my $cross_name_key (keys %progeny_hash){
             my $progenies_ref = $progeny_hash{$cross_name_key};
             my @progenies = @{$progenies_ref};
@@ -1197,10 +1201,52 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
 
             if ($error){
                 $c->stash->{rest} = { error => $error };
-                $c->detach();
+                return;
             }
         }
     }
+
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    my $md5checksum = $md5->hexdigest();
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($archived_filename_with_path),
+        dirname => dirname($archived_filename_with_path),
+        filetype => 'cross_progenies',
+        md5checksum => $md5checksum,
+        metadata_id => $md_row->metadata_id(),
+    });
+
+    my $file_id = $file_row->file_id();
+#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+#    print STDERR   "ALL CROSSES =".Dumper(\@all_crosses)."\n";
+    my $cross_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id;
+    my $cross_experiment_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_experiment', 'experiment_type')->cvterm_id;
+
+    foreach my $cross_name (@all_crosses) {
+        my $q = "SELECT nd_experiment.nd_experiment_id FROM stock
+            JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+            JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id) AND nd_experiment.type_id = ?
+            WHERE stock.uniquename = ?";
+
+        my $h = $chado_schema->storage->dbh()->prepare($q);
+        $h->execute($cross_experiment_cvterm_id, $cross_name);
+        my @nd_experiment_ids= $h->fetchrow_array();
+        if (scalar @nd_experiment_ids == 1) {
+            my $experiment_id = $nd_experiment_ids[0];
+#            print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+            my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+                nd_experiment_id => $experiment_id,
+                file_id => $file_id,
+            });
+        } else {
+            $c->stash->{rest} = {error => "Error storing file metadata",};
+            return;
+        }
+    }
+
     $c->stash->{rest} = { success => 1 };
 }
 
