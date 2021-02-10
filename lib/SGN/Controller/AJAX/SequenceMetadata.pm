@@ -20,9 +20,13 @@ __PACKAGE__->config(
 );
 
 #
-# Get a list of the maps from the database and their associated organisms
+# Get a list of reference genomes from loaded genotype protocols
 # PATH: GET /ajax/sequence_metadata/reference_genomes
-# 
+# RETURNS:
+#   - reference_genomes: an array of reference genomes
+#       - reference_genome: name of reference genome
+#       - species_name: name of species associated with reference genome
+#
 sub get_reference_genomes : Path('/ajax/sequence_metadata/reference_genomes') :Args(0) {
     my $self = shift;
     my $c = shift;
@@ -52,6 +56,143 @@ sub get_reference_genomes : Path('/ajax/sequence_metadata/reference_genomes') :A
         reference_genomes => \@results
     };
 }
+
+
+#
+# Get all of the features associated with sequence metadata
+# PATH: GET /ajax/sequence_metadata/features
+# RETURNS:
+#   - features: an array of features associated with sequence metadata
+#       - feature_id: database id of feature
+#       - feature_name: name of feature
+#       - type_id: cvterm id of feature type
+#       - type_name: cvterm name of feature type
+#       - organism_id: database id of organism associated with the feature
+#       - organism_name: genus and species name of organism
+#
+sub get_features : Path('/ajax/sequence_metadata/features') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh();
+
+    # Get features used by sequence metadata
+    my $q = "SELECT feature.feature_id, feature.name AS feature_name, feature.type_id, cvterm.name AS type_name, feature.organism_id, organism.genus AS organism_genus, organism.species AS organism_species
+FROM public.feature
+LEFT JOIN public.organism ON (organism.organism_id = feature.organism_id)
+LEFT JOIN public.cvterm ON (cvterm.cvterm_id = feature.type_id)
+WHERE feature_id IN (SELECT DISTINCT(feature_id) FROM public.featureprop_json)
+ORDER BY feature.name ASC;";
+    my $h = $dbh->prepare($q);
+    $h->execute();
+
+    # Parse features into response
+    my @results = ();
+    while ( my ($feature_id, $feature_name, $type_id, $type_name, $organism_id, $organism_genus, $organism_species) = $h->fetchrow_array() ) {
+        my %result = (
+            feature_id => $feature_id, 
+            feature_name => $feature_name,
+            type_id => $type_id, 
+            type_name => $type_name,
+            organism_id => $organism_id,
+            organism_name => $organism_genus . " " . $organism_species
+        );
+        push(@results, \%result);
+    }
+
+    # Return results
+    $c->stash->{rest} = {
+        features => \@results
+    };
+}
+
+
+#
+# Get all of the sequence metadata data types associated with existing data
+# PATH: GET /ajax/sequence_metadata/types
+# RETURNS:
+#   - types: an array of sequence metadata data types
+#       - type_id: cvterm id of type
+#       - type_name: cvterm name of type
+#       - type_definition: cvterm definition of type
+#
+sub get_types : Path('/ajax/sequence_metadata/types') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh();
+
+    # Get types used by sequence metadata
+    my $q = "SELECT cvterm_id, name, definition
+FROM public.cvterm
+WHERE cvterm_id IN (SELECT DISTINCT(type_id) FROM public.featureprop_json);";
+    my $h = $dbh->prepare($q);
+    $h->execute();
+
+    # Parse types into response
+    my @results = ();
+    while ( my ($id, $name, $definition) = $h->fetchrow_array() ) {
+        my %result = (
+            type_id => $id, 
+            type_name => $name,
+            type_definition => $definition
+        );
+        push(@results, \%result);
+    }
+
+    # Return results
+    $c->stash->{rest} = {
+        types => \@results
+    };
+}
+
+
+#
+# Get all of the sequence metadata protocols associated with existing data
+# PATH: GET /ajax/sequence_metadata/protocols
+# RETURNS:
+#   - protocols: an array of sequence metadata protocols
+#       - nd_protocol_id: database id of the protocol
+#       - nd_protocol_name: name of protocol
+#       - nd_protocol_description: description of protocol
+#       - nd_protocol_properties: additional properties of protocol
+#
+sub get_protocols : Path('/ajax/sequence_metadata/protocols') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh();
+
+    # Get protocols used by sequence metadata
+    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocolprop.value AS properties
+FROM public.nd_protocol
+LEFT JOIN public.nd_protocolprop ON (nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id)
+LEFT JOIN public.cvterm ON (nd_protocolprop.type_id = cvterm.cvterm_id)
+WHERE nd_protocol.nd_protocol_id IN (SELECT DISTINCT(nd_protocol_id) FROM public.featureprop_json)
+AND cvterm.name = 'sequence_metadata_protocol_properties';";
+    my $h = $dbh->prepare($q);
+    $h->execute();
+
+    # Parse protocols into response
+    my @results = ();
+    while ( my ($id, $name, $description, $props_json) = $h->fetchrow_array() ) {
+        my $props = decode_json $props_json;
+        my %result = (
+            nd_protocol_id => $id, 
+            nd_protocol_name => $name,
+            nd_protocol_description => $description,
+            nd_protocol_properties => $props
+        );
+        push(@results, \%result);
+    }
+
+    # Return results
+    $c->stash->{rest} = {
+        protocols => \@results
+    };
+}
+
+
 
 #
 # Process the gff file upload and perform file verification
