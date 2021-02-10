@@ -23,6 +23,7 @@ figure3_file_name <- args[4]
 figure4_file_name <- args[5]
 pc_check <- args[6]
 kinship_check <- args[7]
+pval_output_filepath <- args[8]
 
 
 
@@ -216,3 +217,5 @@ which(gwasresults$PHENO>alpha_bonferroni)
 gwasresults[,3] <- as.numeric(as.character(gwasresults[,3]))
 gwasresults_prnt <- gwasresults[,3:4]
 write.csv(gwasresults_prnt, "/home/vagrant/cxgn/sgn/R/solgwas/solgwas.csv", row.names = FALSE, quote = FALSE)
+
+write.csv(gwasresults_prnt, pval_output_filepath, row.names = FALSE, quote = FALSE)

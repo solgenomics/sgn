@@ -325,6 +325,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     #my $tmp_dir = File::Spec->catfile($c->config->{basepath}, 'gwas_tmpdir');
     my $pheno_filepath = $tempfile . "_phenotype.txt";
     my $geno_filepath = $tempfile . "_genotype.txt";
+    my $gwas_output_filepath = $tempfile . "_gwas_output.csv";
 #    my $pheno_filepath = "." . $tempfile . "_phenotype.txt";
 #    my $geno_filepath = "." . $tempfile . "_genotype.txt";
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
@@ -451,6 +452,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
             $figure4file,
             $pc_check,
             $kinship_check,
+            $gwas_output_filepath,
     );
 
     $cmd->is_cluster(1);
