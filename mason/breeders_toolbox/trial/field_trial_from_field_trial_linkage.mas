@@ -106,7 +106,7 @@ jQuery(document).ready(function () {
           .data(sankey.nodes())
           .enter().append("g")
           .attr("class", "node")
-          .attr("transform", function(d) { return "translate(" + (d.x + 0) + "," + (d.y + 0) + ")"; });
+          .attr("transform", function(d) { return "translate(" + (50) + "," + (50) + ")"; });
 
           //Create rectangles for nodes
           node.append("rect")
