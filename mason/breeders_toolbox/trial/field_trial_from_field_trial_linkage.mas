@@ -108,15 +108,14 @@ jQuery(document).ready(function () {
           .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
 
           //Create rectangles for nodes
-          node..append("rect")
+          node.append("rect")
           .attr("height", function(d) { return d.dy; })
           .attr("width", sankey.nodeWidth())
           .style("fill", "blue" )
           .style("stroke", "blue" );
 
           //Titles for nodes
-          node
-          .append("text")
+          node.append("text")
           .attr("x", -6)
           .attr("y", function(d) { return d.dy / 2; })
           .attr("dy", ".35em")
