@@ -110,7 +110,7 @@ jQuery(document).ready(function () {
 
           //Create rectangles for nodes
           node.append("rect")
-          .attr("height", function(d) { return d.dy; })
+          .attr("height", 30)
           .attr("width", sankey.nodeWidth())
           .style("fill", "blue" )
           .style("stroke", "blue" );
