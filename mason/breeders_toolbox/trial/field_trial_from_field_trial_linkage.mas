@@ -67,7 +67,7 @@ jQuery(document).ready(function () {
             "links": linksArray
           };
 
-          console.log(r.source_field_trials[0][2]);
+          console.log(r.source_field_trials[0]);
 
           console.log(nodeMap);
 
