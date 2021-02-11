@@ -81,7 +81,7 @@ jQuery(document).ready(function () {
           .attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")");
 
           //Create sankey generator
-          var sankey = d3.sankey()
+          var sankey = d3.Sankey()
           .nodeWidth(15)
           .nodePadding(60);
 
