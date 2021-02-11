@@ -512,7 +512,10 @@ sub sequence_metadata_query_GET : Args(0) {
     # GFF Response
     if ( $format eq 'gff' ) {
         $c->res->content_type("text/plain");
-	    # $c->res->headers()->header("Content-Disposition: filename=sequence_metadata.gff");
+        $c->res->headers()->header(
+            "Content-Disposition" => "filename=sequence_metadata.gff",
+            "Access-Control-Allow-Origin" => "*"
+        );
         
         my @contents = ();
         foreach my $item (@$query) {
