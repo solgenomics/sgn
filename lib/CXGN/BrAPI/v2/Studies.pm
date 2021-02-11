@@ -94,7 +94,7 @@ sub search {
 	my @folder_names = $search_params->{trialNames} ? @{$search_params->{trialNames}} : ();
 	my @location_ids = $search_params->{locationDbIds} ? @{$search_params->{locationDbIds}} : ();
 	my @location_names = $search_params->{studyLocationNames} ? @{$search_params->{studyLocationNames}} : ();
-	my @study_type_list = $search_params->{studyType} ? @{$search_params->{studyTypes}} : ();
+	my @study_type_list = $search_params->{studyTypes} ? @{$search_params->{studyTypes}} : ();
 	my @germplasm_dbids = $search_params->{germplasmDbIds} ? @{$search_params->{germplasmDbIds}} : ();
 	my @germplasm_names = $search_params->{germplasmNames} ? @{$search_params->{germplasmNames}} : ();
 	my @year_list = $search_params->{seasonDbIds} ? @{$search_params->{seasonDbIds}} : ();
@@ -218,6 +218,12 @@ sub detail {
             my $study_db_id = $t->get_trial_id();
             my $folder_db_id = $folder->project_parent->project_id();
             my $breeding_program_id = $folder->breeding_program->project_id();
+
+            my $experimental_design = {
+	        	PUI => undef,
+	        	description => $t->get_design_type(),
+	        };
+
 			%result = (
 				active=>JSON::true,
 				additionalInfo=>\%additional_info,
@@ -228,7 +234,7 @@ sub detail {
 				documentationURL => "",
 				endDate => $harvest_date ? $harvest_date :  undef ,
 				environmentParameters => undef,
-				experimentalDesign => $t->get_design_type(),
+				experimentalDesign => $experimental_design,
 				externalReferences => undef,
 				growthFacility => undef,
 				lastUpdate => undef,
@@ -639,6 +645,10 @@ sub _search {
         #     };
         # }
         my $data_agreement = ''; # = $t->get_data_agreement() ? $t->get_data_agreement() : '';
+        my $experimental_design = {
+        	PUI => undef,
+        	description =>qq|$_->{design}|,
+        };
 
         my $folder_id = $t->get_folder()->id();
         my $folder_name = $t->get_folder()->name();
@@ -652,7 +662,7 @@ sub _search {
 			documentationURL => "",
 			endDate => $harvest_date ? $harvest_date :  undef ,
 			environmentParameters => undef,
-			experimentalDesign => qq|$_->{design}|,
+			experimentalDesign => $experimental_design,
 			externalReferences => undef,
 			growthFacility => undef,
 			lastUpdate => undef,
@@ -669,7 +679,7 @@ sub _search {
 			studyName => $_->{trial_name},
 			studyPUI => undef,
 			studyType => $_->{trial_type},
-            trialDbId => $folder_id,
+            trialDbId => qq|$folder_id|,
             trialName => $folder_name
         );
         push @data_out, \%data_obj;
