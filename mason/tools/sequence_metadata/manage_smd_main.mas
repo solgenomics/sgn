@@ -161,55 +161,20 @@ jQuery(document).ready(function() {
             },
             {
                 text: 'JSON',
-                action: function ( e, dt, button, config ) {
-                    var data = dt.data();
-                    var rtn = [];
-                    for ( i=0; i<data.length; i++) {
-                        rtn.push(data[i]);
-                    }
-                    $.fn.dataTable.fileSave(
-                        new Blob([ JSON.stringify(rtn) ]),
-                        'sequence_metadata_results.json'
-                    );
+                action: function() {
+                    download(getQueryURL(), "sequence_metadata.json");
                 }
             },
             {
                 text: 'GFF',
                 action: function ( e, dt, button, config ) {
-                    var data = dt.data();
-                    var rtn = "";
-                    for ( i=0; i<data.length; i++) {
-                        let attributes = [];
-                        for ( let [key, value] of Object.entries(data[i].attributes) ) {
-                            attributes.push(key + "=" + value);
-                        }
-                        let row = [
-                            data[i].feature_name,
-                            '.',
-                            '.',
-                            data[i].start,
-                            data[i].end,
-                            data[i].score && data[i].score !== '' ? data[i].score : '.',
-                            '.',
-                            '.',
-                            attributes.join(';')
-                        ]
-                        rtn += row.join('\t') + '\n';
-                    }
-                    $.fn.dataTable.fileSave(
-                        new Blob([rtn]),
-                        'sequence_metadata_results.gff3'
-                    );
+                    download(getQueryURL("gff"), "sequence_metadata.gff");
                 }
             },
             {
-                text: 'JBrowse',
+                text: "<span class='glyphicon glyphicon-new-window'></span>&nbsp;JBrowse",
                 action: function() {
-                    var url = "/ajax/sequence_metadata/query?format=gff";
-                    url += "&feature_id=" + jQuery('#sequence_metadata_filter_feature').val();
-                    url += "&start=" + jQuery('#sequence_metadata_filter_start').val();
-                    url += "&end=" + jQuery('#sequence_metadata_filter_end').val();
-                    console.log(url);
+                    let url = getQueryURL("gff");
                     window.open(url, "_blank");
                 }
             }
@@ -374,6 +339,34 @@ function update_protocol_info(nd_protocol_id) {
 
 
 /**
+ * Build the Query URL using the current filter properties
+ * @param {string} [format] Output format (default: JSON)
+ * @returns {string} relative URL to query endpoint
+ */
+function getQueryURL(format="JSON") {
+    let feature_id = jQuery('#sequence_metadata_filter_feature option:selected').val();
+    let start = jQuery('#sequence_metadata_filter_start').val();
+    let end = jQuery('#sequence_metadata_filter_end').val();
+    let type_id = jQuery('#sequence_metadata_filter_type').val();
+    let nd_protocol_id = jQuery('#sequence_metadata_filter_protocol').val();
+
+    let params = {
+        feature_id: feature_id,
+        start: start,
+        end: end,
+        format: format
+    }
+    if ( type_id && type_id !== '' ) params.type_id = type_id;
+    if ( nd_protocol_id && nd_protocol_id !== '' ) params.nd_protocol_id = nd_protocol_id;
+
+    let q = new URLSearchParams(params).toString();
+    let url = '/ajax/sequence_metadata/query?' + q;
+
+    return url;
+}
+
+
+/**
  * Perform a sequence metadata query
  * - Required filter params: feature_id, start, end
  * - Optional filter params: type_id, nd_protocol_id
@@ -384,24 +377,9 @@ function query() {
     jQuery('#sequence_metadata_filter_query').html('Querying...');
     jQuery('#sequence_metadata_filter_query').attr('disabled', true);
 
-    let feature_id = jQuery('#sequence_metadata_filter_feature option:selected').val();
-    let start = jQuery('#sequence_metadata_filter_start').val();
-    let end = jQuery('#sequence_metadata_filter_end').val();
-    let type_id = jQuery('#sequence_metadata_filter_type').val();
-    let nd_protocol_id = jQuery('#sequence_metadata_filter_protocol').val();
-
-    let params = {
-        feature_id: feature_id,
-        start: start,
-        end: end
-    }
-    if ( type_id && type_id !== '' ) params.type_id = type_id;
-    if ( nd_protocol_id && nd_protocol_id !== '' ) params.nd_protocol_id = nd_protocol_id;
-
     jQuery.ajax({
         type: 'GET',
-        url: '/ajax/sequence_metadata/query',
-        data: params,
+        url: getQueryURL(),
         dataType: 'json',
         success: handle_query_results,
         error: function() {
@@ -455,5 +433,18 @@ function hide_error() {
     display_error();
 }
 
+/**
+ * Prompt a download of the specified url with the given file name
+ * @param {String} url URL to download
+ * @param {String} name Name to give the downloaded file
+ */
+function download(url, name) {
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
 
 </script>
