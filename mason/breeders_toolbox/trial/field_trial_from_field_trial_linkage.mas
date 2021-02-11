@@ -42,6 +42,19 @@ jQuery(document).ready(function () {
     //     });
     // });
 
+    //Functions relevant to the sankey diagram
+    function update(nodeMap, newData){
+
+    }
+
+    function findNodePositions(nodeMap){
+
+    }
+
+    function drawLinks(nodeMap){
+
+    }
+
     jQuery('#field_trial_from_field_trial_section_onswitch').one("click",  function() {
       jQuery.ajax({
         url : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_from_field_trial',
@@ -50,12 +63,12 @@ jQuery(document).ready(function () {
         },
         success: function(r){
           jQuery("#working_modal").modal("hide");
-          var nodesArray = [{"name":"This Trial", "type": "<% $trial_type %>" }];
+          var nodesArray = [{"name":"This Trial", "type": "<% $trial_type %>", "x":0, "y":0 }];
           var linksArray = [];
 
           //Build data from response: will be an object with two arrays, one of nodes and one of links
           for (var i = 0; i < r.source_field_trials.length; i++){
-            nodesArray.push({"name":r.source_field_trials[i][1], "type":"Unknown"});
+            nodesArray.push({"name":r.source_field_trials[i][1], "type":"Unknown", "x":0, "y":0});
             linksArray.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
           }
           for (var i = 0; i < r.field_trials_sourced.length; i++){
@@ -81,52 +94,58 @@ jQuery(document).ready(function () {
           .append("g")
           .attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")");
 
-          //Create sankey generator
-          var sankey = sankey()
-          .nodeWidth(15)
-          .nodePadding(60);
+          //Draw trial type boxes
+          var headerBoxWidth = width/3;
+          svg.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).attr("color", "orange").attr("transform", "translate(0,0)");
+          svg.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).attr("color", "yellow").attr("transform", "translate("+headerBoxWidth+",0)");
+          svg.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).attr("color", "green").attr("transform", "translate("+(headerBoxWidth*2)+",0)");
 
-          sankey.nodes(nodesArray)
-          .links(linksArray);
-          //.layout(1);
-
-          //Render links
-          var link = svg.append("g")
-          .selectAll(".link")
-          .data(linksArray)
-          .enter()
-          .append("path")
-          .attr("class", "link")
-          .attr("d", sankey.links() )
-          .style("stroke-width", function(d) { return Math.max(1, d.dy); })
-          .sort(function(a, b) { return b.dy - a.dy; });
-
-          //Render nodes
-          var node = svg.append("g")
-          .selectAll(".node")
-          .data(sankey.nodes())
-          .enter().append("g")
-          .attr("class", "node")
-          .attr("transform", function(d) { return "translate(" + (500) + "," + (50) + ")"; });
-
-          //Create rectangles for nodes
-          node.append("rect")
-          .attr("height", 30)
-          .attr("width", sankey.nodeWidth())
-          .style("fill", "blue" )
-          .style("stroke", "blue" );
-
-          //Titles for nodes
-          node.append("text")
-          .attr("x", -6)
-          .attr("y", function(d) { return d.dy / 2; })
-          .attr("dy", ".35em")
-          .attr("text-anchor", "end")
-          .attr("transform", null)
-          .text(function(d) { return d.name; })
-          .filter(function(d) { return d.x < width / 2; })
-          .attr("x", 6 + sankey.nodeWidth())
-          .attr("text-anchor", "start");
+          // //Create sankey generator
+          // var sankey = sankey()
+          // .nodeWidth(15)
+          // .nodePadding(60);
+          //
+          // sankey.nodes(nodesArray)
+          // .links(linksArray);
+          // //.layout(1);
+          //
+          // //Render links
+          // var link = svg.append("g")
+          // .selectAll(".link")
+          // .data(linksArray)
+          // .enter()
+          // .append("path")
+          // .attr("class", "link")
+          // .attr("d", sankey.links() )
+          // .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+          // .sort(function(a, b) { return b.dy - a.dy; });
+          //
+          // //Render nodes
+          // var node = svg.append("g")
+          // .selectAll(".node")
+          // .data(sankey.nodes())
+          // .enter().append("g")
+          // .attr("class", "node")
+          // .attr("transform", function(d) { return "translate(" + (500) + "," + (50) + ")"; });
+          //
+          // //Create rectangles for nodes
+          // node.append("rect")
+          // .attr("height", 30)
+          // .attr("width", sankey.nodeWidth())
+          // .style("fill", "blue" )
+          // .style("stroke", "blue" );
+          //
+          // //Titles for nodes
+          // node.append("text")
+          // .attr("x", -6)
+          // .attr("y", function(d) { return d.dy / 2; })
+          // .attr("dy", ".35em")
+          // .attr("text-anchor", "end")
+          // .attr("transform", null)
+          // .text(function(d) { return d.name; })
+          // .filter(function(d) { return d.x < width / 2; })
+          // .attr("x", 6 + sankey.nodeWidth())
+          // .attr("text-anchor", "start");
 
         },
         error: function(r){
