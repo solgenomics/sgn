@@ -286,19 +286,19 @@ sub germplasm_pedigree {
             $h->execute($cvterm_female_parent, $accession_cvterm, $cvterm_male_parent);
         }
 
-        my @siblings1 = ();
+        my @siblings = ();
         my $cross_plan;
 
         while (my($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type) = $h->fetchrow_array()){
              if ($progeny_id ne $stock_id){
-                push @siblings1, {
+                push @siblings, {
                     germplasmDbId => qq|$progeny_id|,
                     defaultDisplayName => $progeny_name
                 };
             }
             $cross_plan = $cross_type;
-            $mother = $female_parent_name;
-            $father = $male_parent_name;
+            $mother = $female_parent_name ? $female_parent_name : "NA";
+            $father = $male_parent_name ? $male_parent_name : "NA";
         }
 
         #Cross information
@@ -347,7 +347,7 @@ sub germplasm_pedigree {
                 parent2DbId=>$male_parent_stock_id,
                 parent2Name=>$father,
                 parent2Type=>'MALE',
-                siblings=>\@siblings1
+                siblings=>\@siblings
         );
     }
 
