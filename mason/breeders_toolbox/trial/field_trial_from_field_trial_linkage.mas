@@ -91,8 +91,8 @@ jQuery(document).ready(function () {
           var svg = d3.select("#field_trial_to_field_trial_html").append("svg")
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
-          .attr("fill", "#e6e6e6")
           .append("g")
+          .attr("fill", "#e6e6e6")
           .attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")");
 
           //Draw trial type boxes
