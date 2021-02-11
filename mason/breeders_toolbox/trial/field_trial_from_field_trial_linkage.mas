@@ -100,7 +100,7 @@ jQuery(document).ready(function () {
           svg.append("text").attr("x", headerBoxWidth/2 - 50).attr("y", 12).attr("style", "font-size:5").text("Preliminary Yield Trial").attr("stroke", "dark-grey");
           var ayt = svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "yellow").attr("stroke", "grey").attr("x", headerBoxWidth).attr("y", 0);
           svg.append("text").attr("x", 3*headerBoxWidth/2 - 50).attr("y", 12).attr("style", "font-size:5").text("Advanced Yield Trial").attr("stroke", "dark-grey");
-          var uyt = svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "green").attr("stroke", "grey").attr("x", headerBoxWidth*2).attr("y", 0);
+          var uyt = svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", 120).attr("stroke", "grey").attr("x", headerBoxWidth*2).attr("y", 0);
           svg.append("text").attr("x", 5*headerBoxWidth/2 - 50).attr("y", 12).attr("style", "font-size:5").text("Uniform Yield Trial").attr("stroke", "dark-grey");
 
           // //Create sankey generator
