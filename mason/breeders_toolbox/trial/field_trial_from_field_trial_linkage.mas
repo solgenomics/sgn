@@ -96,9 +96,10 @@ jQuery(document).ready(function () {
 
           //Draw trial type boxes
           var headerBoxWidth = width/3;
-          svg.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).style("fill", "orange").attr("transform", "translate(0,0)");
-          svg.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).style("fill", "yellow").attr("transform", "translate("+headerBoxWidth+",0)");
-          svg.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).style("fill", "green").attr("transform", "translate("+(headerBoxWidth*2)+",0)");
+          var typeScale = svg.append("g");
+          typeScale.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).style("fill", "orange").attr("transform", "translate(0,0)");
+          typeScale.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).style("fill", "yellow").attr("transform", "translate("+headerBoxWidth+",0)");
+          typeScale.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).style("fill", "green").attr("transform", "translate("+(headerBoxWidth*2)+",0)");
 
           // //Create sankey generator
           // var sankey = sankey()
