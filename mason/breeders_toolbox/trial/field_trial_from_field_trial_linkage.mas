@@ -96,7 +96,7 @@ jQuery(document).ready(function () {
 
           //Draw trial type boxes
           var headerBoxWidth = width/3;
-          var typeScale = svg.append("g");
+          var typeScale = svg.append("g").attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")");
           typeScale.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).style("fill", "orange").attr("transform", "translate(0,0)");
           typeScale.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).style("fill", "yellow").attr("transform", "translate("+headerBoxWidth+",0)");
           typeScale.append("rect").enter().attr("width", headerBoxWidth).attr("height", 15).style("fill", "green").attr("transform", "translate("+(headerBoxWidth*2)+",0)");
