@@ -96,9 +96,12 @@ jQuery(document).ready(function () {
 
           //Draw trial type boxes
           var headerBoxWidth = width/3;
-          svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "orange").attr("stroke", "grey").attr("x", 0).attr("y", 0);
-          svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "yellow").attr("stroke", "grey").attr("x", headerBoxWidth).attr("y", 0);
-          svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "green").attr("stroke", "grey").attr("x", headerBoxWidth*2).attr("y", 0);
+          var pyt = svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "orange").attr("stroke", "grey").attr("x", 0).attr("y", 0);
+          pyt.append("g").append("text").attr("text-anchor", "center").text("Preliminary Yield Trial");
+          var ayt = .append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "yellow").attr("stroke", "grey").attr("x", headerBoxWidth).attr("y", 0);
+          ayt.append("g").append("text").attr("text-anchor", "center").text("Advanced Yield Trial");
+          var uyt = svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "green").attr("stroke", "grey").attr("x", headerBoxWidth*2).attr("y", 0);
+          uyt.append("g").append("text").attr("text-anchor", "center").text("Uniform Yield Trial");
 
           // //Create sankey generator
           // var sankey = sankey()
