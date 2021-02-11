@@ -9,7 +9,7 @@ $trial_id
 <div id="field_trial_to_field_trial_html">
 </div>
 
-<script>
+<script src="/js/source/legacy/d3/d3-sankey/src/sankey.js">
 
 jQuery(document).ready(function () {
 
@@ -49,22 +49,22 @@ jQuery(document).ready(function () {
         },
         success: function(r){
           jQuery("#working_modal").modal("hide");
-          var nodes = [{"name":"This Trial"}];
-          var links = [];
+          var nodesArray = [{"name":"This Trial"}];
+          var linksArray = [];
 
           //Build data from response: will be an object with two arrays, one of nodes and one of links
           for (var i = 0; i < r.source_field_trials.length; i++){
-            nodes.push({"name":'<a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a>'});
-            links.push({"source":'<a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a>', "target": "This Trial", "value":1});
+            nodesArray.push({"name":'<a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a>'});
+            linksArray.push({"source":'<a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a>', "target": "This Trial", "value":1});
           }
           for (var i = 0; i < r.field_trials_sourced.length; i++){
-            nodes.push({"name":'<a href="/breeders/trial/'+r.field_trials_sourced[i][0]+'">'+r.field_trials_sourced[i][1]+'</a>'});
-            links.push({"source":"This Trial", "target": '<a href="/breeders/trial/'+r.field_trials_sourced[i][0]+'">'+r.field_trials_sourced[i][1]+'</a>', "value":1});
+            nodesArray.push({"name":'<a href="/breeders/trial/'+r.field_trials_sourced[i][0]+'">'+r.field_trials_sourced[i][1]+'</a>'});
+            linksArray.push({"source":"This Trial", "target": '<a href="/breeders/trial/'+r.field_trials_sourced[i][0]+'">'+r.field_trials_sourced[i][1]+'</a>', "value":1});
           }
 
           var nodeMap = {
-            "nodes": nodes,
-            "links": links
+            "nodes": nodesArray,
+            "links": linksArray
           };
 
           console.log(nodeMap);
@@ -85,14 +85,14 @@ jQuery(document).ready(function () {
           .nodeWidth(15)
           .nodePadding(60);
 
-          sankey.nodes(nodes)
-          .links(links);
+          sankey.nodes(nodesArray)
+          .links(linksArray);
           //.layout(1);
 
           //Render links
           var link = svg.append("g")
           .selectAll(".link")
-          .data(links)
+          .data(linksArray)
           .enter()
           .append("path")
           .attr("class", "link")
