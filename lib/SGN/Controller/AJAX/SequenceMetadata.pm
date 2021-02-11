@@ -458,12 +458,6 @@ sub sequence_metadata_query_GET : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $schema->storage->dbh();
 
-    # Check Logged In Status
-    if (!$c->user){
-        $c->stash->{rest} = {error => 'You must be logged in to do this!'};
-        $c->detach();
-    }
-
     # Check required parameters
     if ( !defined $feature_id || $feature_id eq '' ) {
         $c->stash->{rest} = {error => 'Feature id must be provided!'};
