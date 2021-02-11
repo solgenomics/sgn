@@ -285,7 +285,7 @@ sub germplasm_pedigree {
              if ($progeny_id ne $stock_id){
                 push @siblings, {
                     germplasmDbId => qq|$progeny_id|,
-                    defaultDisplayName => $progeny_name
+                    germplasmName => $progeny_name
                 };
             }
             $cross_plan = $cross_type;
