@@ -328,6 +328,11 @@ has 'scale' => (
 	}
 );
 
+has 'active' => (
+	isa => 'Bool',
+	is  => 'rw'
+);
+
 sub BUILD { 
     #print STDERR "BUILDING...\n";
     my $self = shift;
@@ -337,6 +342,7 @@ sub BUILD {
 		# TODO: Throw a good error if cvterm can't be found
         $cvterm = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { cvterm_id => $self->cvterm_id });
         $self->cvterm($cvterm);
+		$self->active($cvterm->is_obsolete == 0);
     }
     if (defined $cvterm) {
         $self->name($self->name || $cvterm->name );
@@ -356,6 +362,7 @@ sub store {
 	my $description = $self->definition();
 	my $ontology_id = $self->ontology_id(); # passed in value not used currently, uses config
 	my $synonyms = $self->synonyms();
+	my $active = $self->active();
 
 	# get cv_id from sgn_local.conf
 	my $context = SGN::Context->new;
@@ -456,7 +463,7 @@ sub store {
 				name        => $name,
 				definition  => $description,
 				dbxref_id   => $new_term_dbxref->dbxref_id(),
-				is_obsolete => 0
+				is_obsolete => $active ? 0 : 1
 			});
 
 		# set cvtermrelationship VARIABLE_OF to put terms under ontology
@@ -506,6 +513,7 @@ sub update {
 	# new variable
 	my $name = _trim($self->name());
 	my $description = $self->definition();
+	my $active = $self->active();
 	my $synonyms = $self->synonyms();
 	my $cvterm_id = $self->cvterm_id();
 
@@ -513,8 +521,9 @@ sub update {
 
 		# Update the variable
 		$self->cvterm->update({
-			name       => $name,
-			definition => $description
+			name        => $name,
+			definition  => $description,
+			is_obsolete => $active ? 0 : 1
 		});
 
 		# Remove old synonyms
@@ -581,6 +590,11 @@ sub numeric_id {
 	my $id = shift;
 	$id =~ s/.*\:(.*)$/$1/g;
 	return $id;
+}
+
+sub get_active_string {
+	my $self = shift;
+	return $self->{active} ? 'active' : 'archived';
 }
 
 
