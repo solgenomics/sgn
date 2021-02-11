@@ -9,7 +9,7 @@ $trial_id
 <div id="field_trial_to_field_trial_html">
 </div>
 
-<script src="/js/source/legacy/d3/d3-sankey/src/sankey.js">
+<script>
 
 jQuery(document).ready(function () {
 
