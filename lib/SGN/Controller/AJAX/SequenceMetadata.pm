@@ -108,7 +108,7 @@ ORDER BY feature.name ASC;";
 
 
 #
-# Get all of the sequence metadata data types associated with existing data
+# Get all of the sequence metadata data types
 # PATH: GET /ajax/sequence_metadata/types
 # RETURNS:
 #   - types: an array of sequence metadata data types
@@ -125,7 +125,7 @@ sub get_types : Path('/ajax/sequence_metadata/types') :Args(0) {
     # Get types used by sequence metadata
     my $q = "SELECT cvterm_id, name, definition
 FROM public.cvterm
-WHERE cvterm_id IN (SELECT DISTINCT(type_id) FROM public.featureprop_json);";
+WHERE cv_id = (SELECT cv_id FROM public.cv WHERE name = 'sequence_metadata_types');";
     my $h = $dbh->prepare($q);
     $h->execute();
 
@@ -148,7 +148,7 @@ WHERE cvterm_id IN (SELECT DISTINCT(type_id) FROM public.featureprop_json);";
 
 
 #
-# Get all of the sequence metadata protocols associated with existing data
+# Get all of the sequence metadata protocols
 # PATH: GET /ajax/sequence_metadata/protocols
 # RETURNS:
 #   - protocols: an array of sequence metadata protocols
@@ -168,7 +168,7 @@ sub get_protocols : Path('/ajax/sequence_metadata/protocols') :Args(0) {
 FROM public.nd_protocol
 LEFT JOIN public.nd_protocolprop ON (nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id)
 LEFT JOIN public.cvterm ON (nd_protocolprop.type_id = cvterm.cvterm_id)
-WHERE nd_protocol.nd_protocol_id IN (SELECT DISTINCT(nd_protocol_id) FROM public.featureprop_json)
+WHERE nd_protocol.type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'sequence_metadata_protocol' AND cv_id = (SELECT cv_id FROM public.cv WHERE name = 'protocol_type'))
 AND cvterm.name = 'sequence_metadata_protocol_properties';";
     my $h = $dbh->prepare($q);
     $h->execute();
@@ -430,6 +430,7 @@ sub sequence_metadata_store_POST : Args(0) {
 #   - end = end position of the query range
 #   - type_id = (optional) cvterm_id of sequence metadata type
 #   - nd_protocol_id = (optional) nd_protocol_id of sequence metadata protocol
+#   - format = (optional) JSON or gff response format (default: JSON)
 # RETURNS: an array of sequence metadata objects with the following keys:
 #   - feature_id = id of associated feature
 #   - feature_name = name of associated feature
@@ -452,6 +453,7 @@ sub sequence_metadata_query_GET : Args(0) {
     my $end = $c->req->param('end');
     my $type_id = $c->req->param('type_id');
     my $nd_protocol_id = $c->req->param('nd_protocol_id');
+    my $format = $c->req->param('format');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $schema->storage->dbh();
@@ -510,8 +512,43 @@ sub sequence_metadata_query_GET : Args(0) {
         type_id => defined $type_id ? $type_id : undef,
         nd_protocol_id => defined $nd_protocol_id ? $nd_protocol_id : undef
     );
-    my $results = $smd->query($feature_id, $start, $end);
+    my $query = $smd->query($feature_id, $start, $end);
 
-    # Return results
-    $c->stash->{rest} = { results => $results };
+
+    # GFF Response
+    if ( $format eq 'gff' ) {
+        $c->res->content_type("text/plain");
+	    # $c->res->headers()->header("Content-Disposition: filename=sequence_metadata.gff");
+        
+        my @contents = ();
+        foreach my $item (@$query) {
+            my @attributes_parsed = ();
+            my $attributes = $item->{attributes};
+            foreach my $key ( keys %{ $attributes } ) {
+                push(@attributes_parsed, $key . "=" . ${$attributes}{$key});
+            }
+            my @row = (
+                $item->{feature_name},
+                '.',
+                '.',
+                $item->{start},
+                $item->{end},
+                defined $item->{score} && $item->{score} ne '' ? $item->{score} : '.',
+                '.',
+                '.',
+                join(";", @attributes_parsed)
+            );
+            push(@contents, join("\t", @row));
+        }
+
+        $c->res->body(join("\n", @contents));
+        $c->detach();
+    }
+
+    # JSON Response
+    else {
+        $c->stash->{rest} = { results => $query };
+        $c->detach();
+    }
+   
 }

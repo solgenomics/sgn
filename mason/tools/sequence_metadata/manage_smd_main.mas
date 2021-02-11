@@ -201,6 +201,17 @@ jQuery(document).ready(function() {
                         'sequence_metadata_results.gff3'
                     );
                 }
+            },
+            {
+                text: 'JBrowse',
+                action: function() {
+                    var url = "/ajax/sequence_metadata/query?format=gff";
+                    url += "&feature_id=" + jQuery('#sequence_metadata_filter_feature').val();
+                    url += "&start=" + jQuery('#sequence_metadata_filter_start').val();
+                    url += "&end=" + jQuery('#sequence_metadata_filter_end').val();
+                    console.log(url);
+                    window.open(url, "_blank");
+                }
             }
         ],
     });
