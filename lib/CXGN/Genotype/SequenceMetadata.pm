@@ -324,50 +324,111 @@ sub _write_chunk() {
 
 #
 # Query the sequence metadata stored in the featureprop_json table
-# - Optionally filter by sequence metadata type and/or nd_protocol
+# - Required filter: feature_id
+# - Optional filters: start, end, type_id, nd_protocol_id, min score, max score
 # - Return results associated with the provided feature and located within the specified region
 #
 # Arguments:
 # - feature_id = id of feature associated with the sequence metadata
-# - start = start position of query region
-# - end = end position of query region
+# - start = (optional) start position of query region (default: 0)
+# - end = (optional) end position of query region (default: feature max)
+# - type_ids = (optional) array of sequence metadata cvterm ids (default: object type_id, if defined, or include all)
+# - nd_protocol_ids = (optional) array of nd_protocol_ids (default: object nd_protocol_id, if defined, or include all)
+# - min_score = (optional) minimum score value
+# - max_score = (optional) maximum score value
 #
-# Returns an array of sequence metadata hashes with the following keys:
-# - feature_id = id of associated feature
-# - feature_name = name of associated feature
-# - type_id = cvterm_id of sequence metadata type
-# - type_name = name of sequence metadata type
-# - protocol_id = id of associated nd_protocol
-# - protocol_name = name of associated nd_protocol
-# - start = start position of sequence metadata
-# - end = end position of sequence metadata
-# - score = primary score value of sequence metadata
-# - attributes = hash of secondary key/value attributes
+# Returns a hash with the following keys:
+#   - error: an error message, if an error was encountered
+#   - results: an array of sequence metadata objects with the following keys:
+#       - feature_id = id of associated feature
+#       - feature_name = name of associated feature
+#       - type_id = cvterm_id of sequence metadata type
+#       - type_name = name of sequence metadata type
+#       - protocol_id = id of associated nd_protocol
+#       - protocol_name = name of associated nd_protocol
+#       - start = start position of sequence metadata
+#       - end = end position of sequence metadata
+#       - score = primary score value of sequence metadata
+#       - attributes = hash of secondary key/value attributes
 #
 sub query {
-    my $self = shift;
-    my $feature_id = shift;
-    my $start = shift;
-    my $end = shift;
+    my ($self, $args) = @_;
+    my $feature_id = $args->{feature_id};
+    my $start = $args->{start};
+    my $end = $args->{end};
+    my $min_score = $args->{min_score};
+    my $max_score = $args->{max_score};
+    my $type_ids = $args->{type_ids};
+    my $nd_protocol_ids = $args->{nd_protocol_ids};
+    my $score_min = $args->{score_min};
+    my $score_max = $args->{score_max};
 
-    my %results = ();
+    print STDERR "QUERY ARGS:\n";
+    use Data::Dumper;
+    print STDERR Dumper $args;
+
+    my $schema = $self->bcs_schema;
+    my $dbh = $schema->storage->dbh();
+
+    my %results = (
+        results => ()
+    );
 
     # Check for required parameters
     if ( !defined $feature_id || $feature_id eq '' ) {
         $results{'error'} = "Feature ID not provided!";
         return(\%results);
     }
+
+    # Set undefined start / end positions
     if ( !defined $start || $start eq '' ) {
-        $results{'error'} = "Start position not provided!";
-        return(\%results);
+        $start = 0;
     }
     if ( !defined $end || $end eq '' ) {
-        $results{'error'} = "End position not provided!";
+        my $q = "SELECT MAX(end_pos) FROM public.featureprop_json WHERE feature_id = ?";
+        my $h = $dbh->prepare($q);
+        $h->execute($feature_id);
+        ($end) = $h->fetchrow_array();
+    }
+
+    # Set undefined type_ids / nd_protocol_ids
+    if ( !defined $type_ids ) {
+        $type_ids = $self->type_id ? [$self->type_id] : [];
+    }
+    if ( !defined $nd_protocol_ids ) {
+        $nd_protocol_ids = $self->nd_protocol_id ? [$self->nd_protocol_id] : [];
+    }
+
+    # Check if feature_id exists
+    my $feature_rs = $schema->resultset("Sequence::Feature")->find({ feature_id => $feature_id });
+    if ( !defined $feature_rs ) {
+        $results{'error'} = 'Could not find matching feature!';
         return(\%results);
     }
 
+    # Check if type_id exists and is valid type
+    foreach my $type_id (@$type_ids) {
+        my $cv_rs = $schema->resultset('Cv::Cv')->find({ name => "sequence_metadata_types" });
+        my $cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $type_id, cv_id => $cv_rs->cv_id() });
+        if ( !defined $cvterm_rs ) {
+            $results{'error'} = "Could not find matching sequence metadata type [$type_id]!";
+            return(\%results);
+        }
+    }
+
+    # Check if nd_protocol_id exists and is valid type
+    foreach my $nd_protocol_id (@$nd_protocol_ids) {
+        my $protocol_cv_rs = $schema->resultset('Cv::Cv')->find({ name => "protocol_type" });
+        my $protocol_cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ name => "sequence_metadata_protocol", cv_id => $protocol_cv_rs->cv_id() });
+        my $protocol_rs = $schema->resultset("NaturalDiversity::NdProtocol")->find({ nd_protocol_id => $nd_protocol_id, type_id => $protocol_cvterm_rs->cvterm_id() });
+        if ( !defined $protocol_rs ) {
+            $results{'error'} = "Could not find matching nd_protocol [$nd_protocol_id]!";
+            return(\%results);
+        }
+    }
+
+
     # Build query
-    my $dbh = $self->bcs_schema->storage->dbh();
     my $query = "SELECT featureprop_json.feature_id, feature.name AS feature_name, featureprop_json.type_id, cvterm.name AS type_name, featureprop_json.nd_protocol_id, nd_protocol.name AS nd_protocol_name, s AS attributes
 FROM featureprop_json
 LEFT JOIN jsonb_array_elements(featureprop_json.json) as s(data) on true
@@ -379,19 +440,27 @@ AND (s->>'start')::int >= ? AND (s->>'end')::int <= ?
 AND ((featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (featureprop_json.start_pos >= ? AND featureprop_json.end_pos <= ?))";
 
     # Add optional filters
-    if ( defined $self->type_id && $self->type_id ne '' ) {
-        $query .= " AND featureprop_json.type_id = " . $self->type_id;
+    if ( $type_ids && @$type_ids ) {
+        $query .= " AND featureprop_json.type_id IN (" . join(',', @$type_ids) . ")";
     }
-    if ( defined $self->nd_protocol_id && $self->nd_protocol_id ne '' ) {
-        $query .= " AND featureprop_json.nd_protocol_id = " . $self->nd_protocol_id;
+    if ( $nd_protocol_ids && @$nd_protocol_ids ) {
+        $query .= " AND featureprop_json.nd_protocol_id IN (" . join(',', @$nd_protocol_ids) . ")";
     }
+    if ( defined $score_min ) {
+        $query .= " AND (s->>'score')::real >= $score_min";
+    }
+    if ( defined $score_max ) {
+        $query .= " AND (s->>'score')::real <= $score_max";
+    }
+
+    print STDERR "$query\n";
 
     # Perform the search
     my $h = $dbh->prepare($query);
     $h->execute($feature_id, $start, $end, $start, $start, $end, $end, $start, $end);
 
     # Parse the results
-    my @results = ();
+    my @matches = ();
     while (my ($feature_id, $feature_name, $type_id, $type_name, $nd_protocol_id, $nd_protocol_name, $attributes_json) = $h->fetchrow_array()) {
         my $attributes = decode_json $attributes_json;
         my $score = $attributes->{score};
@@ -400,7 +469,7 @@ AND ((featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (fea
         delete $attributes->{score};
         delete $attributes->{start};
         delete $attributes->{end};
-        my %result = (
+        my %match = (
             feature_id => $feature_id,
             feature_name => $feature_name,
             type_id => $type_id,
@@ -412,11 +481,12 @@ AND ((featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (fea
             end => $end += 0,
             attributes => $attributes
         );
-        push(@results, \%result);
+        push(@matches, \%match);
     }
 
     # Return the results
-    return(\@results);
+    $results{'results'} = \@matches;
+    return(\%results);
 }
 
 
