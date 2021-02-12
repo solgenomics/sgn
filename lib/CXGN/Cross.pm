@@ -40,8 +40,8 @@ has 'cross_stock_id' => (isa => "Maybe[Int]",
 );
 
 has 'cross_name' => (isa => 'Maybe[Str]',
-		     is => 'rw',
-    );
+    is => 'rw',
+);
 
 has 'female_parent' => (isa => 'Str',
     is => 'rw',
@@ -82,8 +82,9 @@ sub BUILD {
 
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $cross_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
 
-    my $row = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
+    my $row = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id, type_id => $cross_type_id });
 
     if ($row) {
 	 my $name = $row->uniquename();
@@ -1229,6 +1230,48 @@ sub get_cross_identifiers_in_crossing_experiment {
     }
 
     return \%cross_identifier_hash;
+}
+
+
+=head2 get_nd_experiment_id_with_type_cross_experiment
+
+
+=cut
+
+sub get_nd_experiment_id_with_type_cross_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $cross_name = $self->cross_name();
+    my $cross_id;
+    my $experiment_id;
+    print STDERR "CROSS NAME =".Dumper($cross_name)."\n";
+    my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id;
+    my $cross_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+
+    my $cross_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $cross_name, type_id => $cross_type_id });
+
+    if ($cross_rs) {
+        $cross_id = $cross_rs->stock_id();
+    } else {
+        print STDERR "Error retrieving cross ID"."\n";
+        return;
+    }
+
+    my $q = "SELECT nd_experiment.nd_experiment_id FROM nd_experiment_stock
+        JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+        WHERE nd_experiment.type_id = ? AND nd_experiment_stock.stock_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($cross_experiment_type_id, $cross_id);
+    my @nd_experiment_ids= $h->fetchrow_array();
+    if (scalar @nd_experiment_ids == 1) {
+        $experiment_id = $nd_experiment_ids[0];
+    } else {
+        print STDERR "Error retrieving experiment ID"."\n";
+        return;
+    }
+
+    return $experiment_id;
 }
 
 
