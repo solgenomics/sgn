@@ -104,7 +104,6 @@ sub upload_cross_file_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_role;
@@ -1436,7 +1435,6 @@ sub upload_family_names_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_role;
@@ -1486,11 +1484,6 @@ sub upload_family_names_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
-
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin('FamilyNameExcel');
@@ -1515,8 +1508,10 @@ sub upload_family_names_POST : Args(0) {
     }
 
     #add family name and associate with cross
+    my @all_crosses;
     if ($parsed_data){
         my %family_name_hash = %{$parsed_data};
+        @all_crosses = keys %family_name_hash;
         foreach my $cross_name(keys %family_name_hash){
             my $family_name = $family_name_hash{$cross_name};
 
@@ -1543,6 +1538,48 @@ sub upload_family_names_POST : Args(0) {
             }
         }
     }
+
+#    print STDERR "FILE =".Dumper($archived_filename_with_path)."\n";
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    my $md5checksum = $md5->hexdigest();
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($archived_filename_with_path),
+        dirname => dirname($archived_filename_with_path),
+        filetype => 'families',
+        md5checksum => $md5checksum,
+        metadata_id => $md_row->metadata_id(),
+    });
+
+    my $file_id = $file_row->file_id();
+    print STDERR "FILE ID =".Dumper($file_id)."\n";
+    print STDERR   "ALL CROSSES =".Dumper(\@all_crosses)."\n";
+    my $cross_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type')->cvterm_id;
+    my $cross_experiment_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_experiment', 'experiment_type')->cvterm_id;
+    foreach my $cross_name (@all_crosses) {
+        my $q = "SELECT nd_experiment.nd_experiment_id FROM stock
+            JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+            JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id) AND nd_experiment.type_id = ?
+            WHERE stock.uniquename = ?";
+
+        my $h = $chado_schema->storage->dbh()->prepare($q);
+        $h->execute($cross_experiment_cvterm_id, $cross_name);
+        my @nd_experiment_ids= $h->fetchrow_array();
+        if (scalar @nd_experiment_ids == 1) {
+            my $experiment_id = $nd_experiment_ids[0];
+            print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+            my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+                nd_experiment_id => $experiment_id,
+                file_id => $file_id,
+            });
+        } else {
+            $c->stash->{rest} = {error => "Error storing file metadata",};
+            return;
+        }
+    }
+
 
     $c->stash->{rest} = {success => "1",};
 }
@@ -1606,7 +1643,6 @@ sub upload_intercross_file_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_role;
@@ -1654,11 +1690,6 @@ sub upload_intercross_file_POST : Args(0) {
         return;
     }
     unlink $upload_tempfile;
-
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
