@@ -112,6 +112,7 @@
 
 <script type="text/javascript">
 
+var features = [];
 var data_types = [];
 var protocols = [];
 
@@ -205,8 +206,7 @@ jQuery(document).ready(function() {
             {
                 text: "<span class='glyphicon glyphicon-new-window'></span>&nbsp;JBrowse",
                 action: function() {
-                    let url = getQueryURL("gff");
-                    window.open(url, "_blank");
+                    window.open(getJBrowseURL(), '_blank');
                 }
             }
         ],
@@ -225,6 +225,7 @@ function get_features() {
         dataType: 'json',
         url: '/ajax/sequence_metadata/features',
         success: function(data) {
+            features = data.features;
             if ( data && data.features ) {
                 let options = "";
                 for ( let i = 0; i < data.features.length; i++ ) {
@@ -435,27 +436,33 @@ function set_protocols() {
 /**
  * Build the Query URL using the current filter properties
  * @param {string} [format] Output format (default: JSON)
+ * @param {int[]} [nd_protocol_id] Protocol ID to use (instead of selected protocols)
  * @returns {string} relative URL to query endpoint
  */
-function getQueryURL(format="JSON") {
+function getQueryURL(format, nd_protocol_id) {
     let feature_id = jQuery('#sequence_metadata_filter_feature option:selected').val();
     let start = jQuery('#sequence_metadata_filter_start').val();
     let end = jQuery('#sequence_metadata_filter_end').val();
-    let type_id = jQuery('#sequence_metadata_filter_type').val();
-    let nd_protocol_id = jQuery('#sequence_metadata_filter_protocol').val();
+    let type_ids = jQuery('#sequence_metadata_filter_type').val();
+    let sel_nd_protocol_ids = jQuery('#sequence_metadata_filter_protocol').val();
     let score_min = jQuery('#sequence_metadata_filter_score_min').val();
     let score_max = jQuery('#sequence_metadata_filter_score_max').val();
 
     let params = {
         feature_id: feature_id,
-        format: format
+        format: format ? format : 'JSON'
     }
     if ( start && start !== '' ) params.start = start;
     if ( end && end !== '' ) params.end = end;
-    if ( type_id && type_id !== '' ) params.type_id = type_id;
-    if ( nd_protocol_id && nd_protocol_id !== '' ) params.nd_protocol_id = nd_protocol_id;
+    if ( type_ids && type_ids.length > 0 ) params.type_id = type_ids;
     if ( score_min && score_min !== '' ) params.score_min = score_min;
     if ( score_max && score_max !== '' ) params.score_max = score_max;
+    if ( nd_protocol_id ) {
+        params.nd_protocol_id = nd_protocol_id;
+    }
+    else {
+        if ( sel_nd_protocol_ids && sel_nd_protocol_ids.length > 0 ) params.nd_protocol_id = sel_nd_protocol_ids;
+    }
 
     let q = new URLSearchParams(params).toString();
     let url = '/ajax/sequence_metadata/query?' + q;
@@ -518,6 +525,88 @@ function handle_query_results(response) {
 
 
 
+/**
+ * Build a URL to view the seleceted data in jBrowse
+ * @returns {string} url to jbrowse with remote tracks added
+ */
+function getJBrowseURL() {
+    // Get Selected Types
+    let sel_types = jQuery('#sequence_metadata_filter_type').val();
+    
+    // Get Selected Protocols (or all enabled protocols, if none selected)
+    let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
+    if ( !sel_protocols ) {
+        sel_protocols = [];
+        for ( let i = 0; i < protocols.length; i++ ) {
+            if ( sel_types && sel_types.length > 0 ) {
+                for ( let j = 0; j < sel_types.length; j++ ) {
+                    if ( parseInt(protocols[i].nd_protocol_properties.sequence_metadata_type_id) === parseInt(sel_types[j]) ) {
+                        sel_protocols.push(protocols[i].nd_protocol_id);
+                    }
+                }
+            }
+            else {
+                sel_protocols.push(protocols[i].nd_protocol_id);
+            }
+        }
+    }
+
+    // Get Selected Protocol names (for track labels)
+    let sel_protocol_names = {};
+    for ( let i = 0; i < sel_protocols.length; i++ ) {
+        for ( let j = 0; j < protocols.length; j++ ) {
+            if ( parseInt(sel_protocols[i]) === parseInt(protocols[j].nd_protocol_id) ) {
+                sel_protocol_names[sel_protocols[i].toString()] = protocols[j].nd_protocol_name.replaceAll(" ", "&nbsp;");
+            }
+        }
+    }
+    
+    // Get Selected Feature (for jBrowse chromosome name)
+    let sel_feature = jQuery('#sequence_metadata_filter_feature').val();
+    let sel_feature_name = '';
+    for ( let i = 0; i < features.length; i++ ) {
+        if ( parseInt(features[i].feature_id) === parseInt(sel_feature) ) {
+            sel_feature_name = features[i].feature_name;
+        }
+    }
+
+    // Get Selected start and end for range
+    let start = jQuery('#sequence_metadata_filter_start').val();
+    let end = jQuery('#sequence_metadata_filter_end').val();
+    let range = '';
+    if ( start && start !== '' && end && end !== '' ) {
+        range = ":" + start + ".." + end
+    }
+
+    // Build JBrowse Stores & Tracks
+    let stores = {};
+    let tracks = [];
+    for ( let i = 0; i < sel_protocols.length; i++ ) {
+        stores["url" + i] = {
+            type: "JBrowse/Store/SeqFeature/GFF3",
+            urlTemplate: window.location.protocol + "//" + window.location.host + getQueryURL("gff", sel_protocols[i])
+        }
+        tracks.push({
+            label: sel_protocol_names[sel_protocols[i].toString()],
+            type: "JBrowse/View/Track/CanvasFeatures",
+            store: "url" + i
+        });              
+    }
+
+    // Build URL
+    let base_url = "https://wheat.pw.usda.gov/jb/";
+    let params = {
+        data: "/ggds/whe-iwgsc2018",
+        loc: sel_feature_name + range,
+        tracks: ['DNA'].concat(Object.values(sel_protocol_names)).join(','),
+        addStores: JSON.stringify(stores),
+        addTracks: JSON.stringify(tracks)
+    }
+    let q = new URLSearchParams(params).toString();
+    let url = base_url + '?' + q;
+
+    return url;
+}
 
 
 /**
