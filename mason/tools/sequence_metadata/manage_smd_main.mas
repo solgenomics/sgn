@@ -24,15 +24,15 @@
             </div>
         </div>
 
-        <!-- Start -->
+        <!-- Start / End -->
         <div class="form-group">
             <label class="col-sm-2 control-label">Start: </label>
             <div class="col-sm-4">
-                <input class="form-control" id="sequence_metadata_filter_start" type="text" value="0">
+                <input class="form-control" id="sequence_metadata_filter_start" type="text" value="">
             </div>
             <label class="col-sm-2 control-label">End: </label>
             <div class="col-sm-4">
-                <input class="form-control" id="sequence_metadata_filter_end" type="text" value="2000000">
+                <input class="form-control" id="sequence_metadata_filter_end" type="text" value="">
             </div>
         </div>
 
@@ -42,40 +42,57 @@
         <div class="form-group">
             <label class="col-sm-2 control-label">Type: </label>
             <div class="col-sm-10">
-                <select class="form-control" id="sequence_metadata_filter_type" disabled>
+                <select class="form-control" id="sequence_metadata_filter_type" multiple disabled>
                     <option value="">Loading...</option>
                 </select>
             </div>
         </div>
         <div class="col-sm-2"></div>
-        <div class="col-sm-10 well">
-            <p>
-                <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
-                <span id="sequence_metadata_filter_type_info">Loading...</span>
-            </p>
+        <div class="col-sm-10">
+            <p><a id="sequence_metadata_filter_type_info_btn" href="#"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;Data Type Info</a></p>
+            <div id="sequence_metadata_filter_type_info" class="" style="display:none">
+                <p>Loading...</p>
+            </div>
         </div>
+        <br /><br />
 
         <!-- Protocol -->
         <div class="form-group">
             <label class="col-sm-2 control-label">Protocol: </label>
             <div class="col-sm-10">
-                <select class="form-control" id="sequence_metadata_filter_protocol" disabled>
+                <select class="form-control" id="sequence_metadata_filter_protocol" multiple disabled>
                     <option value="">Loading...</option>
                 </select>
             </div>
         </div>
         <div class="col-sm-2"></div>
-        <div class="col-sm-10 well">
-            <p>
-                <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
-                <span id="sequence_metadata_filter_protocol_info">Loading...</span>
-            </p>
+        <div class="col-sm-10">
+            <p><a id="sequence_metadata_filter_protocol_info_btn" href="#"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;Protocol Info</a></p>
+            <div id="sequence_metadata_filter_protocol_info" class="" style="display:none">
+                <p>Loading...</p>
+            </div>
         </div>
+        <br /><br />
+
+        <!-- Score Min / Max -->
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Score Min: </label>
+            <div class="col-sm-4">
+                <input class="form-control" id="sequence_metadata_filter_score_min" type="text" value="">
+            </div>
+            <label class="col-sm-2 control-label">Score Max: </label>
+            <div class="col-sm-4">
+                <input class="form-control" id="sequence_metadata_filter_score_max" type="text" value="">
+            </div>
+        </div>
+        <br /><br />
+        
 
         <!-- QUERY -->
         <div class="center">
             <button id="sequence_metadata_filter_query" class="btn btn-primary">Query</button>
         </div>
+        <br /><br /><br />
 
 
     </form>
@@ -104,6 +121,20 @@ jQuery(document).ready(function() {
     get_features();
     get_types();
     get_protocols();
+
+    // Toggle info boxes
+    jQuery('#sequence_metadata_filter_type_info_btn').click(function() {
+        jQuery('#sequence_metadata_filter_type_info').toggle();
+        return false;
+    });
+    jQuery('#sequence_metadata_filter_protocol_info_btn').click(function() {
+        jQuery('#sequence_metadata_filter_protocol_info').toggle();
+        return false;
+    });
+
+    // Type and Protocol Change Listeners
+    jQuery('#sequence_metadata_filter_type').change(set_protocols);
+    jQuery('#sequence_metadata_filter_protocol').change(set_types);
 
     // Query Data
     jQuery('#sequence_metadata_filter_query').click(query);
@@ -228,22 +259,24 @@ function get_types() {
         success: function(data) {
             if ( data && data.types ) {
                 data_types = data.types;
-                let options = "<option value=''>Any</option>";
+                
+                // Set Select Options
+                set_types();
+
+                // Build Info Table
+                let info = "<table class='table table-striped'><thead><tr><th>Data Type</th><th>Definition</th></tr></thead>";
+                info += "<tbody>";
                 for ( let i = 0; i < data.types.length; i++ ) {
-                    let t_id = data.types[i].type_id;
-                    let t_name = data.types[i].type_name;
-                    options += "<option value='" + t_id + "'>" + t_name + "</option>";
+                    info += "<tr><td>" + data.types[i].type_name + "</td><td>" + data.types[i].type_definition + "</td></tr>";
                 }
-                jQuery('#sequence_metadata_filter_type').html(options);
-                jQuery('#sequence_metadata_filter_type').prop('disabled', false);
-                jQuery('#sequence_metadata_filter_type').on('change', function() {
-                    update_type_info(this.value);
-                });
+                info += "</tbody>";
+                info += "</table>";
+                jQuery('#sequence_metadata_filter_type_info').html(info);
+
             }
             else {
                 alert("ERROR: Could not load types!");
             }
-            update_type_info(jQuery('#sequence_metadata_filter_type').val());
         },
         error: function() {
          alert("ERROR: Could not load types");
@@ -252,22 +285,48 @@ function get_types() {
 }
 
 /**
- * Update the data type info box with the definition of the specified data type id
- * @param {int} type_id CVTerm ID of the data type
+ * Set the options for the Data Types select box
  */
-function update_type_info(type_id) {
-    let info = "";
-    if ( !type_id || type_id === '' ) {
-        info = "<em>Include sequence metadata of any data type</em>";
-    }
-    else {
-        for ( let i = 0; i < data_types.length; i++ ) {
-            if ( parseInt(type_id) === parseInt(data_types[i].type_id) ) {
-                info = data_types[i].type_definition;
+function set_types() {
+    let sel_types = jQuery('#sequence_metadata_filter_type').val();
+    let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
+
+    let options = "";
+    for ( let i = 0; i < data_types.length; i++ ) {
+        let t_id = data_types[i].type_id;
+        let t_name = data_types[i].type_name;
+
+        // Reselect previosuly selected items
+        let selected = false;
+        if ( sel_types ) {
+            for ( let j = 0; j < sel_types.length; j++ ) {
+                if ( parseInt(sel_types[j]) === parseInt(t_id) ) {
+                    selected = true;
+                }
             }
         }
+
+        // Disable data types based on selected protocols
+        let disabled = false;
+        if ( sel_protocols && sel_protocols.length > 0 ) {
+            disabled = true;
+            for ( let j = 0; j < protocols.length; j++ ) {
+                for ( let k = 0; k < sel_protocols.length; k++ ) {
+                    if ( parseInt(protocols[j].nd_protocol_id) === parseInt(sel_protocols[k]) ) {
+                        if ( parseInt(protocols[j].nd_protocol_properties.sequence_metadata_type_id) === parseInt(t_id) ) {
+                            disabled = false;
+                        }
+                    }
+                }
+            }
+        }
+        let d = disabled ? 'disabled' : '';
+        let s = disabled ? '' : selected ? 'selected' : '';
+        options += "<option value='" + t_id + "' " + d + " " + s + ">" + t_name + "</option>";
     }
-    jQuery('#sequence_metadata_filter_type_info').html(info);
+
+    jQuery('#sequence_metadata_filter_type').html(options);
+    jQuery('#sequence_metadata_filter_type').prop('disabled', false);
 }
 
 /**
@@ -282,22 +341,42 @@ function get_protocols() {
         success: function(data) {
             if ( data && data.protocols ) {
                 protocols = data.protocols;
-                let options = "<option value=''>Any</option>";
+
+                // Set Select Options
+                set_protocols();
+
+                // Build Info Table
+                let info = "<table class='table table-striped'><thead><tr><th>Protocol</th><th>Description</th><th>Properties</th></tr></thead>";
+                info += "<tbody>";
                 for ( let i = 0; i < data.protocols.length; i++ ) {
-                    let p_id = data.protocols[i].nd_protocol_id;
-                    let p_name = data.protocols[i].nd_protocol_name;
-                    options += "<option value='" + p_id + "'>" + p_name + "</option>";
+                    let props = "<strong>Data Type:</strong>&nbsp;" + data.protocols[i].nd_protocol_properties.sequence_metadata_type + "<br />";
+                    props += "<strong>Reference Genome:</strong>&nbsp;" + data.protocols[i].nd_protocol_properties.reference_genome + "<br />";
+                    props += "<strong>Score:</strong>&nbsp;" + data.protocols[i].nd_protocol_properties.score_description + "<br />";
+                    props += "<strong>Attributes:</strong><br />";
+                    let attributes = [];
+                    var keys = Object.keys(data.protocols[i].nd_protocol_properties.attribute_descriptions);
+                    keys.sort();
+                    for ( let j = 0; j < keys.length; j++ ) {
+                        let key = keys[j];
+                        let description = data.protocols[i].nd_protocol_properties.attribute_descriptions[key];
+                        attributes.push("&nbsp;&nbsp;<strong>" + key + ":</strong>&nbsp;" + description);
+                    }
+                    props += attributes.join('<br />');
+
+                    info += "<tr>";
+                    info += "<td>" + data.protocols[i].nd_protocol_name + "</td>";
+                    info += "<td>" + data.protocols[i].nd_protocol_description + "</td>";
+                    info += "<td>" + props + "</td>";
+                    info += "</tr>";
                 }
-                jQuery('#sequence_metadata_filter_protocol').html(options);
-                jQuery('#sequence_metadata_filter_protocol').prop('disabled', false);
-                jQuery('#sequence_metadata_filter_protocol').on('change', function() {
-                    update_protocol_info(this.value);
-                });
+                info += "</tbody>";
+                info += "</table>";
+                jQuery('#sequence_metadata_filter_protocol_info').html(info);
+
             }
             else {
                 alert("ERROR: Could not load protocols!");
             }
-            update_protocol_info(jQuery('#sequence_metadata_filter_protocol').val());
         },
         error: function() {
          alert("ERROR: Could not load protocols");
@@ -305,36 +384,51 @@ function get_protocols() {
     });
 }
 
+
 /**
- * Update the protocol info box with the definition of the specified protocol id
- * @param {int} nd_protocol_id ID of the protocol
+ * Set the options for the Protocol select box
  */
-function update_protocol_info(nd_protocol_id) {
-    let info = "";
-    if ( !nd_protocol_id || nd_protocol_id === '' ) {
-        info = "<em>Include sequence metadata from any protocol</em>";
-    }
-    else {
-        for ( let i = 0; i < protocols.length; i++ ) {
-            if ( parseInt(nd_protocol_id) === parseInt(protocols[i].nd_protocol_id) ) {
-                info = protocols[i].nd_protocol_description + "<br /><br />";
-                info += "<strong>Data Type:</strong>&nbsp;" + protocols[i].nd_protocol_properties.sequence_metadata_type + "<br />";
-                info += "<strong>Reference Genome:</strong>&nbsp;" + protocols[i].nd_protocol_properties.reference_genome + "<br />";
-                info += "<strong>Score:</strong>&nbsp;" + protocols[i].nd_protocol_properties.score_description + "<br />";
-                info += "<strong>Attributes:</strong><br />";
-                let attributes = [];
-                var keys = Object.keys(protocols[i].nd_protocol_properties.attribute_descriptions);
-                keys.sort();
-                for ( let j = 0; j < keys.length; j++ ) {
-                    let key = keys[j];
-                    let description = protocols[i].nd_protocol_properties.attribute_descriptions[key];
-                    attributes.push("&nbsp;&nbsp;<strong>" + key + ":</strong>&nbsp;" + description);
+function set_protocols() {
+    let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
+    let sel_types = jQuery('#sequence_metadata_filter_type').val();
+
+    let options = "";
+    for ( let i = 0; i < protocols.length; i++ ) {
+        let p_id = protocols[i].nd_protocol_id;
+        let p_name = protocols[i].nd_protocol_name;
+        let p_type_id = protocols[i].nd_protocol_properties.sequence_metadata_type_id;
+        
+        // Reselect previosuly selected items
+        let selected = false;
+        if ( sel_protocols ) {
+            for ( let j = 0; j < sel_protocols.length; j++ ) {
+                if ( parseInt(sel_protocols[j]) === parseInt(p_id) ) {
+                    selected = true;
                 }
-                info += attributes.join('<br />');
             }
         }
+
+        // Disable protocols based on selected data types
+        let disabled = false;
+        if ( sel_types && sel_types.length > 0 ) {
+            disabled = true;
+            for ( let j = 0; j < data_types.length; j++ ) {
+                for ( let k = 0; k < sel_types.length; k++ ) {
+                    if ( parseInt(data_types[j].type_id) === parseInt(sel_types[k]) ) {
+                        if ( parseInt(data_types[j].type_id) === parseInt(p_type_id) ) {
+                            disabled = false;
+                        }
+                    }
+                }
+            }
+        }
+        let d = disabled ? 'disabled' : '';
+        let s = disabled ? '' : selected ? 'selected' : '';
+        options += "<option value='" + p_id + "' " + d + " " + s + ">" + p_name + "</option>";
     }
-    jQuery('#sequence_metadata_filter_protocol_info').html(info);
+
+    jQuery('#sequence_metadata_filter_protocol').html(options);
+    jQuery('#sequence_metadata_filter_protocol').prop('disabled', false);
 }
 
 
@@ -349,15 +443,19 @@ function getQueryURL(format="JSON") {
     let end = jQuery('#sequence_metadata_filter_end').val();
     let type_id = jQuery('#sequence_metadata_filter_type').val();
     let nd_protocol_id = jQuery('#sequence_metadata_filter_protocol').val();
+    let score_min = jQuery('#sequence_metadata_filter_score_min').val();
+    let score_max = jQuery('#sequence_metadata_filter_score_max').val();
 
     let params = {
         feature_id: feature_id,
-        start: start,
-        end: end,
         format: format
     }
+    if ( start && start !== '' ) params.start = start;
+    if ( end && end !== '' ) params.end = end;
     if ( type_id && type_id !== '' ) params.type_id = type_id;
     if ( nd_protocol_id && nd_protocol_id !== '' ) params.nd_protocol_id = nd_protocol_id;
+    if ( score_min && score_min !== '' ) params.score_min = score_min;
+    if ( score_max && score_max !== '' ) params.score_max = score_max;
 
     let q = new URLSearchParams(params).toString();
     let url = '/ajax/sequence_metadata/query?' + q;
@@ -384,6 +482,8 @@ function query() {
         success: handle_query_results,
         error: function() {
             alert("ERROR: Could query database!");
+            jQuery('#sequence_metadata_filter_query').html('Query');
+            jQuery('#sequence_metadata_filter_query').attr('disabled', false);
         }
     });
 
@@ -414,8 +514,11 @@ function handle_query_results(response) {
         display_error("No results found - try modifying your filter criteria");
     }
     dt.draw();
-    
 }
+
+
+
+
 
 /**
  * Display an error message
@@ -448,3 +551,12 @@ function download(url, name) {
 }
 
 </script>
+
+
+<style>
+    select[multiple] option:disabled {
+        font-weight: 200;
+        font-style: italic;
+        color: #DCDCDC;
+    }
+</style>

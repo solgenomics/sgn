@@ -214,10 +214,6 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
     my @params = $c->req->params();
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    use Data::Dumper;
-    print STDERR "FILE UPLOAD VERIFY:\n";
-    print STDERR Dumper \@params;
-
     # Check Logged In Status
     if (!$c->user){
         $c->stash->{rest} = {error => 'You must be logged in to do this!'};
@@ -297,10 +293,6 @@ sub sequence_metadata_store_POST : Args(0) {
     my $sgn_schema = $c->dbic_schema("SGN::Schema");
     my $dbh = $schema->storage->dbh();
 
-    use Data::Dumper;
-    print STDERR "Store:\n";
-    print STDERR Dumper \@params;
-
     # Check Logged In Status
     if (!$c->user){
         $c->stash->{rest} = {error => 'You must be logged in to do this!'};
@@ -325,8 +317,6 @@ sub sequence_metadata_store_POST : Args(0) {
     
     # Create new protocol, if requested
     if ( $c->req->param('use_existing_protocol') eq 'false' ) {
-        print STDERR "CREATING NEW PROTOCOL:\n";
-        
         my $protocol_name = $c->req->param('new_protocol_name');
         my $protocol_description = $c->req->param('new_protocol_description');
         my $protocol_sequence_metadata_type_id = $c->req->param('new_protocol_sequence_metadata_type');
@@ -396,8 +386,6 @@ sub sequence_metadata_store_POST : Args(0) {
 
     # Use existing protocol
     else {
-        print STDERR "USE EXISTING PROTOCOL:\n";
-
         $protocol_id = $c->req->param('existing_protocol_id');
         $type_id = $c->req->param('existing_protocol_sequence_metadata_type');
 
@@ -426,10 +414,12 @@ sub sequence_metadata_store_POST : Args(0) {
 # PATH: GET /ajax/sequence_metadata/query
 # PARAMS:
 #   - feature_id = id of the associated feature
-#   - start = start position of the query range
-#   - end = end position of the query range
-#   - type_id = (optional) cvterm_id of sequence metadata type
-#   - nd_protocol_id = (optional) nd_protocol_id of sequence metadata protocol
+#   - start = (optional) start position of the query range (default: 0)
+#   - end = (optional) end position of the query range (default: feature max)
+#   - type_id = (optional) cvterm_id of sequence metadata type (comma separated list of multiple type ids)
+#   - nd_protocol_id = (optional) nd_protocol_id of sequence metadata protocol (comma separated list of multiple protocol ids)
+#   - score_min = (optional) minimum score value
+#   - score_max = (optional) maximum score value
 #   - format = (optional) JSON or gff response format (default: JSON)
 # RETURNS: an array of sequence metadata objects with the following keys:
 #   - feature_id = id of associated feature
@@ -451,62 +441,44 @@ sub sequence_metadata_query_GET : Args(0) {
     my $feature_id = $c->req->param('feature_id');
     my $start = $c->req->param('start');
     my $end = $c->req->param('end');
-    my $type_id = $c->req->param('type_id');
-    my $nd_protocol_id = $c->req->param('nd_protocol_id');
+    my @type_ids = split(',', $c->req->param('type_id'));
+    my @nd_protocol_ids = split(',', $c->req->param('nd_protocol_id'));
+    my $score_min = $c->req->param('score_min');
+    my $score_max = $c->req->param('score_max');
     my $format = $c->req->param('format');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $schema->storage->dbh();
+
 
     # Check required parameters
     if ( !defined $feature_id || $feature_id eq '' ) {
         $c->stash->{rest} = {error => 'Feature id must be provided!'};
         $c->detach();
     }
-    if ( !defined $start || $start eq '' ) {
-        $c->stash->{rest} = {error => 'Start position must be provided!'};
-        $c->detach();
-    }
-    if ( !defined $end || $end eq '' ) {
-        $c->stash->{rest} = {error => 'End position must be provided!'};
-        $c->detach();
-    }
 
-    # Check if feature_id exists
-    my $feature_rs = $schema->resultset("Sequence::Feature")->find({ feature_id => $feature_id });
-    if ( !defined $feature_rs ) {
-        $c->stash->{rest} = {error => 'Could not find matching feature!'};
-        $c->detach();
-    }
-
-    # Check if type_id exists and is valid type
-    if ( defined $type_id ) {
-        my $cv_rs = $schema->resultset('Cv::Cv')->find({ name => "sequence_metadata_types" });
-        my $cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $type_id, cv_id => $cv_rs->cv_id() });
-        if ( !defined $cvterm_rs ) {
-            $c->stash->{rest} = {error => 'Could not find matching sequence metadata type!'};
-            $c->detach();
-        }
-    }
-
-    # Check if nd_protocol_id exists and is valid type
-    if ( defined $nd_protocol_id ) {
-        my $protocol_cv_rs = $schema->resultset('Cv::Cv')->find({ name => "protocol_type" });
-        my $protocol_cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ name => "sequence_metadata_protocol", cv_id => $protocol_cv_rs->cv_id() });
-        my $protocol_rs = $schema->resultset("NaturalDiversity::NdProtocol")->find({ nd_protocol_id => $nd_protocol_id, type_id => type_id => $protocol_cvterm_rs->cvterm_id() });
-        if ( !defined $protocol_rs ) {
-            $c->stash->{rest} = {error => 'Could not find matching nd_protocol!'};
-            $c->detach();
-        }
-    }
 
     # Perform query
-    my $smd =  CXGN::Genotype::SequenceMetadata->new(
-        bcs_schema => $schema,
-        type_id => defined $type_id ? $type_id : undef,
-        nd_protocol_id => defined $nd_protocol_id ? $nd_protocol_id : undef
-    );
-    my $query = $smd->query($feature_id, $start, $end);
+    my $smd =  CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema);
+    my $query = $smd->query({
+        feature_id => $feature_id, 
+        start => defined $start && $start ne '' ? $start : undef, 
+        end => defined $end && $end ne '' ? $end : undef,
+        type_ids => @type_ids ? \@type_ids : undef,
+        nd_protocol_ids => @nd_protocol_ids ? \@nd_protocol_ids : undef,
+        score_min => defined $score_min && $score_min ne '' ? $score_min : undef,
+        score_max => defined $score_max && $score_max ne '' ? $score_max : undef
+    });
+
+
+    # Query Error
+    if ( exists $query->{'error'} ) {
+        $c->stash->{rest} = { error => $query->{'error'} };
+        $c->detach();
+    }
+
+    # Query Results
+    my $results = $query->{'results'};
 
 
     # GFF Response
@@ -518,7 +490,7 @@ sub sequence_metadata_query_GET : Args(0) {
         );
         
         my @contents = ();
-        foreach my $item (@$query) {
+        foreach my $item (@$results) {
             my @attributes_parsed = ();
             my $attributes = $item->{attributes};
             foreach my $key ( keys %{ $attributes } ) {
@@ -544,7 +516,7 @@ sub sequence_metadata_query_GET : Args(0) {
 
     # JSON Response
     else {
-        $c->stash->{rest} = { results => $query };
+        $c->stash->{rest} = { results => $results };
         $c->detach();
     }
    
