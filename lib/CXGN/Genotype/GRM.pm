@@ -19,7 +19,8 @@ my $geno = CXGN::Genotype::GRM->new({
     minor_allele_frequency=>0.01,
     marker_filter=>0.6,
     individuals_filter=>0.8,
-    return_inverse=>0
+    return_inverse=>0,
+    ensure_positive_definite=>0
 });
 RECOMMENDED
 $geno->download_grm();
@@ -136,6 +137,12 @@ has 'return_inverse' => (
     default => 0
 );
 
+has 'ensure_positive_definite' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 1
+);
+
 has 'accession_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw'
@@ -193,6 +200,7 @@ sub get_grm {
     my $get_grm_for_parental_accessions = $self->get_grm_for_parental_accessions();
     my $grm_tempfile = $self->grm_temp_file();
     my $return_inverse = $self->return_inverse();
+    my $ensure_positive_definite = $self->ensure_positive_definite();
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -423,23 +431,25 @@ sub get_grm {
         $cmd .= 'A <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'mean\', n.core='.$number_system_cores.', return.imputed=FALSE);
         ';
         #}
-        # Ensure positive definite matrix. Taken from Schaeffer
-        $cmd .= 'E = eigen(A);
-        ev = E\$values;
-        U = E\$vectors;
-        no = dim(A)[1];
-        nev = which(ev < 0);
-        wr = 0;
-        k=length(nev);
-        if(k > 0){
-            p = ev[no - k];
-            B = sum(ev[nev])*2.0;
-            wr = (B*B*100.0)+1;
-            val = ev[nev];
-            ev[nev] = p*(B-val)*(B-val)/wr;
-            A = U%*%diag(ev)%*%t(U);
+        if ($ensure_positive_definite) {
+            # Ensure positive definite matrix. Taken from Schaeffer
+            $cmd .= 'E = eigen(A);
+            ev = E\$values;
+            U = E\$vectors;
+            no = dim(A)[1];
+            nev = which(ev < 0);
+            wr = 0;
+            k=length(nev);
+            if(k > 0){
+                p = ev[no - k];
+                B = sum(ev[nev])*2.0;
+                wr = (B*B*100.0)+1;
+                val = ev[nev];
+                ev[nev] = p*(B-val)*(B-val)/wr;
+                A = U%*%diag(ev)%*%t(U);
+            }
+            ';
         }
-        ';
         if ($return_inverse) {
             $cmd .= 'A <- solve(A);';
         }
@@ -515,6 +525,9 @@ sub grm_cache_key {
     my $q_params = $accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."_$datatype";
     if ($self->return_inverse()) {
         $q_params .= $self->return_inverse();
+    }
+    if (!$self->ensure_positive_definite()) {
+        $q_params .= $self->ensure_positive_definite();
     }
     my $key = md5_hex($q_params);
     return $key;

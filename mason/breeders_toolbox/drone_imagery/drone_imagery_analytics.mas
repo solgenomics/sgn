@@ -117,6 +117,18 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Env Variance: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_env_variance">
+                                            <option value="0.2">0.2</option>
+                                            <option value="0.1">0.1</option>
+                                            <option value="0.05">0.05</option>
+                                            <option value="0.01">0.01</option>
+                                            <option value="0.5">0.5</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -649,7 +661,8 @@ jQuery(document).ready(function() {
                 'use_area_under_curve':jQuery('#drone_image_analytics_use_area_under_curve_select').val(),
                 'permanent_environment_structure':jQuery('#drone_image_analytics_permanent_env_structure_select').val(),
                 'permanent_environment_structure_phenotype_correlation_traits':JSON.stringify(manage_drone_imagery_analytics_rr_structure_phenotype_correlation),
-                'sim_env_change_over_time':jQuery('#drone_imagery_analytics_select_sim_env_change_over_time_type').val()
+                'sim_env_change_over_time':jQuery('#drone_imagery_analytics_select_sim_env_change_over_time_type').val(),
+                'env_variance_percent':jQuery('#drone_imagery_analytics_env_variance').val()
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
