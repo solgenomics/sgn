@@ -138,23 +138,43 @@ sub create_design {
     my $max_cols = ceil((scalar(@stock_list)+($maximum_block_size*scalar(@control_list)))/$maximum_block_size);
     
     if ($plot_layout_format eq "zigzag") {
-        for my $rep (1 .. $max){
-            if (!$fieldmap_col_number){
-                push @col_number_fieldmaps, (1..$max_cols);
-            } else {
-                push @col_number_fieldmaps, (1..$fieldmap_col_number);
+        my $i = 1;
+        my $count = 0;
+        foreach my $blck (@block_numbers){
+            if ($blck == $i){
+                $count++;
+            }else{
+                push @col_number_fieldmaps, (1..$count);
+                $count=1;
+                $i++;
             }
         }
+        push @col_number_fieldmaps, (1..$count);
     } elsif ($plot_layout_format eq "serpentine") {
-      if (!$fieldmap_row_number)  {
-        for my $rep (1 .. $max){
-          if ($rep % 2){
-            push @col_number_fieldmaps, (1..$max_cols);
-          } else {
-            push @col_number_fieldmaps, (reverse 1..$max_cols);
-          }
-        }
-      } else {
+        if (!$fieldmap_row_number)  {
+            my $i = 1;
+            my $count = 0;
+            foreach my $blck (@block_numbers){
+                if ($blck == $i){
+                    $count++;
+                }else{
+                    if($blck % 2 == 0){
+                       push @col_number_fieldmaps, (1..$count);
+                       $count = 1;
+                       $i++;
+                    }else{
+                        push @col_number_fieldmaps, (reverse 1..$count);
+                        $count = 1;
+                        $i++ ;
+                    }
+                }
+            }
+            if($i % 2 == 0){
+                push @col_number_fieldmaps, (reverse 1..$count);
+            } else {
+                push @col_number_fieldmaps, (1..$count);
+            }
+        } else {
         for my $rep (1 .. $max){
           if ($rep % 2){
             push @col_number_fieldmaps, (1..$fieldmap_col_number);
