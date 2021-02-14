@@ -47,9 +47,9 @@ sub create_design {
     
     if ($self->has_maximum_block_size()) {
 	$maximum_block_size = $self->get_maximum_block_size();
-	if ($maximum_block_size <= scalar(@control_list)) {
-	    die "Maximum block size must be greater the number of control stocks for augmented design\n";
-	}
+	# if ($maximum_block_size <= scalar(@control_list)) {
+	#     die "Maximum block size must be greater the number of control stocks for augmented design\n";
+	# }
 	if ($maximum_block_size >= scalar(@control_list)+scalar(@stock_list)) {
 	    die "Maximum block size must be less than the number of stocks plus the number of controls for augmented design\n";
 	}
