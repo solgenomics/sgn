@@ -12,7 +12,7 @@ Example implementation of a subclass:
 
   package TestProp;
 
-  use Moose;>
+  use Moose;
 
   use Data::Dumper;
 
