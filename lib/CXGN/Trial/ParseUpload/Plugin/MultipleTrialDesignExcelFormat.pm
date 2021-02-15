@@ -355,7 +355,7 @@ sub _validate_with_plugin {
         }
         $seen_plot_names{$plot_name}=$row_name;
     }
-    
+
     ## ACCESSSION NAME CHECK
     if (!$accession_name || $accession_name eq '') {
       push @error_messages, "Cell N$row_name: accession name missing";
@@ -536,7 +536,7 @@ sub _validate_with_plugin {
       'uniquename' => { -in => \@uniquenames }
   });
   while (my $r=$rs->next){
-      push @error_messages, "Cell M".$r->uniquename.": plot name <b>".$seen_plot_names{$r->uniquename}."</b> already exists.";
+      push @error_messages, "Cell M".$seen_plot_names{$r->uniquename}.": plot name <b>".$r->uniquename."</b> already exists.";
   }
 
   if (scalar(@warning_messages) >= 1) {
