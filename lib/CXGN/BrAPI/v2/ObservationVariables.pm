@@ -262,7 +262,6 @@ sub store {
 
     my $self = shift;
     my $data = shift;
-    my $user_id = shift;
     my $c = shift;
 
     my $page_size = $self->page_size;
@@ -322,7 +321,6 @@ sub update {
 
     my $self = shift;
     my $data = shift;
-    my $user_id = shift;
     my $c = shift;
 
     my $schema = $self->bcs_schema();

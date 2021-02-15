@@ -234,6 +234,9 @@ sub _standard_response_construction {
 	my $result = $brapi_package_result->{result};
 	my $datafiles = $brapi_package_result->{datafiles};
 
+	# some older brapi stuff uses parameter, could refactor at some point
+	if (!$return_status) { $return_status = $brapi_package_result->{http_code} };
+
 	my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
 	my %response = (metadata=>\%metadata, result=>$result);
 	$c->stash->{rest} = \%response;
@@ -1765,9 +1768,7 @@ sub programs_list : Chained('brapi') PathPart('programs') Args(0) : ActionClass(
 sub programs_list_POST {
 	my $self = shift;
 	my $c = shift;
-	# TODO: Disabled auth for use with bi-api for now
-	#my ($auth,$user_id) = _authenticate_user($c);
-	my $user_id = undef;
+	my ($auth,$user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
 	my @all_programs;
@@ -1776,7 +1777,8 @@ sub programs_list_POST {
 	}
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Programs');
-	my $brapi_package_result = $brapi_module->store(\@all_programs,$user_id);
+
+	my $brapi_package_result = $brapi_module->store(\@all_programs, $user_id);
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -1826,8 +1828,7 @@ sub programs_detail_GET {
 sub programs_detail_PUT {
 	my $self = shift;
 	my $c = shift;
-	# TODO: Disabled auth for use with bi-api for now
-	# my ($auth,$user_id) = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c);
 	my $user_id = undef;
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
@@ -3138,8 +3139,7 @@ sub locations_list : Chained('brapi') PathPart('locations') Args(0) : ActionClas
 sub locations_list_POST {
 	my $self = shift;
 	my $c = shift;
-	# TODO: disable auth for now with use for bi-api
-	#my ($auth,$user_id) = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c);
 	my $user_id = undef;
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
@@ -3182,8 +3182,7 @@ sub locations_detail_PUT {
 	my $self = shift;
 	my $c = shift;
 	my $location_id = shift;
-	# TODO: disable auth for now with use for bi-api
-	#my ($auth,$user_id) = _authenticate_user($c);
+	my ($auth,$user_id) = _authenticate_user($c);
 	my $user_id = undef;
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;

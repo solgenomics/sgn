@@ -207,18 +207,12 @@ sub get_response {
 sub store {
 	my $self = shift;
 	my $data = shift;
-	my $user_id =shift;
 
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $schema = $self->bcs_schema();
     my @location_ids;
-
-	# TODO: removed check for use with bi-api for now without token
-	#if (!$user_id) {
-	#	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
-	#}
 
 	foreach my $params (@{$data}) {
 		my $id = $params->{locationDbId} || undef;
@@ -235,16 +229,29 @@ sub store {
 		my $noaa_station_id    = $params->{additionalInfo}->{noaaStationId} || undef;
 		my $external_references = $params->{externalReferences};
 		my $program_name;
-	
+
+		if ($id) {
+			my $location = $schema->resultset('NaturalDiversity::NdGeolocation')->find({nd_geolocation_id => $id});
+			if (!$location) {
+				my $err_string = sprintf('Location %s does not exist.',$id);
+				warn $err_string;
+				return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 404);
+			}
+		}
+
 		my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
 		if ($existing_name_count > 0) {
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Location name %s already exists.', $name ));
+			my $err_string = sprintf('Location name %s already exists.', $name );
+			warn $err_string;
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 409);
 		}
 
 		if ($program_id) {
 			my $program = $schema->resultset('Project::Project')->find({project_id => $program_id});
 			if (!$program) {
-				return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Program %s does not exist.',$program_id));
+				my $err_string = sprintf('Program %s does not exist.',$program_id);
+				warn $err_string;
+				return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 404);
 			}
 			$program_name = $program->name();
 		}
@@ -270,7 +277,9 @@ sub store {
 		my $store = $location->store_location();
 
 		if ($store->{'error'}) {
-		   		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Location %s was not stored.',$name));
+			my $err_string = sprintf('Location %s was not stored.',$name);
+			warn $err_string;
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 500);
 		} else {
 			push @location_ids, $store->{'nd_geolocation_id'};
 		}

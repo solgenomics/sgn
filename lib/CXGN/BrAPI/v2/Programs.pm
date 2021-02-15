@@ -208,17 +208,11 @@ sub detail {
 sub store {
 	my $self = shift;
     my $data = shift;
-    my $user_id =shift;
-
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $schema = $self->bcs_schema();
 
-	# TODO: Disabled auth for use with bi-api
-    #if (!$user_id) {
-	#	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
-	#}
 	my @program_ids;
 
 	foreach my $params (@{$data}) {
@@ -229,10 +223,21 @@ sub store {
 
 		my $p = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
 
+		my $rs = $schema->resultset("Project::Project")->search(
+			{
+				name => $name,
+			});
+		if ($rs->count() > 0) {
+			my $err_msg = "A breeding program with name '$name' already exists.";
+			warn $err_msg;
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_msg, 409);
+		}
+
 		my $new_program = $p->new_breeding_program($name, $desc, $external_references);
 
 		if ($new_program->{'error'}) {
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Program %s was not stored.', $name));
+			warn $new_program->{'error'};
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, $new_program->{'error'}, 500);
 		}
 
 		print STDERR "New program is " . Dumper($new_program) . "\n";
@@ -250,17 +255,12 @@ sub store {
 sub update {
 	my $self = shift;
     my $params = shift;
-    my $user_id =shift;
 
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
     my $schema = $self->bcs_schema();
 
-	# TODO: Disabled auth for use with bi-api
-    #if (!$user_id) {
-	#	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must login and have permission to access this BrAPI call.'));
-	#}
 	my @program_ids;
 
 	my $name = $params->{programName} || undef;
@@ -269,7 +269,9 @@ sub update {
 
 	my $program = $schema->resultset('Project::Project')->find({project_id => $id});
 	if (!$program) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Program id %s does not exist.',$id));
+		my $err_msg = sprintf('Program id %s does not exist.',$id);
+		warn $err_msg;
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_msg, 404);
 	}
 
 	my $row = $schema->resultset("Project::Project")->update_or_create(
