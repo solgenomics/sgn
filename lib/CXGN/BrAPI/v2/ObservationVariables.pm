@@ -235,7 +235,7 @@ sub get_query {
             dbxref_id  => $dbxref_id,
             db_id      => $db_id,
             db         => $db_name,
-            accession       => $accession
+            accession  => $accession
         });
 
         push @variables, $self->_construct_variable_response($c, $trait);
@@ -279,6 +279,7 @@ sub store {
         my $ontology_id = $params->{ontologyReference}{ontologyDbId};
         my $description = $params->{trait}{traitDescription};
         my $synonyms = $params->{synonyms};
+        my $active = $params->{status} ne "archived";
 
         #TODO: Parse this when it initially comes into the brapi controller
         my $scale = CXGN::BrAPI::v2::Scales->new({
@@ -305,6 +306,7 @@ sub store {
             method                                => $method,
             scale                                 => $scale
         });
+        $trait->{active} = $active;
 
         my $variable = $trait->store();
         push @result, $self->_construct_variable_response($c, $variable);
@@ -341,6 +343,7 @@ sub update {
     my $ontology_id = $data->{ontologyReference}{ontologyDbId};
     my $description = $data->{trait}{traitDescription};
     my $synonyms = $data->{synonyms};
+    my $active = $data->{status} ne "archived";
 
     my $scale = CXGN::BrAPI::v2::Scales->new({
         bcs_schema => $self->bcs_schema,
@@ -366,6 +369,7 @@ sub update {
         method                                => $method,
         scale                                 => $scale
     });
+    $trait->{active} = $active;
 
     my $variable = $trait->update();
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,1,1);
@@ -460,7 +464,7 @@ sub _construct_variable_response {
         },
         scale => $scale_json,
         scientist => undef,
-        status => "Active", # creating so will always be active
+        status => $variable->get_active_string(),
         submissionTimestamp => undef,
         synonyms => @synonyms,
         trait => {
@@ -475,7 +479,7 @@ sub _construct_variable_response {
                 ontologyName => $variable->db ? $variable->db : undef,
                 version => undef,
             },
-            status => "Active",
+            status => $variable->get_active_string(),
             synonyms => @synonyms,
             traitClass => undef,
             traitDescription => $variable->definition,
