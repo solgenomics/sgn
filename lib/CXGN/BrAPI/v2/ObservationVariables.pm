@@ -201,8 +201,7 @@ sub get_query {
     my $and_where = shift;
     my $join = shift;
     my $array = shift;
-    #my $page_size = $self->page_size;
-    my $page_size = 1000; # ignore page size for now
+    my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
 
