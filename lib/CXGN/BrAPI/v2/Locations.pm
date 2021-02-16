@@ -277,7 +277,7 @@ sub store {
 		my $store = $location->store_location();
 
 		if ($store->{'error'}) {
-			my $err_string = sprintf('Location %s was not stored.',$name);
+			my $err_string = $store->{'error'};
 			warn $err_string;
 			return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 500);
 		} else {
