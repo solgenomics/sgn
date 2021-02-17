@@ -175,6 +175,63 @@ sub upload_cross_file_POST : Args(0) {
         return;
     }
 
+    #add the progeny
+    if ($parsed_data->{number_of_progeny}) {
+        my %progeny_hash = %{$parsed_data->{number_of_progeny}};
+
+        foreach my $cross_name_key (keys %progeny_hash) {
+            my $progeny_number = $progeny_hash{$cross_name_key};
+            my $progeny_increment = 1;
+            my @progeny_names;
+
+            #create array of progeny names to add for this cross
+            while ($progeny_increment < $progeny_number + 1) {
+                $progeny_increment = sprintf "%03d", $progeny_increment;
+                my $stock_name = $cross_name_key.$prefix.$progeny_increment.$suffix;
+                push @progeny_names, $stock_name;
+                $progeny_increment++;
+            }
+
+            #add array of progeny to the cross
+            my $progeny_add = CXGN::Pedigree::AddProgeny->new ({
+                chado_schema => $chado_schema,
+                phenome_schema => $phenome_schema,
+                dbh => $dbh,
+                cross_name => $cross_name_key,
+                progeny_names => \@progeny_names,
+                owner_name => $owner_name,
+            });
+            if (!$progeny_add->add_progeny()){
+                $c->stash->{rest} = {error_string => "Error adding progeny",};
+                #should delete crosses and other progeny if add progeny fails?
+                return;
+            }
+        }
+    }
+
+    if ($parsed_data->{'additional_info'}) {
+        my %cross_additional_info = %{$parsed_data->{additional_info}};
+        foreach my $cross_name (keys %cross_additional_info) {
+            my %info_hash = $cross_additional_info{$cross_name};
+            foreach my $info_type (keys %info_hash) {
+                my $value = $info_hash{$info_type};
+                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+                    chado_schema => $chado_schema,
+                    cross_name => $cross_nam,
+                    key => $info_type,
+                    value => $value,
+                    type => 'cross_additonal_info'
+                });
+                $cross_add_info->add_info();
+            }
+        }
+    }
+
+    if (!$cross_add_info->add_info()){
+        $c->stash->{rest} = {error_string => "Error adding additional cross info",};
+        return;
+    }
+
     $c->stash->{rest} = {success => "1",};
 }
 
@@ -1235,6 +1292,7 @@ sub upload_info_POST : Args(0) {
                     cross_name => $cross_name_key,
                     key => $info_type,
                     value => $value,
+                    type => 'crossing_metadata_json'
                 });
                 $cross_add_info->add_info();
 
