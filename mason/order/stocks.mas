@@ -1,0 +1,137 @@
+
+<%args>
+$role => "stock_orderer"
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
+
+<&| /page/page_title.mas, title => "Order Clones" &>
+
+</&>
+
+<button id="stock_order_button" class="btn btn-primary">New Order</button>
+
+<br />
+<br />
+
+<&| /page/info_section.mas, title => "Your currents orders" &>
+
+  <div id="current_clones"></div>
+  
+</&>
+
+<&| /page/info_section.mas, title => "Your completed orders", collapsible=>1, collapsed=>1 &>
+  
+  <div id="completed_clone_orders"></div>
+  
+</&>
+
+<div class="modal fade" id="stock_order_dialog" name="stock_order_dialog" tabindex="-1" role="dialog" aria-labelledby="stock_order_dialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content ui-front">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="stock_order_dialog">Order Stocks</h4>
+      </div>
+      <div class="modal-body" style="width:400">
+        <div class="container-fluid">
+	  <label for="accession_list_input">Please choose a list of accessions to order: </label>
+          <div id="accession_list_input"></div>
+	  <br />
+
+	  <table cellspacing="20">
+	    <tr><td>
+		Priority:
+	      </td><td>
+		<select class="form-control" id="order_priority">
+		  <option>Normal</option>
+		  <option>High</option>
+		  <option>Low</option>
+		</select>
+	    </td></tr>
+	    <tr>
+	      <td>
+		Send order to:
+	      </td>
+	      <td>
+		<select class="form-control" id="submit_order_to"><option>IITA Arusha</option></select>
+	      </td>
+	    </tr>
+	  </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-primary" name="review_order_button" id="review_order_button">Review Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="modal fade" id="stock_order_review_dialog" name="stock_order_review_dialog" tabindex="-1" role="dialog" aria-labelledby="stock_order_review_dialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content ui-front">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="stock_order_dialog">Review Order</h4>
+      </div>
+      <div class="modal-body" style="width:400">
+        <div class="container-fluid">
+	  <h3>You are ordering the following stocks:</h3>
+          <div id="accession_list_for_review"></div>
+	  <br />
+
+	  <h3>The order is for: IITA Arusha</h3>
+	  
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Modify Order</button>
+	<button type="button" class="btn btn-primary" name="place_order_button" id="place_order_button">Place Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+<script>
+  
+  $(window).ready( function() {
+
+  $('#stock_order_button').click( function() {
+  $('#stock_order_dialog').modal("show");
+    var list = new CXGN.List();
+    document.getElementById("accession_list_input").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh', undefined);
+  });
+  $('#current_clones').DataTable( {
+    url: '/ajax/order/list/current' });
+  $('#completed_clone_orders').DataTable( {
+    url: '/ajax/order/list/past' } );
+  
+  });
+
+  $('#review_order_button').click( function() {
+     alert("Reviewing Order");
+     $('#stock_order_review_dialog').modal("show");
+  });
+
+  $('#place_order_button').click( function() {
+  $.ajax( {
+    url: '/ajax/order/
+  
+  });
+
+ 
+</script>
+
+
+      
+      
+
