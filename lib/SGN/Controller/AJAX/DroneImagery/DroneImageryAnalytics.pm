@@ -1786,7 +1786,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         'sim_env2_', 'simm1_pheno2_', 'effm1_sim2_',
                         'sim_env3_', 'simm1_pheno3_', 'effm1_sim3_',
                         'sim_env4_', 'simm1_pheno4_', 'effm1_sim4_',
-                        'sim_env5_', 'simm1_pheno5_', 'effm1_sim5_',);
+                        'sim_env5_', 'simm1_pheno5_', 'effm1_sim5_',
+                        'sim_env6_', 'simm1_pheno6_', 'effm1_sim6_');
                         foreach my $t (@sorted_trait_names) {
                             foreach my $type (@types_full_plot_corr) {
                                 push @header_full_plot_corr, $type.$trait_name_encoder{$t};
@@ -1827,6 +1828,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $pheno_sim5_1 = $phenotype_data_altered_env_5_hash->{$p}->{$t};
                                 my $effect_sim5_1 = $result_blup_pe_data_delta_altered_env_5->{$p}->{$t}->[0];
                                 push @row, ($sim_env5, $pheno_sim5_1, $effect_sim5_1);
+
+                                my $sim_env6 = $sim_data_6_hash->{$p}->{$t};
+                                my $pheno_sim6_1 = $phenotype_data_altered_env_6_hash->{$p}->{$t};
+                                my $effect_sim6_1 = $result_blup_pe_data_delta_altered_env_6->{$p}->{$t}->[0];
+                                push @row, ($sim_env6, $pheno_sim6_1, $effect_sim6_1);
                             }
                             my $line = join ',', @row;
                             print $F_fullplot "$line\n";
@@ -2203,6 +2209,60 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim_effect5_stat->add_data(@sim_effect5_vals);
                     my $sig_sim_effect5 = $sim_effect5_stat->variance();
 
+                    # SIM ENV 6: ALTERED PHENO + EFFECT
+
+                    my ($phenotypes_env_heatmap_tempfile6_fh, $phenotypes_env_heatmap_tempfile6) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_env_heatmap_tempfile6) || die "Can't open file ".$phenotypes_env_heatmap_tempfile6;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names) {
+                                my @row = ("sim_env6_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_6_hash->{$p}->{$t});
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                            }
+                        }
+                    close($F_pheno);
+
+                    my @sim_pheno6_vals;
+                    my ($phenotypes_pheno_sim_heatmap_tempfile6_fh, $phenotypes_pheno_sim_heatmap_tempfile6) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile6) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile6;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names) {
+                                my $val = $phenotype_data_altered_env_6_hash->{$p}->{$t};
+                                my @row = ("simm1_pheno6_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim_pheno6_vals, $val;
+                            }
+                        }
+                    close($F_pheno);
+                    push @plot_corr_full_vals, \@sim_pheno6_vals;
+
+                    my $sim_pheno6_stat = Statistics::Descriptive::Full->new();
+                    $sim_pheno6_stat->add_data(@sim_pheno6_vals);
+                    my $sig_sim_pheno6 = $sim_pheno6_stat->variance();
+
+                    my @sim_effect6_vals;
+                    my ($effects_sim_heatmap_tempfile6_fh, $effects_sim_heatmap_tempfile6) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_eff, ">", $effects_sim_heatmap_tempfile6) || die "Can't open file ".$effects_sim_heatmap_tempfile6;
+                        print $F_eff "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names) {
+                                my $val = $result_blup_pe_data_delta_altered_env_6->{$p}->{$t}->[0];
+                                my @row = ("effm1_sim6_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_eff "$line\n";
+                                push @sim_effect6_vals, $val;
+                            }
+                        }
+                    close($F_eff);
+                    push @plot_corr_full_vals, \@sim_effect6_vals;
+
+                    my $sim_effect6_stat = Statistics::Descriptive::Full->new();
+                    $sim_effect6_stat->add_data(@sim_effect6_vals);
+                    my $sig_sim_effect6 = $sim_effect6_stat->variance();
+
                     my $plot_corr_summary_figure_inputfile_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'tmp_drone_statistics/fileXXXX');
                     open($F_eff, ">", $plot_corr_summary_figure_inputfile_tempfile) || die "Can't open file ".$plot_corr_summary_figure_inputfile_tempfile;
                         foreach (@plot_corr_full_vals) {
@@ -2210,7 +2270,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             print $F_eff $line."\n";
                         }
                     close($F_eff);
-
 
                     my $plot_corr_summary_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $plot_corr_summary_figure_tempfile_string .= '.png';
@@ -2224,13 +2283,15 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_1\', \'mat_eff_sim2_1\',
                     \'mat_p_sim3_1\', \'mat_eff_sim3_1\',
                     \'mat_p_sim4_1\', \'mat_eff_sim4_1\',
-                    \'mat_p_sim5_1\', \'mat_eff_sim5_1\');
+                    \'mat_p_sim5_1\', \'mat_eff_sim5_1\',
+                    \'mat_p_sim6_1\', \'mat_eff_sim6_1\');
                     mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
                     mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
-                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm1 = mat_full\$mat_altered_1, eff_origm1 = mat_full\$mat_eff_1, eff_altm1 = mat_full\$mat_eff_altered_1, env_lin = mat_env\$value, pheno_linm1 = mat_full\$mat_p_sim1_1, lin_effm1 = mat_full\$mat_eff_sim1_1, env_n1d = mat_env2\$value, pheno_n1dm1 = mat_full\$mat_p_sim2_1, n1d_effm1 = mat_full\$mat_eff_sim2_1, env_n2d = mat_env3\$value, pheno_n2dm1 = mat_full\$mat_p_sim3_1, n2d_effm1 = mat_full\$mat_eff_sim3_1, env_rand = mat_env4\$value, pheno_randm1 = mat_full\$mat_p_sim4_1, rand_effm1 = mat_full\$mat_eff_sim4_1, env_ar1 = mat_env5\$value, pheno_ar1m1 = mat_full\$mat_p_sim5_1, ar1_effm1 = mat_full\$mat_eff_sim5_1);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm1 = mat_full\$mat_altered_1, eff_origm1 = mat_full\$mat_eff_1, eff_altm1 = mat_full\$mat_eff_altered_1, env_lin = mat_env\$value, pheno_linm1 = mat_full\$mat_p_sim1_1, lin_effm1 = mat_full\$mat_eff_sim1_1, env_n1d = mat_env2\$value, pheno_n1dm1 = mat_full\$mat_p_sim2_1, n1d_effm1 = mat_full\$mat_eff_sim2_1, env_n2d = mat_env3\$value, pheno_n2dm1 = mat_full\$mat_p_sim3_1, n2d_effm1 = mat_full\$mat_eff_sim3_1, env_rand = mat_env4\$value, pheno_randm1 = mat_full\$mat_p_sim4_1, rand_effm1 = mat_full\$mat_eff_sim4_1, env_ar1 = mat_env5\$value, pheno_ar1m1 = mat_full\$mat_p_sim5_1, ar1_effm1 = mat_full\$mat_eff_sim5_1, env_realdata = mat_env6\$value, pheno_realdatam1 = mat_full\$mat_p_sim6_1, realdata_effm1 = mat_full\$mat_eff_sim6_1);
                     gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE, label_round = 2);
                     ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, units=\'in\');
                     "';
@@ -2281,7 +2342,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_1\', \'mat_eff_sim2_1\',
                     \'mat_p_sim3_1\', \'mat_eff_sim3_1\',
                     \'mat_p_sim4_1\', \'mat_eff_sim4_1\',
-                    \'mat_p_sim5_1\', \'mat_eff_sim5_1\');
+                    \'mat_p_sim5_1\', \'mat_eff_sim5_1\',
+                    \'mat_p_sim6_1\', \'mat_eff_sim6_1\');
                     mat_eff_1 <- fread(\''.$effects_heatmap_tempfile.'\', header=TRUE, sep=\',\');
                     mat_eff_altered_1 <- fread(\''.$effects_post_heatmap_tempfile.'\', header=TRUE, sep=\',\');
                     effect_mat_1 <- rbind(mat_eff_1, mat_eff_altered_1);
@@ -2290,6 +2352,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
                     options(device=\'png\');
                     par();
                     gg_eff_1 <- ggplot(effect_mat_1, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -2298,7 +2361,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_1, nrow=1), device=\'png\', width=20, height=20, units=\'in\');
-                    write.table(data.frame(airemlf90_grm_random_regression_dap_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_1)), airemlf90_grm_random_regression_dap_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_1)), airemlf90_grm_random_regression_dap_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_1)), airemlf90_grm_random_regression_dap_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_1)), airemlf90_grm_random_regression_dap_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_1)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(airemlf90_grm_random_regression_dap_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_1)), airemlf90_grm_random_regression_dap_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_1)), airemlf90_grm_random_regression_dap_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_1)), airemlf90_grm_random_regression_dap_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_1)), airemlf90_grm_random_regression_dap_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_1)), airemlf90_grm_random_regression_dap_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_1)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -2480,6 +2543,37 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     # print STDERR Dumper $cmd_spatialenvsim_plot_env5;
                     my $status_spatialenvsim_plot_env5 = system($cmd_spatialenvsim_plot_env5);
                     push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_env5, $statistics_select.$sim_env_change_over_time."_env5effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $env_effects_sim_figure_tempfile_string_env6 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $env_effects_sim_figure_tempfile_string_env6 .= '.png';
+                    my $env_effects_sim_figure_tempfile_env6 = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string_env6;
+
+                    my $cmd_spatialenvsim_plot_env6 = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat_p_sim6 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat_eff_sim6 <- fread(\''.$effects_sim_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    options(device=\'png\');
+                    par();
+                    gg_env6 <- ggplot(mat_env6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+                    gg_p_sim6 <- ggplot(mat_p_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+                    gg_eff_sim6 <- ggplot(mat_eff_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+                    ggsave(\''.$env_effects_sim_figure_tempfile_env6.'\', arrangeGrob(gg_env6, gg_p_sim6, gg_eff_sim6, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
+                    "';
+                    # print STDERR Dumper $cmd_spatialenvsim_plot_env6;
+                    my $status_spatialenvsim_plot_env6 = system($cmd_spatialenvsim_plot_env6);
+                    push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_env6, $statistics_select.$sim_env_change_over_time."_env6effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
                 };
 
                 eval {
@@ -2619,6 +2713,25 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim5_blup_stat->add_data(@sim5_blup_vals);
                     my $sig_sim5_blup = $sim5_blup_stat->variance();
 
+                    my @sim6_blup_vals;
+                    my ($effects_altered_env6_line_chart_tempfile_fh, $effects_altered_env6_line_chart_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $effects_altered_env6_line_chart_tempfile) || die "Can't open file ".$effects_altered_env6_line_chart_tempfile;
+                        print $F_pheno "germplasmName,time,value\n";
+                        foreach my $p (@sorted_germplasm_names) {
+                            foreach my $t (@sorted_trait_names) {
+                                my $val = $result_blup_data_altered_env_6->{$p}->{$t}->[0];
+                                my @row = ($p, $trait_to_time_map_hash->{$t}, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim6_blup_vals, $val;
+                            }
+                        }
+                    close($F_pheno);
+
+                    my $sim6_blup_stat = Statistics::Descriptive::Full->new();
+                    $sim6_blup_stat->add_data(@sim6_blup_vals);
+                    my $sig_sim6_blup = $sim6_blup_stat->variance();
+
                     my @set = ('0' ..'9', 'A' .. 'F');
                     my @colors;
                     for (1..scalar(@sorted_germplasm_names)) {
@@ -2654,6 +2767,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $genetic_effects_alt_env5_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $genetic_effects_alt_env5_figure_tempfile_string .= '.png';
                     my $genetic_effects_alt_env5_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env5_figure_tempfile_string;
+
+                    my $genetic_effects_alt_env6_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $genetic_effects_alt_env6_figure_tempfile_string .= '.png';
+                    my $genetic_effects_alt_env6_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env6_figure_tempfile_string;
 
                     my $cmd_gen_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                     mat <- fread(\''.$effects_original_line_chart_tempfile.'\', header=TRUE, sep=\',\');
@@ -2808,6 +2925,28 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     print STDERR Dumper $cmd_gen_env5_plot;
                     my $status_gen_env5_plot = system($cmd_gen_env5_plot);
                     push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv5line_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $cmd_gen_env6_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
+                    mat <- fread(\''.$effects_altered_env6_line_chart_tempfile.'\', header=TRUE, sep=\',\');
+                    mat\$time <- as.numeric(as.character(mat\$time));
+                    options(device=\'png\');
+                    par();
+                    sp <- ggplot(mat, aes(x = time, y = value)) +
+                        geom_line(aes(color = germplasmName), size = 1) +
+                        scale_fill_manual(values = c(\''.$color_string.'\')) +
+                        theme_minimal();
+                    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+                    sp <- sp + labs(title = \'SimRandom Genetic Effects\');';
+                    if (scalar(@sorted_germplasm_names) > 100) {
+                        $cmd_gen_env6_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+                    }
+                    $cmd_gen_env6_plot .= 'ggsave(\''.$genetic_effects_alt_env6_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+                    "';
+                    print STDERR Dumper $cmd_gen_env6_plot;
+                    my $status_gen_env6_plot = system($cmd_gen_env6_plot);
+                    push @$spatial_effects_plots, [$genetic_effects_alt_env6_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv6line_"."envvar_".$env_variance_percent."_".$iterations];
                 };
             }
 
@@ -4225,7 +4364,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         'sim_env2_', 'simm4_pheno2_', 'effm4_sim2_',
                         'sim_env3_', 'simm4_pheno3_', 'effm4_sim3_',
                         'sim_env4_', 'simm4_pheno4_', 'effm4_sim4_',
-                        'sim_env5_', 'simm4_pheno5_', 'effm4_sim5_');
+                        'sim_env5_', 'simm4_pheno5_', 'effm4_sim5_',
+                        'sim_env6_', 'simm4_pheno6_', 'effm4_sim6_');
                         foreach my $t (@sorted_trait_names) {
                             foreach my $type (@types_full_plot_corr) {
                                 push @header_full_plot_corr, $type.$trait_name_encoder{$t};
@@ -4266,6 +4406,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $pheno_sim5_4 = $phenotype_data_altered_env_5_hash_4->{$p}->{$t};
                                 my $effect_sim5_4 = $result_blup_pe_data_delta_altered_env_5_4->{$p}->{$t}->[0];
                                 push @row, ($sim_env5, $pheno_sim5_4, $effect_sim5_4);
+
+                                my $sim_env6 = $sim_data_6_hash_4->{$p}->{$t};
+                                my $pheno_sim6_4 = $phenotype_data_altered_env_6_hash_4->{$p}->{$t};
+                                my $effect_sim6_4 = $result_blup_pe_data_delta_altered_env_6_4->{$p}->{$t}->[0];
+                                push @row, ($sim_env6, $pheno_sim6_4, $effect_sim6_4);
                             }
                             my $line = join ',', @row;
                             print $F_fullplot "$line\n";
@@ -4646,6 +4791,60 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim_effect5_stat_4->add_data(@sim_effect5_vals_4);
                     my $sig_sim_effect5_4 = $sim_effect5_stat_4->variance();
 
+                    # SIM ENV 6: ALTERED PHENO + EFFECT
+
+                    my ($phenotypes_env_heatmap_tempfile6_fh, $phenotypes_env_heatmap_tempfile6) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_env_heatmap_tempfile6) || die "Can't open file ".$phenotypes_env_heatmap_tempfile6;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names) {
+                                my @row = ("sim_env6_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_6_hash_4->{$p}->{$t});
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                            }
+                        }
+                    close($F_pheno);
+
+                    my @sim_pheno6_vals_4;
+                    my ($phenotypes_pheno_sim_heatmap_tempfile6_fh_4, $phenotypes_pheno_sim_heatmap_tempfile6_4) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile6_4) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile6_4;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names) {
+                                my $val = $phenotype_data_altered_env_6_hash_4->{$p}->{$t};
+                                my @row = ("simm4_pheno6_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim_pheno6_vals_4, $val;
+                            }
+                        }
+                    close($F_pheno);
+                    push @plot_corr_full_vals, \@sim_pheno6_vals_4;
+
+                    my $sim_pheno6_stat_4 = Statistics::Descriptive::Full->new();
+                    $sim_pheno6_stat_4->add_data(@sim_pheno6_vals_4);
+                    my $sig_sim_pheno6_4 = $sim_pheno6_stat_4->variance();
+
+                    my @sim_effect6_vals_4;
+                    my ($effects_sim_heatmap_tempfile6_fh_4, $effects_sim_heatmap_tempfile6_4) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_eff, ">", $effects_sim_heatmap_tempfile6_4) || die "Can't open file ".$effects_sim_heatmap_tempfile6_4;
+                        print $F_eff "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names) {
+                                my $val = $result_blup_pe_data_delta_altered_env_6_4->{$p}->{$t}->[0];
+                                my @row = ("effm4_sim6_".$trait_name_encoder{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_eff "$line\n";
+                                push @sim_effect6_vals_4, $val;
+                            }
+                        }
+                    close($F_eff);
+                    push @plot_corr_full_vals, \@sim_effect6_vals_4;
+
+                    my $sim_effect6_stat_4 = Statistics::Descriptive::Full->new();
+                    $sim_effect6_stat_4->add_data(@sim_effect6_vals_4);
+                    my $sig_sim_effect6_4 = $sim_effect6_stat_4->variance();
+
                     my $plot_corr_summary_figure_inputfile_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'tmp_drone_statistics/fileXXXX');
                     open($F_eff, ">", $plot_corr_summary_figure_inputfile_tempfile) || die "Can't open file ".$plot_corr_summary_figure_inputfile_tempfile;
                         foreach (@plot_corr_full_vals) {
@@ -4653,7 +4852,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             print $F_eff $line."\n";
                         }
                     close($F_eff);
-
 
                     my $plot_corr_summary_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $plot_corr_summary_figure_tempfile_string .= '.png';
@@ -4667,13 +4865,15 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_4\', \'mat_eff_sim2_4\',
                     \'mat_p_sim3_4\', \'mat_eff_sim3_4\',
                     \'mat_p_sim4_4\', \'mat_eff_sim4_4\',
-                    \'mat_p_sim5_4\', \'mat_eff_sim5_4\');
+                    \'mat_p_sim5_4\', \'mat_eff_sim5_4\',
+                    \'mat_p_sim6_4\', \'mat_eff_sim6_4\');
                     mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
                     mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
-                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm4 = mat_full\$mat_altered_4, eff_origm4 = mat_full\$mat_eff_4, eff_altm4 = mat_full\$mat_eff_altered_4, env_lin = mat_env\$value, pheno_linm4 = mat_full\$mat_p_sim1_4, lin_effm4 = mat_full\$mat_eff_sim1_4, env_n1d = mat_env2\$value, pheno_n1dm4 = mat_full\$mat_p_sim2_4, n1d_effm4 = mat_full\$mat_eff_sim2_4, env_n2d = mat_env3\$value, pheno_n2dm4 = mat_full\$mat_p_sim3_4, n2d_effm4 = mat_full\$mat_eff_sim3_4, env_rand = mat_env4\$value, pheno_randm4 = mat_full\$mat_p_sim4_4, rand_effm4 = mat_full\$mat_eff_sim4_4, env_ar1 = mat_env5\$value, pheno_ar1m4 = mat_full\$mat_p_sim5_4, ar1_effm4 = mat_full\$mat_eff_sim5_4);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm4 = mat_full\$mat_altered_4, eff_origm4 = mat_full\$mat_eff_4, eff_altm4 = mat_full\$mat_eff_altered_4, env_lin = mat_env\$value, pheno_linm4 = mat_full\$mat_p_sim1_4, lin_effm4 = mat_full\$mat_eff_sim1_4, env_n1d = mat_env2\$value, pheno_n1dm4 = mat_full\$mat_p_sim2_4, n1d_effm4 = mat_full\$mat_eff_sim2_4, env_n2d = mat_env3\$value, pheno_n2dm4 = mat_full\$mat_p_sim3_4, n2d_effm4 = mat_full\$mat_eff_sim3_4, env_rand = mat_env4\$value, pheno_randm4 = mat_full\$mat_p_sim4_4, rand_effm4 = mat_full\$mat_eff_sim4_4, env_ar1 = mat_env5\$value, pheno_ar1m4 = mat_full\$mat_p_sim5_4, ar1_effm4 = mat_full\$mat_eff_sim5_4, env_realdata = mat_env6\$value, pheno_realdatam4 = mat_full\$mat_p_sim6_4, realdata_effm4 = mat_full\$mat_eff_sim6_4);
                     gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE, label_round = 2);
                     ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, units=\'in\');
                     "';
@@ -4724,7 +4924,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_4\', \'mat_eff_sim2_4\',
                     \'mat_p_sim3_4\', \'mat_eff_sim3_4\',
                     \'mat_p_sim4_4\', \'mat_eff_sim4_4\',
-                    \'mat_p_sim5_4\', \'mat_eff_sim5_4\');
+                    \'mat_p_sim5_4\', \'mat_eff_sim5_4\',
+                    \'mat_p_sim6_4\', \'mat_eff_sim6_4\');
                     mat_eff_4 <- fread(\''.$effects_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
                     mat_eff_altered_4 <- fread(\''.$effects_post_heatmap_tempfile_4.'\', header=TRUE, sep=\',\');
                     effect_mat_4 <- rbind(mat_eff_4, mat_eff_altered_4);
@@ -4733,6 +4934,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
                     options(device=\'png\');
                     par();
                     gg_eff_4 <- ggplot(effect_mat_4, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -4741,7 +4943,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_4, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-                    write.table(data.frame(airemlf90_grm_random_regression_PEcorr_dap_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_4))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(airemlf90_grm_random_regression_PEcorr_dap_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_4)), airemlf90_grm_random_regression_PEcorr_dap_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_4)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -4923,6 +5125,37 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     # print STDERR Dumper $cmd_spatialenvsim_plot_4_env5;
                     my $status_spatialenvsim_plot_4_env5 = system($cmd_spatialenvsim_plot_4_env5);
                     push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_4_env5, $statistics_select.$sim_env_change_over_time."_env5effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $env_effects_sim_figure_tempfile_string_4_env6 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $env_effects_sim_figure_tempfile_string_4_env6 .= '.png';
+                    my $env_effects_sim_figure_tempfile_4_env6 = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string_4_env6;
+
+                    my $cmd_spatialenvsim_plot_4_env6 = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat_p_sim6 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile6_4.'\', header=TRUE, sep=\',\');
+                    mat_eff_sim6 <- fread(\''.$effects_sim_heatmap_tempfile6_4.'\', header=TRUE, sep=\',\');
+                    options(device=\'png\');
+                    par();
+                    gg_env6 <- ggplot(mat_env6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+                    gg_p_sim6 <- ggplot(mat_p_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+                    gg_eff_sim6 <- ggplot(mat_eff_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names).');
+                    ggsave(\''.$env_effects_sim_figure_tempfile_4_env6.'\', arrangeGrob(gg_env6, gg_p_sim6, gg_eff_sim6, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
+                    "';
+                    # print STDERR Dumper $cmd_spatialenvsim_plot_4_env6;
+                    my $status_spatialenvsim_plot_4_env6 = system($cmd_spatialenvsim_plot_4_env6);
+                    push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_4_env6, $statistics_select.$sim_env_change_over_time."_env6effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
                 };
 
                 eval {
@@ -5062,6 +5295,25 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim5_blup_stat_4->add_data(@sim5_blup_vals_4);
                     my $sig_sim5_blup_4 = $sim5_blup_stat_4->variance();
 
+                    my @sim6_blup_vals_4;
+                    my ($effects_altered_env6_line_chart_tempfile_fh_4, $effects_altered_env6_line_chart_tempfile_4) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $effects_altered_env6_line_chart_tempfile_4) || die "Can't open file ".$effects_altered_env6_line_chart_tempfile_4;
+                        print $F_pheno "germplasmName,time,value\n";
+                        foreach my $p (@sorted_germplasm_names) {
+                            foreach my $t (@sorted_trait_names) {
+                                my $val = $result_blup_data_altered_env_6_4->{$p}->{$t}->[0];
+                                my @row = ($p, $trait_to_time_map_hash_4->{$t}, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim6_blup_vals_4, $val;
+                            }
+                        }
+                    close($F_pheno);
+
+                    my $sim6_blup_stat_4 = Statistics::Descriptive::Full->new();
+                    $sim6_blup_stat_4->add_data(@sim6_blup_vals_4);
+                    my $sig_sim6_blup_4 = $sim6_blup_stat_4->variance();
+
                     my @set = ('0' ..'9', 'A' .. 'F');
                     my @colors;
                     for (1..scalar(@sorted_germplasm_names)) {
@@ -5097,6 +5349,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $genetic_effects_alt_env5_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $genetic_effects_alt_env5_figure_tempfile_string .= '.png';
                     my $genetic_effects_alt_env5_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env5_figure_tempfile_string;
+
+                    my $genetic_effects_alt_env6_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $genetic_effects_alt_env6_figure_tempfile_string .= '.png';
+                    my $genetic_effects_alt_env6_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env6_figure_tempfile_string;
 
                     my $cmd_gen_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                     mat <- fread(\''.$effects_original_line_chart_tempfile_4.'\', header=TRUE, sep=\',\');
@@ -5251,6 +5507,28 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     print STDERR Dumper $cmd_gen_env5_plot;
                     my $status_gen_env5_plot = system($cmd_gen_env5_plot);
                     push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv5line_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $cmd_gen_env6_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
+                    mat <- fread(\''.$effects_altered_env6_line_chart_tempfile_4.'\', header=TRUE, sep=\',\');
+                    mat\$time <- as.numeric(as.character(mat\$time));
+                    options(device=\'png\');
+                    par();
+                    sp <- ggplot(mat, aes(x = time, y = value)) +
+                        geom_line(aes(color = germplasmName), size = 1) +
+                        scale_fill_manual(values = c(\''.$color_string.'\')) +
+                        theme_minimal();
+                    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+                    sp <- sp + labs(title = \'SimRandom Genetic Effects\');';
+                    if (scalar(@sorted_germplasm_names) > 100) {
+                        $cmd_gen_env6_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+                    }
+                    $cmd_gen_env6_plot .= 'ggsave(\''.$genetic_effects_alt_env6_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+                    "';
+                    print STDERR Dumper $cmd_gen_env6_plot;
+                    my $status_gen_env6_plot = system($cmd_gen_env6_plot);
+                    push @$spatial_effects_plots, [$genetic_effects_alt_env6_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv6line_"."envvar_".$env_variance_percent."_".$iterations];
                 };
             }
 
@@ -6295,7 +6573,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         'sim_env2_', 'simm2_pheno2_', 'effm2_sim2_',
                         'sim_env3_', 'simm2_pheno3_', 'effm2_sim3_',
                         'sim_env4_', 'simm2_pheno4_', 'effm2_sim4_',
-                        'sim_env5_', 'simm2_pheno5_', 'effm2_sim5_',);
+                        'sim_env5_', 'simm2_pheno5_', 'effm2_sim5_',
+                        'sim_env6_', 'simm2_pheno6_', 'effm2_sim6_');
                         foreach my $t (@sorted_trait_names_2) {
                             foreach my $type (@types_full_plot_corr) {
                                 push @header_full_plot_corr, $type.$trait_name_encoder_2{$t};
@@ -6338,6 +6617,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $pheno_sim5_2 = $phenotype_data_altered_env_5_hash_2->{$p}->{$t_conv};
                                 my $effect_sim5_2 = $result_blup_spatial_data_altered_env_5_2->{$p}->{$t_conv}->[0];
                                 push @row, ($sim_env5, $pheno_sim5_2, $effect_sim5_2);
+
+                                my $sim_env6 = $sim_data_6_hash_2->{$p}->{$t};
+                                my $pheno_sim6_2 = $phenotype_data_altered_env_6_hash_2->{$p}->{$t_conv};
+                                my $effect_sim6_2 = $result_blup_spatial_data_altered_env_6_2->{$p}->{$t_conv}->[0];
+                                push @row, ($sim_env6, $pheno_sim6_2, $effect_sim6_2);
                             }
                             my $line = join ',', @row;
                             print $F_fullplot "$line\n";
@@ -6718,6 +7002,60 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim_effect5_stat_2->add_data(@sim_effect5_vals_2);
                     my $sig_sim_effect5_2 = $sim_effect5_stat_2->variance();
 
+                    # SIM ENV 6: ALTERED PHENO + EFFECT
+
+                    my ($phenotypes_env_heatmap_tempfile6_fh, $phenotypes_env_heatmap_tempfile6) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_env_heatmap_tempfile6) || die "Can't open file ".$phenotypes_env_heatmap_tempfile6;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_2) {
+                                my @row = ("sim_env6_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_6_hash_2->{$p}->{$t});
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                            }
+                        }
+                    close($F_pheno);
+
+                    my @sim_pheno6_vals_2;
+                    my ($phenotypes_pheno_sim_heatmap_tempfile6_fh_2, $phenotypes_pheno_sim_heatmap_tempfile6_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile6_2) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile6_2;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_2) {
+                                my $val = $phenotype_data_altered_env_6_hash_2->{$p}->{$t};
+                                my @row = ("simm2_pheno6_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim_pheno6_vals_2, $val;
+                            }
+                        }
+                    close($F_pheno);
+                    push @plot_corr_full_vals, \@sim_pheno6_vals_2;
+
+                    my $sim_pheno6_stat_2 = Statistics::Descriptive::Full->new();
+                    $sim_pheno6_stat_2->add_data(@sim_pheno6_vals_2);
+                    my $sig_sim_pheno6_2 = $sim_pheno6_stat_2->variance();
+
+                    my @sim_effect6_vals_2;
+                    my ($effects_sim_heatmap_tempfile6_fh_2, $effects_sim_heatmap_tempfile6_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_eff, ">", $effects_sim_heatmap_tempfile6_2) || die "Can't open file ".$effects_sim_heatmap_tempfile6_2;
+                        print $F_eff "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_2) {
+                                my $val = $result_blup_spatial_data_altered_env_6_2->{$p}->{$t}->[0];
+                                my @row = ("effm2_sim6_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_eff "$line\n";
+                                push @sim_effect6_vals_2, $val;
+                            }
+                        }
+                    close($F_eff);
+                    push @plot_corr_full_vals, \@sim_effect6_vals_2;
+
+                    my $sim_effect6_stat_2 = Statistics::Descriptive::Full->new();
+                    $sim_effect6_stat_2->add_data(@sim_effect6_vals_2);
+                    my $sig_sim_effect6_2 = $sim_effect6_stat_2->variance();
+
                     my $plot_corr_summary_figure_inputfile_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'tmp_drone_statistics/fileXXXX');
                     open($F_eff, ">", $plot_corr_summary_figure_inputfile_tempfile) || die "Can't open file ".$plot_corr_summary_figure_inputfile_tempfile;
                         foreach (@plot_corr_full_vals) {
@@ -6725,7 +7063,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             print $F_eff $line."\n";
                         }
                     close($F_eff);
-
 
                     my $plot_corr_summary_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $plot_corr_summary_figure_tempfile_string .= '.png';
@@ -6739,13 +7076,15 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_2\', \'mat_eff_sim2_2\',
                     \'mat_p_sim3_2\', \'mat_eff_sim3_2\',
                     \'mat_p_sim4_2\', \'mat_eff_sim4_2\',
-                    \'mat_p_sim5_2\', \'mat_eff_sim5_2\');
+                    \'mat_p_sim5_2\', \'mat_eff_sim5_2\',
+                    \'mat_p_sim6_2\', \'mat_eff_sim6_2\');
                     mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
                     mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
-                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm2 = mat_full\$mat_altered_2, eff_origm2 = mat_full\$mat_eff_2, eff_altm2 = mat_full\$mat_eff_altered_2, env_lin = mat_env\$value, pheno_linm2 = mat_full\$mat_p_sim1_2, lin_effm2 = mat_full\$mat_eff_sim1_2, env_n1d = mat_env2\$value, pheno_n1dm2 = mat_full\$mat_p_sim2_2, n1d_effm2 = mat_full\$mat_eff_sim2_2, env_n2d = mat_env3\$value, pheno_n2dm2 = mat_full\$mat_p_sim3_2, n2d_effm2 = mat_full\$mat_eff_sim3_2, env_rand = mat_env4\$value, pheno_randm2 = mat_full\$mat_p_sim4_2, rand_effm2 = mat_full\$mat_eff_sim4_2, env_ar1 = mat_env5\$value, pheno_ar1m2 = mat_full\$mat_p_sim5_2, ar1_effm2 = mat_full\$mat_eff_sim5_2);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm2 = mat_full\$mat_altered_2, eff_origm2 = mat_full\$mat_eff_2, eff_altm2 = mat_full\$mat_eff_altered_2, env_lin = mat_env\$value, pheno_linm2 = mat_full\$mat_p_sim1_2, lin_effm2 = mat_full\$mat_eff_sim1_2, env_n1d = mat_env2\$value, pheno_n1dm2 = mat_full\$mat_p_sim2_2, n1d_effm2 = mat_full\$mat_eff_sim2_2, env_n2d = mat_env3\$value, pheno_n2dm2 = mat_full\$mat_p_sim3_2, n2d_effm2 = mat_full\$mat_eff_sim3_2, env_rand = mat_env4\$value, pheno_randm2 = mat_full\$mat_p_sim4_2, rand_effm2 = mat_full\$mat_eff_sim4_2, env_ar1 = mat_env5\$value, pheno_ar1m2 = mat_full\$mat_p_sim5_2, ar1_effm2 = mat_full\$mat_eff_sim5_2, env_realdata = mat_env6\$value, pheno_realdatam2 = mat_full\$mat_p_sim6_2, realdata_effm2 = mat_full\$mat_eff_sim6_2);
                     gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE, label_round = 2);
                     ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, units=\'in\');
                     "';
@@ -6795,7 +7134,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_2\', \'mat_eff_sim2_2\',
                     \'mat_p_sim3_2\', \'mat_eff_sim3_2\',
                     \'mat_p_sim4_2\', \'mat_eff_sim4_2\',
-                    \'mat_p_sim5_2\', \'mat_eff_sim5_2\');
+                    \'mat_p_sim5_2\', \'mat_eff_sim5_2\',
+                    \'mat_p_sim6_2\', \'mat_eff_sim6_2\');
                     mat_eff_2 <- fread(\''.$effects_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
                     mat_eff_altered_2 <- fread(\''.$effects_post_heatmap_tempfile_2.'\', header=TRUE, sep=\',\');
                     effect_mat_2 <- rbind(mat_eff_2, mat_eff_altered_2);
@@ -6804,6 +7144,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
                     options(device=\'png\');
                     par();
                     gg_eff_2 <- ggplot(effect_mat_2, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -6812,7 +7153,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_2, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-                    write.table(data.frame(sommer_grm_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_2)), sommer_grm_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_2)), sommer_grm_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_2)), sommer_grm_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_2)), sommer_grm_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_2))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(sommer_grm_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_2)), sommer_grm_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_2)), sommer_grm_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_2)), sommer_grm_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_2)), sommer_grm_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_2)), sommer_grm_spatial_genetic_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_2)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -6994,6 +7335,37 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     # print STDERR Dumper $cmd_spatialenvsim_plot_2_env5;
                     my $status_spatialenvsim_plot_2_env5 = system($cmd_spatialenvsim_plot_2_env5);
                     push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_2_env5, $statistics_select.$sim_env_change_over_time."_env5effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $env_effects_sim_figure_tempfile_string_2_env6 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $env_effects_sim_figure_tempfile_string_2_env6 .= '.png';
+                    my $env_effects_sim_figure_tempfile_2_env6 = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string_2_env6;
+
+                    my $cmd_spatialenvsim_plot_2_env6 = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat_p_sim6 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile6_2.'\', header=TRUE, sep=\',\');
+                    mat_eff_sim6 <- fread(\''.$effects_sim_heatmap_tempfile6_2.'\', header=TRUE, sep=\',\');
+                    options(device=\'png\');
+                    par();
+                    gg_env6 <- ggplot(mat_env6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
+                    gg_p_sim6 <- ggplot(mat_p_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
+                    gg_eff_sim6 <- ggplot(mat_eff_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
+                    ggsave(\''.$env_effects_sim_figure_tempfile_2_env6.'\', arrangeGrob(gg_env6, gg_p_sim6, gg_eff_sim6, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
+                    "';
+                    # print STDERR Dumper $cmd_spatialenvsim_plot_2_env6;
+                    my $status_spatialenvsim_plot_2_env6 = system($cmd_spatialenvsim_plot_2_env6);
+                    push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_2_env6, $statistics_select.$sim_env_change_over_time."_env6effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
                 };
 
                 eval {
@@ -7132,6 +7504,25 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim5_blup_stat_2->add_data(@sim5_blup_vals_2);
                     my $sig_sim5_blup_2 = $sim5_blup_stat_2->variance();
 
+                    my @sim6_blup_vals_2;
+                    my ($effects_altered_env6_line_chart_tempfile_fh_2, $effects_altered_env6_line_chart_tempfile_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $effects_altered_env6_line_chart_tempfile_2) || die "Can't open file ".$effects_altered_env6_line_chart_tempfile_2;
+                        print $F_pheno "germplasmName,time,value\n";
+                        foreach my $p (@sorted_germplasm_names) {
+                            foreach my $t (@sorted_trait_names_2) {
+                                my $val = $result_blup_data_altered_env_6_2->{$p}->{$t}->[0];
+                                my @row = ($p, $trait_to_time_map_hash_2->{$t}, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim6_blup_vals_2, $val;
+                            }
+                        }
+                    close($F_pheno);
+
+                    my $sim6_blup_stat_2 = Statistics::Descriptive::Full->new();
+                    $sim6_blup_stat_2->add_data(@sim6_blup_vals_2);
+                    my $sig_sim6_blup_2 = $sim6_blup_stat_2->variance();
+
                     my @set = ('0' ..'9', 'A' .. 'F');
                     my @colors;
                     for (1..scalar(@sorted_germplasm_names)) {
@@ -7167,6 +7558,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $genetic_effects_alt_env5_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $genetic_effects_alt_env5_figure_tempfile_string .= '.png';
                     my $genetic_effects_alt_env5_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env5_figure_tempfile_string;
+
+                    my $genetic_effects_alt_env6_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $genetic_effects_alt_env6_figure_tempfile_string .= '.png';
+                    my $genetic_effects_alt_env6_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env6_figure_tempfile_string;
 
                     my $cmd_gen_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                     mat <- fread(\''.$effects_original_line_chart_tempfile_2.'\', header=TRUE, sep=\',\');
@@ -7321,6 +7716,28 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     print STDERR Dumper $cmd_gen_env5_plot;
                     my $status_gen_env5_plot = system($cmd_gen_env5_plot);
                     push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv5line_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $cmd_gen_env6_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
+                    mat <- fread(\''.$effects_altered_env6_line_chart_tempfile_2.'\', header=TRUE, sep=\',\');
+                    mat\$time <- as.numeric(as.character(mat\$time));
+                    options(device=\'png\');
+                    par();
+                    sp <- ggplot(mat, aes(x = time, y = value)) +
+                        geom_line(aes(color = germplasmName), size = 1) +
+                        scale_fill_manual(values = c(\''.$color_string.'\')) +
+                        theme_minimal();
+                    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+                    sp <- sp + labs(title = \'SimRandom Genetic Effects\');';
+                    if (scalar(@sorted_germplasm_names) > 100) {
+                        $cmd_gen_env6_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+                    }
+                    $cmd_gen_env6_plot .= 'ggsave(\''.$genetic_effects_alt_env6_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+                    "';
+                    print STDERR Dumper $cmd_gen_env6_plot;
+                    my $status_gen_env6_plot = system($cmd_gen_env6_plot);
+                    push @$spatial_effects_plots, [$genetic_effects_alt_env6_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv6line_"."envvar_".$env_variance_percent."_".$iterations];
                 };
 
                 %trait_name_encoder = %trait_name_encoder_2;
@@ -8361,7 +8778,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         'sim_env2_', 'simm3_pheno2_', 'effm3_sim2_',
                         'sim_env3_', 'simm3_pheno3_', 'effm3_sim3_',
                         'sim_env4_', 'simm3_pheno4_', 'effm3_sim4_',
-                        'sim_env5_', 'simm3_pheno5_', 'effm3_sim5_');
+                        'sim_env5_', 'simm3_pheno5_', 'effm3_sim5_',
+                        'sim_env6_', 'simm3_pheno6_', 'effm3_sim6_');
                         foreach my $t (@sorted_trait_names_2) {
                             foreach my $type (@types_full_plot_corr) {
                                 push @header_full_plot_corr, $type.$trait_name_encoder_2{$t};
@@ -8404,6 +8822,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $pheno_sim5_3 = $phenotype_data_altered_env_5_hash_3->{$p}->{$t_conv};
                                 my $effect_sim5_3 = $result_blup_spatial_data_altered_env_5_3->{$p}->{$t_conv}->[0];
                                 push @row, ($sim_env5, $pheno_sim5_3, $effect_sim5_3);
+
+                                my $sim_env6 = $sim_data_6_hash_3->{$p}->{$t};
+                                my $pheno_sim6_3 = $phenotype_data_altered_env_6_hash_3->{$p}->{$t_conv};
+                                my $effect_sim6_3 = $result_blup_spatial_data_altered_env_6_3->{$p}->{$t_conv}->[0];
+                                push @row, ($sim_env6, $pheno_sim6_3, $effect_sim6_3);
                             }
                             my $line = join ',', @row;
                             print $F_fullplot "$line\n";
@@ -8784,6 +9207,60 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim_effect5_stat_3->add_data(@sim_effect5_vals_3);
                     my $sig_sim_effect5_3 = $sim_effect5_stat_3->variance();
 
+                    # SIM ENV 6: ALTERED PHENO + EFFECT
+
+                    my ($phenotypes_env_heatmap_tempfile6_fh, $phenotypes_env_heatmap_tempfile6) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_env_heatmap_tempfile6) || die "Can't open file ".$phenotypes_env_heatmap_tempfile6;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_2) {
+                                my @row = ("sim_env6_".$t, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_6_hash_3->{$p}->{$t});
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                            }
+                        }
+                    close($F_pheno);
+
+                    my @sim_pheno6_vals_3;
+                    my ($phenotypes_pheno_sim_heatmap_tempfile6_fh_3, $phenotypes_pheno_sim_heatmap_tempfile6_3) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile6_3) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile6_3;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_2) {
+                                my $val = $phenotype_data_altered_env_6_hash_3->{$p}->{$t};
+                                my @row = ("simm3_pheno6_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim_pheno6_vals_3, $val;
+                            }
+                        }
+                    close($F_pheno);
+                    push @plot_corr_full_vals, \@sim_pheno6_vals_3;
+
+                    my $sim_pheno6_stat_3 = Statistics::Descriptive::Full->new();
+                    $sim_pheno6_stat_3->add_data(@sim_pheno6_vals_3);
+                    my $sig_sim_pheno6_3 = $sim_pheno6_stat_3->variance();
+
+                    my @sim_effect6_vals_3;
+                    my ($effects_sim_heatmap_tempfile6_fh_3, $effects_sim_heatmap_tempfile6_3) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_eff, ">", $effects_sim_heatmap_tempfile6_3) || die "Can't open file ".$effects_sim_heatmap_tempfile6_3;
+                        print $F_eff "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_2) {
+                                my $val = $result_blup_spatial_data_altered_env_6_3->{$p}->{$t}->[0];
+                                my @row = ("effm3_sim6_".$trait_name_encoder_2{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_eff "$line\n";
+                                push @sim_effect6_vals_3, $val;
+                            }
+                        }
+                    close($F_eff);
+                    push @plot_corr_full_vals, \@sim_effect6_vals_3;
+
+                    my $sim_effect6_stat_3 = Statistics::Descriptive::Full->new();
+                    $sim_effect6_stat_3->add_data(@sim_effect6_vals_3);
+                    my $sig_sim_effect6_3 = $sim_effect6_stat_3->variance();
+
                     my $plot_corr_summary_figure_inputfile_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'tmp_drone_statistics/fileXXXX');
                     open($F_eff, ">", $plot_corr_summary_figure_inputfile_tempfile) || die "Can't open file ".$plot_corr_summary_figure_inputfile_tempfile;
                         foreach (@plot_corr_full_vals) {
@@ -8791,7 +9268,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             print $F_eff $line."\n";
                         }
                     close($F_eff);
-
 
                     my $plot_corr_summary_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $plot_corr_summary_figure_tempfile_string .= '.png';
@@ -8805,13 +9281,15 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_3\', \'mat_eff_sim2_3\',
                     \'mat_p_sim3_3\', \'mat_eff_sim3_3\',
                     \'mat_p_sim4_3\', \'mat_eff_sim4_3\',
-                    \'mat_p_sim5_3\', \'mat_eff_sim5_3\');
+                    \'mat_p_sim5_3\', \'mat_eff_sim5_3\',
+                    \'mat_p_sim6_3\', \'mat_eff_sim6_3\');
                     mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
                     mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
-                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm3 = mat_full\$mat_altered_3, eff_origm3 = mat_full\$mat_eff_3, eff_altm3 = mat_full\$mat_eff_altered_3, env_lin = mat_env\$value, pheno_linm3 = mat_full\$mat_p_sim1_3, lin_effm3 = mat_full\$mat_eff_sim1_3, env_n1d = mat_env2\$value, pheno_n1dm3 = mat_full\$mat_p_sim2_3, n1d_effm3 = mat_full\$mat_eff_sim2_3, env_n2d = mat_env3\$value, pheno_n2dm3 = mat_full\$mat_p_sim3_3, n2d_effm3 = mat_full\$mat_eff_sim3_3, env_rand = mat_env4\$value, pheno_randm3 = mat_full\$mat_p_sim4_3, rand_effm3 = mat_full\$mat_eff_sim4_3, env_ar1 = mat_env5\$value, pheno_ar1m3 = mat_full\$mat_p_sim5_3, ar1_effm3 = mat_full\$mat_eff_sim5_3);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm3 = mat_full\$mat_altered_3, eff_origm3 = mat_full\$mat_eff_3, eff_altm3 = mat_full\$mat_eff_altered_3, env_lin = mat_env\$value, pheno_linm3 = mat_full\$mat_p_sim1_3, lin_effm3 = mat_full\$mat_eff_sim1_3, env_n1d = mat_env2\$value, pheno_n1dm3 = mat_full\$mat_p_sim2_3, n1d_effm3 = mat_full\$mat_eff_sim2_3, env_n2d = mat_env3\$value, pheno_n2dm3 = mat_full\$mat_p_sim3_3, n2d_effm3 = mat_full\$mat_eff_sim3_3, env_rand = mat_env4\$value, pheno_randm3 = mat_full\$mat_p_sim4_3, rand_effm3 = mat_full\$mat_eff_sim4_3, env_ar1 = mat_env5\$value, pheno_ar1m3 = mat_full\$mat_p_sim5_3, ar1_effm3 = mat_full\$mat_eff_sim5_3, env_realdata = mat_env6\$value, pheno_realdatam3 = mat_full\$mat_p_sim6_3, realdata_effm3 = mat_full\$mat_eff_sim6_3);
                     gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE, label_round = 2);
                     ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, units=\'in\');
                     "';
@@ -8862,7 +9340,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_3\', \'mat_eff_sim2_3\',
                     \'mat_p_sim3_3\', \'mat_eff_sim3_3\',
                     \'mat_p_sim4_3\', \'mat_eff_sim4_3\',
-                    \'mat_p_sim5_3\', \'mat_eff_sim5_3\');
+                    \'mat_p_sim5_3\', \'mat_eff_sim5_3\',
+                    \'mat_p_sim6_3\', \'mat_eff_sim6_3\');
                     mat_eff_3 <- fread(\''.$effects_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
                     mat_eff_altered_3 <- fread(\''.$effects_post_heatmap_tempfile_3.'\', header=TRUE, sep=\',\');
                     effect_mat_3 <- rbind(mat_eff_3, mat_eff_altered_3);
@@ -8871,6 +9350,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
                     options(device=\'png\');
                     par();
                     gg_eff_3 <- ggplot(effect_mat_3, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -8879,7 +9359,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_3, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-                    write.table(data.frame(sommer_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_3)), sommer_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_3)), sommer_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_3)), sommer_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_3)), sommer_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_3))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(sommer_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_3)), sommer_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_3)), sommer_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_3)), sommer_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_3)), sommer_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_3)), sommer_grm_univariate_spatial_genetic_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_3)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -9061,6 +9541,37 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     # print STDERR Dumper $cmd_spatialenvsim_plot_3_env5;
                     my $status_spatialenvsim_plot_3_env5 = system($cmd_spatialenvsim_plot_3_env5);
                     push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_3_env5, $statistics_select.$sim_env_change_over_time."_env5effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $env_effects_sim_figure_tempfile_string_3_env6 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $env_effects_sim_figure_tempfile_string_3_env6 .= '.png';
+                    my $env_effects_sim_figure_tempfile_3_env6 = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string_3_env6;
+
+                    my $cmd_spatialenvsim_plot_3_env6 = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat_p_sim6 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile6_3.'\', header=TRUE, sep=\',\');
+                    mat_eff_sim6 <- fread(\''.$effects_sim_heatmap_tempfile6_3.'\', header=TRUE, sep=\',\');
+                    options(device=\'png\');
+                    par();
+                    gg_env6 <- ggplot(mat_env6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
+                    gg_p_sim6 <- ggplot(mat_p_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
+                    gg_eff_sim6 <- ggplot(mat_eff_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
+                    ggsave(\''.$env_effects_sim_figure_tempfile_3_env6.'\', arrangeGrob(gg_env6, gg_p_sim6, gg_eff_sim6, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
+                    "';
+                    # print STDERR Dumper $cmd_spatialenvsim_plot_3_env6;
+                    my $status_spatialenvsim_plot_3_env6 = system($cmd_spatialenvsim_plot_3_env6);
+                    push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_3_env6, $statistics_select.$sim_env_change_over_time."_env6effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
                 };
 
                 eval {
@@ -9199,6 +9710,25 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim5_blup_stat_3->add_data(@sim5_blup_vals_3);
                     my $sig_sim5_blup_3 = $sim5_blup_stat_3->variance();
 
+                    my @sim6_blup_vals_3;
+                    my ($effects_altered_env6_line_chart_tempfile_fh_3, $effects_altered_env6_line_chart_tempfile_3) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $effects_altered_env6_line_chart_tempfile_3) || die "Can't open file ".$effects_altered_env6_line_chart_tempfile_3;
+                        print $F_pheno "germplasmName,time,value\n";
+                        foreach my $p (@sorted_germplasm_names) {
+                            foreach my $t (@sorted_trait_names_2) {
+                                my $val = $result_blup_data_altered_env_6_3->{$p}->{$t}->[0];
+                                my @row = ($p, $trait_to_time_map_2{$t}, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim6_blup_vals_3, $val;
+                            }
+                        }
+                    close($F_pheno);
+
+                    my $sim6_blup_stat_3 = Statistics::Descriptive::Full->new();
+                    $sim6_blup_stat_3->add_data(@sim6_blup_vals_3);
+                    my $sig_sim6_blup_3 = $sim6_blup_stat_3->variance();
+
                     my @set = ('0' ..'9', 'A' .. 'F');
                     my @colors;
                     for (1..scalar(@sorted_germplasm_names)) {
@@ -9234,6 +9764,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $genetic_effects_alt_env5_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $genetic_effects_alt_env5_figure_tempfile_string .= '.png';
                     my $genetic_effects_alt_env5_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env5_figure_tempfile_string;
+
+                    my $genetic_effects_alt_env6_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $genetic_effects_alt_env6_figure_tempfile_string .= '.png';
+                    my $genetic_effects_alt_env6_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env6_figure_tempfile_string;
 
                     my $cmd_gen_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                     mat <- fread(\''.$effects_original_line_chart_tempfile_3.'\', header=TRUE, sep=\',\');
@@ -9388,6 +9922,28 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     print STDERR Dumper $cmd_gen_env5_plot;
                     my $status_gen_env5_plot = system($cmd_gen_env5_plot);
                     push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv5line_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $cmd_gen_env6_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
+                    mat <- fread(\''.$effects_altered_env6_line_chart_tempfile_3.'\', header=TRUE, sep=\',\');
+                    mat\$time <- as.numeric(as.character(mat\$time));
+                    options(device=\'png\');
+                    par();
+                    sp <- ggplot(mat, aes(x = time, y = value)) +
+                        geom_line(aes(color = germplasmName), size = 1) +
+                        scale_fill_manual(values = c(\''.$color_string.'\')) +
+                        theme_minimal();
+                    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+                    sp <- sp + labs(title = \'SimRandom Genetic Effects\');';
+                    if (scalar(@sorted_germplasm_names) > 100) {
+                        $cmd_gen_env6_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+                    }
+                    $cmd_gen_env6_plot .= 'ggsave(\''.$genetic_effects_alt_env6_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+                    "';
+                    print STDERR Dumper $cmd_gen_env6_plot;
+                    my $status_gen_env6_plot = system($cmd_gen_env6_plot);
+                    push @$spatial_effects_plots, [$genetic_effects_alt_env6_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv6line_"."envvar_".$env_variance_percent."_".$iterations];
                 };
 
                 %trait_name_encoder = %trait_name_encoder_2;
@@ -10534,7 +11090,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         'sim_env2_', 'simm5_pheno2_', 'effm5_sim2_',
                         'sim_env3_', 'simm5_pheno3_', 'effm5_sim3_',
                         'sim_env4_', 'simm5_pheno4_', 'effm5_sim4_',
-                        'sim_env5_', 'simm5_pheno5_', 'effm5_sim5_');
+                        'sim_env5_', 'simm5_pheno5_', 'effm5_sim5_',
+                        'sim_env6_', 'simm5_pheno6_', 'effm5_sim6_');
                         foreach my $t (@sorted_trait_names_5) {
                             foreach my $type (@types_full_plot_corr) {
                                 push @header_full_plot_corr, $type.$trait_name_encoder_5{$t};
@@ -10575,6 +11132,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $pheno_sim5_5 = $phenotype_data_altered_env_5_hash_5->{$p}->{$t};
                                 my $effect_sim5_5 = $result_blup_spatial_data_altered_env_5_5->{$p}->{$t}->[0];
                                 push @row, ($sim_env5, $pheno_sim5_5, $effect_sim5_5);
+
+                                my $sim_env6 = $sim_data_6_hash_5->{$p}->{$t};
+                                my $pheno_sim6_5 = $phenotype_data_altered_env_6_hash_5->{$p}->{$t};
+                                my $effect_sim6_5 = $result_blup_spatial_data_altered_env_6_5->{$p}->{$t}->[0];
+                                push @row, ($sim_env6, $pheno_sim6_5, $effect_sim6_5);
                             }
                             my $line = join ',', @row;
                             print $F_fullplot "$line\n";
@@ -10955,6 +11517,60 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim_effect5_stat_5->add_data(@sim_effect5_vals_5);
                     my $sig_sim_effect5_5 = $sim_effect5_stat_5->variance();
 
+                    # SIM ENV 6: ALTERED PHENO + EFFECT
+
+                    my ($phenotypes_env_heatmap_tempfile6_fh, $phenotypes_env_heatmap_tempfile6) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_env_heatmap_tempfile6) || die "Can't open file ".$phenotypes_env_heatmap_tempfile6;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_5) {
+                                my @row = ("sim_env6_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_6_hash_5->{$p}->{$t});
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                            }
+                        }
+                    close($F_pheno);
+
+                    my @sim_pheno6_vals_5;
+                    my ($phenotypes_pheno_sim_heatmap_tempfile6_fh_5, $phenotypes_pheno_sim_heatmap_tempfile6_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile6_5) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile6_5;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_5) {
+                                my $val = $phenotype_data_altered_env_6_hash_5->{$p}->{$t};
+                                my @row = ("simm5_pheno6_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim_pheno6_vals_5, $val;
+                            }
+                        }
+                    close($F_pheno);
+                    push @plot_corr_full_vals, \@sim_pheno6_vals_5;
+
+                    my $sim_pheno6_stat_5 = Statistics::Descriptive::Full->new();
+                    $sim_pheno6_stat_5->add_data(@sim_pheno6_vals_5);
+                    my $sig_sim_pheno6_5 = $sim_pheno6_stat_5->variance();
+
+                    my @sim_effect6_vals_5;
+                    my ($effects_sim_heatmap_tempfile6_fh_5, $effects_sim_heatmap_tempfile6_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_eff, ">", $effects_sim_heatmap_tempfile6_5) || die "Can't open file ".$effects_sim_heatmap_tempfile6_5;
+                        print $F_eff "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_5) {
+                                my $val = $result_blup_spatial_data_altered_env_6_5->{$p}->{$t}->[0];
+                                my @row = ("effm5_sim6_".$trait_name_encoder_5{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_eff "$line\n";
+                                push @sim_effect6_vals_5, $val;
+                            }
+                        }
+                    close($F_eff);
+                    push @plot_corr_full_vals, \@sim_effect6_vals_5;
+
+                    my $sim_effect6_stat_5 = Statistics::Descriptive::Full->new();
+                    $sim_effect6_stat_5->add_data(@sim_effect6_vals_5);
+                    my $sig_sim_effect6_5 = $sim_effect6_stat_5->variance();
+
                     my $plot_corr_summary_figure_inputfile_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'tmp_drone_statistics/fileXXXX');
                     open($F_eff, ">", $plot_corr_summary_figure_inputfile_tempfile) || die "Can't open file ".$plot_corr_summary_figure_inputfile_tempfile;
                         foreach (@plot_corr_full_vals) {
@@ -10962,7 +11578,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             print $F_eff $line."\n";
                         }
                     close($F_eff);
-
 
                     my $plot_corr_summary_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $plot_corr_summary_figure_tempfile_string .= '.png';
@@ -10976,13 +11591,15 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_5\', \'mat_eff_sim2_5\',
                     \'mat_p_sim3_5\', \'mat_eff_sim3_5\',
                     \'mat_p_sim4_5\', \'mat_eff_sim4_5\',
-                    \'mat_p_sim5_5\', \'mat_eff_sim5_5\');
+                    \'mat_p_sim5_5\', \'mat_eff_sim5_5\',
+                    \'mat_p_sim6_5\', \'mat_eff_sim6_5\');
                     mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
                     mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
-                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm5 = mat_full\$mat_altered_5, eff_origm5 = mat_full\$mat_eff_5, eff_altm5 = mat_full\$mat_eff_altered_5, env_lin = mat_env\$value, pheno_linm5 = mat_full\$mat_p_sim1_5, lin_effm5 = mat_full\$mat_eff_sim1_5, env_n1d = mat_env2\$value, pheno_n1dm5 = mat_full\$mat_p_sim2_5, n1d_effm5 = mat_full\$mat_eff_sim2_5, env_n2d = mat_env3\$value, pheno_n2dm5 = mat_full\$mat_p_sim3_5, env_rand = mat_env4\$value, pheno_randm5 = mat_full\$mat_p_sim4_5, rand_effm5 = mat_full\$mat_eff_sim4_5, env_ar1 = mat_env5\$value, pheno_ar1m5 = mat_full\$mat_p_sim5_5, ar1_effm5 = mat_full\$mat_eff_sim5_5);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm5 = mat_full\$mat_altered_5, eff_origm5 = mat_full\$mat_eff_5, eff_altm5 = mat_full\$mat_eff_altered_5, env_lin = mat_env\$value, pheno_linm5 = mat_full\$mat_p_sim1_5, lin_effm5 = mat_full\$mat_eff_sim1_5, env_n1d = mat_env2\$value, pheno_n1dm5 = mat_full\$mat_p_sim2_5, n1d_effm5 = mat_full\$mat_eff_sim2_5, env_n2d = mat_env3\$value, pheno_n2dm5 = mat_full\$mat_p_sim3_5, env_rand = mat_env4\$value, pheno_randm5 = mat_full\$mat_p_sim4_5, rand_effm5 = mat_full\$mat_eff_sim4_5, env_ar1 = mat_env5\$value, pheno_ar1m5 = mat_full\$mat_p_sim5_5, ar1_effm5 = mat_full\$mat_eff_sim5_5, env_realdata = mat_env6\$value, pheno_realdatam5 = mat_full\$mat_p_sim6_5, realdata_effm5 = mat_full\$mat_eff_sim6_5);
                     gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE, label_round = 2);
                     ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, units=\'in\');
                     "';
@@ -11033,7 +11650,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_5\', \'mat_eff_sim2_5\',
                     \'mat_p_sim3_5\', \'mat_eff_sim3_5\',
                     \'mat_p_sim4_5\', \'mat_eff_sim4_5\',
-                    \'mat_p_sim5_5\', \'mat_eff_sim5_5\');
+                    \'mat_p_sim5_5\', \'mat_eff_sim5_5\',
+                    \'mat_p_sim6_5\', \'mat_eff_sim6_5\');
                     mat_eff_5 <- fread(\''.$effects_heatmap_tempfile_5.'\', header=TRUE, sep=\',\');
                     mat_eff_altered_5 <- fread(\''.$effects_post_heatmap_tempfile_5.'\', header=TRUE, sep=\',\');
                     effect_mat_5 <- rbind(mat_eff_5, mat_eff_altered_5);
@@ -11042,6 +11660,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
                     options(device=\'png\');
                     par();
                     gg_eff_5 <- ggplot(effect_mat_5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -11050,7 +11669,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_5).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_5, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-                    write.table(data.frame(asreml_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_5)), asreml_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_5)), asreml_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_5)), asreml_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_5)), asreml_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_5))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(asreml_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_5)), asreml_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_5)), asreml_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_5)), asreml_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_5)), asreml_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_5)), asreml_grm_univariate_spatial_genetic_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_5)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -11232,6 +11851,37 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     # print STDERR Dumper $cmd_spatialenvsim_plot_5_env5;
                     my $status_spatialenvsim_plot_5_env5 = system($cmd_spatialenvsim_plot_5_env5);
                     push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_5_env5, $statistics_select.$sim_env_change_over_time."_env5effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $env_effects_sim_figure_tempfile_string_5_env6 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $env_effects_sim_figure_tempfile_string_5_env6 .= '.png';
+                    my $env_effects_sim_figure_tempfile_5_env6 = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string_5_env6;
+
+                    my $cmd_spatialenvsim_plot_5_env6 = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat_p_sim6 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile6_5.'\', header=TRUE, sep=\',\');
+                    mat_eff_sim6 <- fread(\''.$effects_sim_heatmap_tempfile6_5.'\', header=TRUE, sep=\',\');
+                    options(device=\'png\');
+                    par();
+                    gg_env6 <- ggplot(mat_env6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_5).');
+                    gg_p_sim6 <- ggplot(mat_p_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_5).');
+                    gg_eff_sim6 <- ggplot(mat_eff_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_5).');
+                    ggsave(\''.$env_effects_sim_figure_tempfile_5_env6.'\', arrangeGrob(gg_env6, gg_p_sim6, gg_eff_sim6, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
+                    "';
+                    # print STDERR Dumper $cmd_spatialenvsim_plot_5_env6;
+                    my $status_spatialenvsim_plot_5_env6 = system($cmd_spatialenvsim_plot_5_env6);
+                    push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_5_env6, $statistics_select.$sim_env_change_over_time."_env6effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
                 };
 
                 eval {
@@ -11370,6 +12020,25 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim5_blup_stat_5->add_data(@sim5_blup_vals_5);
                     my $sig_sim5_blup_5 = $sim5_blup_stat_5->variance();
 
+                    my @sim6_blup_vals_5;
+                    my ($effects_altered_env6_line_chart_tempfile_fh_5, $effects_altered_env6_line_chart_tempfile_5) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $effects_altered_env6_line_chart_tempfile_5) || die "Can't open file ".$effects_altered_env6_line_chart_tempfile_5;
+                        print $F_pheno "germplasmName,time,value\n";
+                        foreach my $p (@sorted_germplasm_names) {
+                            foreach my $t (@sorted_trait_names_5) {
+                                my $val = $result_blup_data_altered_env_6_5->{$p}->{$t}->[0];
+                                my @row = ($p, $t, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim6_blup_vals_5, $val;
+                            }
+                        }
+                    close($F_pheno);
+
+                    my $sim6_blup_stat_5 = Statistics::Descriptive::Full->new();
+                    $sim6_blup_stat_5->add_data(@sim6_blup_vals_5);
+                    my $sig_sim6_blup_5 = $sim6_blup_stat_5->variance();
+
                     my @set = ('0' ..'9', 'A' .. 'F');
                     my @colors;
                     for (1..scalar(@sorted_germplasm_names)) {
@@ -11405,6 +12074,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $genetic_effects_alt_env5_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $genetic_effects_alt_env5_figure_tempfile_string .= '.png';
                     my $genetic_effects_alt_env5_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env5_figure_tempfile_string;
+
+                    my $genetic_effects_alt_env6_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $genetic_effects_alt_env6_figure_tempfile_string .= '.png';
+                    my $genetic_effects_alt_env6_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env6_figure_tempfile_string;
 
                     my $cmd_gen_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                     mat <- fread(\''.$effects_original_line_chart_tempfile_5.'\', header=TRUE, sep=\',\');
@@ -11559,6 +12232,28 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     print STDERR Dumper $cmd_gen_env5_plot;
                     my $status_gen_env5_plot = system($cmd_gen_env5_plot);
                     push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv5line_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $cmd_gen_env6_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
+                    mat <- fread(\''.$effects_altered_env6_line_chart_tempfile_5.'\', header=TRUE, sep=\',\');
+                    mat\$time <- as.numeric(as.character(mat\$time));
+                    options(device=\'png\');
+                    par();
+                    sp <- ggplot(mat, aes(x = time, y = value)) +
+                        geom_line(aes(color = germplasmName), size = 1) +
+                        scale_fill_manual(values = c(\''.$color_string.'\')) +
+                        theme_minimal();
+                    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+                    sp <- sp + labs(title = \'SimRandom Genetic Effects\');';
+                    if (scalar(@sorted_germplasm_names) > 100) {
+                        $cmd_gen_env6_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+                    }
+                    $cmd_gen_env6_plot .= 'ggsave(\''.$genetic_effects_alt_env6_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+                    "';
+                    print STDERR Dumper $cmd_gen_env6_plot;
+                    my $status_gen_env6_plot = system($cmd_gen_env6_plot);
+                    push @$spatial_effects_plots, [$genetic_effects_alt_env6_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv6line_"."envvar_".$env_variance_percent."_".$iterations];
                 };
 
                 %trait_name_encoder = %trait_name_encoder_5;
@@ -12702,7 +13397,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         'sim_env2_', 'simm6_pheno2_', 'effm6_sim2_',
                         'sim_env3_', 'simm6_pheno3_', 'effm6_sim3_',
                         'sim_env4_', 'simm6_pheno4_', 'effm6_sim4_',
-                        'sim_env5_', 'simm6_pheno5_', 'effm6_sim5_');
+                        'sim_env5_', 'simm6_pheno5_', 'effm6_sim5_',
+                        'sim_env6_', 'simm6_pheno6_', 'effm6_sim6_');
                         foreach my $t (@sorted_trait_names_6) {
                             foreach my $type (@types_full_plot_corr) {
                                 push @header_full_plot_corr, $type.$trait_name_encoder_6{$t};
@@ -12743,6 +13439,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 my $pheno_sim5_6 = $phenotype_data_altered_env_5_hash_6->{$p}->{$t};
                                 my $effect_sim5_6 = $result_blup_spatial_data_altered_env_5_6->{$p}->{$t}->[0];
                                 push @row, ($sim_env5, $pheno_sim5_6, $effect_sim5_6);
+
+                                my $sim_env6 = $sim_data_6_hash_6->{$p}->{$t};
+                                my $pheno_sim6_6 = $phenotype_data_altered_env_6_hash_6->{$p}->{$t};
+                                my $effect_sim6_6 = $result_blup_spatial_data_altered_env_6_6->{$p}->{$t}->[0];
+                                push @row, ($sim_env6, $pheno_sim6_6, $effect_sim6_6);
                             }
                             my $line = join ',', @row;
                             print $F_fullplot "$line\n";
@@ -13123,6 +13824,60 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim_effect5_stat_6->add_data(@sim_effect5_vals_6);
                     my $sig_sim_effect5_6 = $sim_effect5_stat_6->variance();
 
+                    # SIM ENV 6: ALTERED PHENO + EFFECT
+
+                    my ($phenotypes_env_heatmap_tempfile6_fh, $phenotypes_env_heatmap_tempfile6) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_env_heatmap_tempfile6) || die "Can't open file ".$phenotypes_env_heatmap_tempfile6;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_6) {
+                                my @row = ("sim_env6_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $sim_data_6_hash_6->{$p}->{$t});
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                            }
+                        }
+                    close($F_pheno);
+
+                    my @sim_pheno6_vals_6;
+                    my ($phenotypes_pheno_sim_heatmap_tempfile6_fh_6, $phenotypes_pheno_sim_heatmap_tempfile6_6) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $phenotypes_pheno_sim_heatmap_tempfile6_6) || die "Can't open file ".$phenotypes_pheno_sim_heatmap_tempfile6_6;
+                        print $F_pheno "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_6) {
+                                my $val = $phenotype_data_altered_env_6_hash_6->{$p}->{$t};
+                                my @row = ("simm6_pheno6_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim_pheno6_vals_6, $val;
+                            }
+                        }
+                    close($F_pheno);
+                    push @plot_corr_full_vals, \@sim_pheno6_vals_6;
+
+                    my $sim_pheno6_stat_6 = Statistics::Descriptive::Full->new();
+                    $sim_pheno6_stat_6->add_data(@sim_pheno6_vals_6);
+                    my $sig_sim_pheno6_6 = $sim_pheno6_stat_6->variance();
+
+                    my @sim_effect6_vals_6;
+                    my ($effects_sim_heatmap_tempfile6_fh_6, $effects_sim_heatmap_tempfile6_6) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_eff, ">", $effects_sim_heatmap_tempfile6_6) || die "Can't open file ".$effects_sim_heatmap_tempfile6_6;
+                        print $F_eff "trait_type,row,col,value\n";
+                        foreach my $p (@unique_plot_names) {
+                            foreach my $t (@sorted_trait_names_6) {
+                                my $val = $result_blup_spatial_data_altered_env_6_6->{$p}->{$t}->[0];
+                                my @row = ("effm6_sim6_".$trait_name_encoder_6{$t}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $val);
+                                my $line = join ',', @row;
+                                print $F_eff "$line\n";
+                                push @sim_effect6_vals_6, $val;
+                            }
+                        }
+                    close($F_eff);
+                    push @plot_corr_full_vals, \@sim_effect6_vals_6;
+
+                    my $sim_effect6_stat_6 = Statistics::Descriptive::Full->new();
+                    $sim_effect6_stat_6->add_data(@sim_effect6_vals_6);
+                    my $sig_sim_effect6_6 = $sim_effect6_stat_6->variance();
+
                     my $plot_corr_summary_figure_inputfile_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'tmp_drone_statistics/fileXXXX');
                     open($F_eff, ">", $plot_corr_summary_figure_inputfile_tempfile) || die "Can't open file ".$plot_corr_summary_figure_inputfile_tempfile;
                         foreach (@plot_corr_full_vals) {
@@ -13130,7 +13885,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             print $F_eff $line."\n";
                         }
                     close($F_eff);
-
 
                     my $plot_corr_summary_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $plot_corr_summary_figure_tempfile_string .= '.png';
@@ -13144,13 +13898,15 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_6\', \'mat_eff_sim2_6\',
                     \'mat_p_sim3_6\', \'mat_eff_sim3_6\',
                     \'mat_p_sim4_6\', \'mat_eff_sim4_6\',
-                    \'mat_p_sim5_6\', \'mat_eff_sim5_6\');
+                    \'mat_p_sim5_6\', \'mat_eff_sim5_6\',
+                    \'mat_p_sim6_6\', \'mat_eff_sim6_6\');
                     mat_env <- fread(\''.$phenotypes_env_heatmap_tempfile.'\', header=TRUE, sep=\',\');
                     mat_env2 <- fread(\''.$phenotypes_env_heatmap_tempfile2.'\', header=TRUE, sep=\',\');
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
-                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm6 = mat_full\$mat_altered_6, eff_origm6 = mat_full\$mat_eff_6, eff_altm6 = mat_full\$mat_eff_altered_6, env_lin = mat_env\$value, pheno_linm6 = mat_full\$mat_p_sim1_6, lin_effm6 = mat_full\$mat_eff_sim1_6, env_n1d = mat_env2\$value, pheno_n1dm6 = mat_full\$mat_p_sim2_6, n1d_effm6 = mat_full\$mat_eff_sim2_6, env_n2d = mat_env3\$value, pheno_n2dm6 = mat_full\$mat_p_sim3_6, env_rand = mat_env4\$value, pheno_randm6 = mat_full\$mat_p_sim4_6, rand_effm6 = mat_full\$mat_eff_sim4_6, env_ar1 = mat_env5\$value, pheno_ar1m6 = mat_full\$mat_p_sim5_6, ar1_effm6 = mat_full\$mat_eff_sim5_6);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat <- data.frame(pheno_orig = mat_full\$mat_orig, pheno_altm6 = mat_full\$mat_altered_6, eff_origm6 = mat_full\$mat_eff_6, eff_altm6 = mat_full\$mat_eff_altered_6, env_lin = mat_env\$value, pheno_linm6 = mat_full\$mat_p_sim1_6, lin_effm6 = mat_full\$mat_eff_sim1_6, env_n1d = mat_env2\$value, pheno_n1dm6 = mat_full\$mat_p_sim2_6, n1d_effm6 = mat_full\$mat_eff_sim2_6, env_n2d = mat_env3\$value, pheno_n2dm6 = mat_full\$mat_p_sim3_6, env_rand = mat_env4\$value, pheno_randm6 = mat_full\$mat_p_sim4_6, rand_effm6 = mat_full\$mat_eff_sim4_6, env_ar1 = mat_env5\$value, pheno_ar1m6 = mat_full\$mat_p_sim5_6, ar1_effm6 = mat_full\$mat_eff_sim5_6, env_realdata = mat_env6\$value, pheno_realdatam6 = mat_full\$mat_p_sim6_6, realdata_effm6 = mat_full\$mat_eff_sim6_6);
                     gg <- ggcorr(data=mat, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE, label_round = 2);
                     ggsave(\''.$plot_corr_summary_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, units=\'in\');
                     "';
@@ -13201,7 +13957,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     \'mat_p_sim2_6\', \'mat_eff_sim2_6\',
                     \'mat_p_sim3_6\', \'mat_eff_sim3_6\',
                     \'mat_p_sim4_6\', \'mat_eff_sim4_6\',
-                    \'mat_p_sim5_6\', \'mat_eff_sim5_6\');
+                    \'mat_p_sim5_6\', \'mat_eff_sim5_6\',
+                    \'mat_p_sim6_6\', \'mat_eff_sim6_6\');
                     mat_eff_6 <- fread(\''.$effects_heatmap_tempfile_6.'\', header=TRUE, sep=\',\');
                     mat_eff_altered_6 <- fread(\''.$effects_post_heatmap_tempfile_6.'\', header=TRUE, sep=\',\');
                     effect_mat_6 <- rbind(mat_eff_6, mat_eff_altered_6);
@@ -13210,6 +13967,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     mat_env3 <- fread(\''.$phenotypes_env_heatmap_tempfile3.'\', header=TRUE, sep=\',\');
                     mat_env4 <- fread(\''.$phenotypes_env_heatmap_tempfile4.'\', header=TRUE, sep=\',\');
                     mat_env5 <- fread(\''.$phenotypes_env_heatmap_tempfile5.'\', header=TRUE, sep=\',\');
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
                     options(device=\'png\');
                     par();
                     gg_eff_6 <- ggplot(effect_mat_6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
@@ -13218,7 +13976,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_6).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_6, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-                    write.table(data.frame(asreml_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_6)), asreml_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_6)), asreml_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_6)), asreml_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_6)), asreml_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_6))), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(asreml_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_6)), asreml_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_6)), asreml_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_6)), asreml_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_6)), asreml_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_6)), asreml_grm_univariate_spatial_genetic_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_6)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -13400,6 +14158,37 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     # print STDERR Dumper $cmd_spatialenvsim_plot_6_env5;
                     my $status_spatialenvsim_plot_6_env5 = system($cmd_spatialenvsim_plot_6_env5);
                     push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_6_env5, $statistics_select.$sim_env_change_over_time."_env5effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $env_effects_sim_figure_tempfile_string_6_env6 = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $env_effects_sim_figure_tempfile_string_6_env6 .= '.png';
+                    my $env_effects_sim_figure_tempfile_6_env6 = $c->config->{basepath}."/".$env_effects_sim_figure_tempfile_string_6_env6;
+
+                    my $cmd_spatialenvsim_plot_6_env6 = 'R -e "library(data.table); library(ggplot2); library(dplyr); library(viridis); library(GGally); library(gridExtra);
+                    mat_env6 <- fread(\''.$phenotypes_env_heatmap_tempfile6.'\', header=TRUE, sep=\',\');
+                    mat_p_sim6 <- fread(\''.$phenotypes_pheno_sim_heatmap_tempfile6_6.'\', header=TRUE, sep=\',\');
+                    mat_eff_sim6 <- fread(\''.$effects_sim_heatmap_tempfile6_6.'\', header=TRUE, sep=\',\');
+                    options(device=\'png\');
+                    par();
+                    gg_env6 <- ggplot(mat_env5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_6).');
+                    gg_p_sim6 <- ggplot(mat_p_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_6).');
+                    gg_eff_sim6 <- ggplot(mat_eff_sim6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                        geom_tile() +
+                        scale_fill_viridis(discrete=FALSE) +
+                        coord_equal() +
+                        facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_6).');
+                    ggsave(\''.$env_effects_sim_figure_tempfile_6_env6.'\', arrangeGrob(gg_env6, gg_p_sim6, gg_eff_sim6, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
+                    "';
+                    # print STDERR Dumper $cmd_spatialenvsim_plot_6_env6;
+                    my $status_spatialenvsim_plot_6_env6 = system($cmd_spatialenvsim_plot_6_env6);
+                    push @$spatial_effects_plots, [$env_effects_sim_figure_tempfile_string_6_env6, $statistics_select.$sim_env_change_over_time."_env6effheatmap_"."envvar_".$env_variance_percent."_".$iterations];
                 };
 
                 eval {
@@ -13538,6 +14327,25 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     $sim5_blup_stat_6->add_data(@sim5_blup_vals_6);
                     my $sig_sim5_blup_6 = $sim5_blup_stat_6->variance();
 
+                    my @sim6_blup_vals_6;
+                    my ($effects_altered_env6_line_chart_tempfile_fh_6, $effects_altered_env6_line_chart_tempfile_6) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+                    open($F_pheno, ">", $effects_altered_env6_line_chart_tempfile_6) || die "Can't open file ".$effects_altered_env6_line_chart_tempfile_6;
+                        print $F_pheno "germplasmName,time,value\n";
+                        foreach my $p (@sorted_germplasm_names) {
+                            foreach my $t (@sorted_trait_names_6) {
+                                my $val = $result_blup_data_altered_env_6_6->{$p}->{$t}->[0];
+                                my @row = ($p, $t, $val);
+                                my $line = join ',', @row;
+                                print $F_pheno "$line\n";
+                                push @sim6_blup_vals_6, $val;
+                            }
+                        }
+                    close($F_pheno);
+
+                    my $sim6_blup_stat_6 = Statistics::Descriptive::Full->new();
+                    $sim6_blup_stat_6->add_data(@sim6_blup_vals_6);
+                    my $sig_sim6_blup_6 = $sim6_blup_stat_6->variance();
+
                     my @set = ('0' ..'9', 'A' .. 'F');
                     my @colors;
                     for (1..scalar(@sorted_germplasm_names)) {
@@ -13573,6 +14381,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $genetic_effects_alt_env5_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
                     $genetic_effects_alt_env5_figure_tempfile_string .= '.png';
                     my $genetic_effects_alt_env5_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env5_figure_tempfile_string;
+
+                    my $genetic_effects_alt_env6_figure_tempfile_string = $c->tempfile( TEMPLATE => 'tmp_drone_statistics/figureXXXX');
+                    $genetic_effects_alt_env6_figure_tempfile_string .= '.png';
+                    my $genetic_effects_alt_env6_figure_tempfile = $c->config->{basepath}."/".$genetic_effects_alt_env6_figure_tempfile_string;
 
                     my $cmd_gen_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
                     mat <- fread(\''.$effects_original_line_chart_tempfile_6.'\', header=TRUE, sep=\',\');
@@ -13727,6 +14539,28 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     print STDERR Dumper $cmd_gen_env5_plot;
                     my $status_gen_env5_plot = system($cmd_gen_env5_plot);
                     push @$spatial_effects_plots, [$genetic_effects_alt_env5_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv5line_"."envvar_".$env_variance_percent."_".$iterations];
+
+                    my $cmd_gen_env6_plot = 'R -e "library(data.table); library(ggplot2); library(GGally); library(gridExtra);
+                    mat <- fread(\''.$effects_altered_env6_line_chart_tempfile_6.'\', header=TRUE, sep=\',\');
+                    mat\$time <- as.numeric(as.character(mat\$time));
+                    options(device=\'png\');
+                    par();
+                    sp <- ggplot(mat, aes(x = time, y = value)) +
+                        geom_line(aes(color = germplasmName), size = 1) +
+                        scale_fill_manual(values = c(\''.$color_string.'\')) +
+                        theme_minimal();
+                    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
+                    sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));
+                    sp <- sp + labs(title = \'SimRandom Genetic Effects\');';
+                    if (scalar(@sorted_germplasm_names) > 100) {
+                        $cmd_gen_env6_plot .= 'sp <- sp + theme(legend.position = \'none\');';
+                    }
+                    $cmd_gen_env6_plot .= 'ggsave(\''.$genetic_effects_alt_env6_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
+                    "';
+                    print STDERR Dumper $cmd_gen_env6_plot;
+                    my $status_gen_env6_plot = system($cmd_gen_env6_plot);
+                    push @$spatial_effects_plots, [$genetic_effects_alt_env6_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv6line_"."envvar_".$env_variance_percent."_".$iterations];
                 };
 
                 %trait_name_encoder = %trait_name_encoder_6;
