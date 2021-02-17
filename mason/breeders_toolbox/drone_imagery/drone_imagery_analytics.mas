@@ -318,6 +318,24 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <hr>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Simulated Environment Processes: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_simulated_environment_processes_select_div">
+                                            <option value="">Linear, 1D Normal, 2D Normal, AR1xAR1, Random, Real Data</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trait For Real Data Environment Simulation: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="drone_imagery_analytics_simulated_environment_real_data_trait_select_div"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -400,6 +418,8 @@ jQuery(document).ready(function() {
             }
 
             get_select_box('traits', 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select_div', { 'name' : 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select', 'id' : 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('traits', 'drone_imagery_analytics_simulated_environment_real_data_trait_select_div', { 'name' : 'drone_imagery_analytics_simulated_environment_real_data_trait_select', 'id' : 'drone_imagery_analytics_simulated_environment_real_data_trait_select', 'empty':0, 'multiple':0, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot' });
 
             get_select_box('analytics_protocols', 'drone_imagery_analytics_analytics_protocols_select_div', { 'checkbox_name' : 'drone_imagery_analytics_analytics_protocols_select_id', 'analytics_protocol_type' : 'drone_imagery_analytics_env_simulation_protocol' });
 
@@ -663,7 +683,8 @@ jQuery(document).ready(function() {
                 'permanent_environment_structure':jQuery('#drone_image_analytics_permanent_env_structure_select').val(),
                 'permanent_environment_structure_phenotype_correlation_traits':JSON.stringify(manage_drone_imagery_analytics_rr_structure_phenotype_correlation),
                 'sim_env_change_over_time':jQuery('#drone_imagery_analytics_select_sim_env_change_over_time_type').val(),
-                'env_variance_percent':jQuery('#drone_imagery_analytics_env_variance').val()
+                'env_variance_percent':jQuery('#drone_imagery_analytics_env_variance').val(),
+                'simulated_environment_real_data_trait_id':jQuery('#drone_imagery_analytics_simulated_environment_real_data_trait_select').val(),
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
