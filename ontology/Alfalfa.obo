@@ -1,0 +1,132 @@
+format-version: 1.2
+ontology: Alfalfa_ontology
+default-namespace: Alfalfa_ontology
+
+[Term]
+id: ALF:0000000
+name: ALF
+
+[Term]
+id: ALF:0000001
+name: Agronomic Traits
+is_a: G2F:0000000
+
+[Term]
+id: ALF:0000002
+name: Forage harvest dry matter yield first cut [tons/acre]
+def: "Dry matter yield of forage harvest from first cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000003
+name: Forage harvest dry matter yield second cut [tons/acre]
+def: "Dry matter yield of forage harvest from second cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000004
+name: Forage harvest dry matter yield third cut [tons/acre]
+def: "Dry matter yield of forage harvest from third cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000005
+name: Forage harvest dry matter yield fourth cut [tons/acre]
+def: "Dry matter yield of forage harvest from fourth cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000006
+name: Forage harvest dry matter yield fifth cut [tons/acre]
+def: "Dry matter yield of forage harvest from fifth cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000007
+name: Forage harvest dry matter yield sixth cut [tons/acre]
+def: "Dry matter yield of forage harvest from sixth cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000008
+name: Forage harvest dry matter yield seventh cut [tons/acre]
+def: "Dry matter yield of forage harvest from seventh cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000009
+name: Forage harvest dry matter yield eighth cut [tons/acre]
+def: "Dry matter yield of forage harvest from eighth cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000010
+name: Forage harvest dry matter yield ninth cut [tons/acre]
+def: "Dry matter yield of forage harvest from ninth cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000011
+name: Forage harvest dry matter yield tenth cut [tons/acre]
+def: "Dry matter yield of forage harvest from tenth cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000012
+name: Forage harvest dry matter yield eleventh cut [tons/acre]
+def: "Dry matter yield of forage harvest from eleventh cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000013
+name: Forage harvest dry matter yield twelfth cut [tons/acre]
+def: "Dry matter yield of forage harvest from twelfth cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000014
+name: Forage harvest dry matter yield thirteenth cut [tons/acre]
+def: "Dry matter yield of forage harvest from thirteenth cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000015
+name: Forage harvest dry matter yield fourteenth cut [tons/acre]
+def: "Dry matter yield of forage harvest from fourteenth cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000016
+name: Forage harvest dry matter yield fifteenth cut [tons/acre]
+def: "Dry matter yield of forage harvest from fifteenth cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000017
+name: Forage harvest dry matter yield sixteenth cut [tons/acre]
+def: "Dry matter yield of forage harvest from sixteenth cut in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000018
+name: Forage harvest dry matter yield first year total [tons/acre]
+def: "Dry matter yield of forage harvest total from first year in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000019
+name: Forage harvest dry matter yield second year total [tons/acre]
+def: "Dry matter yield of forage harvest total from second year in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000020
+name: Forage harvest dry matter yield third year total [tons/acre]
+def: "Dry matter yield of forage harvest total from third year in tons per acre." []
+relationship: variable_of ALF:0000001
+
+[Term]
+id: ALF:0000021
+name: Forage harvest dry matter yield fourth year total [tons/acre]
+def: "Dry matter yield of forage harvest total from fourth year in tons per acre." []
+relationship: variable_of ALF:0000001
