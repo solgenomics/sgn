@@ -38,6 +38,7 @@ has 'chado_schema' => (
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
 has 'key' => (isa =>'Str', is => 'rw', predicate => 'has_key',);
 has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value',);
+has 'type' => (isa =>'Str', is => 'rw', predicate => 'has_type',);
 
 sub add_info {
     my $self = shift;
@@ -54,7 +55,15 @@ sub add_info {
             return;
         }
 
-        my $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_metadata_json', 'stock_property');
+        # get cvterm of cross info type (crossing_metadata_json or cross_additional_info)
+        my $cross_info_type = $self->get_type();
+        my $cross_info_cvterm;
+        if (($cross_info_type ne 'crossing_metadata_json') && ($cross_info_type ne 'cross_additional_info')) {
+            print STDERR "Invalid type"."\n";
+            return;
+        } else {
+		    $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $cross_info_type, 'stock_property');
+        }
 
         my $cross_json_string;
         my $cross_json_hash = {};

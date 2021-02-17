@@ -244,17 +244,28 @@ sub upload_cross_file_POST : Args(0) {
         }
     }
 
-#    while (my $info_type = shift (@properties)){
-#        if ($parsed_data->{$info_type}) {
-#            print STDERR "Handling info type $info_type\n";
-#            my %info_hash = %{$parsed_data->{$info_type}};
-#            foreach my $cross_name_key (keys %info_hash) {
-#                my $value = $info_hash{$cross_name_key};
-#                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, key => $info_type, value => $value, } );
-#                $cross_add_info->add_info();
-#            }
-#        }
-#    }
+    if ($parsed_data->{'additional_info'}) {
+        my %cross_additional_info = %{$parsed_data->{additional_info}};
+        foreach my $cross_name (keys %cross_additional_info) {
+            my %info_hash = $cross_additional_info{$cross_name};
+            foreach my $info_type (keys %info_hash) {
+                my $value = $info_hash{$info_type};
+                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+                    chado_schema => $chado_schema,
+                    cross_name => $cross_nam,
+                    key => $info_type,
+                    value => $value,
+                    type => 'cross_additonal_info'
+                });
+                $cross_add_info->add_info();
+            }
+        }
+    }
+
+    if (!$cross_add_info->add_info()){
+        $c->stash->{rest} = {error_string => "Error adding additional cross info",};
+        return;
+    }
 
     $c->stash->{rest} = {success => "1",};
 }
@@ -1337,6 +1348,7 @@ sub upload_info_POST : Args(0) {
                     cross_name => $cross_name_key,
                     key => $info_type,
                     value => $value,
+                    type => 'crossing_metadata_json'
                 });
                 $cross_add_info->add_info();
             }
