@@ -9380,6 +9380,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
 
         my $return_inverse_matrix = 0;
+        my $ensure_positive_definite = 0;
 
         my (%phenotype_data_original_5, @data_matrix_original_5, @data_matrix_phenotypes_original_5);
         my (%trait_name_encoder_5, %trait_name_encoder_rev_5, %seen_days_after_plantings_5, %stock_info_5, %seen_times_5, %seen_trial_ids_5, %trait_to_time_map_5, %trait_composing_info_5, @sorted_trait_names_5, %seen_trait_names_5, %unique_traits_ids_5, @phenotype_header_5, $header_string_5);
@@ -10161,7 +10162,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             accession_id_list=>\@accession_ids,
                             protocol_id=>$protocol_id,
                             get_grm_for_parental_accessions=>$compute_from_parents,
-                            return_inverse=>$return_inverse_matrix
+                            return_inverse=>$return_inverse_matrix,
+                            ensure_positive_definite=>$ensure_positive_definite
                             # minor_allele_frequency=>$minor_allele_frequency,
                             # marker_filter=>$marker_filter,
                             # individuals_filter=>$individuals_filter
@@ -12325,7 +12327,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                             accession_id_list=>\@accession_ids,
                             protocol_id=>$protocol_id,
                             get_grm_for_parental_accessions=>$compute_from_parents,
-                            return_inverse=>$return_inverse_matrix
+                            return_inverse=>$return_inverse_matrix,
+                            ensure_positive_definite=>$ensure_positive_definite
                             # minor_allele_frequency=>$minor_allele_frequency,
                             # marker_filter=>$marker_filter,
                             # individuals_filter=>$individuals_filter
