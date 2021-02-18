@@ -36,13 +36,15 @@
 
                     <div class="well well-sm">
                         <select class="form-control" id="drone_imagery_analytics_select_input">
-                            <option value="">Sommer Multi/Uni Spatial 2Dspl, REMLf90 RR Identiy/Env, ASREML Uni Spatial AR1xAR1</option>
+                            <!--option value="">Sommer Multi/Uni Spatial 2Dspl, REMLf90 RR Identiy/Env, ASREML Uni Spatial AR1xAR1</option-->
                             <!--option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+1|Germplasm. Univariate genetic effects</option-->
 
                             <!--option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+GRM. Multivariate genetic effects using GRM</option-->
 
-                            <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic + 2Dspl spatial effects</option>
-                            <option value="sommer_grm_univariate_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+spatial. Univariate genetic + 2Dspl spatial effects</option>
+                            <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+Row+Col+2Dspline. Multivariate genetic + 2Dspl spatial effects</option>
+                            <option value="sommer_grm_spatial_pure_2dspl_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+2Dspline. Multivariate genetic + 2Dspl spatial effects</option>
+                            <option value="sommer_grm_univariate_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+Row+Col+2Dspline. Univariate genetic + 2Dspl spatial effects</option>
+                            <option value="sommer_grm_univariate_spatial_pure_2dspl_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+2Dspline. Univariate genetic + 2Dspl spatial effects</option>
 
                             <!--option value="blupf90_grm_random_regression_dap_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
                             <option value="blupf90_grm_random_regression_gdd_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using growing degree days. Multivariate genetic + permanent environment effects</option-->
@@ -460,7 +462,7 @@ jQuery(document).ready(function() {
             jQuery('#drone_imagery_analytics_analysis_save_residuals').hide();
             jQuery('#drone_imagery_analytics_analysis_save_fitted').hide();
         }
-        else if (manage_drone_imagery_analytics_statistics_select == 'sommer_grm_spatial_genetic_blups') {
+        else if (manage_drone_imagery_analytics_statistics_select == 'sommer_grm_spatial_genetic_blups' || manage_drone_imagery_analytics_statistics_select == 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
             jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
             jQuery('#drone_imagery_analytics_analysis_save_blups_genetic_pe_residual').show();
             jQuery('#drone_imagery_analytics_analysis_save_blups_genetic').hide();

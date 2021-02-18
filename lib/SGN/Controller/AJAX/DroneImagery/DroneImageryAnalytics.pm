@@ -940,10 +940,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $sig_col = $col_stat->variance();
 
                 print STDERR "PREPARE RELATIONSHIP MATRIX\n";
-                if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
-                    || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups'
-                    || $statistics_select eq 'sommer_grm_genetic_blups') {
-
+                eval {
                     my %seen_accession_stock_ids;
                     foreach my $trial_id (@$field_trial_id_list) {
                         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
@@ -1747,7 +1744,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes is not valid!" };
                         return;
                     }
-                }
+                };
 
                 my ($statistical_ontology_term, $analysis_model_training_data_file_type, $analysis_model_language, $sorted_residual_trait_names_array, $rr_unique_traits_hash, $rr_residual_unique_traits_hash, $statistics_cmd, $cmd_f90, $number_traits, $trait_to_time_map_hash,
                 $result_blup_data_original, $result_blup_data_delta_original, $result_blup_spatial_data_original, $result_blup_pe_data_original, $result_blup_pe_data_delta_original, $result_residual_data_original, $result_fitted_data_original, $fixed_effects_original_hash, $rr_genetic_coefficients_original_hash, $rr_temporal_coefficients_original_hash,
@@ -3518,10 +3515,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $sig_col = $col_stat->variance();
 
                 print STDERR "PREPARE RELATIONSHIP MATRIX\n";
-                if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
-                    || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups'
-                    || $statistics_select eq 'sommer_grm_genetic_blups') {
-
+                eval {
                     my %seen_accession_stock_ids;
                     foreach my $trial_id (@$field_trial_id_list) {
                         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
@@ -4325,7 +4319,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes is not valid!" };
                         return;
                     }
-                }
+                };
 
                 my ($statistical_ontology_term_4, $analysis_model_training_data_file_type_4, $analysis_model_language_4, $sorted_residual_trait_names_array_4, $rr_unique_traits_hash_4, $rr_residual_unique_traits_hash_4, $statistics_cmd_4, $cmd_f90_4, $number_traits_4, $trait_to_time_map_hash_4,
                 $result_blup_data_original_4, $result_blup_data_delta_original_4, $result_blup_spatial_data_original_4, $result_blup_pe_data_original_4, $result_blup_pe_data_delta_original_4, $result_residual_data_original_4, $result_fitted_data_original_4, $fixed_effects_original_hash_4, $rr_genetic_coefficients_original_hash_4, $rr_temporal_coefficients_original_hash_4,
@@ -5540,8 +5534,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             my $phenotype_min_original_2 = 1000000000;
             my $phenotype_max_original_2 = -1000000000;
 
-            if ($statistics_select_original eq '' || $statistics_select_original eq 'sommer_grm_spatial_genetic_blups') {
-                $statistics_select = 'sommer_grm_spatial_genetic_blups';
+            if ($statistics_select_original eq '' || $statistics_select_original eq 'sommer_grm_spatial_genetic_blups' || $statistics_select_original eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
+                $statistics_select = $statistics_select_original eq 'sommer_grm_spatial_genetic_blups' ? 'sommer_grm_spatial_genetic_blups' : 'sommer_grm_spatial_pure_2dspl_genetic_blups';
 
                 eval {
                     print STDERR "PREPARE ORIGINAL PHENOTYPE FILES 2\n";
@@ -5728,10 +5722,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $sig_col = $col_stat->variance();
 
                 print STDERR "PREPARE RELATIONSHIP MATRIX\n";
-                if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
-                    || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups'
-                    || $statistics_select eq 'sommer_grm_genetic_blups') {
-
+                eval {
                     my %seen_accession_stock_ids;
                     foreach my $trial_id (@$field_trial_id_list) {
                         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
@@ -6535,7 +6526,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes is not valid!" };
                         return;
                     }
-                }
+                };
 
                 my ($statistical_ontology_term_2, $analysis_model_training_data_file_type_2, $analysis_model_language_2, $sorted_residual_trait_names_array_2, $rr_unique_traits_hash_2, $rr_residual_unique_traits_hash_2, $statistics_cmd_2, $cmd_f90_2, $number_traits_2, $trait_to_time_map_hash_2,
                 $result_blup_data_original_2, $result_blup_data_delta_original_2, $result_blup_spatial_data_original_2, $result_blup_pe_data_original_2, $result_blup_pe_data_delta_original_2, $result_residual_data_original_2, $result_fitted_data_original_2, $fixed_effects_original_hash_2, $rr_genetic_coefficients_original_hash_2, $rr_temporal_coefficients_original_hash_2,
@@ -7153,7 +7144,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_2, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-                    write.table(data.frame(sommer_grm_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_2)), sommer_grm_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_2)), sommer_grm_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_2)), sommer_grm_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_2)), sommer_grm_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_2)), sommer_grm_spatial_genetic_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_2)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_2)), env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_2)), env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_2)), env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_2)), env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_2)), env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_2)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -7175,7 +7166,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 @columns = $csv->fields();
                             }
                             foreach (@columns) {
-                                push @{$env_corr_res->{$header[$counter].$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
+                                push @{$env_corr_res->{$statistics_select."_".$header[$counter].$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
                                 $counter++;
                             }
                         }
@@ -7744,8 +7735,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 %trait_to_time_map = %trait_to_time_map_2;
             }
 
-            if ($statistics_select_original eq '' || $statistics_select_original eq 'sommer_grm_univariate_spatial_genetic_blups') {
-                $statistics_select = 'sommer_grm_univariate_spatial_genetic_blups';
+            if ($statistics_select_original eq '' || $statistics_select_original eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select_original eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
+                $statistics_select = $statistics_select_original eq 'sommer_grm_univariate_spatial_genetic_blups' ? 'sommer_grm_univariate_spatial_genetic_blups' : 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups';
 
                 eval {
                     print STDERR "PREPARE ORIGINAL PHENOTYPE FILES 2\n";
@@ -7932,10 +7923,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $sig_col = $col_stat->variance();
 
                 print STDERR "PREPARE RELATIONSHIP MATRIX\n";
-                if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
-                    || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups'
-                    || $statistics_select eq 'sommer_grm_genetic_blups') {
-
+                eval {
                     my %seen_accession_stock_ids;
                     foreach my $trial_id (@$field_trial_id_list) {
                         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
@@ -8739,7 +8727,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes is not valid!" };
                         return;
                     }
-                }
+                };
 
                 my ($statistical_ontology_term_3, $analysis_model_training_data_file_type_3, $analysis_model_language_3, $sorted_residual_trait_names_array_3, $rr_unique_traits_hash_3, $rr_residual_unique_traits_hash_3, $statistics_cmd_3, $cmd_f90_3, $number_traits_3, $trait_to_time_map_hash_3,
                 $result_blup_data_original_3, $result_blup_data_delta_original_3, $result_blup_spatial_data_original_3, $result_blup_pe_data_original_3, $result_blup_pe_data_delta_original_3, $result_residual_data_original_3, $result_fitted_data_original_3, $fixed_effects_original_hash_3, $rr_genetic_coefficients_original_hash_3, $rr_temporal_coefficients_original_hash_3,
@@ -9359,7 +9347,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         coord_equal() +
                         facet_wrap(~trait_type, ncol='.scalar(@sorted_trait_names_2).');
                     ggsave(\''.$env_effects_first_figure_tempfile.'\', arrangeGrob(gg_eff_3, nrow=1), device=\'png\', width=25, height=25, units=\'in\');
-                    write.table(data.frame(sommer_grm_univariate_spatial_genetic_blups_env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_3)), sommer_grm_univariate_spatial_genetic_blups_env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_3)), sommer_grm_univariate_spatial_genetic_blups_env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_3)), sommer_grm_univariate_spatial_genetic_blups_env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_3)), sommer_grm_univariate_spatial_genetic_blups_env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_3)), sommer_grm_univariate_spatial_genetic_blups_env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_3)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+                    write.table(data.frame(env_linear = c(cor(mat_env\$value, mat_full\$mat_eff_sim1_3)), env_1DN = c(cor(mat_env2\$value, mat_full\$mat_eff_sim2_3)), env_2DN = c(cor(mat_env3\$value, mat_full\$mat_eff_sim3_3)), env_random = c(cor(mat_env4\$value, mat_full\$mat_eff_sim4_3)), env_ar1xar1 = c(cor(mat_env5\$value, mat_full\$mat_eff_sim5_3)), env_realdata = c(cor(mat_env6\$value, mat_full\$mat_eff_sim6_3)) ), file=\''.$sim_effects_corr_results.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
                     "';
                     # print STDERR Dumper $cmd;
                     my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
@@ -9381,7 +9369,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 @columns = $csv->fields();
                             }
                             foreach (@columns) {
-                                push @{$env_corr_res->{$header[$counter].$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
+                                push @{$env_corr_res->{$statistics_select."_".$header[$counter].$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
                                 $counter++;
                             }
                         }
@@ -10222,10 +10210,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $sig_col = $col_stat->variance();
 
                 print STDERR "PREPARE RELATIONSHIP MATRIX\n";
-                if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
-                || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups'
-                || $statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups') {
-
+                eval {
                     my %seen_accession_stock_ids;
                     foreach my $trial_id (@$field_trial_id_list) {
                         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
@@ -11051,7 +11036,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes is not valid!" };
                         return;
                     }
-                }
+                };
 
                 my ($statistical_ontology_term_5, $analysis_model_training_data_file_type_5, $analysis_model_language_5, $sorted_residual_trait_names_array_5, $rr_unique_traits_hash_5, $rr_residual_unique_traits_hash_5, $statistics_cmd_5, $cmd_f90_5, $number_traits_5, $trait_to_time_map_hash_5,
                 $result_blup_data_original_5, $result_blup_data_delta_original_5, $result_blup_spatial_data_original_5, $result_blup_pe_data_original_5, $result_blup_pe_data_delta_original_5, $result_residual_data_original_5, $result_fitted_data_original_5, $fixed_effects_original_hash_5, $rr_genetic_coefficients_original_hash_5, $rr_temporal_coefficients_original_hash_5,
@@ -12529,10 +12514,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $sig_col = $col_stat->variance();
 
                 print STDERR "PREPARE RELATIONSHIP MATRIX\n";
-                if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups'
-                || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups' || $statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups'
-                || $statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
-
+                eval {
                     my %seen_accession_stock_ids;
                     foreach my $trial_id (@$field_trial_id_list) {
                         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
@@ -13358,7 +13340,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes is not valid!" };
                         return;
                     }
-                }
+                };
 
                 my ($statistical_ontology_term_6, $analysis_model_training_data_file_type_6, $analysis_model_language_6, $sorted_residual_trait_names_array_6, $rr_unique_traits_hash_6, $rr_residual_unique_traits_hash_6, $statistics_cmd_6, $cmd_f90_6, $number_traits_6, $trait_to_time_map_hash_6,
                 $result_blup_data_original_6, $result_blup_data_delta_original_6, $result_blup_spatial_data_original_6, $result_blup_pe_data_original_6, $result_blup_pe_data_delta_original_6, $result_residual_data_original_6, $result_fitted_data_original_6, $fixed_effects_original_hash_6, $rr_genetic_coefficients_original_hash_6, $rr_temporal_coefficients_original_hash_6,
@@ -14731,6 +14713,8 @@ sub _perform_drone_imagery_analytics {
 
     print STDERR "CALC $permanent_environment_structure\n";
 
+    my $number_plots = scalar(@unique_plot_names);
+
     my ($statistical_ontology_term, $analysis_model_training_data_file_type, $analysis_model_language, @sorted_residual_trait_names, %rr_unique_traits, %rr_residual_unique_traits, $statistics_cmd, $cmd_f90, $cmd_asreml, $number_traits, $number_accessions);
     my $tolparinv_10 = $tolparinv*10;
     my ($result_blup_data_original, $result_blup_data_delta_original, $result_blup_spatial_data_original, $result_blup_pe_data_original, $result_blup_pe_data_delta_original, $result_residual_data_original, $result_fitted_data_original, %fixed_effects_original, %rr_genetic_coefficients_original, %rr_temporal_coefficients_original);
@@ -14747,7 +14731,7 @@ sub _perform_drone_imagery_analytics {
     my $residual_sum_original = 0;
 
     print STDERR "RUN FIRST ENV ESTIMATION\n";
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
         $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001"; #In the JS this is set to either the genetic or spatial BLUP term (Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003) when saving analysis results
 
         $analysis_model_language = "R";
@@ -14767,8 +14751,16 @@ sub _perform_drone_imagery_analytics {
         mat\$colNumber <- as.numeric(mat\$colNumber);
         mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
         mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-        mix <- mmer('.$cbind_string.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
-        if (!is.null(mix\$U)) {
+        ';
+        if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+            $statistics_cmd .= 'mix <- mmer('.$cbind_string.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(rowNumberFactor, Gtc=diag('.$number_traits.')) +vs(colNumberFactor, Gtc=diag('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            ';
+        }
+        elsif ($statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
+            $statistics_cmd .= 'mix <- mmer('.$cbind_string.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('.$number_traits.')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('.$number_traits.')), rcov=~vs(units, Gtc=unsm('.$number_traits.')), data=mat, tolparinv='.$tolparinv.');
+            ';
+        }
+        $statistics_cmd .= 'if (!is.null(mix\$U)) {
         #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
         write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
         write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -14927,7 +14919,7 @@ sub _perform_drone_imagery_analytics {
             print STDERR "ERROR IN R CMD\n";
         }
     }
-    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
         $statistical_ontology_term = "Univariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001"; #In the JS this is set to either the genetic or spatial BLUP term (Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003) when saving analysis results
 
         $analysis_model_language = "R";
@@ -14946,8 +14938,16 @@ sub _perform_drone_imagery_analytics {
             mat\$colNumber <- as.numeric(mat\$colNumber);
             mat\$rowNumberFactor <- as.factor(mat\$rowNumberFactor);
             mat\$colNumberFactor <- as.factor(mat\$colNumberFactor);
-            mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv_10.');
-            if (!is.null(mix\$U)) {
+            ';
+            if ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
+                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(rowNumberFactor, Gtc=diag(1)) +vs(colNumberFactor, Gtc=diag(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv_10.');
+                ';
+            }
+            elsif ($statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
+                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm(1)) +vs(spl2D(rowNumber, colNumber), Gtc=diag(1)), rcov=~vs(units, Gtc=unsm(1)), data=mat, tolparinv='.$tolparinv.');
+                ';
+            }
+            $statistics_cmd .= 'if (!is.null(mix\$U)) {
             #gen_cor <- cov2cor(mix\$sigma\$\`u:id\`);
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
@@ -15136,8 +15136,7 @@ sub _perform_drone_imagery_analytics {
         my $status_r = system($statistics_cmd);
 
         my @pheno_var;
-        open(my $fh_r, '<', $stats_out_param_tempfile)
-            or die "Could not open file '$stats_out_param_tempfile' $!";
+        open(my $fh_r, '<', $stats_out_param_tempfile) or die "Could not open file '$stats_out_param_tempfile' $!";
             print STDERR "Opened $stats_out_param_tempfile\n";
 
             while (my $row = <$fh_r>) {
@@ -15318,21 +15317,37 @@ sub _perform_drone_imagery_analytics {
         print STDERR Dumper $cmd_f90;
         my $status = system($cmd_f90);
 
-        open(my $fh_log, '<', $stats_out_tempfile)
-            or die "Could not open file '$stats_out_tempfile' $!";
-
+        my @log_output_rows;
+        open(my $fh_log, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
             print STDERR "Opened $stats_out_tempfile\n";
             while (my $row = <$fh_log>) {
                 print STDERR $row;
+                push @log_output_rows, $row;
             }
         close($fh_log);
+
+        my $log_output = join '', @log_output_rows;
+        my ($gen_var_string) = $log_output =~ /Genetic variance\(s\) for effect  2(.*?)correlations/gs;
+        my @gen_vars = split ' ', $gen_var_string;
+        print STDERR Dumper \@gen_vars;
+        my ($env_var_string) = $log_output =~ /Genetic variance\(s\) for effect  5(.*?)correlations/gs;
+        my @env_vars = split ' ', $env_var_string;
+        print STDERR Dumper \@env_vars;
+        my (@gen_cor_string) = $log_output =~ /correlations(.*?)eigenvectors/gs;
+        my @gen_cors = split ' ', $gen_cor_string[0];
+        print STDERR Dumper \@gen_cors;
+        my @env_cors = split ' ', $gen_cor_string[1];
+        print STDERR Dumper \@env_cors;
+        my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
+        print STDERR Dumper $res_se_string;
+        my $res_var = ($res_se_string**2)*$number_plots;
+        print STDERR Dumper $res_var;
 
         my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
         my $h_time = $schema->storage->dbh()->prepare($q_time);
 
         $yhat_residual_tempfile = $tmp_stats_dir."/yhat_residual";
-        open(my $fh_yhat_res, '<', $yhat_residual_tempfile)
-            or die "Could not open file '$yhat_residual_tempfile' $!";
+        open(my $fh_yhat_res, '<', $yhat_residual_tempfile) or die "Could not open file '$yhat_residual_tempfile' $!";
             print STDERR "Opened $yhat_residual_tempfile\n";
 
             my $pred_res_counter = 0;
@@ -15363,8 +15378,7 @@ sub _perform_drone_imagery_analytics {
         close($fh_yhat_res);
 
         $blupf90_solutions_tempfile = $tmp_stats_dir."/solutions";
-        open(my $fh_sol, '<', $blupf90_solutions_tempfile)
-            or die "Could not open file '$blupf90_solutions_tempfile' $!";
+        open(my $fh_sol, '<', $blupf90_solutions_tempfile) or die "Could not open file '$blupf90_solutions_tempfile' $!";
             print STDERR "Opened $blupf90_solutions_tempfile\n";
 
             my $head = <$fh_sol>;
@@ -15413,8 +15427,8 @@ sub _perform_drone_imagery_analytics {
             }
         close($fh_sol);
 
-        # print STDERR Dumper \%rr_genetic_coefficients;
-        # print STDERR Dumper \%rr_temporal_coefficients;
+        # print STDERR Dumper \%rr_genetic_coefficients_original;
+        # print STDERR Dumper \%rr_temporal_coefficients_original;
 
         open(my $Fgc, ">", $coeff_genetic_tempfile) || die "Can't open file ".$coeff_genetic_tempfile;
         print STDERR "OPENED $coeff_genetic_tempfile\n";
@@ -16005,7 +16019,7 @@ sub _perform_drone_imagery_analytics {
     my $phenotype_variance_altered;
 
     print STDERR "SUBTRACT ENV ESTIMATE\n";
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
 
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
@@ -16256,7 +16270,7 @@ sub _perform_drone_imagery_analytics {
     my $residual_sum_altered = 0;
 
     print STDERR "RUN ENV ESTIMATE ON ALTERED PHENO\n";
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
         # print STDERR Dumper $statistics_cmd;
         eval {
             my $status = system($statistics_cmd);
@@ -16398,7 +16412,7 @@ sub _perform_drone_imagery_analytics {
             print STDERR "ERROR IN R CMD\n";
         }
     }
-    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
         foreach my $t (@encoded_traits) {
 
@@ -17222,7 +17236,6 @@ sub _perform_drone_imagery_analytics {
 
     my %seen_rows;
     my %seen_cols;
-    my $number_plots = scalar(@unique_plot_names);
     $number_traits = scalar(@sorted_trait_names);
 
     eval {
@@ -17411,7 +17424,7 @@ sub _perform_drone_imagery_analytics {
 
     print STDERR "ADD SIMULATED ENV TO ALTERED PHENO linear_gradient\n";
     print STDERR Dumper [$env_sim_min, $env_sim_max];
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
 
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
@@ -17636,7 +17649,7 @@ sub _perform_drone_imagery_analytics {
     my $residual_sum_altered_env = 0;
 
     print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env linear_gradient\n";
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
         # print STDERR Dumper $statistics_cmd;
         eval {
             my $status = system($statistics_cmd);
@@ -17778,7 +17791,7 @@ sub _perform_drone_imagery_analytics {
             print STDERR "ERROR IN R CMD\n";
         }
     }
-    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
         foreach my $t (@encoded_traits) {
 
@@ -18788,7 +18801,7 @@ sub _perform_drone_imagery_analytics {
 
     print STDERR "ADD SIMULATED ENV TO ALTERED PHENO random_1d_normal_gradient\n";
     print STDERR Dumper [$env_sim_min_2, $env_sim_max_2];
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
 
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
@@ -19013,7 +19026,7 @@ sub _perform_drone_imagery_analytics {
     my $residual_sum_altered_env_2 = 0;
 
     print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env random_1d_normal_gradient\n";
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
         # print STDERR Dumper $statistics_cmd;
         eval {
             my $status = system($statistics_cmd);
@@ -19155,7 +19168,7 @@ sub _perform_drone_imagery_analytics {
             print STDERR "ERROR IN R CMD\n";
         }
     }
-    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
         foreach my $t (@encoded_traits) {
 
@@ -20166,7 +20179,7 @@ sub _perform_drone_imagery_analytics {
 
     print STDERR "ADD SIMULATED ENV TO ALTERED PHENO random_2d_normal_gradient\n";
     print STDERR Dumper [$env_sim_min_3, $env_sim_max_3];
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
 
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
@@ -20391,7 +20404,7 @@ sub _perform_drone_imagery_analytics {
     my $residual_sum_altered_env_3 = 0;
 
     print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env random_2d_normal_gradient\n";
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
         # print STDERR Dumper $statistics_cmd;
         eval {
             my $status = system($statistics_cmd);
@@ -20533,7 +20546,7 @@ sub _perform_drone_imagery_analytics {
             print STDERR "ERROR IN R CMD\n";
         }
     }
-    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
         foreach my $t (@encoded_traits) {
 
@@ -21541,7 +21554,7 @@ sub _perform_drone_imagery_analytics {
 
     print STDERR "ADD SIMULATED ENV TO ALTERED PHENO random\n";
     print STDERR Dumper [$env_sim_min_4, $env_sim_max_4];
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
 
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
@@ -21766,7 +21779,7 @@ sub _perform_drone_imagery_analytics {
     my $residual_sum_altered_env_4 = 0;
 
     print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env random\n";
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
         # print STDERR Dumper $statistics_cmd;
         eval {
             my $status = system($statistics_cmd);
@@ -21908,7 +21921,7 @@ sub _perform_drone_imagery_analytics {
             print STDERR "ERROR IN R CMD\n";
         }
     }
-    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
         foreach my $t (@encoded_traits) {
 
@@ -22885,7 +22898,7 @@ sub _perform_drone_imagery_analytics {
 
     print STDERR "ADD SIMULATED ENV TO ALTERED PHENO ar1xar1\n";
     print STDERR Dumper [$env_sim_min_5, $env_sim_max_5];
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
 
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
@@ -23108,7 +23121,7 @@ sub _perform_drone_imagery_analytics {
     my $residual_sum_altered_env_5 = 0;
 
     print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env ar1xar1\n";
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
         # print STDERR Dumper $statistics_cmd;
         eval {
             my $status = system($statistics_cmd);
@@ -23248,7 +23261,7 @@ sub _perform_drone_imagery_analytics {
             print STDERR "ERROR IN R CMD\n";
         }
     }
-    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
         foreach my $t (@encoded_traits) {
 
@@ -24275,7 +24288,7 @@ sub _perform_drone_imagery_analytics {
 
     print STDERR "ADD SIMULATED ENV TO ALTERED PHENO selected_field_trial_htp_env\n";
     print STDERR Dumper [$env_sim_min_6, $env_sim_max_6];
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
 
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
@@ -24498,7 +24511,7 @@ sub _perform_drone_imagery_analytics {
     my $residual_sum_altered_env_6 = 0;
 
     print STDERR "RUN ENV ESTIMATE ON Altered Pheno With Sim Env selected_field_trial_htp_env\n";
-    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups') {
+    if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
         # print STDERR Dumper $statistics_cmd;
         eval {
             my $status = system($statistics_cmd);
@@ -24636,7 +24649,7 @@ sub _perform_drone_imagery_analytics {
             print STDERR "ERROR IN R CMD\n";
         }
     }
-    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
         my @encoded_traits = values %trait_name_encoder;
         foreach my $t (@encoded_traits) {
 
