@@ -80,7 +80,7 @@ sub add_info {
             $cross_json_string = _generate_property_hash($self->get_key, $self->get_value, $cross_json_hash);
             $cross_stock->create_stockprops({$cross_info_cvterm->name() => $cross_json_string});
         }
-
+        print STDERR "CROSS JSON STRING =".Dumper($cross_json_string)."\n";
     };
 
     #try to add all cross info in a transaction

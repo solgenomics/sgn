@@ -161,12 +161,12 @@ sub upload_cross_file_POST : Args(0) {
     $upload_metadata{'user_id'}=$user_id;
     $upload_metadata{'date'}="$timestamp";
 
-    my $cross_properties_json = $c->config->{cross_properties};
-    my @properties = split ',', $cross_properties_json;
-    my $cross_properties = \@properties;
+    my $cross_additional_info_string = $c->config->{cross_additional_info};
+    my @additional_info = split ',', $cross_additional_info_string;
+    my $cross_additional_info = \@additional_info;
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_additional_info => $cross_additional_info);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
@@ -247,24 +247,20 @@ sub upload_cross_file_POST : Args(0) {
     if ($parsed_data->{'additional_info'}) {
         my %cross_additional_info = %{$parsed_data->{additional_info}};
         foreach my $cross_name (keys %cross_additional_info) {
-            my %info_hash = $cross_additional_info{$cross_name};
+            my %info_hash = %{$cross_additional_info{$cross_name}};
             foreach my $info_type (keys %info_hash) {
                 my $value = $info_hash{$info_type};
                 my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
                     chado_schema => $chado_schema,
-                    cross_name => $cross_nam,
+                    cross_name => $cross_name,
                     key => $info_type,
                     value => $value,
-                    type => 'cross_additonal_info'
+                    type => 'cross_additional_info'
                 });
-                $cross_add_info->add_info();
+
+               $cross_add_info->add_info();
             }
         }
-    }
-
-    if (!$cross_add_info->add_info()){
-        $c->stash->{rest} = {error_string => "Error adding additional cross info",};
-        return;
     }
 
     $c->stash->{rest} = {success => "1",};

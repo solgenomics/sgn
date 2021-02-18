@@ -18,6 +18,7 @@ sub _validate_with_plugin {
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
+    print STDERR "ADDITIONAL INFO =".Dumper($cross_additional_info)."\n";
 
     #currently supported cross types
     $supported_cross_types{'biparental'} = 1; #both parents required
@@ -311,6 +312,7 @@ sub _parse_with_plugin {
 
     }
 
+#    print STDERR "ADDITIONAL INFO HASH =".Dumper(\%cross_additional_info)."\n";
     $parsed_result{'additional_info'} = \%cross_additional_info;
 
     $parsed_result{'crosses'} = \@pedigrees;
