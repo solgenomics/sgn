@@ -190,9 +190,9 @@ sub search {
         my %observationUnitPosition = (
             entryType => $entry_type,
             geoCoordinates => $geo_coordinates,
-            positionCoordinateX => $obs_unit->{obsunit_col_number},
+            positionCoordinateX => $obs_unit->{obsunit_col_number} + 0,
             positionCoordinateXType => 'GRID_COL',
-            positionCoordinateY => $obs_unit->{obsunit_row_number},
+            positionCoordinateY => $obs_unit->{obsunit_row_number} + 0,
             positionCoordinateYType => 'GRID_ROW',
             # replicate => $obs_unit->{obsunit_rep}, #obsolete v2?
             observationLevel =>  { 
@@ -219,11 +219,11 @@ sub search {
             observationUnitPUI => qq|$obs_unit->{obsunit_plot_number}|,
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
-                #seedLotDbId
+            seedLotDbId => undef, # not implemented yet
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,
-            trialDbId => qq|$obs_unit->{folder_id}|,
+            trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : undef,
             trialName => $obs_unit->{folder_name},
         };
         $total_count = $obs_unit->{full_count};       
@@ -351,9 +351,9 @@ sub detail {
         my %observationUnitPosition = (
             entryType => $entry_type,
             geoCoordinates => $geo_coordinates,
-            positionCoordinateX => $obs_unit->{obsunit_col_number},
+            positionCoordinateX => $obs_unit->{obsunit_col_number} + 0,
             positionCoordinateXType => '',
-            positionCoordinateY => $obs_unit->{obsunit_row_number},
+            positionCoordinateY => $obs_unit->{obsunit_row_number} + 0,
             positionCoordinateYType => '',
             observationLevel =>  { 
                 levelName => $obs_unit->{observationunit_type_name},       
@@ -379,7 +379,7 @@ sub detail {
             observationUnitPUI => qq|$obs_unit->{obsunit_plot_number}|,
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
-                #seedLotDbId
+            seedLotDbId => undef, # not implemented yet
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,

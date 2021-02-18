@@ -2271,9 +2271,13 @@
 	    }).on('mousemove', (e)=>{
 	      let sourceTarget = e.sourceTarget;
 	      let ou = this.plot_map[sourceTarget.feature.properties.observationUnitDbId];
+	      get_oup_rel(ou).forEach((levels)=>{ 
+	      	if(levels.levelName == 'replicate'){ ou.replicate = levels.levelCode;}
+	  		else if(levels.levelName == 'block'){ ou.blockNumber = levels.levelCode;}
+	  		else if(levels.levelName == 'plot'){ ou.plotNumber = levels.levelCode;}});
 	      this.info.html(`<div style="padding: 5px"><div>Germplasm: ${ou.germplasmName}</div>
-       <div>Replicate: ${get_oup(ou).replicate}</div>
-       <div>    Block: ${get_oup(ou).blockNumber}</div>
+       <div>Replicate: ${ou.replicate}</div>
+       <div>    Block: ${ou.blockNumber}</div>
        <div>  Row,Col: ${ou._row},${ou._col}</div>
        <div>   Plot #: ${ou.plotNumber}</div></div>`);
 	    }).on('mouseout', ()=>{
@@ -2373,7 +2377,7 @@
 	      clusterCenters.push(turf.getCoord(turf.center(cluster)));
 	    });
 	    let bearing = turf.bearing(center, this.northernmost(clusterCenters[0], clusterCenters[1]));
-	    this.rotation = -bearing;
+	    this.rotation = 90-(Math.round(bearing) == 0 ? 90:bearing);
 	    this.geoJson = turf.transformRotate(this.geoJson, this.rotation);
 	  }
 
@@ -2389,7 +2393,7 @@
 	        }));
 	        if (!data.plots_shaped) {
 	          // rotate to original position
-	          this.plots = turf.transformRotate(this.plots, -this.rotation);
+				this.plots = turf.transformRotate(this.plots, -this.rotation);
 	        }
 	        this.fitBounds(this.plots);
 	      });
@@ -2409,7 +2413,8 @@
 	      var results = {'plots':[]};
 	      brapi.search_observationunits({
 	        "studyDbIds":[studyDbId],
-	        'pageSize':this.opts.brapi_pageSize
+	        'pageSize':this.opts.brapi_pageSize,
+	        'observationUnitLevelName' : 'plot'
 	      })
 	        .each(ou=>{
 	          ou.X = parseFloat(ou.X);
@@ -2545,12 +2550,12 @@
 	      data.plots_shaped = this.opts.useGeoJson;
 	    }
 
-	    let plot_XY_groups = [];
+	    let plot_XY_groups = {};
 	    // group by plots with the same X/Y
 	    data.plots.forEach(plot=>{
-	      plot_XY_groups[plot._col] = plot_XY_groups[plot._col] || [];
-	      plot_XY_groups[plot._col][plot._row] = plot_XY_groups[plot._col][plot._row] || [];
-	      plot_XY_groups[plot._col][plot._row].push(plot);
+	      plot_XY_groups[plot._col] = plot_XY_groups[plot._col] || {};
+	      plot_XY_groups[plot._col][plot._row] = plot_XY_groups[plot._col][plot._row] || {};
+	      plot_XY_groups[plot._col][plot._row]=[plot];
 	    });
 
 	    if(!data.plots_shaped){
@@ -2564,10 +2569,10 @@
 	      this.opts.defaultPos = [bbox[0], bbox[3]];
 	      let plotLength = this.opts.plotLength/1000,
 	        plotWidth = this.opts.plotWidth/1000;
-	      const cols = plot_XY_groups.length,
-	        rows = plot_XY_groups.reduce((acc, col)=>{
-	          col.forEach((row, i)=>{
-	            if (!row) return;
+	      const cols = Object.keys(plot_XY_groups).length,
+	      rows =  Object.values(plot_XY_groups).reduce((acc, col)=>{
+	        Object.keys(col).forEach((row, i)=>{
+	          if (!row) return;
 	            acc[i] = acc[i]+1 || 1;
 	          });
 	          return acc;
@@ -2760,6 +2765,12 @@
 
 	function get_oup(ou) {
 	  return ou.observationUnitPosition || {};
+	}
+
+	function get_oup_rel(ou,level) {
+		// let levels = ou.observationUnitPosition.observationLevelRelationships || {};
+		let levels = (ou.observationUnitPosition || {}).observationLevelRelationships || {};
+		return levels;
 	}
 
 	applyDefaultPlot(Fieldmap);
