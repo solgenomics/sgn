@@ -1529,7 +1529,7 @@ function search(entity,params,behavior){
         var pageless_params = Object.assign({}, p);
         delete pageless_params.page;
         delete pageless_params.pageRange;
-        delete pageless_params.pageSize;
+        // delete pageless_params.pageSize;
         return pageless_params;
     });
     return param_map.join(search_ids).search_GET(entity,function(joined){
