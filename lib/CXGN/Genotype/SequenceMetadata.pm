@@ -471,10 +471,10 @@ AND ((featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (fea
         $query .= " AND featureprop_json.nd_protocol_id IN (" . join(',', @$nd_protocol_ids) . ")";
     }
     if ( defined $score_min ) {
-        $query .= " AND (s->>'score')::real >= $score_min";
+        $query .= " AND CASE WHEN s->>'score' = '' THEN FALSE ELSE (s->>'score')::real >= $score_min END";
     }
     if ( defined $score_max ) {
-        $query .= " AND (s->>'score')::real <= $score_max";
+        $query .= " AND CASE WHEN s->>'score' = '' THEN FALSE ELSE (s->>'score')::real <= $score_max END";
     }
 
     # Perform the search
