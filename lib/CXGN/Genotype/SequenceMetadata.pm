@@ -16,9 +16,17 @@ my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id =
 my $store_results = $smd->store($processed_filepath);
 
 To query the stored sequence metadata:
-(bcs_schema is required, type_id and nd_protocol_id are optional filters)
-my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $cvterm_id, nd_protocol_id => $nd_protocol_id);
-my $query_results = $smd->query($feature_id, $start, $end);
+(bcs_schema and feature_id are required, all other filters are optional)
+my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema)
+my $query_results = $smd->query({
+    feature_id => $feature_id, 
+    start => $start_pos, 
+    end => $end_pos,
+    type_ids => @type_ids,
+    nd_protocol_ids => @nd_protocol_ids,
+    score_min => $score_min,
+    score_max => $score_max
+});
 
 =head1 DESCRIPTION
 
@@ -323,10 +331,7 @@ sub _write_chunk() {
 
 
 #
-# Query the sequence metadata stored in the featureprop_json table
-# - Required filter: feature_id
-# - Optional filters: start, end, type_id, nd_protocol_id, min score, max score
-# - Return results associated with the provided feature and located within the specified region
+# Query the sequence metadata stored in the featureprop_json table with the provided filter parameters
 #
 # Arguments:
 # - feature_id = id of feature associated with the sequence metadata
@@ -362,10 +367,7 @@ sub query {
     my $nd_protocol_ids = $args->{nd_protocol_ids};
     my $score_min = $args->{score_min};
     my $score_max = $args->{score_max};
-
-    print STDERR "QUERY ARGS:\n";
-    use Data::Dumper;
-    print STDERR Dumper $args;
+    my $MAX_CHUNK_COUNT = 1000;  # The max number of chunks to try to query at once
 
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh();
@@ -391,7 +393,7 @@ sub query {
         ($end) = $h->fetchrow_array();
     }
 
-    # Set undefined type_ids / nd_protocol_ids
+    # Set undefined type_ids / nd_protocol_ids (use class arguments, if available)
     if ( !defined $type_ids ) {
         $type_ids = $self->type_id ? [$self->type_id] : [];
     }
@@ -428,6 +430,28 @@ sub query {
     }
 
 
+    # Estimate result size by getting number of matching chunks
+    my $size_query = "SELECT COUNT(feature_json_id)
+FROM public.featureprop_json
+WHERE feature_id = ? 
+AND ((start_pos <= ? AND end_pos >= ?) OR (start_pos <= ? AND end_pos >= ?) OR (start_pos >= ? AND end_pos <= ?))";
+    if ( $type_ids && @$type_ids ) {
+        $size_query .= " AND featureprop_json.type_id IN (" . join(',', @$type_ids) . ")";
+    }
+    if ( $nd_protocol_ids && @$nd_protocol_ids ) {
+        $size_query .= " AND featureprop_json.nd_protocol_id IN (" . join(',', @$nd_protocol_ids) . ")";
+    }
+    my $sh = $dbh->prepare($size_query);
+    $sh->execute($feature_id, $start, $start, $end, $end, $start, $end);
+    my ($chunk_count) = $sh->fetchrow_array();
+    
+    # DATA QUERY TOO LARGE: return with an error message
+    if ( $chunk_count > $MAX_CHUNK_COUNT ) {
+        $results{'error'} = "The requested query is too large to perform at once.  Try filtering the data by including fewer data types/protocols and/or a smaller sequence range.";
+        return(\%results);
+    }
+
+
     # Build query
     my $query = "SELECT featureprop_json.feature_id, feature.name AS feature_name, featureprop_json.type_id, cvterm.name AS type_name, featureprop_json.nd_protocol_id, nd_protocol.name AS nd_protocol_name, s AS attributes
 FROM featureprop_json
@@ -452,8 +476,6 @@ AND ((featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (fea
     if ( defined $score_max ) {
         $query .= " AND (s->>'score')::real <= $score_max";
     }
-
-    print STDERR "$query\n";
 
     # Perform the search
     my $h = $dbh->prepare($query);

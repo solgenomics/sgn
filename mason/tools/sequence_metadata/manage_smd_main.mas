@@ -590,7 +590,7 @@ function getJBrowseURL() {
             label: sel_protocol_names[sel_protocols[i].toString()],
             type: "JBrowse/View/Track/CanvasFeatures",
             store: "url" + i
-        });              
+        });            
     }
 
     // Build URL
