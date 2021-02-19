@@ -17,6 +17,41 @@ name: boiled
 is_a: TREAT:0000001 ! Plant treatment
 
 [Term]
+id: TREAT:0000020
+name: 10 minutes boiling time
+is_a: TREAT:0000004 ! boiled
+
+[Term]
+id: TREAT:0000021
+name: 18 minutes boiling time
+is_a: TREAT:0000004 ! boiled
+
+[Term]
+id: TREAT:0000022
+name: 20 minutes boiling time
+is_a: TREAT:0000004 ! boiled
+
+[Term]
+id: TREAT:0000023
+name: 30 minutes boiling time
+is_a: TREAT:0000004 ! boiled
+
+[Term]
+id: TREAT:0000024
+name: 40 minutes boiling time
+is_a: TREAT:0000004 ! boiled
+
+[Term]
+id: TREAT:0000025
+name: 50 minutes boiling time
+is_a: TREAT:0000004 ! boiled
+
+[Term]
+id: TREAT:0000026
+name: 60 minutes boiling time
+is_a: TREAT:0000004 ! boiled
+
+[Term]
 id: TREAT:0000005
 name: fried
 is_a: TREAT:0000001 ! Plant treatment
