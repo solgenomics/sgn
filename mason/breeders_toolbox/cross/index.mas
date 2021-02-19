@@ -114,7 +114,7 @@ $identifier_prefix => ''
     </div>
  </&>
 
- <&| /page/info_section.mas, title => 'Cross Additional Info', collapsible => 1, collapsed => 0, subtitle => ''&>
+ <&| /page/info_section.mas, title => 'Additional Parent Info', collapsible => 1, collapsed => 0, subtitle => ''&>
      <div class = "well well-sm">
          <div class = "panel panel-default">
              <div class = "panel-body">
