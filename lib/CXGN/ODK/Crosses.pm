@@ -837,7 +837,8 @@ sub save_ona_cross_info {
             dbh => $schema->storage->dbh,
             crossing_trial_id => $cross_trial_id,
             crosses => \@new_crosses,
-            owner_name => $self->sp_person_username
+            owner_name => $self->sp_person_username,
+            user_id => $self->sp_person_id
         });
         if (!$cross_add->validate_crosses()){
             return {error => 'Error validating crosses'};

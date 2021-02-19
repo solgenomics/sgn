@@ -72,9 +72,10 @@ my $before_adding_cross_in_experiment = $schema->resultset("NaturalDiversity::Nd
 my $before_adding_cross_in_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
 
 
-$mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial_id, 'cross_name' => 'test_add_cross', 'cross_combination' => 'UG120001xUG120002', 'cross_type' => 'biparental', 'maternal' => 'UG120001', 'paternal' => 'UG120002', 'female_plot' => $female_plot_id,'male_plot' => $male_plot_id]);
+$mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial_id, 'cross_name' => 'test_add_cross', 'cross_combination' => 'UG120001xUG120002', 'cross_type' => 'biparental', 'maternal' => 'UG120001', 'paternal' => 'UG120002', 'female_plot' => $female_plot_id, 'male_plot' => $male_plot_id, 'sgn_session_id' => $sgn_session_id]);
 
 $response = decode_json $mech->content;
+print STDERR Dumper $response;
 is($response->{'success'}, '1');
 
 my $after_adding_cross = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
@@ -97,7 +98,7 @@ is($after_adding_cross_in_experiment_stock, $before_adding_cross_in_experiment_s
 my $crossing_trial2_rs = $schema->resultset('Project::Project')->find({name =>'test_crossingtrial2'});
 my $crossing_trial2_id = $crossing_trial2_rs->project_id();
 
-$mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial2_id, 'cross_name' => 'test_backcross1', 'cross_combination' => 'test_add_crossxUG120001', 'cross_type' => 'backcross', 'maternal' => 'test_add_cross', 'paternal' => 'UG120001']);
+$mech->post_ok('http://localhost:3010/ajax/cross/add_cross', [ 'crossing_trial_id' => $crossing_trial2_id, 'cross_name' => 'test_backcross1', 'cross_combination' => 'test_add_crossxUG120001', 'cross_type' => 'backcross', 'maternal' => 'test_add_cross', 'paternal' => 'UG120001', 'sgn_session_id' => $sgn_session_id]);
 
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');

@@ -106,32 +106,8 @@ sub upload_cross_file_POST : Args(0) {
     my %parsed_data;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my $user_role;
-    my $user_id;
-    my $user_name;
-    my $owner_name;
-    my $session_id = $c->req->param("sgn_session_id");
 
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload crosses!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload crosses!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -216,6 +192,8 @@ sub add_cross_POST :Args(0) {
     my $cross_combination = $c->req->param('cross_combination');
     $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end.
 
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
     print STDERR "CROSS COMBINATION=".Dumper($cross_combination)."\n";
 
     if (!$c->user()) {
@@ -243,7 +221,7 @@ sub add_cross_POST :Args(0) {
             my $maternal = $maternal_parents[$i];
             my $polycross_name = $cross_name . '_' . $maternal;
             print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
-            my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
+            my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_id, $user_name, $user_role);
             if (!$success) {
                 return;
             }
@@ -261,7 +239,7 @@ sub add_cross_POST :Args(0) {
                     next;
                 }
                 my $reciprocal_cross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_reciprocalcross';
-                my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
+                my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_id, $user_name, $user_role);
                 if (!$success) {
                     return;
                 }
@@ -276,7 +254,7 @@ sub add_cross_POST :Args(0) {
             my $maternal = $maternal_parents[$i];
             my $paternal = $paternal_parents[$i];
             my $multicross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_multicross';
-            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal);
+            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $user_id, $user_name, $user_role);
             if (!$success) {
                 return;
             }
@@ -285,7 +263,7 @@ sub add_cross_POST :Args(0) {
     else {
         my $maternal = $c->req->param('maternal');
         my $paternal = $c->req->param('paternal');
-        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $cross_combination);
+        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $female_plot_id, $male_plot_id, $maternal, $paternal, $cross_combination, $user_id, $user_name, $user_role);
         if (!$success) {
             return;
         }
@@ -692,8 +670,10 @@ sub add_individual_cross {
     my $maternal = shift;
     my $paternal = shift;
     my $cross_combination = shift;
+    my $user_id = shift;
+    my $user_name = shift;
+    my $user_role = shift;
 
-    my $owner_name = $c->user()->get_object()->get_username();
     my @progeny_names;
     my $progeny_increment = 1;
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -795,7 +775,8 @@ sub add_individual_cross {
             dbh => $dbh,
             crossing_trial_id => $crossing_trial_id,
             crosses =>  \@array_of_pedigree_objects,
-            owner_name => $owner_name,
+            owner_name => $user_name,
+            user_id => $user_id
         });
 
         #add the crosses
@@ -826,7 +807,7 @@ sub add_individual_cross {
                 dbh => $dbh,
                 cross_name => $cross_name,
                 progeny_names => \@progeny_names,
-                owner_name => $owner_name,
+                owner_name => $user_name,
             });
             $progeny_add->add_progeny();
         }
@@ -926,33 +907,8 @@ sub upload_progenies_POST : Args(0) {
     my %parsed_data;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my $user_role;
-    my $user_id;
-    my $user_name;
-    my $owner_name;
-#   my $upload_file_type = "crosses excel";#get from form when more options are added
-    my $session_id = $c->req->param("sgn_session_id");
 
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -1069,32 +1025,9 @@ sub validate_upload_existing_progenies_POST : Args(0) {
     my %parsed_data;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my $user_role;
-    my $user_id;
-    my $user_name;
-    my $owner_name;
-#   my $upload_file_type = "crosses excel";#get from form when more options are added
-    my $session_id = $c->req->param("sgn_session_id");
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
+
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
@@ -1240,31 +1173,8 @@ sub upload_info_POST : Args(0) {
     my %parsed_data;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my $user_role;
-    my $user_id;
-    my $user_name;
-    my $session_id = $c->req->param("sgn_session_id");
 
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload cross info!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload cross info!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -1389,33 +1299,8 @@ sub upload_family_names_POST : Args(0) {
     my %parsed_data;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my $user_role;
-    my $user_id;
-    my $user_name;
-    my $owner_name;
-#   my $upload_file_type = "crosses excel";#get from form when more options are added
-    my $session_id = $c->req->param("sgn_session_id");
 
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload family names!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload family names!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -1581,32 +1466,8 @@ sub upload_intercross_file_POST : Args(0) {
     my %parsed_data;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my $user_role;
-    my $user_id;
-    my $user_name;
-    my $owner_name;
-    my $session_id = $c->req->param("sgn_session_id");
 
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload intercross data!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else {
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload intercross data!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
-    }
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
@@ -1787,7 +1648,8 @@ sub upload_intercross_file_POST : Args(0) {
                 dbh => $dbh,
                 crossing_trial_id => $crossing_experiment_id,
                 crosses => \@new_crosses,
-                owner_name => $user_name
+                owner_name => $user_name,
+                user_id => $user_id
             });
 
             if (!$cross_add->validate_crosses()){
@@ -1865,6 +1727,40 @@ sub get_cross_transactions :Path('/ajax/cross/transactions') Args(1) {
 
 }
 
+sub _check_user_login {
+    my $c = shift;
+    my $role_check = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+    if ($role_check && $user_role ne $role_check) {
+        $c->stash->{rest} = {error=>'You must have permission to do this! Please contact us!'};
+        $c->detach();
+    }
+    return ($user_id, $user_name, $user_role);
+}
 
 ###
 1;#
