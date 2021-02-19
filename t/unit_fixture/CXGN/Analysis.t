@@ -232,7 +232,7 @@ my $message_hash_uploaded_analysis = decode_json $message_uploaded_analysis;
 print STDERR Dumper $message_hash_uploaded_analysis;
 ok($message_hash_uploaded_analysis->{analysis_id});
 
-sleep(5);
+sleep(10);
 my $a = CXGN::Analysis->new({
     bcs_schema => $schema,
     people_schema => $people_schema,
