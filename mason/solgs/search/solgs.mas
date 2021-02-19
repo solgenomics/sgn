@@ -30,22 +30,26 @@ $gs_traits_index => undef
   "solGS.ajaxAutocomplete"] &>
 
 <div class="container">
+ <& /page/page_title.mas, 
+	  title => "solGS: Genomic Prediction Modeling" 
+	 &>
+ 
+  <!-- <&| /util/workflow.mas, id=> "solgs_workflow" &> -->
+  <!--    <&| /util/workflow.mas:step, title => "choose genotype protocol" &>  -->
+   	 <& /solgs/genotyping_protocol.mas &>
+  <!--    </&> -->
+  
+  <!--    <&| /util/workflow.mas:step, title=> "Create training data" &> -->
+	   
+	   <& /solgs/search/trial_search_form.mas &>
 
-  <& /page/page_title.mas, 
-   title => "solGS: Genomic Prediction Modeling" 
-    &>
-    
-  <& /solgs/genotyping_protocol.mas &>
-    
 
-<& /solgs/search/trial_search_form.mas &>
+	     <& /solgs/search/list_type_training_population.mas &>
 
 
-<& /solgs/search/list_type_training_population.mas &>
-
-
-<& /solgs/search/trait_search_form.mas,
-   gs_traits_index => $gs_traits_index
- &>
-   
+	       <& /solgs/search/trait_search_form.mas,
+		  gs_traits_index => $gs_traits_index
+		 &>
+	   <!--   </&> -->
+	   <!-- </&> -->
 </div>
