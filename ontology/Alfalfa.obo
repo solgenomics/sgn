@@ -9,7 +9,7 @@ name: ALF
 [Term]
 id: ALF:0000001
 name: Agronomic Traits
-is_a: G2F:0000000
+is_a: ALF:0000000
 
 [Term]
 id: ALF:0000002
