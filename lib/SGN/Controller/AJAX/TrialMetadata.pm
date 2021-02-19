@@ -2410,6 +2410,37 @@ sub delete_all_crosses_in_crossingtrial : Chained('trial') PathPart('delete_all_
     $c->stash->{rest} = { success => 1 };
 }
 
+
+sub cross_additional_info_trial : Chained('trial') PathPart('cross_additional_info_trial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+    print STDERR "TRIAL ID =".Dumper($trial_id)."\n";
+    my $result = $trial->get_cross_additional_info_trial();
+    print STDERR "ADDITIONAL INFO =".Dumper($result)."\n";
+
+    my $cross_additional_info_string = $c->config->{cross_additional_info};
+    my @column_order = split ',', $cross_additional_info_string;
+
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $cross_combination, $cross_additional_info_hash) =@$r;
+
+        my @row = ( qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination );
+        foreach my $key (@column_order){
+          push @row, $cross_additional_info_hash->{$key};
+        }
+
+        push @crosses, \@row;
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+}
+
+
 sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $self = shift;
     my $c = shift;
