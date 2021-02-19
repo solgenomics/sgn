@@ -18,38 +18,38 @@ is_a: TREAT:0000001 ! Plant treatment
 
 [Term]
 id: TREAT:0000020
-name: 10 minutes boiling time
-is_a: TREAT:0000004 ! boiled
+name: boiling time 10 minutes
+is_a: TREAT:0000001 ! 
 
 [Term]
 id: TREAT:0000021
 name: 18 minutes boiling time
-is_a: TREAT:0000004 ! boiled
+is_a: TREAT:0000001 ! 
 
 [Term]
 id: TREAT:0000022
-name: 20 minutes boiling time
-is_a: TREAT:0000004 ! boiled
+name: boiling time 20 minutes
+is_a: TREAT:0000001 ! 
 
 [Term]
 id: TREAT:0000023
-name: 30 minutes boiling time
-is_a: TREAT:0000004 ! boiled
+name: boiling time 30 minutes
+is_a: TREAT:0000001 ! 
 
 [Term]
 id: TREAT:0000024
-name: 40 minutes boiling time
-is_a: TREAT:0000004 ! boiled
+name: boiling time 40 minutes
+is_a: TREAT:0000001 ! 
 
 [Term]
 id: TREAT:0000025
-name: 50 minutes boiling time
-is_a: TREAT:0000004 ! boiled
+name: boiling time 50 minutes
+is_a: TREAT:0000001 ! 
 
 [Term]
 id: TREAT:0000026
-name: 60 minutes boiling time
-is_a: TREAT:0000004 ! boiled
+name: boiling time 60 minutes
+is_a: TREAT:0000001 !
 
 [Term]
 id: TREAT:0000005
