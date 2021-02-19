@@ -23,7 +23,7 @@ is_a: TREAT:0000001 !
 
 [Term]
 id: TREAT:0000021
-name: 18 minutes boiling time
+name: boiling time 18 minutes
 is_a: TREAT:0000001 ! 
 
 [Term]
