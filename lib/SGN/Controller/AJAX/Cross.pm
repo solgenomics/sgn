@@ -1839,6 +1839,40 @@ sub get_cross_transactions :Path('/ajax/cross/transactions') Args(1) {
 }
 
 
+sub get_cross_additional_info :Path('/ajax/cross/additional_info') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $cross_additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_additional_info', 'stock_property')->cvterm_id();
+    my $cross_additional_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_additional_info_cvterm});
+
+    my $cross_info_json_string;
+    if($cross_additional_info_rs){
+        $cross_info_json_string = $cross_additional_info_rs->value();
+    }
+
+    my $cross_info_hash ={};
+    if($cross_info_json_string){
+        $cross_info_hash = decode_json $cross_info_json_string;
+    }
+
+    my $cross_additional_info = $c->config->{cross_additional_info};
+    my @column_order = split ',',$cross_additional_info;
+    my @props;
+    my @row;
+    foreach my $key (@column_order){
+        push @row, $cross_info_hash->{$key};
+    }
+
+    push @props,\@row;
+    $c->stash->{rest} = {data => \@props};
+
+}
+
+
 ###
 1;#
 ###
