@@ -10,6 +10,8 @@ jQuery(document).ready(function() {
 
     display_transactions(get_cross_id());
 
+    display_cross_additional_info(get_cross_id());
+
     function get_cross_id() {
         var cross_id = jQuery('#cross_id').html();
         var regex = /\n|\r/g;
@@ -97,7 +99,7 @@ jQuery(document).ready(function() {
     }
 
     function display_parents(cross_id){
-        var property_table = jQuery('#parent_information').DataTable({
+        var parents_table = jQuery('#parent_information').DataTable({
             'ajax': '/ajax/cross/accession_plot_plant_parents/'+cross_id,
             'paging' : false,
             'searching' : false,
@@ -283,5 +285,15 @@ jQuery(document).ready(function() {
         return;
     }
 
+    function display_cross_additional_info(cross_id){
+        var additional_info_table = jQuery('#cross_additional_info').DataTable({
+            'ajax': '/ajax/cross/additional_info/'+cross_id,
+            'paging' : false,
+            'searching' : false,
+            'bInfo' : false,
+            'destroy' : true,
+        });
+        return;
+    }
 
 });
