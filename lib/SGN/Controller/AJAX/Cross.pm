@@ -259,6 +259,12 @@ sub upload_cross_file_POST : Args(0) {
                 });
 
                $cross_add_info->add_info();
+
+               if (!$cross_add_info->add_info()){
+                   $c->stash->{rest} = {error_string => "Error saving info",};
+                   return;
+               }
+
             }
         }
     }
@@ -668,7 +674,8 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
         chado_schema => $schema,
         cross_name => $cross_name,
         key => $type,
-        value => $value
+        value => $value,
+        type => 'crossing_metadata_json'
     });
     $cross_add_info->add_info();
 
