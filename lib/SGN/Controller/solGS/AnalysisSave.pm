@@ -119,7 +119,7 @@ sub check_stored_analysis {
 
 	if ($analysis_name)
 	{
-		my $schema = $self->schema();
+		my $schema = $self->schema($c);
         my $analysis= $schema->resultset("Project::Project")->find({ name => $analysis_name });
 
 	    if ($analysis)
@@ -141,7 +141,7 @@ sub check_stored_analysis {
 sub extended_trait_name {
 	my ($self, $c, $trait_id) = @_;
 
-	my $schema = $self->schema();
+	my $schema = $self->schema($c);
 	# foreach my $tr_id (@$trait_ids) {
 		#$c->controller('solGS::solGS')->get_trait_details($c, $tr_id);
 		my $extended_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_id, 'extended');

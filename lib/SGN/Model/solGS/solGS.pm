@@ -438,11 +438,15 @@ sub get_population_details {
 sub trait_name {
     my ($self, $trait_id) = @_;
 
-    my $trait_name = $self->schema->resultset('Cv::Cvterm')
-        ->search( {cvterm_id => $trait_id})
-        ->single
-        ->name;
-
+	my $trait_name;
+	if ($trait_id)
+	{
+	   	$trait_name = $self->schema->resultset('Cv::Cvterm')
+	        ->search( {cvterm_id => $trait_id})
+	        ->single
+	        ->name;
+	}
+	
     return $trait_name;
 
 }
