@@ -26,7 +26,7 @@ $trial_id
 
 jQuery(document).ready(function(){
 
-    jQuery('#cross_additional_info_crossingtrial_section_onswitch').click(function(){
+    jQuery('#additional_info_crossingtrial_section_onswitch').click(function(){
         jQuery('#cross_additional_info_crossingtrial_table').DataTable({
             'destroy': true,
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_additional_info_trial',

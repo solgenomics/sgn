@@ -2391,9 +2391,8 @@ sub cross_additional_info_trial : Chained('trial') PathPart('cross_additional_in
 
     my $trial_id = $c->stash->{trial_id};
     my $trial = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
-    print STDERR "TRIAL ID =".Dumper($trial_id)."\n";
     my $result = $trial->get_cross_additional_info_trial();
-    print STDERR "ADDITIONAL INFO =".Dumper($result)."\n";
+#    print STDERR "ADDITIONAL INFO =".Dumper($result)."\n";
 
     my $cross_additional_info_string = $c->config->{cross_additional_info};
     my @column_order = split ',', $cross_additional_info_string;
