@@ -10016,7 +10016,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             }
 
             my $return_inverse_matrix = 0;
-            my $ensure_positive_definite = 0;
+            my $ensure_positive_definite = 1;
 
             my (%phenotype_data_original_5, @data_matrix_original_5, @data_matrix_phenotypes_original_5);
             my (%trait_name_encoder_5, %trait_name_encoder_rev_5, %seen_days_after_plantings_5, %stock_info_5, %seen_times_5, %seen_trial_ids_5, %trait_to_time_map_5, %trait_composing_info_5, @sorted_trait_names_5, %seen_trait_names_5, %unique_traits_ids_5, @phenotype_header_5, $header_string_5);
@@ -13478,7 +13478,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 
                 $phenotype_data_altered_env_hash_6_6, $data_matrix_altered_env_array_6_6, $data_matrix_phenotypes_altered_env_array_6_6, $phenotype_min_altered_env_6_6, $phenotype_max_altered_env_6_6, $env_sim_min_6_6, $env_sim_max_6_6, $sim_data_hash_6_6,
                 $result_blup_data_altered_env_6_6, $result_blup_data_delta_altered_env_6_6, $result_blup_spatial_data_altered_env_6_6, $result_blup_pe_data_altered_env_6_6, $result_blup_pe_data_delta_altered_env_6_6, $result_residual_data_altered_env_6_6, $result_fitted_data_altered_env_6_6, $fixed_effects_altered_env_hash_6_6, $rr_genetic_coefficients_altered_env_hash_6_6, $rr_temporal_coefficients_altered_env_hash_6_6, 
-                $rr_coeff_genetic_covariance_altered_env_array_6_6, $rr_coeff_env_covariance_altered_env_array_1_6, $rr_coeff_genetic_correlation_altered_env_array_6_6, $rr_coeff_env_correlation_altered_env_array_6_6, $rr_residual_variance_altered_env_6_6,
+                $rr_coeff_genetic_covariance_altered_env_array_6_6, $rr_coeff_env_covariance_altered_env_array_6_6, $rr_coeff_genetic_correlation_altered_env_array_6_6, $rr_coeff_env_correlation_altered_env_array_6_6, $rr_residual_variance_altered_env_6_6,
                 $model_sum_square_residual_altered_env_6_6, $genetic_effect_min_altered_env_6_6, $genetic_effect_max_altered_env_6_6, $env_effect_min_altered_env_6_6, $env_effect_max_altered_env_6_6, $genetic_effect_sum_square_altered_env_6_6, $genetic_effect_sum_altered_env_6_6, $env_effect_sum_square_altered_env_6_6, $env_effect_sum_altered_env_6_6, $residual_sum_square_altered_env_6_6, $residual_sum_altered_env_6_6
                 ) = _perform_drone_imagery_analytics($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_6, \%trait_name_encoder_rev_6, \%stock_info_6, \%plot_id_map, \@sorted_trait_names_6, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map_6, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_6, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $time_min, $time_max, $header_string_6, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id);
 
@@ -14825,6 +14825,8 @@ sub _perform_drone_imagery_analytics {
     my %stock_row_col_id = %$stock_row_col_id_hash;
     my %polynomial_map = %$polynomial_map_hash;
     my @plot_ids_ordered = @$plot_ids_ordered_array;
+    my $col_number_span = 1 + $max_col - $min_col;
+    my $row_number_span = 1 + $max_row - $min_row;
 
     print STDERR "CALC $permanent_environment_structure\n";
 
@@ -15862,8 +15864,11 @@ sub _perform_drone_imagery_analytics {
                         my $std = $columns[2];
                         my $z_ratio = $columns[3];
                         if (defined $value && $value ne '') {
-                            if ($solution_file_counter < $number_accessions) {
-                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                            if ($solution_file_counter < $row_number_span) {
+                                # print STDERR "$level $value \n";
+                            }
+                            elsif ($solution_file_counter < $row_number_span + $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter - $row_number_span + 1};
                                 $result_blup_data_original->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
 
                                 if ($value < $genetic_effect_min_original) {
@@ -15877,6 +15882,9 @@ sub _perform_drone_imagery_analytics {
                                 $genetic_effect_sum_square_original = $genetic_effect_sum_square_original + $value*$value;
 
                                 $current_gen_row_count++;
+                            }
+                            elsif ($solution_file_counter < $col_number_span + $row_number_span + $number_accessions) {
+                                # print STDERR "$level $value \n";
                             }
                             else {
                                 my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
@@ -17163,8 +17171,11 @@ sub _perform_drone_imagery_analytics {
                         my $std = $columns[2];
                         my $z_ratio = $columns[3];
                         if (defined $value && $value ne '') {
-                            if ($solution_file_counter < $number_accessions) {
-                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                            if ($solution_file_counter < $row_number_span) {
+                                # print STDERR "$level $value \n";
+                            }
+                            elsif ($solution_file_counter < $row_number_span + $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter - $row_number_span + 1};
                                 $result_blup_data_altered->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
 
                                 if ($value < $genetic_effect_min_altered) {
@@ -17178,6 +17189,9 @@ sub _perform_drone_imagery_analytics {
                                 $genetic_effect_sum_square_altered = $genetic_effect_sum_square_altered + $value*$value;
 
                                 $current_gen_row_count++;
+                            }
+                            elsif ($solution_file_counter < $col_number_span + $row_number_span + $number_accessions) {
+                                # print STDERR "$level $value \n";
                             }
                             else {
                                 my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
@@ -18522,9 +18536,7 @@ sub _perform_drone_imagery_analytics {
                 my $current_env_row_count = 0;
                 my @row_col_ordered_plots_names;
 
-                open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                    or die "Could not open file '$stats_out_tempfile_residual' $!";
-                
+                open(my $fh_residual, '<', $stats_out_tempfile_residual) or die "Could not open file '$stats_out_tempfile_residual' $!";
                     print STDERR "Opened $stats_out_tempfile_residual\n";
                     my $header_residual = <$fh_residual>;
                     my @header_cols_residual;
@@ -18569,8 +18581,11 @@ sub _perform_drone_imagery_analytics {
                         my $std = $columns[2];
                         my $z_ratio = $columns[3];
                         if (defined $value && $value ne '') {
-                            if ($solution_file_counter < $number_accessions) {
-                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                            if ($solution_file_counter < $row_number_span) {
+                                # print STDERR "$level $value \n";
+                            }
+                            elsif ($solution_file_counter < $row_number_span + $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter - $row_number_span + 1};
                                 $result_blup_data_altered_env->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
 
                                 if ($value < $genetic_effect_min_altered_env) {
@@ -18584,6 +18599,9 @@ sub _perform_drone_imagery_analytics {
                                 $genetic_effect_sum_square_altered_env = $genetic_effect_sum_square_altered_env + $value*$value;
 
                                 $current_gen_row_count++;
+                            }
+                            elsif ($solution_file_counter < $col_number_span + $row_number_span + $number_accessions) {
+                                # print STDERR "$level $value \n";
                             }
                             else {
                                 my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
@@ -19917,9 +19935,7 @@ sub _perform_drone_imagery_analytics {
                 my $current_env_row_count = 0;
                 my @row_col_ordered_plots_names;
 
-                open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                    or die "Could not open file '$stats_out_tempfile_residual' $!";
-                
+                open(my $fh_residual, '<', $stats_out_tempfile_residual) or die "Could not open file '$stats_out_tempfile_residual' $!";
                     print STDERR "Opened $stats_out_tempfile_residual\n";
                     my $header_residual = <$fh_residual>;
                     my @header_cols_residual;
@@ -19964,8 +19980,11 @@ sub _perform_drone_imagery_analytics {
                         my $std = $columns[2];
                         my $z_ratio = $columns[3];
                         if (defined $value && $value ne '') {
-                            if ($solution_file_counter < $number_accessions) {
-                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                            if ($solution_file_counter < $row_number_span) {
+                                # print STDERR "$level $value \n";
+                            }
+                            elsif ($solution_file_counter < $row_number_span + $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter - $row_number_span + 1};
                                 $result_blup_data_altered_env_2->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
 
                                 if ($value < $genetic_effect_min_altered_env_2) {
@@ -19979,6 +19998,9 @@ sub _perform_drone_imagery_analytics {
                                 $genetic_effect_sum_square_altered_env_2 = $genetic_effect_sum_square_altered_env_2 + $value*$value;
 
                                 $current_gen_row_count++;
+                            }
+                            elsif ($solution_file_counter < $col_number_span + $row_number_span + $number_accessions) {
+                                # print STDERR "$level $value \n";
                             }
                             else {
                                 my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
@@ -21313,9 +21335,7 @@ sub _perform_drone_imagery_analytics {
                 my $current_env_row_count = 0;
                 my @row_col_ordered_plots_names;
 
-                open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                    or die "Could not open file '$stats_out_tempfile_residual' $!";
-                
+                open(my $fh_residual, '<', $stats_out_tempfile_residual) or die "Could not open file '$stats_out_tempfile_residual' $!";
                     print STDERR "Opened $stats_out_tempfile_residual\n";
                     my $header_residual = <$fh_residual>;
                     my @header_cols_residual;
@@ -21360,8 +21380,11 @@ sub _perform_drone_imagery_analytics {
                         my $std = $columns[2];
                         my $z_ratio = $columns[3];
                         if (defined $value && $value ne '') {
-                            if ($solution_file_counter < $number_accessions) {
-                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                            if ($solution_file_counter < $row_number_span) {
+                                # print STDERR "$level $value \n";
+                            }
+                            elsif ($solution_file_counter < $row_number_span + $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter - $row_number_span + 1};
                                 $result_blup_data_altered_env_3->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
 
                                 if ($value < $genetic_effect_min_altered_env_3) {
@@ -21375,6 +21398,9 @@ sub _perform_drone_imagery_analytics {
                                 $genetic_effect_sum_square_altered_env_3 = $genetic_effect_sum_square_altered_env_3 + $value*$value;
 
                                 $current_gen_row_count++;
+                            }
+                            elsif ($solution_file_counter < $col_number_span + $row_number_span + $number_accessions) {
+                                # print STDERR "$level $value \n";
                             }
                             else {
                                 my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
@@ -22706,9 +22732,7 @@ sub _perform_drone_imagery_analytics {
                 my $current_env_row_count = 0;
                 my @row_col_ordered_plots_names;
 
-                open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                    or die "Could not open file '$stats_out_tempfile_residual' $!";
-                
+                open(my $fh_residual, '<', $stats_out_tempfile_residual) or die "Could not open file '$stats_out_tempfile_residual' $!";
                     print STDERR "Opened $stats_out_tempfile_residual\n";
                     my $header_residual = <$fh_residual>;
                     my @header_cols_residual;
@@ -22753,8 +22777,11 @@ sub _perform_drone_imagery_analytics {
                         my $std = $columns[2];
                         my $z_ratio = $columns[3];
                         if (defined $value && $value ne '') {
-                            if ($solution_file_counter < $number_accessions) {
-                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                            if ($solution_file_counter < $row_number_span) {
+                                # print STDERR "$level $value \n";
+                            }
+                            elsif ($solution_file_counter < $row_number_span + $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter - $row_number_span + 1};
                                 $result_blup_data_altered_env_4->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
 
                                 if ($value < $genetic_effect_min_altered_env_4) {
@@ -22768,6 +22795,9 @@ sub _perform_drone_imagery_analytics {
                                 $genetic_effect_sum_square_altered_env_4 = $genetic_effect_sum_square_altered_env_4 + $value*$value;
 
                                 $current_gen_row_count++;
+                            }
+                            elsif ($solution_file_counter < $col_number_span + $row_number_span + $number_accessions) {
+                                # print STDERR "$level $value \n";
                             }
                             else {
                                 my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
@@ -24060,9 +24090,7 @@ sub _perform_drone_imagery_analytics {
                 my $current_env_row_count = 0;
                 my @row_col_ordered_plots_names;
 
-                open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                    or die "Could not open file '$stats_out_tempfile_residual' $!";
-                
+                open(my $fh_residual, '<', $stats_out_tempfile_residual) or die "Could not open file '$stats_out_tempfile_residual' $!";
                     print STDERR "Opened $stats_out_tempfile_residual\n";
                     my $header_residual = <$fh_residual>;
                     my @header_cols_residual;
@@ -24107,8 +24135,11 @@ sub _perform_drone_imagery_analytics {
                         my $std = $columns[2];
                         my $z_ratio = $columns[3];
                         if (defined $value && $value ne '') {
-                            if ($solution_file_counter < $number_accessions) {
-                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                            if ($solution_file_counter < $row_number_span) {
+                                # print STDERR "$level $value \n";
+                            }
+                            elsif ($solution_file_counter < $row_number_span + $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter - $row_number_span + 1};
                                 $result_blup_data_altered_env_5->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
 
                                 if ($value < $genetic_effect_min_altered_env_5) {
@@ -24122,6 +24153,9 @@ sub _perform_drone_imagery_analytics {
                                 $genetic_effect_sum_square_altered_env_5 = $genetic_effect_sum_square_altered_env_5 + $value*$value;
 
                                 $current_gen_row_count++;
+                            }
+                            elsif ($solution_file_counter < $col_number_span + $row_number_span + $number_accessions) {
+                                # print STDERR "$level $value \n";
                             }
                             else {
                                 my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
@@ -25508,8 +25542,11 @@ sub _perform_drone_imagery_analytics {
                         my $std = $columns[2];
                         my $z_ratio = $columns[3];
                         if (defined $value && $value ne '') {
-                            if ($solution_file_counter < $number_accessions) {
-                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter+1};
+                            if ($solution_file_counter < $row_number_span) {
+                                # print STDERR "$level $value \n";
+                            }
+                            elsif ($solution_file_counter < $row_number_span + $number_accessions) {
+                                my $stock_name = $accession_id_factor_map_reverse{$solution_file_counter - $row_number_span + 1};
                                 $result_blup_data_altered_env_6->{$stock_name}->{$t} = [$value, $timestamp, $user_name, '', ''];
 
                                 if ($value < $genetic_effect_min_altered_env_6) {
@@ -25523,6 +25560,9 @@ sub _perform_drone_imagery_analytics {
                                 $genetic_effect_sum_square_altered_env_6 = $genetic_effect_sum_square_altered_env_6 + $value*$value;
 
                                 $current_gen_row_count++;
+                            }
+                            elsif ($solution_file_counter < $col_number_span + $row_number_span + $number_accessions) {
+                                # print STDERR "$level $value \n";
                             }
                             else {
                                 my $plot_name = $row_col_ordered_plots_names[$current_env_row_count-$number_accessions];
