@@ -3,7 +3,6 @@ package CXGN::Dataset::File;
 
 use Moose;
 use File::Slurp qw | write_file |;
-#use File::Sp qw(append_file write_file);
 use JSON::Any;
 use Data::Dumper;
 use CXGN::Genotype::Search;
@@ -118,11 +117,24 @@ override('retrieve_phenotypes',
 	     my $file = shift || $self->file_name()."_phenotype.txt";
 	     my $phenotypes = $self->SUPER::retrieve_phenotypes();
 	     my $phenotype_string = "";
+	     my $s;
 	     foreach my $line (@$phenotypes) {
-			 my $s = join "\t", map { $_ ? $_ : "" } @$line;
-			 $s =~ s/\n//g;
-			 $s =~ s/\r//g;
-			 $phenotype_string .= $s."\n";
+		 $s = "";
+	         my $num_col = scalar(@{$line});
+		 for (my $j = 0; $j < $num_col; $j++) {
+                     if (@$line[$j]) {
+		         if ($s eq "") {
+	                    $s .= "\"@$line[$j]\"";
+		         } else {
+		            $s .= "\t\"@$line[$j]\"";
+			 }
+                     } else {
+                         $s .= "\t";
+                     }
+                 }			 
+		 $s =~ s/\n//g;
+		 $s =~ s/\r//g;
+		 $phenotype_string .= $s."\n";
 	     }
 	     write_file($file, $phenotype_string);
 	     return $phenotypes;

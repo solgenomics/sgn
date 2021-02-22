@@ -399,6 +399,15 @@ var phenotypes_id = [];
 var ctrlFuncDataset;
 jQuery(document).ready( function() {
 
+    var auth_token;
+    var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+    if (require_login === '1'){
+        auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+        if (!auth_token){
+            alert("Login required to display");
+        }
+    }
+
     function assayed_trait_heatmap_view(selected) {
         var selectedTrait = selected;
         jQuery.ajax( {
@@ -410,6 +419,9 @@ jQuery(document).ready( function() {
                 'observationVariableDbId':selectedTrait,
                 'pageSize':1000,
                 'page':0
+            },
+            headers: {
+                'Authorization': `Bearer ` + auth_token,
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
@@ -762,6 +774,9 @@ jQuery(document).ready( function() {
         jQuery("#ctrldiv").css("display", "none");
         jQuery.ajax( {
              //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
+            headers: {
+                'Authorization': `Bearer ` + auth_token,
+            },
              url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
@@ -1304,6 +1319,9 @@ jQuery(document).ready( function() {
         jQuery("#trait_heatmap").css("display", "none");
         field_map_view();
         jQuery.ajax ( {
+            headers: {
+                'Authorization': `Bearer ` + auth_token,
+            },
             url: '/brapi/v1/studies/'+ <% $trial_id %> +'/observationvariables?pageSize=1000000',
             //url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
             beforeSend: function() {
