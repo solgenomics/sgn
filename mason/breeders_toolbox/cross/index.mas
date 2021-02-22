@@ -137,7 +137,7 @@ $identifier_prefix => ''
 % my $edit_link = "[Edit]";
 % if ($user_id) { $edit_link = '<a id="edit_properties_link">[Edit]</a>'; }
 
-<&| /page/info_section.mas, title => 'Cross Info', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
+<&| /page/info_section.mas, title => 'Field Crossing Data', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
