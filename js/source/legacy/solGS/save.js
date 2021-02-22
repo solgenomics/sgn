@@ -114,7 +114,8 @@ jQuery(document).ready( function() {
 					var link = '<a href="/analyses/'+ res.analysis_id + '">View stored GEBVs</a>';
 					jQuery("#gebvs_output").append(link);
 				} else {
-					jQuery("#gebvs_error").html('Error occured storing the GEBVs').show().fadeOut(10000);
+					jQuery("#save_gebvs").show();
+					jQuery("#gebvs_save_message").html('Error occured storing the GEBVs').show().fadeOut(10000);
 
 				}
 				jQuery("#gebvs_output .multi-spinner-container").hide();
@@ -129,7 +130,7 @@ jQuery(document).ready( function() {
 					var link = '<a href="/analyses/'+ res.analysis_id + '">View Stored GEBVs</a>';
 					jQuery("#gebvs_output").append(link);
 				} else {
-					jQuery("#gebvs_error").html('Error occured storing the GEBVs').show().fadeOut(10000);
+					jQuery("#gebvs_save_message").html('Error occured storing the GEBVs').show().fadeOut(10000);
 
 				}
 					//jQuery("#save_gebvs").show();
@@ -142,7 +143,8 @@ jQuery(document).ready( function() {
 
 			save.fail(function(res) {
 				jQuery("#gebvs_output .multi-spinner-container").hide();
-				jQuery("#gebvs_error").html('Error occured storing the GEBVs').show().fadeOut(10000);
+					jQuery("#save_gebvs").show();
+				jQuery("#gebvs_save_message").html('Error occured storing the GEBVs').show().fadeOut(10000);
 			});
 }
 

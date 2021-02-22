@@ -24,6 +24,6 @@ $gebvs_download_url
  		 <% $gebvs_download_url %> |
  		<button id="save_gebvs" class="btn btn-success">Save GEBVs</button>
 		<& /solgs/spinner.mas &>
-		<div id="gebvs_error" style="display:none"></div>
+		<div id="gebvs_save_message' class="message"" style="display:none"></div>
 </div>
 <br />
