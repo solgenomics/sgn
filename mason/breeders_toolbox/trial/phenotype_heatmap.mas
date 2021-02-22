@@ -29,7 +29,7 @@ $data_level => 'plot'
     #container_fm {
         /*border:2px dashed #000;*/
         height: 390px;
-        width: 700px;
+        width: 390px;
         overflow: auto;
         /*overflow: scroll;*/
         display: none;
