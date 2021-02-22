@@ -362,7 +362,7 @@ sub store {
     my $user_name = $self->user_name();
     my $user_role = $self->user_role();
 
-    print STDERR Dumper $analysis_model_type;
+    # print Dumper $analysis_model_type;
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
 
     if ($analysis_to_save_boolean eq 'yes' && !$analysis_name) {
@@ -417,7 +417,6 @@ sub store {
             gen => [],
         };
 
-        # print STDERR Dumper $analysis_result_trait_compose_info_time;
         my %time_term_map;
 
         if ($analysis_result_trait_compose_info_time) {
@@ -433,21 +432,22 @@ sub store {
             $categories->{toy} = \@toy;
         }
 
-        # print STDERR Dumper $categories;
-        # print STDERR Dumper \%time_term_map;
+        # print Dumper $categories;
 
-        my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($bcs_schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, $categories);
-        my $existing_traits = $traits->{existing_traits};
-        my $new_traits = $traits->{new_traits};
+		if  (@{ $categories->{toy} }) {
+	        my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($bcs_schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, $categories);
+	        my $existing_traits = $traits->{existing_traits};
+	        my $new_traits = $traits->{new_traits};
 
-        my %new_trait_names;
-        foreach (@$new_traits) {
-            my $components = $_->[0];
-            $new_trait_names{$_->[1]} = join ',', @$components;
-        }
+	        my %new_trait_names;
+	        foreach (@$new_traits) {
+	            my $components = $_->[0];
+	            $new_trait_names{$_->[1]} = join ',', @$components;
+	        }
 
-       my $onto = CXGN::Onto->new( { schema => $bcs_schema } );
-        my $new_terms = $onto->store_composed_term(\%new_trait_names);
+	       my $onto = CXGN::Onto->new( { schema => $bcs_schema } );
+	       my $new_terms = $onto->store_composed_term(\%new_trait_names);
+	   }
 
         my %composed_trait_map;
         while (my($trait_name, $trait_id) = each %trait_id_map) {
