@@ -411,7 +411,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
                     my @columns = @{$data[$line]};
                     my $step = 1;
                     for(my $i=0; $i<$num_col; $i++) {
-                        if ($columns[$i]) {
+                        if (defined($columns[$i])) {
                             print CSV "\"$columns[$i]\"";
                         } else {
                             print CSV "\"\"";
