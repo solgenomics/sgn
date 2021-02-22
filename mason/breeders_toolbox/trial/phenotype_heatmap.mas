@@ -29,7 +29,8 @@ $data_level => 'plot'
     #container_fm {
         /*border:2px dashed #000;*/
         height: 390px;
-        width: 390px;
+        /*width: 390px;*/
+        width: 700px;
         overflow: auto;
         /*overflow: scroll;*/
         display: none;
@@ -1264,9 +1265,16 @@ jQuery(document).ready( function() {
     
 
     var r = 0; 
+    var toggleWidthFM = 0;
     jQuery('#rotate_map').click(function(){ 
         jQuery("#container_fm").css('transform','rotate(' + (r += 90) + 'deg)');
-        //jQuery("#container_heatmap").css('transform','rotate(' + (r += 180) + 'deg)'); 
+        jQuery("#container_fm").width(390 + 'px');
+        //toggleWidthFM = jQuery("#container_fm").width();
+        //console.log(toggleWidthFM);
+        //console.log(r);
+        if ((r/90) % 2 == 0){
+            jQuery("#container_fm").width(700 + 'px');
+        }
     }); 
     
     jQuery("#hm_view_plot_image_submit").click( function() {
