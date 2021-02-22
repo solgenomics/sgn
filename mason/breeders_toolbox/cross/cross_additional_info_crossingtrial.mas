@@ -11,7 +11,7 @@ $trial_id
             <tr>
                 <th>Cross Unique ID</th>
                 <th>Cross Combination</th>
-% my $cross_additional_info_string = $c->config->{cross_additional_info};
+% my $cross_additional_info_string = $c->config->{cross_additional_info_header};
 % my @column_header = split ',',$cross_additional_info_string;
 % foreach my $column_header(@column_header){
                 <th><%$column_header%></th>
