@@ -18,7 +18,7 @@ $identifier_prefix => ''
 % my $cross_properties = $c->config->{cross_properties};
 % my @cross_props = split ',',$cross_properties;
 % my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
-% my $cross_additional_info_string = $c->config->{cross_additional_info};
+% my $cross_additional_info_string = $c->config->{cross_additional_info_header};
 % my @cross_additional_info = split ',',$cross_additional_info_string;
 
 

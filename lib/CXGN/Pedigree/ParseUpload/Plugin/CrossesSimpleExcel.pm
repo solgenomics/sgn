@@ -18,7 +18,7 @@ sub _validate_with_plugin {
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
-    print STDERR "ADDITIONAL INFO =".Dumper($cross_additional_info)."\n";
+#    print STDERR "ADDITIONAL INFO =".Dumper($cross_additional_info)."\n";
 
     #currently supported cross types
     $supported_cross_types{'biparental'} = 1; #both parents required
