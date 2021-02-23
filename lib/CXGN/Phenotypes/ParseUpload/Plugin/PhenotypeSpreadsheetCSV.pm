@@ -38,7 +38,7 @@ sub validate {
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
-    open(my $fh, '<', $filename)
+    open(my $fh, '< :encoding(UTF-8)', $filename)
         or die "Could not open file '$filename' $!";
 
     if (!$fh) {
@@ -143,7 +143,7 @@ sub parse {
     my @traits;
     my %data;
 
-    open(my $fh, '<', $filename)
+    open(my $fh, '< :encoding(UTF-8)', $filename)
         or die "Could not open file '$filename' $!";
 
     if (!$fh) {
