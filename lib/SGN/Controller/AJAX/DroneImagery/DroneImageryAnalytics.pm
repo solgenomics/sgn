@@ -16678,7 +16678,7 @@ sub _perform_drone_imagery_analytics {
             }
         close($F2);
     }
-    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_column_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_pure_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
             my $col_number = $stock_name_row_col{$p}->{col_number};
@@ -18453,7 +18453,7 @@ sub _perform_drone_imagery_analytics {
             }
         close($F2);
     }
-    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_column_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_pure_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
             my $col_number = $stock_name_row_col{$p}->{col_number};
@@ -20214,7 +20214,7 @@ sub _perform_drone_imagery_analytics {
             }
         close($F2);
     }
-    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_column_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_pure_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
             my $col_number = $stock_name_row_col{$p}->{col_number};
@@ -21976,7 +21976,7 @@ sub _perform_drone_imagery_analytics {
             }
         close($F2);
     }
-    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_column_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_pure_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
             my $col_number = $stock_name_row_col{$p}->{col_number};
@@ -23735,7 +23735,7 @@ sub _perform_drone_imagery_analytics {
             }
         close($F2);
     }
-    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_column_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_pure_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
             my $col_number = $stock_name_row_col{$p}->{col_number};
@@ -25462,7 +25462,7 @@ sub _perform_drone_imagery_analytics {
             }
         close($F2);
     }
-    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_column_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_pure_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
             my $col_number = $stock_name_row_col{$p}->{col_number};
@@ -27236,7 +27236,7 @@ sub _perform_drone_imagery_analytics {
             }
         close($F2);
     }
-    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
+    elsif ($statistics_select eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_column_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_univariate_pure_spatial_genetic_blups' || $statistics_select eq 'asreml_grm_multivariate_spatial_genetic_blups') {
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
             my $col_number = $stock_name_row_col{$p}->{col_number};
