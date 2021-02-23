@@ -3313,7 +3313,6 @@ sub observationvariable_list_POST {
 	my $self = shift;
 	my $c = shift;
 	my ($auth,$user_id) = _authenticate_user($c);
-	my $user_id;
 
 	my $response;
 	try {
@@ -3326,7 +3325,7 @@ sub observationvariable_list_POST {
 
 		my $brapi = $self->brapi_module;
 		my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
-		$response = $brapi_module->store(\@all_variables,$user_id, $c);
+		$response = $brapi_module->store(\@all_variables, $c);
 	} catch {
 		if ($_->isa('CXGN::BrAPI::Exceptions::ConflictException')){
 			my $error = CXGN::BrAPI::JSONResponse->return_error([], $_->message);
@@ -3382,7 +3381,6 @@ sub observationvariable_detail_PUT {
 	my $c = shift;
 	my $variableDbId = shift;
 	my ($auth,$user_id) = _authenticate_user($c);
-	my $user_id;
 
 	my $response;
 	try {
@@ -3393,7 +3391,7 @@ sub observationvariable_detail_PUT {
 
 		my $brapi = $self->brapi_module;
 		my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
-		$response = $brapi_module->update($data,$user_id,$c);
+		$response = $brapi_module->update($data,$c);
 	} catch {
 		warn Dumper($_);
 		if ($_->isa('CXGN::BrAPI::Exceptions::NotFoundException')){
