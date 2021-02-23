@@ -82,11 +82,11 @@ sub upload_cross_file_POST : Args(0) {
     if ($crosses_plots_upload) {
         $upload = $crosses_plots_upload;
         $upload_type = 'CrossesExcelFormat';
-        }
+    }
     if ($crosses_plants_upload) {
-            $upload = $crosses_plants_upload;
-            $upload_type = 'CrossesExcelFormat';
-            }
+        $upload = $crosses_plants_upload;
+        $upload_type = 'CrossesExcelFormat';
+    }
 
     if ($crosses_simple_upload) {
         $upload = $crosses_simple_upload;
@@ -1251,7 +1251,23 @@ sub upload_info_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload = $c->req->upload('crossinfo_upload_file');
+    my $cross_info_upload = $c->req->upload('crossinfo_upload_file');
+    my $additional_info_upload = $c->req->upload('additional_info_upload_file');
+    my $upload;
+    my $upload_type;
+    my $data_type;
+
+    if ($cross_info_upload) {
+        $upload = $cross_info_upload;
+        $upload_type = 'CrossInfoExcel';
+        $data_type = 'crossing_metadata_json';
+    }
+    if ($additional_info_upload) {
+        $upload = $additional_info_upload;
+        $upload_type = 'AdditionalInfoExcel';
+        $data_type = 'cross_additional_info';
+    }
+
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
@@ -1323,7 +1339,7 @@ sub upload_info_POST : Args(0) {
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
-    $parser->load_plugin('CrossInfoExcel');
+    $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
@@ -1355,7 +1371,7 @@ sub upload_info_POST : Args(0) {
                     cross_name => $cross_name_key,
                     key => $info_type,
                     value => $value,
-                    type => 'crossing_metadata_json'
+                    type => $data_type
                 });
                 $cross_add_info->add_info();
             }
