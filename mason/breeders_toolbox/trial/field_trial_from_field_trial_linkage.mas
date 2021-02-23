@@ -109,7 +109,7 @@ jQuery(document).ready(function () {
           svg.append("path").attr("fill", "none").attr("stroke", "dark-grey").attr("stroke-width", "2").attr("d", "M"+(margin.left + 2*headerBoxWidth)+",0 V"+(height-margin.bottom)+" ");
 
           //Create sankey generator
-          var sankey = Sankey()
+          var sankey = sankey.Sankey()
           .nodeWidth(15)
           .nodePadding(60);
 
