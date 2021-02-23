@@ -666,6 +666,10 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
     my $cross_id = $c->req->param("cross_id");
     my $type = $c->req->param("type");
     my $value = $c->req->param("value");
+    my $data_type = $c->req->param("data_type");
+#    print STDERR "DATA TYPE =".Dumper($data_type)."\n";
+#    print STDERR "TYPE =".Dumper($type)."\n";
+#    print STDERR "VALUE =".Dumper($value)."\n";
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cross_name = $schema->resultset("Stock::Stock")->find({stock_id => $cross_id})->uniquename();
@@ -675,7 +679,7 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
         cross_name => $cross_name,
         key => $type,
         value => $value,
-        type => 'crossing_metadata_json'
+        type => $data_type
     });
     $cross_add_info->add_info();
 
