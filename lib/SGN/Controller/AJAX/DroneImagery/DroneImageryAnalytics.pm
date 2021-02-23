@@ -15796,10 +15796,10 @@ sub _perform_drone_imagery_analytics {
             attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'INVERSE\') <- TRUE;
-            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat);
             if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
             write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
-            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors, rowNumber = mat\$rowNumber, colNumber = mat\$colNumber), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             }
             "';
             print STDERR Dumper $statistics_cmd;
@@ -15987,7 +15987,7 @@ sub _perform_drone_imagery_analytics {
         attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
         attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
         attr(geno_mat_3col,\'INVERSE\') <- TRUE;
-        mix <- asreml('.$cbind_string.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):rowNumberFactor + id(trait):colNumberFactor + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat);
+        mix <- asreml('.$cbind_string.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~units:idv(trait,init=c('.$init_values_string.')), data=mat);
         if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
         write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
         write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
@@ -17104,7 +17104,7 @@ sub _perform_drone_imagery_analytics {
             attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'INVERSE\') <- TRUE;
-            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat);
             if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
             write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
@@ -18514,7 +18514,7 @@ sub _perform_drone_imagery_analytics {
             attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'INVERSE\') <- TRUE;
-            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat);
             if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
             write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
@@ -19913,7 +19913,7 @@ sub _perform_drone_imagery_analytics {
             attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'INVERSE\') <- TRUE;
-            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat);
             if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
             write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
@@ -21313,7 +21313,7 @@ sub _perform_drone_imagery_analytics {
             attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'INVERSE\') <- TRUE;
-            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat);
             if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
             write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
@@ -22710,7 +22710,7 @@ sub _perform_drone_imagery_analytics {
             attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'INVERSE\') <- TRUE;
-            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat);
             if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
             write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
@@ -24068,7 +24068,7 @@ sub _perform_drone_imagery_analytics {
             attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'INVERSE\') <- TRUE;
-            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat);
             if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
             write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
@@ -25475,7 +25475,7 @@ sub _perform_drone_imagery_analytics {
             attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
             attr(geno_mat_3col,\'INVERSE\') <- TRUE;
-            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~idv(units), data=mat);
+            mix <- asreml(t'.$t.'~1 + replicate, random=~vm(id_factor, geno_mat_3col) + rowNumberFactor + colNumberFactor + ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~idv(units), data=mat);
             if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
             write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
