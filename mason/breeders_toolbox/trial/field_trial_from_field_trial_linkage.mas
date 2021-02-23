@@ -75,7 +75,7 @@ jQuery(document).ready(function () {
           }
           yinc = 20;
           for (var i = 0; i < r.field_trials_sourced.length; i++){
-            nodesArray.push({"name":r.field_trials_sourced[i][1], "type":"Unknown"}, "x":200, "y":yinc);
+            nodesArray.push({"name":r.field_trials_sourced[i][1], "type":"Unknown", "x":200, "y":yinc});
             linksArray.push({"source":r.field_trials_sourced[i][1], "target": "This Trial", "value":1});
             yinc = yinc + 20;
           }
