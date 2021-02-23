@@ -67,13 +67,17 @@ jQuery(document).ready(function () {
           var linksArray = [];
 
           //Build data from response: will be an object with two arrays, one of nodes and one of links
+          var yinc = 20;
           for (var i = 0; i < r.source_field_trials.length; i++){
-            nodesArray.push({"name":r.source_field_trials[i][1], "type":"Unknown", "x":0, "y":0});
+            nodesArray.push({"name":r.source_field_trials[i][1], "type":"Unknown", "x":0, "y":yinc});
             linksArray.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
+            yinc = yinc + 20;
           }
+          yinc = 20;
           for (var i = 0; i < r.field_trials_sourced.length; i++){
-            nodesArray.push({"name":r.field_trials_sourced[i][1], "type":"Unknown"});
+            nodesArray.push({"name":r.field_trials_sourced[i][1], "type":"Unknown"}, "x":200, "y":yinc);
             linksArray.push({"source":r.field_trials_sourced[i][1], "target": "This Trial", "value":1});
+            yinc = yinc + 20;
           }
 
           var nodeMap = {
@@ -105,8 +109,8 @@ jQuery(document).ready(function () {
           var uyt = svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "#00cc00").attr("stroke", "green").attr("x", headerBoxWidth*2 + margin.left).attr("y", 0);
           svg.append("text").attr("x", 5*headerBoxWidth/2 + margin.left).attr("y", 13).attr("text-anchor", "middle").attr("style", "font-size:5").text("Uniform Yield Trial").attr("stroke", "dark-grey");
 
-          svg.append("path").attr("fill", "none").attr("stroke", "black").attr("stroke-width", "4").attr("d", "M"+(margin.left + headerBoxWidth)+",0 V"+(height-margin.bottom)+" ");
-          svg.append("path").attr("fill", "none").attr("stroke", "black").attr("stroke-width", "4").attr("d", "M"+(margin.left + 2*headerBoxWidth)+",0 V"+(height-margin.bottom)+" ");
+          svg.append("path").attr("fill", "none").attr("stroke", "dark-grey").attr("stroke-width", "1").attr("d", "M"+(margin.left + headerBoxWidth)+",0 V"+(height-margin.bottom)+" ");
+          svg.append("path").attr("fill", "none").attr("stroke", "dark-grey").attr("stroke-width", "1").attr("d", "M"+(margin.left + 2*headerBoxWidth)+",0 V"+(height-margin.bottom)+" ");
 
           //Create sankey generator
           var sankey = d3.sankey()
@@ -125,8 +129,8 @@ jQuery(document).ready(function () {
           .append("path")
           .attr("class", "link")
           .attr("d", sankey.links() )
-          .style("stroke-width", function(d) { return Math.max(1, d.dy); })
-          .sort(function(a, b) { return b.dy - a.dy; });
+          .style("stroke-width", "4" );
+          //.sort(function(a, b) { return b.dy - a.dy; });
 
           //Render nodes
           var node = svg.append("g")
@@ -134,13 +138,12 @@ jQuery(document).ready(function () {
           .data(sankey.nodes())
           .enter().append("g")
           .attr("class", "node")
-          .attr("transform", function(d) { return "translate(" + (d.x) + "," + (d.y) + ")"; });
+          .attr("transform", "translate("+function(d){return d.x;}+","+function(d){return d.y;}+")");
 
           //Create rectangles for nodes
-          node.append("rect")
-          .attr("height", 30)
-          .attr("width", sankey.nodeWidth())
-          .style("fill", "blue" )
+          node.append("circle")
+          .attr("r", "7")
+          .style("fill", "light-blue" )
           .style("stroke", "blue" );
 
           //Titles for nodes
