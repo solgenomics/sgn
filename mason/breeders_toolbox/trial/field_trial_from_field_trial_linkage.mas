@@ -4,7 +4,7 @@ $trial_id
 $trial_type
 </%args>
 
-<& /util/import_javascript.mas, legacy => [ "d3/d3Min.js", "d3/d3-sankey/dist/d3-sankeyMin.js", "d3/d3-array/dist/d3-array.min", "d3/d3-path/dist/d3-path.min" ]  &>
+<& /util/import_javascript.mas, legacy => [ "d3/d3Min.js", "d3/d3-sankey/dist/d3-sankey.js", "d3/d3-sankey/src/sankey.js", "d3/d3-array/dist/d3-array.min", "d3/d3-path/dist/d3-path.min" ]  &>
 
 
 <div id="field_trial_to_field_trial_html">
@@ -42,18 +42,18 @@ jQuery(document).ready(function () {
     //     });
     // });
 
-    //Functions relevant to the sankey diagram
-    function update(nodeMap, newData){
-
-    }
-
-    function findNodePositions(nodeMap){
-
-    }
-
-    function drawLinks(nodeMap){
-
-    }
+    // //Functions relevant to the sankey diagram
+    // function update(nodeMap, newData){
+    //
+    // }
+    //
+    // function findNodePositions(nodeMap){
+    //
+    // }
+    //
+    // function drawLinks(nodeMap){
+    //
+    // }
 
     jQuery('#field_trial_from_field_trial_section_onswitch').one("click",  function() {
       jQuery.ajax({
