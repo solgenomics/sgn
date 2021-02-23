@@ -4,7 +4,7 @@ $trial_id
 $trial_type
 </%args>
 
-<& /util/import_javascript.mas, classes => [ "d3/d3Min.js" ], classes => [ "d3/d3-sankey/dist/d3-sankey.js" ], classes => [ "d3/d3-array/dist/d3-array.js" ], classes => [ "d3/d3-path/dist/d3-path.js" ]  &>
+<& /util/import_javascript.mas, legacy => [ "d3/d3Min.js", "d3/d3-sankey/dist/d3-sankey.js", "d3/d3-array/dist/d3-array.js", "d3/d3-path/dist/d3-path.js" ]  &>
 
 
 <div id="field_trial_to_field_trial_html">
@@ -108,52 +108,52 @@ jQuery(document).ready(function () {
           svg.append("path").attr("fill", "none").attr("stroke", "dark-grey").attr("stroke-width", "1").attr("d", "M"+(margin.left + headerBoxWidth)+",0L"+(margin.left + headerBoxWidth)+","+(height - margin.bottom)+" ");
           svg.append("path").attr("fill", "none").attr("stroke", "dark-grey").attr("stroke-width", "1").attr("d", "M"+(margin.left + 2*headerBoxWidth)+",0L"+(margin.left + 2*headerBoxWidth)+","+(height - margin.bottom)+" ");
 
-          // //Create sankey generator
-          // var sankey = sankey()
-          // .nodeWidth(15)
-          // .nodePadding(60);
-          //
-          // sankey.nodes(nodesArray)
-          // .links(linksArray);
-          // //.layout(1);
-          //
-          // //Render links
-          // var link = svg.append("g")
-          // .selectAll(".link")
-          // .data(linksArray)
-          // .enter()
-          // .append("path")
-          // .attr("class", "link")
-          // .attr("d", sankey.links() )
-          // .style("stroke-width", function(d) { return Math.max(1, d.dy); })
-          // .sort(function(a, b) { return b.dy - a.dy; });
-          //
-          // //Render nodes
-          // var node = svg.append("g")
-          // .selectAll(".node")
-          // .data(sankey.nodes())
-          // .enter().append("g")
-          // .attr("class", "node")
-          // .attr("transform", function(d) { return "translate(" + (500) + "," + (50) + ")"; });
-          //
-          // //Create rectangles for nodes
-          // node.append("rect")
-          // .attr("height", 30)
-          // .attr("width", sankey.nodeWidth())
-          // .style("fill", "blue" )
-          // .style("stroke", "blue" );
-          //
-          // //Titles for nodes
-          // node.append("text")
-          // .attr("x", -6)
-          // .attr("y", function(d) { return d.dy / 2; })
-          // .attr("dy", ".35em")
-          // .attr("text-anchor", "end")
-          // .attr("transform", null)
-          // .text(function(d) { return d.name; })
-          // .filter(function(d) { return d.x < width / 2; })
-          // .attr("x", 6 + sankey.nodeWidth())
-          // .attr("text-anchor", "start");
+          //Create sankey generator
+          var sankey = sankey()
+          .nodeWidth(15)
+          .nodePadding(60);
+
+          sankey.nodes(nodesArray)
+          .links(linksArray);
+          //.layout(1);
+
+          //Render links
+          var link = svg.append("g")
+          .selectAll(".link")
+          .data(linksArray)
+          .enter()
+          .append("path")
+          .attr("class", "link")
+          .attr("d", sankey.links() )
+          .style("stroke-width", function(d) { return Math.max(1, d.dy); })
+          .sort(function(a, b) { return b.dy - a.dy; });
+
+          //Render nodes
+          var node = svg.append("g")
+          .selectAll(".node")
+          .data(sankey.nodes())
+          .enter().append("g")
+          .attr("class", "node")
+          .attr("transform", function(d) { return "translate(" + (500) + "," + (50) + ")"; });
+
+          //Create rectangles for nodes
+          node.append("rect")
+          .attr("height", 30)
+          .attr("width", sankey.nodeWidth())
+          .style("fill", "blue" )
+          .style("stroke", "blue" );
+
+          //Titles for nodes
+          node.append("text")
+          .attr("x", -6)
+          .attr("y", function(d) { return d.dy / 2; })
+          .attr("dy", ".35em")
+          .attr("text-anchor", "end")
+          .attr("transform", null)
+          .text(function(d) { return d.name; })
+          .filter(function(d) { return d.x < width / 2; })
+          .attr("x", 6 + sankey.nodeWidth())
+          .attr("text-anchor", "start");
 
         },
         error: function(r){
