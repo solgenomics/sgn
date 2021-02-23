@@ -14265,7 +14265,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     mat_eff_sim6 <- fread(\''.$effects_sim_heatmap_tempfile6_6.'\', header=TRUE, sep=\',\');
                     options(device=\'png\');
                     par();
-                    gg_env6 <- ggplot(mat_env5, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
+                    gg_env6 <- ggplot(mat_env6, aes('.$output_plot_col.', '.$output_plot_row.', fill=value)) +
                         geom_tile() +
                         scale_fill_viridis(discrete=FALSE) +
                         coord_equal() +
@@ -16350,7 +16350,7 @@ sub _perform_drone_imagery_analytics {
         attr(geno_mat_3col,\'rowNames\') <- as.character(seq(1,'.$number_accessions.'));
         attr(geno_mat_3col,\'colNames\') <- as.character(seq(1,'.$number_accessions.'));
         attr(geno_mat_3col,\'INVERSE\') <- TRUE;
-        mix <- asreml('.$cbind_string.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1v(rowNumberFactor):ar1(colNumberFactor), residual=~units:idv(trait,init=c('.$init_values_string.')), data=mat);
+        mix <- asreml('.$cbind_string.'~trait + replicate, random=~us(trait,init=c('.$init_values_string.')):vm(id_factor, geno_mat_3col) + id(trait):ar1(rowNumberFactor):ar1v(colNumberFactor), residual=~units:us(trait,init=c('.$init_values_string.')), data=mat);
         if (!is.null(summary(mix,coef=TRUE)\$coef.random)) {
         write.table(summary(mix,coef=TRUE)\$coef.random, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
         write.table(data.frame(plot_id = mat\$plot_id, residuals = mix\$residuals, fitted = mix\$linear.predictors), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
