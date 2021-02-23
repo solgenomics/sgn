@@ -4,7 +4,7 @@ $trial_id
 $trial_type
 </%args>
 
-<& /util/import_javascript.mas, legacy => [ "d3/d3Min.js", "d3/d3-sankey/dist/d3-sankey.min", "d3/d3-array/dist/d3-array.min", "d3/d3-path/dist/d3-path.min" ]  &>
+<& /util/import_javascript.mas, legacy => [ "d3/d3Min.js", "d3/d3-sankey/dist/d3-sankeyMin.js", "d3/d3-array/dist/d3-array.min", "d3/d3-path/dist/d3-path.min" ]  &>
 
 
 <div id="field_trial_to_field_trial_html">
