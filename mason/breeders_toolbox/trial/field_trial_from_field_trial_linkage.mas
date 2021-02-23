@@ -4,7 +4,7 @@ $trial_id
 $trial_type
 </%args>
 
-<& /util/import_javascript.mas, legacy => [ "d3/d3Min.js", "d3/d3-sankey/dist/d3-sankey.js", "d3/d3-array/dist/d3-array.js", "d3/d3-path/dist/d3-path.js" ]  &>
+<& /util/import_javascript.mas, legacy => [ "d3/d3Min.js", "d3/d3-sankey/", "d3/d3-array/", "d3/d3-path/" ]  &>
 
 
 <div id="field_trial_to_field_trial_html">
@@ -109,7 +109,7 @@ jQuery(document).ready(function () {
           svg.append("path").attr("fill", "none").attr("stroke", "dark-grey").attr("stroke-width", "2").attr("d", "M"+(margin.left + 2*headerBoxWidth)+",0L"+(margin.left + 2*headerBoxWidth)+","+(height - margin.bottom)+" ");
 
           //Create sankey generator
-          var sankey = sankey()
+          var sankey = Sankey()
           .nodeWidth(15)
           .nodePadding(60);
 
