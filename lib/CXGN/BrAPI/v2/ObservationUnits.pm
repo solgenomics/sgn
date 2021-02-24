@@ -127,7 +127,7 @@ sub search {
         my @brapi_treatments;
         my $treatments = $obs_unit->{treatments};
         while (my ($factor, $modality) = each %$treatments){
-            my $modality = $modality ? $modality : '';
+            my $modality = $modality ? $modality : undef;
             push @brapi_treatments, {
                 factor => $factor,
                 modality => $modality,
@@ -144,7 +144,7 @@ sub search {
             $geolocation_lookup{$r->stock_id} = $r->value;
         }
         my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{observationunit_stock_id}} ?$geolocation_lookup{$obs_unit->{observationunit_stock_id}} : '';
-        my $geo_coordinates =''; 
+        my $geo_coordinates; 
 
         if ($geo_coordinates_string){
             $geo_coordinates = decode_json $geo_coordinates_string;
@@ -299,7 +299,7 @@ sub detail {
         my @brapi_treatments;
         my $treatments = $obs_unit->{treatments};
         while (my ($factor, $modality) = each %$treatments){
-            my $modality = $modality ? $modality : '';
+            my $modality = $modality ? $modality : undef;
             push @brapi_treatments, {
                 factor => $factor,
                 modality => $modality,
@@ -316,7 +316,7 @@ sub detail {
             $geolocation_lookup{$r->stock_id} = $r->value;
         }
         my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{observationunit_stock_id}} ?$geolocation_lookup{$obs_unit->{observationunit_stock_id}} : '';
-        my $geo_coordinates =''; 
+        my $geo_coordinates; 
 
         if ($geo_coordinates_string){
             $geo_coordinates = decode_json $geo_coordinates_string;
