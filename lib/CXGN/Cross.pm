@@ -40,8 +40,8 @@ has 'cross_stock_id' => (isa => "Maybe[Int]",
 );
 
 has 'cross_name' => (isa => 'Maybe[Str]',
-		     is => 'rw',
-    );
+    is => 'rw',
+);
 
 has 'female_parent' => (isa => 'Str',
     is => 'rw',
@@ -82,8 +82,9 @@ sub BUILD {
 
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $cross_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
 
-    my $row = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
+    my $row = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id, type_id => $cross_type_id });
 
     if ($row) {
 	 my $name = $row->uniquename();
@@ -914,15 +915,40 @@ sub delete {
 	    print STDERR "This cross has no associated data that would prevent deletion.";
 	}
 
-	# TO DO: check if this row is actually a cross
+    #checking if the stock id has cross stock type
+    my $cross_rs = $schema->resultset("Stock::Stock")->find ({stock_id => $cross_id, type_id => $cross_type_id});
+    if (!$cross_rs) {
+        print STDERR "This stock id is not a cross. Cannot delete.\n";
+	    die "This stock id is not a cross. Cannot delete.\n";
+    }
 
+    #get nd_experiment_id with cross_experiment_type
+    my $experiment_id;
+    my $nd_q = "SELECT nd_experiment.nd_experiment_id FROM nd_experiment_stock
+        JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+        WHERE nd_experiment.type_id = ? AND nd_experiment_stock.stock_id = ?";
+
+    my $nd_h = $schema->storage->dbh()->prepare($nd_q);
+    $nd_h->execute($cross_experiment_type_id, $cross_id);
+    my @nd_experiment_ids= $nd_h->fetchrow_array();
+    if (scalar @nd_experiment_ids == 1) {
+        $experiment_id = $nd_experiment_ids[0];
+    } else {
+        print STDERR "Error retrieving experiment id"."\n";
+        die "Error retrieving experiment id";
+    }
+#    print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+
+    #delete the nd_experiment_md_files entries
+    my $md_files_q = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id = ?";
+    my $md_files_h = $schema->storage->dbh()->prepare($md_files_q);
+    $md_files_h->execute($experiment_id);
 
 	# delete the nd_experiment entries
-	#
 	print STDERR "Deleting nd_experiment entry for cross...\n";
-	my $q2= "delete from nd_experiment where nd_experiment.nd_experiment_id=(SELECT nd_experiment_id FROM nd_experiment_stock JOIN stock USING (stock_id) where stock.stock_id=? and stock.type_id =?) and nd_experiment.type_id = ?";
+	my $q2= "delete from nd_experiment where nd_experiment.nd_experiment_id = ? AND nd_experiment.type_id = ?";
 	my $h2 = $dbh->prepare($q2);
-	$h2->execute($self->cross_stock_id(), $cross_type_id, $cross_experiment_type_id);
+	$h2->execute($experiment_id, $cross_experiment_type_id);
 
 	# delete stock owner entries
 	#
@@ -951,6 +977,7 @@ sub delete {
 		$s->hard_delete();
 	    }
 	}
+
     };
 
     if ($@) {
@@ -1273,7 +1300,48 @@ sub get_cross_additional_info_trial {
     }
 
     return \@data;
+}
 
+
+=head2 get_nd_experiment_id_with_type_cross_experiment
+
+
+=cut
+
+sub get_nd_experiment_id_with_type_cross_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $cross_name = $self->cross_name();
+    my $cross_id;
+    my $experiment_id;
+#    print STDERR "CROSS NAME =".Dumper($cross_name)."\n";
+    my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id;
+    my $cross_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+
+    my $cross_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $cross_name, type_id => $cross_type_id});
+
+    if ($cross_rs) {
+        $cross_id = $cross_rs->stock_id();
+    } else {
+        print STDERR "Error retrieving cross ID"."\n";
+        return;
+    }
+
+    my $q = "SELECT nd_experiment.nd_experiment_id FROM nd_experiment_stock
+        JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+        WHERE nd_experiment.type_id = ? AND nd_experiment_stock.stock_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($cross_experiment_type_id, $cross_id);
+    my @nd_experiment_ids= $h->fetchrow_array();
+    if (scalar @nd_experiment_ids == 1) {
+        $experiment_id = $nd_experiment_ids[0];
+    } else {
+        print STDERR "Error retrieving experiment ID"."\n";
+        return;
+    }
+
+    return $experiment_id;
 }
 
 
