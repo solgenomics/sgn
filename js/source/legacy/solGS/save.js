@@ -43,6 +43,7 @@ solGS.save = {
 
 	saveGebvsArgs: function() {
 	   var trainingPopId = jQuery('#training_pop_id').val();
+	   var selectionPopId = jQuery('#selection_pop_id').val();
 	   var traitId       = jQuery('#trait_id').val();
 	   var protocolId = jQuery('#genotyping_protocol_id').val();
 
@@ -50,6 +51,7 @@ solGS.save = {
 
 	   var args = {
 		   'training_pop_id' : trainingPopId,
+		   'selection_pop_id': selectionPopId,
 		   'trait_id' : traitId,
 		   'genotyping_protocol_id' : protocolId,
 		   'analysis_result_type' : analysisResultType
@@ -115,7 +117,7 @@ jQuery(document).ready( function() {
 					jQuery("#gebvs_output").append(link);
 				} else {
 					jQuery("#save_gebvs").show();
-					jQuery("#gebvs_save_message").html('Error occured storing the GEBVs').show().fadeOut(10000);
+					jQuery("#gebvs_save_message").html(res.error).show().fadeOut(10000);
 
 				}
 				jQuery("#gebvs_output .multi-spinner-container").hide();
@@ -130,7 +132,7 @@ jQuery(document).ready( function() {
 					var link = '<a href="/analyses/'+ res.analysis_id + '">View Stored GEBVs</a>';
 					jQuery("#gebvs_output").append(link);
 				} else {
-					jQuery("#gebvs_save_message").html('Error occured storing the GEBVs').show().fadeOut(10000);
+					jQuery("#gebvs_save_message").html(res.error).show().fadeOut(10000);
 
 				}
 					//jQuery("#save_gebvs").show();
