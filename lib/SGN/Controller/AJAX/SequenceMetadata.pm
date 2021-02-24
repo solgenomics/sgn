@@ -416,10 +416,15 @@ sub sequence_metadata_store_POST : Args(0) {
 #   - feature_id = id of the associated feature
 #   - start = (optional) start position of the query range (default: 0)
 #   - end = (optional) end position of the query range (default: feature max)
-#   - type_id = (optional) cvterm_id of sequence metadata type (comma separated list of multiple type ids)
-#   - nd_protocol_id = (optional) nd_protocol_id of sequence metadata protocol (comma separated list of multiple protocol ids)
-#   - score_min = (optional) minimum score value
-#   - score_max = (optional) maximum score value
+#   - type_id = (optional) cvterm_id(s) of sequence metadata type(s) (comma separated list of multiple type ids)
+#   - nd_protocol_id = (optional) nd_protocol_id(s) of sequence metadata protocol(s) (comma separated list of multiple protocol ids)
+#   - attribute = (optional) attribute(s) and their properties (protocol id, comparison, and value - | separated) (comma separated list of multiple attributes)
+#       attribute format: 
+#           {attribute name}|{protocol id}|{comparison}|{value}
+#           where comparison = con, eq, lt, lte, gt, gte
+#       examples:
+#           attribute=score|12|lt|0
+#           attribute=score|12|lt|0,trait|13|eq|yield
 #   - format = (optional) JSON or gff response format (default: JSON)
 # RETURNS: an array of sequence metadata objects with the following keys:
 #   - feature_id = id of associated feature
@@ -443,8 +448,7 @@ sub sequence_metadata_query_GET : Args(0) {
     my $end = $c->req->param('end');
     my @type_ids = split(',', $c->req->param('type_id'));
     my @nd_protocol_ids = split(',', $c->req->param('nd_protocol_id'));
-    my $score_min = $c->req->param('score_min');
-    my $score_max = $c->req->param('score_max');
+    my @attributes = split(',', $c->req->param('attribute'));
     my $format = $c->req->param('format');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -458,6 +462,20 @@ sub sequence_metadata_query_GET : Args(0) {
     }
 
 
+    # Parse attribute filters
+    my @attributes_parsed = ();
+    foreach my $attr (@attributes) {
+        my @attr_parts = split(/\|/, $attr);
+        my %a = (
+            key => $attr_parts[0],
+            nd_protocol_id => $attr_parts[1],
+            comparison => $attr_parts[2],
+            value => $attr_parts[3]
+        );
+        push(@attributes_parsed, \%a);
+    }
+
+
     # Perform query
     my $smd =  CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema);
     my $query = $smd->query({
@@ -466,8 +484,7 @@ sub sequence_metadata_query_GET : Args(0) {
         end => defined $end && $end ne '' ? $end : undef,
         type_ids => @type_ids ? \@type_ids : undef,
         nd_protocol_ids => @nd_protocol_ids ? \@nd_protocol_ids : undef,
-        score_min => defined $score_min && $score_min ne '' ? $score_min : undef,
-        score_max => defined $score_max && $score_max ne '' ? $score_max : undef
+        attributes => @attributes_parsed ? \@attributes_parsed : undef
     });
 
 

@@ -18,14 +18,27 @@ my $store_results = $smd->store($processed_filepath);
 To query the stored sequence metadata:
 (bcs_schema and feature_id are required, all other filters are optional)
 my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema)
+my @attributes = (
+    {
+        key => 'score',
+        nd_protocol_id => 200,
+        comparison => 'lt',
+        value => 0
+    },
+    {
+        key => 'trait',
+        nd_protocol_id => 201,
+        comparison => 'eq',
+        value => 'grain yield'
+    }
+);
 my $query_results = $smd->query({
     feature_id => $feature_id, 
     start => $start_pos, 
     end => $end_pos,
-    type_ids => @type_ids,
-    nd_protocol_ids => @nd_protocol_ids,
-    score_min => $score_min,
-    score_max => $score_max
+    type_ids => \@type_ids,
+    nd_protocol_ids => \@nd_protocol_ids,
+    attributes => \@attributes
 });
 
 =head1 DESCRIPTION
@@ -339,8 +352,12 @@ sub _write_chunk() {
 # - end = (optional) end position of query region (default: feature max)
 # - type_ids = (optional) array of sequence metadata cvterm ids (default: object type_id, if defined, or include all)
 # - nd_protocol_ids = (optional) array of nd_protocol_ids (default: object nd_protocol_id, if defined, or include all)
-# - min_score = (optional) minimum score value
-# - max_score = (optional) maximum score value
+# - attributes = (optional) an array of attribute properties to include in the filter (default: none)
+#       the attribute properties are a hash with the following keys:
+#           - key = attribute key (score, secondary attribute key, etc)
+#           - nd_protocol_id = the id of the protocol to apply this attribute filter to
+#           - comparison = one of: con, eq, lt, lte, gt, gte to use as the comparison of the stored value to the specified value
+#           - value = the value to use in the comparison
 #
 # Returns a hash with the following keys:
 #   - error: an error message, if an error was encountered
@@ -365,9 +382,8 @@ sub query {
     my $max_score = $args->{max_score};
     my $type_ids = $args->{type_ids};
     my $nd_protocol_ids = $args->{nd_protocol_ids};
-    my $score_min = $args->{score_min};
-    my $score_max = $args->{score_max};
-    my $MAX_CHUNK_COUNT = 1000;  # The max number of chunks to try to query at once
+    my $attributes = $args->{attributes};
+    my $MAX_CHUNK_COUNT = 1000;  # The max number of chunks to try to query at once, more than this returns an error
 
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh();
@@ -429,20 +445,25 @@ sub query {
         }
     }
 
-
-    # Estimate result size by getting number of matching chunks
-    my $size_query = "SELECT COUNT(feature_json_id)
-FROM public.featureprop_json
-WHERE feature_id = ? 
-AND ((start_pos <= ? AND end_pos >= ?) OR (start_pos <= ? AND end_pos >= ?) OR (start_pos >= ? AND end_pos <= ?))";
+    # Build the base query conditions
+    my @query_params = ($feature_id, $start, $start, $end, $end, $start, $end);
+    my $query_where = " WHERE featureprop_json.feature_id = ? ";
+    $query_where .= " AND ((featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (featureprop_json.start_pos >= ? AND featureprop_json.end_pos <= ?)) ";
     if ( $type_ids && @$type_ids ) {
-        $size_query .= " AND featureprop_json.type_id IN (" . join(',', @$type_ids) . ")";
+        $query_where .= " AND featureprop_json.type_id IN (@{[join',', ('?') x @$type_ids]})";
+        push(@query_params, @$type_ids);
     }
     if ( $nd_protocol_ids && @$nd_protocol_ids ) {
-        $size_query .= " AND featureprop_json.nd_protocol_id IN (" . join(',', @$nd_protocol_ids) . ")";
+        $query_where .= " AND featureprop_json.nd_protocol_id IN (@{[join',', ('?') x @$nd_protocol_ids]})";
+        push(@query_params, @$nd_protocol_ids);
     }
+
+    # Estimate result size by getting number of matching chunks
+    my $size_query = "SELECT COUNT(feature_json_id) ";
+    $size_query .= "FROM public.featureprop_json";
+    $size_query .= $query_where;
     my $sh = $dbh->prepare($size_query);
-    $sh->execute($feature_id, $start, $start, $end, $end, $start, $end);
+    $sh->execute(@query_params);
     my ($chunk_count) = $sh->fetchrow_array();
     
     # DATA QUERY TOO LARGE: return with an error message
@@ -458,28 +479,68 @@ FROM featureprop_json
 LEFT JOIN jsonb_array_elements(featureprop_json.json) as s(data) on true
 LEFT JOIN public.feature ON feature.feature_id = featureprop_json.feature_id
 LEFT JOIN public.cvterm ON cvterm.cvterm_id = featureprop_json.type_id
-LEFT JOIN public.nd_protocol ON nd_protocol.nd_protocol_id = featureprop_json.nd_protocol_id
-WHERE featureprop_json.feature_id = ?
-AND (s->>'start')::int >= ? AND (s->>'end')::int <= ?
-AND ((featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (featureprop_json.start_pos <= ? AND featureprop_json.end_pos >= ?) OR (featureprop_json.start_pos >= ? AND featureprop_json.end_pos <= ?))";
+LEFT JOIN public.nd_protocol ON nd_protocol.nd_protocol_id = featureprop_json.nd_protocol_id";
 
-    # Add optional filters
-    if ( $type_ids && @$type_ids ) {
-        $query .= " AND featureprop_json.type_id IN (" . join(',', @$type_ids) . ")";
+    # Add aditional conditions
+    $query .= $query_where;
+    $query .= " AND (s->>'start')::int >= ? AND (s->>'end')::int <= ?";
+    push(@query_params, $start, $end);
+    if ( $attributes && @$attributes ) {
+        $query .= " AND (";
+        my @aq = ();
+        foreach my $a (@$attributes ) {
+            my $ap = $a->{nd_protocol_id};
+            my $ak = $a->{key};
+            my $ac = $a->{comparison};
+            my $av = $a->{value};
+            
+            my $cast = undef;
+            my $comp = undef;
+            if ( $ac eq "lt" ) {
+                $comp = "<";
+                $cast = "real";
+            }
+            elsif ( $ac eq "lte" ) {
+                $comp = "<=";
+                $cast = "real";
+            }
+            elsif ( $ac eq "gt" ) {
+                $comp = ">";
+                $cast = "real";
+            }
+            elsif ( $ac eq "gte" ) {
+                $comp = ">=";
+                $cast = "real";
+            }
+            elsif ( $ac eq "con" ) {
+                $comp = "LIKE";
+                $cast = "text";
+                $av = "%" . $av . "%";
+            }
+            else {
+                $comp = "=";
+                $cast = "text";
+            }
+
+            my $q = "(featureprop_json.nd_protocol_id <> ? OR (featureprop_json.nd_protocol_id = ?";
+            $q .= " AND CASE WHEN s->>? = '' THEN FALSE ELSE (s->>?)::$cast $comp ? END))";
+
+            push(@aq, $q);
+            push(@query_params, $ap, $ap, $ak, $ak, $av);
+        }
+        $query .= join(" AND ", @aq);
+        $query .= ") ";
     }
-    if ( $nd_protocol_ids && @$nd_protocol_ids ) {
-        $query .= " AND featureprop_json.nd_protocol_id IN (" . join(',', @$nd_protocol_ids) . ")";
-    }
-    if ( defined $score_min ) {
-        $query .= " AND CASE WHEN s->>'score' = '' THEN FALSE ELSE (s->>'score')::real >= $score_min END";
-    }
-    if ( defined $score_max ) {
-        $query .= " AND CASE WHEN s->>'score' = '' THEN FALSE ELSE (s->>'score')::real <= $score_max END";
-    }
+
+    # print STDERR "QUERY:\n";
+    # print STDERR "$query\n";
+    # print STDERR "QUERY PARAMS:\n";
+    # use Data::Dumper;
+    # print STDERR Dumper \@query_params;
 
     # Perform the search
     my $h = $dbh->prepare($query);
-    $h->execute($feature_id, $start, $end, $start, $start, $end, $end, $start, $end);
+    $h->execute(@query_params);
 
     # Parse the results
     my @matches = ();
