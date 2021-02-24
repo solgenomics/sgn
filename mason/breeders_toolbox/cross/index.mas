@@ -268,24 +268,25 @@ $identifier_prefix => ''
 
 <script>
 
-  jQuery(document).ready( function() {
+jQuery(document).ready( function() {
     jQuery('#delete_cross_button').click( function() {
-       var response = confirm('Really delete this cross? This action cannot be undone.');
-       if (response) {
-         jQuery.ajax( {
-           url: '/ajax/cross/delete',
-           data: { 'cross_id' : <% $cross_id %>},
-           method: 'POST',
-           error: function(r) { alert('An error occurred.'); },
-           success: function(r) {
-             if (r.error) { alert(r.error); }
-             else {
-               alert('Deletion was successful.');
-             }
-           }
-         });
-       }
+        var response = confirm('Really delete this cross? This action cannot be undone.');
+        if (response) {
+            jQuery.ajax( {
+                url: '/ajax/cross/delete',
+                data: { 'cross_id' : <% $cross_id %>},
+                method: 'POST',
+                error: function(r) { alert('An error occurred.'); },
+                success: function(r) {
+                    if (r.error) {
+                        alert(r.error);
+                    } else {
+                        alert('Deletion was successful.');
+                    }
+                }
+            });
+        }
     });
-  });
+});
 
 </script>
