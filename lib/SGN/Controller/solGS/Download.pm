@@ -204,8 +204,10 @@ sub selection_prediction_download_urls {
 
     if (!$download_url)
     {
-	$download_url = qq | <a href ="/solgs/model/$training_pop_id/prediction/$selection_pop_id/|
-	    . qq|gp/$protocol_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a>|;
+	my $trait_id = $selected_model_traits->[0];
+	
+	$download_url = qq | <a href ="/solgs/selection/$selection_pop_id/model/$training_pop_id/|
+	    . qq|trait/$trait_id/gp/$protocol_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a>|;
     }
 
     $c->stash->{selection_prediction_download} = $download_url;
