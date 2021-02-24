@@ -77,6 +77,7 @@ $analytics_protocol_result_summary
 %           my $env_corr_results = $s->{env_correlation_results};
 %           my $env_iterations = $s->{env_iterations};
 %           my $number_iterations = $s->{number_iterations};
+%           my $varcomps = $s->{env_varcomps};
 %           if ($analytics_result_type) {
 %               print "<h4>Type: ".$analytics_result_type."</h4>";
 %           }
@@ -97,6 +98,28 @@ $analytics_protocol_result_summary
 %                       print " ".$param." : ".$env_iterations->{$iteration}->{$param}." ";
 %                   }
 %                   print "<br/>";
+%               }
+%           }
+%           if ($varcomps) {
+%               print "<br/><strong>Variance Components</strong>";
+%               foreach my $i (@$varcomps) {
+%                  print "<br/>$i->{type}<br/>";
+%                   my @types = ('original', 'altered', 'env_linear', 'env_1DN', 'env_2DN', 'env_ar1xar1', 'env_random', 'env_realdata');
+%                   foreach my $t (@types) {
+%                       if ($i->{$t}->{covariance}) {
+%                           my $string = " $t: ";
+%                           foreach my $i (@{$i->{$t}->{covariance}}) {
+%                               $string .= $i->[0]." : ".$i->[1]." ";
+%                           }
+%                           print " ".$string."<br/>";
+%                       }
+%                       if ($i->{$t}->{genetic_covariance}) {
+%                           my $string = " $t: Genetic: ". join(',', @{$i->{$t}->{genetic_covariance}} );
+%                           $string .= " Env: ". join(',', @{$i->{$t}->{env_covariance}} );
+%                           $string .= " Residual: ".$i->{$t}->{residual};
+%                           print " ".$string."<br/>";
+%                       }
+%                   }
 %               }
 %           }
 %           print "</div>";

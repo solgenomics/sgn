@@ -53,7 +53,7 @@
                             <option value="airemlf90_grm_random_regression_PEcorr_dap_blups">AIREMLf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects with PE Correlation Structure</option>
 
                             <option value="asreml_grm_univariate_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+Row+Col+spatial. Univariate genetic + AR1xAR1 spatial effects</option>
-                            <option value="asreml_grm_univariate_column_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+Col+spatial. Univariate genetic + AR1xAR1 spatial effects</option>
+                            <!--option value="asreml_grm_univariate_column_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+Col+spatial. Univariate genetic + AR1xAR1 spatial effects</option-->
                             <option value="asreml_grm_univariate_pure_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+spatial. Univariate genetic + AR1xAR1 spatial effects</option>
                             <option value="asreml_grm_multivariate_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic + AR1xAR1 spatial effects</option>
 

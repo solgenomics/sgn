@@ -71,7 +71,7 @@ sub analytics_protocol_detail :Path('/analytics_protocols') Args(1) {
     );
 
     my $result_props_json_array = $result_props_json ? decode_json $result_props_json : [];
-    print STDERR Dumper $result_props_json_array;
+    # print STDERR Dumper $result_props_json_array;
 
     $c->stash->{analytics_protocol_id} = $nd_protocol_id;
     $c->stash->{analytics_protocol_name} = $name;

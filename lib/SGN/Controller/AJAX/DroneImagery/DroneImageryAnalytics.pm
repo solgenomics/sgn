@@ -342,6 +342,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $spatial_effects_files_store;
     my $env_corr_res;
     my $env_iterations;
+    my $env_varcomps;
 
     my (@sorted_trait_names, @unique_accession_names, @unique_plot_names, %trait_name_encoder, %trait_to_time_map);
 
@@ -2966,6 +2967,50 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $status_gen_env6_plot = system($cmd_gen_env6_plot);
                     push @$spatial_effects_plots, [$genetic_effects_alt_env6_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv6line_"."envvar_".$env_variance_percent."_".$iterations];
                 };
+
+                push @$env_varcomps, {
+                    type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    original => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_original_array_1,
+                        env_covariance => $rr_coeff_env_covariance_original_array_1,
+                        residual => $rr_residual_variance_original_1
+                    },
+                    altered => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_array_1,
+                        env_covariance => $rr_coeff_env_covariance_altered_array_1,
+                        residual => $rr_residual_variance_altered_1
+                    },
+                    env_linear => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_1_1,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_1_1,
+                        residual => $rr_residual_variance_altered_env_1_1
+                    },
+                    env_1DN  => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_2_1,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_2_1,
+                        residual => $rr_residual_variance_altered_env_2_1
+                    },
+                    env_2DN  => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_3_1,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_3_1,
+                        residual => $rr_residual_variance_altered_env_3_1
+                    },
+                    env_random  => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_4_1,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_4_1,
+                        residual => $rr_residual_variance_altered_env_4_1
+                    },
+                    env_ar1xar1  => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_5_1,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_5_1,
+                        residual => $rr_residual_variance_altered_env_5_1
+                    },
+                    env_realdata  => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_6_1,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_6_1,
+                        residual => $rr_residual_variance_altered_env_6_1
+                    }
+                };
             }
 
             if ($statistics_select_original eq '' || $statistics_select_original eq 'airemlf90_grm_random_regression_PEcorr_dap_blups') {
@@ -5564,6 +5609,50 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my $status_gen_env6_plot = system($cmd_gen_env6_plot);
                     push @$spatial_effects_plots, [$genetic_effects_alt_env6_figure_tempfile_string, $statistics_select.$sim_env_change_over_time."_effaltenv6line_"."envvar_".$env_variance_percent."_".$iterations];
                 };
+
+                push @$env_varcomps, {
+                    type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    original => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_original_array_4,
+                        env_covariance => $rr_coeff_env_covariance_original_array_4,
+                        residual => $rr_residual_variance_original_4
+                    },
+                    altered => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_array_4,
+                        env_covariance => $rr_coeff_env_covariance_altered_array_4,
+                        residual => $rr_residual_variance_altered_4
+                    },
+                    env_linear => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_1_4,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_1_4,
+                        residual => $rr_residual_variance_altered_env_1_4
+                    },
+                    env_1DN  => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_2_4,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_2_4,
+                        residual => $rr_residual_variance_altered_env_2_4
+                    },
+                    env_2DN  => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_3_4,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_3_4,
+                        residual => $rr_residual_variance_altered_env_3_4
+                    },
+                    env_random  => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_4_4,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_4_4,
+                        residual => $rr_residual_variance_altered_env_4_4
+                    },
+                    env_ar1xar1  => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_5_4,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_5_4,
+                        residual => $rr_residual_variance_altered_env_5_4
+                    },
+                    env_realdata  => {
+                        genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_6_4,
+                        env_covariance => $rr_coeff_env_covariance_altered_env_array_6_4,
+                        residual => $rr_residual_variance_altered_env_6_4
+                    }
+                };
             }
 
             my (%phenotype_data_original_2, @data_matrix_original_2, @data_matrix_phenotypes_original_2);
@@ -7792,6 +7881,34 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 %trait_name_encoder = %trait_name_encoder_2;
                 %trait_to_time_map = %trait_to_time_map_2;
+
+                push @$env_varcomps, {
+                    type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    original => {
+                        covariance => $varcomp_original_array_2,
+                    },
+                    altered => {
+                        covariance => $varcomp_altered_array_2,
+                    },
+                    env_linear => {
+                        covariance => $varcomp_altered_array_env_1_2,
+                    },
+                    env_1DN  => {
+                        covariance => $varcomp_altered_array_env_2_2,
+                    },
+                    env_2DN  => {
+                        covariance => $varcomp_altered_array_env_3_2,
+                    },
+                    env_random  => {
+                        covariance => $varcomp_altered_array_env_4_2,
+                    },
+                    env_ar1xar1  => {
+                        covariance => $varcomp_altered_array_env_5_2,
+                    },
+                    env_realdata  => {
+                        covariance => $varcomp_altered_array_env_6_2,
+                    }
+                };
             }
 
             if ($statistics_select_original eq '' || $statistics_select_original eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select_original eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
@@ -10014,6 +10131,34 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 %trait_name_encoder = %trait_name_encoder_2;
                 %trait_to_time_map = %trait_to_time_map_2;
+
+                push @$env_varcomps, {
+                    type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    original => {
+                        covariance => $varcomp_original_array_3,
+                    },
+                    altered => {
+                        covariance => $varcomp_altered_array_3,
+                    },
+                    env_linear => {
+                        covariance => $varcomp_altered_array_env_1_3,
+                    },
+                    env_1DN  => {
+                        covariance => $varcomp_altered_array_env_2_3,
+                    },
+                    env_2DN  => {
+                        covariance => $varcomp_altered_array_env_3_3,
+                    },
+                    env_random  => {
+                        covariance => $varcomp_altered_array_env_4_3,
+                    },
+                    env_ar1xar1  => {
+                        covariance => $varcomp_altered_array_env_5_3,
+                    },
+                    env_realdata  => {
+                        covariance => $varcomp_altered_array_env_6_3,
+                    }
+                };
             }
 
             my $return_inverse_matrix = 0;
@@ -12338,6 +12483,34 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 %trait_name_encoder = %trait_name_encoder_5;
                 %trait_to_time_map = %trait_to_time_map_5;
+
+                push @$env_varcomps, {
+                    type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    original => {
+                        covariance => $varcomp_original_array_5
+                    },
+                    altered => {
+                        covariance => $varcomp_altered_array_5
+                    },
+                    env_linear => {
+                        covariance => $varcomp_altered_array_env_1_5
+                    },
+                    env_1DN  => {
+                        covariance => $varcomp_altered_array_env_2_5
+                    },
+                    env_2DN  => {
+                        covariance => $varcomp_altered_array_env_3_5
+                    },
+                    env_random  => {
+                        covariance => $varcomp_altered_array_env_4_5
+                    },
+                    env_ar1xar1  => {
+                        covariance => $varcomp_altered_array_env_5_5
+                    },
+                    env_realdata  => {
+                        covariance => $varcomp_altered_array_env_6_5
+                    }
+                };
             }
 
             my (%phenotype_data_original_6, @data_matrix_original_6, @data_matrix_phenotypes_original_6);
@@ -14661,6 +14834,34 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 %trait_name_encoder = %trait_name_encoder_6;
                 %trait_to_time_map = %trait_to_time_map_6;
+
+                push @$env_varcomps, {
+                    type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    original => {
+                        covariance => $varcomp_original_array_6
+                    },
+                    altered => {
+                        covariance => $varcomp_altered_array_6
+                    },
+                    env_linear => {
+                        covariance => $varcomp_altered_array_env_1_6
+                    },
+                    env_1DN  => {
+                        covariance => $varcomp_altered_array_env_2_6
+                    },
+                    env_2DN  => {
+                        covariance => $varcomp_altered_array_env_3_6
+                    },
+                    env_random  => {
+                        covariance => $varcomp_altered_array_env_4_6
+                    },
+                    env_ar1xar1  => {
+                        covariance => $varcomp_altered_array_env_5_6
+                    },
+                    env_realdata  => {
+                        covariance => $varcomp_altered_array_env_6_6
+                    }
+                };
             }
 
         }
@@ -14685,7 +14886,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         env_iterations => $env_iterations,
         env_correlation_results => $env_corr_res,
         trait_name_map => \%trait_name_encoder,
-        trait_to_time_map => \%trait_to_time_map
+        trait_to_time_map => \%trait_to_time_map,
+        env_varcomps => $env_varcomps
     };
     my $q2 = "UPDATE nd_protocolprop SET value=? WHERE nd_protocolprop_id=?;";
     my $h2 = $schema->storage->dbh()->prepare($q2);
