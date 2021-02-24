@@ -240,8 +240,14 @@ sub trial_details_POST  {
 
     print STDERR "my user roles = @user_roles and trial breeding program = $breeding_program_name \n";
 
-    if (!exists($has_roles{$breeding_program_name})) {
-      $c->stash->{rest} = { error => "You need to be associated with breeding program $breeding_program_name to change the details of this trial." };
+    # policy: curators can change without breeding program association
+    # submitters can change if they are associated with the breeding program
+    # users cannot change
+
+    if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) { 
+    
+#    if (!exists($has_roles{$breeding_program_name})) {
+      $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to change the details of this trial." };
       return;
     }
 

@@ -63,8 +63,6 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 	return;
     }
 
-    $c->stash->{user_can_modify} = ($user->check_roles("submitter") || $user->check_roles("curator")) ;
-
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial = $c->stash->{trial};
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
@@ -104,6 +102,10 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{breeding_program_id} = $breeding_program_data->[0]->[0];
     $c->stash->{breeding_program_name} = $breeding_program_data->[0]->[1];
 
+    $c->stash->{user_can_modify} = ($user->check_roles("submitter") && $user->check_roles($c->stash->{breeding_program_name})) || $user->check_roles("curator") ;
+
+
+    
     $c->stash->{year} = $trial->get_year();
 
     $c->stash->{trial_id} = $c->stash->{trial_id};

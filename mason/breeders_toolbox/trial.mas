@@ -241,6 +241,12 @@ $management_factor_types => ()
 
 jQuery(document).ready(function () {
 
+    var can_modify = '<% $user_can_modify %>';
+    alert('can modify: '+can_modify);
+    if (can_modify === '0') { 
+      jQuery('#edit_trial_details').prop('disabled', true);
+    }
+
     jQuery('#edit_trial_details').click(function(){
 
         jQuery('#trial_details_edit_dialog').modal("show");
