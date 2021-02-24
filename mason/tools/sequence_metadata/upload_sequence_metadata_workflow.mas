@@ -131,6 +131,7 @@
 
                   <br />
                   <p><strong>Add a description for each of the key/value pairs included in the attributes column.</strong></p>
+                  <p><em>Specifying the attribute here in the protocol will allow the attribute to be used as a filter in a query.  Make sure the attribute key exactly matches the key used in the gff file.</em></p>
 
                   <div class="form-group">
                     <label class="col-sm-3 control-label">Attribute Key: </label>
