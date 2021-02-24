@@ -288,9 +288,9 @@ solGS.submitJob = {
 	    // } else {
 	    window.location = page;
 	    // }
-	} else if (page.match(/solgs\selection\//)) {
-		var listTypePages = 'solgs\/selection\/\\w+_\\d+\/model\/\\w+_\\d+\/'
-		+ '|solgs\/selection\/\\d+\/model\/\\w+_\\d+\/';
+	} else if (page.match(/solgs\/selection\//)) {
+		var listTypePages = 'solgs/selection/\\w+_\\d+/model/\\w+_\\d+/'
+		+ '|solgs/selection/\\d+/model/\\w+_\\d+/';
 
 	    if (page.match(/listTypePages/)) {
 			loadGenotypesListTypeSelectionPop(args);
@@ -360,7 +360,7 @@ solGS.submitJob = {
 	    + '|solgs/trait/'
 	    + '|solgs/model/combined/trials/'
 	    + '|solgs/selection/\\d+/model/\\d+/'
-		+ '|solgs/selection/\\w+_\\d+/model/\\d+/'';
+		+ '|solgs/selection/\\w+_\\d+/model/\\d+/';
 
 	if (page.match(matchItems) ) {
 
@@ -568,7 +568,7 @@ solGS.submitJob = {
 
 	var protocolId = args.genotyping_protocol_id;
 
-	if(!protocolId) {
+	if (!protocolId) {
 	    protocolId = jQuery('#genotyping_protocol_id').val();
 	}
 
