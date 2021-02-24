@@ -123,7 +123,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             legendre_order_number => $c->req->param('legendre_order_number'),
             permanent_environment_structure => $c->req->param('permanent_environment_structure'),
             permanent_environment_structure_phenotype_correlation_traits => decode_json $c->req->param('permanent_environment_structure_phenotype_correlation_traits'),
-            env_variance_percent => $c->req->param('env_variance_percent') || 0.2,0.1,0.05,0.01,0.3,
+            env_variance_percent => $c->req->param('env_variance_percent') || "0.2,0.1,0.05,0.01,0.3",
             number_iterations => $c->req->param('number_iterations') || 2,
             simulated_environment_real_data_trait_id => $c->req->param('simulated_environment_real_data_trait_id')
         };
@@ -14884,6 +14884,7 @@ sub _perform_drone_imagery_analytics {
         write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
         write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
         write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+        write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
         X <- with(mat, spl2D(rowNumber, colNumber));
         spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
         ';
@@ -14951,9 +14952,7 @@ sub _perform_drone_imagery_analytics {
                 }
             close($fh);
 
-            open(my $fh_2dspl, '<', $stats_out_tempfile_2dspl)
-                or die "Could not open file '$stats_out_tempfile_2dspl' $!";
-
+            open(my $fh_2dspl, '<', $stats_out_tempfile_2dspl) or die "Could not open file '$stats_out_tempfile_2dspl' $!";
                 print STDERR "Opened $stats_out_tempfile_2dspl\n";
                 my $header_2dspl = <$fh_2dspl>;
                 my @header_cols_2dspl;
@@ -14992,9 +14991,7 @@ sub _perform_drone_imagery_analytics {
                 }
             close($fh_2dspl);
 
-            open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                or die "Could not open file '$stats_out_tempfile_residual' $!";
-            
+            open(my $fh_residual, '<', $stats_out_tempfile_residual) or die "Could not open file '$stats_out_tempfile_residual' $!";
                 print STDERR "Opened $stats_out_tempfile_residual\n";
                 my $header_residual = <$fh_residual>;
                 my @header_cols_residual;
@@ -15025,6 +15022,25 @@ sub _perform_drone_imagery_analytics {
                     }
                 }
             close($fh_residual);
+
+            open(my $fh_varcomp, '<', $stats_out_tempfile_varcomp) or die "Could not open file '$stats_out_tempfile_varcomp' $!";
+                print STDERR "Opened $stats_out_tempfile_varcomp\n";
+                my $header_varcomp = <$fh_varcomp>;
+                my @header_cols_varcomp;
+                if ($csv->parse($header_varcomp)) {
+                    @header_cols_varcomp = $csv->fields();
+                }
+                while (my $row = <$fh_varcomp>) {
+                    my @columns;
+                    if ($csv->parse($row)) {
+                        @columns = $csv->fields();
+                    }
+                    my $level = $columns[0];
+                    my $se = $columns[1];
+                    my $z_ratio = $columns[2];
+                    my $status = $columns[3];
+                }
+            close($fh_varcomp);
 
             if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
                 $run_stats_fault = 1;
@@ -15071,6 +15087,7 @@ sub _perform_drone_imagery_analytics {
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             X <- with(mat, spl2D(rowNumber, colNumber));
             spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
             blups1 <- mix\$U\$\`u:rowNumber\`\$'.$t.';
@@ -15092,9 +15109,7 @@ sub _perform_drone_imagery_analytics {
                 my $current_gen_row_count = 0;
                 my $current_env_row_count = 0;
 
-                open(my $fh, '<', $stats_out_tempfile)
-                    or die "Could not open file '$stats_out_tempfile' $!";
-
+                open(my $fh, '<', $stats_out_tempfile) or die "Could not open file '$stats_out_tempfile' $!";
                     print STDERR "Opened $stats_out_tempfile\n";
                     my $header = <$fh>;
                     my @header_cols;
@@ -15135,9 +15150,7 @@ sub _perform_drone_imagery_analytics {
                     }
                 close($fh);
 
-                open(my $fh_2dspl, '<', $stats_out_tempfile_2dspl)
-                    or die "Could not open file '$stats_out_tempfile_2dspl' $!";
-
+                open(my $fh_2dspl, '<', $stats_out_tempfile_2dspl) or die "Could not open file '$stats_out_tempfile_2dspl' $!";
                     print STDERR "Opened $stats_out_tempfile_2dspl\n";
                     my $header_2dspl = <$fh_2dspl>;
                     my @header_cols_2dspl;
@@ -15178,9 +15191,7 @@ sub _perform_drone_imagery_analytics {
                     }
                 close($fh_2dspl);
 
-                open(my $fh_residual, '<', $stats_out_tempfile_residual)
-                    or die "Could not open file '$stats_out_tempfile_residual' $!";
-                
+                open(my $fh_residual, '<', $stats_out_tempfile_residual) or die "Could not open file '$stats_out_tempfile_residual' $!";
                     print STDERR "Opened $stats_out_tempfile_residual\n";
                     my $header_residual = <$fh_residual>;
                     my @header_cols_residual;
@@ -16921,6 +16932,7 @@ sub _perform_drone_imagery_analytics {
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             X <- with(mat, spl2D(rowNumber, colNumber));
             spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
             blups1 <- mix\$U\$\`u:rowNumber\`\$'.$t.';
@@ -18686,6 +18698,7 @@ sub _perform_drone_imagery_analytics {
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             X <- with(mat, spl2D(rowNumber, colNumber));
             spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
             blups1 <- mix\$U\$\`u:rowNumber\`\$'.$t.';
@@ -20447,6 +20460,7 @@ sub _perform_drone_imagery_analytics {
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             X <- with(mat, spl2D(rowNumber, colNumber));
             spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
             blups1 <- mix\$U\$\`u:rowNumber\`\$'.$t.';
@@ -22209,6 +22223,7 @@ sub _perform_drone_imagery_analytics {
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             X <- with(mat, spl2D(rowNumber, colNumber));
             spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
             blups1 <- mix\$U\$\`u:rowNumber\`\$'.$t.';
@@ -23968,6 +23983,7 @@ sub _perform_drone_imagery_analytics {
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             X <- with(mat, spl2D(rowNumber, colNumber));
             spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
             blups1 <- mix\$U\$\`u:rowNumber\`\$'.$t.';
@@ -25692,6 +25708,7 @@ sub _perform_drone_imagery_analytics {
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             X <- with(mat, spl2D(rowNumber, colNumber));
             spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
             blups1 <- mix\$U\$\`u:rowNumber\`\$'.$t.';
@@ -27464,6 +27481,7 @@ sub _perform_drone_imagery_analytics {
             write.table(mix\$U\$\`u:rowNumberFactor\`, file=\''.$stats_out_tempfile_row.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(mix\$U\$\`u:colNumberFactor\`, file=\''.$stats_out_tempfile_col.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             write.table(data.frame(plot_id = mix\$data\$plot_id, residuals = mix\$residuals, fitted = mix\$fitted), file=\''.$stats_out_tempfile_residual.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            write.table(summary(mix)\$varcomp, file=\''.$stats_out_tempfile_varcomp.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             X <- with(mat, spl2D(rowNumber, colNumber));
             spatial_blup_results <- data.frame(plot_id = mat\$plot_id);
             blups1 <- mix\$U\$\`u:rowNumber\`\$'.$t.';
