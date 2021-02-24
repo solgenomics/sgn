@@ -1,6 +1,6 @@
 <%doc>
 
-=head1 NAME 
+=head1 NAME
 
 /solgs/population/selection_trait.mas - displays trait GEBV prediction output for selection population using single trial model.
 
@@ -54,22 +54,22 @@ my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\"
 </%perl>
 
   <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS",
-                                              "flot.flot", "flot.categories", 
-                                              "flot.tooltip", "flot.selection", "flot.navigate", 
+                                              "flot.flot", "flot.categories",
+                                              "flot.tooltip", "flot.selection", "flot.navigate",
                                               "flot.axisLabels",
-                                             ] 
+                                             ]
   &>
 
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
-<& /page/page_title.mas, 
+<& /page/page_title.mas,
    title => "GEBVs for $trait_name ($trait_abbr) in $selection_pop_name"
 &>
 
-<&| /page/info_section.mas, 
-  collapsible => 1, 
-  collapsed   => 0, 
+<&| /page/info_section.mas,
+  collapsible => 1,
+  collapsed   => 0,
   title       => "Selection population summary",
   &>
 
@@ -87,14 +87,24 @@ my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\"
    combined_populations => $combined_populations,
  &>
 
+ <& /solgs/population/hidden_input.mas,
+    	training_pop_id  => $training_pop_id,
+   		training_pop_name => $training_pop_name,
+   		training_pop_desc => $training_pop_desc,
+   		selection_pop_id  => $selection_pop_id,
+   		selection_pop_name => $selection_pop_name,
+   		selection_pop_desc => $selection_pop_desc,
+   		genotyping_protocol_id => $genotyping_protocol_id,
+		trait_id => $trait_id
+    &>
 </&>
 
 <& /solgs/pca/analysis.mas &>
-  
-<& /solgs/model/gebvs.mas, 
+
+<& /solgs/model/gebvs.mas,
    top_blups         => $top_blups,
   blups_download_url => $blups_download_url,
-  
+
 &>
 
 
@@ -103,15 +113,3 @@ my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\"
    training_pop_id  => $training_pop_id,
    selection_pop_id => $selection_pop_id,
 &>
-
-
-<& /solgs/population/hidden_input.mas,
-   training_pop_id  => $training_pop_id,
-  training_pop_name => $training_pop_name,
-  training_pop_desc => $training_pop_desc,
-  selection_pop_id  => $selection_pop_id,
-  selection_pop_name => $selection_pop_name,
-  selection_pop_desc => $selection_pop_desc,
-  genotyping_protocol_id => $genotyping_protocol_id,
-     
-   &>
