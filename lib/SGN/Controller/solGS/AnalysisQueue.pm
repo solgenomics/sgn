@@ -228,7 +228,7 @@ sub format_log_entry {
 
 	my $profile = $c->stash->{analysis_profile};
 
-	if ($profile->{analysis_page} =~ /solgs\/model\/(\d+|\w+_\d+)\/prediction\//)
+	if ($profile->{analysis_page} =~ /solgs\/selection\/(\d+|\w+_\d+)\/model\//)
 	{
 		$self->create_selection_pop_page($c);
 		my $sel_pop_page = $c->stash->{selection_pop_page};
@@ -502,7 +502,7 @@ sub structure_output_details {
 	{
 		$output_details = $self->structure_training_combined_pops_data_output($c);
 	}
-	elsif ( $analysis_page =~ m/solgs\/model\/\d+\/prediction\/|solgs\/model\/\w+_\d+\/prediction\// )
+	elsif ( $analysis_page =~ m/solgs\/selection\/\d+\/model\/|solgs\/selection\/\w+_\d+\/model\// )
 	{
 		$output_details = $self->structure_selection_prediction_output($c);
 	}
@@ -924,7 +924,7 @@ sub run_analysis {
 			$self->predict_training_traits($c);
 		}
 
-		elsif ($analysis_page =~ /solgs\/model\/(\d+|\w+_\d+)\/prediction\//)
+		elsif ($analysis_page =~ /solgs\/selection\/(\d+|\w+_\d+)\/model\//)
 		{
 			$self->predict_selection_traits($c);
 		}
