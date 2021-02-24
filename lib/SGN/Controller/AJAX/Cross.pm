@@ -229,7 +229,7 @@ sub upload_cross_file_POST : Args(0) {
                     cross_name => $cross_name,
                     key => $info_type,
                     value => $value,
-                    type => 'cross_additional_info'
+                    data_type => 'cross_additional_info'
                 });
 
                $cross_add_info->add_info();
@@ -655,7 +655,7 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
         cross_name => $cross_name,
         key => $type,
         value => $value,
-        type => $data_type
+        data_type => $data_type
     });
     $cross_add_info->add_info();
 
@@ -1248,6 +1248,9 @@ sub upload_info_POST : Args(0) {
         $upload_type = 'AdditionalInfoExcel';
         $data_type = 'cross_additional_info';
     }
+#    print STDERR "INFO UPLOAD =".Dumper($cross_info_upload)."\n";
+#    print STDERR "ADDITIONAL INFO UPLOAD =".Dumper($additional_info_upload)."\n";
+#    print STDERR "DATA TYPE =".Dumper($data_type)."\n";
 
     my $parser;
     my $parsed_data;
@@ -1284,15 +1287,24 @@ sub upload_info_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    my $cross_properties_json = $c->config->{cross_properties};
-    my @properties = split ',', $cross_properties_json;
+    $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_type'}="cross upload file";
+    $upload_metadata{'user_id'}=$user_id;
+    $upload_metadata{'date'}="$timestamp";
+
+    my $cross_properties_string = $c->config->{cross_properties};
+    my @properties = split ',', $cross_properties_string;
     my $cross_properties = \@properties;
 
+    my $cross_additional_info_string = $c->config->{cross_additional_info};
+    my @additional_info = split ',', $cross_additional_info_string;
+    my $cross_additional_info = \@additional_info;
+
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties, cross_additional_info => $cross_additional_info);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
-    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+#    print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -1311,27 +1323,27 @@ sub upload_info_POST : Args(0) {
         $c->detach();
     }
 
-    my @all_crosses;
-    while (my $info_type = shift (@properties)){
-        if ($parsed_data->{$info_type}) {
-            print STDERR "Handling info type $info_type\n";
-            my %info_hash = %{$parsed_data->{$info_type}};
-            @all_crosses = keys %info_hash;
-            foreach my $cross_name_key (keys %info_hash){
-                my $value = $info_hash{$cross_name_key};
+    if ($parsed_data) {
+        my %cross_info = %{$parsed_data};
+        foreach my $cross_name (keys %cross_info) {
+            my %info_hash = %{$cross_info{$cross_name}};
+            foreach my $info_type (keys %info_hash) {
+                my $value = $info_hash{$info_type};
                 my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
                     chado_schema => $chado_schema,
-                    cross_name => $cross_name_key,
+                    cross_name => $cross_name,
                     key => $info_type,
                     value => $value,
-                    type => $data_type
+                    data_type => $data_type
                 });
-                $cross_add_info->add_info();
 
-                if (!$cross_add_info->add_info()){
-                    $c->stash->{rest} = {error => "Error adding cross info",};
-                    return;
-                }
+               $cross_add_info->add_info();
+
+               if (!$cross_add_info->add_info()){
+                   $c->stash->{rest} = {error_string => "Error saving info",};
+                   return;
+               }
+
             }
         }
     }

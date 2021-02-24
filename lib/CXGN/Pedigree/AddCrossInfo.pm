@@ -38,7 +38,7 @@ has 'chado_schema' => (
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
 has 'key' => (isa =>'Str', is => 'rw', predicate => 'has_key',);
 has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value',);
-has 'type' => (isa =>'Str', is => 'rw', predicate => 'has_type',);
+has 'data_type' => (isa =>'Str', is => 'rw', predicate => 'has_type',);
 
 sub add_info {
     my $self = shift;
@@ -56,13 +56,14 @@ sub add_info {
         }
 
         # get cvterm of cross info type (crossing_metadata_json or cross_additional_info)
-        my $cross_info_type = $self->get_type();
+        my $cross_info_type = $self->get_data_type();
+#        print STDERR "DATA TYPE =".Dumper($cross_info_type)."\n";
         my $cross_info_cvterm;
-        if (($cross_info_type ne 'crossing_metadata_json') && ($cross_info_type ne 'cross_additional_info')) {
-            print STDERR "Invalid type"."\n";
-            return;
+        if (($cross_info_type eq 'crossing_metadata_json') || ($cross_info_type eq 'cross_additional_info')) {
+			$cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $cross_info_type, 'stock_property');
         } else {
-		    $cross_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $cross_info_type, 'stock_property');
+			print STDERR "Invalid type"."\n";
+            return;
         }
 
         my $cross_json_string;
@@ -80,7 +81,7 @@ sub add_info {
             $cross_json_string = _generate_property_hash($self->get_key, $self->get_value, $cross_json_hash);
             $cross_stock->create_stockprops({$cross_info_cvterm->name() => $cross_json_string});
         }
-        print STDERR "CROSS JSON STRING =".Dumper($cross_json_string)."\n";
+#        print STDERR "CROSS JSON STRING =".Dumper($cross_json_string)."\n";
     };
 
     #try to add all cross info in a transaction

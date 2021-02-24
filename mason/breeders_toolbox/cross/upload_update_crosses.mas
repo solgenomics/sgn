@@ -164,7 +164,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="update_crossinfo_submit" id="update_crossinfo_submit">Upload File</button>
+                <button type="button" class="btn btn-primary" name="upload_additional_info_submit" id="upload_additional_info_submit">Upload File</button>
             </div>
         </div>
     </div>
@@ -284,7 +284,7 @@ jQuery(document).ready(function(){
 
     jQuery("#upload_additional_info_submit").click(function(){
         var uploadFile = jQuery("#additional_info_upload_file").val();
-        jQuery('#upload_additional_info_form').attr("action", "/ajax/cross/upload_additional_info");
+        jQuery('#upload_additional_info_form').attr("action", "/ajax/cross/upload_info");
         if (uploadFile === ''){
             alert("Please select a file");
             return;
