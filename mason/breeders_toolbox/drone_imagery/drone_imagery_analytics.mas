@@ -589,6 +589,8 @@ jQuery(document).ready(function() {
 
     jQuery('#drone_imagery_analytics_select_step').click(function(){
 
+        manage_drone_imagery_analytics_statistics_select = jQuery('#drone_imagery_analytics_select_input').val();
+
         var manage_drone_imagery_analytics_protocol_ids = [];
         jQuery('input[name="drone_imagery_analytics_analytics_protocols_select_id"]').each(function() {
             if (this.checked){
