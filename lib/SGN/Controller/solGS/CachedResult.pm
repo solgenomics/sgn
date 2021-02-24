@@ -77,7 +77,7 @@ sub _check_cached_output {
 
 	$self->_check_combined_trials_model_output($c, $pop_id, $trait_id);
     }
-    elsif ($req_page =~ /solgs\/model\/\d+\/prediction\//)
+    elsif ($req_page =~ /solgs\/selection\/(\d+|\w+_\d+)\/model\//)
     {
 	my $tr_pop_id  = $args->{training_pop_id}[0];
 	my $sel_pop_id = $args->{selection_pop_id}[0];
@@ -395,7 +395,7 @@ sub check_selection_pop_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
 
     # my $identifier = $tr_pop_id . '_' . $sel_pop_id;
-    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $tr_pop_id, $sel_pop_id, $trait_id);  
+    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $tr_pop_id, $sel_pop_id, $trait_id);
     my $cached_gebv = -s $c->stash->{rrblup_selection_gebvs_file};
 
     if ($cached_gebv)
