@@ -14895,7 +14895,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     foreach my $f (@$spatial_effects_plots) {
         my $auxiliary_model_file = $c->config->{basepath}.$f->[0];
-        my $auxiliary_model_file_archive_type = $f->[1];
+        my $auxiliary_model_file_archive_type = "nicksmixedmodelsanalytics_v1_".$f->[1];
         print STDERR "$auxiliary_model_file_archive_type : $auxiliary_model_file\n";
 
         my $model_aux_original_name = basename($auxiliary_model_file);
@@ -14933,7 +14933,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     foreach my $f (@$spatial_effects_files_store) {
         my $auxiliary_model_file = $f->[0];
-        my $auxiliary_model_file_archive_type = $f->[1];
+        my $auxiliary_model_file_archive_type = "nicksmixedmodelsanalytics_v1_".$f->[1];
         print STDERR "$auxiliary_model_file_archive_type : $auxiliary_model_file\n";
 
         my $model_aux_original_name = basename($auxiliary_model_file);
