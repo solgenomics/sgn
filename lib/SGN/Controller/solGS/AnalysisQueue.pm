@@ -236,13 +236,18 @@ sub format_log_entry {
 	}
 
 	my $time    = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
+
+	my $arguments = decode_json($profile->{arguments});
+	$arguments->{analysis_time} = $time;
+	$arguments = encode_json($arguments);
+
 	my $entry   = join("\t", (
 				$profile->{user_name},
 				$profile->{analysis_name},
 				$profile->{analysis_page},
 				'Submitted',
 				$time,
-				$profile->{arguments},)
+				$arguments,)
 	);
 
 	$entry .= "\n";
