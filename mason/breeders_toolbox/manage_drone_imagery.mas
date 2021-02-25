@@ -19,7 +19,7 @@
     <& /page/page_title.mas, title=>"Manage Drone Imagery" &>
 
     <div class="well well-sm">
-        <center><h4>Please use the Google Chrome web-browser to use these image tools. In the future, other browsers may be supported.</h4></center>
+        <center><h4>Please use the Brave or Chrome web-browsers to view these image tools. In the future, other browsers may be supported.</h4></center>
     </div>
 
 <%perl>
