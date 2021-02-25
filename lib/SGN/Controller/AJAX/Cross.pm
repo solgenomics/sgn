@@ -728,6 +728,7 @@ sub add_individual_cross {
     my $cross_combination = shift;
 
     my $owner_name = $c->user()->get_object()->get_username();
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
     my @progeny_names;
     my $progeny_increment = 1;
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -829,7 +830,7 @@ sub add_individual_cross {
             dbh => $dbh,
             crossing_trial_id => $crossing_trial_id,
             crosses =>  \@array_of_pedigree_objects,
-            owner_name => $owner_name,
+            user_id => $user_id,
         });
 
         #add the crosses
@@ -1846,7 +1847,7 @@ sub upload_intercross_file_POST : Args(0) {
                 dbh => $dbh,
                 crossing_trial_id => $crossing_experiment_id,
                 crosses => \@new_crosses,
-                owner_name => $user_name
+                user_id => $user_id
             });
 
             if (!$cross_add->validate_crosses()){
