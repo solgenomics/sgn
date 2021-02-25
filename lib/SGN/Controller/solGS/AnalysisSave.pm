@@ -34,24 +34,32 @@ sub check_analysis_result :Path('/solgs/check/analysis/result') Args() {
 }
 
 
-sub result_id :Path('/solgs/result/id') Args() {
-    my ($self, $c) = @_;
-
-
-
-}
-
 sub result_details :Path('/solgs/analysis/result/details') Args() {
     my ($self, $c) = @_;
 
 	my $stored = $self->check_stored_analysis($c);
 
-
 	if (!$stored)
 	{
 		my $params = $c->req->params;
-		$c->stash->{rest}{analysis_details} = $self->structure_gebvs_result_details($c, $params);
+		my $analysis_details;
+
+		eval
+		{
+			$analysis_details = $self->structure_gebvs_result_details($c, $params);
+		};
+
+		if ($@)
+		{
+			$c->stash->{rest}{error} = 'Something went wrong structuring the analysis result';
+		}
+		else
+		{
+
+		$c->stash->{rest}{analysis_details} = $analysis_details;
+		}
 	}
+
 
 }
 
@@ -61,10 +69,44 @@ sub structure_gebvs_result_details {
 	my $gebvs = $self->structure_gebvs_values($c, $params);
 	my @accessions = keys %$gebvs;
 
+	my $trait_names     = $self->analysis_traits($c);
+	my $model_details = $self->model_details($c);
 	my $log = $self->analysis_log($c);
-	my $trial_id = $log->{training_pop_id}[0];
-	my $program_id = $c->model('solGS::solGS')->trial_breeding_program_id($trial_id);
 
+    my $details = {
+		'analysis_to_save_boolean' => 'yes',
+		'analysis_name' => $log->{analysis_name},
+		'analysis_description' => $log->{training_pop_desc},
+		'analysis_year' => $self->analysis_year($c),
+		'analysis_breeding_program_id' => $self->analysis_breeding_prog($c),
+		'analysis_protocol' => 'GBLUP',
+		'analysis_dataset_id' => '',
+		'analysis_accession_names' => encode_json(\@accessions),
+		'analysis_trait_names' =>encode_json($trait_names),
+		'analysis_precomputed_design_optional' =>'',
+		'analysis_result_values' => to_json($gebvs),
+		'analysis_result_values_type' => 'analysis_result_values_match_accession_names',
+		'analysis_result_summary' => '',
+		'analysis_model_type' => $model_details->{model_type},
+		'analysis_result_trait_compose_info' =>  "",
+		'analysis_statistical_ontology_term' =>  $model_details->{stat_ont_term},
+		'analysis_model_application_version' => 'sgn-292',
+		'analysis_model_application_name' => 'solGS',
+		'analysis_model_language' => 'R',
+		'analysis_model_is_public' => 'yes',
+		'analysis_model_description' =>  $model_details->{model_desc},
+		'analysis_model_name' => $log->{analysis_name},
+	};
+
+	return $details;
+
+}
+
+
+sub analysis_traits {
+	my ($self, $c) = @_;
+
+	my $log = $self->analysis_log($c);
 	my $trait_ids = $log->{trait_id};
 	my @trait_names;
 
@@ -74,42 +116,59 @@ sub structure_gebvs_result_details {
 		push @trait_names, $extended_name;
 	}
 
-	#my $user = $c->controller('solGS::AnalysisQueue')->get_user_detail($c);
+	return \@trait_names;
+
+}
+
+
+sub analysis_breeding_prog {
+	my ($self, $c) = @_;
+
+	my $log = $self->analysis_log($c);
+
+	my $trial_id = $log->{training_pop_id}[0];
+	my $program_id = $c->model('solGS::solGS')->trial_breeding_program_id($trial_id);
+
+	return $program_id;
+
+}
+
+sub model_details {
+	my ($self, $c) = @_;
+
 	my $model_type = 'mixed_model_lmer';#'GEBVs using GBLUP from rrblup R package';
-	my $ont_term = 'GEBVs using GBLUP from rrblup R package|SGNSTAT:0000038';
+	my $stat_ont_term = 'GEBVs using GBLUP from rrblup R package|SGNSTAT:0000038';
 
+	my $log = $self->analysis_log($c);
 	my $model_page = $log->{analysis_page};
-	$model_page = qq | <a href="$model_page">Go to model detail page</a>|;
-	my $model_desc = 'test desc';
+	my $model_desc= qq | <a href="$model_page">Go to model detail page</a>|;
+	#my $model_desc = 'test desc';
 
-    my $details = {
-		'analysis_to_save_boolean' => 'yes',
-		'analysis_name' => $log->{analysis_name},
-		'analysis_description' => $log->{training_pop_desc},
-		'analysis_year' => 2021,
-		'analysis_breeding_program_id' => $program_id,
-		'analysis_protocol' => 'GBLUP',
-		'analysis_dataset_id' => '',
-		'analysis_accession_names' => encode_json(\@accessions),
-		'analysis_trait_names' =>encode_json(\@trait_names),
-		'analysis_precomputed_design_optional' =>'',
-		'analysis_result_values' => to_json($gebvs),
-		'analysis_result_values_type' => 'analysis_result_values_match_accession_names',
-		'analysis_result_summary' => '',
-		'analysis_model_type' => $model_type,
-		'analysis_result_trait_compose_info' =>  "",
-		'analysis_statistical_ontology_term' => $ont_term,
-		'analysis_model_application_version' => 'sgn-292',
-		'analysis_model_application_name' => 'solGS',
-		'analysis_model_language' => 'R',
-		'analysis_model_is_public' => 'yes',
-		'analysis_model_description' => $model_page,
-		'analysis_model_name' => $log->{analysis_name},
+	my $details = {
+		'model_type' => $model_type,
+		'model_page' => $model_page,
+		'model_desc' => $model_desc,
+		'stat_ont_term' => $stat_ont_term,
 	};
 
 	return $details;
+}
+
+
+
+sub analysis_year {
+	my ($self, $c) = @_;
+
+	my $log = $self->analysis_log($c);
+	my $time = $log->{analysis_time};
+
+	my $time= (split(/\s+/, $time))[0];
+	my $year = (split(/\//, $time))[2];
+
+	return $year;
 
 }
+
 
 sub check_stored_analysis {
 	my ($self, $c) = @_;
@@ -171,7 +230,7 @@ sub gebvs_values {
 	}
 	elsif ($ref =~ /solgs\/selection\//)
 	{
-		$gebvs_file = $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
+		$gebvs_file = $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
 	}
 
 	my $gebvs = $c->controller('solGS::Utils')->read_file_data($gebvs_file);
@@ -179,6 +238,7 @@ sub gebvs_values {
 	return $gebvs;
 
 }
+
 
 sub structure_gebvs_values {
 	my ($self, $c, $params) = @_;
@@ -246,11 +306,13 @@ sub all_users_analyses_logs {
 
 }
 
+
 sub schema {
 	my ($self, $c) = @_;
 
 	return  $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 }
+
 
 sub begin : Private {
     my ($self, $c) = @_;
