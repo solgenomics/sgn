@@ -60,8 +60,8 @@ sub result_details :Path('/solgs/analysis/result/details') Args() {
 		}
 	}
 
-
 }
+
 
 sub structure_gebvs_result_details {
 	my ($self, $c, $params) = @_;
@@ -69,9 +69,10 @@ sub structure_gebvs_result_details {
 	my $gebvs = $self->structure_gebvs_values($c, $params);
 	my @accessions = keys %$gebvs;
 
-	my $trait_names     = $self->analysis_traits($c);
+	my $trait_names		= $self->analysis_traits($c);
 	my $model_details = $self->model_details($c);
-	my $log = $self->analysis_log($c);
+	my $app_details		= $self->app_details();
+	my $log					 = $self->analysis_log($c);
 
     my $details = {
 		'analysis_to_save_boolean' => 'yes',
@@ -79,7 +80,7 @@ sub structure_gebvs_result_details {
 		'analysis_description' => $log->{training_pop_desc},
 		'analysis_year' => $self->analysis_year($c),
 		'analysis_breeding_program_id' => $self->analysis_breeding_prog($c),
-		'analysis_protocol' => 'GBLUP',
+		'analysis_protocol' => $model_details->{protocol},
 		'analysis_dataset_id' => '',
 		'analysis_accession_names' => encode_json(\@accessions),
 		'analysis_trait_names' =>encode_json($trait_names),
@@ -87,15 +88,30 @@ sub structure_gebvs_result_details {
 		'analysis_result_values' => to_json($gebvs),
 		'analysis_result_values_type' => 'analysis_result_values_match_accession_names',
 		'analysis_result_summary' => '',
-		'analysis_model_type' => $model_details->{model_type},
 		'analysis_result_trait_compose_info' =>  "",
 		'analysis_statistical_ontology_term' =>  $model_details->{stat_ont_term},
-		'analysis_model_application_version' => 'sgn-292',
-		'analysis_model_application_name' => 'solGS',
-		'analysis_model_language' => 'R',
+		'analysis_model_application_version' => $app_details->{version},
+		'analysis_model_application_name' => $app_details->{name},
+		'analysis_model_language' => $model_details->{model_lang},
 		'analysis_model_is_public' => 'yes',
 		'analysis_model_description' =>  $model_details->{model_desc},
 		'analysis_model_name' => $log->{analysis_name},
+		'analysis_model_type' => $model_details->{model_type},
+	};
+
+	return $details;
+
+}
+
+
+sub app_details {
+	my $self = shift;
+
+	my $ver = qx / git describe --tags --abbrev=0 /;
+
+	my $details = {
+		'name' => 'solGS',
+		'version' => $ver
 	};
 
 	return $details;
@@ -133,12 +149,13 @@ sub analysis_breeding_prog {
 
 }
 
+
 sub model_details {
 	my ($self, $c) = @_;
 
-	my $model_type = 'mixed_model_lmer';#'GEBVs using GBLUP from rrblup R package';
+	my $model_type = 'gblup_model_rrblup';
 	my $stat_ont_term = 'GEBVs using GBLUP from rrblup R package|SGNSTAT:0000038';
-
+	my $protocol = "GBLUP model from RRBLUP R Package";
 	my $log = $self->analysis_log($c);
 	my $model_page = $log->{analysis_page};
 	my $model_desc= qq | <a href="$model_page">Go to model detail page</a>|;
@@ -148,12 +165,13 @@ sub model_details {
 		'model_type' => $model_type,
 		'model_page' => $model_page,
 		'model_desc' => $model_desc,
+		'model_lang' => 'R',
 		'stat_ont_term' => $stat_ont_term,
+		'protocol' => $protocol
 	};
 
 	return $details;
 }
-
 
 
 sub analysis_year {
