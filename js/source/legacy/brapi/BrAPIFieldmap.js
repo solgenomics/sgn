@@ -2377,7 +2377,7 @@
 	      clusterCenters.push(turf.getCoord(turf.center(cluster)));
 	    });
 	    let bearing = turf.bearing(center, this.northernmost(clusterCenters[0], clusterCenters[1]));
-	    this.rotation = 90-(Math.round(bearing) == 0 ? 90:bearing);
+	    this.rotation = 90-( (Math.round(Math.abs(bearing)) == 0 || Math.round(Math.abs(bearing)) == 90) ? 90:bearing);
 	    this.geoJson = turf.transformRotate(this.geoJson, this.rotation);
 	  }
 
