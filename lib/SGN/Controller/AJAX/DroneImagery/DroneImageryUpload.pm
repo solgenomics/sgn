@@ -1133,7 +1133,7 @@ sub upload_drone_imagery_POST : Args(0) {
             # my $content  = $response->decoded_content();
             # print STDERR Dumper $content;
 
-            my $odm_command = 'docker run -ti --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm --radiometric-calibration camera > '.$temp_file_docker_log;
+            my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm --radiometric-calibration camera > '.$temp_file_docker_log;
             print STDERR $odm_command."\n";
             my $odm_status = system($odm_command);
 
