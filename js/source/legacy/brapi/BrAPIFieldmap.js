@@ -2767,10 +2767,8 @@
 	  return ou.observationUnitPosition || {};
 	}
 
-	function get_oup_rel(ou,level) {
-		// let levels = ou.observationUnitPosition.observationLevelRelationships || {};
-		let levels = (ou.observationUnitPosition || {}).observationLevelRelationships || {};
-		return levels;
+	function get_oup_rel(ou) {
+	  return (ou.observationUnitPosition || {}).observationLevelRelationships || {};
 	}
 
 	applyDefaultPlot(Fieldmap);

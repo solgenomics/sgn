@@ -1,5 +1,4 @@
 <%args> 
-$enable_edition => undef
 $trial_id
 </%args>
 
@@ -9,44 +8,40 @@ $trial_id
 <& '/util/import_javascript.mas', 
  classes => ['jquery','d3.d3v4Min', 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap']
 &>
-% if ($enable_edition){
 
-    <!-- <& '/page/page_title.mas', title => "Fieldmap app" &> -->
 
-    <div class="row">
-      <center class = "col-md-offset-2 col-md-8">
-          <div id="trialList" class="col-sm-12 col-md-12 col-lg-12">
-              <label for="select_trial_for_selection_index">Trial: </label>
-              <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
-          </div><br>
-      </center>
-    </div>
-    <br>
-    <form id="formOptions" class="form-inline" style="padding:10px;">
-        <a class="btn btn-default" onclick="load()">Load plots</a>
-        <a class="btn btn-default" onclick="update()">Save Geo coordinates</a>
-    </form>
+<& '/page/page_title.mas', title => "Fieldmap app" &>
 
-% }
+<div class="row">
+  <center class = "col-md-offset-2 col-md-8">
+      <div id="trialList" class="col-sm-12 col-md-12 col-lg-12">
+          <label for="select_trial_for_selection_index">Trial: </label>
+          <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
+      </div><br>
+  </center>
+</div>
+<br>
+<form id="formOptions" class="form-inline" style="padding:10px;">
+    <a class="btn btn-default" onclick="load()">Load plots</a>
+    <a class="btn btn-default" onclick="update()">Save Geo coordinates</a>
+</form>
 
-<!-- <div id="map" style="width: 780px; height: 600px"></div> -->
+
 <div id="map" style="width: 780px; height: 600px"></div>
 
 <script>
-    var edition = '<% $enable_edition %>';
 
     jQuery('#map').width(jQuery('#map').parent().width());
     jQuery('#map').height(jQuery('#map').parent().width()*0.7);
+    document.getElementById("trialList").style.display="none";
 
     jQuery(document).ready(function() {
-        if (edition){
         jQuery('#ranking_formula').html("<center><i>Select a trial.</i></center>");
         get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
         jQuery('#select_trial_for_selection_index').change(load);
-        } 
         load();
     });
-    if (edition) document.getElementById("formOptions").style.display="none";
+    document.getElementById("formOptions").style.display="none";
  
     var brapi_endpoint = "/brapi/v2";
     var auth_token;
@@ -63,9 +58,8 @@ $trial_id
         fieldMap.opts.brapi_pageSize = 1000;
         fieldMap.opts.brapi_auth = auth_token;
     }
- 
+
     function load(){
-       
         var trialId = getStudyId();  
         var studyDbId = '<% $trial_id %>' || trialId; // jQuery('#select_trial_for_selection_index').val();
         setupBrAPI();
@@ -73,12 +67,12 @@ $trial_id
         fieldMap.load(studyDbId)
             .then((value)=>{
               if (!value) return setLocation(studyDbId); 
-              else {if (edition) jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); }} ); 
-              if (edition) document.getElementById("formOptions").style.display="block";
+              else {jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); }} ); 
+              document.getElementById("formOptions").style.display="block";
     }
 
     function setLocation(studyDbId) {
-        if (edition) jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); 
+        jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); 
         fieldMap.setLocation(studyDbId).then(()=>alert("Please select an area over the field and click 'Load plots'."), ()=>alert("No geo reference for location in this trial!"));
     }
     
