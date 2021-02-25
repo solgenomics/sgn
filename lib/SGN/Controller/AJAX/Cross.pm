@@ -848,8 +848,7 @@ sub add_individual_cross {
             dbh => $dbh,
             crossing_trial_id => $crossing_trial_id,
             crosses =>  \@array_of_pedigree_objects,
-            owner_name => $user_name,
-            user_id => $user_id
+            user_id => $user_id,
         });
 
         #add the crosses
@@ -1750,7 +1749,6 @@ sub upload_intercross_file_POST : Args(0) {
                 dbh => $dbh,
                 crossing_trial_id => $crossing_experiment_id,
                 crosses => \@new_crosses,
-                owner_name => $user_name,
                 user_id => $user_id
             });
 
