@@ -374,7 +374,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             my $phenotype_min_original = 1000000000;
             my $phenotype_max_original = -1000000000;
 
-            if ($statistics_select_original eq '' || $statistics_select_original eq 'airemlf90_grm_random_regression_dap_blups') {
+            if ($statistics_select_original eq 'airemlf90_grm_random_regression_dap_blups') {
                 $statistics_select = 'airemlf90_grm_random_regression_dap_blups';
                 $permanent_environment_structure = 'identity';
 
@@ -2970,6 +2970,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 push @$env_varcomps, {
                     type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    statistics_select => $statistics_select,
+                    env_variance => $env_variance_percent,
                     original => {
                         genetic_covariance => $rr_coeff_genetic_covariance_original_array_1,
                         env_covariance => $rr_coeff_env_covariance_original_array_1,
@@ -3013,7 +3015,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 };
             }
 
-            if ($statistics_select_original eq '' || $statistics_select_original eq 'airemlf90_grm_random_regression_PEcorr_dap_blups') {
+            if ($statistics_select_original eq 'airemlf90_grm_random_regression_PEcorr_dap_blups') {
                 $statistics_select = 'airemlf90_grm_random_regression_dap_blups';
                 $permanent_environment_structure = 'env_corr_structure';
 
@@ -5612,6 +5614,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 push @$env_varcomps, {
                     type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    statistics_select => $statistics_select,
+                    env_variance => $env_variance_percent,
                     original => {
                         genetic_covariance => $rr_coeff_genetic_covariance_original_array_4,
                         env_covariance => $rr_coeff_env_covariance_original_array_4,
@@ -5663,7 +5667,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             my $phenotype_min_original_2 = 1000000000;
             my $phenotype_max_original_2 = -1000000000;
 
-            if ($statistics_select_original eq '' || $statistics_select_original eq 'sommer_grm_spatial_genetic_blups' || $statistics_select_original eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
+            if ($statistics_select_original eq 'sommer_grm_spatial_genetic_blups' || $statistics_select_original eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
                 $statistics_select = $statistics_select_original eq 'sommer_grm_spatial_genetic_blups' ? 'sommer_grm_spatial_genetic_blups' : 'sommer_grm_spatial_pure_2dspl_genetic_blups';
 
                 eval {
@@ -7884,6 +7888,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 push @$env_varcomps, {
                     type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    statistics_select => $statistics_select,
+                    env_variance => $env_variance_percent,
                     original => {
                         covariance => $varcomp_original_array_2,
                     },
@@ -7891,27 +7897,27 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         covariance => $varcomp_altered_array_2,
                     },
                     env_linear => {
-                        covariance => $varcomp_altered_array_env_1_2,
+                        covariance => $varcomp_altered_array_env_1_2
                     },
                     env_1DN  => {
-                        covariance => $varcomp_altered_array_env_2_2,
+                        covariance => $varcomp_altered_array_env_2_2
                     },
                     env_2DN  => {
-                        covariance => $varcomp_altered_array_env_3_2,
+                        covariance => $varcomp_altered_array_env_3_2
                     },
                     env_random  => {
-                        covariance => $varcomp_altered_array_env_4_2,
+                        covariance => $varcomp_altered_array_env_4_2
                     },
                     env_ar1xar1  => {
-                        covariance => $varcomp_altered_array_env_5_2,
+                        covariance => $varcomp_altered_array_env_5_2
                     },
                     env_realdata  => {
-                        covariance => $varcomp_altered_array_env_6_2,
+                        covariance => $varcomp_altered_array_env_6_2
                     }
                 };
             }
 
-            if ($statistics_select_original eq '' || $statistics_select_original eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select_original eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
+            if ($statistics_select_original eq 'sommer_grm_univariate_spatial_genetic_blups' || $statistics_select_original eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
                 $statistics_select = $statistics_select_original eq 'sommer_grm_univariate_spatial_genetic_blups' ? 'sommer_grm_univariate_spatial_genetic_blups' : 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups';
 
                 eval {
@@ -10134,29 +10140,31 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 push @$env_varcomps, {
                     type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    statistics_select => $statistics_select,
+                    env_variance => $env_variance_percent,
                     original => {
-                        covariance => $varcomp_original_array_3,
+                        covariance => $varcomp_original_array_3
                     },
                     altered => {
-                        covariance => $varcomp_altered_array_3,
+                        covariance => $varcomp_altered_array_3
                     },
                     env_linear => {
-                        covariance => $varcomp_altered_array_env_1_3,
+                        covariance => $varcomp_altered_array_env_1_3
                     },
                     env_1DN  => {
-                        covariance => $varcomp_altered_array_env_2_3,
+                        covariance => $varcomp_altered_array_env_2_3
                     },
                     env_2DN  => {
-                        covariance => $varcomp_altered_array_env_3_3,
+                        covariance => $varcomp_altered_array_env_3_3
                     },
                     env_random  => {
-                        covariance => $varcomp_altered_array_env_4_3,
+                        covariance => $varcomp_altered_array_env_4_3
                     },
                     env_ar1xar1  => {
-                        covariance => $varcomp_altered_array_env_5_3,
+                        covariance => $varcomp_altered_array_env_5_3
                     },
                     env_realdata  => {
-                        covariance => $varcomp_altered_array_env_6_3,
+                        covariance => $varcomp_altered_array_env_6_3
                     }
                 };
             }
@@ -10172,7 +10180,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             my $phenotype_min_original_5 = 1000000000;
             my $phenotype_max_original_5 = -1000000000;
 
-            if ($statistics_select_original eq '' || $statistics_select_original eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select_original eq 'asreml_grm_univariate_column_spatial_genetic_blups' || $statistics_select_original eq 'asreml_grm_univariate_pure_spatial_genetic_blups') {
+            if ($statistics_select_original eq 'asreml_grm_univariate_spatial_genetic_blups' || $statistics_select_original eq 'asreml_grm_univariate_column_spatial_genetic_blups' || $statistics_select_original eq 'asreml_grm_univariate_pure_spatial_genetic_blups') {
                 $statistics_select = $statistics_select_original;
 
                 eval {
@@ -12486,6 +12494,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 push @$env_varcomps, {
                     type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    statistics_select => $statistics_select,
+                    env_variance => $env_variance_percent,
                     original => {
                         covariance => $varcomp_original_array_5
                     },
@@ -12521,7 +12531,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             my $phenotype_min_original_6 = 1000000000;
             my $phenotype_max_original_6 = -1000000000;
 
-            if ($statistics_select_original eq '' || $statistics_select_original eq 'asreml_grm_multivariate_spatial_genetic_blups') {
+            if ($statistics_select_original eq 'asreml_grm_multivariate_spatial_genetic_blups') {
                 $statistics_select = 'asreml_grm_multivariate_spatial_genetic_blups';
 
                 eval {
@@ -14837,6 +14847,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                 push @$env_varcomps, {
                     type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    statistics_select => $statistics_select,
+                    env_variance => $env_variance_percent,
                     original => {
                         covariance => $varcomp_original_array_6
                     },
@@ -14877,8 +14889,61 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
     print STDERR Dumper $env_corr_res;
     print STDERR Dumper $env_iterations;
-    print STDERR Dumper \%trait_name_encoder;
-    print STDERR Dumper \%trait_to_time_map;
+    # print STDERR Dumper \%trait_name_encoder;
+    # print STDERR Dumper \%trait_to_time_map;
+    print STDERR Dumper $env_varcomps;
+
+    my %avg_varcomps;
+    my @avg_varcomps_display;
+    my @varcomp_keys = ('original', 'altered', 'env_linear', 'env_1DN', 'env_2DN', 'env_ar1xar1', 'env_random', 'env_realdata');
+    if ($statistics_select ne 'blupf90_grm_random_regression_gdd_blups' && $statistics_select ne 'blupf90_grm_random_regression_dap_blups' && $statistics_select ne 'airemlf90_grm_random_regression_gdd_blups' && $statistics_select ne 'airemlf90_grm_random_regression_dap_blups') {
+        foreach (@$env_varcomps) {
+            my $type = $_->{statistics_select}."_".$_->{env_variance};
+            foreach my $t (@varcomp_keys) {
+                foreach my $a (@{$_->{$t}->{covariance}}) {
+                    push @{$avg_varcomps{$type}->{$t}->{$a->[0]}->{vals}}, $a->[1];
+                }
+            }
+        }
+        # print STDERR Dumper \%avg_varcomps;
+
+        while (my($t, $type_obj) = each %avg_varcomps) {
+            while (my($type, $level_obj) = each %$type_obj) {
+                while (my($level, $vals) = each %$level_obj) {
+                    my $level_rec;
+                    my @level_split = split '\.', $level;
+                    if (scalar(@level_split) == 2) { #For Sommer Varcomp
+                        my ($level_type, $level_times) = @level_split;
+                        my @ar = split '-', $level_times;
+                        my ($t1, $t2) = sort @ar;
+                        # print STDERR Dumper [$t1, $t2];
+                        $level_rec = $level_type.".".$t1."-".$t2;
+                    }
+                    else { #For ASREML-R Varcomp
+                        $level_rec = $level;
+                    }
+                    my $stat = Statistics::Descriptive::Full->new();
+                    $stat->add_data(@{$vals->{vals}});
+                    my $std = $stat->standard_deviation();
+                    my $mean = $stat->mean();
+                    $avg_varcomps{$t}->{$type}->{$level_rec}->{std} = $std;
+                    $avg_varcomps{$t}->{$type}->{$level_rec}->{mean} = $mean;
+                    push @avg_varcomps_display, {
+                        type => $t,
+                        type_scenario => $type,
+                        level => $level_rec,
+                        vals => $vals->{vals},
+                        std => $std,
+                        mean => $mean
+                    };
+                }
+            }
+        }
+    }
+    else {
+        
+    }
+    # print STDERR Dumper \%avg_varcomps;
 
     push @$protocol_result_summary, {
         statistics_select_original => $statistics_select_original,
@@ -14887,7 +14952,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         env_correlation_results => $env_corr_res,
         trait_name_map => \%trait_name_encoder,
         trait_to_time_map => \%trait_to_time_map,
-        env_varcomps => $env_varcomps
+        env_varcomps => $env_varcomps,
+        avg_varcomps => \%avg_varcomps,
+        avg_varcomps_display => \@avg_varcomps_display
     };
     my $q2 = "UPDATE nd_protocolprop SET value=? WHERE nd_protocolprop_id=?;";
     my $h2 = $schema->storage->dbh()->prepare($q2);
