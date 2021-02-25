@@ -15,9 +15,9 @@ sub fieldmap :Path('/tools/fieldmap') {
   	$c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
   	return;
   }
-  $c->stash->{datasets} = CXGN::Dataset->get_datasets_by_user(
-    $c->dbic_schema("CXGN::People::Schema"),
-    $c->user->get_sp_person_id());
+  my $trial_id = $c->request->param('trial_id');
+
+  $c->stash->{trial_id} = $trial_id;
   $c->stash->{template} = '/tools/fieldmap.mas';
 }
 1;
