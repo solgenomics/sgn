@@ -5,13 +5,32 @@ use Moose;
 
 extends 'CXGN::JSONProp';
 
+# a general human readable description of the stock
+#
 has 'description' => ( isa => 'Str', is => 'rw' );
 
+# a list of representative images, given as image_ids
+#
 has 'images' => ( isa => 'Maybe[ArrayRef]', is => 'rw' );
 
+# availability status: in_stock, delayed, currently_unavailable ...
+#
 has 'availability' => ( isa => 'Str', is => 'rw' );
 
-has 'comments' => ( isa => 'Str', is => 'rw') ;
+# list of hashrefs like { stock_center => { name => ..., count_available => ..., delivery_time => } } 
+has 'order_source' => ( isa => 'ArrayRef', is => 'rw');
+
+# the breeding program this clones originated from
+#
+has 'breeding_program' => ( isa => 'Str', is => 'rw');
+
+# list of trait ids??? product profiles??? maybe free text better???
+#
+has 'categories' => ( isa => 'ArrayRef', is => 'rw' );
+
+# list of comments as ArrayRef of [ 'comment', 'sp_person_id']
+#
+has 'comments' => ( isa => 'ArrayRef', is => 'rw') ;
 
 
 sub BUILD {
