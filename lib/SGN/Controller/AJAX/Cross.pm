@@ -82,11 +82,11 @@ sub upload_cross_file_POST : Args(0) {
     if ($crosses_plots_upload) {
         $upload = $crosses_plots_upload;
         $upload_type = 'CrossesExcelFormat';
-        }
+    }
     if ($crosses_plants_upload) {
-            $upload = $crosses_plants_upload;
-            $upload_type = 'CrossesExcelFormat';
-            }
+        $upload = $crosses_plants_upload;
+        $upload_type = 'CrossesExcelFormat';
+    }
 
     if ($crosses_simple_upload) {
         $upload = $crosses_simple_upload;
@@ -152,8 +152,12 @@ sub upload_cross_file_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
+    my $cross_additional_info_string = $c->config->{cross_additional_info};
+    my @additional_info = split ',', $cross_additional_info_string;
+    my $cross_additional_info = \@additional_info;
+
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_additional_info => $cross_additional_info);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
@@ -197,6 +201,31 @@ sub upload_cross_file_POST : Args(0) {
     if (!$cross_add->add_crosses()){
         $c->stash->{rest} = {error_string => "Error adding crosses",};
         return;
+    }
+
+    if ($parsed_data->{'additional_info'}) {
+        my %cross_additional_info = %{$parsed_data->{additional_info}};
+        foreach my $cross_name (keys %cross_additional_info) {
+            my %info_hash = %{$cross_additional_info{$cross_name}};
+            foreach my $info_type (keys %info_hash) {
+                my $value = $info_hash{$info_type};
+                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+                    chado_schema => $chado_schema,
+                    cross_name => $cross_name,
+                    key => $info_type,
+                    value => $value,
+                    data_type => 'cross_additional_info'
+                });
+
+               $cross_add_info->add_info();
+
+               if (!$cross_add_info->add_info()){
+                   $c->stash->{rest} = {error_string => "Error saving info",};
+                   return;
+               }
+
+            }
+        }
     }
 
     $c->stash->{rest} = {success => "1",};
@@ -596,6 +625,10 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
     my $cross_id = $c->req->param("cross_id");
     my $type = $c->req->param("type");
     my $value = $c->req->param("value");
+    my $data_type = $c->req->param("data_type");
+#    print STDERR "DATA TYPE =".Dumper($data_type)."\n";
+#    print STDERR "TYPE =".Dumper($type)."\n";
+#    print STDERR "VALUE =".Dumper($value)."\n";
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cross_name = $schema->resultset("Stock::Stock")->find({stock_id => $cross_id})->uniquename();
@@ -604,7 +637,8 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
         chado_schema => $schema,
         cross_name => $cross_name,
         key => $type,
-        value => $value
+        value => $value,
+        data_type => $data_type
     });
     $cross_add_info->add_info();
 
@@ -694,6 +728,7 @@ sub add_individual_cross {
     my $cross_combination = shift;
 
     my $owner_name = $c->user()->get_object()->get_username();
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
     my @progeny_names;
     my $progeny_increment = 1;
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -795,7 +830,7 @@ sub add_individual_cross {
             dbh => $dbh,
             crossing_trial_id => $crossing_trial_id,
             crosses =>  \@array_of_pedigree_objects,
-            owner_name => $owner_name,
+            user_id => $user_id,
         });
 
         #add the crosses
@@ -1226,7 +1261,26 @@ sub upload_info_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload = $c->req->upload('crossinfo_upload_file');
+    my $cross_info_upload = $c->req->upload('crossinfo_upload_file');
+    my $additional_info_upload = $c->req->upload('additional_info_upload_file');
+    my $upload;
+    my $upload_type;
+    my $data_type;
+
+    if ($cross_info_upload) {
+        $upload = $cross_info_upload;
+        $upload_type = 'CrossInfoExcel';
+        $data_type = 'crossing_metadata_json';
+    }
+    if ($additional_info_upload) {
+        $upload = $additional_info_upload;
+        $upload_type = 'AdditionalInfoExcel';
+        $data_type = 'cross_additional_info';
+    }
+#    print STDERR "INFO UPLOAD =".Dumper($cross_info_upload)."\n";
+#    print STDERR "ADDITIONAL INFO UPLOAD =".Dumper($additional_info_upload)."\n";
+#    print STDERR "DATA TYPE =".Dumper($data_type)."\n";
+
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
@@ -1285,15 +1339,19 @@ sub upload_info_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    my $cross_properties_json = $c->config->{cross_properties};
-    my @properties = split ',', $cross_properties_json;
+    my $cross_properties_string = $c->config->{cross_properties};
+    my @properties = split ',', $cross_properties_string;
     my $cross_properties = \@properties;
 
+    my $cross_additional_info_string = $c->config->{cross_additional_info};
+    my @additional_info = split ',', $cross_additional_info_string;
+    my $cross_additional_info = \@additional_info;
+
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
-    $parser->load_plugin('CrossInfoExcel');
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties, cross_additional_info => $cross_additional_info);
+    $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
-    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+#    print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -1313,25 +1371,27 @@ sub upload_info_POST : Args(0) {
     }
 
     my @all_crosses;
-    while (my $info_type = shift (@properties)){
-        if ($parsed_data->{$info_type}) {
-            print STDERR "Handling info type $info_type\n";
-            my %info_hash = %{$parsed_data->{$info_type}};
-            @all_crosses = keys %info_hash;
-            foreach my $cross_name_key (keys %info_hash){
-                my $value = $info_hash{$cross_name_key};
+    if ($parsed_data) {
+        my %cross_info = %{$parsed_data};
+        @all_crosses = keys %cross_info;
+        foreach my $cross_name (keys %cross_info) {
+            my %info_hash = %{$cross_info{$cross_name}};
+            foreach my $info_type (keys %info_hash) {
+                my $value = $info_hash{$info_type};
                 my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
                     chado_schema => $chado_schema,
-                    cross_name => $cross_name_key,
+                    cross_name => $cross_name,
                     key => $info_type,
                     value => $value,
+                    data_type => $data_type
                 });
-                $cross_add_info->add_info();
 
-                if (!$cross_add_info->add_info()){
-                    $c->stash->{rest} = {error => "Error adding cross info",};
-                    return;
-                }
+               $cross_add_info->add_info();
+
+               if (!$cross_add_info->add_info()){
+                   $c->stash->{rest} = {error_string => "Error saving info",};
+                   return;
+               }
             }
         }
     }
@@ -1787,7 +1847,7 @@ sub upload_intercross_file_POST : Args(0) {
                 dbh => $dbh,
                 crossing_trial_id => $crossing_experiment_id,
                 crosses => \@new_crosses,
-                owner_name => $user_name
+                user_id => $user_id
             });
 
             if (!$cross_add->validate_crosses()){
@@ -1862,6 +1922,40 @@ sub get_cross_transactions :Path('/ajax/cross/transactions') Args(1) {
     }
 
     $c->stash->{rest} = {data => \@all_transactions};
+
+}
+
+
+sub get_cross_additional_info :Path('/ajax/cross/additional_info') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $cross_additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_additional_info', 'stock_property')->cvterm_id();
+    my $cross_additional_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_additional_info_cvterm});
+
+    my $cross_info_json_string;
+    if($cross_additional_info_rs){
+        $cross_info_json_string = $cross_additional_info_rs->value();
+    }
+
+    my $cross_info_hash ={};
+    if($cross_info_json_string){
+        $cross_info_hash = decode_json $cross_info_json_string;
+    }
+
+    my $cross_additional_info = $c->config->{cross_additional_info};
+    my @column_order = split ',',$cross_additional_info;
+    my @props;
+    my @row;
+    foreach my $key (@column_order){
+        push @row, $cross_info_hash->{$key};
+    }
+
+    push @props,\@row;
+    $c->stash->{rest} = {data => \@props};
 
 }
 

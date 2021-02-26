@@ -1,4 +1,4 @@
-package CXGN::Pedigree::ParseUpload::Plugin::CrossInfoExcel;
+package CXGN::Pedigree::ParseUpload::Plugin::AdditionalInfoExcel;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
@@ -11,7 +11,7 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $cross_properties = $self->get_cross_properties();
+    my $cross_additional_info_ref = $self->get_cross_additional_info();
     my @error_messages;
     my %errors;
     my $parser = Spreadsheet::ParseExcel->new();
@@ -37,8 +37,8 @@ sub _validate_with_plugin {
 
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
-    if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of progeny
-        push @error_messages, "Spreadsheet is missing header or no cross info data";
+    if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of parental info
+        push @error_messages, "Spreadsheet is missing header or no parental info data";
         $errors{'error_messages'} = \@error_messages;
         $self->_set_parse_errors(\%errors);
         return;
@@ -55,16 +55,16 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A1: cross_unique_id is missing from the header";
     }
 
-    my %valid_properties;
-    my @properties = @{$cross_properties};
-    foreach my $property(@properties){
-        $valid_properties{$property} = 1;
+    my %valid_headers;
+    my @additional_info_headers = @{$cross_additional_info_ref};
+    foreach my $info_field(@additional_info_headers){
+        $valid_headers{$info_field} = 1;
     }
 
     for my $column (1 .. $col_max){
         my $header_string = $worksheet->get_cell(0,$column)->value();
 
-        if (!$valid_properties{$header_string}){
+        if (!$valid_headers{$header_string}){
             push @error_messages, "Invalid info type: $header_string";
         }
     }
@@ -88,18 +88,6 @@ sub _validate_with_plugin {
             $seen_cross_names{$cross_name}++;
         }
 
-        for my $column (1 .. $col_max) {
-            if ($worksheet->get_cell($row,$column)) {
-                my $info_value = $worksheet->get_cell($row,$column)->value();
-                my $info_type = $worksheet->get_cell(0,$column)->value();
-                if ( ($info_type =~ m/days/  || $info_type =~ m/number/) && !($info_value =~ /^\d+?$/) ) {
-                    push @error_messages, "Cell $info_type:$row_name: is not a positive integer: $info_value";
-                }
-                elsif ( $info_type =~ m/date/ && !($info_value =~ m/(\d{4})\/(\d{2})\/(\d{2})/) ) {
-                    push @error_messages, "Cell $info_type:$row_name: is not a valid date: $info_value. Dates need to be of form YYYY/MM/DD";
-                }
-            }
-        }
     }
 
     my @crosses = keys %seen_cross_names;
@@ -160,8 +148,10 @@ sub _parse_with_plugin {
                 $parsed_result{$cross_name}{$info_header} = $worksheet->get_cell($row,$column)->value();
             }
         }
+
     }
-    print STDERR "PARSED RESULT =".Dumper(\%parsed_result)."\n";
+
+    print STDERR "ADDITIONAL INFO PARSED RESULT =".Dumper(\%parsed_result)."\n";
 
     $self->_set_parsed_data(\%parsed_result);
 
