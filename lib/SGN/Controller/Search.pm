@@ -1,5 +1,6 @@
 package SGN::Controller::Search;
 use Moose;
+use URI::FromHash 'uri';
 use namespace::autoclean;
 
 use CXGN::Search::CannedForms;
@@ -173,6 +174,17 @@ sub images_search : Path('/search/images') Args(0) {
     #$_[1]->stash->{content} = CXGN::Search::CannedForms->image_search_form(); ####DEPRECATED CGIBIN CODE
 }
 
+sub bulk_search : Path('/search/bulk') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        $c->detach();
+    }
+
+    $c->stash->{template} = '/search/bulk.mas';
+}
 
 =head1 AUTHOR
 

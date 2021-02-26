@@ -609,6 +609,95 @@ sub validate : Path('/list/validate') Args(2) {
     $c->stash->{rest} = $data;
 }
 
+#
+# Validate a list of names for a specified data type
+# - Temporarily create a list
+# - Validate the list
+# - Delete the temp list
+# - Return lists of missing and existing items
+#
+# PATH: POST /list/validate/{type}
+#   where {type} is the name of a supported list type (accessions, trials, seedlots, etc...)
+# BODY:
+#   items: array of item names to validate
+#
+# RETURNS:
+#   error: error message, if an error was encountered
+#   missing: array of objects for the items not in the database (keys: name = list item name)
+#   existing: array of objects for the items found in the database (keys: name = list item name)
+#
+sub validate_temp : Path('/list/validate') : ActionClass('REST') { }
+sub validate_temp_POST : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $type = shift;
+    my $params = $c->request->parameters();
+
+    # Check user status
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+        $c->stash->{rest} = { error => "You must be logged in to perform a list validation" };
+	    $c->detach();
+    }
+
+    # Get list items
+    my $items = $params->{'items[]'} || $params->{'items'};
+    if (!defined $items) {
+        $c->stash->{rest} = { error => "Data items not provided" };
+        $c->detach();
+    }
+
+    # Create new temp list
+    my $list_name = "TEMP_" . sprintf("%08X", rand(0xFFFFFFFF));
+    my $list_id = $self->new_list($c, $list_name, "temp list used for validation...", $user_id);
+    if (!$list_id) {
+        $c->stash->{rest} = { error => "Could not create temporary list" };
+        $c->detach();
+    }
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
+    if (!$list) {
+        $c->stash->{rest} = { error => "Could not get temporary list" };
+        $c->detach();
+    }
+    $list->type($type);
+
+    # Add list items
+    my $response = $list->add_bulk($items);
+    if ($response->{error}) {
+        $c->stash->{rest} = { error => $response->{error} };
+        $c->detach();
+    }
+
+    # Validate the list
+    my $list_elements = $list->retrieve_elements_with_ids($list_id);
+    my @flat_list = map { $_->[1] } @$list_elements;
+    my $lv = CXGN::List::Validate->new();
+    my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
+
+    # Delete the list
+    CXGN::List->delete_list($c->dbc->dbh(), $list_id);
+
+    # Set missing (array of hashes, name = item name)
+    my $m = $data->{missing};
+    my @missing = ();
+    foreach (@$m) {
+        push(@missing, {name => $_});
+    }
+
+    # Set existing (array of hashes, name = item name)
+    my %comp = map { $_ => 1 } @$m;
+    my @e = grep !$comp{$_}, @$items;
+    my @existing = ();
+    foreach (@e) {
+        push(@existing, {name => $_});
+    }
+
+    $c->stash->{rest} = {
+        missing => \@missing,
+        existing => \@existing
+    };
+}
+
 sub fuzzysearch : Path('/list/fuzzysearch') Args(2) {
     my $self = shift;
     my $c = shift;
