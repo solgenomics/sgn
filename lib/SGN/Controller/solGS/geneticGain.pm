@@ -24,6 +24,7 @@ use File::Copy;
 use File::Basename;
 use File::Path qw / mkpath  /;
 use File::Spec::Functions;
+use File::Slurp qw /write_file read_file/;
 use JSON;
 use List::MoreUtils qw /uniq/;
 use String::CRC;
@@ -201,7 +202,7 @@ sub get_selection_pop_gebv_file {
     if ($selection_pop_id && $trait_id && $training_pop_id)
     {
 	# my $identifier = "${training_pop_id}_${selection_pop_id}";
-	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);       
+	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
 	$gebv_file = $c->stash->{rrblup_selection_gebvs_file};
     }
 
