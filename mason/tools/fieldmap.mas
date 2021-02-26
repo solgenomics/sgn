@@ -1,5 +1,5 @@
 <%args> 
-$trial_id
+$trial_id => undef
 </%args>
 
 
@@ -64,11 +64,14 @@ $trial_id
         var studyDbId = '<% $trial_id %>' || trialId; // jQuery('#select_trial_for_selection_index').val();
         setupBrAPI();
 
-        fieldMap.load(studyDbId)
-            .then((value)=>{
-              if (!value) return setLocation(studyDbId); 
-              else {jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); }} ); 
-              document.getElementById("formOptions").style.display="block";
+        if (studyDbId){
+            fieldMap.load(studyDbId)
+                .then((value)=>{
+                  if (!value) return setLocation(studyDbId); 
+                  else { jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); }
+                }); 
+            document.getElementById("formOptions").style.display="block";
+        } else alert("Invalid trial!");
     }
 
     function setLocation(studyDbId) {
