@@ -53,7 +53,7 @@ my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\"
 
 </%perl>
 
-  <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS",
+  <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS", "solGS.save",
                                               "flot.flot", "flot.categories",
                                               "flot.tooltip", "flot.selection", "flot.navigate",
                                               "flot.axisLabels",
