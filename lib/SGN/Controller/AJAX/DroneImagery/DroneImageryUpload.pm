@@ -162,6 +162,19 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->detach();
     }
 
+    if ($new_drone_run_band_stitching eq 'yes_open_data_map_stitch') {
+        my $upload_file = $c->req->upload('upload_drone_images_zipfile');
+        if (!$upload_file) {
+            $c->stash->{rest} = { error => "Please provide a drone image zipfile of raw images!" };
+            $c->detach();
+        }
+        my $upload_original_name = $upload_file->filename();
+        if ($upload_original_name ne 'images.zip') {
+            $c->stash->{rest} = { error => "The uploaded zip file must be named images.zip!" };
+            $c->detach();
+        }
+    }
+
     # if ($selected_drone_run_id && ($new_drone_run_band_stitching eq 'yes' || $new_drone_run_band_stitching eq 'yes_raw' || $new_drone_run_band_stitching eq 'yes_automated')) {
     #     $c->stash->{rest} = { error => "Please create a new drone run if you are uploading a zipfile of raw images!" };
     #     $c->detach();
@@ -1086,6 +1099,7 @@ sub upload_drone_imagery_POST : Args(0) {
         my $upload_tempfile = $upload_file->tempname;
         my $time = DateTime->now();
         my $timestamp = $time->ymd()."_".$time->hms();
+        print STDERR Dumper [$upload_original_name, $upload_tempfile];
 
         my $uploader = CXGN::UploadFile->new({
             tempfile => $upload_tempfile,
@@ -1107,7 +1121,7 @@ sub upload_drone_imagery_POST : Args(0) {
 
         my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
         my $zipfile_return = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_drone_run_id);
-        print STDERR Dumper $zipfile_return;
+        # print STDERR Dumper $zipfile_return;
         if ($zipfile_return->{error}) {
             $c->stash->{rest} = { error => "Problem saving images!".$zipfile_return->{error} };
             $c->detach();
@@ -1118,8 +1132,8 @@ sub upload_drone_imagery_POST : Args(0) {
         my $image_path_img_name = pop(@img_path_split);
         my $image_path_project_name = pop(@img_path_split);
         my $image_path_remaining = join '/', @img_path_split;
-        # my $image_path_remaining_host = $image_path_remaining =~ s/production/nmorales/gr;
-        print STDERR Dumper [$image_path_img_name, $image_path_project_name, $image_path_remaining];
+        my $image_path_remaining_host = $image_path_remaining =~ s/cxgn\/sgn\/static\/documents\/tempfiles/tmp\/breedbase\-site/gr;
+        print STDERR Dumper [$image_path_img_name, $image_path_project_name, $image_path_remaining, $image_path_remaining_host];
 
         my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_images');
         my $temp_file_docker_log = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
@@ -1133,16 +1147,16 @@ sub upload_drone_imagery_POST : Args(0) {
             # my $content  = $response->decoded_content();
             # print STDERR Dumper $content;
 
-            my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm --radiometric-calibration camera > '.$temp_file_docker_log;
+            my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm --radiometric-calibration camera > '.$temp_file_docker_log;
             print STDERR $odm_command."\n";
             my $odm_status = system($odm_command);
 
-            my $odm_b1 = "$image_path_remaining/odm_orthophoto/b1.png";
-            my $odm_b2 = "$image_path_remaining/odm_orthophoto/b2.png";
-            my $odm_b3 = "$image_path_remaining/odm_orthophoto/b3.png";
-            my $odm_b4 = "$image_path_remaining/odm_orthophoto/b4.png";
-            my $odm_b5 = "$image_path_remaining/odm_orthophoto/b5.png";
-            my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path $image_path_remaining/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5 --odm_radiocalibrated True";
+            my $odm_b1 = "$image_path_remaining_host/odm_orthophoto/b1.png";
+            my $odm_b2 = "$image_path_remaining_host/odm_orthophoto/b2.png";
+            my $odm_b3 = "$image_path_remaining_host/odm_orthophoto/b3.png";
+            my $odm_b4 = "$image_path_remaining_host/odm_orthophoto/b4.png";
+            my $odm_b5 = "$image_path_remaining_host/odm_orthophoto/b5.png";
+            my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path $image_path_remaining_host/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5 --odm_radiocalibrated True";
             my $odm_open_status = system($odm_cmd);
 
             @stitched_bands = (
@@ -1154,11 +1168,11 @@ sub upload_drone_imagery_POST : Args(0) {
             );
         }
         elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
-            my $odm_command = 'docker run -ti --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm > '.$temp_file_docker_log;
+            my $odm_command = 'docker run -ti --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm > '.$temp_file_docker_log;
             print STDERR $odm_command."\n";
             my $odm_status = system($odm_command);
             @stitched_bands = (
-                ["Color Image", "RGB Color Image", "RGB Color Image", "$image_path_remaining/odm_orthophoto/odm_orthophoto.tif"],
+                ["Color Image", "RGB Color Image", "RGB Color Image", "$image_path_remaining_host/odm_orthophoto/odm_orthophoto.tif"],
             );
         }
         else {
