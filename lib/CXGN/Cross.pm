@@ -946,8 +946,8 @@ sub delete {
 
 	# delete the nd_experiment entries
 	print STDERR "Deleting nd_experiment entry for cross...\n";
-	my $q2= "delete from nd_experiment where nd_experiment.nd_experiment_id = ? AND nd_experiment.type_id = ?";
-	my $h2 = $dbh->prepare($q2);
+	$q2= "delete from nd_experiment where nd_experiment.nd_experiment_id = ? AND nd_experiment.type_id = ?";
+	$h2 = $dbh->prepare($q2);
 	$h2->execute($experiment_id, $cross_experiment_type_id);
 
 	# delete stock owner entries
@@ -1324,8 +1324,6 @@ sub get_cross_additional_info_trial {
         WHERE nd_experiment_project.project_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    my $h = $schema->storage->dbh()->prepare($q);
-
     $h->execute($cross_combination_typeid, $cross_additional_info_typeid, $trial_id);
 
 

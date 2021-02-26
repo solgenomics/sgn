@@ -182,7 +182,7 @@
                                     <!-- option value="yes">Yes, I am uploading a zipfile of raw images to stitch</option -->
                                     <!-- option value="yes_automated">Yes, I am uploading a zipfile of raw images to automatically get plot images from</option -->
                                     <option value="no">No, I am uploading a stitched orthomosaic</option>
-                                    <!--option value="yes_open_data_map_stitch">Yes, I am uploading a zipfile of raw images to stitch using OpenDroneMap</option -->
+                                    <option value="yes_open_data_map_stitch">Yes, I am uploading a zipfile of raw images to stitch using OpenDroneMap</option>
                                     <!--option value="yes_raw">Yes, I am uploading a zipfile of raw images</option -->
                                 </select>
                             </div>

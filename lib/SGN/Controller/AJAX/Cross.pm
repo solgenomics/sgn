@@ -73,6 +73,8 @@ sub upload_cross_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
+    my $prefix = $c->req->param('prefix');
+    my $suffix = $c->req->param('suffix');
     my $crossing_trial_id = $c->req->param('cross_upload_crossing_trial');
     my $crosses_simple_upload = $c->req->upload('xls_crosses_simple_file');
     my $crosses_plots_upload = $c->req->upload('xls_crosses_plots_file');
@@ -127,11 +129,6 @@ sub upload_cross_file_POST : Args(0) {
         return;
     }
     unlink $upload_tempfile;
-
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
 
     my $cross_additional_info_string = $c->config->{cross_additional_info};
     my @additional_info = split ',', $cross_additional_info_string;
@@ -208,7 +205,7 @@ sub upload_cross_file_POST : Args(0) {
                 dbh => $dbh,
                 cross_name => $cross_name_key,
                 progeny_names => \@progeny_names,
-                owner_name => $owner_name,
+                owner_name => $user_name,
             });
             if (!$progeny_add->add_progeny()){
                 $c->stash->{rest} = {error_string => "Error adding progeny",};
@@ -1047,7 +1044,7 @@ sub upload_progenies_POST : Args(0) {
     my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
     $md_row->insert();
     my $upload_file = CXGN::UploadFile->new();
-    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    $md5 = $upload_file->get_md5($archived_filename_with_path);
     my $md5checksum = $md5->hexdigest();
     my $file_row = $metadata_schema->resultset("MdFiles")->create({
         basename => basename($archived_filename_with_path),
@@ -1286,11 +1283,6 @@ sub upload_info_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
-
     my $cross_properties_string = $c->config->{cross_properties};
     my @properties = split ',', $cross_properties_string;
     my $cross_properties = \@properties;
@@ -1322,8 +1314,10 @@ sub upload_info_POST : Args(0) {
         $c->detach();
     }
 
+    my @all_crosses;
     if ($parsed_data) {
         my %cross_info = %{$parsed_data};
+        @all_crosses = keys %cross_info;
         foreach my $cross_name (keys %cross_info) {
             my %info_hash = %{$cross_info{$cross_name}};
             foreach my $info_type (keys %info_hash) {
@@ -1342,7 +1336,6 @@ sub upload_info_POST : Args(0) {
                    $c->stash->{rest} = {error_string => "Error saving info",};
                    return;
                }
-
             }
         }
     }
@@ -1351,7 +1344,7 @@ sub upload_info_POST : Args(0) {
     my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
     $md_row->insert();
     my $upload_file = CXGN::UploadFile->new();
-    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    $md5 = $upload_file->get_md5($archived_filename_with_path);
     my $md5checksum = $md5->hexdigest();
     my $file_row = $metadata_schema->resultset("MdFiles")->create({
         basename => basename($archived_filename_with_path),
@@ -1481,7 +1474,7 @@ sub upload_family_names_POST : Args(0) {
     my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
     $md_row->insert();
     my $upload_file = CXGN::UploadFile->new();
-    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    $md5 = $upload_file->get_md5($archived_filename_with_path);
     my $md5checksum = $md5->hexdigest();
     my $file_row = $metadata_schema->resultset("MdFiles")->create({
         basename => basename($archived_filename_with_path),
@@ -1866,8 +1859,6 @@ sub get_cross_additional_info :Path('/ajax/cross/additional_info') Args(1) {
     my $self = shift;
     my $c = shift;
     my $cross_id = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $cross_additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_additional_info', 'stock_property')->cvterm_id();
     my $cross_additional_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_additional_info_cvterm});

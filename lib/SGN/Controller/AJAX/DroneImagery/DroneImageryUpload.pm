@@ -1143,7 +1143,7 @@ sub upload_drone_imagery_POST : Args(0) {
             my $odm_b4 = "$image_path_remaining/odm_orthophoto/b4.png";
             my $odm_b5 = "$image_path_remaining/odm_orthophoto/b5.png";
             my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path $image_path_remaining/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5 --odm_radiocalibrated True";
-            my $odm_status = system($odm_cmd);
+            my $odm_open_status = system($odm_cmd);
 
             @stitched_bands = (
                 ["Band 1", "Blue", "Blue (450-520nm)", $odm_b1],
