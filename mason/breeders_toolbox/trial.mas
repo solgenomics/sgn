@@ -84,7 +84,7 @@ $management_factor_types => ()
 % my $subtitle = 'View and edit the spatial layout of the experiment. Also view a heatmap for phenotyped traits.';
 % my $layout_buttons = '';
 % if ($has_col_and_row_numbers){
-%     $layout_buttons = '<h3><span class="glyphicon glyphicon-ok-sign text-success"></span>&nbsp;&nbsp;&nbsp;This experiment has spatial layout info uploaded!</h3><button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button> <button class="btn btn-primary" style="margin:3px" id="trial_fieldmap_download_layout_button">Download Spatial Layout</button> <button class="btn btn-danger" id="delete_field_map_hm_link" style="margin:3px">Delete Spatial Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
+%     $layout_buttons = '<h3><span class="glyphicon glyphicon-ok-sign text-success"></span>&nbsp;&nbsp;&nbsp;This experiment has spatial layout info uploaded!</h3><button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button><button class="btn btn-primary" style="margin:3px" id="trial_fieldmap_download_layout_button">Download Spatial Layout</button> <button class="btn btn-primary" style="margin:3px" id="gps_field_map_link">Edit Geo Field Layout</button><button class="btn btn-danger" id="delete_field_map_hm_link" style="margin:3px">Delete Spatial Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
 % } else {
 %    $layout_buttons = '<h3><span class="glyphicon glyphicon-remove-sign text-danger"></span>&nbsp;&nbsp;&nbsp;This experiment does not have spatial layout info!</h3><button class="btn btn-primary" style="margin:3px" id="heatmap_upload_trial_coords_link">Upload Spatial Layout</button> <button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
 % }
@@ -332,6 +332,11 @@ jQuery(document).ready(function () {
     jQuery('#direct_phenotyping_link').click(function () {
         var  id = <% $trial_id %>;
         location.href = '/breeders/trial_phenotyping?trial_id=' + id + '';
+    });
+
+    jQuery('#gps_field_map_link').click(function () {
+        var  id = <% $trial_id %>;
+        window.open('/tools/fieldmap?trial_id=' + id ,'_blank');
     });
 
 });
