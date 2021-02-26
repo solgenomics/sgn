@@ -134,6 +134,94 @@
     </div>
 </div>
 
+
+<div class="modal fade" id="upload_additional_info_dialog" name="upload_additional_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadAdditionalInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadAdditionalInfoDialog">Upload Additional Parent Info of Existing Crosses </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File Format Information</b>
+                            <br>
+                            <a id="upload_additional_info_format">Spreadsheet Format</a>
+                            <br>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_additional_info_form" name="upload_additional_info_form">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Upload File: </label>
+                                <div class="col-sm-10">
+                                    <input type="file" name="additional_info_upload_file" id="additional_info_upload_file" encoding="multipart/form-data" />
+                                </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_additional_info_submit" id="upload_additional_info_submit">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_additional_info_format_dialog" name="upload_additional_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadAdditionalInfoFormatDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadAdditionalInfoFormatDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Additional Parent Info of existing crosses may be uploaded in an Excel file (.xls)
+                    </b>
+                    <br>
+                        (.xlsx format not supported)
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>cross_unique_id</td>
+                                <td>At least one column of parent info listed below (please use exact column header as shown)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Required columns:
+                    </b>
+                    <ul>
+                        <li><b>cross_unique_id:</b> Must exist in the database, must not have duplicate cross unique id in the same upload file.
+                        <li><b>At least one of the following columns:</b> You can upload different types of parent info by selecting corresponding column headers. All of parent info of the same cross unique id must be in a single row.</li>
+                        <br>
+% my $cross_additional_info_string = $c->config->{cross_additional_info};
+% my @additional_info_headers = split ',',$cross_additional_info_string;
+% foreach my $info_header(@additional_info_headers){
+                        <%$info_header%>
+                        <br>
+%}
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 
 jQuery(document).ready(function(){
@@ -184,6 +272,50 @@ jQuery(document).ready(function(){
     jQuery("#dismiss_cross_info_saved_dialog").click(function(){
         location.reload();
     });
+
+    jQuery("#upload_additional_info").click(function(){
+
+        jQuery("#upload_additional_info_format").click(function(){
+            jQuery("#upload_additional_info_format_dialog").modal("show");
+        });
+
+        jQuery("#upload_additional_info_dialog").modal("show");
+    });
+
+    jQuery("#upload_additional_info_submit").click(function(){
+        var uploadFile = jQuery("#additional_info_upload_file").val();
+        jQuery('#upload_additional_info_form').attr("action", "/ajax/cross/upload_info");
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_additional_info_form").submit();
+        jQuery("#upload_additional_info_dialog").modal("hide");
+    });
+
+    jQuery('#upload_additional_info_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response){
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string){
+                jQuery("#upload_crossinfo_error_display tbody").html('');
+                jQuery("#upload_crossinfo_error_display tbody").append(response.error_string);
+                jQuery("#upload_crossinfo_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#cross_info_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
 
 });
 

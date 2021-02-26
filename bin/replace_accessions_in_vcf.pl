@@ -1,13 +1,15 @@
 
 use strict;
 
+use Hash::Case::Preserve;
+
 my $vcf_file = shift;
 my $equivalence_file = shift;
 
 
 open(my $E, "<", $equivalence_file) || die "Can't open $equivalence_file\n";
 
-my %ids;
+tie my %ids, 'Hash::Case::Preserve';
 while (<$E>) {
     chomp;
 

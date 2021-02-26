@@ -11,13 +11,14 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-#    my $cross_properties = $self->get_cross_properties();
+    my $cross_additional_info = $self->get_cross_additional_info();
     my @error_messages;
     my %errors;
     my %supported_cross_types;
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
+#    print STDERR "ADDITIONAL INFO =".Dumper($cross_additional_info)."\n";
 
     #currently supported cross types
     $supported_cross_types{'biparental'} = 1; #both parents required
@@ -95,20 +96,21 @@ sub _validate_with_plugin {
         push @error_messages, "Cell E1: male_parent is missing from the header";
     }
 
+    my %valid_additional_info;
+    my @valid_info = @{$cross_additional_info};
+    foreach my $info(@valid_info){
+        $valid_additional_info{$info} = 1;
+    }
 
-#    my %valid_properties;
-#    my @properties = @{$cross_properties};
-#    foreach my $property(@properties){
-#        $valid_properties{$property} = 1;
-#    }
+    for my $column (5 .. $col_max){
+        if ($worksheet->get_cell(0, $column)) {
+            my $header_string = $worksheet->get_cell(0,$column)->value();
 
-#    for my $column ( 5 .. $col_max ) {
-#        my $header_string = $worksheet->get_cell(0,$column)->value();
-
-#        if (!$valid_properties{$header_string}){
-#            push @error_messages, "Invalid info type: $header_string";
-#        }
-#    }
+            if (!$valid_additional_info{$header_string}){
+                push @error_messages, "Invalid info type: $header_string";
+            }
+        }
+    }
 
     my %seen_cross_names;
     my %seen_accession_names;
@@ -141,19 +143,6 @@ sub _validate_with_plugin {
         if ($worksheet->get_cell($row,4)) {
             $male_parent =  $worksheet->get_cell($row,4)->value();
         }
-
-#        for my $column ( 5 .. $col_max ) {
-#            if ($worksheet->get_cell($row,$column)) {
-#                my $info_value = $worksheet->get_cell($row,$column)->value();
-#                my $info_type = $worksheet->get_cell(0,$column)->value();
-#                if ( ($info_type =~ m/days/  || $info_type =~ m/number/) && !($info_value =~ /^\d+?$/) ) {
-#                    push @error_messages, "Cell $info_type:$row_name: is not a positive integer: $info_value";
-#                }
-#                elsif ( $info_type =~ m/date/ && !($info_value =~ m/(\d{4})\/(\d{2})\/(\d{2})/) ) {
-#                    push @error_messages, "Cell $info_type:$row_name: is not a valid date: $info_value. Dates need to be of form YYYY/MM/DD";
-#                }
-#            }
-#        }
 
         #cross name must not be blank
         if (!$cross_name || $cross_name eq '') {
@@ -256,8 +245,7 @@ sub _parse_with_plugin {
     my $excel_obj;
     my $worksheet;
     my @pedigrees;
-#    my %additional_properties;
-#    my %properties_columns;
+    my %cross_additional_info;
     my %parsed_result;
 
     $excel_obj = $parser->parse($filename);
@@ -268,13 +256,6 @@ sub _parse_with_plugin {
     $worksheet = ( $excel_obj->worksheets() )[0];
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
-
-#    for my $column ( 5 .. $col_max ) {
-#        my $header_string = $worksheet->get_cell(0,$column)->value();
-
-#        $properties_columns{$column} = $header_string;
-#        $additional_properties{$header_string} = ();
-#    }
 
     for my $row ( 1 .. $row_max ) {
         my $cross_name;
@@ -309,16 +290,13 @@ sub _parse_with_plugin {
             $male_parent =~ s/^\s+|\s+$//g;
         }
 
-
-
-#        for my $column ( 5 .. $col_max ) {
-#            if ($worksheet->get_cell($row,$column)) {
-#                my $column_property = $properties_columns{$column};
-#                $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
-#                my $info_type = $worksheet->get_cell(0,$column)->value();
-#                $parsed_result{$info_type} = $additional_properties{$column_property};
-#            }
-#        }
+        for my $column ( 5 .. $col_max ) {
+            if ($worksheet->get_cell($row,$column)) {
+                my $info_header =  $worksheet->get_cell(0,$column)->value();
+                $info_header =~ s/^\s+|\s+$//g;
+                $cross_additional_info{$cross_name}{$info_header} = $worksheet->get_cell($row,$column)->value();
+            }
+        }
 
         my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>$cross_type, cross_combination=>$cross_combination);
         if ($female_parent) {
@@ -333,6 +311,9 @@ sub _parse_with_plugin {
         push @pedigrees, $pedigree;
 
     }
+
+#    print STDERR "ADDITIONAL INFO HASH =".Dumper(\%cross_additional_info)."\n";
+    $parsed_result{'additional_info'} = \%cross_additional_info;
 
     $parsed_result{'crosses'} = \@pedigrees;
 

@@ -532,7 +532,7 @@ sub get_markers_count {
     {
 	my $training_pop_id = $pop_hash->{training_pop_id};
 	$c->stash->{pop_id} = $training_pop_id;
-	$c->controller('solGS::Files')->filtered_training_genotype_file($c, $protocol_id);
+	$c->controller('solGS::Files')->filtered_training_genotype_file($c, $training_pop_id, $protocol_id);
 	$filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
 	if (-s $filtered_geno_file) 
@@ -915,7 +915,7 @@ sub trait :Path('/solgs/trait') Args() {
 		$self->get_all_traits($c);
 	    }
 
-	    $self->trait_phenotype_stat($c);  		   		    
+	    $self->model_phenotype_stat($c);  		   		    
 	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
 	}
     }
@@ -937,20 +937,23 @@ sub gs_modeling_files {
 }
 
 
-sub trait_info_file {
+sub save_model_info_file {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{pop_id} || $c->stash->{combo_pops_id};
     my $trait_id = $c->stash->{trait_id};
     my $trait_abbr = $c->stash->{trait_abbr};
-    my $name  = "trait_info_${trait_id}_pop_${pop_id}"; 
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
-    my $trait_info = $trait_id . "\t" . $trait_abbr;
-    my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);    
-     
-    write_file($file, {binmode => ':utf8'}, $trait_info);
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    
+    my $info = 'Name' . "\t" . 'Value' . "\n";
+    $info .= 'protocol_id' . "\t" . $protocol_id . "\n";
+    $info .= 'model_id' . "\t" . $pop_id . "\n";
+    $info .= 'trait_abbr' . "\t" . $trait_abbr . "\n";
+    $info .= 'trait_id' . "\t" . $trait_id . "\n";   
+  
+    my $file = $c->controller('solGS::Files')->model_info_file($c);  
+    write_file($file, {binmode => ':utf8'}, $info);
 
-    $c->stash->{trait_info_file} = $file;     
 }
 
 
@@ -967,10 +970,17 @@ sub input_files {
     {
 	my $pop_id = $c->stash->{pop_id};
 	my $protocol_id = $c->stash->{genotyping_protocol_id};
+
+	$self->save_model_info_file($c);
 	
-	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id); 
-	$c->controller('solGS::Files')->phenotype_file_name($c, $pop_id); 
-	$self->trait_info_file($c);
+	$c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
+	my $geno_file   = $c->stash->{genotype_file_name};
+	
+	$c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+	my $pheno_file  = $c->stash->{phenotype_file_name};
+	
+	$c->controller('solGS::Files')->model_info_file($c);
+	my $model_info_file  = $c->stash->{model_info_file};
 	
 	$c->controller('solGS::Files')->formatted_phenotype_file($c);
 	my $formatted_phenotype_file  = $c->stash->{formatted_phenotype_file};
@@ -982,12 +992,8 @@ sub input_files {
 	{
 	    $selection_population_file = $c->stash->{selection_population_file};
 	}   
-	
-	my $pheno_file  = $c->stash->{phenotype_file_name};
-	my $geno_file   = $c->stash->{genotype_file_name};
+  
 	my $traits_file = $c->stash->{selected_traits_file};
-	my $trait_file  = $c->stash->{trait_info_file};
-
 	no warnings 'uninitialized';
 
 	my $input_files = join ("\t",
@@ -995,7 +1001,7 @@ sub input_files {
 				$formatted_phenotype_file,
 				$geno_file,
 				$traits_file,
-				$trait_file,
+				$model_info_file,
 				$selection_population_file,
 	    );
 
@@ -1018,10 +1024,10 @@ sub output_files {
     $c->controller('solGS::Files')->marker_effects_file($c);  
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c); 
     $c->controller('solGS::Files')->validation_file($c);
-    $c->controller("solGS::Files")->trait_phenodata_file($c);
+    $c->controller("solGS::Files")->model_phenodata_file($c);
     $c->controller("solGS::Files")->variance_components_file($c);
     $c->controller('solGS::Files')->relationship_matrix_file($c);
-     $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
+    $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
     $c->controller('solGS::Files')->inbreeding_coefficients_file($c);
     $c->controller('solGS::Files')->average_kinship_file($c);
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
@@ -1041,7 +1047,7 @@ sub output_files {
                           $c->stash->{rrblup_training_gebvs_file},
                           $c->stash->{marker_effects_file},
                           $c->stash->{validation_file},
-                          $c->stash->{trait_phenodata_file},                         
+                          $c->stash->{model_phenodata_file},                         
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
 			  $c->stash->{relationship_matrix_table_file},
@@ -1212,7 +1218,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
 	$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
         
         $c->controller('solGS::combinedTrials')->combined_pops_summary($c);        
-        $self->trait_phenotype_stat($c);
+        $self->model_phenotype_stat($c);
         $self->gs_modeling_files($c);
 	
         $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id/gp/$protocol_id"); 
@@ -1227,7 +1233,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
  
 	$self->predict_selection_pop_single_pop_model($c);
 
-	$self->trait_phenotype_stat($c);
+	$self->model_phenotype_stat($c);
         $self->gs_modeling_files($c);
 
 	$c->res->redirect("/solgs/trait/$trait_id/population/$training_pop_id/gp/$protocol_id");
@@ -2199,6 +2205,9 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
     my $trait_id      = $c->req->param('trait_id');
     my $combo_pops_id = $c->req->param('combo_pops_id');
 
+    my $protocol_id = $c->req->param('genotyping_protocol_id');
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    
     $self->get_trait_details($c, $trait_id);
        
     $c->stash->{pop_id}        = $pop_id;
@@ -2206,17 +2215,17 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 
     $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
   
-    $c->controller("solGS::Files")->trait_phenodata_file($c);
+    $c->controller("solGS::Files")->model_phenodata_file($c);
 
-    my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
-    my $trait_data = $c->controller("solGS::Utils")->read_file_data($trait_pheno_file);
+    my $model_pheno_file = $c->{stash}->{model_phenodata_file};
+    my $model_data = $c->controller("solGS::Utils")->read_file_data($model_pheno_file);
        
     my $ret->{status} = 'failed';
     
-    if (@$trait_data) 
+    if (@$model_data) 
     {            
         $ret->{status} = 'success';
-        $ret->{trait_data} = $trait_data;
+        $ret->{trait_data} = $model_data;
     } 
     
     $ret = to_json($ret);
@@ -2227,17 +2236,17 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 }
 
 
-sub trait_pheno_data_type {
-    my ($self, $c, $trait_pheno_file) = @_;
+sub model_phenodata_type {
+    my ($self, $c, $model_pheno_file) = @_;
 
     #$c->controller("solGS::Files")->trait_phenodata_file($c);
     #my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
 
     my $mean_type;
-    if (-s $trait_pheno_file)
+    if (-s $model_pheno_file)
     {
-	my @trait_data = read_file($trait_pheno_file, {binmode => ':utf8'});
-	$mean_type = shift(@trait_data);
+	my @model_data = read_file($model_pheno_file, {binmode => ':utf8'});
+	$mean_type = shift(@model_data);
 	
 	if ($mean_type =~ /fixed_effects/)
 	{
@@ -2266,23 +2275,23 @@ sub trait_pheno_data_type {
 
 
 #generates descriptive stat for a trait phenotype data
-sub trait_phenotype_stat {
+sub model_phenotype_stat {
     my ($self, $c) = @_; 
     
-    $c->controller("solGS::Files")->trait_phenodata_file($c);
-    my $trait_pheno_file = $c->{stash}->{trait_phenodata_file};
+    $c->controller("solGS::Files")->model_phenodata_file($c);
+    my $model_pheno_file = $c->{stash}->{model_phenodata_file};
 
-    my $trait_data = $c->controller("solGS::Utils")->read_file_data($trait_pheno_file);
+    my $model_data = $c->controller("solGS::Utils")->read_file_data($model_pheno_file);
     
     my @desc_stat;
     my $background_job = $c->stash->{background_job};
 
-    my $pheno_type = $self->trait_pheno_data_type($c, $trait_pheno_file);
+    my $pheno_type = $self->model_phenodata_type($c, $model_pheno_file);
    
-    if ($trait_data && !$background_job)
+    if ($model_data && !$background_job)
     {
 	my @pheno_data;   
-	foreach (@$trait_data) 
+	foreach (@$model_data) 
 	{
 	    unless (!$_->[0]) 
 	    {	 
@@ -2304,9 +2313,9 @@ sub trait_phenotype_stat {
 	my $mean = $stat->mean;
 	my $med  = $stat->median;
 	my $std  = $stat->standard_deviation;
-	my $cnt  = scalar(@$trait_data);
+	my $cnt  = scalar(@$model_data);
 	my $cv   = ($std / $mean) * 100;
-	my $na   = scalar(@$trait_data) - scalar(@pheno_data);
+	my $na   = scalar(@$model_data) - scalar(@pheno_data);
 
 	if ($na == 0) { $na = '--'; }
 
