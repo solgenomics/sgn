@@ -1,0 +1,215 @@
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
+
+<div class="container-fluid">
+
+<& /page/page_title.mas, title=>'Bulk Search' &>
+
+<p>The Bulk Search will check if a list of data items exist in the database for the specified data type.<p>
+
+<br />
+
+<!-- QUERY SECTION -->
+<div id="bulk_search_query">
+
+    <h3>Data Type</h3>
+
+    <select id="bulk_search_type" class="form-control" disabled>
+        <option>Loading...</option>
+    </select>
+
+    <br />
+
+    <h3>Data Items</h3>
+
+    <p>Enter the names of the data items (one per line)</p>
+
+    <textarea id="bulk_search_items" class="form-control" rows="25"></textarea>
+
+    <br />
+
+    <button id="bulk_search_start" class="btn btn-primary btn-block">Search</button>
+
+</div>
+
+
+<!-- RESULTS SECTION -->
+<div id="bulk_search_results" style="display: none">
+
+    <h3>Existing Items</h3>
+    
+    <table id="bulk_search_existing" class="table table-striped table-hover">
+        <tr>
+            <th>Name</th>
+        </tr>
+    </table>
+
+    <br />
+
+    <h3>Missing Items</h3>
+
+    <table id="bulk_search_missing" class="table table-striped table-hover">
+        <tr>
+            <th>Name</th>
+        </tr>
+    </table>
+
+    <br /><br />
+
+    <button id="bulk_search_back" class="btn btn-primary btn-block"><span class="glyphicon glyphicon-chevron-left"></span>&nbsp;Back to Search</button>
+
+</div>
+
+<br /><br />
+
+</div>
+
+
+<script type="text/javascript">
+jQuery(document).ready(function() {
+
+    // Get the supported data types
+    updateDataTypes();
+
+    // Click Listeners
+    jQuery('#bulk_search_start').click(bulkSearch);
+    jQuery('#bulk_search_back').click(toggleSections);
+
+    // Init DataTables
+    jQuery('#bulk_search_existing').DataTable({
+        dom: 'Bfrtip',
+        autoWidth: false,
+        data: [],
+        columns: [
+            { title: "Name", data: "name" },
+        ],
+        buttons: [
+            {
+                extend: 'excelHtml5',
+                title: 'existing_items'
+            },
+            {
+                extend: 'csvHtml5',
+                title: 'existing_items'
+            }
+        ]
+    });
+    jQuery('#bulk_search_missing').DataTable({
+        dom: 'Bfrtip',
+        autoWidth: false,
+        data: [],
+        columns: [
+            { title: "Name", data: "name" }
+        ],
+        buttons: [
+            {
+                extend: 'excelHtml5',
+                title: 'missing_items'
+            },
+            {
+                extend: 'csvHtml5',
+                title: 'missing_items'
+            }
+        ]
+    });
+    
+});
+
+
+/**
+ * Get the supported data types
+ * Update the select box with the data types
+ */
+function updateDataTypes() {
+    let urlParams = new URLSearchParams(window.location.search);
+    let type_name = urlParams.get('type');
+    let type_id = urlParams.get('type_id');
+
+    jQuery.ajax({
+        url: '/list/alltypes',
+        success: function(data) {
+            if ( data && data.length > 0 ) {
+                let html = "";
+                for ( let i = 0; i < data.length; i++ ) {
+                    let id = data[i][0];
+                    let name = data[i][1];
+                    let selected = parseInt(id) === parseInt(type_id) || name === type_name ? 'selected' : '';
+                    html += "<option value='" + id + "' " + selected + ">" + name + "</option>";
+                }
+                jQuery('#bulk_search_type').html(html).attr('disabled', false);
+            }
+        },
+        error: function() {
+            alert("Could not get supported data types!");
+        }
+    })
+}
+
+
+/**
+ * Perform the bulk search
+ * call displayResults() when complete
+ */
+function bulkSearch() {
+    let type_id = jQuery('#bulk_search_type').val();
+    let type_name = jQuery("#bulk_search_type option:selected").text();
+    let names = jQuery('#bulk_search_items').val().split('\n');
+    names = names.filter(function(str) {
+        return /\S/.test(str);
+    });
+
+    jQuery('#bulk_search_start').html('Searching...').attr('disabled', true);
+
+    jQuery.ajax({
+        url: '/list/validate/' + type_name,
+        type: 'POST',
+        data: {items: names},
+        success: function(data) {
+            jQuery('#bulk_search_start').html('Search').attr('disabled', false);
+            displayResults(data);
+        },
+        error: function() {
+            alert("Could not run bulk search!");
+            jQuery('#bulk_search_start').html('Search').attr('disabled', false);
+        }
+    });
+}
+
+
+/**
+ * Display the results of the bulk search
+ * @param {Object} data JSON response from server
+ */
+function displayResults(data) {
+    let dte = jQuery('#bulk_search_existing').DataTable();
+    let dtm = jQuery('#bulk_search_missing').DataTable();
+    dte.clear();
+    dtm.clear();
+
+    if ( data ) {
+        if ( data.error ) {
+            alert(data.error);
+        }
+        else if ( data.existing && data.missing ) {
+            dte.rows.add(data.existing);
+            dtm.rows.add(data.missing);
+        }
+    }
+    else {
+        alert("Invalid response from the server!");
+    }
+
+    dte.draw();
+    dtm.draw();
+
+    toggleSections();
+}
+
+/**
+ * Toggle the display of the query and results sections
+ */
+function toggleSections() {
+    jQuery('#bulk_search_query').toggle();
+    jQuery('#bulk_search_results').toggle();
+}
+</script>
