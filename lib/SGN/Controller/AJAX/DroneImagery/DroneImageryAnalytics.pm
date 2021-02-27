@@ -151,13 +151,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         my ($value) = $h->fetchrow_array();
         $protocol_properties = decode_json $value;
 
-        my $q2 = "SELECT nd_protocolprop_id, value FROM nd_protocolprop WHERE nd_protocol_id=? AND type_id=?;";
-        my $h2 = $schema->storage->dbh()->prepare($q2);
-        $h2->execute($analytics_protocol_id, $protocolprop_result_type_cvterm_id);
-        my ($protocol_result_summary_id_select, $value2) = $h2->fetchrow_array();
-        $protocol_result_summary = $value2 ? decode_json $value2 : [];
-        $protocol_result_summary_id = $protocol_result_summary_id_select;
-
         my $q3 = "SELECT nd_experiment.nd_experiment_id
             FROM nd_experiment_protocol
             JOIN nd_experiment ON(nd_experiment_protocol.nd_experiment_id = nd_experiment.nd_experiment_id)
@@ -14944,6 +14937,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         
     }
     # print STDERR Dumper \%avg_varcomps;
+
+    my $q_save_res = "SELECT nd_protocolprop_id, value FROM nd_protocolprop WHERE nd_protocol_id=? AND type_id=?;";
+    my $h_save_res = $schema->storage->dbh()->prepare($q_save_res);
+    $h_save_res->execute($analytics_protocol_id, $protocolprop_result_type_cvterm_id);
+    my ($protocol_result_summary_id_select, $value2) = $h_save_res->fetchrow_array();
+    $protocol_result_summary = $value2 ? decode_json $value2 : [];
+    $protocol_result_summary_id = $protocol_result_summary_id_select;
 
     push @$protocol_result_summary, {
         statistics_select_original => $statistics_select_original,
