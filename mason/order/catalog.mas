@@ -10,14 +10,14 @@
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<& /page/page_title.mas, title => "Clone Catalog" &>
+<& /page/page_title.mas, title => "Order Catalog" &>
 
 <&| /page/info_section.mas, title => 'Manage Catalog', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
-            <button id="upload_items_button" class="btn btn-primary">Upload Items</button>
-            <button id="add_an_item_button" class="btn btn-primary">Add an Item</button>
+            <button id="upload_catalog_items_button" class="btn btn-primary">Upload Catalog Items</button>
+            <button id="add_catalog_item_button" class="btn btn-primary">Add a Catalog Item</button>
             </div>
         </div>
     </div>
@@ -94,11 +94,22 @@
         </div>
     </div>
 </&>
+<& /order/catalog_dialogs.mas &>
 
 
 <script>
 
 jQuery(document).ready( function() {
+
+    jQuery("#upload_catalog_items_button").click(function(){
+
+        jQuery("#upload_catalog_items_format").click(function(){
+            jQuery("#upload_catalog_items_format_dialog").modal("show");
+        });
+
+        jQuery("#upload_catalog_items_dialog").modal("show");
+    });
+
 
 });
 
