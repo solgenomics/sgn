@@ -17,13 +17,13 @@ $role => "stock_orderer"
 <&| /page/info_section.mas, title => "Your currents orders" &>
 
   <div id="current_clones"></div>
-  
+
 </&>
 
 <&| /page/info_section.mas, title => "Your completed orders", collapsible=>1, collapsed=>1 &>
-  
+
   <div id="completed_clone_orders"></div>
-  
+
 </&>
 
 <div class="modal fade" id="stock_order_dialog" name="stock_order_dialog" tabindex="-1" role="dialog" aria-labelledby="stock_order_dialog" data-backdrop="static" data-keyboard="false">
@@ -84,7 +84,7 @@ $role => "stock_orderer"
 	  <br />
 
 	  <h3>The order is for: IITA Arusha</h3>
-	  
+
         </div>
       </div>
       <div class="modal-footer">
@@ -102,7 +102,7 @@ $role => "stock_orderer"
 
 
 <script>
-  
+
   $(window).ready( function() {
 
   $('#stock_order_button').click( function() {
@@ -114,8 +114,7 @@ $role => "stock_orderer"
     url: '/ajax/order/list/current' });
   $('#completed_clone_orders').DataTable( {
     url: '/ajax/order/list/past' } );
-  
-  });
+
 
   $('#review_order_button').click( function() {
      alert("Reviewing Order");
@@ -124,14 +123,11 @@ $role => "stock_orderer"
 
   $('#place_order_button').click( function() {
   $.ajax( {
-    url: '/ajax/order/
-  
+    url: '/ajax/order/',
+
   });
+  });
+});
 
- 
+
 </script>
-
-
-      
-      
-
