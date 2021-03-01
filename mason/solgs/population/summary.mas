@@ -1,6 +1,6 @@
 <%doc>
 
-=head1 NAME 
+=head1 NAME
 
 /population/sumary.mas - displays project metadata.
 
@@ -14,9 +14,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$project_id
-$project_name
-$project_desc
+$training_pop_id
+$training_pop_name
+$training_pop_desc =>''
 $model_link => ''
 $pop_link => ''
 $stocks_no
@@ -35,17 +35,17 @@ $combined_populations => ''
 $owner = 'NA' if !$owner;
 $traits_no = 'NA' if !$traits_no;
 
-my $project_link; 
- 
+my $project_link;
+
 if ($model_link) {
   $project_link = $model_link;
 }elsif ($pop_link) {
   $project_link = $pop_link;
 }else {
-  $project_link = $project_name;
+  $project_link = $training_pop_name;
 }
 
-my @data_c1 = (['Name', $project_name],  ['Description', $project_desc], ['Owner', $owner]);
+my @data_c1 = (['Name', $training_pop_name],  ['Description', $training_pop_desc], ['Owner', $owner]);
 my @data_c2 = (['No. of lines', $stocks_no],  ['No. of markers', $markers_no], ['Genotyping version', $protocol_url]);
 
 push @data_c2,  ['No. of traits', $traits_no] if $traits_no > 1;
@@ -61,21 +61,16 @@ push @data_c2,  ['Training population', $pop_link] if $pop_link;
          data         => \@data_c1,
          __alt_freq   => 0,
          __align      => "l",
-       
+
         &>
-    </td>    
+    </td>
     <td>
-      <& /page/columnar_table.mas,        
+      <& /page/columnar_table.mas,
          data       =>\@data_c2,
         __alt_freq  => 1,
         __align     => "l",
-     
+
         &>
     </td>
   </tr>
 </table>
-    
-
- 
-
-
