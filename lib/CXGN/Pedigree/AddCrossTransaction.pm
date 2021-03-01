@@ -104,6 +104,7 @@ sub add_intercross_transaction {
                 cross_name => $cross_unique_id,
                 key => $info_type,
                 value => $value,
+                data_type => 'crossing_metadata_json'
             });
             $cross_summary_info->add_info();
         }

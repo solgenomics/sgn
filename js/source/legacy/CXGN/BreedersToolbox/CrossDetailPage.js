@@ -10,6 +10,8 @@ jQuery(document).ready(function() {
 
     display_transactions(get_cross_id());
 
+    display_cross_additional_info(get_cross_id());
+
     function get_cross_id() {
         var cross_id = jQuery('#cross_id').html();
         var regex = /\n|\r/g;
@@ -97,7 +99,7 @@ jQuery(document).ready(function() {
     }
 
     function display_parents(cross_id){
-        var property_table = jQuery('#parent_information').DataTable({
+        var parents_table = jQuery('#parent_information').DataTable({
             'ajax': '/ajax/cross/accession_plot_plant_parents/'+cross_id,
             'paging' : false,
             'searching' : false,
@@ -163,7 +165,7 @@ jQuery(document).ready(function() {
             }
         },
         autoOpen: false,
-        title: 'Edit Cross Information'
+        title: 'Edit Field Crossing Data'
     });
 
     jQuery('#edit_properties_link').click( function() {
@@ -244,7 +246,7 @@ jQuery(document).ready(function() {
     function save_property(cross_id, type, value) {
         return jQuery.ajax( {
             url: '/cross/property/save/'+cross_id,
-            data: { 'cross_id' : cross_id, 'type': type, 'value': value }
+            data: { 'cross_id' : cross_id, 'type': type, 'value': value, 'data_type': 'crossing_metadata_json' }
         }).done( function(response) {
             get_properties(get_cross_id());
             save_confirm(response);
@@ -282,6 +284,75 @@ jQuery(document).ready(function() {
         });
         return;
     }
+
+    function display_cross_additional_info(cross_id){
+        var additional_info_table = jQuery('#cross_additional_info').DataTable({
+            'ajax': '/ajax/cross/additional_info/'+cross_id,
+            'paging' : false,
+            'searching' : false,
+            'bInfo' : false,
+            'destroy' : true,
+        });
+        return;
+    }
+
+    jQuery('#edit_additional_info_dialog').dialog( {
+        height: 150,
+        width: 500,
+        buttons: {
+	        'Done': {
+                id: 'edit_additional_info_dialog_done_button',
+                click:  function() { jQuery('#edit_additional_info_dialog').dialog("close") },
+                text: "Done",
+            }
+        },
+        autoOpen: false,
+        title: 'Edit Additional Parent Info'
+    });
+
+    jQuery('#edit_additional_info_link').click( function() {
+        jQuery('#edit_additional_info_dialog').dialog("open");
+        display_cross_additional_info(get_cross_id(), draw_additional_info_dialog);
+    });
+
+    function draw_additional_info_dialog(response) {
+        var type = jQuery('#additional_info_select').val();
+        var info = response.props[type];
+        if (info instanceof Array) {
+            for (var n=0; n<info.length; n++) {
+                jQuery('#additional_info_value').val(info[n][0]);
+            }
+        }
+        else {
+            jQuery('#additional_info_value').val('');
+        }
+    }
+
+    function set_additional_info_select(type) {
+        jQuery('#additional_info_select').val(type);
+    }
+
+    function set_additional_info_value(value) {
+        jQuery('#additional_info_value').val(value);
+    }
+
+    function save_additional_info(cross_id, type, value) {
+        return jQuery.ajax( {
+            url: '/cross/property/save/'+cross_id,
+            data: { 'cross_id' : cross_id, 'type': type, 'value': value, 'data_type': 'cross_additional_info' }
+        }).done( function(response) {
+            display_cross_additional_info(get_cross_id());
+            save_confirm(response);
+        }).fail( function(response, x, y) {
+            alert("An error occurred saving the property. "+y);
+        });
+    }
+
+    jQuery('#edit_additional_info_submit').click( function() {
+        jQuery('#working').dialog("open");
+        save_additional_info(get_cross_id(), jQuery('#additional_info_select').val(), jQuery('#additional_info_value').val());
+        jQuery('#working').dialog("close");
+    });
 
 
 });

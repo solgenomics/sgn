@@ -95,6 +95,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my %stocks;
 
     my $header = <$F>;
+    $header =~ s/\r//g; 
     chomp($header);
     my ($progeny_name, $female_parent_accession, $male_parent_accession, $type) =split /\t/, $header;
 

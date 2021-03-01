@@ -412,7 +412,7 @@ sub store_crosses { #crosses must belong to same experiment
             dbh => $dbh,
             crossing_trial_id => $crossing_trial_id,
             crosses =>  \@array_of_pedigree_objects,
-            owner_name => $user_name,
+            user_id => $user_id,
         });
 
         #add the crosses
