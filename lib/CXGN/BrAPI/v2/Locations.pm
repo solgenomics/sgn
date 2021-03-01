@@ -203,7 +203,7 @@ sub store {
 		my $country_code =  $params->{countryCode} || undef;
 		my $program_id =  $params->{additionalInfo}->{programDbId}  || undef;
 		my $type =  $params->{locationType} || undef;
-		my $geo_coordinates = $params->{coordinates} || undef;
+		my $geo_coordinates = $params->{coordinates}->{geometry}->{coordinates} || undef;
 		my $latitude = $geo_coordinates->[0] || undef;
 		my $longitude = $geo_coordinates->[1] || undef;
 		my $altitude  = $geo_coordinates->[2]|| undef;
