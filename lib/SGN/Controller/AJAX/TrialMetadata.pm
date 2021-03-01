@@ -31,6 +31,7 @@ use List::Util qw(sum);
 use CXGN::Genotype::DownloadFactory;
 use POSIX;
 use CXGN::Phenotypes::StorePhenotypes;
+use Statistics::Descriptive::Full;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -2870,6 +2871,7 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
     my $trait_format = $c->req->param('trait_format');
     my $data_level = $c->req->param('data_level');
+    my $draw_error_bars = $c->req->param('draw_error_bars');
 
     my $user_id;
     my $user_name;
@@ -2948,7 +2950,7 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     }
     my @sorted_germplasm_names = sort keys %seen_germplasm_names;
 
-    my $header_string = 'germplasmName,time,value';
+    my $header_string = 'germplasmName,time,value,sd';
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_correlation";
@@ -2965,13 +2967,18 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
                 my $time_val = $time_split[1];
                 my $vals = $phenotype_data{$s}->{$t};
                 my $val;
+                my $sd;
                 if (!$vals || scalar(@$vals) == 0) {
                     $val = 'NA';
+                    $sd = 0;
                 }
                 else {
                     $val = sum(@$vals)/scalar(@$vals);
+                    my $stat = Statistics::Descriptive::Full->new();
+                    $stat->add_data(@$vals);
+                    $sd = $stat->standard_deviation();
                 }
-                print $F "$s,$time_val,$val\n";
+                print $F "$s,$time_val,$val,$sd\n";
             }
         }
     close($F);
@@ -2997,8 +3004,16 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     sp <- ggplot(mat, aes(x = time, y = value)) +
         geom_line(aes(color = germplasmName), size = 1) +
         scale_fill_manual(values = c(\''.$color_string.'\')) +
-        theme_minimal();
-    sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
+        theme_minimal()';
+    if ($draw_error_bars eq "Yes") {
+        $cmd .= '+ geom_errorbar(aes(ymin=value-sd, ymax=value+sd, color=germplasmName), width=.2, position=position_dodge(0.05));
+        ';
+    }
+    else {
+        $cmd .= ';
+        ';
+    }
+    $cmd .= 'sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
     sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
     sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));';
     if (scalar(@sorted_germplasm_names) > 100) {
