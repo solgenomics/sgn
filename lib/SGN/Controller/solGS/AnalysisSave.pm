@@ -3,6 +3,7 @@ package SGN::Controller::solGS::AnalysisSave;
 use Moose;
 use namespace::autoclean;
 
+use Carp qw/ carp confess croak /;
 use DateTime;
 use Data::Dumper;
 use File::Find::Rule;
@@ -10,11 +11,9 @@ use File::Path qw / mkpath  /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
 use JSON;
-
-use Try::Tiny;
-use Storable qw/ nstore retrieve /;
-use Carp qw/ carp confess croak /;
 use Scalar::Util 'reftype';
+use Storable qw/ nstore retrieve /;
+use Try::Tiny;
 use URI;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -26,10 +25,10 @@ __PACKAGE__->config(
     );
 
 
-sub check_analysis_result :Path('/solgs/check/analysis/result') Args() {
+sub check_analysis_result :Path('/solgs/check/stored/analysis/') Args() {
     my ($self, $c) = @_;
 
-    #my $
+    $self->check_stored_analysis($c);
 
 }
 
@@ -304,7 +303,14 @@ sub analysis_log {
 		@log = split(/\t/, $log);
 	}
 
-	return decode_json($log[5]);
+	if (@log)
+	{
+		return decode_json($log[5]);
+	}
+	else
+	{
+		return;
+	}
 
 }
 
