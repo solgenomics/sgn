@@ -206,7 +206,6 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
             push @success_status, "Aggregated file data successfully parsed.";
         }
     }
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
@@ -666,16 +665,12 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
         }
     }
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
         dbname=>$c->config->{dbname},
         dbuser=>$c->config->{dbuser},
         dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -872,16 +867,12 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $pheno_dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
         dbname=>$c->config->{dbname},
         dbuser=>$c->config->{dbuser},
         dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -1076,16 +1067,12 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
         }
     }
 
-    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
         dbname=>$c->config->{dbname},
         dbuser=>$c->config->{dbuser},
         dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -1308,16 +1295,12 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $pheno_dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
-    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
-
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
         dbname=>$c->config->{dbname},
         dbuser=>$c->config->{dbuser},
         dbpass=>$c->config->{dbpass},
-        temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
