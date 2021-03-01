@@ -2872,6 +2872,7 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     my $trait_format = $c->req->param('trait_format');
     my $data_level = $c->req->param('data_level');
     my $draw_error_bars = $c->req->param('draw_error_bars');
+    my $use_cumulative_phenotype = $c->req->param('use_cumulative_phenotype');
 
     my $user_id;
     my $user_name;
@@ -2919,17 +2920,42 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
         return;
     }
 
+    my %trait_ids_hash = map {$_ => 1} @$trait_ids;
+
     my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$c->stash->{trial_id}});
     my $traits_assayed = $trial->get_traits_assayed($data_level, $trait_format, 'time_ontology');
     my %unique_traits_ids;
     foreach (@$traits_assayed) {
-        $unique_traits_ids{$_->[0]} = $_;
+        if (exists($trait_ids_hash{$_->[0]})) {
+            $unique_traits_ids{$_->[0]} = $_;
+        }
     }
     my %unique_components;
     foreach (values %unique_traits_ids) {
         foreach my $component (@{$_->[2]}) {
             if ($component->{cv_type} && $component->{cv_type} eq 'time_ontology') {
                 $unique_components{$_->[0]} = $component->{name};
+            }
+        }
+    }
+
+    my @sorted_times;
+    my %sorted_time_hash;
+    while( my($trait_id, $time_name) = each %unique_components) {
+        my @time_split = split ' ', $time_name;
+        my $time_val = $time_split[1] + 0;
+        push @sorted_times, $time_val;
+        $sorted_time_hash{$time_val} = $trait_id;
+    }
+    @sorted_times = sort @sorted_times;
+
+    my %cumulative_time_hash;
+    while( my($trait_id, $time_name) = each %unique_components) {
+        my @time_split = split ' ', $time_name;
+        my $time_val = $time_split[1] + 0;
+        foreach my $t (@sorted_times) {
+            if ($t < $time_val) {
+                push @{$cumulative_time_hash{$time_val}}, $sorted_time_hash{$t};
             }
         }
     }
@@ -2973,10 +2999,25 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
                     $sd = 0;
                 }
                 else {
-                    $val = sum(@$vals)/scalar(@$vals);
                     my $stat = Statistics::Descriptive::Full->new();
                     $stat->add_data(@$vals);
                     $sd = $stat->standard_deviation();
+                    $val = $stat->mean();
+                    if ($use_cumulative_phenotype eq 'Yes') {
+                        my $previous_time_trait_ids = $cumulative_time_hash{$time_val};
+                        my @previous_vals_avgs = ($val);
+                        foreach my $pt (@$previous_time_trait_ids) {
+                            my $previous_vals = $phenotype_data{$s}->{$pt};
+                            my $previous_stat = Statistics::Descriptive::Full->new();
+                            $previous_stat->add_data(@$previous_vals);
+                            my $previous_val_avg = $previous_stat->mean();
+                            push @previous_vals_avgs, $previous_val_avg;
+                        }
+                        my $stat_cumulative = Statistics::Descriptive::Full->new();
+                        $stat_cumulative->add_data(@previous_vals_avgs);
+                        $sd = $stat_cumulative->standard_deviation();
+                        $val = sum(@previous_vals_avgs);
+                    }
                 }
                 print $F "$s,$time_val,$val,$sd\n";
             }

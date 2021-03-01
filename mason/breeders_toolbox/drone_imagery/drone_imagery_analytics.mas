@@ -13,7 +13,7 @@
 
             <&| /util/workflow.mas, id=> "drone_imagery_analytics_workflow" &>
                 <&| /util/workflow.mas:step, title=> "Field Trial" &>
-                    <& /page/page_title.mas, title=>"Select the field trial you are interested in. Select only one." &>
+                    <& /page/page_title.mas, title=>"Select the field trial you are interested in. Select only one. Field trial MUST have row and column assigned and should be a rectangular design." &>
                     <br/><br/>
                     <form class="form-horizontal">
                         <div class="form-group">
