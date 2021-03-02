@@ -5109,13 +5109,13 @@ sub save_results {
     my $search_params = shift;
     my $search_type = shift;
 
-	my $version = $c->request->captures->[0];
-	my $permissions = "CXGN::BrAPI::" . $version  . "::ServerInfo"; 
-	my $server_permission;
+	my %server_permission;
 	my $rc = eval{
-		$server_permission =  $permissions->info()->{'GET'};
+		my $server_permission = $c->config->{"brapi_GET"};
+		my @server_permission  = split ',', $server_permission;
+		%server_permission = map { $_ => 1 } @server_permission;
 	1; };
-	if($rc && $server_permission ne 'any'){
+	if($rc && !$server_permission{'any'}){
 	    my $auth = _authenticate_user($c);
 	}
 
@@ -5136,16 +5136,7 @@ sub retrieve_results {
     my $c = shift;
     my $search_id = shift;
     my $search_type = shift;
-    
-	my $version = $c->request->captures->[0];
-	my $permissions = "CXGN::BrAPI::" . $version  . "::ServerInfo"; 
-	my $server_permission;
-	my $rc = eval{
-		$server_permission =  $permissions->info()->{'GET'};
-	1; };
-	if($rc && $server_permission ne 'any'){
-	    my $auth = _authenticate_user($c);
-	}
+    my $auth = _authenticate_user($c);
 
     my $clean_inputs = $c->stash->{clean_inputs};
     my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
