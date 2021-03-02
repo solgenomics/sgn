@@ -26,11 +26,11 @@ has 'item_type' => ( isa => 'Str', is => 'rw');
 # the breeding program this clones originated from
 has 'breeding_program' => ( isa => 'Str', is => 'rw');
 
-# need to discuss how many categories
+#
 has 'category' => ( isa => 'Str', is => 'rw' );
 
-# list of comments as ArrayRef of [ 'comment', 'sp_person_id']
-has 'comments' => ( isa => 'ArrayRef', is => 'rw') ;
+# additional info
+has 'comments' => ( isa => 'Str', is => 'rw') ;
 
 
 sub BUILD {
