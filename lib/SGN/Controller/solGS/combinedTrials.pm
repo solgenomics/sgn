@@ -164,28 +164,28 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
 }
 
 
-sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args() {
-    my ($self, $c, $combo_pops_id, $trait_txt, $trait_id, $gp, $protocol_id) = @_;
-
-    $c->stash->{combo_pops_id} = $combo_pops_id;
-    $c->stash->{trait_id}      = $trait_id;
-
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-
-    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $combo_pops_id, $trait_id);
-    my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
-
-    if ( -s $gebv_file )
-    {
-        $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id/gp/$protocol_id");
-        $c->detach();
-    }
-    else
-    {
-###	$self->combine_trait_data($c);
-	$self->build_model_combined_trials_trait($c);
-    }
-}
+# sub model_combined_trials_trait :Path('/solgs/model/combined/trials') Args() {
+#     my ($self, $c, $combo_pops_id, $trait_txt, $trait_id, $gp, $protocol_id) = @_;
+#
+#     $c->stash->{combo_pops_id} = $combo_pops_id;
+#     $c->stash->{trait_id}      = $trait_id;
+#
+#     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+#
+#     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $combo_pops_id, $trait_id);
+#     my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
+#
+#     if ( -s $gebv_file )
+#     {
+#         $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id/gp/$protocol_id");
+#         $c->detach();
+#     }
+#     else
+#     {
+# ###	$self->combine_trait_data($c);
+# 	$self->build_model_combined_trials_trait($c);
+#     }
+# }
 
 
 sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
@@ -262,7 +262,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 }
 
 
-sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Args() {
+sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
     my ($self, $c,  $combo_pops_id, $trait_key,  $trait_id, $gp, $protocol_id) = @_;
 
     $c->stash->{data_set_type} = 'combined populations';
@@ -298,7 +298,8 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
     $c->controller('solGS::solGS')->top_markers($c, $c->stash->{marker_effects_file});
     $c->controller('solGS::solGS')->model_parameters($c);
 
-    $c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
+    #$c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
+	$c->stash->{template} = $c->controller('solGS::Files')->template('/population/trait.mas');
 }
 
 
@@ -701,6 +702,7 @@ sub get_combined_pops_list {
 
     my @combos = uniq(read_file($combo_pops_catalogue_file, {binmode => ':utf8'}));
 
+	my @pops_list;
     foreach my $entry (@combos)
     {
         if ($entry =~ m/$id/)
@@ -710,13 +712,14 @@ sub get_combined_pops_list {
 
 	    if ($id == $combo_pops_id)
 	    {
-		my @pops_list = split(',', $pops);
-		$c->stash->{combined_pops_list} = \@pops_list;
-		$c->stash->{trait_combo_pops} = \@pops_list;
+			@pops_list = split(',', $pops);
+			$c->stash->{combined_pops_list} = \@pops_list;
+			$c->stash->{trait_combo_pops} = \@pops_list;
 	    }
         }
     }
 
+	return \@pops_list;
 }
 
 
@@ -766,8 +769,9 @@ sub combined_pops_summary {
     $c->stash(
 	markers_no   => $markers_no,
 	stocks_no    => $stocks_no,
-	project_desc => $desc,
-	project_name => $training_pop,
+	training_pop_id => $combo_pops_id,
+	training_pop_desc => $desc,
+	training_pop_name => $training_pop,
 	owner        => $projects_owners,
 	protocol_url => $protocol,
 	model_link   => $model_link
@@ -1138,7 +1142,7 @@ sub combined_trials_desc {
         {
             my $pr_id   = $row->id;
             my $pr_name = $row->name;
-            $desc .= qq | <a href="/solgs/population/$pr_id/gp/$protocol_id">$pr_name</a>|;
+            $desc .= qq| <a href="/solgs/population/$pr_id/gp/$protocol_id">$pr_name</a>|;
             $desc .= $pop_id == $combined_pops_list->[-1] ? '.' : ' and ';
         }
 
@@ -1183,13 +1187,14 @@ sub combined_trials_desc {
     my $protocol  = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
     my $stocks_no = $self->count_combined_trials_lines_count($c, $combo_pops_id);
 
-    $c->stash(stocks_no    => $stocks_no,
-	      markers_no   => $markers_no,
-              traits_no    => $traits_no,
-              project_desc => $desc,
-              project_name => $training_pop,
-              owner        => $projects_owners,
-	      protocol_url     => $protocol,
+    $c->stash(stocks_no => $stocks_no,
+	    markers_no => $markers_no,
+        traits_no => $traits_no,
+		training_pop_id => $combo_pops_id,
+    	training_pop_desc => $desc,
+        training_pop_name => $training_pop,
+        owner => $projects_owners,
+	    protocol_url => $protocol,
         );
 }
 

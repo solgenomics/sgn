@@ -823,7 +823,8 @@ sub structure_selection_prediction_output {
 			$tr_pop_name    = 'Training population ' . $tr_pop_id;
 			#$prediction_pop_page  = $base . "solgs/selection/$prediction_pop_id/model/combined/$training_pop_id/trait/$trait_id/gp/$protocol_id";
 			$sel_pop_page = $base. "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
-			$model_page    = $base . "solgs/model/combined/populations/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
+			#$model_page    = $base . "solgs/model/combined/populations/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
+			$model_page    = $base . "solgs/model/combined/trials/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
 		}
 		else
 		{

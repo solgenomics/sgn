@@ -889,6 +889,8 @@ sub trait :Path('/solgs/trait') Args() {
 	#$c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
 	#my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
 	$self->project_description($c, $pop_id);
+	$c->stash->{training_pop_name} = $c->stash->{project_name};
+	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
 
 	my $cached = $c->controller('solGS::CachedResult')->check_single_trial_model_output($c, $pop_id, $trait_id, $protocol_id);
 
@@ -1226,7 +1228,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
         $self->model_phenotype_stat($c);
         $self->gs_modeling_files($c);
 
-        $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id/gp/$protocol_id");
+        $c->res->redirect("/solgs/model/combined/trials/$combo_pops_id/trait/$trait_id/gp/$protocol_id");
         $c->detach();
     }
     elsif ($referer =~ /solgs\/trait\//)
