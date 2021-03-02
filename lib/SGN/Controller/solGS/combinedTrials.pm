@@ -707,15 +707,15 @@ sub get_combined_pops_list {
     {
         if ($entry =~ m/$id/)
         {
-	    chomp($entry);
-            my ($combo_pops_id, $pops)  = split(/\t/, $entry);
+		    chomp($entry);
+	            my ($combo_pops_id, $pops)  = split(/\t/, $entry);
 
-	    if ($id == $combo_pops_id)
-	    {
-			@pops_list = split(',', $pops);
-			$c->stash->{combined_pops_list} = \@pops_list;
-			$c->stash->{trait_combo_pops} = \@pops_list;
-	    }
+		    if ($id == $combo_pops_id)
+		    {
+				@pops_list = split(',', $pops);
+				$c->stash->{combined_pops_list} = \@pops_list;
+				$c->stash->{trait_combo_pops} = \@pops_list;
+		    }
         }
     }
 
