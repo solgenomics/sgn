@@ -50,6 +50,7 @@ sub result_details :Path('/solgs/analysis/result/details') Args() {
 
 		if ($@)
 		{
+			print STDERR "\n$@\n";
 			$c->stash->{rest}{error} = 'Something went wrong structuring the analysis result';
 		}
 		else
@@ -142,7 +143,17 @@ sub analysis_breeding_prog {
 	my $log = $self->analysis_log($c);
 
 	my $trial_id = $log->{training_pop_id}[0];
-	my $program_id = $c->model('solGS::solGS')->trial_breeding_program_id($trial_id);
+	if ($log->{data_set_type} =~ /combined/)
+	{
+		my $trials_ids = $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $trial_id);
+		$trial_id = $trials_ids->[0];
+	}
+
+	my $program_id;
+	if ($trial_id =~ /^\d+$/)
+	{
+		$program_id = $c->model('solGS::solGS')->trial_breeding_program_id($trial_id);
+	}
 
 	return $program_id;
 
@@ -240,10 +251,11 @@ sub gebvs_values {
 	$c->stash->{genotyping_protocol_id} = $protocol_id;
 
 	my $ref = $c->req->referer;
+	my $path = $c->req->path;
 	my $gebvs_file;
-	if ($ref =~ /solgs\/trait\//)
+	if ($ref =~ /solgs\/trait\/|solgs\/model\/combined\/trials\//)
 	{
-		$gebvs_file = $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
+			$gebvs_file = $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
 	}
 	elsif ($ref =~ /solgs\/selection\//)
 	{
