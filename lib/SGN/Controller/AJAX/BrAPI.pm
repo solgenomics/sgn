@@ -3339,7 +3339,7 @@ sub observationvariable_list_GET {
 	my $brapi_package_result = $brapi_module->search({
 		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
 		traitClasses => $clean_inputs->{traitClass},
-		studyDbId => $clean_inputs->{studyDbId},
+		studyDbIds => $clean_inputs->{studyDbId},
 		externalReferenceIDs => $clean_inputs->{externalReferenceID},
 		externalReferenceSources => $clean_inputs->{externalReferenceSource},
 		supportedCrop =>$supported_crop,
