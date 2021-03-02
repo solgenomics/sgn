@@ -37,7 +37,7 @@
                                 <th>Material Source</th>
                                 <th>Breeding Program</th>
                                 <th>Availability</th>
-                                <th> </th>
+                                <th>Comment</th>
                             </tr>
                         </thead>
                     </table>
@@ -47,53 +47,6 @@
     </div>
 </&>
 
-<&| /page/info_section.mas, title => 'Category 2', collapsible=>1, collapsed=>0 &>
-    <div class = "well well-sm">
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-                <div style="overflow:scroll">
-                    <table id = "category_2_table" class="table table-hover table-striped">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Description</th>
-                                <th>Material Source</th>
-                                <th>Breeding Program</th>
-                                <th>Availability</th>
-                                <th> </th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</&>
-
-<&| /page/info_section.mas, title => 'Category 3', collapsible=>1, collapsed=>0 &>
-    <div class = "well well-sm">
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-                <div style="overflow:scroll">
-                    <table id = "category_3_table" class="table table-hover table-striped">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Description</th>
-                                <th>Material Source</th>
-                                <th>Breeding Program</th>
-                                <th>Availability</th>
-                                <th> </th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</&>
 <& /order/catalog_dialogs.mas &>
 
 

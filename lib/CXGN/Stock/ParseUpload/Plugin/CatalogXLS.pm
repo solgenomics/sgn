@@ -50,7 +50,8 @@ sub _validate_with_plugin {
     my $description_header;
     my $material_source_header;
     my $breeding_program_header;
-    my $availability_header
+    my $availability_header;
+    my $comment_header;
 
     if ($worksheet->get_cell(0,0)) {
         $name_header  = $worksheet->get_cell(0,0)->value();
@@ -73,6 +74,10 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell(0,6)) {
         $availability_header  = $worksheet->get_cell(0,6)->value();
     }
+    if ($worksheet->get_cell(0,7)) {
+        $comment_header  = $worksheet->get_cell(0,7)->value();
+    }
+
 
     if (!$name_header || $name_header ne 'name' ) {
         push @error_messages, "Cell A1: name is missing from the header";
@@ -93,7 +98,12 @@ sub _validate_with_plugin {
         push @error_messages, "Cell F1: breeding_program is missing from the header";
     }
     if (!$availability_header || $availability_header ne 'availability') {
-        push @error_messages, "Cell F1: availability is missing from the header";
+        push @error_messages, "Cell G1: availability is missing from the header";
+    }
+    if ($comment_header) {
+        if ($comment_header ne 'comment') {
+            push @error_messages, "Cell H1: comment is missing from the header";
+        }
     }
 
     my %seen_stock_names;
@@ -222,7 +232,7 @@ sub _parse_with_plugin {
         my $material_source;
         my $breeding_program;
         my $availability;
-
+        my $comment;
 
         if ($worksheet->get_cell($row,0)) {
             $item_name = $worksheet->get_cell($row,0)->value();
@@ -245,6 +255,9 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,6)) {
             $availability =  $worksheet->get_cell($row,6)->value();
         }
+        if ($worksheet->get_cell($row,7)) {
+            $comment =  $worksheet->get_cell($row,7)->value();
+        }
 
         $parsed_result{$item_name} = {
             'item_type' => $item_type,
@@ -252,7 +265,8 @@ sub _parse_with_plugin {
             'description' => $description,
             'material_source' => $material_source,
             'breeding_program' => $breeding_program,
-            'availability' => $availability
+            'availability' => $availability,
+            'comments' => $comment
         }
     }
 #    print STDERR "PARSED RESULT =".Dumper(%parsed_result)."\n";
