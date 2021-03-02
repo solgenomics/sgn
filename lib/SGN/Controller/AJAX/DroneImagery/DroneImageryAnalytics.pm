@@ -1757,7 +1757,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $phenotype_data_altered_env_hash_1_1, $data_matrix_altered_env_array_1_1, $data_matrix_phenotypes_altered_env_array_1_1, $phenotype_min_altered_env_1_1, $phenotype_max_altered_env_1_1, $env_sim_min_1_1, $env_sim_max_1_1, $sim_data_hash_1_1,
                 $result_blup_data_altered_env_1_1, $result_blup_data_delta_altered_env_1_1, $result_blup_spatial_data_altered_env_1_1, $result_blup_pe_data_altered_env_1_1, $result_blup_pe_data_delta_altered_env_1_1, $result_residual_data_altered_env_1_1, $result_fitted_data_altered_env_1_1, $fixed_effects_altered_env_hash_1_1, 
                 $rr_genetic_coefficients_altered_env_hash_1_1, $rr_temporal_coefficients_altered_env_hash_1_1, 
-                $rr_coeff_genetic_covariance_altered_env_array_1_1, $rr_coeff_env_covariance_altered_env_array_1_1, $rr_coeff_genetic_correlation_altered_env_array, $rr_coeff_env_correlation_altered_env_array_1_1, $rr_residual_variance_altered_env_1_1, $varcomp_altered_array_env_1_1,
+                $rr_coeff_genetic_covariance_altered_env_array_1_1, $rr_coeff_env_covariance_altered_env_array_1_1, $rr_coeff_genetic_correlation_altered_env_array_1_1, $rr_coeff_env_correlation_altered_env_array_1_1, $rr_residual_variance_altered_env_1_1, $varcomp_altered_array_env_1_1,
                 $model_sum_square_residual_altered_env_1_1, $genetic_effect_min_altered_env_1_1, $genetic_effect_max_altered_env_1_1, $env_effect_min_altered_env_1_1, $env_effect_max_altered_env_1_1, $genetic_effect_sum_square_altered_env_1_1, $genetic_effect_sum_altered_env_1_1, $env_effect_sum_square_altered_env_1_1, $env_effect_sum_altered_env_1_1, $residual_sum_square_altered_env_1_1, $residual_sum_altered_env_1_1,
                 
                 $phenotype_data_altered_env_hash_2_1, $data_matrix_altered_env_array_2_1, $data_matrix_phenotypes_altered_env_array_2_1, $phenotype_min_altered_env_2_1, $phenotype_max_altered_env_2_1, $env_sim_min_2_1, $env_sim_max_2_1, $sim_data_hash_2_1,
@@ -2968,42 +2968,58 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     original => {
                         genetic_covariance => $rr_coeff_genetic_covariance_original_array_1,
                         env_covariance => $rr_coeff_env_covariance_original_array_1,
-                        residual => $rr_residual_variance_original_1
+                        residual => $rr_residual_variance_original_1,
+                        genetic_correlation => $rr_coeff_genetic_correlation_original_array_1,
+                        env_correlation => $rr_coeff_env_correlation_original_array_1
                     },
                     altered => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_array_1,
                         env_covariance => $rr_coeff_env_covariance_altered_array_1,
-                        residual => $rr_residual_variance_altered_1
+                        residual => $rr_residual_variance_altered_1,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_array_1,
+                        env_correlation => $rr_coeff_env_correlation_altered_array_1
                     },
                     env_linear => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_1_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_1_1,
-                        residual => $rr_residual_variance_altered_env_1_1
+                        residual => $rr_residual_variance_altered_env_1_1,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_1_1,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_1_1
                     },
                     env_1DN  => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_2_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_2_1,
-                        residual => $rr_residual_variance_altered_env_2_1
+                        residual => $rr_residual_variance_altered_env_2_1,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_2_1,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_2_1
                     },
                     env_2DN  => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_3_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_3_1,
-                        residual => $rr_residual_variance_altered_env_3_1
+                        residual => $rr_residual_variance_altered_env_3_1,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_3_1,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_3_1
                     },
                     env_random  => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_4_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_4_1,
-                        residual => $rr_residual_variance_altered_env_4_1
+                        residual => $rr_residual_variance_altered_env_4_1,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_4_1,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_4_1
                     },
                     env_ar1xar1  => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_5_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_5_1,
-                        residual => $rr_residual_variance_altered_env_5_1
+                        residual => $rr_residual_variance_altered_env_5_1,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_5_1,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_5_1
                     },
                     env_realdata  => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_6_1,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_6_1,
-                        residual => $rr_residual_variance_altered_env_6_1
+                        residual => $rr_residual_variance_altered_env_6_1,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_6_1,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_6_1
                     }
                 };
             }
@@ -5612,42 +5628,58 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     original => {
                         genetic_covariance => $rr_coeff_genetic_covariance_original_array_4,
                         env_covariance => $rr_coeff_env_covariance_original_array_4,
-                        residual => $rr_residual_variance_original_4
+                        residual => $rr_residual_variance_original_4,
+                        genetic_correlation => $rr_coeff_genetic_correlation_original_array_4,
+                        env_correlation => $rr_coeff_env_correlation_original_array_4
                     },
                     altered => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_array_4,
                         env_covariance => $rr_coeff_env_covariance_altered_array_4,
-                        residual => $rr_residual_variance_altered_4
+                        residual => $rr_residual_variance_altered_4,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_array_4,
+                        env_correlation => $rr_coeff_env_correlation_altered_array_4
                     },
                     env_linear => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_1_4,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_1_4,
-                        residual => $rr_residual_variance_altered_env_1_4
+                        residual => $rr_residual_variance_altered_env_1_4,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_1_4,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_1_4
                     },
                     env_1DN  => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_2_4,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_2_4,
-                        residual => $rr_residual_variance_altered_env_2_4
+                        residual => $rr_residual_variance_altered_env_2_4,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_2_4,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_2_4
                     },
                     env_2DN  => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_3_4,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_3_4,
-                        residual => $rr_residual_variance_altered_env_3_4
+                        residual => $rr_residual_variance_altered_env_3_4,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_3_4,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_3_4
                     },
                     env_random  => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_4_4,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_4_4,
-                        residual => $rr_residual_variance_altered_env_4_4
+                        residual => $rr_residual_variance_altered_env_4_4,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_4_4,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_4_4
                     },
                     env_ar1xar1  => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_5_4,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_5_4,
-                        residual => $rr_residual_variance_altered_env_5_4
+                        residual => $rr_residual_variance_altered_env_5_4,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_5_4,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_5_4
                     },
                     env_realdata  => {
                         genetic_covariance => $rr_coeff_genetic_covariance_altered_env_array_6_4,
                         env_covariance => $rr_coeff_env_covariance_altered_env_array_6_4,
-                        residual => $rr_residual_variance_altered_env_6_4
+                        residual => $rr_residual_variance_altered_env_6_4,
+                        genetic_correlation => $rr_coeff_genetic_correlation_altered_env_array_6_4,
+                        env_correlation => $rr_coeff_env_correlation_altered_env_array_6_4
                     }
                 };
             }
@@ -14884,7 +14916,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     print STDERR Dumper $env_iterations;
     # print STDERR Dumper \%trait_name_encoder;
     # print STDERR Dumper \%trait_to_time_map;
-    print STDERR Dumper $env_varcomps;
+    # print STDERR Dumper $env_varcomps;
 
     my %avg_varcomps;
     my @avg_varcomps_display;
@@ -14934,7 +14966,61 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
     }
     else {
-        
+        foreach (@$env_varcomps) {
+            my $type = $_->{statistics_select}."_".$_->{env_variance};
+            foreach my $t (@varcomp_keys) {
+                my $genetic_line = 1;
+                foreach $a (@{$_->{$t}->{genetic_covariance}}) {
+                    push @{$avg_varcomps{$type}->{$t}->{genetic_covariance}->{$genetic_line}->{vals}}, $a;
+                    $genetic_line++;
+                }
+                my $env_line = 1;
+                foreach $a (@{$_->{$t}->{env_covariance}}) {
+                    push @{$avg_varcomps{$type}->{$t}->{env_covariance}->{$env_line}->{vals}}, $a;
+                    $env_line++;
+                }
+                my $genetic_corr_line = 1;
+                foreach $a (@{$_->{$t}->{genetic_correlation}}) {
+                    push @{$avg_varcomps{$type}->{$t}->{genetic_correlation}->{$genetic_corr_line}->{vals}}, $a;
+                    $genetic_corr_line++;
+                }
+                my $env_corr_line = 1;
+                foreach $a (@{$_->{$t}->{env_correlation}}) {
+                    push @{$avg_varcomps{$type}->{$t}->{env_correlation}->{$env_corr_line}->{vals}}, $a;
+                    $env_corr_line++;
+                }
+                push @{$avg_varcomps{$type}->{$t}->{residual}->{1}->{vals}}, $_->{$t}->{residual};
+            }
+        }
+        # print STDERR Dumper \%avg_varcomps;
+
+        my %avg_varcomps_save;
+        while (my($t, $type_obj) = each %avg_varcomps) {
+            while (my($type, $line_obj) = each %$type_obj) {
+                while (my($var_type, $level_obj) = each %$line_obj) {
+                    while (my($line_num, $vals) = each %$level_obj) {
+                        my $values = $vals->{vals};
+                        my $level_rec = $var_type."_".$line_num;
+                        my $stat = Statistics::Descriptive::Full->new();
+                        $stat->add_data(@$values);
+                        my $std = $stat->standard_deviation();
+                        my $mean = $stat->mean();
+                        $avg_varcomps_save{$t}->{$type}->{$level_rec}->{std} = $std;
+                        $avg_varcomps_save{$t}->{$type}->{$level_rec}->{mean} = $mean;
+                        $avg_varcomps_save{$t}->{$type}->{$level_rec}->{vals} = $values;
+                        push @avg_varcomps_display, {
+                            type => $t,
+                            type_scenario => $type,
+                            level => $level_rec,
+                            vals => $values,
+                            std => $std,
+                            mean => $mean
+                        };
+                    }
+                }
+            }
+        }
+        %avg_varcomps = %avg_varcomps_save;
     }
     # print STDERR Dumper \%avg_varcomps;
 
