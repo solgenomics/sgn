@@ -1792,7 +1792,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     open(my $F_fullplot, ">", $full_plot_level_correlation_tempfile) || die "Can't open file ".$full_plot_level_correlation_tempfile;
                         print STDERR "OPENED PLOTCORR FILE $full_plot_level_correlation_tempfile\n";
 
-                        my @header_full_plot_corr;
+                        my @header_full_plot_corr = ('plot_name, plot_id, row_number, col_number, rep, block, germplasm_name, germplasm_id');
                         my @types_full_plot_corr = ('pheno_orig_', 'pheno_postm1_', 'eff_origm1_', 'eff_postm1_',
                         'sim_env1_', 'simm1_pheno1_', 'effm1_sim1_',
                         'sim_env2_', 'simm1_pheno2_', 'effm1_sim2_',
@@ -1808,7 +1808,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $header_string_full_plot_corr = join ',', @header_full_plot_corr;
                         print $F_fullplot "$header_string_full_plot_corr\n";
                         foreach my $p (@unique_plot_names) {
-                            my @row;
+                            my @row = ($p, $stock_name_row_col{$p}->{obsunit_stock_id}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $stock_name_row_col{$p}->{rep}, $stock_name_row_col{$p}->{block}, $stock_name_row_col{$p}->{germplasm_name}, $stock_name_row_col{$p}->{germplasm_stock_id});
                             foreach my $t (@sorted_trait_names) {
                                 my $phenotype_original = $phenotype_data_original{$p}->{$t};
                                 my $phenotype_post_1 = $phenotype_data_altered_hash_1->{$p}->{$t};
@@ -1857,7 +1857,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                     my $cmd_plotcorr_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
                     mat_orig <- fread(\''.$full_plot_level_correlation_tempfile.'\', header=TRUE, sep=\',\');
-                    gg <- ggcorr(data=mat_orig, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
+                    gg <- ggcorr(data=mat_orig[,-seq(1,8)], hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
                     ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, limitsize = FALSE, units=\'in\');
                     "';
                     # print STDERR Dumper $cmd;
@@ -4448,7 +4448,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     open(my $F_fullplot, ">", $full_plot_level_correlation_tempfile) || die "Can't open file ".$full_plot_level_correlation_tempfile;
                         print STDERR "OPENED PLOTCORR FILE $full_plot_level_correlation_tempfile\n";
 
-                        my @header_full_plot_corr;
+                        my @header_full_plot_corr = ('plot_name, plot_id, row_number, col_number, rep, block, germplasm_name, germplasm_id');
                         my @types_full_plot_corr = ('pheno_orig_', 'pheno_postm4_', 'eff_origm4_', 'eff_postm4_',
                         'sim_env1_', 'simm4_pheno1_', 'effm4_sim1_',
                         'sim_env2_', 'simm4_pheno2_', 'effm4_sim2_',
@@ -4464,7 +4464,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $header_string_full_plot_corr = join ',', @header_full_plot_corr;
                         print $F_fullplot "$header_string_full_plot_corr\n";
                         foreach my $p (@unique_plot_names) {
-                            my @row;
+                            my @row = ($p, $stock_name_row_col{$p}->{obsunit_stock_id}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $stock_name_row_col{$p}->{rep}, $stock_name_row_col{$p}->{block}, $stock_name_row_col{$p}->{germplasm_name}, $stock_name_row_col{$p}->{germplasm_stock_id});
                             foreach my $t (@sorted_trait_names) {
                                 my $phenotype_original = $phenotype_data_original{$p}->{$t};
                                 my $phenotype_post_4 = $phenotype_data_altered_hash_4->{$p}->{$t};
@@ -4513,7 +4513,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                     my $cmd_plotcorr_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
                     mat_orig <- fread(\''.$full_plot_level_correlation_tempfile.'\', header=TRUE, sep=\',\');
-                    gg <- ggcorr(data=mat_orig, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
+                    gg <- ggcorr(data=mat_orig[,-seq(1,8)], hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
                     ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, limitsize = FALSE, units=\'in\');
                     "';
                     # print STDERR Dumper $cmd;
@@ -6735,7 +6735,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     my ($full_plot_level_correlation_tempfile_fh, $full_plot_level_correlation_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
                     open(my $F_fullplot, ">", $full_plot_level_correlation_tempfile) || die "Can't open file ".$full_plot_level_correlation_tempfile;
 
-                        my @header_full_plot_corr;
+                        my @header_full_plot_corr = ('plot_name, plot_id, row_number, col_number, rep, block, germplasm_name, germplasm_id');
                         my @types_full_plot_corr = ('pheno_orig_', 'pheno_postm2_', 'eff_origm2_', 'eff_postm2_',
                         'sim_env1_', 'simm2_pheno1_', 'effm2_sim1_',
                         'sim_env2_', 'simm2_pheno2_', 'effm2_sim2_',
@@ -6751,7 +6751,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $header_string_full_plot_corr = join ',', @header_full_plot_corr;
                         print $F_fullplot "$header_string_full_plot_corr\n";
                         foreach my $p (@unique_plot_names) {
-                            my @row;
+                            my @row = ($p, $stock_name_row_col{$p}->{obsunit_stock_id}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $stock_name_row_col{$p}->{rep}, $stock_name_row_col{$p}->{block}, $stock_name_row_col{$p}->{germplasm_name}, $stock_name_row_col{$p}->{germplasm_stock_id});
                             foreach my $t (@sorted_trait_names_2) {
                                 my $t_conv = $trait_name_encoder_rev_2{$trait_name_encoder_2{$t}};
 
@@ -6802,7 +6802,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                     my $cmd_plotcorr_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
                     mat_orig <- fread(\''.$full_plot_level_correlation_tempfile.'\', header=TRUE, sep=\',\');
-                    gg <- ggcorr(data=mat_orig, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
+                    gg <- ggcorr(data=mat_orig[,-seq(1,8)], hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
                     ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, limitsize = FALSE, units=\'in\');
                     "';
                     # print STDERR Dumper $cmd;
@@ -8986,7 +8986,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     open(my $F_fullplot, ">", $full_plot_level_correlation_tempfile) || die "Can't open file ".$full_plot_level_correlation_tempfile;
                         print STDERR "OPENED PLOTCORR FILE $full_plot_level_correlation_tempfile\n";
 
-                        my @header_full_plot_corr;
+                        my @header_full_plot_corr = ('plot_name, plot_id, row_number, col_number, rep, block, germplasm_name, germplasm_id');
                         my @types_full_plot_corr = ('pheno_orig_', 'pheno_postm3_', 'eff_origm3_', 'eff_postm3_',
                         'sim_env1_', 'simm3_pheno1_', 'effm3_sim1_',
                         'sim_env2_', 'simm3_pheno2_', 'effm3_sim2_',
@@ -9002,7 +9002,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $header_string_full_plot_corr = join ',', @header_full_plot_corr;
                         print $F_fullplot "$header_string_full_plot_corr\n";
                         foreach my $p (@unique_plot_names) {
-                            my @row;
+                            my @row = ($p, $stock_name_row_col{$p}->{obsunit_stock_id}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $stock_name_row_col{$p}->{rep}, $stock_name_row_col{$p}->{block}, $stock_name_row_col{$p}->{germplasm_name}, $stock_name_row_col{$p}->{germplasm_stock_id});
                             foreach my $t (@sorted_trait_names_2) {
                                 my $t_conv = $trait_name_encoder_rev_2{$trait_name_encoder_2{$t}};
 
@@ -9053,7 +9053,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                     my $cmd_plotcorr_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
                     mat_orig <- fread(\''.$full_plot_level_correlation_tempfile.'\', header=TRUE, sep=\',\');
-                    gg <- ggcorr(data=mat_orig, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
+                    gg <- ggcorr(data=mat_orig[,-seq(1,8)], hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
                     ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, limitsize = FALSE, units=\'in\');
                     "';
                     # print STDERR Dumper $cmd;
@@ -11342,7 +11342,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     open(my $F_fullplot, ">", $full_plot_level_correlation_tempfile) || die "Can't open file ".$full_plot_level_correlation_tempfile;
                         print STDERR "OPENED PLOTCORR FILE $full_plot_level_correlation_tempfile\n";
 
-                        my @header_full_plot_corr;
+                        my @header_full_plot_corr = ('plot_name, plot_id, row_number, col_number, rep, block, germplasm_name, germplasm_id');
                         my @types_full_plot_corr = ('pheno_orig_', 'pheno_postm5_', 'eff_origm5_', 'eff_postm5_',
                         'sim_env1_', 'simm5_pheno1_', 'effm5_sim1_',
                         'sim_env2_', 'simm5_pheno2_', 'effm5_sim2_',
@@ -11358,7 +11358,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $header_string_full_plot_corr = join ',', @header_full_plot_corr;
                         print $F_fullplot "$header_string_full_plot_corr\n";
                         foreach my $p (@unique_plot_names) {
-                            my @row;
+                            my @row = ($p, $stock_name_row_col{$p}->{obsunit_stock_id}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $stock_name_row_col{$p}->{rep}, $stock_name_row_col{$p}->{block}, $stock_name_row_col{$p}->{germplasm_name}, $stock_name_row_col{$p}->{germplasm_stock_id});
                             foreach my $t (@sorted_trait_names_5) {
                                 my $phenotype_original = $phenotype_data_original_5{$p}->{$t};
                                 my $phenotype_post_5 = $phenotype_data_altered_hash_5->{$p}->{$t};
@@ -11407,7 +11407,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                     my $cmd_plotcorr_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
                     mat_orig <- fread(\''.$full_plot_level_correlation_tempfile.'\', header=TRUE, sep=\',\');
-                    gg <- ggcorr(data=mat_orig, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
+                    gg <- ggcorr(data=mat_orig[,-seq(1,8)], hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
                     ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, limitsize = FALSE, units=\'in\');
                     "';
                     # print STDERR Dumper $cmd;
@@ -13695,7 +13695,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     open(my $F_fullplot, ">", $full_plot_level_correlation_tempfile) || die "Can't open file ".$full_plot_level_correlation_tempfile;
                         print STDERR "OPENED PLOTCORR FILE $full_plot_level_correlation_tempfile\n";
 
-                        my @header_full_plot_corr;
+                        my @header_full_plot_corr = ('plot_name, plot_id, row_number, col_number, rep, block, germplasm_name, germplasm_id');
                         my @types_full_plot_corr = ('pheno_orig_', 'pheno_postm6_', 'eff_origm6_', 'eff_postm6_',
                         'sim_env1_', 'simm6_pheno1_', 'effm6_sim1_',
                         'sim_env2_', 'simm6_pheno2_', 'effm6_sim2_',
@@ -13711,7 +13711,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $header_string_full_plot_corr = join ',', @header_full_plot_corr;
                         print $F_fullplot "$header_string_full_plot_corr\n";
                         foreach my $p (@unique_plot_names) {
-                            my @row;
+                            my @row = ($p, $stock_name_row_col{$p}->{obsunit_stock_id}, $stock_name_row_col{$p}->{row_number}, $stock_name_row_col{$p}->{col_number}, $stock_name_row_col{$p}->{rep}, $stock_name_row_col{$p}->{block}, $stock_name_row_col{$p}->{germplasm_name}, $stock_name_row_col{$p}->{germplasm_stock_id});
                             foreach my $t (@sorted_trait_names_6) {
                                 my $phenotype_original = $phenotype_data_original_6{$p}->{$t};
                                 my $phenotype_post_6 = $phenotype_data_altered_hash_6->{$p}->{$t};
@@ -13760,7 +13760,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                     my $cmd_plotcorr_plot = 'R -e "library(data.table); library(ggplot2); library(GGally);
                     mat_orig <- fread(\''.$full_plot_level_correlation_tempfile.'\', header=TRUE, sep=\',\');
-                    gg <- ggcorr(data=mat_orig, hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
+                    gg <- ggcorr(data=mat_orig[,-seq(1,8)], hjust = 1, size = 2, color = \'grey50\', layout.exp = 1, label = TRUE);
                     ggsave(\''.$plot_corr_figure_tempfile.'\', gg, device=\'png\', width=30, height=30, limitsize = FALSE, units=\'in\');
                     "';
                     # print STDERR Dumper $cmd;
