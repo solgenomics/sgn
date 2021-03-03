@@ -461,6 +461,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
     copy($figure3file,$figure_path);
     copy($figure4file,$figure_path);
+    copy($gwas_output_filepath,$figure_path);
 #    my $figure3basename = $figure3file;
 
 #    $figure3basename =~ s/\/export\/prod\/tmp\/solgwas\_files\///;
@@ -468,10 +469,13 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $figure3file_response = "/documents/tempfiles/solgwas_files/" . $figure3basename;
     my $figure4basename = basename($figure4file);
     my $figure4file_response = "/documents/tempfiles/solgwas_files/" . $figure4basename;
+    my $gwas_output_basename = basename($gwas_output_filepath);
+    my $gwas_output_response = "/documents/tempfiles/solgwas_files/" . $gwas_output_basename;
 #    $figure4file_response =~ s/\.\/static//;
     $c->stash->{rest} = {
         figure3 => $figure3file_response,
         figure4 => $figure4file_response,
+        gwasoutfile => $gwas_output_response,
         dummy_response => $dataset_id,
         dummy_response2 => $trait_id,
     };

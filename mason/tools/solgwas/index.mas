@@ -81,7 +81,8 @@
 
     <div id="tempfile" style="display:none" >
     </div>
-
+    <div id="gwasresultfile" style="display:none" >
+    </div>
 
 
 
@@ -366,6 +367,8 @@ jQuery(document).ready(function() {
             else {
               var fig3_response = response.figure3;
               var fig4_response = response.figure4;
+              var gwasoutfile_response = response.gwasoutfile;
+              jQuery('#gwasresultfile').html(response.gwasoutfile);
   	    //alert("Response ID: "+temp_response);
       	    //alert("Response ID: "+fig3_response);
 
