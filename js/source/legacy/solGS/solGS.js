@@ -26,6 +26,8 @@ solGS.submitJob = {
 		    + '|solgs/search/trials/trait/'
 		    + '|solgs/selection/\\d+/model/'
 			+ '|solgs/selection/\\w_+\\d+/model/'
+			+ '|solgs/combined/model/\\d+/selection/'
+			+ '|solgs/combined/model/\\w_+\\d+/selection/'
 		    + '|solgs/models/combined/trials/'
 	     	+ '|solgs/traits/all/population/'
 	    	 + '|kinship/analysis';
@@ -276,7 +278,6 @@ solGS.submitJob = {
 	    + '|solgs/model/combined/trials/'
 	    + '|kinship/analysis';
 
-	console.log('gotopage '+page)
 	if (page.match(matchItems)) {
 	    window.location = page;
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
@@ -359,6 +360,8 @@ solGS.submitJob = {
 	var matchItems = '/solgs/population/'
 	    + '|solgs/trait/'
 	    + '|solgs/model/combined/trials/'
+		+ '|solgs/combined/model/\\d+/selection/'
+		+ '|solgs/combined/model/\\w_+\\d+/selection/'
 	    + '|solgs/selection/\\d+/model/\\d+/'
 		+ '|solgs/selection/\\w+_\\d+/model/\\d+/';
 
@@ -544,7 +547,7 @@ solGS.submitJob = {
 
 	    var dataSetType;
 
-	    if (referer.match(/solgs\/model\/combined\/populations\/|solgs\/models\/combined\//)) {
+	    if (referer.match(/solgs\/model\/combined\/trials\/|solgs\/models\/combined\//)) {
 			dataSetType = 'combined populations';
 	    } else if (referer.match(/solgs\/trait\/|solgs\/traits\/all\/population\//)) {
 			dataSetType = 'single population';
@@ -553,6 +556,18 @@ solGS.submitJob = {
 		args['trait_id']         = [ traitId ];
 		args['training_pop_id']  = [ urlStr[5] ];
 		args['selection_pop_id'] = [ urlStr[3] ];
+		args['analysis_type']    = 'selection prediction';
+		args['data_set_type']    = dataSetType;
+
+	} else if (url.match(/solgs\/combined\/model\//)) {
+
+	    var urlStr  = url.split(/\/+/);
+		//var protocolId = urlStr[10];
+	    var dataSetType = 'combined populations';
+
+		args['training_pop_id']  = [ urlStr[4] ];
+		args['selection_pop_id'] = [ urlStr[6] ];
+		args['trait_id'] = [ urlStr[8] ];
 		args['analysis_type']    = 'selection prediction';
 		args['data_set_type']    = dataSetType;
 
@@ -567,7 +582,6 @@ solGS.submitJob = {
 	}
 
 	var protocolId = args.genotyping_protocol_id;
-
 	if (!protocolId) {
 	    protocolId = jQuery('#genotyping_protocol_id').val();
 	}
