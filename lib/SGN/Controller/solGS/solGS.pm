@@ -1214,7 +1214,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
     $c->stash->{selection_pop_id}  = $selection_pop_id;
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 
-    if ($referer =~ /solgs\/model\/combined\/populations\//)
+    if ($referer =~ /solgs\/model\/combined\/trials\//)
     {
         my ($combo_pops_id, $trait_id) = $referer =~ m/(\d+)/g;
 
