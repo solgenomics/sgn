@@ -257,7 +257,7 @@ sub gebvs_values {
 	{
 			$gebvs_file = $c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
 	}
-	elsif ($ref =~ /solgs\/selection\//)
+	elsif ($ref =~ /solgs\/selection\/|solgs\/combined\/model\/\d+|\w+_\d+\/selection\//)
 	{
 		$gebvs_file = $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
 	}
