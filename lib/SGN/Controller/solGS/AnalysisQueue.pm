@@ -507,7 +507,7 @@ sub structure_output_details {
 	{
 		$output_details = $self->structure_training_combined_pops_data_output($c);
 	}
-	elsif ( $analysis_page =~ m/solgs\/selection\/\d+\/model\/|solgs\/selection\/\w+_\d+\/model\// )
+	elsif ( $analysis_page =~ m/solgs\/selection\/(\d+|\w+_\d+)\/model\/|solgs\/combined\/model\/\d+\/selection\// )
 	{
 		$output_details = $self->structure_selection_prediction_output($c);
 	}
@@ -930,7 +930,7 @@ sub run_analysis {
 			$self->predict_training_traits($c);
 		}
 
-		elsif ($analysis_page =~ /solgs\/selection\/(\d+|\w+_\d+)\/model\//)
+		elsif ($analysis_page =~ /solgs\/selection\/(\d+|\w+_\d+)\/model\/|solgs\/combined\/model\/(\d+|\w+_\d+)\/selection\//)
 		{
 			$self->predict_selection_traits($c);
 		}
@@ -1038,7 +1038,6 @@ sub predict_selection_traits {
 	}
 
 	my $referer = $c->req->referer;
-
 	if ($referer =~ /solgs\/trait\/|solgs\/traits\/all\/population\//)
 	{
 		$c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
