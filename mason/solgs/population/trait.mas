@@ -63,10 +63,10 @@ if ($c->req->path =~ /\/combined\/populations\//) {
   &>
 
  <& summary.mas,
-    training_pop_id   => $training_pop_id,
-    pop_link     => $pop_link,
-   	training_pop_name => $training_pop_name,
-    training_pop_desc => $training_pop_desc,
+    pop_id   => $training_pop_id,
+   	pop_name => $training_pop_name,
+    pop_desc => $training_pop_desc,
+	pop_link     => $pop_link,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,

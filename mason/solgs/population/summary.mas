@@ -14,9 +14,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$training_pop_id
-$training_pop_name
-$training_pop_desc =>''
+$pop_id
+$pop_name
+$pop_desc
+
 $model_link => ''
 $pop_link => ''
 $stocks_no
@@ -42,10 +43,10 @@ if ($model_link) {
 }elsif ($pop_link) {
   $project_link = $pop_link;
 }else {
-  $project_link = $training_pop_name;
+  $project_link = $pop_name;
 }
 
-my @data_c1 = (['Name', $training_pop_name],  ['Description', $training_pop_desc], ['Owner', $owner]);
+my @data_c1 = (['Name', $pop_name],  ['Description', $pop_desc], ['Owner', $owner]);
 my @data_c2 = (['No. of lines', $stocks_no],  ['No. of markers', $markers_no], ['Genotyping version', $protocol_url]);
 
 push @data_c2,  ['No. of traits', $traits_no] if $traits_no > 1;

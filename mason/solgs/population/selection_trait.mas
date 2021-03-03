@@ -24,8 +24,8 @@ $traits_no => ''
 
 $training_pop_id
 $training_pop_name
-$training_pop_desc
-$training_pop_owner
+$training_pop_desc => ''
+$training_pop_owner => ''
 $training_stocks_cnt => ''
 $training_markers_cnt => ''
 
@@ -36,6 +36,7 @@ $selection_pop_owner => ''
 $selection_stocks_cnt => ''
 $selection_markers_cnt => ''
 
+$model_link => ''
 $owner => ''
 $protocol_url => ''
 $top_blups
@@ -49,7 +50,9 @@ $data_set_type => ''
 
 <%perl>
 
-my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\">$training_pop_name</a>";
+if (!$model_link) {
+	$model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\">$training_pop_name</a>";
+}
 
 </%perl>
 
@@ -74,9 +77,9 @@ my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\"
   &>
 
  <& summary.mas,
-    project_id   => $selection_pop_id,
-    project_name => $selection_pop_name,
-    project_desc => $selection_pop_desc,
+    pop_id   => $selection_pop_id,
+    pop_name => $selection_pop_name,
+    pop_desc => $selection_pop_desc,
     model_link   => $model_link,
     stocks_no    => $selection_stocks_cnt,
     markers_no   => $selection_markers_cnt,
