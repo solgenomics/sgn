@@ -1149,8 +1149,9 @@ sub upload_drone_imagery_POST : Args(0) {
             $example_archived_filename_with_path_odm_img = $archived_filename_with_path_odm_img;
         }
 
+        my $current_odm_image_count = $new_drone_run_band_stitching_odm_current_image_count+scalar(@$image_paths);
         if ($new_drone_run_band_stitching_odm_more_images eq 'Yes') {
-            $c->stash->{rest} = { drone_run_project_id => $selected_drone_run_id, current_image_count => $new_drone_run_band_stitching_odm_current_image_count+scalar(@$image_paths) };
+            $c->stash->{rest} = { drone_run_project_id => $selected_drone_run_id, current_image_count => $current_odm_image_count };
             $c->detach();
         }
 
@@ -1176,7 +1177,7 @@ sub upload_drone_imagery_POST : Args(0) {
             # my $content  = $response->decoded_content();
             # print STDERR Dumper $content;
             my $odm_dsm_dtm_string = '';
-            if ($new_drone_run_band_stitching_odm_current_image_count > 500) {
+            if ($current_odm_image_count > 500) {
                 $odm_dsm_dtm_string = '--dsm --dtm';
             }
             my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all '.$odm_dsm_dtm_string.' --radiometric-calibration camera > '.$temp_file_docker_log;
