@@ -4,6 +4,7 @@ use Moose;
 use Data::Dumper;
 use Try::Tiny;
 use List::Util 'max';
+use CXGN::BrAPI::Exceptions::ServerException;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -16,8 +17,20 @@ has 'external_references' => (
     isa => 'ArrayRef[HashRef[Str]|Undef]',
 );
 
-has 'dbxref_id' => (
-    isa => 'Int',
+has 'base_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw',
+    required => 0,
+);
+
+has 'table_name' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 1,
+);
+
+has 'base_id_key' => (
+    isa => 'Str',
     is => 'rw',
     required => 1,
 );
@@ -78,16 +91,19 @@ has 'reference_source_id' => (
 );
 
 has 'references_db' => (
-    isa => 'ArrayRef[HashRef[Str]|Undef]',
+    isa => 'Maybe[ArrayRef[HashRef[Str]]]',
     is => 'ro',
     lazy => 1,
     default => sub {
         my $self = shift;
         my %references;
 
-        my $props = $self->bcs_schema()->resultset("Cv::Dbxrefprop")->search(
+        my $base_id = $self->base_id();
+        my $base_id_key = $self->base_id_key();
+
+        my $props = $self->bcs_schema()->resultset($self->table_name())->search(
             {
-                dbxref_id => $self->dbxref_id()
+                $base_id_key => $base_id
             },
             {order_by => { -asc => 'rank' }}
         );
@@ -96,25 +112,34 @@ has 'references_db' => (
             my $reference = $references{$prop->get_column('rank')};
             if ($prop->get_column('type_id') == $self->reference_id) {
                 $reference->{'referenceID'} = $prop->get_column('value');
+                $references{$prop->get_column('rank')}=$reference;
             }
             if ($prop->get_column('type_id') == $self->reference_source_id) {
                 $reference->{'referenceSource'} = $prop->get_column('value');
+                $references{$prop->get_column('rank')}=$reference;
             }
 
-            $references{$prop->get_column('rank')}=$reference;
         }
 
-        my $ref = \%references;
-        my $maxkey = max keys %$ref;
-        my @array = @{$ref}{0 .. $maxkey};
-        return \@array;
+        if (%references) {
+            my $ref = \%references;
+            my $maxkey = max keys %$ref;
+            my @array = @{$ref}{0 .. $maxkey};
+            return \@array;
+        }
+        return undef;
     }
 );
 
 sub store {
     my $self = shift;
     my $schema = $self->bcs_schema();
-    my $dbxref_id = $self->dbxref_id();
+    my $base_id = $self->base_id();
+    my $base_id_key = $self->base_id_key();
+
+    if (!defined($self->base_id)) {
+        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: External References base id not specified, cannot store"});
+    }
 
     my @references = @{$self->external_references()};
     my $rank = 0;
@@ -125,25 +150,28 @@ sub store {
     my $reference_id = $self->reference_id;
     my $reference_source = $self->reference_source_id;
 
+    # delete previous references
+    $self->delete();
+
     my $coderef = sub {
 
         foreach my $reference (@references) {
             my $id = $reference->{'referenceID'};
             my $source = $reference->{'referenceSource'};
 
-            # write external reference info to dbxrefprop
-            my $prop_id = $schema->resultset("Cv::Dbxrefprop")->create(
+            # write external reference info to prop table
+            my $prop_id = $schema->resultset($self->table_name())->create(
                 {
-                    dbxref_id => $dbxref_id,
+                    $base_id_key => $base_id,
                     type_id   => $reference_id,
                     value     => $id,
                     rank      => $rank
                 }
             );
 
-            my $prop_source = $schema->resultset("Cv::Dbxrefprop")->create(
+            my $prop_source = $schema->resultset($self->table_name())->create(
                 {
-                    dbxref_id => $dbxref_id,
+                    $base_id_key => $base_id,
                     type_id   => $reference_source,
                     value     => $source,
                     rank      => $rank
@@ -168,6 +196,23 @@ sub store {
 
     return { success => "External References added successfully" };
 
+}
+
+sub delete {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+
+    $schema->resultset($self->table_name())->search(
+        {
+            $self->base_id_key => $self->base_id,
+            type_id   => { -in =>
+                [
+                    $self->reference_id,
+                    $self->reference_source_id,
+                ]
+            }
+        }
+    ) -> delete;
 }
 
 1;
