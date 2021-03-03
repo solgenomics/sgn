@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::Order;
 
 use Moose;
 use CXGN::Stock::StockOrder;
+use CXGN::Stock::Catalog;
 use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -59,12 +60,12 @@ sub upload_catalog_items : Path('/ajax/catalog/upload_items') : ActionClass('RES
 sub upload_catalog_items_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $upload = $c->req->upload('catalog_items_upload_file');
-    my $upload_type = 'CatalogItems';
+    my $upload_type = 'CatalogXLS';
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
@@ -88,7 +89,7 @@ sub upload_catalog_items_POST : Args(0) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -123,10 +124,11 @@ sub upload_catalog_items_POST : Args(0) {
     }
     unlink $upload_tempfile;
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Order::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    my @stock_props = ('stock_catalog_json');
+    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
-    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+    print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
 
     if (!$parsed_data){
         my $return_error = '';
@@ -145,11 +147,37 @@ sub upload_catalog_items_POST : Args(0) {
         $c->detach();
     }
 
-    
-        $c->stash->{rest} = {success => "1",};
+    if ($parsed_data) {
+        my %catalog_info = %{$parsed_data};
+        foreach my $item_name (keys %catalog_info) {
+            my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $item_name});
+            my $stock_id = $stock_rs->stock_id();
+            print STDERR "STOCK ID =".Dumper($stock_id)."\n";
+            my %catalog_info_hash = %{$catalog_info{$item_name}};
+
+            my $stock_catalog = CXGN::Stock::Catalog->new({
+                bcs_schema => $schema,
+                item_type => $catalog_info_hash{item_type},
+                category => $catalog_info_hash{category},
+                description => $catalog_info_hash{description},
+                material_source => $catalog_info_hash{material_source},
+                breeding_program => $catalog_info_hash{breeding_program},
+                availability => $catalog_info_hash{availability},
+                parent_id => $stock_id
+            });
+
+            my $stock_prop_id = $stock_catalog->store();
+            print STDERR "STOCK PROP ID =".Dumper($stock_prop_id)."\n";
+            if (!$stock_prop_id) {
+                $c->stash->{rest} = {error_string => "Error saving catalog info",};
+                return;
+            }
+        }
+    }
+
+    $c->stash->{rest} = {success => "1",};
 
 }
-
 
 
 1;

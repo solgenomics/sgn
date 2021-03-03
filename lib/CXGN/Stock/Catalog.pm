@@ -30,7 +30,7 @@ has 'breeding_program' => ( isa => 'Str', is => 'rw');
 has 'category' => ( isa => 'Str', is => 'rw' );
 
 # additional info
-has 'comments' => ( isa => 'Str', is => 'rw') ;
+has 'comment' => ( isa => 'Str', is => 'rw') ;
 
 
 sub BUILD {
@@ -42,7 +42,7 @@ sub BUILD {
     $self->prop_primary_key('stockprop_id');
     $self->prop_type('stock_catalog_json');
     $self->cv_name('stock_property');
-    $self->allowed_fields( [ qw | description images availability order_source material_source item_type breeding_program categories comments | ] );
+    $self->allowed_fields( [ qw | description images availability order_source material_source item_type breeding_program category comment | ] );
     $self->parent_table('stock');
     $self->parent_primary_key('stock_id');
 

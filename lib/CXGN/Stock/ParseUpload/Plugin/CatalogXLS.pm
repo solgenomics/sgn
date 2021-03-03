@@ -78,7 +78,6 @@ sub _validate_with_plugin {
         $comment_header  = $worksheet->get_cell(0,7)->value();
     }
 
-
     if (!$name_header || $name_header ne 'name' ) {
         push @error_messages, "Cell A1: name is missing from the header";
     }
@@ -165,18 +164,18 @@ sub _validate_with_plugin {
 
         if ($item_name){
             $item_name =~ s/^\s+|\s+$//g;
-            $seen_names{$item_name}++;
+            $seen_stock_names{$item_name}++;
         }
 
         if ($breeding_program){
             $breeding_program =~ s/^\s+|\s+$//g;
-            $seen_programs{$breeding_program}++;
+            $seen_program_names{$breeding_program}++;
         }
 
     }
 
-    my @stock_missing;
-    my @catalog_items = keys %seen_item_names;
+    my @stocks_missing;
+    my @catalog_items = keys %seen_stock_names;
     my $catalog_item_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$catalog_item_validator->validate($schema,'uniquenames',\@catalog_items)->{'missing'}};
     if (scalar(@accessions_missing) > 0) {
@@ -187,7 +186,7 @@ sub _validate_with_plugin {
         push @error_messages, "The following catalog items are not in the database as accession or population: ".join(',',@stocks_missing);
     }
 
-    my @breeding_programs = keys %seen_programs;
+    my @breeding_programs = keys %seen_program_names;
     my $breeding_program_validator = CXGN::List::Validate->new();
     my @programs_missing = @{$breeding_program_validator->validate($schema,'breeding_programs',\@breeding_programs)->{'missing'}};
 
@@ -261,7 +260,7 @@ sub _parse_with_plugin {
 
         $parsed_result{$item_name} = {
             'item_type' => $item_type,
-            'categories' => $category,
+            'category' => $category,
             'description' => $description,
             'material_source' => $material_source,
             'breeding_program' => $breeding_program,
@@ -269,7 +268,7 @@ sub _parse_with_plugin {
             'comments' => $comment
         }
     }
-#    print STDERR "PARSED RESULT =".Dumper(%parsed_result)."\n";
+    print STDERR "PLUGIN PARSED RESULT =".Dumper(\%parsed_result)."\n";
 
     $self->_set_parsed_data(\%parsed_result);
 

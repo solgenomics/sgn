@@ -13,7 +13,7 @@ this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds stock_catalog_json and stock_order_json cvterms
+This patch adds stock_catalog_json and stock_order_json stock_property cvterms and catalog_items list_types cvterm
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -39,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'stock_catalog_json and stock_order_json cvterms
+This patch adds the 'stock_catalog_json and stock_order_json stock_property cvterms and catalog_items list_types cvterm
 
 has '+prereq' => (
 	default => sub {
@@ -65,6 +65,8 @@ sub patch {
 	    'stock_property' => [
             'stock_catalog_json',
             'stock_order_json'],
+        'list_types' => [
+            'catalog_items']
 	};
 
 	foreach my $t (keys %$terms){
