@@ -38,7 +38,48 @@
     </div>
 </div>
 
+<div class="modal fade" id="upload_catalog_items_error_display" name="upload_catalog_items_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCatalogItemsErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCatalogItemsErrorDialog">Upload Catalog Items File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
+<div class="modal fade" id="catalog_items_saved_dialog_message" name="catalog_items_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="catalogItemsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="catalogItemsSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The catalog items were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_catalog_items_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <script>
@@ -56,6 +97,30 @@ jQuery(document).ready( function() {
         jQuery("#upload_catalog_items_dialog").modal("hide");
     });
 
+    jQuery("#upload_catalog_items_form").iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response){
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string){
+                jQuery("#upload_catalog_items_error_display tbody").html('');
+                jQuery("#upload_catalog_items_error_display tbody").append(response.error_string);
+                jQuery("#upload_catalog_items_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#catalog_items_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
 });
+
 
 </script>

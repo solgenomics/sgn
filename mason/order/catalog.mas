@@ -1,13 +1,8 @@
-
 <%args>
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List"] &>
-
-% use utf8;
-
-<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <& /page/page_title.mas, title => "Order Catalog" &>

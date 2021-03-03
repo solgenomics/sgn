@@ -5,6 +5,7 @@ use Moose;
 use CXGN::Stock::StockOrder;
 use CXGN::Stock::Catalog;
 use Data::Dumper;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -166,16 +167,16 @@ sub upload_catalog_items_POST : Args(0) {
                 parent_id => $stock_id
             });
 
-            my $stock_prop_id = $stock_catalog->store();
-            print STDERR "STOCK PROP ID =".Dumper($stock_prop_id)."\n";
-            if (!$stock_prop_id) {
-                $c->stash->{rest} = {error_string => "Error saving catalog info",};
+            $stock_catalog->store();
+
+            if (!$stock_catalog->store()){
+                $c->stash->{rest} = {error_string => "Error saving catalog items",};
                 return;
             }
         }
     }
 
-    $c->stash->{rest} = {success => "1",};
+    $c->stash->{rest} = {success => "1"};
 
 }
 
