@@ -271,35 +271,51 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 
-    my $pops_cvs = $c->req->param('combined_populations');
+	my $cached = $c->controller('solGS::CachedResult')->check_single_trial_model_output($c, $combo_pops_id, $trait_id, $protocol_id);
 
-    if ($pops_cvs)
-    {
-	my @pops = split(',', $pops_cvs);
-        $c->stash->{trait_combo_pops} = \@pops;
-    }
-    else
-    {
-        $self->get_combined_pops_list($c, $combo_pops_id);
-        $c->stash->{trait_combo_pops} = $c->stash->{combined_pops_list};
-    }
+	if (!$cached)
+	{
+	    my $training_pop_page = qq | <a href="/solgs/populations/combined/$combo_pops_id/gp/$protocol_id">here</a> |;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	    my $msg = "Cached output for this model does not exist anymore.\n"
+		. " Please go to $training_pop_page and run the analysis.";
 
-    $self->combined_pops_summary($c);
+	    $c->controller('solGS::Utils')->generic_message($c, $msg);
 
-    $c->controller('solGS::solGS')->model_phenotype_stat($c);
-    $c->controller('solGS::Files')->validation_file($c);
-    $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
-    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
-    $c->controller('solGS::solGS')->top_blups($c,  $c->stash->{rrblup_training_gebvs_file});
-    $c->controller('solGS::Download')->training_prediction_download_urls($c);
-    $c->controller('solGS::Files')->marker_effects_file($c);
-    $c->controller('solGS::solGS')->top_markers($c, $c->stash->{marker_effects_file});
-    $c->controller('solGS::solGS')->model_parameters($c);
+	}
+	else
+	{
 
-    #$c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
-	$c->stash->{template} = $c->controller('solGS::Files')->template('/population/trait.mas');
+	    my $pops_cvs = $c->req->param('combined_populations');
+
+	    if ($pops_cvs)
+	    {
+		my @pops = split(',', $pops_cvs);
+	        $c->stash->{trait_combo_pops} = \@pops;
+	    }
+	    else
+	    {
+	        $self->get_combined_pops_list($c, $combo_pops_id);
+	        $c->stash->{trait_combo_pops} = $c->stash->{combined_pops_list};
+	    }
+
+	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+
+	    $self->combined_pops_summary($c);
+
+	    $c->controller('solGS::solGS')->model_phenotype_stat($c);
+	    $c->controller('solGS::Files')->validation_file($c);
+	    $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
+	    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+	    $c->controller('solGS::solGS')->top_blups($c,  $c->stash->{rrblup_training_gebvs_file});
+	    $c->controller('solGS::Download')->training_prediction_download_urls($c);
+	    $c->controller('solGS::Files')->marker_effects_file($c);
+	    $c->controller('solGS::solGS')->top_markers($c, $c->stash->{marker_effects_file});
+	    $c->controller('solGS::solGS')->model_parameters($c);
+
+	    #$c->stash->{template} = $c->controller('solGS::Files')->template('/model/combined/populations/trait.mas');
+		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/trait.mas');
+	}
 }
 
 
@@ -313,6 +329,7 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
       #   $trait_key, $trait_id, $gp, $protocol_id) = @_;
 
     $c->stash->{combo_pops_id}        = $model_id;
+	$c->stash->{training_pop_id}        = $model_id;
     $c->stash->{trait_id}             = $trait_id;
     $c->stash->{selection_pop_id}     = $selection_pop_id;
     $c->stash->{data_set_type}        = 'combined populations';
@@ -358,7 +375,7 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     $c->stash->{protocol_url} = $protocol;
 
     my $training_pop = "Training population $model_id";
-    my $model_link   = qq | <a href="/solgs/populations/combined/$model_id/gp/$protocol_id">$training_pop </a>|;
+    my $model_link   = qq | <a href="/solgs/model/combined/trials/$model_id/trait/$trait_id/gp/$protocol_id">$training_pop </a>|;
     $c->stash->{model_link} = $model_link;
     $c->stash->{training_pop_name} = $training_pop;
 
@@ -373,8 +390,8 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
 
     $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$model_id/prediction/$selection_pop_id/$trait_id/gp/$protocol_id">Download all GEBVs</a>|;
 
-    $c->stash->{template} = $c->controller('solGS::Files')->template('/selection/combined/selection_trait.mas');
-    #$c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
+    #$c->stash->{template} = $c->controller('solGS::Files')->template('/selection/combined/selection_trait.mas');
+    $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
 
 }
 
@@ -879,10 +896,10 @@ sub predict_selection_pop_combined_pops_model {
     $c->stash->{pop_id} = $training_pop_id;
 
     my @selected_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
-
+print STDERR "\npredict_selection_pop_combined_pops_model: selected_traits: @selected_traits\n";
     $c->controller('solGS::solGS')->traits_with_valid_models($c);
     my @traits_with_valid_models = @{$c->stash->{traits_ids_with_valid_models}};
-
+print STDERR "\npredict_selection_pop_combined_pops_model: traits_ids_with_valid_models: @traits_with_valid_models\n";
     $c->stash->{training_traits_ids} = \@traits_with_valid_models;
 
     my @prediction_traits;
