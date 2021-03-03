@@ -798,6 +798,8 @@ jQuery(document).ready(function() {
 
             if (drone_run_camera_info == 'micasense_5') {
                 html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Radiometric Calibration Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_panel_zipfile" name="upload_drone_images_panel_zipfile" encoding="multipart/form-data" /></div></div>';
+
+                html = html + '<div class="form-group"><label class="col-sm-3 control-label">Perform radiometric calibration: </label><div class="col-sm-9" ><select class="form-control" id="drone_image_upload_drone_run_band_stitching_odm_radiocalibration" name="drone_image_upload_drone_run_band_stitching_odm_radiocalibration"><option value="Yes">Yes</option></select></div></div>';
             }
 
             html = html + '</div>';
