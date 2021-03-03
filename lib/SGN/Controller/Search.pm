@@ -8,6 +8,7 @@ use CXGN::Glossary qw(get_definitions create_tooltips_from_text);
 
 # this is suboptimal
 use CatalystX::GlobalContext qw( $c );
+use URI::FromHash 'uri';
 
 BEGIN {extends 'Catalyst::Controller'; }
 
@@ -163,6 +164,11 @@ sub directory_search : Path('/search/directory') Args(0) {
 sub images_search : Path('/search/images') Args(0) {
     my $self = shift;
     my $c = shift;
+    if (!$c->user()) {
+        # redirect to login page
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
     $c->stash->{template} = '/search/images.mas';
     #$_[1]->stash->{content} = CXGN::Search::CannedForms->image_search_form(); ####DEPRECATED CGIBIN CODE
 }
