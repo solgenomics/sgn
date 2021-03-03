@@ -1155,6 +1155,11 @@ sub upload_drone_imagery_POST : Args(0) {
             $c->detach();
         }
 
+        if ($current_odm_image_count < 50) {
+            $c->stash->{rest} = { error => "Upload more than $current_odm_image_count images! Atleast 50 are required for OpenDroneMap to stitch." };
+            $c->detach();
+        }
+
         print STDERR $example_archived_filename_with_path_odm_img."\n";
         my @img_path_split = split '\/', $example_archived_filename_with_path_odm_img;
         my $image_path_img_name = pop(@img_path_split);
@@ -1176,11 +1181,8 @@ sub upload_drone_imagery_POST : Args(0) {
             # my $response = $ua->post( $c->config->{main_production_site_url}."/RunODMDocker.php", { 'file_path' => $image_path_remaining_host, 'dtm_string' => $dtm_string } );
             # my $content  = $response->decoded_content();
             # print STDERR Dumper $content;
-            my $odm_dsm_dtm_string = '';
-            if ($current_odm_image_count > 500) {
-                $odm_dsm_dtm_string = '--dsm --dtm';
-            }
-            my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all '.$odm_dsm_dtm_string.' --radiometric-calibration camera > '.$temp_file_docker_log;
+
+            my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm --radiometric-calibration camera > '.$temp_file_docker_log;
             print STDERR $odm_command."\n";
             my $odm_status = system($odm_command);
 

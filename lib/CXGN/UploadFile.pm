@@ -112,7 +112,7 @@ sub archive {
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" || $_ eq "sequencer" } ($self->user_role)  ) {
-	die  "You have insufficient privileges to archive a file.\n". Dumper $self->user_role;
+        die  "You have insufficient privileges to archive a file.\n". Dumper $self->user_role;
     }
     # if (!$subdirectory || !$tempfile || !$archive_filename ) {
     #     print STDERR "File archive failed: incomplete information to archive file.\n";
@@ -140,28 +140,35 @@ sub archive {
             }
         }
     }
+
     try {
-	if (!-d $archive_path) {
-	    mkdir $archive_path;
-	}
-	if (! -d catfile($archive_path, $user_id)) {
-	  mkdir (catfile($archive_path, $user_id));
-	}
-	if (! -d catfile($archive_path, $user_id, $subdirectory)) {
-	  mkdir (catfile($archive_path, $user_id, $subdirectory));
-	}
-    if (! -d catfile($archive_path, $user_id, $subdirectory, $second_subdirectory)) {
-	  mkdir (catfile($archive_path, $user_id, $subdirectory, $second_subdirectory));
-	}
-    if (! -d catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory)) {
-	  mkdir (catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory));
-	}
-	copy($tempfile,$file_destination);
-    } catch {
-	$error = "Error saving archived file: $file_destination\n$_";
+        if (!-d $archive_path) {
+            mkdir $archive_path;
+        }
+        if (! -d catfile($archive_path, $user_id)) {
+            mkdir (catfile($archive_path, $user_id));
+        }
+        if (! -d catfile($archive_path, $user_id, $subdirectory)) {
+            mkdir (catfile($archive_path, $user_id, $subdirectory));
+        }
+        if ($second_subdirectory) {
+            if (! -d catfile($archive_path, $user_id, $subdirectory, $second_subdirectory)) {
+                mkdir (catfile($archive_path, $user_id, $subdirectory, $second_subdirectory));
+            }
+        }
+        if ($second_subdirectory && $third_subdirectory) {
+            if (! -d catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory)) {
+                mkdir (catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory));
+            }
+        }
+
+        copy($tempfile,$file_destination);
+    }
+    catch {
+        $error = "Error saving archived file: $file_destination\n$_";
     };
     if ($error) {
-	print STDERR  "$error\n";
+        print STDERR  "$error\n";
     }
     print STDERR "ARCHIVED: $file_destination\n";
     return $file_destination;
