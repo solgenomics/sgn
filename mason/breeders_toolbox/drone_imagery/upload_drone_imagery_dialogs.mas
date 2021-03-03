@@ -68,6 +68,7 @@
 
                         <!-- If drone run is selected above, the drone_run_project_id is passed to controller, negating need to create new drone run -->
                         <input id="drone_run_id" name="drone_run_id" type="hidden" value=""/>
+                        <input id="drone_image_upload_drone_run_band_stitching_odm_image_count" name="drone_image_upload_drone_run_band_stitching_odm_image_count" type="hidden" value=""/>
 
                         <!-- If raw plot image boundaries are given -->
                         <input id="drone_run_raw_image_boundaries_first_plot_corner" name="drone_run_raw_image_boundaries_first_plot_corner" type="hidden" value=""/>
@@ -1020,6 +1021,7 @@ jQuery(document).ready(function() {
             }
             else if (drone_run_band_unstitched == 'yes_open_data_map_stitch' && new_drone_run_band_stitching_odm_more_images == 'Yes') {
                 jQuery('#drone_run_id').val(response.drone_run_project_id);
+                jQuery('#drone_image_upload_drone_run_band_stitching_odm_image_count').val(response.current_image_count);
 
                 alert('Select another zip file and submit! If this is your last file to upload, make sure to change the select to No.');
                 return;
