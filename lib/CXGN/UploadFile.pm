@@ -9,6 +9,7 @@ CXGN::UploadFile - an object to handle uploading files
  my $uploader = CXGN::UploadFile->new({
     tempfile => '/tmp/myfile.csv',
     subdirectory => 'some_directory',
+    second_subdirectory => 'some_directory',
     archive_path => '/some/path/to/dir',
     archive_filename => 'myfilename.csv',
     timestamp => '2016-09-24_10:30:30',
@@ -50,6 +51,16 @@ has 'subdirectory' => (isa => "Str",
     required => 0
 );
 
+has 'second_subdirectory' => (isa => "Str",
+    is => 'rw',
+    required => 0
+);
+
+has 'third_subdirectory' => (isa => "Str",
+    is => 'rw',
+    required => 0
+);
+
 has 'archive_path' => (isa => "Str",
     is => 'rw',
     required => 0
@@ -85,6 +96,8 @@ has 'include_timestamp' => (
 sub archive {
     my $self = shift;
     my $subdirectory = $self->subdirectory;
+    my $second_subdirectory = $self->second_subdirectory;
+    my $third_subdirectory = $self->third_subdirectory;
     my $tempfile = $self->tempfile;
     my $archive_filename = $self->archive_filename;
     my $timestamp = $self->timestamp;
@@ -106,10 +119,26 @@ sub archive {
     # 	die "File archive failed: incomplete information to archive file.\n";
     # }
     if ($self->include_timestamp){
-        $file_destination =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
+        $file_destination =  catfile($archive_path, $user_id, $subdirectory, $timestamp."_".$archive_filename);
     }
     else {
-        $file_destination =  catfile($archive_path, $user_id, $subdirectory,$archive_filename);
+        $file_destination =  catfile($archive_path, $user_id, $subdirectory, $archive_filename);
+    }
+    if ($second_subdirectory) {
+        if ($self->include_timestamp){
+            $file_destination =  catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $timestamp."_".$archive_filename);
+        }
+        else {
+            $file_destination =  catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $archive_filename);
+        }
+        if ($third_subdirectory) {
+            if ($self->include_timestamp){
+                $file_destination =  catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory, $timestamp."_".$archive_filename);
+            }
+            else {
+                $file_destination =  catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory, $archive_filename);
+            }
+        }
     }
     try {
 	if (!-d $archive_path) {
@@ -120,6 +149,12 @@ sub archive {
 	}
 	if (! -d catfile($archive_path, $user_id, $subdirectory)) {
 	  mkdir (catfile($archive_path, $user_id, $subdirectory));
+	}
+    if (! -d catfile($archive_path, $user_id, $subdirectory, $second_subdirectory)) {
+	  mkdir (catfile($archive_path, $user_id, $subdirectory, $second_subdirectory));
+	}
+    if (! -d catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory)) {
+	  mkdir (catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory));
 	}
 	copy($tempfile,$file_destination);
     } catch {

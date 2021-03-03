@@ -715,7 +715,7 @@ jQuery(document).ready(function() {
         var drone_run_vehicle_id = jQuery('#drone_run_imaging_vehicle_id').val();
         var drone_run_vehicle_battery_name = jQuery('#drone_run_imaging_vehicle_battery_name').val();
 
-        if (drone_run_id != '' && (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_automated' || drone_run_band_unstitched == 'yes_open_data_map_stitch')) {
+        if (drone_run_id != '' && (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_automated') ) {
             alert('Please create a new drone run band if you are uploading a zipfile of raw images.');
             return false;
         }
@@ -779,9 +779,21 @@ jQuery(document).ready(function() {
             html = html + '</div>';
         }
 
-        else if (drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_open_data_map_stitch') {
+        else if (drone_run_band_unstitched == 'yes_raw') {
             html = html + '<div class="well well-sm">';
             html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip) (MUST be named images.zip! 2GB Maximum, but can can upload multiple zip files.): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
+
+            if (drone_run_camera_info == 'micasense_5') {
+                html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Radiometric Calibration Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_panel_zipfile" name="upload_drone_images_panel_zipfile" encoding="multipart/form-data" /></div></div>';
+            }
+
+            html = html + '</div>';
+        }
+        else if (drone_run_band_unstitched == 'yes_open_data_map_stitch') {
+            html = html + '<div class="well well-sm">';
+            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip) (2GB Maximum, but can can upload multiple zip files.): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
+
+            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Upload another zipfile after submit this one?: </label><div class="col-sm-9" ><select class="form-control" id="drone_image_upload_drone_run_band_stitching_odm_more_images" name="drone_image_upload_drone_run_band_stitching_odm_more_images"><option value="Yes">Yes</option><option value="No">No</option></select></div></div>';
 
             if (drone_run_camera_info == 'micasense_5') {
                 html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Radiometric Calibration Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_panel_zipfile" name="upload_drone_images_panel_zipfile" encoding="multipart/form-data" /></div></div>';
@@ -868,9 +880,11 @@ jQuery(document).ready(function() {
 
 
     var drone_run_band_unstitched = '';
+    var new_drone_run_band_stitching_odm_more_images = '';
     jQuery('#upload_drone_imagery_submit').click(function(){
         var drone_run_band_number = jQuery('#drone_run_band_number').val();
         drone_run_band_unstitched = jQuery('#drone_image_upload_drone_run_band_stitching').val();
+        new_drone_run_band_stitching_odm_more_images = jQuery('#drone_image_upload_drone_run_band_stitching_odm_more_images').val();
         var drone_run_camera_info = jQuery('#drone_image_upload_camera_info').val();
         if (drone_run_band_unstitched == '') {
             alert('Please select whether you are uploading unstitched images.');
@@ -988,8 +1002,8 @@ jQuery(document).ready(function() {
         json: true,
         post: function () {
             jQuery('#working_modal').modal("show");
-            if (drone_run_band_unstitched == 'yes') {
-                jQuery('#working_msg').html("It can take a very long time to assemble the orthophotomosaic depending on the number of images uploaded. Times range from 15 minutes to 5 days depending on the number of images, not including upload time.");
+            if (drone_run_band_unstitched == 'yes' || (drone_run_band_unstitched == 'yes_open_data_map_stitch' && new_drone_run_band_stitching_odm_more_images == 'No')) {
+                jQuery('#working_msg').html("It can take a very long time to assemble the orthophotomosaic depending on the number of images uploaded. Times range from 15 minutes to 6 hours depending on the number of images, not including upload time.");
             }
         },
         complete: function (response) {
@@ -1001,8 +1015,14 @@ jQuery(document).ready(function() {
                 alert(response.error);
                 return;
             }
-            if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'yes_open_data_map_stitch' || drone_run_band_unstitched == 'no') {
+            if (drone_run_band_unstitched == 'yes' || drone_run_band_unstitched == 'yes_raw' || drone_run_band_unstitched == 'no' || (drone_run_band_unstitched == 'yes_open_data_map_stitch' && new_drone_run_band_stitching_odm_more_images == 'No')) {
                 location.reload();
+            }
+            else if (drone_run_band_unstitched == 'yes_open_data_map_stitch' && new_drone_run_band_stitching_odm_more_images == 'Yes') {
+                jQuery('#drone_run_id').val(response.drone_run_project_id);
+
+                alert('Select another zip file and submit! If this is your last file to upload, make sure to change the select to No.');
+                return;
             }
             else if (drone_run_band_unstitched == 'yes_automated') {
                 uploadDroneRawImagesBoundariesDroneRunProjectId = response.drone_run_project_id;
