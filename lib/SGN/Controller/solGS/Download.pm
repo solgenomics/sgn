@@ -175,40 +175,48 @@ sub selection_prediction_download_urls {
 
     my @selection_traits_ids = sort(@$selection_traits_ids) if $selection_traits_ids->[0];
     my @selected_model_traits = sort(@$selected_model_traits) if $selected_model_traits->[0];
+	my $page = $c->req->referer;
 
     if (@selected_model_traits ~~ @selection_traits_ids)
     {
-	foreach my $trait_id (@selection_traits_ids)
-	{
-	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-	    my $trait_abbr = $c->stash->{trait_abbr};
+		foreach my $trait_id (@selection_traits_ids)
+		{
+		    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+		    my $trait_abbr = $c->stash->{trait_abbr};
 
-	    my $page = $c->req->referer;
-	    if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
-	    {
-		$download_url .= " | " if $download_url;
-	    }
+		    if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
+		    {
+			$download_url .= " | " if $download_url;
+		    }
 
-	    if ($page =~ /combined/)
-	    {
-		$download_url .= qq | <a href="/solgs/combined/model/$training_pop_id/selection/|
-		    . qq|$selection_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
-	    }
-	    else
-	    {
-		$download_url .= qq |<a href="/solgs/selection/$selection_pop_id/model/|
-		    . qq|$training_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
-	    }
-	}
+		    if ($page =~ /combined/)
+		    {
+			$download_url .= qq | <a href="/solgs/combined/model/$training_pop_id/selection/|
+			    . qq|$selection_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
+		    }
+		    else
+		    {
+			$download_url .= qq |<a href="/solgs/selection/$selection_pop_id/model/|
+			    . qq|$training_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
+		    }
+		}
     }
 
     if (!$download_url)
     {
-	my $trait_id = $selected_model_traits->[0];
-	
-	$download_url = qq | <a href ="/solgs/selection/$selection_pop_id/model/$training_pop_id/|
-	    . qq|trait/$trait_id/gp/$protocol_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a>|;
-    }
+		my $trait_id = $selected_model_traits[0];
+
+		if ($page =~ /combined/)
+	    {
+	    	$download_url .= qq | <a href="/solgs/combined/model/$training_pop_id/selection/|
+	   	 	. qq|$selection_pop_id/trait/$trait_id/gp/$protocol_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a> |;
+	    }
+		else
+		{
+			$download_url = qq | <a href ="/solgs/selection/$selection_pop_id/model/$training_pop_id/|
+		    . qq|trait/$trait_id/gp/$protocol_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a>|;
+	    }
+}
 
     $c->stash->{selection_prediction_download} = $download_url;
 
