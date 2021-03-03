@@ -181,4 +181,18 @@ sub upload_catalog_items_POST : Args(0) {
 }
 
 
+sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema});
+    my $catalog_items = $catalog_obj->get_catalog_items();
+    print STDERR "ITEM RESULTS =".Dumper($catalog_items)."\n";
+
+    $c->stash->{rest} = {data => $catalog_items};
+
+}
+
+
 1;

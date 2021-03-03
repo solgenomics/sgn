@@ -2,6 +2,7 @@
 package CXGN::Stock::Catalog;
 
 use Moose;
+use Data::Dumper;
 
 extends 'CXGN::JSONProp';
 
@@ -42,11 +43,37 @@ sub BUILD {
     $self->prop_primary_key('stockprop_id');
     $self->prop_type('stock_catalog_json');
     $self->cv_name('stock_property');
-    $self->allowed_fields( [ qw | description images availability order_source material_source item_type breeding_program category comment | ] );
+    $self->allowed_fields( [ qw | item_type category description material_source breeding_program availability comment | ] );
     $self->parent_table('stock');
     $self->parent_primary_key('stock_id');
 
     $self->load();
+}
+
+sub get_catalog_items {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $type = $self->prop_type();
+    my $type_id = $self->_prop_type_id();
+    my $key_ref = $self->allowed_fields();
+    my @fields = @$key_ref;
+
+    my $catalog_rs = $schema->resultset("Stock::Stockprop")->search({type_id => $type_id }, { order_by => {-asc => 'stockprop_id'} });
+    my @catalog_list;
+    while (my $r = $catalog_rs->next()){
+        my @each_row = ();
+        my $catalog_stockprop_id = $r->stockprop_id();
+        push @each_row, $catalog_stockprop_id;
+        my $item_detail_json = $r->value();
+        my $detail_hash = JSON::Any->jsonToObj($item_detail_json);
+        foreach my $field (@fields){
+            push @each_row, $detail_hash->{$field};
+        }
+        push @catalog_list, [@each_row];
+    }
+#    print STDERR "CATALOG LIST =".Dumper(\@catalog_list)."\n";
+
+    return \@catalog_list;
 }
 
 1;

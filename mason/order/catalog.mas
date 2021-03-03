@@ -18,16 +18,17 @@
     </div>
 </&>
 
-<&| /page/info_section.mas, title => 'Category 1', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => 'Catalog Items', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <div style="overflow:scroll">
-                    <table id = "category_1_table" class="table table-hover table-striped">
+                    <table id = "catalog_items_table" class="table table-hover table-striped">
                         <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Type</th>
+                                <th>Category</th>
                                 <th>Description</th>
                                 <th>Material Source</th>
                                 <th>Breeding Program</th>
@@ -56,6 +57,12 @@ jQuery(document).ready( function() {
         });
 
         jQuery("#upload_catalog_items_dialog").modal("show");
+    });
+
+    jQuery('#catalog_items_table').DataTable( {
+        'autoWidth': false,
+        'ajax': '/ajax/catalog/items',
+        'order': false,
     });
 
 
