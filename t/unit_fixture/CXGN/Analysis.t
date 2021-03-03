@@ -178,7 +178,7 @@ is_deeply($saved_model_object->{model_properties}, {
                                   'arbitrary_property' => '0.001'
                                 });
 
-sleep(5);
+sleep(15);
 my $a = CXGN::Analysis->new({
     bcs_schema => $schema,
     people_schema => $people_schema,
@@ -232,7 +232,7 @@ my $message_hash_uploaded_analysis = decode_json $message_uploaded_analysis;
 print STDERR Dumper $message_hash_uploaded_analysis;
 ok($message_hash_uploaded_analysis->{analysis_id});
 
-sleep(10);
+sleep(15);
 my $a = CXGN::Analysis->new({
     bcs_schema => $schema,
     people_schema => $people_schema,
