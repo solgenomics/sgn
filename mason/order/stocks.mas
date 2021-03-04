@@ -21,6 +21,17 @@ $role => "stock_orderer"
             <div class = "panel-body">
                 <div style="overflow:scroll">
                     <table id = "current_clones" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Order Number</th>
+                                <th>Ordered By</th>
+                                <th>Items</th>
+                                <th>Priority</th>
+                                <th>Send Order To</th>
+                                <th>Comment</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
                     </table>
                 </div>
             </div>
@@ -34,6 +45,17 @@ $role => "stock_orderer"
             <div class = "panel-body">
                 <div style="overflow:scroll">
                     <table id = "completed_clone_orders" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Order Number</th>
+                            <th>Ordered By</th>
+                            <th>Items</th>
+                            <th>Send Order To</th>
+                            <th>Completed Date</th>
+                            <th>Processed By</th>
+                        </tr>
+                    </thead>
+
                     </table>
                 </div>
             </div>
@@ -50,10 +72,9 @@ $role => "stock_orderer"
             </div>
             <div class="modal-body" style="width:400">
                 <div class="container-fluid">
-
                     <label for="accession_list_input">Please choose a list of accessions to order: </label>
                     <div id="accession_list_input"></div>
-                    <br>
+                    <br/>
                         <table cellspacing="20">
                             <tr>
                                 <td>
