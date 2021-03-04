@@ -58,12 +58,12 @@ sub get_catalog_items {
     my $key_ref = $self->allowed_fields();
     my @fields = @$key_ref;
 
-    my $catalog_rs = $schema->resultset("Stock::Stockprop")->search({type_id => $type_id }, { order_by => {-asc => 'stockprop_id'} });
+    my $catalog_rs = $schema->resultset("Stock::Stockprop")->search({type_id => $type_id }, { order_by => {-asc => 'stock_id'} });
     my @catalog_list;
     while (my $r = $catalog_rs->next()){
         my @each_row = ();
-        my $catalog_stockprop_id = $r->stockprop_id();
-        push @each_row, $catalog_stockprop_id;
+        my $catalog_stock_id = $r->stock_id();
+        push @each_row, $catalog_stock_id;
         my $item_detail_json = $r->value();
         my $detail_hash = JSON::Any->jsonToObj($item_detail_json);
         foreach my $field (@fields){

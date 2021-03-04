@@ -187,10 +187,22 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema});
-    my $catalog_items = $catalog_obj->get_catalog_items();
-    print STDERR "ITEM RESULTS =".Dumper($catalog_items)."\n";
+    my $catalog_ref = $catalog_obj->get_catalog_items();
+#    print STDERR "ITEM RESULTS =".Dumper($catalog_ref)."\n";
+    my @catalog_items;
+    my @catalog_list = @$catalog_ref;
+    foreach my $catalog_item (@catalog_list) {
+        my @item_detail = ();
+        my @item_detail = @$catalog_item;
+        my $item_id = shift @item_detail;
+        my $stock_rs = $schema->resultset("Stock::Stock")->find({stock_id => $item_id });
+        my $item_name = $stock_rs->uniquename();
+        unshift @item_detail, qq{<a href="/stock/$item_id/view">$item_name</a>};
 
-    $c->stash->{rest} = {data => $catalog_items};
+        push @catalog_items, [@item_detail];
+    }
+
+    $c->stash->{rest} = {data => \@catalog_items};
 
 }
 
