@@ -157,34 +157,38 @@
                         </center>
                     </&>
                     <&| /util/workflow.mas:step, title=> "Image Info" &>
-                        <& /page/page_title.mas, title=>"Stitched vs Unstitched and Number of Bands (Image Sets) To Upload" &>
+                        <& /page/page_title.mas, title=>"Type of Image to Upload" &>
 
                         <div class="well">
+                            <center><h4>Uploading already stitched orthophotomosaics or complete images of experimental field</h4></center>
                             <ul>
-                                <li>You can choose to upload orthomosaic images (PNG).</li>
-                                <li>Or you can upload any image, for example, the single image can be for interpolated soil data, such as altitude or electrical conductance EC measurements (CH1m, IH1m) from an EM38. </li>
-                                <li>Or raw images (unstitched) coming from your drone can be uploaded in a zip file. Maximum zipfile size is 2GB, but you can upload many zipfiles in the process. To have OpenDroneMap stitch the images into orthophotmosaics, please name the zip file images.zip (e.g. images.zip/IMG001_1.tiff). OpenDroneMap can stitch MicaSense 5-spectra images.</li>
+                                <li>You can choose to upload orthophotomosaic images (PNG, TIFF) created using external software (Pix4d, Agisoft, etc).</li>
+                                <li>You can upload any image (PNG, TIFF, JPEG) which covers the entire experimental field, for example, interpolated soil data for altitude or electrical conductance EC measurements. Another example is for images from a phenotyping facility, greenhouse, or growth chamber.</li>
+                                <li>Up to seven distinct spectral band images can be uploaded.</li>
                             </ul>
                         </div>
                         <div class="well">
+                            <center><h4>Uploading raw images to stitch using OpenDroneMap</h4></center>
                             <ul>
-                                <li>It is possible to upload regular RGB or Black and White photos.</li>
-                                <li>For multi-spectral cameras, it is possible to upload individual spectra orthomosaicphotos.</li>
-                                <li>It is possible to upload raster digital surface model (DSM) images to estimate plant heights/volumes.</li>
-                                <li>When uploading many separate bands of unstitched images, you will upload a single zipfile (.zip) which contains all images. In the zipfile each image is named following the template IMG_0001_1.tif, IMG_0001_2.tif, ..., IMG_0001_5.tif, ..., IMG_9999_5.tif. The final number represents the 5 bands coming from the camera, while the middle number is an index for the image capture. The middle number can be as many digits long as needed. The images should be in order in the zipfile. You will also need to upload a zipfile (.zip) containing the Micasense radiometric calibration panel images, so that ImageBreed can produce the best result possible.</li>
+                                <li>You can upload raw images (PNG, TIFF, JPEG) from a MicaSense 5-channel camera or a color image camera, for instance collected from an aerial drone, and then orthophotomosaics will be created using OpenDroneMap and saved in ImageBreed.</li>
+                                <li>Raw images are uploaded using a zipfile with maximum size of 2GB; however, many zipfiles can be uploaded in case all your images do not fit in one.</li>
+                                <li>Make sure there is >65% overlap in the images, so that the images can be properly assembled.</li>
+                                <li>A digital surface map (DSM) will also be generated and saved as a black and white image. The DSM is a representation of height of objects.</li>
                             </ul>
                         </div>
 
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Are you not uploading an orthophotomosaic?:</label>
+                            <label class="col-sm-3 control-label">Are you not uploading orthophotomosaic(s) or complete image(s) of the experimental field?:</label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="drone_image_upload_drone_run_band_stitching" name="drone_image_upload_drone_run_band_stitching">
                                     <option value="">Select One</option>
                                     <!-- option value="yes">Yes, I am uploading a zipfile of raw images to stitch</option -->
                                     <!-- option value="yes_automated">Yes, I am uploading a zipfile of raw images to automatically get plot images from</option -->
-                                    <option value="no">No, I am uploading a stitched orthomosaic</option>
+                                    <option value="no">No, I am uploading stitched orthomosaic(s) or complete image(s)</option>
 %  if ($c->config->{enable_opendronemap}) {
                                     <option value="yes_open_data_map_stitch">Yes, I am uploading a zipfile of raw images to stitch using OpenDroneMap</option>
+%  } else {
+                                    <option value="yes_open_data_map_stitch" disabled>Yes, I am uploading a zipfile of raw images to stitch using OpenDroneMap (Not configured on your system. Check Docker deployment README)</option>
 %  }
                                     <!--option value="yes_raw">Yes, I am uploading a zipfile of raw images</option -->
                                 </select>
@@ -792,14 +796,14 @@ jQuery(document).ready(function() {
         }
         else if (drone_run_band_unstitched == 'yes_open_data_map_stitch') {
             html = html + '<div class="well well-sm">';
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Drone Images ZipFile (.zip) (2GB Maximum, but can can upload multiple zip files.): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
+            html = html + '<div class="form-group"><label class="col-sm-6 control-label">Drone Images ZipFile (.zip) (2GB Maximum, but can upload multiple zip files.): </label><div class="col-sm-6" ><input type="file" id="upload_drone_images_zipfile" name="upload_drone_images_zipfile" encoding="multipart/form-data" /></div></div>';
 
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label">Upload another zipfile after submit this one?: </label><div class="col-sm-9" ><select class="form-control" id="drone_image_upload_drone_run_band_stitching_odm_more_images" name="drone_image_upload_drone_run_band_stitching_odm_more_images"><option value="Yes">Yes</option><option value="No">No</option></select></div></div>';
+            html = html + '<div class="form-group"><label class="col-sm-6 control-label">Upload another zipfile after submit this one? Select Yes if all the images did not fit within the 2GB of the first zip file.: </label><div class="col-sm-6" ><select class="form-control" id="drone_image_upload_drone_run_band_stitching_odm_more_images" name="drone_image_upload_drone_run_band_stitching_odm_more_images"><option value="No">No</option><option value="Yes">Yes</option></select></div></div>';
 
             if (drone_run_camera_info == 'micasense_5') {
-                html = html + '<div class="form-group"><label class="col-sm-3 control-label">Micasense Radiometric Calibration Images ZipFile (.zip): </label><div class="col-sm-9" ><input type="file" id="upload_drone_images_panel_zipfile" name="upload_drone_images_panel_zipfile" encoding="multipart/form-data" /></div></div>';
+                html = html + '<div class="form-group"><label class="col-sm-6 control-label">MicaSense Radiometric Calibration Images ZipFile (.zip): </label><div class="col-sm-6" ><input type="file" id="upload_drone_images_panel_zipfile" name="upload_drone_images_panel_zipfile" encoding="multipart/form-data" /></div></div>';
 
-                html = html + '<div class="form-group"><label class="col-sm-3 control-label">Perform radiometric calibration: </label><div class="col-sm-9" ><select class="form-control" id="drone_image_upload_drone_run_band_stitching_odm_radiocalibration" name="drone_image_upload_drone_run_band_stitching_odm_radiocalibration"><option value="Yes">Yes</option></select></div></div>';
+                html = html + '<div class="form-group"><label class="col-sm-6 control-label">Perform radiometric calibration: </label><div class="col-sm-6" ><select class="form-control" id="drone_image_upload_drone_run_band_stitching_odm_radiocalibration" name="drone_image_upload_drone_run_band_stitching_odm_radiocalibration"><option value="Yes">Yes</option></select></div></div>';
             }
 
             html = html + '</div>';
@@ -942,10 +946,21 @@ jQuery(document).ready(function() {
                 alert('Please select a zipfile of images');
                 return;
             }
-            // if (jQuery('#upload_drone_images_panel_zipfile').val() == ''){
-            //    alert('Please select a zipfile of Micasense radiocalibration panel images');
-            //    return;
-            // }
+
+            var file_input = document.getElementById('upload_drone_images_zipfile');
+            if (!file_input.files[0] || file_input.files.length > 1) {
+                alert('Please select only a single zipfile that is less than 2GB in size. You can upload another zipfile afterwards if all the images did not fit in a single zipfile.');
+                return;
+            }
+            if (file_input.files[0].size > 2000000000) {
+                alert('Please select only a single zipfile that is less than 2GB in size. You can upload another zipfile afterwards if all the images did not fit in a single zipfile.');
+                return;
+            }
+
+            if (jQuery('#upload_drone_images_panel_zipfile').val() == ''){
+                alert('Please select a zipfile of Micasense radiocalibration panel images');
+                return;
+            }
         }
 
         if (drone_run_band_unstitched == 'yes_automated' && drone_run_band_unstitched_raw_image_boundaries == 1) {

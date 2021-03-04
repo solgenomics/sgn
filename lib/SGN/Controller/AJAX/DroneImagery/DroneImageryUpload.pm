@@ -1156,7 +1156,7 @@ sub upload_drone_imagery_POST : Args(0) {
         }
 
         if ($current_odm_image_count < 50) {
-            $c->stash->{rest} = { error => "Upload more than $current_odm_image_count images! Atleast 50 are required for OpenDroneMap to stitch." };
+            $c->stash->{rest} = { error => "Upload more than $current_odm_image_count images! Atleast 50 are required for OpenDroneMap to stitch. Upload now and try again!", drone_run_project_id => $selected_drone_run_id, current_image_count => $current_odm_image_count };
             $c->detach();
         }
 
@@ -1176,6 +1176,28 @@ sub upload_drone_imagery_POST : Args(0) {
         my @stitched_bands;
         my %raw_image_bands;
         if ($new_drone_run_camera_info eq 'micasense_5') {
+            my $upload_panel_original_name = $upload_panel_file->filename();
+            my $upload_panel_tempfile = $upload_panel_file->tempname;
+
+            my $uploader_panel = CXGN::UploadFile->new({
+                tempfile => $upload_panel_tempfile,
+                subdirectory => "drone_imagery_upload_odm_panel_zips",
+                second_subdirectory => "$selected_drone_run_id",
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_panel_original_name,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role
+            });
+            my $archived_filename_panel_with_path = $uploader_panel->archive();
+            my $md5_panel = $uploader_panel->get_md5($archived_filename_panel_with_path);
+            if (!$archived_filename_panel_with_path) {
+                $c->stash->{rest} = { error => "Could not save file $archived_filename_panel_with_path in archive." };
+                $c->detach();
+            }
+            unlink $upload_panel_tempfile;
+            print STDERR "Archived Drone Image ODM Zip File: $archived_filename_panel_with_path\n";
+
             # my $dtm_string = '';
             # my $ua       = LWP::UserAgent->new();
             # my $response = $ua->post( $c->config->{main_production_site_url}."/RunODMDocker.php", { 'file_path' => $image_path_remaining_host, 'dtm_string' => $dtm_string } );
