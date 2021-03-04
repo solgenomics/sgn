@@ -9049,7 +9049,7 @@ sub _perform_image_cropping {
         foreach my $point (@$p) {
             my $x = $point->{x};
             my $y = $point->{y};
-            push @p_rescaled, {x=>$x/$apply_image_width_ratio, y=>$y/$apply_image_height_ratio};
+            push @p_rescaled, {x=>round($x/$apply_image_width_ratio), y=>round($y/$apply_image_height_ratio)};
         }
         push @polygons_rescaled, \@p_rescaled;
     }
