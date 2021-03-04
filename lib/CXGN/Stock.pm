@@ -1534,6 +1534,7 @@ sub merge {
     my $stock_owner_count=0;
     my $parent_1_count=0;
     my $parent_2_count=0;
+    my $nd_experiment_stock_count=0;
     my $other_stock_deleted = 'NO';
     my $pui_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'PUI', 'stock_property')->cvterm_id();
 
@@ -1584,6 +1585,10 @@ sub merge {
 
     while (my $row = $ssrs->next()) {
 
+	# the next query is done to make sure that we don't add the same information again.
+	# Only if the info is not already there can we safely add it. This will for example
+	# prevent us from ending up with 4 parents etc.
+	# 
 	my $this_subject_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), object_id => $row->object_id, type_id => $row->type_id() });
 
 	if ($this_subject_rel_rs->count() == 0) { # this stock does not have the relationship
@@ -1606,6 +1611,7 @@ sub merge {
     #
 
     # TO DO: do not move parents if target already has parents.
+    # SEE NOTE ABOVE (previous block) HOW THIS IS ACTUALLY AVOIDED. SO THIS CODE IS NOT NEEDED.
     #
     # my $female_parent_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'female_parent')->cvterm_id();
     # my $male_parent_id   = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'stock_type', 'male_parent')->cvterm_id();
@@ -1654,7 +1660,12 @@ sub merge {
 
     # move stock_cvterm relationships
     #
-
+    my $scvr = $schema->resultset("NaturalDiversity::NdStockCvterm")->search( { stock_id => $other_stock_id } );
+    while (my $row = $scvr->next()) {
+	$row->stock_id($self->stock_id);
+	$row->update();
+	print STDERR "Moving stock_cvterm relationships for $other_stock_id to stock ".$self->stock_id()."\n";
+    }
 
     # move stock_dbxref
     #
@@ -1663,6 +1674,7 @@ sub merge {
 	$row->stock_id($self->stock_id());
 	$row->update();
 	$stock_dbxref_count++;
+	print STDERR "Moving stock_dbxref relationships from $other_stock_id to stock ".$self->stock_id()."\n";
     }
 
     # move sgn.pcr_exp_accession relationships
@@ -1674,10 +1686,16 @@ sub merge {
 
 
 
-    # move stock_genotype relationships
+    # move stock_genotype relationships and other nd_experiment entries
     #
-
-
+    my $ndes = $schema->resultset("NaturalDiversity::NdExperimentStock")->search( { stock_id => $other_stock_id } );
+    while (my $row = $ndes->next()) {
+	$row->stock_id($self->stock());
+	$row->update();
+	$nd_experiment_stock_count++;
+	print STDERR "Moving nd_experiment_stock relationships from $other_stock_id to stock ".$self->stock_id()."\n";
+    }
+    
     my $phenome_schema = CXGN::Phenome::Schema->connect(
 	sub { $self->schema()->storage()->dbh() }, { on_connect_do => [ 'SET search_path TO phenome, public, sgn'], limit_dialect => 'LimitOffset' }
 	);
