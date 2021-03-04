@@ -12415,7 +12415,7 @@ sub drone_imagery_delete_drone_run_GET : Args(0) {
     my $q5 = "
         DROP TABLE IF EXISTS temp_drone_image_pheno_deletion;
         CREATE TEMP TABLE temp_drone_image_pheno_deletion AS
-        (SELECT phenotype_id, nd_experiment_id, image_id
+        (SELECT nd_experiment_phenotype_bridge.phenotype_id, nd_experiment_phenotype_bridge.image_id
         FROM phenotype
         JOIN nd_experiment_phenotype_bridge using(phenotype_id)
         WHERE nd_experiment_phenotype_bridge.image_id IN ($drone_run_band_image_ids_sql) );
