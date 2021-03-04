@@ -197,9 +197,17 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
         my $item_id = shift @item_detail;
         my $stock_rs = $schema->resultset("Stock::Stock")->find({stock_id => $item_id });
         my $item_name = $stock_rs->uniquename();
-        unshift @item_detail, qq{<a href="/stock/$item_id/view">$item_name</a>};
-
-        push @catalog_items, [@item_detail];
+        push @catalog_items, {
+            item_id => $item_id,
+            item_name => $item_name,
+            item_type => $item_detail[0],
+            category => $item_detail[1],
+            description => $item_detail[2],
+            material_source => $item_detail[3],
+            breeding_program => $item_detail[4],
+            availability => $item_detail[5],
+            comment => $item_detail[6]
+        };
     }
 
     $c->stash->{rest} = {data => \@catalog_items};
