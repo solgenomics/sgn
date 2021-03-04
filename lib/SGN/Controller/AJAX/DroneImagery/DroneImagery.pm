@@ -6822,6 +6822,10 @@ sub standard_process_apply_POST : Args(0) {
     my ($image_id, $drone_run_band_type, $drone_run_band_project_id_q) = $h2->fetchrow_array();
     $selected_drone_run_band_types{$drone_run_band_type} = $drone_run_band_project_id_q;
 
+    my $check_image = SGN::Image->new( $bcs_schema->storage->dbh, $image_id, $c );
+    my $check_image_fullpath = $check_image->get_filename('original_converted', 'full');
+    my ($check_image_width, $check_image_height) = imgsize($check_image_fullpath);
+
     my $term_map = CXGN::DroneImagery::ImageTypes::get_base_imagery_observation_unit_plot_polygon_term_map();
 
     my %drone_run_band_info;
@@ -6830,6 +6834,13 @@ sub standard_process_apply_POST : Args(0) {
         $h2->execute($apply_drone_run_band_project_id);
         my ($image_id, $drone_run_band_type, $drone_run_band_project_id) = $h2->fetchrow_array();
         $selected_drone_run_band_types{$drone_run_band_type} = $drone_run_band_project_id;
+
+        my $check_image_apply = SGN::Image->new( $bcs_schema->storage->dbh, $image_id, $c );
+        my $check_image_apply_fullpath = $check_image_apply->get_filename('original_converted', 'full');
+        my ($check_image_apply_width, $check_image_apply_height) = imgsize($check_image_apply_fullpath);
+
+        my $apply_image_width_ratio = $check_image_width/$check_image_apply_width;
+        my $apply_image_height_ratio = $check_image_height/$check_image_apply_height;
 
         my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
         my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
@@ -6842,7 +6853,7 @@ sub standard_process_apply_POST : Args(0) {
         my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
         $archive_temp_image .= '.png';
 
-        my $cropping_return = _perform_image_cropping($c, $bcs_schema, $drone_run_band_project_id, $rotated_image_id, $cropping_value, $user_id, $user_name, $user_role, $archive_temp_image);
+        my $cropping_return = _perform_image_cropping($c, $bcs_schema, $drone_run_band_project_id, $rotated_image_id, $cropping_value, $user_id, $user_name, $user_role, $archive_temp_image, $apply_image_width_ratio, $apply_image_height_ratio);
         my $cropped_image_id = $cropping_return->{cropped_image_id};
 
         $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
@@ -7371,7 +7382,11 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
     $archive_temp_image .= '.png';
 
-    my $check_cropping_return = _perform_image_cropping($c, $bcs_schema, $drone_run_band_project_id_input, $rotated_image_id, encode_json $image_crop, $user_id, $user_name, $user_role, $archive_temp_image);
+    my $check_image_crop = SGN::Image->new( $bcs_schema->storage->dbh, $rotated_image_id, $c );
+    my $check_image_crop_fullpath = $check_image_crop->get_filename('original_converted', 'full');
+    my ($check_image_crop_width, $check_image_crop_height) = imgsize($check_image_crop_fullpath);
+
+    my $check_cropping_return = _perform_image_cropping($c, $bcs_schema, $drone_run_band_project_id_input, $rotated_image_id, encode_json $image_crop, $user_id, $user_name, $user_role, $archive_temp_image, 1, 1);
     my $check_cropped_image_id = $check_cropping_return->{cropped_image_id};
 
     my $crop_check_target_image = SGN::Image->new( $bcs_schema->storage->dbh, $check_cropped_image_id, $c );
@@ -7498,6 +7513,13 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         my ($image_id, $drone_run_band_type, $drone_run_band_project_id) = $h4->fetchrow_array();
         $selected_drone_run_band_types{$drone_run_band_type} = $drone_run_band_project_id;
 
+        my $check_image_apply_crop = SGN::Image->new( $bcs_schema->storage->dbh, $image_id, $c );
+        my $check_image_apply_crop_fullpath = $check_image_apply_crop->get_filename('original_converted', 'full');
+        my ($check_image_apply_crop_width, $check_image_apply_crop_height) = imgsize($check_image_apply_crop_fullpath);
+
+        my $apply_image_width_ratio = $check_image_crop_width/$check_image_apply_crop_width;
+        my $apply_image_height_ratio = $check_image_crop_height/$check_image_apply_crop_height;
+
         my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
         my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
         $archive_rotate_temp_image .= '.png';
@@ -7509,7 +7531,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
         $archive_temp_image .= '.png';
 
-        my $cropping_return = _perform_image_cropping($c, $bcs_schema, $drone_run_band_project_id, $rotated_image_id, $cropping_value, $user_id, $user_name, $user_role, $archive_temp_image);
+        my $cropping_return = _perform_image_cropping($c, $bcs_schema, $drone_run_band_project_id, $rotated_image_id, $cropping_value, $user_id, $user_name, $user_role, $archive_temp_image, $apply_image_width_ratio, $apply_image_height_ratio);
         my $cropped_image_id = $cropping_return->{cropped_image_id};
 
         $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
@@ -8770,7 +8792,7 @@ sub _perform_minimal_vi_standard_process {
             my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
             $archive_temp_image .= '.png';
 
-            my $cropping_return = _perform_image_cropping($c, $bcs_schema, $merged_drone_run_band_project_id, $rotated_image_id, $drone_run_band_info->{$selected_drone_run_band_types->{'Blue (450-520nm)'}}->{cropping_value}, $user_id, $user_name, $user_role, $archive_temp_image);
+            my $cropping_return = _perform_image_cropping($c, $bcs_schema, $merged_drone_run_band_project_id, $rotated_image_id, $drone_run_band_info->{$selected_drone_run_band_types->{'Blue (450-520nm)'}}->{cropping_value}, $user_id, $user_name, $user_role, $archive_temp_image, 1, 1);
             my $cropped_image_id = $cropping_return->{cropped_image_id};
 
             $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
@@ -8815,7 +8837,7 @@ sub _perform_minimal_vi_standard_process {
             my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
             $archive_temp_image .= '.png';
 
-            my $cropping_return = _perform_image_cropping($c, $bcs_schema, $merged_drone_run_band_project_id, $rotated_image_id, $drone_run_band_info->{$selected_drone_run_band_types->{'NIR (780-3000nm)'}}->{cropping_value}, $user_id, $user_name, $user_role, $archive_temp_image);
+            my $cropping_return = _perform_image_cropping($c, $bcs_schema, $merged_drone_run_band_project_id, $rotated_image_id, $drone_run_band_info->{$selected_drone_run_band_types->{'NIR (780-3000nm)'}}->{cropping_value}, $user_id, $user_name, $user_role, $archive_temp_image, 1, 1);
             my $cropped_image_id = $cropping_return->{cropped_image_id};
 
             $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
@@ -8847,7 +8869,7 @@ sub _perform_minimal_vi_standard_process {
             my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
             $archive_temp_image .= '.png';
 
-            my $cropping_return = _perform_image_cropping($c, $bcs_schema, $merged_drone_run_band_project_id, $rotated_image_id, $drone_run_band_info->{$selected_drone_run_band_types->{'NIR (780-3000nm)'}}->{cropping_value}, $user_id, $user_name, $user_role, $archive_temp_image);
+            my $cropping_return = _perform_image_cropping($c, $bcs_schema, $merged_drone_run_band_project_id, $rotated_image_id, $drone_run_band_info->{$selected_drone_run_band_types->{'NIR (780-3000nm)'}}->{cropping_value}, $user_id, $user_name, $user_role, $archive_temp_image, 1, 1);
             my $cropped_image_id = $cropping_return->{cropped_image_id};
 
             $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
@@ -9002,7 +9024,7 @@ sub drone_imagery_crop_image_GET : Args(0) {
     my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
     $archive_temp_image .= '.png';
 
-    my $return = _perform_image_cropping($c, $schema, $drone_run_band_project_id, $image_id, $polygons, $user_id, $user_name, $user_role, $archive_temp_image);
+    my $return = _perform_image_cropping($c, $schema, $drone_run_band_project_id, $image_id, $polygons, $user_id, $user_name, $user_role, $archive_temp_image, 1, 1);
 
     $c->stash->{rest} = $return;
 }
@@ -9017,6 +9039,21 @@ sub _perform_image_cropping {
     my $user_name = shift;
     my $user_role = shift;
     my $archive_temp_image = shift;
+    my $apply_image_width_ratio = shift;
+    my $apply_image_height_ratio = shift;
+
+    my $polygons_array = decode_json $polygons;
+    my @polygons_rescaled = ();
+    foreach my $p (@$polygons_array) {
+        my @p_rescaled;
+        foreach my $point (@$p) {
+            my $x = $point->{x};
+            my $y = $point->{y};
+            push @p_rescaled, {x=>$x/$apply_image_width_ratio, y=>$y/$apply_image_height_ratio};
+        }
+        push @polygons_rescaled, \@p_rescaled;
+    }
+    $polygons = encode_json \@polygons_rescaled;
 
     my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
     my $image_url = $image->get_image_url("original");
@@ -9036,7 +9073,7 @@ sub _perform_image_cropping {
         drone_run_band_project_id_list=>[$drone_run_band_project_id]
     });
     my ($previous_result, $previous_total_count) = $previous_cropped_images_search->search();
-    foreach (@$previous_result){
+    foreach (@$previous_result) {
         my $previous_image = SGN::Image->new( $schema->storage->dbh, $_->{image_id}, $c );
         $previous_image->delete(); #Sets to obsolete
     }
