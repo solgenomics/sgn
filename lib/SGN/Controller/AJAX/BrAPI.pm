@@ -97,7 +97,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 		}
 	}
 
-	my $session_token = $c->req->headers->header("access_token") || $bearer_token;
+	my $session_token = $c->req->headers->header("access_token") || $bearer_token || $c->req->param("access_token");
 
 	if (defined $c->request->data){
 		my $data_type = ref $c->request->data;
@@ -106,7 +106,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 		my $current_sesion_token = $c->request->data->{"access_token"} if ($data_type ne 'ARRAY');
 		$page = $current_page || $page || 0;
 		$page_size = $current_page_size || $page_size || $DEFAULT_PAGE_SIZE;
-        $session_token = $current_sesion_token|| $session_token;
+        $session_token = $current_sesion_token || $session_token;
 	}
 	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
