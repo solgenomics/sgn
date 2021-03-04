@@ -3670,7 +3670,7 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
     my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'nonconcurrent', $c->config->{basepath});
 
     $c->stash->{rest} = {success => 1};
 }
