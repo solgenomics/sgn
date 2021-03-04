@@ -190,9 +190,9 @@ sub search {
         my %observationUnitPosition = (
             entryType => $entry_type,
             geoCoordinates => $geo_coordinates,
-            positionCoordinateX => $obs_unit->{obsunit_col_number} + 0,
+            positionCoordinateX => $obs_unit->{obsunit_col_number} ? $obs_unit->{obsunit_col_number} + 0 : undef,
             positionCoordinateXType => 'GRID_COL',
-            positionCoordinateY => $obs_unit->{obsunit_row_number} + 0,
+            positionCoordinateY => $obs_unit->{obsunit_row_number} ? $obs_unit->{obsunit_row_number} + 0 : undef,
             positionCoordinateYType => 'GRID_ROW',
             # replicate => $obs_unit->{obsunit_rep}, #obsolete v2?
             observationLevel =>  { 
@@ -351,10 +351,10 @@ sub detail {
         my %observationUnitPosition = (
             entryType => $entry_type,
             geoCoordinates => $geo_coordinates,
-            positionCoordinateX => $obs_unit->{obsunit_col_number} + 0,
-            positionCoordinateXType => '',
-            positionCoordinateY => $obs_unit->{obsunit_row_number} + 0,
-            positionCoordinateYType => '',
+            positionCoordinateX => $obs_unit->{obsunit_col_number} ? $obs_unit->{obsunit_col_number} + 0 : undef,
+            positionCoordinateXType => 'GRID_COL',
+            positionCoordinateY => $obs_unit->{obsunit_row_number} ? $obs_unit->{obsunit_row_number} + 0 : undef,
+            positionCoordinateYType => 'GRID_ROW',
             observationLevel =>  { 
                 levelName => $obs_unit->{observationunit_type_name},       
                 levelOrder => $level_order,
