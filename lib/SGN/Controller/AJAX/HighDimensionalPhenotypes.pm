@@ -21,6 +21,7 @@ use CXGN::UploadFile;
 use DateTime;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
+use CXGN::Phenotypes::HighDimensionalPhenotypesRelationshipMatrix;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1499,6 +1500,57 @@ sub high_dimensional_phenotypes_download_file_POST : Args(0) {
         }
 
     close($F);
+
+    $c->stash->{rest} = {download_file_link => $download_file_link, error => $error};
+}
+
+sub high_dimensional_phenotypes_download_relationship_matrix_file : Path('/ajax/highdimensionalphenotypes/download_relationship_matrix_file') : ActionClass('REST') { }
+sub high_dimensional_phenotypes_download_relationship_matrix_file_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my ($user_id, $user_name, $user_type) = _check_user_login($c);
+    my $error;
+
+    my $dataset_id = $c->req->param('dataset_id');
+    my $nd_protocol_id = $c->req->param('nd_protocol_id');
+    my $high_dimensional_phenotype_type = $c->req->param('high_dimensional_phenotype_type');
+    my $query_associated_stocks = $c->req->param('query_associated_stocks') eq 'yes' ? 1 : 0;
+
+    my $ds = CXGN::Dataset->new({
+        people_schema => $people_schema,
+        schema => $schema,
+        sp_dataset_id => $dataset_id
+    });
+    my $accession_ids = $ds->accessions();
+    my $plot_ids = $ds->plots();
+    my $plant_ids = $ds->plants();
+
+    my $dir = $c->tempfiles_subdir('/high_dimensional_phenotypes_relationship_matrix_download');
+    my $temp_data_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'high_dimensional_phenotypes_relationship_matrix_download/downloadXXXX');
+    my $download_file_link = $c->tempfile( TEMPLATE => 'high_dimensional_phenotypes_relationship_matrix_download/downloadXXXX');
+    $download_file_link .= '.csv';
+    my $download_file_tempfile = $c->config->{basepath}."/".$download_file_link;
+
+    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesRelationshipMatrix->new({
+        bcs_schema=>$schema,
+        nd_protocol_id=>$nd_protocol_id,
+        temporary_data_file=>$temp_data_file,
+        relationship_matrix_file=>$download_file_tempfile,
+        high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
+        query_associated_stocks=>$query_associated_stocks,
+        accession_list=>$accession_ids,
+        plot_list=>$plot_ids,
+        plant_list=>$plant_ids
+    });
+    my ($relationship_matrix_data, $data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+    # print STDERR Dumper $relationship_matrix_data;
+    # print STDERR Dumper $data_matrix;
+    # print STDERR Dumper $identifier_metadata;
+    # print STDERR Dumper $identifier_names;
 
     $c->stash->{rest} = {download_file_link => $download_file_link, error => $error};
 }
