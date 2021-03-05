@@ -4,11 +4,12 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
 
-<&| /page/info_section.mas, title=>'Query Sequence Metadata', is_subsection=>1, collapsible=>1, collapsed=>0, subtitle=>'View and download sequence metadata' &>
+<p>Filter the sequence metadata by feature, start, and end position and optionally by the sequence metadata type and/or protocol.</p>
 
-    <p>Filter the sequence metadata by feature, start, and end position and optionally by the sequence metadata type and/or protocol.</p>
+<br />
 
-    <br />
+<!-- START QUERY SECTION -->
+<div id="sequence_metadata_section_query">
 
     <form class="form-horizontal" id="sequence_metadata_filter_form" name="sequence_metadata_filter_form">
 
@@ -176,10 +177,18 @@
 
     <br />
 
+</div>
+<!-- END QUERY SECTION -->
+
+
+<!-- START RESULTS SECTION -->
+<div id="sequence_metadata_section_results" style="display: none">
+
     <!-- Query Results -->
     <table id="sequence_metadata_filter_results" class="display"></table>
 
-</&>
+</div>
+
 
 
 <script type="text/javascript">
@@ -466,7 +475,6 @@ function get_protocols() {
     });
 }
 
-
 /**
  * Set the options for the Protocol select box
  */
@@ -691,26 +699,30 @@ function query() {
 /**
  * Parse the query results
  * - Update the rows in the DataTable
- * @param {Object} response         JSON response from the query endpoint
- *                 response.error   message of error encountered by server
- *                 response.results array of sequence metadata objects
+ * @param {Object} response          JSON response from the query endpoint
+ *                 response.error    message of error encountered by server
+ *                 response.features array of sequence metadata objects
  */
 function handle_query_results(response) {
-    jQuery('#sequence_metadata_filter_query').html('Query');
-    jQuery('#sequence_metadata_filter_query').attr('disabled', false);
+    console.log("HANDLE QUERY RESULTS:");
+    console.log(response);
 
     let dt = jQuery('#sequence_metadata_filter_results').DataTable();
     dt.clear();
     if ( response && response.error ) {
         display_error(response.error);
     }
-    else if ( response && response.results && response.results.length > 0) {
-        dt.rows.add(response.results);
+    else if ( response && response.features && response.features.length > 0) {
+        dt.rows.add(response.features);
+        toggle_sections();
     }
     else {
         display_error("No results found - try modifying your filter criteria");
     }
     dt.draw();
+
+    jQuery('#sequence_metadata_filter_query').html('Query');
+    jQuery('#sequence_metadata_filter_query').attr('disabled', false);
 }
 
 
@@ -798,6 +810,14 @@ function getJBrowseURL() {
     return url;
 }
 
+
+/**
+ * Toggle the display of the query and results sections
+ */
+function toggle_sections() {
+    jQuery("#sequence_metadata_section_query").toggle();
+    jQuery("#sequence_metadata_section_results").toggle();
+}
 
 /**
  * Display an error message
