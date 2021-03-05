@@ -362,6 +362,7 @@ sub _write_chunk() {
 # Returns a hash with the following keys:
 #   - error: an error message, if an error was encountered
 #   - results: an array of sequence metadata objects with the following keys:
+#       - featureprop_json_id = id of associated featureprop_json chunk
 #       - feature_id = id of associated feature
 #       - feature_name = name of associated feature
 #       - type_id = cvterm_id of sequence metadata type
@@ -459,7 +460,7 @@ sub query {
     }
 
     # Estimate result size by getting number of matching chunks
-    my $size_query = "SELECT COUNT(feature_json_id) ";
+    my $size_query = "SELECT COUNT(featureprop_json_id) ";
     $size_query .= "FROM public.featureprop_json";
     $size_query .= $query_where;
     my $sh = $dbh->prepare($size_query);
@@ -474,7 +475,7 @@ sub query {
 
 
     # Build query
-    my $query = "SELECT featureprop_json.feature_id, feature.name AS feature_name, featureprop_json.type_id, cvterm.name AS type_name, featureprop_json.nd_protocol_id, nd_protocol.name AS nd_protocol_name, s AS attributes
+    my $query = "SELECT featureprop_json.featureprop_json_id, featureprop_json.feature_id, feature.name AS feature_name, featureprop_json.type_id, cvterm.name AS type_name, featureprop_json.nd_protocol_id, nd_protocol.name AS nd_protocol_name, s AS attributes
 FROM featureprop_json
 LEFT JOIN jsonb_array_elements(featureprop_json.json) as s(data) on true
 LEFT JOIN public.feature ON feature.feature_id = featureprop_json.feature_id
@@ -544,7 +545,7 @@ LEFT JOIN public.nd_protocol ON nd_protocol.nd_protocol_id = featureprop_json.nd
 
     # Parse the results
     my @matches = ();
-    while (my ($feature_id, $feature_name, $type_id, $type_name, $nd_protocol_id, $nd_protocol_name, $attributes_json) = $h->fetchrow_array()) {
+    while (my ($featureprop_json_id, $feature_id, $feature_name, $type_id, $type_name, $nd_protocol_id, $nd_protocol_name, $attributes_json) = $h->fetchrow_array()) {
         my $attributes = decode_json $attributes_json;
         my $score = $attributes->{score};
         my $start = $attributes->{start};
@@ -552,7 +553,9 @@ LEFT JOIN public.nd_protocol ON nd_protocol.nd_protocol_id = featureprop_json.nd
         delete $attributes->{score};
         delete $attributes->{start};
         delete $attributes->{end};
+
         my %match = (
+            featureprop_json_id => $featureprop_json_id,
             feature_id => $feature_id,
             feature_name => $feature_name,
             type_id => $type_id,
