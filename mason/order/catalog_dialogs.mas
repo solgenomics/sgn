@@ -81,10 +81,72 @@
     </div>
 </div>
 
+<div class="modal fade" id="upload_catalog_items_format_dialog" name="upload_catalog_items_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCatalogItemsFormatDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCatalogItemsFormatDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Catalog Items may be uploaded in an Excel file (.xls)</b>
+                    <br>
+                    (.xlsx format not supported)
+                    <br><br>
+                    <b>Header:</b>
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>name</td>
+                                <td>type</td>
+                                <td>category</td>
+                                <td>description</td>
+                                <td>material_source</td>
+                                <td>breeding_program</td>
+                                <td>availability</td>
+                                <td>comment</tr>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required columns:</b>
+                    <ul>
+                        <li><b>name:</b>.......</li>
+                        <li><b>type:</b>.......</li>
+                        <li><b>category:</b>......</li>
+                        <li><b>description:</b>......</li>
+                        <li><b>material_source:</b>......</li>
+                        <li><b>breeding_program:</b>......</li>
+                        <li><b>availability:</b>......</li>
+                    </ul>
+                    <b>Optional column:</b>
+                    <ul>
+                        <li><b>comment:</b>......</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
 jQuery(document).ready( function() {
+
+    jQuery("#upload_catalog_items_button").click(function(){
+
+        jQuery("#upload_catalog_items_format").click(function(){
+            jQuery("#upload_catalog_items_format_dialog").modal("show");
+        });
+
+        jQuery("#upload_catalog_items_dialog").modal("show");
+    });
+
 
     jQuery("#upload_catalog_items_submit").click(function(){
         var uploadFile = jQuery("#catalog_items_upload_file").val();

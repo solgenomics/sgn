@@ -5,7 +5,7 @@
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<& /page/page_title.mas, title => "Order Catalog" &>
+<& /page/page_title.mas, title => "Catalog" &>
 
 <&| /page/info_section.mas, title => 'Manage Catalog', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
@@ -46,15 +46,6 @@
 <script>
 
 jQuery(document).ready( function() {
-
-    jQuery("#upload_catalog_items_button").click(function(){
-
-        jQuery("#upload_catalog_items_format").click(function(){
-            jQuery("#upload_catalog_items_format_dialog").modal("show");
-        });
-
-        jQuery("#upload_catalog_items_dialog").modal("show");
-    });
 
     jQuery('#catalog_items_table').DataTable( {
         'autoWidth': false,
