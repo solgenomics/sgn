@@ -306,7 +306,7 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 	return;
     }
 
-    my @file_types = [ 'spreadsheet phenotype file', 'direct phenotyping', 'trial_additional_file_upload', 'brapi observations', 'tablet phenotype file' ];
+    my @file_types = ( 'spreadsheet phenotype file', 'direct phenotyping', 'trial_additional_file_upload', 'brapi observations', 'tablet phenotype file' );
     my $data = $self->get_file_data($c, \@file_types);
 
     $c->stash->{phenotype_files} = $data->{files};
@@ -325,7 +325,7 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
 	return;
     }
 
-    my @file_types = [ 'nirs spreadsheet' ];
+    my @file_types = ( 'nirs spreadsheet' );
     my $all_data = $self->get_file_data($c, \@file_types, 1);
     my $data = $self->get_file_data($c, \@file_types, 0);
 
@@ -745,54 +745,53 @@ sub get_file_data : Private {
     my $c = shift;
     my $file_types = shift;
     my $get_files_for_all_users = shift;
-    my @file_types = @{$file_types};
+    my $file_type_string = "'".join("','", @$file_types)."'";
 
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 
     my $file_info = [];
     my $deleted_file_info = [];
 
-    my %search_param;
+    my $where_string = '';
     if (!$get_files_for_all_users) {
-        $search_param{create_person_id} = $c->user()->get_object->get_sp_person_id();
+        $where_string = ' AND md.create_person_id = '.$c->user()->get_object->get_sp_person_id();
     }
-    my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( \%search_param, { order_by => 'create_date' } );
 
-    print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
-
-    while (my $md_row = ($metadata_rs->next())) {
-        my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id(), filetype => {'in' => @file_types } } );
-
-        if (!$md_row->obsolete) {
-            while (my $file_row = $file_rs->next()) {
-                push @$file_info, { file_id => $file_row->file_id(),
-                basename => $file_row->basename,
-                dirname  => $file_row->dirname,
-                file_type => $file_row->filetype,
-                md5checksum => $file_row->md5checksum,
-                create_date => $md_row->create_date,
+    my $q = "SELECT mdf.file_id, mdf.basename, mdf.dirname, mdf.filetype, mdf.md5checksum, md.create_date, md.obsolete
+        FROM metadata.md_files AS mdf
+        JOIN metadata.md_metadata AS md ON (mdf.metadata_id = md.metadata_id)
+        WHERE mdf.filetype IN ($file_type_string) $where_string;";
+    print STDERR $q."\n";
+    my $h = $c->dbc->dbh->prepare($q);
+    $h->execute();
+    while (my ($file_id, $basename, $dirname, $filetype, $md5, $create_date, $obsolete) = $h->fetchrow_array()) {
+        if (!$obsolete) {
+            push @$file_info, {
+                file_id => $file_id,
+                basename => $basename,
+                dirname  => $dirname,
+                file_type => $filetype,
+                md5checksum => $md5,
+                create_date => $create_date
+            };
+        }
+        else {
+            push @$deleted_file_info, {
+                file_id => $file_id,
+                basename => $basename,
+                dirname  => $dirname,
+                file_type => $filetype,
+                md5checksum => $md5,
+                create_date => $create_date
             };
         }
     }
-    else {
-        while (my $file_row = $file_rs->next()) {
-            push @$deleted_file_info, { file_id => $file_row->file_id(),
-            basename => $file_row->basename,
-            dirname => $file_row->dirname,
-            file_type => $file_row->filetype,
-            md5checksum => $file_row->md5checksum,
-            create_date => $md_row->create_date,
-        };
-    }
-}
-}
 
-my $data = { files => $file_info,
-deleted_files => $deleted_file_info,
-};
-return $data;
-
-
+    my $data = {
+        files => $file_info,
+        deleted_files => $deleted_file_info
+    };
+    return $data;
 }
 
 
