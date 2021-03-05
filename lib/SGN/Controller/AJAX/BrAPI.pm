@@ -195,27 +195,24 @@ sub _authenticate_user {
 	my $expired;
 	my $wildcard = 'any';
 
-	my @server_permission;
-	my $version = $c->request->captures->[0];
-
-	my $permissions = "CXGN::BrAPI::" . $version  . "::ServerInfo"; 
-	my @server_permission;
+	my %server_permission;
 	my $rc = eval{
-		my $server_permission =  $permissions->info()->{$c->request->method};
-		@server_permission  = split ',', $server_permission;
+		my $server_permission = $c->config->{"brapi_" . $c->request->method};
+		my @server_permission  = split ',', $server_permission;
+		%server_permission = map { $_ => 1 } @server_permission;
 	1; };
 
-	if(!$rc && !@server_permission){
-		push @server_permission, $wildcard;
+	if(!$rc && !%server_permission){
+		$server_permission{$wildcard} = 1;
 	}
 
 	# If our brapi config is set to authenticate or the controller calling this asks for forcing of
 	# authentication or serverinfo call method request auth, we authenticate.
-    if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !grep { $_ eq $wildcard } @server_permission){
+    if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !exists($server_permission{$wildcard})){
         ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
         #print STDERR $user_id." : ".$user_type." : ".$expired;
 
-        if (!$user_id || $expired || !$user_type || (grep {$_ ne $user_type} @server_permission && grep { $_ ne $wildcard } @server_permission)) {
+        if (!$user_id || $expired || !$user_type || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
 
             _standard_response_construction($c, $brapi_package_result, 401);
@@ -3316,7 +3313,7 @@ sub observationvariable_list_GET {
 	my $brapi_package_result = $brapi_module->search({
 		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
 		traitClasses => $clean_inputs->{traitClass},
-		studyDbId => $clean_inputs->{studyDbId},
+		studyDbIds => $clean_inputs->{studyDbId},
 		externalReferenceIDs => $clean_inputs->{externalReferenceID},
 		externalReferenceSources => $clean_inputs->{externalReferenceSource},
 		supportedCrop =>$supported_crop,
@@ -5090,13 +5087,13 @@ sub save_results {
     my $search_params = shift;
     my $search_type = shift;
 
-	my $version = $c->request->captures->[0];
-	my $permissions = "CXGN::BrAPI::" . $version  . "::ServerInfo"; 
-	my $server_permission;
+	my %server_permission;
 	my $rc = eval{
-		$server_permission =  $permissions->info()->{'GET'};
+		my $server_permission = $c->config->{"brapi_GET"};
+		my @server_permission  = split ',', $server_permission;
+		%server_permission = map { $_ => 1 } @server_permission;
 	1; };
-	if($rc && $server_permission ne 'any'){
+	if($rc && !$server_permission{'any'}){
 	    my $auth = _authenticate_user($c);
 	}
 
@@ -5117,16 +5114,7 @@ sub retrieve_results {
     my $c = shift;
     my $search_id = shift;
     my $search_type = shift;
-    
-	my $version = $c->request->captures->[0];
-	my $permissions = "CXGN::BrAPI::" . $version  . "::ServerInfo"; 
-	my $server_permission;
-	my $rc = eval{
-		$server_permission =  $permissions->info()->{'GET'};
-	1; };
-	if($rc && $server_permission ne 'any'){
-	    my $auth = _authenticate_user($c);
-	}
+    my $auth = _authenticate_user($c);
 
     my $clean_inputs = $c->stash->{clean_inputs};
     my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
