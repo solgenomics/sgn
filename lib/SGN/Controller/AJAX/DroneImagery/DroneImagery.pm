@@ -5339,6 +5339,15 @@ sub _perform_plot_polygon_assign {
 
     foreach my $stock_name (keys %$polygon_objs) {
         my $polygon = $polygon_objs->{$stock_name};
+
+        my @p_rescaled;
+        foreach my $point (@$polygon) {
+            my $x = $point->{x};
+            my $y = $point->{y};
+            push @p_rescaled, {x=>round($x/$width_ratio), y=>round($y/$height_ratio)};
+        }
+        $polygon = \@p_rescaled;
+
         if ($from_web_interface) {
             my $last_point = pop @$polygon;
         }
@@ -5428,15 +5437,8 @@ sub _perform_plot_polygon_assign {
         #my $pid = $pm->start and next;
 
         my $polygon = $polygon_objs->{$stock_name};
+        my $polygons = encode_json [$polygon];
 
-        my @p_rescaled;
-        foreach my $point (@$polygon) {
-            my $x = $point->{x};
-            my $y = $point->{y};
-            push @p_rescaled, {x=>round($x/$width_ratio), y=>round($y/$height_ratio)};
-        }
-
-        my $polygons = encode_json [\@p_rescaled];
         my $stock_id = $stock_ids{$stock_name};
 
         my $archive_plot_polygons_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_plot_polygons/imageXXXX');
