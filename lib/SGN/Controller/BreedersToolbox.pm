@@ -342,7 +342,7 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
 
 }
 
-sub manage_smd :Path("/breeders/smd") Args(0) {
+sub manage_sequence_metadata :Path("/breeders/sequence_metadata") Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -351,7 +351,7 @@ sub manage_smd :Path("/breeders/smd") Args(0) {
 	    return;
     }
 
-    $c->stash->{template} = '/breeders_toolbox/manage_smd.mas';
+    $c->stash->{template} = '/breeders_toolbox/manage_sequence_metadata.mas';
 }
 
 sub manage_upload :Path("/breeders/upload") Args(0) {
