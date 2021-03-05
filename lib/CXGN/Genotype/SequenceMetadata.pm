@@ -367,8 +367,8 @@ sub _write_chunk() {
 #       - feature_name = name of associated feature
 #       - type_id = cvterm_id of sequence metadata type
 #       - type_name = name of sequence metadata type
-#       - protocol_id = id of associated nd_protocol
-#       - protocol_name = name of associated nd_protocol
+#       - nd_protocol_id = id of associated nd_protocol
+#       - nd_protocol_name = name of associated nd_protocol
 #       - start = start position of sequence metadata
 #       - end = end position of sequence metadata
 #       - score = primary score value of sequence metadata
