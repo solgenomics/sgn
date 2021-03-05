@@ -30,6 +30,7 @@ $data_level => 'plot'
     #container_fm {
         /*border:2px dashed #000;*/
         height: 390px;
+        /*width: 390px;*/
         width: 700px;
         overflow: auto;
         /*overflow: scroll;*/
@@ -797,6 +798,7 @@ jQuery(document).ready( function() {
                 var plot_names = [];
                 var replicates = [];
                 var plot_mums = [];
+                var seedlot_names = [];
                 var design;
                 var plotImageDbIds = [];
                 var plant_names = [];
@@ -844,6 +846,9 @@ jQuery(document).ready( function() {
                                 if (key_add == 'plantNames'){
                                     var s = value_add.length;
                                     plant_names.push(s); 
+                                }
+                                if (key_add == 'seedLotName'){
+                                    seedlot_names.push(value_add);
                                 }
                             });
                         }
@@ -926,12 +931,12 @@ jQuery(document).ready( function() {
                 var result = [];
                 for (var i=0; i<plot_names.length; i++){
                     if (plant_names[i] < 1) { 
-            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i];
+            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nseedlot:"+seedlot_names[i];
             		}
             		else{
-            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nnumber_of_plants:"+plant_names[i];
+            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nnumber_of_plants:"+plant_names[i]+"\nseedlot:"+seedlot_names[i];
                     }
-            		result.push({plotname:plot_names[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp}) ;
+            		result.push({plotname:plot_names[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp, seedlot:seedlot_names[i]}) ;
                 }
                                 
                 var col_max = Math.max.apply(Math,unique_cols);
@@ -1283,9 +1288,16 @@ jQuery(document).ready( function() {
     }
 
     var r = 0; 
+    var toggleWidthFM = 0;
     jQuery('#rotate_map').click(function(){ 
-        jQuery("#container_fm").css('transform','rotate(' + (r += 180) + 'deg)');
-        //jQuery("#container_heatmap").css('transform','rotate(' + (r += 180) + 'deg)'); 
+        jQuery("#container_fm").css('transform','rotate(' + (r += 90) + 'deg)');
+        jQuery("#container_fm").width(390 + 'px');
+        //toggleWidthFM = jQuery("#container_fm").width();
+        //console.log(toggleWidthFM);
+        //console.log(r);
+        if ((r/90) % 2 == 0){
+            jQuery("#container_fm").width(700 + 'px');
+        }
     }); 
     
     jQuery("#hm_view_plot_image_submit").click( function() {
