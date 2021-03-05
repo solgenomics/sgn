@@ -149,6 +149,11 @@ sub analysis_breeding_prog {
 		$trial_id = $trials_ids->[0];
 	}
 
+	if ($trial_id =~ /list/)
+	{
+		$trial_id = $c->controller('solGS::List')->get_trial_id_plots_list($c, $trial_id);
+	}
+
 	my $program_id;
 	if ($trial_id =~ /^\d+$/)
 	{

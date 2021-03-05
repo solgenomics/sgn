@@ -187,6 +187,8 @@ sub phenotype_file_name {
 
     $self->cache_file($c, $cache_data);
 
+	return $c->stash->{phenotype_file_name};
+	
 }
 
 
