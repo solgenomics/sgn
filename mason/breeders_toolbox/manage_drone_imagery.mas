@@ -3234,7 +3234,6 @@ jQuery(document).ready(function() {
     var drone_imagery_plot_polygons_display_plot_field_layout;
 
     function _drone_imagery_time_series_image_show() {
-        console.log(manage_drone_imagery_field_trial_time_series_image_id_hash);
         manage_drone_imagery_field_trial_time_series_time = manage_drone_imagery_field_trial_time_series_sorted_times[manage_drone_imagery_field_trial_time_series_time_counter];
         manage_drone_imagery_field_trial_time_series_date = manage_drone_imagery_field_trial_time_series_sorted_dates[manage_drone_imagery_field_trial_time_series_time_counter];
 
