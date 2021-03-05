@@ -26,7 +26,7 @@ use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
 use File::Temp qw / tempfile tempdir /;
 use JSON;
-use List::MoreUtils qw /uniq/;
+use List::MoreUtils qw /uniq firstidx/;
 use CXGN::People::Person;
 use POSIX qw(strftime);
 use Storable qw/ nstore retrieve /;
@@ -170,6 +170,21 @@ sub get_trial_id :Path('/solgs/get/trial/id') Args(0) {
 
 }
 
+
+sub get_trial_id_plots_list {
+	my ($self, $c, $list_id) = @_;
+
+	$list_id = $list_id =~ /list/ ? $list_id : 'list_' . $list_id;
+
+	my $pheno_file = $c->controller('solGS::Files')->phenotype_file_name($c, $list_id);
+	my @pheno_data = read_file($pheno_file,  {binmode => ':utf8'});
+	my @headers = split(/\t/, $pheno_data[0]);
+	my $trial_idx = firstidx{ $_  eq 'studyDbId'} @headers;
+	my $trial_id = (split(/\t/, $pheno_data[1]))[$trial_idx];
+
+	return $trial_id;
+
+}
 
 sub get_selection_genotypes_list_from_file {
     my ($self, $file) = @_;
