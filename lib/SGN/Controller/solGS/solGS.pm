@@ -459,8 +459,8 @@ sub population : Path('/solgs/population') Args() {
 
     if (!$pop_id)
     {
-	my $msg = "You can not access this page with out population id.";
-	$c->controller('solGS::Utils')->generic_message($c, $msg);
+		my $msg = "You can not access this page with out population id.";
+		$c->controller('solGS::Utils')->generic_message($c, $msg);
     }
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
@@ -470,11 +470,11 @@ sub population : Path('/solgs/population') Args() {
 
     if ($pop_id =~ /dataset/)
     {
-	$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
+		$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
     }
     elsif ($pop_id =~ /list/)
     {
-	$c->stash->{list_id} = $pop_id =~ s/\w+_//r;
+		$c->stash->{list_id} = $pop_id =~ s/\w+_//r;
     }
 
     my $cached = $c->controller('solGS::CachedResult')->check_single_trial_training_data($c, $pop_id, $protocol_id);
@@ -489,18 +489,18 @@ sub population : Path('/solgs/population') Args() {
     }
     else
     {
-	$c->controller('solGS::Utils')->save_metadata($c);
-        $self->get_all_traits($c);
+		$c->controller('solGS::Utils')->save_metadata($c);
+	    $self->get_all_traits($c);
 
-	$self->project_description($c, $pop_id);
+		$self->project_description($c, $pop_id);
 
-	$c->stash->{training_pop_name} = $c->stash->{project_name};
-	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
+		$c->stash->{training_pop_name} = $c->stash->{project_name};
+		$c->stash->{training_pop_desc} = $c->stash->{project_desc};
 
-        $c->stash->{template} = $c->controller('solGS::Files')->template('/population.mas');
+	    $c->stash->{template} = $c->controller('solGS::Files')->template('/population.mas');
 
-        my $acronym = $self->get_acronym_pairs($c, $pop_id);
-        $c->stash->{acronym} = $acronym;
+	    my $acronym = $self->get_acronym_pairs($c, $pop_id);
+	    $c->stash->{acronym} = $acronym;
     }
 
 }
