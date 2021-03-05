@@ -61,7 +61,7 @@ sub patch {
 
 -- table definition
 CREATE TABLE IF NOT EXISTS public.featureprop_json (
-    "feature_json_id" SERIAL PRIMARY KEY,
+    "featureprop_json_id" SERIAL PRIMARY KEY,
     "feature_id" int8 REFERENCES feature,
     "type_id" int8 REFERENCES cvterm,
     "nd_protocol_id" int8 REFERENCES nd_protocol,
@@ -79,7 +79,7 @@ CREATE INDEX feaureprop_json_idx5 ON featureprop_json(end_pos);
 
 -- grant usage to web_usr
 GRANT ALL on public.featureprop_json to web_usr;
-GRANT USAGE ON public.featureprop_json_feature_json_id_seq to web_usr;
+GRANT USAGE ON public.featureprop_json_featureprop_json_id_seq to web_usr;
 
 EOSQL
 
