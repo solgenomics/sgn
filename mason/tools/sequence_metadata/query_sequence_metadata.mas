@@ -187,6 +187,17 @@
     <!-- Query Results -->
     <table id="sequence_metadata_filter_results" class="display"></table>
 
+    <br /><br />
+
+    <!-- Return -->
+    <div class="center">
+        <button id="sequence_metadata_filter_return" class="btn btn-primary btn-block" style="max-width: 400px; margin: auto">
+            <span class="glyphicon glyphicon-chevron-left">&nbsp;</span>Back to Query
+        </button>
+    </div>
+
+    <br /><br />
+
 </div>
 
 
@@ -228,6 +239,9 @@ jQuery(document).ready(function() {
 
     // Query Data
     jQuery('#sequence_metadata_filter_query').click(query);
+
+    // Return to Query
+    jQuery('#sequence_metadata_filter_return').click(toggle_sections);
 
     // Init DataTable
     jQuery('#sequence_metadata_filter_results').DataTable({
@@ -283,7 +297,13 @@ jQuery(document).ready(function() {
             {
                 text: 'JSON',
                 action: function() {
-                    download(getQueryURL(), "sequence_metadata.json");
+                    download(getQueryURL('JSON'), "sequence_metadata.json");
+                }
+            },
+            {
+                text: 'GA4GH',
+                action: function() {
+                    download(getQueryURL('GA4GH'), "sequence_metadata_ga4gh.json");
                 }
             },
             {
@@ -682,7 +702,7 @@ function query() {
 
     jQuery.ajax({
         type: 'GET',
-        url: getQueryURL(),
+        url: getQueryURL('JSON'),
         dataType: 'json',
         success: handle_query_results,
         error: function() {
@@ -697,23 +717,20 @@ function query() {
 
 
 /**
- * Parse the query results
+ * Parse the query results (in JSON format)
  * - Update the rows in the DataTable
  * @param {Object} response          JSON response from the query endpoint
  *                 response.error    message of error encountered by server
- *                 response.features array of sequence metadata objects
+ *                 response.results array of sequence metadata objects
  */
 function handle_query_results(response) {
-    console.log("HANDLE QUERY RESULTS:");
-    console.log(response);
-
     let dt = jQuery('#sequence_metadata_filter_results').DataTable();
     dt.clear();
     if ( response && response.error ) {
         display_error(response.error);
     }
-    else if ( response && response.features && response.features.length > 0) {
-        dt.rows.add(response.features);
+    else if ( response && response.results && response.results.length > 0) {
+        dt.rows.add(response.results);
         toggle_sections();
     }
     else {
