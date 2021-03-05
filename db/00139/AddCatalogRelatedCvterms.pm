@@ -3,17 +3,17 @@
 
 =head1 NAME
 
- AddStockOrderAndCatalogCvterms
+AddCatalogRelatedCvterms
 
 =head1 SYNOPSIS
 
-mx-run AddStockOrderAndCatalogCvterms [options] -H hostname -D dbname -u username [-F]
+mx-run AddCatalogRelatedCvterms [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds stock_catalog_json and stock_order_json stock_property cvterms and catalog_items list_types cvterm
+This patch adds stock_catalog_json stock_property and catalog_items list_types cvterm
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddStockOrderAndCatalogCvterms;
+package AddCatalogRelatedCvterms;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -39,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'stock_catalog_json and stock_order_json stock_property cvterms and catalog_items list_types cvterm
+This patch adds the 'stock_catalog_json stock_property cvterm and catalog_items list_types cvterm
 
 has '+prereq' => (
 	default => sub {
@@ -63,8 +63,7 @@ sub patch {
 
 	my $terms = {
 	    'stock_property' => [
-            'stock_catalog_json',
-            'stock_order_json'],
+            'stock_catalog_json'],
         'list_types' => [
             'catalog_items']
 	};

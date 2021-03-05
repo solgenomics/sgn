@@ -14,6 +14,22 @@ $role => "stock_orderer"
 <br />
 <br />
 
+<&| /page/info_section.mas, title => 'Manage Orders', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "manage_orders" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
 
 <&| /page/info_section.mas, title => 'Your Current Orders', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
@@ -25,6 +41,7 @@ $role => "stock_orderer"
                             <tr>
                                 <th>Order Number</th>
                                 <th>Ordered By</th>
+                                <th>Submitted Date</th>
                                 <th>Items</th>
                                 <th>Priority</th>
                                 <th>Send Order To</th>
@@ -49,6 +66,7 @@ $role => "stock_orderer"
                         <tr>
                             <th>Order Number</th>
                             <th>Ordered By</th>
+                            <th>Submitted Date</th>
                             <th>Items</th>
                             <th>Send Order To</th>
                             <th>Completed Date</th>
@@ -72,7 +90,7 @@ $role => "stock_orderer"
             </div>
             <div class="modal-body" style="width:400">
                 <div class="container-fluid">
-                    <label for="accession_list_input">Please choose a list of accessions to order: </label>
+                    <label for="accession_list_input">Please choose a list of catalog items to order: </label>
                     <div id="accession_list_input"></div>
                     <br/>
                         <table cellspacing="20">
@@ -139,7 +157,7 @@ $(window).ready( function() {
     $('#stock_order_button').click( function() {
         $('#stock_order_dialog').modal("show");
         var list = new CXGN.List();
-        document.getElementById("accession_list_input").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh', undefined);
+        document.getElementById("accession_list_input").innerHTML = list.listSelect("select_list", [ 'catalog_items' ], '', 'refresh', undefined);
     });
 
     $('#current_clones').DataTable({
