@@ -425,7 +425,10 @@ sub sequence_metadata_store_POST : Args(0) {
 #       examples:
 #           attribute=score|12|lt|0
 #           attribute=score|12|lt|0,trait|13|eq|yield
-#   - format = (optional) JSON or gff response format (default: JSON)
+#   - format = (optional) define the output format
+#       - GA4GH: (default) JSON output following Global Alliance for Genomics and Health API format
+#       - JSON: JSON output using internal/breedbase format
+#       - gff: gff3 format
 # RETURNS: an array of sequence metadata objects with the following keys:
 #   - feature_id = id of associated feature
 #   - feature_name = name of associated feature
@@ -498,8 +501,14 @@ sub sequence_metadata_query_GET : Args(0) {
     my $results = $query->{'results'};
 
 
+    # Internal/Breedbase Format
+    if ( $format eq 'JSON' ) {
+        $c->stash->{rest} = { results => $results };
+        $c->detach();
+    }
+
     # GFF Response
-    if ( $format eq 'gff' ) {
+    elsif ( $format eq 'gff' ) {
         $c->res->content_type("text/plain");
         $c->res->headers()->header(
             "Content-Disposition" => "filename=sequence_metadata.gff",
@@ -531,9 +540,43 @@ sub sequence_metadata_query_GET : Args(0) {
         $c->detach();
     }
 
-    # JSON Response
+    # GA4GH JSON Response
     else {
-        $c->stash->{rest} = { results => $results };
+        my @features = ();
+
+        my $count = 0;
+        foreach my $item (@$results) {
+            my $id = $item->{featureprop_json_id} . '.' . $count;
+
+            my %attributes = ();
+            my $ra = $item->{attributes};
+            $ra->{score} = $item->{score};
+            foreach my $key (keys %$ra) {
+                $attributes{$key} = [$ra->{$key}];
+            }
+            my %bb_metadata = (
+                type_id => [$item->{type_id}],
+                type_name => [$item->{type_name}],
+                nd_protocol_id => [$item->{nd_protocol_id}],
+                nd_protocol_name => [$item->{nd_protocol_name}]
+            );
+            $attributes{'bb_metadata'} = \%bb_metadata;
+
+            my %feature = (
+                id => $id,
+                parent_id => $item->{feature_id},
+                reference_name => $item->{feature_name},
+                feature_set_id => $item->{nd_protocol_id},
+                start => $item->{start},
+                end => $item->{end},
+                attributes => \%attributes
+            );
+            push(@features, \%feature);
+
+            $count++;
+        }
+
+        $c->stash->{rest} = { features => \@features };
         $c->detach();
     }
    
