@@ -1219,12 +1219,12 @@ sub upload_drone_imagery_POST : Args(0) {
             my $odm_dem_open_status = system($odm_dem_cmd);
 
             @stitched_bands = (
-                ["Band 1", "Blue", "Blue (450-520nm)", $odm_b1],
-                ["Band 2", "Green", "Green (515-600nm)", $odm_b2],
-                ["Band 3", "Red", "Red (600-690nm)", $odm_b3],
-                ["Band 4", "NIR", "NIR (780-3000nm)", $odm_b4],
-                ["Band 5", "RedEdge", "Red Edge (690-750nm)", $odm_b5],
-                ["Band 6", "DSM", "Black and White Image", $odm_dsm_png]
+                ["Band 1", "OpenDroneMap Blue", "Blue (450-520nm)", $odm_b1],
+                ["Band 2", "OpenDroneMap Green", "Green (515-600nm)", $odm_b2],
+                ["Band 3", "OpenDroneMap Red", "Red (600-690nm)", $odm_b3],
+                ["Band 4", "OpenDroneMap NIR", "NIR (780-3000nm)", $odm_b4],
+                ["Band 5", "OpenDroneMap RedEdge", "Red Edge (690-750nm)", $odm_b5],
+                ["Band 6", "OpenDroneMap DSM", "Black and White Image", $odm_dsm_png]
             );
         }
         elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
@@ -1239,8 +1239,8 @@ sub upload_drone_imagery_POST : Args(0) {
             my $odm_dem_open_status = system($odm_dem_cmd);
 
             @stitched_bands = (
-                ["Color Image", "RGB Color Image", "RGB Color Image", "$image_path_remaining/odm_orthophoto/odm_orthophoto.tif"],
-                ["DSM", "DSM", "Black and White Image", $odm_dsm_png]
+                ["Color Image", "OpenDroneMap RGB Color Image", "RGB Color Image", "$image_path_remaining/odm_orthophoto/odm_orthophoto.tif"],
+                ["DSM", "OpenDroneMap DSM", "Black and White Image", $odm_dsm_png]
             );
         }
         else {
