@@ -669,6 +669,8 @@ jQuery(document).ready(function() {
 
             jQuery('#working_modal').modal("hide");
             if (response.error) {
+                jQuery('#drone_run_id').val(response.drone_run_project_id);
+                jQuery('#drone_image_upload_drone_run_band_stitching_odm_image_count').val(response.current_image_count);
                 alert(response.error);
                 return;
             }

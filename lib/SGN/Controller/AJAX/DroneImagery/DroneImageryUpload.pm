@@ -144,10 +144,6 @@ sub upload_drone_imagery_POST : Args(0) {
             $c->stash->{rest} = { error => "Please provide a zipfile of images of the Micasense radiometric calibration panels!" };
             $c->detach();
         }
-        if ($new_drone_run_camera_info ne 'micasense_5') {
-            $c->stash->{rest} = { error => "OpenDroneMap stitching only implemented for Micasense 5-band camera currently. In the future, color images from CCD and CMOS cameras will be supported!" };
-            $c->detach();
-        }
     }
 
     # if ($selected_drone_run_id && ($new_drone_run_band_stitching eq 'yes' || $new_drone_run_band_stitching eq 'yes_raw' || $new_drone_run_band_stitching eq 'yes_automated')) {
@@ -1232,11 +1228,19 @@ sub upload_drone_imagery_POST : Args(0) {
             );
         }
         elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
-            my $odm_command = 'docker run -ti --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm > '.$temp_file_docker_log;
+            my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm > '.$temp_file_docker_log;
             print STDERR $odm_command."\n";
             my $odm_status = system($odm_command);
+
+            my $odm_dsm_png = "$image_path_remaining/odm_dem/dsm.png";
+            my $odm_dtm_png = "$image_path_remaining/odm_dem/dtm.png";
+            my $odm_subtract_png = "$image_path_remaining/odm_dem/subtract.png";
+            my $odm_dem_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImageDSM.py --image_path_dsm $image_path_remaining/odm_dem/dsm.tif --image_path_dtm $image_path_remaining/odm_dem/dtm.tif --outfile_path_dsm $odm_dsm_png --outfile_path_dtm $odm_dtm_png --outfile_path_subtract $odm_subtract_png --band_number 1";
+            my $odm_dem_open_status = system($odm_dem_cmd);
+
             @stitched_bands = (
-                ["Color Image", "RGB Color Image", "RGB Color Image", "$image_path_remaining_host/odm_orthophoto/odm_orthophoto.tif"],
+                ["Color Image", "RGB Color Image", "RGB Color Image", "$image_path_remaining/odm_orthophoto/odm_orthophoto.tif"],
+                ["DSM", "DSM", "Black and White Image", $odm_dsm_png]
             );
         }
         else {
