@@ -7,6 +7,7 @@
 <p>Filter the sequence metadata by feature, start, and end position and optionally by the sequence metadata type and/or protocol.</p>
 
 <br />
+<a id="sequence_metadata_anchor"></a>
 
 <!-- START QUERY SECTION -->
 <div id="sequence_metadata_section_query">
@@ -834,6 +835,8 @@ function getJBrowseURL() {
 function toggle_sections() {
     jQuery("#sequence_metadata_section_query").toggle();
     jQuery("#sequence_metadata_section_results").toggle();
+    let anchor = jQuery('#sequence_metadata_anchor');
+    jQuery('html,body').animate({scrollTop: anchor.offset().top-150}, 'fast');
 }
 
 /**
