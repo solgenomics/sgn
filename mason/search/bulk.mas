@@ -5,7 +5,7 @@
 
 <& /page/page_title.mas, title=>'Bulk Search' &>
 
-<p>The Bulk Search will check if a list of data items exist in the database for the specified data type.<p>
+<p>The Bulk Search will check a list of data items if they exist in the database for the specified data type.<p>
 
 <br />
 
