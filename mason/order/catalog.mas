@@ -40,7 +40,8 @@
     </div>
 </&>
 
-<& /order/catalog_dialogs.mas &>
+<& /order/upload_catalog_items_dialog.mas &>
+<& /order/add_catalog_item_dialog.mas &>
 
 
 <script>

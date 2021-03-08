@@ -1,0 +1,86 @@
+<%args>
+$timestamp => localtime()
+</%args>
+
+<div class="modal fade" id="add_catalog_item_dialog" name="add_catalog_item_dialog" tabindex="-1" role="dialog" aria-labelledby="addCatalogItemDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addCatalogItemDialog">Add New Catalog Item</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" id="add_new_catalog_item_form" name="add_new_catalog_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Item Name: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="item_name" placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Item Type: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="item_type" placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Category: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="item_category" placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Description: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="item_description" placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Material Source: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="item_material_source" placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Breeding Program: </label>
+                            <div class="col-sm-9" >
+                                <div id="catalog_breeding_program_div"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">availability: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="item_availability" placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Comment: </label>
+                            <div class="col-sm-9" >
+                                <input class="form-control" id="item_comment" placeholder="">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="submit_catalog_item_button" type="button" class="btn btn-primary" >Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery("#catalog_item_uniquename").autocomplete({
+       source: '/ajax/stock/accession_autocomplete',
+    });
+
+    jQuery("#add_catalog_item_button").click( function() {
+        jQuery('#add_catalog_item_dialog').modal('show');
+        get_select_box('breeding_programs', 'seedlot_breeding_program_div', { 'name' : 'seedlot_breeding_program_id', 'id' : 'seedlot_breeding_program_id' });
+    });
+
+});
+</script>
