@@ -134,6 +134,16 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Simulated Environment Correlation Through Time: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_sim_env_change_over_time_correlation">
+                                            <option value="0.9">0.9</option>
+                                            <option value="0.75">0.75</option>
+                                            <option value="0.6">0.6</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -691,6 +701,7 @@ jQuery(document).ready(function() {
                 'sim_env_change_over_time':jQuery('#drone_imagery_analytics_select_sim_env_change_over_time_type').val(),
                 'env_variance_percent':jQuery('#drone_imagery_analytics_env_variance').val(),
                 'simulated_environment_real_data_trait_id':jQuery('#drone_imagery_analytics_simulated_environment_real_data_trait_select').val(),
+                'sim_env_change_over_time_correlation':jQuery('#drone_imagery_analytics_sim_env_change_over_time_correlation').val(),
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");

@@ -82,7 +82,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $analytics_protocol_name = $c->req->param('analytics_protocol_name');
     my $analytics_protocol_desc = $c->req->param('analytics_protocol_desc');
     my $sim_env_change_over_time = $c->req->param('sim_env_change_over_time') || '';
-    my $correlation_between_times = $c->req->param('sim_env_change_over_time_correlation') || '0.9';
 
     my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
@@ -125,7 +124,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             permanent_environment_structure_phenotype_correlation_traits => decode_json $c->req->param('permanent_environment_structure_phenotype_correlation_traits'),
             env_variance_percent => $c->req->param('env_variance_percent') || "0.2,0.1,0.05,0.01,0.3",
             number_iterations => $c->req->param('number_iterations') || 2,
-            simulated_environment_real_data_trait_id => $c->req->param('simulated_environment_real_data_trait_id')
+            simulated_environment_real_data_trait_id => $c->req->param('simulated_environment_real_data_trait_id'),
+            sim_env_change_over_time_correlation => $c->req->param('sim_env_change_over_time_correlation') || '0.9'
         };
         my $q2 = "INSERT INTO nd_protocolprop (nd_protocol_id, value, type_id) VALUES (?,?,?);";
         my $h2 = $schema->storage->dbh()->prepare($q2);
@@ -178,6 +178,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my @env_variance_percents = split ',', $protocol_properties->{env_variance_percent};
     my $number_iterations = $protocol_properties->{number_iterations};
     my $simulated_environment_real_data_trait_id = $protocol_properties->{simulated_environment_real_data_trait_id};
+    my $correlation_between_times = $protocol_properties->{sim_env_change_over_time_correlation} || 0.9;
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
@@ -867,9 +868,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 
                         my $csv = Text::CSV->new({ sep_char => "\t" });
 
-                        open(my $pe_rel_res, '<', $stats_out_pe_pheno_rel_tempfile2)
-                            or die "Could not open file '$stats_out_pe_pheno_rel_tempfile2' $!";
-
+                        open(my $pe_rel_res, '<', $stats_out_pe_pheno_rel_tempfile2) or die "Could not open file '$stats_out_pe_pheno_rel_tempfile2' $!";
                             print STDERR "Opened $stats_out_pe_pheno_rel_tempfile2\n";
                             my $header_row = <$pe_rel_res>;
                             my @header;
