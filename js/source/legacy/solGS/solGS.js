@@ -23,14 +23,12 @@ solGS.submitJob = {
 		    + '|solgs/populations/combined/'
 		    + '|solgs/trait/'
 		    + '|solgs/model/combined/trials/'
-		    + '|solgs/search/trials/trait/'
-		    + '|solgs/selection/\\d+/model/'
-			+ '|solgs/selection/\\w_+\\d+/model/'
-			+ '|solgs/combined/model/\\d+/selection/'
-			+ '|solgs/combined/model/\\w_+\\d+/selection/'
+		    + '|solgs/search/trials/trait\//'
+		    + '|solgs/selection/\\d+|\\w+_\\d+\/model/'
+			+ '|solgs/combined/model/\\d+|\\w+_\\d+/selection/'
 		    + '|solgs/models/combined/trials/'
 	     	+ '|solgs/traits/all/population/'
-	    	 + '|kinship/analysis';
+	    	+ '|kinship/analysis/';
 
 		if (page.match(matchItems)) {
 
@@ -48,6 +46,7 @@ solGS.submitJob = {
 		    }
 		}
 		else {
+			console.log(' goto matchItems ' + matchItems)
 	    	  this.goToPage(page, args);
 		}
     },
@@ -356,17 +355,14 @@ solGS.submitJob = {
 
 
     getProfileDialog: function(page, args) {
-// '|solgs/selection/\\d+|\\w+_\\d+\/model\/\\d+\//';
+
 	var matchItems = '/solgs/population/'
 	    + '|solgs/trait/'
 	    + '|solgs/model/combined/trials/'
-		+ '|solgs/combined/model/\\d+/selection/'
-		+ '|solgs/combined/model/\\w_+\\d+/selection/'
-	    + '|solgs/selection/\\d+/model/\\d+/'
-		+ '|solgs/selection/\\w+_\\d+/model/\\d+/';
+		+ '|solgs/combined/model/\\d+|\\w+_\\d+/selection/'
+	    + '|solgs/selection/\\d+|\\w+_\\d+/model/';
 
 	if (page.match(matchItems) ) {
-
 	    args = this.getArgsFromUrl(page, args);
 	}
 
