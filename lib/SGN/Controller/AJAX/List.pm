@@ -685,7 +685,7 @@ sub validate_temp_POST : Args(1) {
     my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
 
     # Delete the list
-    CXGN::List->delete_list($c->dbc->dbh(), $list_id);
+    CXGN::List::delete_list($c->dbc->dbh(), $list_id);
 
     # Set missing (array of hashes, name = item name)
     my $m = $data->{missing};
