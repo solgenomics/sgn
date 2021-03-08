@@ -593,6 +593,16 @@ sub list_size : Path('/list/size') Args(0) {
     $c->stash->{rest} = { count => $count };
 }
 
+#
+# Validate an existing list for a specified data type
+#
+# PATH: GET /list/validate/{list}/{type}
+#   {list} is the list id
+#   {type} is the name of the supported list type (accessions, trials, seedlots, etc...)
+#
+# RETURNS:
+#   missing: array list item names not in the database
+#
 sub validate : Path('/list/validate') Args(2) {
     my $self = shift;
     my $c = shift;
@@ -617,14 +627,14 @@ sub validate : Path('/list/validate') Args(2) {
 # - Return lists of missing and existing items
 #
 # PATH: POST /list/validate/{type}
-#   where {type} is the name of a supported list type (accessions, trials, seedlots, etc...)
+#   {type} is the name of a supported list type (accessions, trials, seedlots, etc...)
 # BODY:
 #   items: array of item names to validate
 #
 # RETURNS:
 #   error: error message, if an error was encountered
-#   missing: array of objects for the items not in the database (keys: name = list item name)
-#   existing: array of objects for the items found in the database (keys: name = list item name)
+#   missing: array list item names not in the database
+#   existing: array list item names found in the database
 #
 sub validate_temp : Path('/list/validate') : ActionClass('REST') { }
 sub validate_temp_POST : Args(1) {
@@ -679,22 +689,14 @@ sub validate_temp_POST : Args(1) {
 
     # Set missing (array of hashes, name = item name)
     my $m = $data->{missing};
-    my @missing = ();
-    foreach (@$m) {
-        push(@missing, {name => $_});
-    }
 
     # Set existing (array of hashes, name = item name)
     my %comp = map { $_ => 1 } @$m;
     my @e = grep !$comp{$_}, @$items;
-    my @existing = ();
-    foreach (@e) {
-        push(@existing, {name => $_});
-    }
 
     $c->stash->{rest} = {
-        missing => \@missing,
-        existing => \@existing
+        missing => $m,
+        existing => \@e
     };
 }
 
