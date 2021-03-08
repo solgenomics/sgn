@@ -687,10 +687,10 @@ sub validate_temp_POST : Args(1) {
     # Delete the list
     CXGN::List::delete_list($c->dbc->dbh(), $list_id);
 
-    # Set missing (array of hashes, name = item name)
+    # Set missing
     my $m = $data->{missing};
 
-    # Set existing (array of hashes, name = item name)
+    # Set existing
     my %comp = map { $_ => 1 } @$m;
     my @e = grep !$comp{$_}, @$items;
 
