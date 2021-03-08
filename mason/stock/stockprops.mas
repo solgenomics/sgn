@@ -83,6 +83,9 @@ my $prop_select = simple_selectbox_html(
                 <input name="<% $div_name %>_prop" id="<% $div_name %>_prop" class="form-control" type="text" />
               </div>
             </div>
+
+          </div>
+        </div>
       
       <div class="modal-footer">
         <button id="close_add_<% $div_name %>_stockprop_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
