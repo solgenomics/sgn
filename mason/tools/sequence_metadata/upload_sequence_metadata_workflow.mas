@@ -436,6 +436,16 @@ function upload_and_verify() {
   // Build the FormData to pass as POST arguments
   let formData = new FormData();
   formData.append('file', jQuery('#sequence_metadata_upload_file_input').prop('files')[0]);
+  formData.append('use_existing_protocol', use_existing_protocol);
+  if ( use_existing_protocol ) {
+    formData.append('existing_protocol_id', jQuery('input[name="sequence_metadata_upload_protocol_id"]:checked').val());
+  }
+  else {
+    formData.append('new_protocol_attribute_count', new_attribute_count);
+    for ( let i = 0; i <= new_attribute_count; i++ ) {
+      formData.append('new_protocol_attribute_key_' + i, jQuery('#sequence_metadata_upload_attribute_key_' + i).val());
+    }
+  }
 
   // Make the POST request
   jQuery.ajax({
@@ -499,13 +509,35 @@ function upload_and_verify() {
           msg += "</ul>";
           add_message("error", msg);
         }
+
+        if ( response.results.missing_attributes && response.results.missing_attributes.length > 0 ) {
+          let msg = "WARNING: The following attributes are defined in the protocol but are <em>not present in the gff file</em>.";
+          msg += "<ul>";
+          for ( let i = 0; i < response.results.missing_attributes.length; i++ ) {
+            msg += "<li>" + response.results.missing_attributes[i] + "</li>";
+          }
+          msg += "</ul>";
+          msg += "You can either <a href='javascript:Workflow.focus(\"#upload_sequence_metadata_workflow\", 2);'>remove the attributes from the protocol info</a> or continue to store the file with the attributes defined in the protocol but missing from the file."; 
+          add_message("warning", msg);
+        }
+
+        if ( response.results.undefined_attributes && response.results.undefined_attributes.length > 0 ) {
+          let msg = "WARNING: The following attributes are present in the gff file but are <em>not defined in the protocol</em>.";
+          msg += "<ul>";
+          for ( let i = 0; i < response.results.undefined_attributes.length; i++ ) {
+            msg += "<li>" + response.results.undefined_attributes[i] + "</li>";
+          }
+          msg += "</ul>";
+          msg += "You can either <a href='javascript:Workflow.focus(\"#upload_sequence_metadata_workflow\", 2);'>add the attributes to the protocol info</a> or continue to store the file with the attributes not defined in the protocol."; 
+          add_message("warning", msg);
+        }
       }
 
       // Enable the Store button if processed and verified
       if ( response && response.results && response.results.processed && response.results.processed === 1 && response.results.verified && response.results.verified === 1 && response.results.processed_filepath ) {
         jQuery('#sequence_metadata_upload_verify').attr('disabled', true);
         jQuery('#sequence_metadata_upload_store').attr('disabled', false);
-        add_message("warning", "Verification Complete.  Next, click the <strong>Store</strong> button to save the data to the database.");
+        add_message("info", "Verification Complete.  Next, click the <strong>Store</strong> button to save the data to the database.");
         processed_filepath = response.results.processed_filepath;
       }
 
@@ -628,8 +660,8 @@ function save_attribute_description() {
 
   let key = jQuery('#sequence_metadata_upload_new_attribute_key').val();
   let description = jQuery('#sequence_metadata_upload_new_attribute_description').val();
-  if ( !key || key === "" || !description || description === "" ) {
-    alert("An attribute key and description are required!");
+  if ( !key || key === "" ) {
+    alert("An attribute key is required!");
     return false;
   }
 
