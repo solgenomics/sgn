@@ -15,19 +15,28 @@ $timestamp => localtime()
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Item Name: </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" id="item_name" placeholder="">
+                                <input class="form-control" id="item_name" placeholder="The item name must be in the database">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Item Type: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="item_type" placeholder="">
+                            <div class="col-sm-9">
+                                <select class="form-control" id="item_type">
+                                    <option value="">Select an item type</option>
+                                    <option value="single">single item</option>
+                                    <option value="set">set of items</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Category: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="item_category" placeholder="">
+                            <div class="col-sm-9">
+                                <select class="form-control" id="item_category">
+                                    <option value="">Select a category</option>
+                                    <option value="released_variety">released variety</option>
+                                    <option value="pathogen_assay ">pathogen assay</option>
+                                    <option value="control">control</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-group">
@@ -38,20 +47,30 @@ $timestamp => localtime()
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Material Source: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="item_material_source" placeholder="">
+                            <div class="col-sm-9">
+                                <select class="form-control" id="item_material_source">
+                                    <option value="">Select a material source</option>
+                                    <option value="Arusha">Arusha</option>
+                                    <option value="Sendusu">Sendusu</option>
+                                    <option value="Kawanda">Kawanda</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Breeding Program: </label>
                             <div class="col-sm-9" >
-                                <div id="catalog_breeding_program_div"></div>
+                                <div id="item_breeding_program_div"></div>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">availability: </label>
-                            <div class="col-sm-9" >
-                                <input class="form-control" id="item_availability" placeholder="">
+                            <label class="col-sm-3 control-label">Availability: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="item_availability">
+                                    <option value="">Select availability</option>
+                                    <option value="in_stock">in_stock</option>
+                                    <option value="out_of_stock">out_of_stock</option>
+                                    <option value="available_in_3_months">available_in_3_months</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-group">
@@ -64,7 +83,8 @@ $timestamp => localtime()
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="submit_catalog_item_button" type="button" class="btn btn-primary" >Add</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="submit_catalog_item" type="button" class="btn btn-primary" >Add</button>
             </div>
         </div>
     </div>
@@ -73,14 +93,66 @@ $timestamp => localtime()
 <script>
 jQuery(document).ready(function(){
 
-    jQuery("#catalog_item_uniquename").autocomplete({
-       source: '/ajax/stock/accession_autocomplete',
+    jQuery("#add_catalog_item_button").click( function() {
+
+        jQuery("#item_name").autocomplete({
+            source: '/ajax/stock/accession_autocomplete',
+        });
+
+        jQuery('#add_catalog_item_dialog').modal('show');
+        get_select_box('breeding_programs', 'item_breeding_program_div', { 'name' : 'item_breeding_program_id', 'id' : 'item_breeding_program_id' });
     });
 
-    jQuery("#add_catalog_item_button").click( function() {
-        jQuery('#add_catalog_item_dialog').modal('show');
-        get_select_box('breeding_programs', 'seedlot_breeding_program_div', { 'name' : 'seedlot_breeding_program_id', 'id' : 'seedlot_breeding_program_id' });
+    jQuery('#submit_catalog_item').click( function() {
+        var item_name = jQuery('#item_name').val();
+        var item_type = jQuery('#item_type').val();
+        var item_category = jQuery('#item_category').val();
+        var item_description = jQuery('#item_description').val();
+        var item_material_source = jQuery('#item_material_source').val();
+        var item_breeding_program = jQuery('#item_breeding_program_id').val();
+        var item_availability = jQuery('#item_availability').val();
+        var item_comment = jQuery('#item_comment').val();
+
+        if (item_name == '') { alert("Please provide a name") };
+        if (item_type == '') { alert("Please select a type") };
+        if (item_category == '') { alert("Please select a category") };
+        if (item_description == '') { alert("Please provide a description") };
+        if (item_material_source == '') { alert("Please select a material source") };
+        if (item_breeding_program == '') { alert("Please select a breeding program") };
+        if (item_availability == '') { alert("Please indicate availability") };
+
+        jQuery.ajax({
+            url: '/ajax/catalog/add_item',
+            data : {
+                'item_name' : item_name,
+                'item_type': item_type,
+                'item_category':item_category,
+                'item_description': item_description,
+                'item_material_source': item_material_source,
+                'item_breeding_program': item_breeding_program,
+                'item_availability': item_availability,
+                'item_comment':item_comment,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert("The item was saved.");
+                    jQuery('#add_catalog_item_dialog').modal('hide');
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred adding item');
+            }
+        });
     });
 
 });
+
 </script>
