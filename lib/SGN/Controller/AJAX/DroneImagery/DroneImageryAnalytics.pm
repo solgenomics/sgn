@@ -3244,7 +3244,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 };
 
                 push @$env_varcomps, {
-                    type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
+                    type => "$statistics_select: Env Variance $env_variance_percent : PE Structure: $permanent_environment_structure : Iteration $iterations",
                     statistics_select => $statistics_select,
                     env_variance => $env_variance_percent,
                     original => {
@@ -13922,6 +13922,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_original, \@columns;
                     }
                 close($fh_varcomp);
@@ -14121,6 +14122,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_original, \@columns;
                     }
                 close($fh_varcomp);
@@ -14317,6 +14319,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_original, \@columns;
                     }
                 close($fh_varcomp);
@@ -15691,6 +15694,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered, \@columns;
                     }
                 close($fh_varcomp);
@@ -15889,6 +15893,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered, \@columns;
                     }
                 close($fh_varcomp);
@@ -16084,6 +16089,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered, \@columns;
                     }
                 close($fh_varcomp);
@@ -17547,6 +17553,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env, \@columns;
                     }
                 close($fh_varcomp);
@@ -17745,6 +17752,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env, \@columns;
                     }
                 close($fh_varcomp);
@@ -17940,6 +17948,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env, \@columns;
                     }
                 close($fh_varcomp);
@@ -19394,6 +19403,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_2, \@columns;
                     }
                 close($fh_varcomp);
@@ -19592,6 +19602,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_2, \@columns;
                     }
                 close($fh_varcomp);
@@ -19787,6 +19798,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_2, \@columns;
                     }
                 close($fh_varcomp);
@@ -21242,6 +21254,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_3, \@columns;
                     }
                 close($fh_varcomp);
@@ -21440,6 +21453,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_3, \@columns;
                     }
                 close($fh_varcomp);
@@ -21635,6 +21649,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_3, \@columns;
                     }
                 close($fh_varcomp);
@@ -23087,6 +23102,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_4, \@columns;
                     }
                 close($fh_varcomp);
@@ -23285,6 +23301,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_4, \@columns;
                     }
                 close($fh_varcomp);
@@ -23480,6 +23497,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_4, \@columns;
                     }
                 close($fh_varcomp);
@@ -24901,6 +24919,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_5, \@columns;
                     }
                 close($fh_varcomp);
@@ -25099,6 +25118,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_5, \@columns;
                     }
                 close($fh_varcomp);
@@ -25294,6 +25314,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_5, \@columns;
                     }
                 close($fh_varcomp);
@@ -26768,6 +26789,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_6, \@columns;
                     }
                 close($fh_varcomp);
@@ -26966,6 +26988,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_6, \@columns;
                     }
                 close($fh_varcomp);
@@ -27161,6 +27184,7 @@ sub _perform_drone_imagery_analytics {
                         if ($csv->parse($row)) {
                             @columns = $csv->fields();
                         }
+                        $columns[0] = $columns[0]."!trait_t".$t.":t".$t;
                         push @varcomp_altered_env_6, \@columns;
                     }
                 close($fh_varcomp);
