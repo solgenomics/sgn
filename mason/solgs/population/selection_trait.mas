@@ -56,7 +56,7 @@ if (!$model_link) {
 
 </%perl>
 
-  <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS", "solGS.save",
+  <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS",
                                               "flot.flot", "flot.categories",
                                               "flot.tooltip", "flot.selection", "flot.navigate",
                                               "flot.axisLabels",

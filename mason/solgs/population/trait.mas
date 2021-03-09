@@ -43,7 +43,7 @@ if ($c->req->path =~ /\/combined\/populations\//) {
 
 
 
-    <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.save", "solGS.phenotypeDataFlot",
+    <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.phenotypeDataFlot",
                                               "flot.flot", "flot.categories",
                                               "flot.tooltip", "flot.selection", "flot.navigate",
                                               "flot.axisLabels", "statistics/simple_statistics"]
