@@ -4,6 +4,8 @@
 <p>Sequence Metadata queries can be made using a public API (Application Programming Interface).  Below are the available 
 endpoints related to sequence metadata that can be used to query the database using HTTP requests.</p>
 
+<br />
+
 <h3>Sequence Metadata Query</h3>
 <p class='sequence_metadata_description'>Perform a query of the stored sequence metadata for a specific parent feature (i.e., chromosome) using any combination of additional filter criteria, provided as query parameters</p>
 <code class='sequence_metadata_method'>GET</code>&nbsp;
@@ -26,22 +28,22 @@ endpoints related to sequence metadata that can be used to query the database us
         </tr>
         <tr>
             <td>start</td>
-            <td>start position of the query range (default: 0)</td>
+            <td>start position of the query range<br /><strong>default:</strong> 0</td>
             <td><code>1000000</code></td>
         </tr>
         <tr>
             <td>end</td>
-            <td>end position of the query range (default: max of specified feature)</td>
+            <td>end position of the query range<br /><strong>default:</strong> max of specified feature</td>
             <td><code>2000000</code></td>
         </tr>
         <tr>
             <td>type_id</td>
-            <td>cvterm_id(s) of sequence metadata type(s) (comma separated list of multiple type_ids)</td>
+            <td>cvterm_id(s) of sequence metadata type(s) (comma separated list of multiple type_ids)<br /><strong>default:</strong> any</td>
             <td><code>86273</code><br /><code>86273,86275</code></td>
         </tr>
         <tr>
             <td>nd_protocol_id</td>
-            <td>nd_protocol_id(s) of sequence metadata protocol(s) (comma separated list of multiple nd_protocol_ids)</td>
+            <td>nd_protocol_id(s) of sequence metadata protocol(s) (comma separated list of multiple nd_protocol_ids)<br /><strong>default:</strong> any</td>
             <td><code>204</code><br /><code>204,207</code></td>
         </tr>
         <tr>
@@ -50,8 +52,9 @@ endpoints related to sequence metadata that can be used to query the database us
                 Filter results using the value of an attribute (score or any of the defined secondary attributes) from a specific protocol.  
                 The query parameter value includes the attribute(s) and their properties (attribute name, protocol id, comparison type, comparison value - separated by a '|') 
                 (multiple attribute filters separated by a ',')<br />
-                <strong>attribute format:</strong>{attribute name}|{nd_protocol_id}|{comparison}|{value}<br />
-                <strong>comparison:</strong> 'eq' (equal), 'con' (contains), 'lt' (less than), 'lte' (less than or equal), 'gt' (greater than), 'gte' (greater than or equal)
+                <strong>format:</strong> {attribute name}|{nd_protocol_id}|{comparison}|{value}<br />
+                <strong>comparison:</strong> 'eq' (equal), 'con' (contains), 'lt' (less than), 'lte' (less than or equal), 'gt' (greater than), 'gte' (greater than or equal)<br />
+                <strong>default:</strong> none
             </td>
             <td><code>score|207|gt|0</code><br /><code>score|207|gt|0,Trait|204|con|grain+yield</code></td>
         </tr>
@@ -66,7 +69,7 @@ endpoints related to sequence metadata that can be used to query the database us
         </tr>
     </tbody>
 </table>
-<br /><br />
+<br />
 <p><strong>Response:</strong></p>
 <p>An example response for each format:</p>
 <ul class="nav nav-tabs">
@@ -77,7 +80,7 @@ endpoints related to sequence metadata that can be used to query the database us
 
 <div class="tab-content">
   <div id="sequence_metadata_response_json" class="tab-pane fade in active">
-    <pre>
+    <pre class='sequence_metadata_response'>
 {
   "results": [
     {
@@ -195,7 +198,7 @@ endpoints related to sequence metadata that can be used to query the database us
     </pre>
   </div>
   <div id="sequence_metadata_response_ga4gh" class="tab-pane fade">
-    <pre>
+    <pre class='sequence_metadata_response'>
 {
   "features": [
     {
@@ -458,12 +461,13 @@ endpoints related to sequence metadata that can be used to query the database us
     </pre>
   </div>
   <div id="sequence_metadata_response_gff" class="tab-pane fade">
-    <pre>
+    <pre class='sequence_metadata_response'>
 chr1A	.	.	1207522	1207522	0.0454952857260828	.	.	Trait="SDS sedimentation";Variable=CO_321:0001138;Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon";Locus=TraesCS1A02G002300;ID=RAC875_c20883_801;pvalue=0.00080725065468678;zvalue=3.350296620481;qvalue=0.0454952857260828
 chr1A	.	.	1211006	1211006	0.0454952857260828	.	.	ID=GENE-0014_317;pvalue=0.00080725065468678;zvalue=3.350296620481;qvalue=0.0454952857260828;Trait="SDS sedimentation";Variable=CO_321:0001138;Locus=TraesCS1A02G002300;Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon"
 chr1A	.	.	1211057	1211057	0.0454952857260828	.	.	Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon";Locus=TraesCS1A02G002300;Variable=CO_321:0001138;Trait="SDS sedimentation";qvalue=0.0454952857260828;zvalue=3.350296620481;pvalue=0.00080725065468678;ID=GENE-0014_262
 chr1A	.	.	1234797	1234797	0.0454952857260828	.	.	ID=RAC875_c95364_59;pvalue=0.00080725065468678;zvalue=3.350296620481;qvalue=0.0454952857260828;Trait="SDS sedimentation";Variable=CO_321:0001138;Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon";Locus=TraesCS1A02G002500
-chr1A	.	.	1342766	1342766	0.0394888300035745	.	.	ID=Kukri_c2408_857;qvalue=0.0394888300035745;pvalue=0.000513039677027759;zvalue=3.4738542266235;Trait="SDS sedimentation";Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon";Locus=TraesCS1A02G002700;Variable=CO_321:0001138    </pre>
+chr1A	.	.	1342766	1342766	0.0394888300035745	.	.	ID=Kukri_c2408_857;qvalue=0.0394888300035745;pvalue=0.000513039677027759;zvalue=3.4738542266235;Trait="SDS sedimentation";Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon";Locus=TraesCS1A02G002700;Variable=CO_321:0001138
+    </pre>
 </div>
 
 <br /><br /><br />
@@ -475,7 +479,7 @@ chr1A	.	.	1342766	1342766	0.0394888300035745	.	.	ID=Kukri_c2408_857;qvalue=0.039
 <br /><br />
 <p><strong>Response:</strong></p>
 <p>An example response in JSON format:</p>
-<pre>
+<pre class='sequence_metadata_response'>
 {
   "features": [
     {
@@ -675,7 +679,7 @@ chr1A	.	.	1342766	1342766	0.0394888300035745	.	.	ID=Kukri_c2408_857;qvalue=0.039
 <br /><br />
 <p><strong>Response:</strong></p>
 <p>An example response in JSON format:</p>
-<pre>
+<pre class='sequence_metadata_response'>
 {
   "types": [
     {
@@ -706,7 +710,7 @@ chr1A	.	.	1342766	1342766	0.0394888300035745	.	.	ID=Kukri_c2408_857;qvalue=0.039
 <br /><br />
 <p><strong>Response:</strong></p>
 <p>An example response in JSON format:</p>
-<pre>
+<pre class='sequence_metadata_response'>
 {
   "protocols": [
     {
@@ -845,5 +849,9 @@ chr1A	.	.	1342766	1342766	0.0394888300035745	.	.	ID=Kukri_c2408_857;qvalue=0.039
         background: none;
         color: #333;
         font-size: 12px;
+    }
+    pre.sequence_metadata_response {
+      max-height: 500px;
+      overflow-y: auto;
     }
 </style>
