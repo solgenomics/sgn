@@ -50,7 +50,6 @@
                             <option value="blupf90_grm_random_regression_gdd_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using growing degree days. Multivariate genetic + permanent environment effects</option-->
 
                             <option value="airemlf90_grm_random_regression_dap_blups">AIREMLf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
-                            <option value="airemlf90_grm_random_regression_PEcorr_dap_blups">AIREMLf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects with PE Correlation Structure</option>
 
                             <option value="asreml_grm_univariate_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+Row+Col+spatial. Univariate genetic + AR1xAR1 spatial effects</option>
                             <!--option value="asreml_grm_univariate_column_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+Col+spatial. Univariate genetic + AR1xAR1 spatial effects</option-->
@@ -311,11 +310,14 @@
                             <hr>
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Permanent Environment Structure: </label>
+                                    <label class="col-sm-3 control-label">AIMREMLf90 Permanent Environment Structure: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="drone_image_analytics_permanent_env_structure_select">
                                             <option value="identity">Identity Matrix</option>
+                                            <option value="env_corr_structure">Simulated Phenotype Correlation Matrix</option>
                                             <option value="phenotype_correlation">Phenotype Correlation Matrix</option>
+                                            <option value="phenotype_2dspline_effect">2D-Spline Effect of Phenotype</option>
+                                            <!--option value="phenotype_ar1xar1_effect">AR1xAR1 Effect of Phenotype</option-->
                                             <option value="euclidean_rows_and_columns">Euclidean Distance From Rows and Columns Matrix</option>
                                         </select>
                                     </div>
@@ -328,6 +330,17 @@
                                         <label class="col-sm-3 control-label">Phenotypes For Correlation Matrix: </label>
                                         <div class="col-sm-9" >
                                             <div id="drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select_div"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div" style="display:none">
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Phenotype For 2D-spline of AR1xAR1 Effect in Permanent Environment Structure: </label>
+                                        <div class="col-sm-9" >
+                                            <div id="drone_imagery_analytics_permanent_env_structure_phenotype_select_div"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -432,6 +445,8 @@ jQuery(document).ready(function() {
             }
 
             get_select_box('traits', 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select_div', { 'name' : 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select', 'id' : 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('traits', 'drone_imagery_analytics_permanent_env_structure_phenotype_select_div', { 'name' : 'drone_imagery_analytics_permanent_env_structure_phenotype_select', 'id' : 'drone_imagery_analytics_permanent_env_structure_phenotype_select', 'empty':1, 'multiple':1, 'size':20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':'time_ontology', 'select_format':'component_table_select' });
 
             get_select_box('traits', 'drone_imagery_analytics_simulated_environment_real_data_trait_select_div', { 'name' : 'drone_imagery_analytics_simulated_environment_real_data_trait_select', 'id' : 'drone_imagery_analytics_simulated_environment_real_data_trait_select', 'empty':0, 'multiple':0, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot' });
 
@@ -588,12 +603,19 @@ jQuery(document).ready(function() {
     jQuery('#drone_image_analytics_permanent_env_structure_select').change(function(){
         if (jQuery(this).val() == 'euclidean_rows_and_columns') {
             jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').hide();
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').hide();
         }
         else if (jQuery(this).val() == 'phenotype_correlation') {
             jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').show();
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').hide();
+        }
+        else if (jQuery(this).val() == 'phenotype_2dspline_effect') {
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').hide();
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').show();
         }
         else {
             jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').hide();
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').hide();
         }
     });
 
@@ -668,10 +690,17 @@ jQuery(document).ready(function() {
         if (jQuery('#drone_image_analytics_permanent_env_structure_select').val() == 'phenotype_correlation') {
             manage_drone_imagery_analytics_rr_structure_phenotype_correlation = jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select').val();
             if (!manage_drone_imagery_analytics_rr_structure_phenotype_correlation || manage_drone_imagery_analytics_rr_structure_phenotype_correlation.length < 3) {
-                alert('Please select at least three phenotypes to use in random regression phenotype correlation structure!');
+                alert('Please select at least three phenotypes to use in random regression permanent environment phenotype correlation structure!');
                 return false;
             }
         }
+
+        manage_drone_imagery_analytics_rr_env_structure_trait_ids = [];
+        jQuery('input[name="drone_imagery_analytics_permanent_env_structure_phenotype_select"]').each(function() {
+            if (this.checked){
+                manage_drone_imagery_analytics_rr_env_structure_trait_ids.push(jQuery(this).val());
+            }
+        });
 
         jQuery.ajax({
             url : '/api/drone_imagery/calculate_analytics',
@@ -698,6 +727,7 @@ jQuery(document).ready(function() {
                 'use_area_under_curve':jQuery('#drone_image_analytics_use_area_under_curve_select').val(),
                 'permanent_environment_structure':jQuery('#drone_image_analytics_permanent_env_structure_select').val(),
                 'permanent_environment_structure_phenotype_correlation_traits':JSON.stringify(manage_drone_imagery_analytics_rr_structure_phenotype_correlation),
+                'permanent_environment_structure_phenotype_trait_ids':JSON.stringify(manage_drone_imagery_analytics_rr_env_structure_trait_ids),
                 'sim_env_change_over_time':jQuery('#drone_imagery_analytics_select_sim_env_change_over_time_type').val(),
                 'env_variance_percent':jQuery('#drone_imagery_analytics_env_variance').val(),
                 'simulated_environment_real_data_trait_id':jQuery('#drone_imagery_analytics_simulated_environment_real_data_trait_select').val(),
