@@ -198,7 +198,11 @@ AND cvterm.name = 'sequence_metadata_protocol_properties';";
 # Process the gff file upload and perform file verification
 # PATH: POST /ajax/sequence_metadata/file_upload_verify
 # PARAMS:
-#   - file = upload file
+#   - file = (required) upload file
+#   - use_existing_protocol = (required) 'true'/'false' if file is using an existing protocol (or creating a new one)
+#   - existing_protocol_id = (required if use_existing_protocol is 'true') nd_protocol_id of existing protocol
+#   - new_protocol_attribute_count = (required if use_existing_protocol is 'false') the number of attributes to be added to the new protocol
+#   - new_protocol_attribute_key_{i} = (required if use_existing_protocol is 'false') the name of each attribute to be added to the new protocol
 # RETURNS:
 #   - error = error message
 #   - results = verification results
@@ -206,6 +210,8 @@ AND cvterm.name = 'sequence_metadata_protocol_properties';";
 #       - processed = 1 if file successfully uploaded and processed / 0 if not
 #       - verified = 1 if file sucessfully verified / 0 if not
 #       - missing_features = list of seqid's not in the database as features
+#       - missing_attributes = list of attributes in the protocol that are not in the uploaded file
+#       - undefined_attributes = list attributes in the uploaded file not defined by the protocol
 #
 sub sequence_metadata_upload_verify : Path('/ajax/sequence_metadata/file_upload_verify') : ActionClass('REST') { }
 sub sequence_metadata_upload_verify_POST : Args(0) {
@@ -239,6 +245,7 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
         my $timestamp = $time->ymd()."_".$time->hms();
         my $subdirectory = "sequence_metadata_upload";
 
+        # Upload and Archive file
         my $uploader = CXGN::UploadFile->new({
             tempfile => $upload_tempfile,
             subdirectory => $subdirectory,
@@ -251,9 +258,47 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
         my $archived_filepath = $uploader->archive();
         my $processed_filepath = $archived_filepath . ".processed";
 
+        # Get protocol attributes to verify...
+        my @attributes = ();
+        my $use_existing_protocol = $c->req->param('use_existing_protocol');
+        if ( !defined $use_existing_protocol || $use_existing_protocol eq '' ) {
+            $c->stash->{rest} = {error => 'use_existing_protocol not provided!'};
+            $c->detach();
+        }
+
+        # Get attributes from existing protocol...
+        if ( $use_existing_protocol eq 'true' ) {
+            my $protocol_id = $c->req->param('existing_protocol_id');
+            if ( !defined $protocol_id || $protocol_id eq '' ) {
+                $c->stash->{rest} = {error => 'protocol_id not provided!'};
+                $c->detach();
+            }
+
+            # Get attributes from protocol props
+            my $smd_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol_properties', 'protocol_property')->cvterm_id();
+            my $protocol_props = decode_json $schema->resultset('NaturalDiversity::NdProtocolprop')->search({nd_protocol_id=>$protocol_id, type_id=>$smd_protocol_prop_cvterm_id})->first->value;
+            my $attribute_descriptions = $protocol_props->{attribute_descriptions};
+            @attributes = keys %$attribute_descriptions;
+        }
+
+        # Get attributes to be added to new protocol...
+        else {
+            my $protocol_attribute_count = $c->req->param('new_protocol_attribute_count');
+            if ( !defined $protocol_attribute_count || $protocol_attribute_count eq '' ) {
+                $c->stash->{rest} = {error => 'protocol_attribute_count not provided!'};
+                $c->detach();
+            }
+            for ( my $i = 1; $i <= $protocol_attribute_count; $i++ ){
+                my $attribute_key = $c->req->param('new_protocol_attribute_key_' . $i);
+                if ( defined $attribute_key && $attribute_key ne '' && $attribute_key ne 'undefined' ) {
+                    push(@attributes, $attribute_key);
+                }
+            }
+        }
+
         # Run the verification
         my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema);
-        my $verification_results = $smd->verify($archived_filepath, $processed_filepath);
+        my $verification_results = $smd->verify($archived_filepath, $processed_filepath, \@attributes);
         $verification_results->{'processed_filepath'} = $processed_filepath;
 
         # Verification Error
@@ -360,9 +405,7 @@ sub sequence_metadata_store_POST : Args(0) {
                 my $attribute_key = $c->req->param('new_protocol_attribute_key_' . $i);
                 my $attribute_description = $c->req->param('new_protocol_attribute_description_' . $i);
                 if ( defined $attribute_key && $attribute_key ne '' && $attribute_key ne 'undefined' ) {
-                    if ( defined $attribute_description && $attribute_description ne '' && $attribute_description ne 'undefined' ) {
-                        $attributes{$attribute_key} = $attribute_description;
-                    }
+                    $attributes{$attribute_key} = $attribute_description;
                 }
             }
         }
