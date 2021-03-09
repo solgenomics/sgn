@@ -23,8 +23,8 @@ $timestamp => localtime()
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_type">
                                     <option value="">Select an item type</option>
-                                    <option value="single">single item</option>
-                                    <option value="set">set of items</option>
+                                    <option value="single item">single item</option>
+                                    <option value="set of items">set of items</option>
                                 </select>
                             </div>
                         </div>
@@ -33,8 +33,8 @@ $timestamp => localtime()
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_category">
                                     <option value="">Select a category</option>
-                                    <option value="released_variety">released variety</option>
-                                    <option value="pathogen_assay ">pathogen assay</option>
+                                    <option value="released variety">released variety</option>
+                                    <option value="pathogen assay ">pathogen assay</option>
                                     <option value="control">control</option>
                                 </select>
                             </div>
@@ -67,9 +67,9 @@ $timestamp => localtime()
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_availability">
                                     <option value="">Select availability</option>
-                                    <option value="in_stock">in_stock</option>
-                                    <option value="out_of_stock">out_of_stock</option>
-                                    <option value="available_in_3_months">available_in_3_months</option>
+                                    <option value="in stock">in stock</option>
+                                    <option value="out of stock">out of stock</option>
+                                    <option value="available in 3 months">available in 3 months</option>
                                 </select>
                             </div>
                         </div>
@@ -104,34 +104,36 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#submit_catalog_item').click( function() {
-        var item_name = jQuery('#item_name').val();
-        var item_type = jQuery('#item_type').val();
-        var item_category = jQuery('#item_category').val();
-        var item_description = jQuery('#item_description').val();
-        var item_material_source = jQuery('#item_material_source').val();
-        var item_breeding_program = jQuery('#item_breeding_program_id').val();
-        var item_availability = jQuery('#item_availability').val();
-        var item_comment = jQuery('#item_comment').val();
-
-        if (item_name == '') { alert("Please provide a name") };
-        if (item_type == '') { alert("Please select a type") };
-        if (item_category == '') { alert("Please select a category") };
-        if (item_description == '') { alert("Please provide a description") };
-        if (item_material_source == '') { alert("Please select a material source") };
-        if (item_breeding_program == '') { alert("Please select a breeding program") };
-        if (item_availability == '') { alert("Please indicate availability") };
+        var name = jQuery('#item_name').val();
+        var type = jQuery('#item_type').val();
+        var category = jQuery('#item_category').val();
+        var description = jQuery('#item_description').val();
+        var material_source = jQuery('#item_material_source').val();
+        var breeding_program = jQuery('#item_breeding_program_id').val();
+        var availability = jQuery('#item_availability').val();
+        var comment = jQuery('#item_comment').val();
+        alert(breeding_program);
+        if (name == '') { alert("Please provide a name") };
+        if (type == '') { alert("Please select a type") };
+        if (category == '') { alert("Please select a category") };
+        if (description == '') { alert("Please provide a description") };
+        if (material_source == '') { alert("Please select a material source") };
+        if (breeding_program == '') { alert("Please select a breeding program") };
+        if (availability == '') { alert("Please indicate availability") };
 
         jQuery.ajax({
             url: '/ajax/catalog/add_item',
+            dataType: "json",
+            type: 'POST',
             data : {
-                'item_name' : item_name,
-                'item_type': item_type,
-                'item_category':item_category,
-                'item_description': item_description,
-                'item_material_source': item_material_source,
-                'item_breeding_program': item_breeding_program,
-                'item_availability': item_availability,
-                'item_comment':item_comment,
+                'item_name' : name,
+                'item_type': type,
+                'item_category': category,
+                'item_description': description,
+                'item_material_source': material_source,
+                'item_breeding_program': breeding_program,
+                'item_availability': availability,
+                'item_comment': comment,
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -142,8 +144,8 @@ jQuery(document).ready(function(){
                     alert("The item was saved.");
                     jQuery('#add_catalog_item_dialog').modal('hide');
                 }
-                if (response.error) {
-                    alert(response.error);
+                if (response.error_string) {
+                    alert(response.error_string);
                 }
             },
             error: function(response){

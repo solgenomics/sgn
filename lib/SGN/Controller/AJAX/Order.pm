@@ -99,7 +99,7 @@ sub upload_catalog_items_POST : Args(0) {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload progenies!'};
+            $c->stash->{rest} = {error=>'You must be logged in to upload catalog items!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
