@@ -1,0 +1,9 @@
+<%args>
+$item_id
+$item_name
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<& /page/page_title.mas, title => "Catalog Item Details for: $item_name" &>
