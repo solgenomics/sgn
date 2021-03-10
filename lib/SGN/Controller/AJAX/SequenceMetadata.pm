@@ -563,7 +563,11 @@ sub sequence_metadata_query_GET : Args(0) {
             my @attributes_parsed = ();
             my $attributes = $item->{attributes};
             foreach my $key ( keys %{ $attributes } ) {
-                push(@attributes_parsed, $key . "=" . ${$attributes}{$key});
+                my $value = ${$attributes}{$key};
+                if ( $value =~ m/\s/ ) {
+                    $value = "\"$value\"";
+                }
+                push(@attributes_parsed, $key . "=" . $value);
             }
             my @row = (
                 $item->{feature_name},
