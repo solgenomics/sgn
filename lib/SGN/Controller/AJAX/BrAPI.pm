@@ -3772,6 +3772,7 @@ sub observations_GET {
         observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},
         observationTimeStampRangeEnd => $clean_inputs->{observationTimeStampRangeEnd},
         observationUnitDbId => $clean_inputs->{observationUnitDbId},
+		observationVariableDbId => $clean_inputs->{observationVariableDbId},
         observationDbId => $clean_inputs->{observationDbId}
 
     });
@@ -3863,10 +3864,25 @@ sub observations_detail_PUT {
 
 sub observation_search_save : Chained('brapi') PathPart('search/observations') Args(0) : ActionClass('REST') { }
 
+# make this immediate rather than saved search
+# sub observation_search_POST {
+# 	my $self = shift;
+# 	my $c = shift;
+# 	my $auth = _authenticate_user($c);
+# 	my $clean_inputs = $c->stash->{clean_inputs};
+# 	my $brapi = $self->brapi_module;
+# 	my $brapi_module = $brapi->brapi_wrapper('Observations');
+# 	print Dumper($clean_inputs);
+# 	my $brapi_package_result = $brapi_module->search(
+# 		$clean_inputs
+# 	);
+# 	_standard_response_construction($c, $brapi_package_result);
+# }
+
 sub observation_search_save_POST {
-    my $self = shift;
-    my $c = shift;
-    save_results($self,$c,$c->stash->{clean_inputs},'Observations');
+   my $self = shift;
+   my $c = shift;
+   save_results($self,$c,$c->stash->{clean_inputs},'Observations');
 }
 
 sub observation_search_retrieve  : Chained('brapi') PathPart('search/observations') Args(1) {
@@ -5174,7 +5190,7 @@ sub save_results {
     my $results_module = $brapi->brapi_wrapper('Results');
     my $brapi_package_result = $results_module->save_results($tempfile, $search_result, $search_type);
 
-    _standard_response_construction($c, $brapi_package_result);
+    _standard_response_construction($c, $brapi_package_result, 202);
 }
 
 sub retrieve_results {
