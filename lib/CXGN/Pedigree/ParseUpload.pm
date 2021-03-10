@@ -42,6 +42,12 @@ has 'cross_properties' => (
     required => 0,
 );
 
+has 'cross_additional_info' => (
+    is => 'ro',
+    isa => 'ArrayRef',
+    required => 0,
+);
+
 
 sub parse {
     my $self = shift;

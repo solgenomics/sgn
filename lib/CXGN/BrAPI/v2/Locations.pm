@@ -119,9 +119,10 @@ sub search {
 
 		if (!$passes_search && %externalreference_ids_arrayref && %externalreference_sources_arrayref) { next; }
 		push @available, $_;
+
 	}
 
-	$self->get_response(\@available);
+	$self->get_response(\@available, 1);
 }
 
 sub detail {
@@ -129,12 +130,13 @@ sub detail {
 	my $location_id = shift;
 	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema , $location_id);
 
-	$self->get_response($locations);
+	$self->get_response($locations, 0);
 }
 
 sub get_response {
 	my $self = shift;
 	my $locations = shift;
+	my $array = shift;
 
 	my $status = $self->status;
 	my $page_size = $self->page_size;
@@ -148,25 +150,23 @@ sub get_response {
 	foreach (@$data_window){
 
 		my $coordinates = undef;
-		my @coordinates;
 
 		# if lat & lon exist
 		if ($_->[2] && $_->[3]) {
 			my @coords;
-			push @coords, $_->[2]; # lat
 			push @coords, $_->[3]; # lon
+			push @coords, $_->[2]; # lat
 			if ($_->[4]) {
 				push @coords, $_->[4]; #alt
 			}
 
-			push @coordinates, {
+			$coordinates = {
 				geometry=>{
 					coordinates=>\@coords,
 					type=>'Point'
 				},
 				type=>'Feature'
 			};
-			$coordinates = \@coordinates;
 		}
 
 		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
@@ -199,9 +199,19 @@ sub get_response {
 		};
 	}
 
-	my %result = (data=>\@data);
+	my $result = $data;
 	my @data_files;
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Locations list result constructed');
+
+	if ($array) {
+		my $data_window;
+		($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@variables, $page_size, $page);
+		%result = (data => $data);
+		return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Locations list result constructed');
+	} else {
+		$pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
+		return CXGN::BrAPI::JSONResponse->return_success(@data[0], $pagination, \@data_files, $status, 'Locations object result constructed');
+	}
+
 }
 
 sub store {
@@ -222,7 +232,7 @@ sub store {
 		my $country_code =  $params->{countryCode} || undef;
 		my $program_id =  $params->{additionalInfo}->{programDbId}  || undef;
 		my $type =  $params->{locationType} || undef;
-		my $geo_coordinates = $params->{coordinates}->{geometry}->{coordinates} || undef;
+		my $geo_coordinates = $params->{coordinates} || undef;
 		my $latitude = $geo_coordinates->[0] || undef;
 		my $longitude = $geo_coordinates->[1] || undef;
 		my $altitude  = $geo_coordinates->[2]|| undef;

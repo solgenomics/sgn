@@ -107,7 +107,12 @@ sub _validate_with_plugin {
 
     if (scalar(@progenies_missing) > 0) {
         push @error_messages, "The following progeny names are not in the database, or are not in the database as uniquenames: ".join(',',@progenies_missing);
-        $errors{'missing_accessions'} = \@progenies_missing;
+    }
+
+    if (scalar(@error_messages) > 0) {
+        $errors{'error_messages'} = \@error_messages;
+        $self->_set_parse_errors(\%errors);
+        return;
     }
 
     #check if progeny is already associated with cross_unique_id
@@ -115,7 +120,7 @@ sub _validate_with_plugin {
         my $cross_progeny_linkage = CXGN::Stock::RelatedStocks->get_cross_of_progeny($progeny_name, $schema);
         my @previous_cross = @$cross_progeny_linkage;
         if (scalar(@previous_cross) > 0) {
-            push @error_messages, "The following progeny name is already associated with a cross unique id: ".$progeny_name;
+            push @error_messages, "The following progeny name is already associated with a cross unique id: progeny name ".$progeny_name;
             $errors{'existing_another_cross_linkage'} = $progeny_name;
         }
     }

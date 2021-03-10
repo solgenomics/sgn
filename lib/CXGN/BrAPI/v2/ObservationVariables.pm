@@ -81,12 +81,16 @@ sub search {
     my @dbxref_terms = $inputs->{externalReferenceSources} ? @{$inputs->{externalReferenceSources}} : ();
     my @method_ids = $inputs->{methodDbIds} ? @{$inputs->{methodDbIds}} : ();
     my @scale_ids = $inputs->{scaleDbIds} ? @{$inputs->{scaleDbIds}} : ();
-    my @study_ids = $inputs->{studyDbId} ? @{$inputs->{studyDbIds}} : ();
+    my @study_ids = $inputs->{studyDbIds} ? @{$inputs->{studyDbIds}} : ();
     my @trait_dbids = $inputs->{traitDbIds} ? @{$inputs->{traitDbIds}} : ();
     my @trait_ids = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
 
     if (scalar(@classes)>0 || scalar(@method_ids)>0 || scalar(@scale_ids)>0 || scalar(@study_ids)>0){
-        push @$status, { 'error' => 'The following parameters are not implemented: scaleDbId, studyDbId, traitClasses, methodDbId' };
+        push @$status, { 'error' => 'The following search parameters are not implemented yet: scaleDbId, studyDbId, traitClasses, methodDbId' };
+        my %result;
+        my @data_files;
+        my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
+        return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
     }
    
     my $join = '';

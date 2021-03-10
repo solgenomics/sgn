@@ -33,44 +33,86 @@ use CXGN::Trial;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use File::Basename qw | basename dirname|;
+use CXGN::UploadFile;
+
 
 class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
+
 has 'chado_schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_chado_schema',
-		 required => 1,
-		);
+    is => 'rw',
+    isa => 'DBIx::Class::Schema',
+    predicate => 'has_chado_schema',
+    required => 1,
+);
+
 has 'phenome_schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_phenome_schema',
-		 required => 1,
-		);
+    is => 'rw',
+    isa => 'DBIx::Class::Schema',
+    predicate => 'has_phenome_schema',
+    required => 1,
+);
+
 has 'metadata_schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_metadata_schema',
-		 required => 0,
-		);
-has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
-has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_crosses', required => 1,);
-has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
-has 'crossing_trial_id' =>(isa =>'Int', is => 'rw', predicate => 'has_crossing_trial_id', required => 1,);
+    is => 'rw',
+    isa => 'DBIx::Class::Schema',
+    predicate => 'has_metadata_schema',
+    required => 0,
+);
+
+has 'dbh' => (
+    is  => 'rw',
+    predicate => 'has_dbh',
+    required => 1,
+);
+
+has 'crosses' => (
+    isa =>'ArrayRef[Pedigree]',
+    is => 'rw',
+    predicate => 'has_crosses',
+    required => 1,
+);
+
+has 'user_id' => (
+    isa => 'Int',
+    is => 'rw',
+    predicate => 'has_user_id',
+    required => 1,
+);
+
+has 'crossing_trial_id' => (
+    isa =>'Int',
+    is => 'rw',
+    predicate => 'has_crossing_trial_id',
+    required => 1,
+);
+
+has 'archived_filename' => (
+    isa => 'Str',
+    is => 'rw',
+    predicate => 'has_archived_filename',
+    required => 0,
+);
+
+has 'archived_file_type' => (
+    isa => 'Str',
+    is => 'rw',
+    predicate => 'has_archived_file_type',
+    required => 0,
+);
+
 
 sub add_crosses {
     my $self = shift;
     my $chado_schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
+    my $metadata_schema = $self->get_metadata_schema();
     my $crossing_trial_id = $self->get_crossing_trial_id();
+    my $owner_id = $self->get_user_id();
     my @crosses;
     my $transaction_error;
     my @added_stock_ids;
-
-    #lookup user by name
-    my $owner_name = $self->get_owner_name();
-    my $dbh = $self->get_dbh();
-    my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
+    my %nd_experiments;
 
     if (!$self->validate_crosses()) {
         print STDERR "Invalid pedigrees in array.  No crosses will be added\n";
@@ -105,7 +147,6 @@ sub add_crosses {
 		my $geolocation_rs = $chado_schema->resultset("Project::Projectprop")->find({project_id => $crossing_trial_id, type_id => $project_location_cvterm_id});
 
         @crosses = @{$self->get_crosses()};
-
         foreach my $pedigree (@crosses) {
             my $experiment;
             my $cross_stock;
@@ -191,6 +232,8 @@ sub add_crosses {
                 nd_geolocation_id => $geolocation_rs->value,
                 type_id => $cross_experiment_type_cvterm->cvterm_id,
             });
+            my $nd_experiment_id = $experiment->nd_experiment_id();
+            $nd_experiments{$nd_experiment_id}++;
 
             #create a stock of type cross
             $cross_stock = $chado_schema->resultset("Stock::Stock")->find_or_create({
@@ -302,8 +345,37 @@ sub add_crosses {
         #add the owner for this stock
         $phenome_schema->resultset("StockOwner")->find_or_create({
             stock_id => $stock_id,
-            sp_person_id => $owner_sp_person_id,
+            sp_person_id => $owner_id,
         });
+    }
+
+    #link nd_experiments to uploaded file
+	my $archived_filename_with_path = $self->get_archived_filename;
+    print STDERR "FILE =".Dumper($archived_filename_with_path)."\n";
+    if ($archived_filename_with_path) {
+        print STDERR "Generating md_file entry for cross file...\n";
+        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $owner_id});
+        $md_row->insert();
+        my $upload_file = CXGN::UploadFile->new();
+        my $md5 = $upload_file->get_md5($archived_filename_with_path);
+        my $md5checksum = $md5->hexdigest();
+        my $file_row = $metadata_schema->resultset("MdFiles")->create({
+            basename => basename($archived_filename_with_path),
+            dirname => dirname($archived_filename_with_path),
+            filetype => $self->get_archived_file_type,
+            md5checksum => $md5checksum,
+            metadata_id => $md_row->metadata_id(),
+        });
+
+        my $file_id = $file_row->file_id();
+        print STDERR "FILE ID =".Dumper($file_id)."\n";
+
+        foreach my $nd_experiment_id (keys %nd_experiments) {
+            my $nd_experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+                nd_experiment_id => $nd_experiment_id,
+                file_id => $file_id,
+            });
+        }
     }
 
     return 1;

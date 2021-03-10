@@ -301,6 +301,7 @@ sub login_allowed {
         return 1;
     }
     else {
+	print STDERR "Login is disabled if dbname contains 'sandbox' and production_server is set to 1\n";
         return 0;
     }
 }

@@ -101,8 +101,13 @@
                                     <option selected value="SCIO">SCIO</option>
                                     <option value="QST">QST</option>
                                     <option value="Foss6500">Foss6500</option>
+                                    <option value="Foss DS2500">Foss DS2500</option>
+                                    <option value="Foss XDS">Foss XDS</option>
                                     <option value="BunchiN500">BunchiN500</option>
                                     <option value="LinkSquare">LinkSquare</option>
+                                    <option value="ASD Qualityspec">ASD Qualityspec</option>
+                                    <option value="ASD LabSpec">ASD LabSpec</option>
+                                    <option value="Specim FX17">Specim FX17</option>
                                 </select>
                             </div>
                         </div>

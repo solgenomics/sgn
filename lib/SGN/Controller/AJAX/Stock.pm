@@ -1787,6 +1787,109 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0
     $c->stash->{rest} = { pedigree_string => $parents };
 }
 
+
+sub get_pedigree_string_ :Chained('/stock/get_stock') PathPart('pedigreestring') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $level = $c->req->param("level");
+    my $stock_id = $c->stash->{stock}->get_stock_id();
+    my $stock_name = $c->stash->{stock}->get_name();
+
+    my $pedigree_string;
+
+    my %pedigree = _get_pedigree_hash($c,[$stock_id]);
+
+    if ($level eq "Parents") {
+        my $mother = $pedigree{$stock_name}{'1'}{'mother'} || 'NA';
+        my $father = $pedigree{$stock_name}{'1'}{'father'} || 'NA';
+        $pedigree_string = "$mother/$father" ;
+    }
+    elsif ($level eq "Grandparents") {
+        my $maternal_mother = $pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'mother'} || 'NA';
+        my $maternal_father = $pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'father'} || 'NA';
+        my $paternal_mother = $pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'mother'} || 'NA';
+        my $paternal_father = $pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'father'} || 'NA';
+        my $maternal_parent_string = "$maternal_mother/$maternal_father";
+        my $paternal_parent_string = "$paternal_mother/$paternal_father";
+        $pedigree_string =  "$maternal_parent_string//$paternal_parent_string";
+    }
+    elsif ($level eq "Great-Grandparents") {
+        my $m_maternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'mother'}}{'3'}{'mother'} || 'NA';
+        my $m_maternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'father'}}{'3'}{'mother'} || 'NA';
+        my $p_maternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'mother'}}{'3'}{'father'} || 'NA';
+        my $p_maternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'mother'}}{'2'}{'father'}}{'3'}{'father'} || 'NA';
+        my $m_paternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'mother'}}{'3'}{'mother'} || 'NA';
+        my $m_paternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'father'}}{'3'}{'mother'} || 'NA';
+        my $p_paternal_mother = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'mother'}}{'3'}{'father'} || 'NA';
+        my $p_paternal_father = $pedigree{$pedigree{$pedigree{$stock_name}{'1'}{'father'}}{'2'}{'father'}}{'3'}{'father'} || 'NA';
+        my $mm_parent_string = "$m_maternal_mother/$m_maternal_father";
+        my $mf_parent_string = "$p_maternal_mother/$p_maternal_father";
+        my $pm_parent_string = "$m_paternal_mother/$m_paternal_father";
+        my $pf_parent_string = "$p_paternal_mother/$p_paternal_father";
+        $pedigree_string =  "$mm_parent_string//$mf_parent_string///$pm_parent_string//$pf_parent_string";
+    }
+    $c->stash->{rest} = { pedigree_string => $pedigree_string };
+}
+
+sub _get_pedigree_hash {
+    my ($c, $accession_ids, $format) = @_;
+
+    my $placeholders = join ( ',', ('?') x @$accession_ids );
+    my $query = "
+        WITH RECURSIVE included_rows(child, child_id, mother, mother_id, father, father_id, type, depth, path, cycle) AS (
+                SELECT c.uniquename AS child,
+                c.stock_id AS child_id,
+                m.uniquename AS mother,
+                m.stock_id AS mother_id,
+                f.uniquename AS father,
+                f.stock_id AS father_id,
+                m_rel.value AS type,
+                1,
+                ARRAY[c.stock_id],
+                false
+                FROM stock c
+                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
+                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
+                WHERE c.stock_id IN ($placeholders)
+                GROUP BY 1,2,3,4,5,6,7,8,9,10
+            UNION
+                SELECT c.uniquename AS child,
+                c.stock_id AS child_id,
+                m.uniquename AS mother,
+                m.stock_id AS mother_id,
+                f.uniquename AS father,
+                f.stock_id AS father_id,
+                m_rel.value AS type,
+                included_rows.depth + 1,
+                path || c.stock_id,
+                c.stock_id = ANY(path)
+                FROM included_rows, stock c
+                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
+                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
+                WHERE c.stock_id IN (included_rows.mother_id, included_rows.father_id) AND NOT cycle
+                GROUP BY 1,2,3,4,5,6,7,8,9,10
+        )
+        SELECT child, mother, father, type, depth
+        FROM included_rows
+        GROUP BY 1,2,3,4,5
+        ORDER BY 5,1;";
+
+    my $sth = $c->dbc->dbh->prepare($query);
+    $sth->execute(@$accession_ids);
+
+    my %pedigree;
+    no warnings 'uninitialized';
+    while (my ($name, $mother, $father, $cross_type, $depth) = $sth->fetchrow_array()) {
+        $pedigree{$name}{$depth}{'mother'} = $mother;
+        $pedigree{$name}{$depth}{'father'} = $father;
+    }
+    return %pedigree;
+}
+
 sub stock_lookup : Path('/stock_lookup/') Args(2) ActionClass('REST') { }
 
 sub stock_lookup_POST {

@@ -28,7 +28,7 @@ jQuery(document).ready(function($) {
 
 function get_pedigree_string(stock_id) {
     jQuery.ajax( {
-      url : '/stock/'+ stock_id +'/pedigree',
+      url : '/stock/'+ stock_id +'/pedigreestring',
       data : { 'level' : jQuery('#pedigree_level_select').val() },
       error : function(response) {
          alert("an error occurred");

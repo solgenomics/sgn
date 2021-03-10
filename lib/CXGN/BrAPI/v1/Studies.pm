@@ -538,6 +538,9 @@ sub studies_layout {
 
     my $cxgn_trial_type = $trial->get_cxgn_project_type();
 
+    #get seedlots
+    my %seedlots = get_seedlots($self,$study_id);
+
 	my $plot_data = [];
 	my $formatted_plot = {};
 	my $check_id;
@@ -560,18 +563,30 @@ sub studies_layout {
 			if ($design->{$plot_number}->{plant_ids}){
 				$additional_info{plantDbIds} = $design->{$plot_number}->{plant_ids};
 			}
-            my $image_id = CXGN::Stock->new({
-    			schema => $self->bcs_schema,
-    			stock_id => $design->{$plot_number}->{plot_id},
-    		});
-    		my @plot_image_ids = $image_id->get_image_ids();
+			my @plot_image_ids;
+			eval {
+	            my $image_id = CXGN::Stock->new({
+	    			schema => $self->bcs_schema,
+	    			stock_id => $design->{$plot_number}->{plot_id},
+	    		});
+	    		@plot_image_ids = $image_id->get_image_ids();
+	    	};
             my @ids;
             foreach my $arrayimage (@plot_image_ids){
                 push @ids, $arrayimage->[0];
             }
+            my $plot_id = $design->{$plot_number}->{plot_id};
             $additional_info{plotImageDbIds} = \@ids;
             $additional_info{plotNumber} = $design->{$plot_number}->{plot_number};
             $additional_info{designType} = $design_type;
+
+            if (exists($seedlots{$plot_id})) {
+            	$additional_info{seedLotDbId} = qq|$seedlots{$plot_id}[0]|;
+            	$additional_info{seedLotName} = $seedlots{$plot_id}[1];
+            } else {
+            	$additional_info{seedLotDbId} = undef;
+            	$additional_info{seedLotName} = undef;
+            }
 
 			$formatted_plot = {
 				studyDbId => $study_id,
@@ -875,6 +890,37 @@ sub get_stockprop_hash {
 	}
 	#print STDERR Dumper $prop_hash;
 	return $prop_hash;
+}
+
+sub get_seedlots {
+	my $self = shift;
+	my $trial_id = shift;
+	my %seedlots;
+
+	my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'seedlot', 'stock_type' )->cvterm_id();
+	my $seed_transaction_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "seed transaction", "stock_relationship")->cvterm_id();
+
+	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename, plot.stock_id
+		FROM stock as accession
+		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
+		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
+		JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
+		JOIN nd_experiment using(nd_experiment_id)
+		JOIN nd_experiment_project using(nd_experiment_id)
+		JOIN project using(project_id)
+		WHERE accession.type_id = $seedlot_cvterm_id
+		AND stock_relationship.type_id IN ($seed_transaction_cvterm_id)
+		AND project.project_id = ?
+		GROUP BY accession.stock_id, plot.stock_id
+		ORDER BY accession.stock_id;";
+
+	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+	$h->execute($trial_id);
+	while (my ($stock_id, $uniquename, $plot_id) = $h->fetchrow_array()) {
+		 $seedlots{$plot_id} = [$stock_id, $uniquename];
+	}
+
+	return %seedlots;
 }
 
 sub format_date {

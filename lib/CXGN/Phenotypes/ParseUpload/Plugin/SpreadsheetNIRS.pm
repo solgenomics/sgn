@@ -71,7 +71,7 @@ sub validate {
     }
 
     foreach (@columns) {
-        if (not $_=~/^[+]?\d+\.?\d*$/){
+        if (not $_=~/^[-+]?\d+\.?\d*$/){
             $parse_result{'error'}= "It is not a valid wavelength in the header. Must be a numeric spectra: '$_'. Could you check the data format?";
             return \%parse_result;
         }

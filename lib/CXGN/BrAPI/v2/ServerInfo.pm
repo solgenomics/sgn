@@ -165,7 +165,7 @@ sub search {
 		};
 		
 	}
-	my $permissions = info();
+
 	my %result = (
 		calls=>\@data,
 		contactEmail=>"lam87\@cornell.edu",
@@ -175,20 +175,9 @@ sub search {
 		organizationURL=>$c->request->{"base"},
 		serverDescription=>"BrAPI v2.0 compliant server",
 		serverName=>$c->config->{project_name},
-		permissions=>$permissions,
 	);
 	my @data_files;
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Calls result constructed');
-}
-
-sub info {
-	my $permissions  = {
-				'GET' => 'any',
-				'POST' => 'any',
-				'PUT' => 'any'
-			};
-
-	return $permissions;
 }
 
 1;
