@@ -156,7 +156,7 @@ sub _clean_inputs {
 	if($alldata){
 		my %data = ref $alldata eq 'ARRAY' ? map { $_ => $_} @{$alldata} : %{$alldata};
 		%$params = $params ? (%data, %$params) : %data;
-	} 
+	}
 
 	foreach (keys %$params){
 		my $values = $params->{$_};
@@ -396,7 +396,7 @@ sub calls_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Calls');
-	my $brapi_package_result = $brapi_module->search( 
+	my $brapi_package_result = $brapi_module->search(
 		$clean_inputs
 	);
 	_standard_response_construction($c, $brapi_package_result);
@@ -2631,7 +2631,7 @@ sub observation_unit_single_PUT {
     my $observationUnits = $clean_inputs;
     $observationUnits->{observationUnitDbId} = $observation_unit_db_id;
     my @all_observations_units;
-    push @all_observations_units, $observationUnits;	
+    push @all_observations_units, $observationUnits;
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
     my $brapi_package_result = $brapi_module->observationunits_update(\@all_observations_units);
@@ -2665,7 +2665,7 @@ sub observation_units_search_retrieve  : Chained('brapi') PathPart('search/obser
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'ObservationUnits');
 }
- 
+
 
 sub phenotypes_search_table : Chained('brapi') PathPart('phenotypes-search/table') Args(0) : ActionClass('REST') { }
 
@@ -3296,7 +3296,7 @@ sub variables_search_save  : Chained('brapi') PathPart('search/variables') Args(
 
 sub variables_search_save_POST {
     my $self = shift;
-    my $c = shift; 
+    my $c = shift;
     save_results($self,$c,$c->stash->{clean_inputs},'ObservationVariables');
 }
 
@@ -3788,7 +3788,7 @@ sub observations_detail_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Observations');
-    my $brapi_package_result = $brapi_module->detail({ 
+    my $brapi_package_result = $brapi_module->detail({
     	observationDbId => $c->stash->{observation_id}
     });
     _standard_response_construction($c, $brapi_package_result);
@@ -3915,7 +3915,7 @@ sub markers_search_retrieve : Chained('brapi') PathPart('search/markers') Args(1
  Usage: To retrieve variants
  Desc: BrAPI v2.0
  Args:
- Side Effects: 
+ Side Effects:
 
 =cut
 
@@ -3947,7 +3947,7 @@ sub variants_detail_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Variants');
-    my $brapi_package_result = $brapi_module->detail({ 
+    my $brapi_package_result = $brapi_module->detail({
     	variantDbId => $c->stash->{variants_id}
     });
     _standard_response_construction($c, $brapi_package_result);
@@ -4220,7 +4220,7 @@ sub images_single_PUT {
     my $image = $clean_inputs;
     $image->{imageDbId} = $c->stash->{image_id};
     my @all_images;
-    push @all_images, $image;   
+    push @all_images, $image;
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
@@ -4777,7 +4777,7 @@ sub referencesets_search_retrieve : Chained('brapi') PathPart('search/references
 
 =head2 brapi/v2/reference
 
- Usage: To retrieve data for reference 
+ Usage: To retrieve data for reference
  Desc:
  Return JSON example:
         {
@@ -5099,6 +5099,20 @@ sub seedlot_single_transaction_fetch_GET {
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
 	my $brapi_package_result = $brapi_module->transactions($c->stash->{seedLotDbId}, $clean_inputs);
 	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub breedingmethods  : Chained('brapi') PathPart('breedingmethods') Args(0) : ActionClass('REST') { }
+
+sub breedingmethods_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('breedingmethods');
+    my $brapi_package_result = $brapi_module->search($clean_inputs);
+
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 
