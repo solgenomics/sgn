@@ -126,7 +126,7 @@ $analytics_protocol_result_summary
 %           if ($avg_varcomps_display) {
 %               print "<br/><strong>Variance Components</strong><br/>";
 %               foreach my $i (@$avg_varcomps_display) {
-%                   if ($i->{mean}) {
+%                   if (defined($i->{mean})) {
 %                       print "$i->{type}: $i->{type_scenario}: $i->{level}: $i->{mean} +- $i->{std}<br/>";
 %                   }
 %               }

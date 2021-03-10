@@ -12534,8 +12534,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         $env_corr_res->{$t}->{mean} = $env_corr_res_stat->mean();
     }
 
-    print STDERR Dumper $env_corr_res;
-    print STDERR Dumper $env_iterations;
+    # print STDERR Dumper $env_corr_res;
+    # print STDERR Dumper $env_iterations;
     # print STDERR Dumper \%trait_name_encoder;
     # print STDERR Dumper \%trait_to_time_map;
     # print STDERR Dumper $env_varcomps;
@@ -12554,9 +12554,11 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         }
         # print STDERR Dumper \%avg_varcomps;
 
+        my %avg_varcomps_save;
         while (my($t, $type_obj) = each %avg_varcomps) {
             while (my($type, $level_obj) = each %$type_obj) {
                 while (my($level, $vals) = each %$level_obj) {
+                    my @values = @{$vals->{vals}};
                     my $level_rec;
                     my @level_split = split '\.', $level;
                     if (scalar(@level_split) == 2) { #For Sommer Varcomp
@@ -12570,11 +12572,12 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         $level_rec = $level;
                     }
                     my $stat = Statistics::Descriptive::Full->new();
-                    $stat->add_data(@{$vals->{vals}});
+                    $stat->add_data(@values);
                     my $std = $stat->standard_deviation();
                     my $mean = $stat->mean();
-                    $avg_varcomps{$t}->{$type}->{$level_rec}->{std} = $std;
-                    $avg_varcomps{$t}->{$type}->{$level_rec}->{mean} = $mean;
+                    $avg_varcomps_save{$t}->{$type}->{$level_rec}->{std} = $std;
+                    $avg_varcomps_save{$t}->{$type}->{$level_rec}->{mean} = $mean;
+                    $avg_varcomps_save{$t}->{$type}->{$level_rec}->{vals} = \@values;
                     push @avg_varcomps_display, {
                         type => $t,
                         type_scenario => $type,
@@ -12586,31 +12589,48 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
             }
         }
+        %avg_varcomps = %avg_varcomps_save;
+        print STDERR Dumper \%avg_varcomps;
+
+        my @potential_times;
+        #Sommer
+        foreach (keys %trait_name_encoder) {
+            push @potential_times, "t$_";
+        }
+        #ASREML-R
+        foreach (values %trait_name_encoder) {
+            push @potential_times, $_;
+        }
 
         while (my($t, $type_obj) = each %avg_varcomps) {
             while (my($type, $level_obj) = each %$type_obj) {
                 my @h_values;
-                foreach my $time (keys %trait_name_encoder) {
+                foreach my $time (@potential_times) {
                     #Sommer varcomps
-                    if (exists($avg_varcomps{$t}->{$type}->{"u:id.t$time-t$time"}) && exists($avg_varcomps{$t}->{$type}->{"u:units.t$time-t$time"})) {
-                        my $h = $avg_varcomps{$t}->{$type}->{"u:id.t$time-t$time"}/($avg_varcomps{$t}->{$type}->{"u:id.t$time-t$time"} + $avg_varcomps{$t}->{$type}->{"u:units.t$time-t$time"});
+                    if (exists($avg_varcomps{$t}->{$type}->{"u:id.$time-$time"}->{mean}) && exists($avg_varcomps{$t}->{$type}->{"u:units.$time-$time"}->{mean})) {
+                        my $g = $avg_varcomps{$t}->{$type}->{"u:id.$time-$time"}->{mean};
+                        my $r = $avg_varcomps{$t}->{$type}->{"u:units.$time-$time"}->{mean};
+                        my $h = $g + $r == 0 ? 0 : $g/($g + $r);
+                        print STDERR "$h\n";
                         push @h_values, $h;
                         push @avg_varcomps_display, {
                             type => $t,
                             type_scenario => $type,
-                            level => "h2-t$time",
+                            level => "h2-$time",
                             vals => [$h],
                             std => 0,
                             mean => $h
                         };
                     }
-                    elsif (exists($avg_varcomps{$t}->{$type}->{"trait:vm(id_factor, geno_mat_3col)!trait_t$time:t$time"}) && exists($avg_varcomps{$t}->{$type}->{"units:trait!trait_t$time:t$time"})) {
-                        my $h = $avg_varcomps{$t}->{$type}->{"trait:vm(id_factor, geno_mat_3col)!trait_t$time:t$time"}/($avg_varcomps{$t}->{$type}->{"trait:vm(id_factor, geno_mat_3col)!trait_t$time:t$time"} + $avg_varcomps{$t}->{$type}->{"units:trait!trait_t$time:t$time"});
+                    elsif (exists($avg_varcomps{$t}->{$type}->{"trait:vm(id_factor, geno_mat_3col)!trait_$time:$time"}->{mean}) && exists($avg_varcomps{$t}->{$type}->{"units:trait!trait_$time:$time"}->{mean})) {
+                        my $g = $avg_varcomps{$t}->{$type}->{"trait:vm(id_factor, geno_mat_3col)!trait_$time:$time"}->{mean};
+                        my $r = $avg_varcomps{$t}->{$type}->{"units:trait!trait_$time:$time"}->{mean};
+                        my $h = $g + $r == 0 ? 0 : $g/($g + $r);
                         push @h_values, $h;
                         push @avg_varcomps_display, {
                             type => $t,
                             type_scenario => $type,
-                            level => "h2-t$time",
+                            level => "h2-$time",
                             vals => [$h],
                             std => 0,
                             mean => $h
@@ -12650,12 +12670,14 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 }
                 my $hg_line = 1;
                 foreach $a (@{$_->{$t}->{genetic_covariance}}) {
-                    push @{$avg_varcomps{$type}->{$t}->{h2_coeff}->{$hg_line}->{vals}}, $a/($a+$res);
+                    my $hg = $a + $res == 0 ? 0 : $a/($a + $res);
+                    push @{$avg_varcomps{$type}->{$t}->{h2_coeff}->{$hg_line}->{vals}}, $hg;
                     $hg_line++;
                 }
                 my $he_line = 1;
                 foreach $a (@{$_->{$t}->{env_covariance}}) {
-                    push @{$avg_varcomps{$type}->{$t}->{env2_coeff}->{$he_line}->{vals}}, $a/($a+$res);
+                    my $he = $a + $res == 0 ? 0 : $a/($a + $res);
+                    push @{$avg_varcomps{$type}->{$t}->{env2_coeff}->{$he_line}->{vals}}, $he;
                     $he_line++;
                 }
                 my $genetic_corr_line = 1;
