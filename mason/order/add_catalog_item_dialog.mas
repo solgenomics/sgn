@@ -90,6 +90,29 @@ $timestamp => localtime()
     </div>
 </div>
 
+<div class="modal fade" id="add_item_saved_dialog_message" name="add_item_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addItemSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addItemSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The catalog item was saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_item_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 jQuery(document).ready(function(){
 
@@ -112,7 +135,6 @@ jQuery(document).ready(function(){
         var breeding_program = jQuery('#item_breeding_program_id').val();
         var availability = jQuery('#item_availability').val();
         var comment = jQuery('#item_comment').val();
-        alert(breeding_program);
         if (name == '') { alert("Please provide a name") };
         if (type == '') { alert("Please select a type") };
         if (category == '') { alert("Please select a category") };
@@ -141,8 +163,8 @@ jQuery(document).ready(function(){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert("The item was saved.");
                     jQuery('#add_catalog_item_dialog').modal('hide');
+                    jQuery('#add_item_saved_dialog_message').modal("show");
                 }
                 if (response.error_string) {
                     alert(response.error_string);
@@ -153,6 +175,10 @@ jQuery(document).ready(function(){
                 alert('An error occurred adding item');
             }
         });
+    });
+
+    jQuery("#dismiss_item_saved_dialog").click(function(){
+        location.reload();
     });
 
 });

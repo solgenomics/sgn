@@ -46,13 +46,16 @@ sub add_catalog_item_POST : Args(0) {
         $item_stock_id = $item_rs->stock_id();
     }
 
+    my $program_rs = $schema->resultset('Project::Project')->find({project_id => $item_breeding_program});
+    my $program_name = $program_rs->name();
+
     my $stock_catalog = CXGN::Stock::Catalog->new({
         bcs_schema => $schema,
         item_type => $item_type,
         category => $item_category,
         description => $item_description,
         material_source => $item_material_source,
-        breeding_program => $item_breeding_program,
+        breeding_program => $program_name,
         availability => $item_availability,
         comment => $item_comment,
         parent_id => $item_stock_id
