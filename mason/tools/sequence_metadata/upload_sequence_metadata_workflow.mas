@@ -53,7 +53,9 @@
                 <div class="form-group">
                   <label class="col-sm-3 control-label">Data Type:&nbsp;</label>
                   <div class="col-sm-9">
-                    <div id="sequence_metadata_upload_type_select_div">Loading...</div>
+                    <select class="form-control" id="sequence_metadata_upload_type_select" disabled>
+                      <option value="">Loading...</option>
+                    </select>
                     <br />
                     <div class="well">
                       <p><span class="glyphicon glyphicon-info-sign"></span>&nbsp;<span id="sequence_metadata_upload_type_definition"></span></p>
@@ -295,15 +297,20 @@ function complete_intro_step() {
   jQuery.ajax({
     type: 'GET',
     dataType: 'json',
-    url: '/ajax/html/select/sequence_metadata_types?id=sequence_metadata_upload_type_select',
+    url: '/ajax/sequence_metadata/types',
     success: function(data) {
-      if ( data && data.select && data.json ) {
-        sequence_metadata_data_types = data.json;
-        jQuery('#sequence_metadata_upload_type_select_div').html(data.select);
+      if ( data && data.types ) {
+        sequence_metadata_data_types = data.types;
+        let html = "";
+        for ( let i = 0; i < data.types.length; i++ ) {
+          html += "<option value='" + data.types[i].type_id + "'>" + data.types[i].type_name + "</option>";
+        }
+        jQuery('#sequence_metadata_upload_type_select').html(html);
+        jQuery('#sequence_metadata_upload_type_select').prop('disabled', false);
         jQuery('#sequence_metadata_upload_type_select').on('change', function() {
           setDataTypeDefinition(this.value);
         });
-        setDataTypeDefinition(data.json[0].id);
+        setDataTypeDefinition(data.types[0].type_id);
       }
       else {
         alert("ERROR: Could not load data types!");
@@ -337,8 +344,8 @@ function complete_data_type_step() {
   
   // Set sequence metadata type value
   for ( let i = 0; i < sequence_metadata_data_types.length; i++ ) {
-    if ( parseInt(sequence_metadata_data_types[i].id) === parseInt(sequence_metadata_upload_type_id) ) {
-      jQuery('#sequence_metadata_upload_protocol_sequence_metadata_type:text').val(sequence_metadata_data_types[i].name);
+    if ( parseInt(sequence_metadata_data_types[i].type_id) === parseInt(sequence_metadata_upload_type_id) ) {
+      jQuery('#sequence_metadata_upload_protocol_sequence_metadata_type:text').val(sequence_metadata_data_types[i].type_name);
     }
   }
 
@@ -644,8 +651,8 @@ function store() {
  */
 function setDataTypeDefinition(id) {
   for ( let i = 0; i < sequence_metadata_data_types.length; i++ ) {
-    if ( parseInt(sequence_metadata_data_types[i].id) === parseInt(id) ) {
-      jQuery('#sequence_metadata_upload_type_definition').html(sequence_metadata_data_types[i].definition);
+    if ( parseInt(sequence_metadata_data_types[i].type_id) === parseInt(id) ) {
+      jQuery('#sequence_metadata_upload_type_definition').html(sequence_metadata_data_types[i].type_definition);
     }
   }
 }
