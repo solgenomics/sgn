@@ -280,11 +280,11 @@ sub store {
 
         # Get data from line
         my @data = split(/\t/, $line);
-        my $feature = @data[0] ne "." ? @data[0] : "";
-        my $start = @data[3] ne "." ? @data[3] : "";
-        my $end = @data[4] ne "." ? @data[4] : "";
-        my $score = @data[5] ne "." ? @data[5] : "";
-        my $attributes = @data[8] ne "." ? @data[8] : "";
+        my $feature = $data[0] ne "." ? $data[0] : "";
+        my $start = $data[3] ne "." ? $data[3] : "";
+        my $end = $data[4] ne "." ? $data[4] : "";
+        my $score = $data[5] ne "." ? $data[5] : "";
+        my $attributes = $data[8] ne "." ? $data[8] : "";
 
         # Put unknown start / stop positions at 0
         $start = $start eq "" ? 0 : $start;
@@ -310,10 +310,12 @@ sub store {
             my @as = split(/;/, $attributes);
             for my $a (@as) {
                 my @kv = split(/=/, $a);
-                my $key = @kv[0];
-                my $value = @kv[1];
+                my $key = $kv[0];
+                my $value = $kv[1];
+                ($value) = $value =~ /^"?([^"]*)"?$/;
                 if ( $key eq "score" || $key eq "start" || $key eq "end" ) {
-                    die "Line has reserved key in attribute list (attributes cannot use keys of 'score', 'start' or 'end')\n";
+                    $results{'error'} = "Line has reserved key in attribute list (attributes cannot use keys of 'score', 'start' or 'end')";
+                    return(\%results);
                 }
                 $attribute_hash{$key} = $value;
             }
