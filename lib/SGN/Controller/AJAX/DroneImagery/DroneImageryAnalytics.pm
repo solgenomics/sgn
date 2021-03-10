@@ -3244,8 +3244,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 };
 
                 push @$env_varcomps, {
-                    type => "$statistics_select: Env Variance $env_variance_percent : PE Structure: $permanent_environment_structure : Iteration $iterations",
-                    statistics_select => $statistics_select,
+                    type => "$statistics_select: Env Variance $env_variance_percent : PE Structure: $permanent_environment_structure : SimCorrelation: $correlation_between_times : Iteration $iterations",
+                    statistics_select => "$statistics_select: Env Variance $env_variance_percent : PE Structure: $permanent_environment_structure : SimCorrelation: $correlation_between_times",
+                    correlation_between_times => $correlation_between_times,
                     env_variance => $env_variance_percent,
                     original => {
                         genetic_covariance => $rr_coeff_genetic_covariance_original_array_1,
@@ -5534,8 +5535,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 %trait_to_time_map = %trait_to_time_map_2;
 
                 push @$env_varcomps, {
-                    type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
-                    statistics_select => $statistics_select,
+                    type => "$statistics_select: Env Variance $env_variance_percent : SimCorrelation: $correlation_between_times : Iteration $iterations",
+                    statistics_select => "$statistics_select: Env Variance $env_variance_percent : SimCorrelation: $correlation_between_times",
+                    correlation_between_times => $correlation_between_times,
                     env_variance => $env_variance_percent,
                     original => {
                         covariance => $varcomp_original_array_2,
@@ -7786,8 +7788,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 %trait_to_time_map = %trait_to_time_map_2;
 
                 push @$env_varcomps, {
-                    type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
-                    statistics_select => $statistics_select,
+                    type => "$statistics_select: Env Variance $env_variance_percent : SimCorrelation: $correlation_between_times : Iteration $iterations",
+                    statistics_select => "$statistics_select: Env Variance $env_variance_percent : SimCorrelation: $correlation_between_times",
+                    correlation_between_times => $correlation_between_times,
                     env_variance => $env_variance_percent,
                     original => {
                         covariance => $varcomp_original_array_3
@@ -10140,8 +10143,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 %trait_to_time_map = %trait_to_time_map_5;
 
                 push @$env_varcomps, {
-                    type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
-                    statistics_select => $statistics_select,
+                    type => "$statistics_select: Env Variance $env_variance_percent : SimCorrelation: $correlation_between_times : Iteration $iterations",
+                    statistics_select => "$statistics_select: Env Variance $env_variance_percent : SimCorrelation: $correlation_between_times",
+                    correlation_between_times => $correlation_between_times,
                     env_variance => $env_variance_percent,
                     original => {
                         covariance => $varcomp_original_array_5
@@ -12493,8 +12497,9 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 %trait_to_time_map = %trait_to_time_map_6;
 
                 push @$env_varcomps, {
-                    type => "$statistics_select: Env Variance $env_variance_percent : Iteration $iterations",
-                    statistics_select => $statistics_select,
+                    type => "$statistics_select: Env Variance $env_variance_percent : SimCorrelation: $correlation_between_times : Iteration $iterations",
+                    statistics_select => "$statistics_select: Env Variance $env_variance_percent : SimCorrelation: $correlation_between_times",
+                    correlation_between_times => $correlation_between_times,
                     env_variance => $env_variance_percent,
                     original => {
                         covariance => $varcomp_original_array_6
@@ -12545,7 +12550,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my @varcomp_keys = ('original', 'altered', 'env_linear', 'env_1DN', 'env_2DN', 'env_ar1xar1', 'env_random', 'env_realdata');
     if ($statistics_select ne 'blupf90_grm_random_regression_gdd_blups' && $statistics_select ne 'blupf90_grm_random_regression_dap_blups' && $statistics_select ne 'airemlf90_grm_random_regression_gdd_blups' && $statistics_select ne 'airemlf90_grm_random_regression_dap_blups') {
         foreach (@$env_varcomps) {
-            my $type = $_->{statistics_select}."_".$_->{env_variance};
+            my $type = $_->{statistics_select};
             foreach my $t (@varcomp_keys) {
                 foreach my $a (@{$_->{$t}->{covariance}}) {
                     push @{$avg_varcomps{$type}->{$t}->{$a->[0]}->{vals}}, $a->[1];
@@ -12611,7 +12616,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                         my $g = $avg_varcomps{$t}->{$type}->{"u:id.$time-$time"}->{mean};
                         my $r = $avg_varcomps{$t}->{$type}->{"u:units.$time-$time"}->{mean};
                         my $h = $g + $r == 0 ? 0 : $g/($g + $r);
-                        print STDERR "$h\n";
                         push @h_values, $h;
                         push @avg_varcomps_display, {
                             type => $t,
@@ -12655,7 +12659,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     #AIREMLF90 RR
     else {
         foreach (@$env_varcomps) {
-            my $type = $_->{statistics_select}."_".$permanent_environment_structure."_".$_->{env_variance};
+            my $type = $_->{statistics_select};
             foreach my $t (@varcomp_keys) {
                 my $res = $_->{$t}->{residual};
                 my $genetic_line = 1;
