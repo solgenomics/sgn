@@ -770,40 +770,6 @@ sub get_analytics_protocols : Path('/ajax/html/select/analytics_protocols') Args
     $c->stash->{rest} = { select => $html };
 }
 
-sub get_sequence_metadata_types : Path('/ajax/html/select/sequence_metadata_types') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $id = $c->req->param("id") || "sequence_metadata_upload_type_select";
-    my $name = $c->req->param("name") || "sequence_metadata_upload_type_select";
-
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $sequence_metadata_types_cv_id = $schema->resultset("Cv::Cv")->find( { name => "sequence_metadata_types" } )->cv_id();
-    my $cvterms = $schema->resultset("Cv::Cvterm")->search( { cv_id => $sequence_metadata_types_cv_id } );
-
-    my @json = ();
-    my @options = ();
-    while (my $cvterm = $cvterms->next) {
-        my %result = (
-            id => $cvterm->get_column('cvterm_id'),
-            name => $cvterm->get_column('name'),
-            definition => $cvterm->get_column('definition')
-        );
-        push(@json, \%result);
-        push(@options, [$result{'id'}, $result{'name'}]);
-    }
-
-    my $html = simple_selectbox_html(
-        name => $name,
-        id => $id,
-        choices => \@options
-    );
-
-    $c->stash->{rest} = { 
-        select => $html,
-        json => \@json
-    };
-}
-
 sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_protocols') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -824,7 +790,7 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
-    my $html = '<table class="table table-bordered table-hover" id="html-select-highdimprotocol-table"><thead><tr><th>Select</th><th>Protocol Name</th><th>Description</th><th>Properties</th></tr></thead><tbody>';
+    my $html = '<table class="table table-bordered table-hover" id="html-select-sdmprotocol-table"><thead><tr><th>Select</th><th>Protocol Name</th><th>Description</th><th>Properties</th></tr></thead><tbody>';
 
     while (my ($nd_protocol_id, $name, $description, $props_json) = $h->fetchrow_array()) {
         my $props = decode_json $props_json;
@@ -844,7 +810,7 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
     }
     $html .= "</tbody></table>";
 
-    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-highdimprotocol-table').DataTable({ }); } );</script>";
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-sdmprotocol-table').DataTable({ }); } );</script>";
 
     $c->stash->{rest} = { select => $html };
 }
