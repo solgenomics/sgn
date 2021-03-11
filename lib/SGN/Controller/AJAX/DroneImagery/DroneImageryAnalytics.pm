@@ -81,7 +81,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $analytics_protocol_id = $c->req->param('analytics_protocol_id');
     my $analytics_protocol_name = $c->req->param('analytics_protocol_name');
     my $analytics_protocol_desc = $c->req->param('analytics_protocol_desc');
-    my $sim_env_change_over_time = $c->req->param('sim_env_change_over_time') || '';
 
     my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
@@ -181,6 +180,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $number_iterations = $protocol_properties->{number_iterations};
     my $simulated_environment_real_data_trait_id = $protocol_properties->{simulated_environment_real_data_trait_id};
     my $correlation_between_times = $protocol_properties->{sim_env_change_over_time_correlation} || 0.9;
+    $sim_env_change_over_time = $correlation_between_times;
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
@@ -2677,7 +2677,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 @columns = $csv->fields();
                             }
                             foreach (@columns) {
-                                push @{$env_corr_res->{$header[$counter].$sim_env_change_over_time."_envvar_".$env_variance_percent."_".$permanent_environment_structure}->{values}}, $_;
+                                push @{$env_corr_res->{$header[$counter]."_corrtime_".$sim_env_change_over_time."_envvar_".$env_variance_percent."_".$permanent_environment_structure}->{values}}, $_;
                                 $counter++;
                             }
                         }
@@ -4966,7 +4966,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 @columns = $csv->fields();
                             }
                             foreach (@columns) {
-                                push @{$env_corr_res->{$statistics_select."_".$header[$counter].$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
+                                push @{$env_corr_res->{$statistics_select."_".$header[$counter]."_corrtime_".$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
                                 $counter++;
                             }
                         }
@@ -7219,7 +7219,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 @columns = $csv->fields();
                             }
                             foreach (@columns) {
-                                push @{$env_corr_res->{$statistics_select."_".$header[$counter].$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
+                                push @{$env_corr_res->{$statistics_select."_".$header[$counter]."_corrtime_".$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
                                 $counter++;
                             }
                         }
@@ -9574,7 +9574,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 @columns = $csv->fields();
                             }
                             foreach (@columns) {
-                                push @{$env_corr_res->{$header[$counter].$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
+                                push @{$env_corr_res->{$header[$counter]."_corrtime_".$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
                                 $counter++;
                             }
                         }
@@ -11928,7 +11928,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                                 @columns = $csv->fields();
                             }
                             foreach (@columns) {
-                                push @{$env_corr_res->{$header[$counter].$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
+                                push @{$env_corr_res->{$header[$counter]."_corrtime_".$sim_env_change_over_time."_envvar_".$env_variance_percent}->{values}}, $_;
                                 $counter++;
                             }
                         }
