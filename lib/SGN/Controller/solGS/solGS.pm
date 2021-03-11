@@ -818,8 +818,6 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 	my $protocol_url = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c, $protocol_id);
 	$c->stash->{protocol_url} = $protocol_url;
 
-	# my $identifier    = $training_pop_id . '_' . $selection_pop_id;
-
 	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
 	my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
 
@@ -840,10 +838,6 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 	};
 
 	$c->stash->{selection_stocks_cnt} = $self->predicted_lines_count($c, $args);
-
-	# my $identifier = $training_pop_id . '_' . $selection_pop_id;
-	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
-	my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
 
 	$self->top_blups($c, $gebvs_file);
 
@@ -1322,7 +1316,6 @@ sub prediction_pop_analyzed_traits {
     my @trait_abbrs;
     my @selected_trait_abbrs;
     my @selected_files;
-    # my $identifier = $training_pop_id . '_' . $selection_pop_id;
 
     if (@selected_analyzed_traits)
     {
@@ -3485,8 +3478,8 @@ sub get_selection_pop_query_args {
     }
     elsif ($selection_pop_id =~ /dataset/)
     {
-	#$c->controller('solGS::Dataset')->get_dataset_genotypes_list($c);
-	#$genotypes_ids = $c->stash->{genotypes_ids};
+	# $c->controller('solGS::Dataset')->get_dataset_genotypes_list($c);
+	# $genotypes_ids = $c->stash->{genotypes_ids};
 
 	$pop_type = 'dataset';
     }
