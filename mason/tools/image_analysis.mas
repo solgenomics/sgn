@@ -469,7 +469,7 @@ function _load_image_search_results() {
         'serverSide': true,
         'scrollX': true,
         'lengthMenu': [10,20,50,100,1000,5000],
-        'ajax': { 'url':  '/ajax/search/images',
+        'ajax': { 'url':  '/ajax/search/images?show_observations=1',
             'data': function(d) {
               d.html_select_box = "image_analysis_select";
               d.image_description_filename_composite = jQuery('#image_description_filename_composite').val();

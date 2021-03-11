@@ -26,6 +26,7 @@ sub image_search :Path('/ajax/search/images') Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $params = $c->req->params() || {};
     #print STDERR Dumper $params;
+    my $show_observations = $c->req->param('show_observations');
 
     my @descriptors;
     if (exists($params->{image_description_filename_composite}) && $params->{image_description_filename_composite}) {
@@ -93,13 +94,16 @@ sub image_search :Path('/ajax/search/images') Args(0) {
     foreach (@$result){
         my $image = SGN::Image->new($schema->storage->dbh, $_->{image_id}, $c);
         my $associations = $_->{stock_id} ? "Stock (".$_->{stock_type_name}."): <a href='/stock/".$_->{stock_id}."/view' >".$_->{stock_uniquename}."</a>" : "";
-        my $observations = $_->{observations_array} ? join("\n", map { $_->{observationvariable_name} . " : " . $_->{value} } @{$_->{observations_array}}) : "";
+        my $observations;
+        if ($show_observations) {
+            $observations = $_->{observations_array} ? join("\n", map { $_->{observationvariable_name} . " : " . $_->{value} } @{$_->{observations_array}}) : "";
+        }
         if ($_->{project_name}) {
             $associations = $_->{stock_id} ? $associations."<br/>Project (".$_->{project_image_type_name}."): ".$_->{project_name} : "Project (".$_->{project_image_type_name}."): ".$_->{project_name};
         }
-        my @tags;
+        my %unique_tags;
         foreach my $t (@{$_->{tags_array}}) {
-            push @tags, $t->{name};
+            $unique_tags{$t->{name}}++;
         }
         my $image_id = $image->get_image_id;
         my $image_name = $image->get_name() || '';
@@ -119,10 +123,12 @@ sub image_search :Path('/ajax/search/images') Args(0) {
             "<a href='/image/view/".$_->{image_id}."' >".$_->{image_original_filename}."</a>",
             $_->{image_description},
             "<a href='/solpeople/personal-info.pl?sp_person_id=".$_->{image_sp_person_id}."' >".$_->{image_username}."</a>",
-            $associations,
-            $observations,
-            (join ', ', @tags)
+            $associations
         );
+        if ($show_observations) {
+            push @line, $observations;
+        }
+        push @line,  (join ', ', keys %unique_tags);
 
         push @return, \@line;
     }
