@@ -180,7 +180,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $number_iterations = $protocol_properties->{number_iterations};
     my $simulated_environment_real_data_trait_id = $protocol_properties->{simulated_environment_real_data_trait_id};
     my $correlation_between_times = $protocol_properties->{sim_env_change_over_time_correlation} || 0.9;
-    $sim_env_change_over_time = $correlation_between_times;
+    my $sim_env_change_over_time = $correlation_between_times;
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
