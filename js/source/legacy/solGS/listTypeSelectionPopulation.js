@@ -18,7 +18,7 @@ jQuery(document).ready( function() {
     var listMenu = list.listSelect("list_type_selection_pops", ["accessions"], undefined, undefined, undefined);
     var relevant =[];
 
-    var dType = ['accessions'];
+    var dType = ['accessions', 'trials'];
     var dMenu = solGS.dataset.getDatasetsMenu(dType);
 
     if (listMenu.match(/option/) != null) {
