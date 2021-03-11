@@ -176,8 +176,6 @@ tr.shown td.details-control {
 var service_traits = {
     'necrosis': {
         "CBSDpct|CO_334:0002078" : "Cassava",
-        "Vine dry matter content computing percent|CO_331:0001014" : "SweetPotato",
-        "Necrosis rating|CO_331:01234567": "SweetPotato",
     },
     'largest_contour_percent': {},
     'count_contours': {},
