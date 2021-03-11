@@ -437,7 +437,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     print STDERR $q."\n";
     my $h = $dbh->prepare($q);
 
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)+(e-?[0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex);
 
     my @phenotype_data;

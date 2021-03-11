@@ -2438,7 +2438,7 @@ sub get_phenotypes_for_trait {
         ORDER BY phenotype_id ASC;";
     $h = $dbh->prepare($q);
 
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)+(e-?[0-9]+)?$';
     $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
     while (my ($value) = $h->fetchrow_array()) {
         push @data, $value + 0;
@@ -2515,7 +2515,7 @@ sub get_stock_phenotypes_for_traits {
     print STDERR "QUERY = $q\n";
     my $h = $dbh->prepare($q);
 
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)+(e-?[0-9]+)?$';
     $h->execute($self->get_trial_id(), $numeric_regex );
     while (my ($stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value, $rel_stock_id, $rel_stock_name, $stock_type) = $h->fetchrow_array()) {
         push @data, [$stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value + 0, $rel_stock_id, $rel_stock_name, $stock_type];

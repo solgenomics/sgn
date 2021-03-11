@@ -155,7 +155,7 @@ sub search {
     print STDERR "Search Start:".localtime."\n";
 
     my $include_timestamp = $self->include_timestamp;
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)+(e-?[0-9]+)?$';
 
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
