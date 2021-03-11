@@ -446,7 +446,7 @@ sub trait_name {
 	        ->single
 	        ->name;
 	}
-	
+
     return $trait_name;
 
 }
@@ -1914,8 +1914,6 @@ sub trial_breeding_program_id {
 
 	my $type_id = $self->schema->resultset('Cv::Cvterm')->search({'name' => 'breeding_program_trial_relationship'})->single->id;
 
-	print STDERR "\project breeding program: type id -- $type_id\n";
-
 	my $breeding_id = $self->schema->resultset("Project::ProjectRelationship")
 	->search({'me.subject_project_id' => $trial_id, 'me.type_id' => $type_id})->single->object_project_id;
 
@@ -2015,15 +2013,25 @@ sub get_all_genotyping_protocols {
 sub get_genotypes_from_dataset {
     my ($self, $dataset_id) = @_;
 
-    my $dataset = CXGN::Dataset->new({
-	people_schema => $self->people_schema,
-	schema  => $self->schema,
-	sp_dataset_id =>$dataset_id});
+	my $data = $self->get_dataset_data($dataset_id);
+	my $genotypes_ids;
+	if ($data->{categories}->{accessions}->[0])
+	{
+		$genotypes_ids = $data->{categories}->{accessions};
+	}
+	else
+	{
+	    my $dataset = CXGN::Dataset->new({
+		people_schema => $self->people_schema,
+		schema  => $self->schema,
+		sp_dataset_id =>$dataset_id});
 
-    my  $genotypes_ids  = $dataset->retrieve_accessions();
-    my @genotypes_ids = uniq(@$genotypes_ids) if $genotypes_ids;
+	    $genotypes_ids  = $dataset->retrieve_accessions();
+	    my @genotypes_ids = uniq(@$genotypes_ids) if $genotypes_ids;
+		$genotypes_ids = \@genotypes_ids;
+	}
 
-    return \@genotypes_ids;
+    return $genotypes_ids;
 }
 
 
