@@ -218,8 +218,10 @@ sub verify {
 # - input: the full filepath to the gff3 file to parse
 # - chunk_size: (optional) max number of items to store in a single database row (default 8000)
 #
-# Returns a has with the following keys:
+# Returns a hash with the following keys:
 # - error: error message
+# - stored: 0 if storing failed, 1 if it succeeds
+# - chunks: the number of chunks stored
 #
 sub store {
     my $self = shift;

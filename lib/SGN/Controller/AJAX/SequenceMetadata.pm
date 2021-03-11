@@ -328,6 +328,11 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
 #   - new_protocol_attribute_count = max number of attributes to read (some may be missing if an attribute was removed)
 #   - new_protocol_attribute_key_{n} = key name of nth attribute
 #   - new_protocol_attribute_description_{n} = description of nth attribute
+# RETURNS:
+#   - error: error message
+#   - results: store results
+#       - stored: 0 if storing failed, 1 if it succeeds
+#       - chunks: the number of chunks stored
 #
 sub sequence_metadata_store : Path('/ajax/sequence_metadata/store') : ActionClass('REST') { }
 sub sequence_metadata_store_POST : Args(0) {
