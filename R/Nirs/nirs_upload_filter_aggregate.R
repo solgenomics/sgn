@@ -69,9 +69,8 @@ spectra.tagged %>%
     sampling_date = NA,
     device_id = NA,
     comments = NA) %>%
-  rename(observationunit_name = observationUnitId) %>%
-  dplyr::select(id, sample_id, sampling_date, observationunit_name, device_id,
-    device_type, comments, starts_with("nirs_spectra")) %>%
+  rename(sample_name = observationUnitId) %>%
+  dplyr::select(sample_name, starts_with("nirs_spectra")) %>%
   rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
   write.csv(x = ., file = args[3])
 
@@ -91,9 +90,8 @@ agg.spectra %>%
     sampling_date = NA,
     device_id = NA,
     comments = NA) %>%
-  rename(observationunit_name = Group.1) %>%
+  rename(sample_name = Group.1) %>%
   rename(device_type_rename = Group.2) %>%
-  dplyr::select(id, sample_id, sampling_date, observationunit_name, device_id,
-    device_type_rename, comments, starts_with("nirs_spectra")) %>%
+  dplyr::select(sample_name, starts_with("nirs_spectra")) %>%
   rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
   write.csv(x=., file = args[2], row.names=FALSE)

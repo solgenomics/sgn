@@ -267,7 +267,8 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
 
     $c->stash->{data_set_type} = 'combined populations';
     $c->stash->{combo_pops_id} = $combo_pops_id;
-
+    $c->stash->{training_pop_id} = $combo_pops_id;
+    
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);    
     
     my $pops_cvs = $c->req->param('combined_populations');
@@ -287,7 +288,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Arg
    
     $self->combined_pops_summary($c);
       
-    $c->controller('solGS::solGS')->trait_phenotype_stat($c);    
+    $c->controller('solGS::solGS')->model_phenotype_stat($c);    
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller('solGS::modelAccuracy')->model_accuracy_report($c);
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
@@ -786,8 +787,8 @@ sub cache_combined_pops_data {
     {
 	$c->stash->{data_set_type} = 'combined populations';
 	$c->stash->{pop_id} =  $combo_pops_id;
-	$c->controller('solGS::Files')->trait_phenodata_file($c);
-	$c->stash->{trait_combined_pheno_file} = $c->stash->{trait_phenodata_file};
+	$c->controller('solGS::Files')->model_phenodata_file($c);
+	$c->stash->{trait_combined_pheno_file} = $c->stash->{model_phenodata_file};
     }
 
     $c->controller('solGS::Files')->genotype_file_name($c, $combo_pops_id);
@@ -1078,13 +1079,15 @@ sub combined_pops_gs_input_files {
     $self->cache_combined_pops_data($c);   
     my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-	
+
+    #$c->controller('solGS::solGS')->save_model_info_file($c);
+    
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id   = $c->stash->{trait_id};
-    
-    $c->controller('solGS::solGS')->trait_info_file($c);
-    my $trait_info_file = $c->stash->{trait_info_file};
+
+    $c->controller('solGS::Files')->model_info_file($c);
+    my $model_info_file = $c->stash->{model_info_file};
 
     my $dataset_file  = $c->controller('solGS::Files')->create_tempfile($temp_dir, "dataset_info_${trait_id}");
     write_file($dataset_file, {binmode => ':utf8'}, 'combined populations');
@@ -1100,7 +1103,7 @@ sub combined_pops_gs_input_files {
     my $input_files = join("\t",
 			   $combined_pops_pheno_file,
 			   $combined_pops_geno_file,
-			   $trait_info_file,
+			   $model_info_file,
 			   $dataset_file,
 			   $selection_population_file,
 	);
@@ -1388,22 +1391,30 @@ sub combine_trait_data_input {
     my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
     
-    my $temp_dir    = $c->stash->{solgs_tempfiles_dir};
-    my $trait_info  = $trait_id . "\t" . $trait_abbr;
-    my $trait_file  = $c->controller('solGS::Files')->create_tempfile($temp_dir, "trait_info_${trait_id}");
-    write_file($trait_file, {binmode => ':utf8'}, $trait_info); 
+     
+    # my $trait_info  = $trait_id . "\t" . $trait_abbr;
+    # my $trait_file  = $c->controller('solGS::Files')->create_tempfile($temp_dir, "trait_info_${trait_id}");
+    # write_file($trait_file, {binmode => ':utf8'}, $trait_info);
+
+    $c->controller('solGS::solGS')->save_model_info_file($c); 
+
+    $c->controller('solGS::Files')->model_info_file($c);
+    my $model_info_file = $c->stash->{model_info_file};
+
   
+    
     my $input_files = join ("\t",
                             $pheno_files,
                             $geno_files,
-                            $trait_file,   
+                            $model_info_file,   
         );
     
     my $output_files = join ("\t", 
                              $combined_pops_pheno_file,
                              $combined_pops_geno_file,
         );
-                             
+            
+    my $temp_dir    = $c->stash->{solgs_tempfiles_dir};
     my $tempfile_input = $c->controller('solGS::Files')->create_tempfile($temp_dir, "input_files_${trait_id}_combine"); 
     write_file($tempfile_input, {binmode => ':utf8'}, $input_files);
 

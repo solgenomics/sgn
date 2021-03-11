@@ -37,6 +37,8 @@ use CXGN::Stock::StockLookup;
 use CXGN::Genotype::DownloadFactory;
 use CXGN::Genotype::GRM;
 use CXGN::Genotype::GWAS;
+use CXGN::Accession;
+use Spreadsheet::WriteExcel;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -571,7 +573,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
                     my @columns = @{$data[$line]};
                     my $step = 1;
                     for(my $i=0; $i<$num_col; $i++) {
-                        if ($columns[$i]) {
+                        if (defined($columns[$i])) {
                             print CSV "\"$columns[$i]\"";
                         } else {
                             print CSV "\"\"";
@@ -613,6 +615,182 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         $c->res->body($output);
     }
 }
+
+
+
+# accession properties download -- begin
+
+#
+# Download a file of accession properties (in the same format as the accession upload template)
+# 
+# POST Params:
+#   accession_properties_accession_list_list_select = list id of an accession list
+#   file_format: format of the file output (.xls or .csv)
+#
+sub download_accession_properties_action : Path('/breeders/download_accession_properties_action') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $dbh = $schema->storage->dbh;
+
+    # Get request params
+    my $accession_list_id = $c->req->param("accession_properties_accession_list_list_select");
+    my $file_format = $c->req->param("file_format") || ".xls";
+    my $dl_token = $c->req->param("accession_properties_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    if ( !$accession_list_id ) {
+        print STDERR "ERROR: No accession list id provided to download accession properties action";
+        return;
+    }
+
+    # Get accession IDs from list
+    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+    my @accession_list = map { $_->[1] } @$accession_data;
+
+    my $t = CXGN::List::Transform->new();
+    my $acc_t = $t->can_transform("accessions", "accession_ids");
+    my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+    my @accession_ids = @{$accession_id_hash->{transform}};
+
+    # Create list of accession objects
+    my @accessions = ();
+    foreach (@accession_ids) {
+        push @accessions, CXGN::Accession->new( $dbh, $_ );
+    }
+
+    # Create tempfile
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_accessions_XXXXX", UNLINK=> 0);
+
+    # Build Accession Info
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my $rows = $self->build_accession_properties_info($schema, \@accession_ids, \@editable_stock_props);
+
+    # Create and Return XLS file
+    if ( $file_format eq ".xls" ) {
+        my $file_path = $tempfile . ".xls";
+        my $file_name = basename($file_path);
+
+        # Write to the xls file
+        my $workbook = Spreadsheet::WriteExcel->new($file_path);
+        my $worksheet = $workbook->add_worksheet();
+        for ( my $i = 0; $i <= $#$rows; $i++ ) {
+            $worksheet->write_row($i, 0, $rows->[$i]);
+        }
+        $workbook->close();
+
+        # Return the xls file
+        $c->res->content_type('Application/xls');
+        $c->res->cookies->{$dl_cookie} = {
+          value => $dl_token,
+          expires => '+1m',
+        };
+        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+        my $output = read_file($file_path);
+        $c->res->body($output);
+    }
+
+    # Create and Return CSV file
+    elsif ( $file_format eq ".csv" ) {
+        my $file_path = $tempfile . ".csv";
+        my $file_name = basename($file_path);
+
+        # Write to csv file
+        open(CSV, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
+        my @header =  @{$rows->[0]};
+        my $num_col = scalar(@header);
+
+        for ( my $line = 0; $line <= $#$rows; $line++ ) {
+            my $columns = $rows->[$line];
+            my $step = 1;
+            for ( my $i = 0; $i < $num_col; $i++ ) {
+                if ($columns->[$i]) {
+                    print CSV "\"$columns->[$i]\"";
+                } else {
+                    print CSV "\"\"";
+                }
+                if ($step < $num_col) {
+                    print CSV ",";
+                }
+                $step++;
+            }
+            print CSV "\n";
+        }
+        close CSV;
+
+        # Return the csv file
+        $c->res->content_type('text/csv');
+        $c->res->cookies->{$dl_cookie} = {
+          value => $dl_token,
+          expires => '+1m',
+        };
+        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+        my $output = read_file($file_path);
+        $c->res->body($output);
+    }
+
+}
+
+# 
+# Build Accession Properties Info
+#
+# Generate the rows in the accession info table for the specified Accessions
+#
+# Usage: my $rows = $self->build_accession_properties_info($schema, \@accession_ids, \@editable_stock_props);
+# Returns: an arrayref where each array item is an array of accession properties
+#          the first item is an array of the header values
+#
+sub build_accession_properties_info {
+    my $self = shift;
+    my $schema = shift;
+    my $accession_ids = shift;
+    my $editable_stock_props = shift;
+
+    # Setup Stock Props
+    my @required_stock_props = ("accession_name", "species_name", "population_name", "organization", "synonym", "PUI");
+    my @parsed_editable_stock_props = ();
+    foreach my $esp (@$editable_stock_props) {
+        if ( !grep(/^$esp$/, @required_stock_props) ) {
+            push(@parsed_editable_stock_props, $esp)
+        }
+    }
+
+    # Build Header
+    my @accession_headers = ();
+    push(@accession_headers, @required_stock_props);
+    push(@accession_headers, @parsed_editable_stock_props);
+
+    # Add Header to Rows
+    my @accession_rows = ();
+    push(@accession_rows, \@accession_headers);
+
+    # Build Row for each Accession
+    foreach my $stock_id ( @$accession_ids ) {
+        my $a = new CXGN::Stock::Accession({ schema => $schema, stock_id => $stock_id});
+        my $synonym_string = join(',', @{$a->synonyms()});
+        
+        # Setup row with required stock props
+        my @r = (
+            $a->uniquename(),
+            $a->get_species(),
+            $a->population_name(),
+            $a->organization_name(),
+            $synonym_string,
+            $a->germplasmPUI()
+        );
+
+        # Add parsed editable stock props
+        foreach my $esp (@parsed_editable_stock_props) {
+            push(@r, $a->_retrieve_stockprop($esp));
+        }
+
+        push(@accession_rows, \@r);
+    }
+    
+    return \@accession_rows;
+}
+
+# accession properties download -- end
+
 
 
 # pedigree download -- begin

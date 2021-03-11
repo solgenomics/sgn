@@ -19,6 +19,7 @@ use List::Util qw(shuffle);
 use CXGN::AnalysisModel::GetModel;
 use CXGN::UploadFile;
 use DateTime;
+use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 use CXGN::Phenotypes::StorePhenotypes;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -38,7 +39,7 @@ sub generate_spectral_plot_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my $dataset_id = $c->req->param('dataset_id');
-    my $format_id = $c->req->param('device_type');
+    my $nd_protocol_id = $c->req->param('nd_protocol_id');
     my $query_associated_stocks = $c->req->param('query_associated_stocks') eq 'yes' ? 1 : 0;
 
     my $ds = CXGN::Dataset->new({
@@ -50,99 +51,20 @@ sub generate_spectral_plot_POST : Args(0) {
     my $plot_ids = $ds->plots();
     my $plant_ids = $ds->plants();
 
-    if (!$accession_ids && !$plot_ids && !$plant_ids) {
-        $c->stash->{rest} = { error => "No accessions or plots or plants in your selected dataset!"};
-        $c->detach();
-    }
-
-    my @all_stock_ids;
-    if ($query_associated_stocks) {
-        if ($accession_ids && scalar(@$accession_ids) > 0) {
-            push @all_stock_ids, @$accession_ids;
-        }
-        if ($plot_ids && scalar(@$plot_ids) > 0) {
-            push @all_stock_ids, @$plot_ids;
-        }
-        if ($plant_ids && scalar(@$plant_ids) > 0) {
-            push @all_stock_ids, @$plant_ids;
-        }
-
-        my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-        my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-        my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-        my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
-
-        my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-        my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
-        my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
-
-        if ($accession_ids && scalar(@$accession_ids) > 0) {
-            my $accession_ids_sql = join ',', @$accession_ids;
-            my $accession_q = "SELECT subject_id FROM stock_relationship WHERE object_id IN ($accession_ids_sql) AND type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id);";
-            my $accession_h = $dbh->prepare($accession_q);
-            $accession_h->execute();
-            while (my ($stock_id) = $accession_h->fetchrow_array()) {
-                push @all_stock_ids, $stock_id;
-            }
-        }
-        if ( ($plot_ids && scalar(@$plot_ids) > 0) || ($plant_ids && scalar(@$plant_ids) > 0) ) {
-            my @plot_plant_ids;
-            if ($plot_ids && scalar(@$plot_ids) > 0) {
-                push @plot_plant_ids, @$plot_ids;
-            }
-            if ($plant_ids && scalar(@$plant_ids) > 0) {
-                push @plot_plant_ids, @$plant_ids;
-            }
-            my $plot_ids_sql = join ',', @plot_plant_ids;
-            my $plot_q = "SELECT object_id FROM stock_relationship WHERE subject_id IN ($plot_ids_sql) AND type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id);";
-            my $plot_h = $dbh->prepare($plot_q);
-            $plot_h->execute();
-            while (my ($stock_id) = $plot_h->fetchrow_array()) {
-                push @all_stock_ids, $stock_id;
-            }
-
-            my $accession_ids_sql = join ',', @all_stock_ids;
-            my $accession_q = "SELECT subject_id FROM stock_relationship WHERE object_id IN ($accession_ids_sql) AND type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id);";
-            my $accession_h = $dbh->prepare($accession_q);
-            $accession_h->execute();
-            while (my ($stock_id) = $accession_h->fetchrow_array()) {
-                push @all_stock_ids, $stock_id;
-            }
-        }
-    }
-    else {
-        if ($accession_ids && scalar(@$accession_ids) > 0) {
-            push @all_stock_ids, @$accession_ids;
-        }
-        if ($plot_ids && scalar(@$plot_ids) > 0) {
-            push @all_stock_ids, @$plot_ids;
-        }
-        if ($plant_ids && scalar(@$plant_ids) > 0) {
-            push @all_stock_ids, @$plant_ids;
-        }
-    }
-
-    my $stock_ids_sql = join ',', @all_stock_ids;
-    my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra', metadata.md_json.json->>'device_type'
-        FROM stock
-        JOIN nd_experiment_stock USING(stock_id)
-        JOIN nd_experiment USING(nd_experiment_id)
-        JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
-        JOIN metadata.md_json USING(json_id)
-        WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ?;";
-    print STDERR Dumper $nirs_training_q;
-    my $nirs_training_h = $dbh->prepare($nirs_training_q);
-    $nirs_training_h->execute($format_id);
-    my %training_pheno_data;
-    while (my ($stock_uniquename, $stock_id, $spectra, $device_type) = $nirs_training_h->fetchrow_array()) {
-        $spectra = decode_json $spectra;
-        $training_pheno_data{$stock_id}->{spectra} = $spectra;
-        $training_pheno_data{$stock_id}->{device_type} = $device_type;
-    }
-    # print STDERR Dumper \%training_pheno_data;
+    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
+        bcs_schema=>$schema,
+        nd_protocol_id=>$nd_protocol_id,
+        high_dimensional_phenotype_type=>'NIRS',
+        query_associated_stocks=>$query_associated_stocks,
+        accession_list=>$accession_ids,
+        plot_list=>$plot_ids,
+        plant_list=>$plant_ids
+    });
+    my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+    # print STDERR Dumper $data_matrix;
 
     my @training_data_input;
-    while ( my ($stock_id, $o) = each %training_pheno_data) {
+    while ( my ($stock_id, $o) = each %$data_matrix) {
         my $spectra = $o->{spectra};
         if ($spectra) {
             push @training_data_input, {
@@ -154,8 +76,8 @@ sub generate_spectral_plot_POST : Args(0) {
     }
     # print STDERR Dumper \@training_data_input;
 
-    if (scalar(@training_data_input) < 10) {
-        $c->stash->{rest} = { error => "Not enough data! Need atleast 10 samples with a phenotype and spectra! Maybe choose a different device type?"};
+    if (scalar(@training_data_input) < 5) {
+        $c->stash->{rest} = { error => "Not enough data! Need atleast 5 samples with a phenotype and spectra! Maybe choose a different device type?"};
         $c->detach();
     }
 

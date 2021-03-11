@@ -1529,7 +1529,7 @@ function search(entity,params,behavior){
         var pageless_params = Object.assign({}, p);
         delete pageless_params.page;
         delete pageless_params.pageRange;
-        delete pageless_params.pageSize;
+        // delete pageless_params.pageSize;
         return pageless_params;
     });
     return param_map.join(search_ids).search_GET(entity,function(joined){
@@ -2679,12 +2679,10 @@ class BrAPICallController {
             body: body
         };
         if(this.brapi_auth_token){
-            if(this.brapi_base_url.startsWith("https") || this.brapi_base_url.startsWith("/brapi")){
-                // console.log("auth",this.brapi_auth_token);
-                fetch_opts.headers.Authorization = "Bearer "+this.brapi_auth_token;
-            } else {
-                console.warn("BrAPI.js will only send authentication token over https!");
+            if (!this.brapi_base_url.startsWith("https")) {
+                console.warn("You should send the BrAPI.js authentication token over https!")
             }
+            fetch_opts.headers.Authorization = "Bearer " + this.brapi_auth_token;
         }
         // console.log("fetch(",url,",",fetch_opts,")")
         var self = this;

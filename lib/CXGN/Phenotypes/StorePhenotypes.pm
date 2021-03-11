@@ -506,10 +506,22 @@ sub store {
                 $self->store_stock_note($stock_id, $note_array, $operator);
             }
 
-            # Check if there is nirs data for this plot, If so add it using dedicated function
+            # Check if there is nirs data for this plot
             my $nirs_hashref = $plot_trait_value{$plot_name}->{'nirs'};
             if (defined $nirs_hashref) {
-                $self->store_nirs_data($nirs_hashref, $experiment->nd_experiment_id());
+                $self->store_high_dimensional_data($nirs_hashref, $experiment->nd_experiment_id(), 'nirs_spectra');
+            }
+
+            # Check if there is transcriptomics data for this plot
+            my $transcriptomics_hashref = $plot_trait_value{$plot_name}->{'transcriptomics'};
+            if (defined $transcriptomics_hashref) {
+                $self->store_high_dimensional_data($transcriptomics_hashref, $experiment->nd_experiment_id(), 'transcriptomics');
+            }
+
+            # Check if there is metabolomics data for this plot
+            my $metabolomics_hashref = $plot_trait_value{$plot_name}->{'metabolomics'};
+            if (defined $metabolomics_hashref) {
+                $self->store_high_dimensional_data($metabolomics_hashref, $experiment->nd_experiment_id(), 'metabolomics');
             }
 
             foreach my $trait_name (@trait_list) {
@@ -687,10 +699,13 @@ sub store_stock_note {
     $stock->create_stockprops( { 'notes' => $note } );
 }
 
-sub store_nirs_data {
+
+
+sub store_high_dimensional_data {
     my $self = shift;
     my $nirs_hashref = shift;
     my $nd_experiment_id = shift;
+    my $md_json_type = shift;
     my %nirs_hash = %{$nirs_hashref};
 
     my $protocol_id = $nirs_hash{protocol_id};
@@ -698,9 +713,9 @@ sub store_nirs_data {
 
     my $nirs_json = encode_json \%nirs_hash;
 
-    my $insert_query = "INSERT INTO metadata.md_json (json_type, json) VALUES ('nirs_spectra',?) RETURNING json_id;";
+    my $insert_query = "INSERT INTO metadata.md_json (json_type, json) VALUES (?,?) RETURNING json_id;";
     my $dbh = $self->bcs_schema->storage->dbh()->prepare($insert_query);
-    $dbh->execute($nirs_json);
+    $dbh->execute($md_json_type, $nirs_json);
     my ($json_id) = $dbh->fetchrow_array();
 
     my $linking_query = "INSERT INTO phenome.nd_experiment_md_json ( nd_experiment_id, json_id) VALUES (?,?);";
@@ -711,7 +726,7 @@ sub store_nirs_data {
     $dbh = $self->bcs_schema->storage->dbh()->prepare($protocol_query);
     $dbh->execute($nd_experiment_id,$protocol_id);
 
-    print STDERR "[StorePhenotypes] Linked json with id $json_id to nd_experiment $nd_experiment_id to protocol $protocol_id\n";
+    print STDERR "[StorePhenotypes] Linked $md_json_type json with id $json_id to nd_experiment $nd_experiment_id to protocol $protocol_id\n";
 }
 
 sub delete_previous_phenotypes {

@@ -19,6 +19,7 @@ $field_size
 $field_trial_is_planned_to_be_genotyped
 $field_trial_is_planned_to_cross
 $trial_stock_type
+$trial_stock_count
 </%args>
 
 <div class="row">
@@ -87,6 +88,19 @@ $trial_stock_type
 %     print "$trial_stock_type";
 % } else {
 %     print "accession";
+% }
+                    </div>
+                </td>
+            </tr>
+	    
+	    <tr>
+                <td><b>Number of Stocks in This Trial</b></td>
+                <td>
+                    <div id="stock_number_in_trial">
+% if ($trial_stock_count) {
+%     print "$trial_stock_count";
+% } else {
+% print "<span class='text-danger'>[No Stocks in Trial]</span>";
 % }
                     </div>
                 </td>

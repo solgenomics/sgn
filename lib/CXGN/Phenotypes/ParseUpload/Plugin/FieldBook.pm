@@ -30,6 +30,9 @@ sub validate {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
+    my $zipfile = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my %parse_result;
     my $csv = Text::CSV->new ( { binary => 1 } )  # should set binary attribute.
                 or die "Cannot use CSV: ".Text::CSV->error_diag ();
@@ -105,6 +108,11 @@ sub parse {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
+    my $zipfile = shift; #not relevant for this plugin
+    my $user_id = shift; #not relevant for this plugin
+    my $c = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my %parse_result;
     my @file_lines;
     my $header;
