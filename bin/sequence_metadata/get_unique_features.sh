@@ -10,4 +10,4 @@ if [ "$#" -ne 1 ]; then
     exit 1
 fi
 
-awk -F $'\t' '{print $1}' "$1" | uniq
+awk -F $'\t' '{print $1}' "$1" | sort | uniq
