@@ -1,9 +1,43 @@
 <%args>
 $item_id
 $item_name
+$item_type
+$category
+$description
+$material_source
+$breeding_program
+$availability
+$comment
+$identifier_prefix
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <& /page/page_title.mas, title => "Catalog Item Details for: $item_name" &>
+
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0, subtitle=>"[<a id='edit_catalog_item_link' >Edit Item Details</a>]" &>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <table class="table table-bordered table-hover">
+                        <tr><td><b>Item Type</b></td><td><% $item_type %> </td></tr>
+                        <tr><td><b>Category</b></td><td><% $category %></td></tr>
+                        <tr><td><b>Description</b></td><td><% $description %></td></tr>
+                        <tr><td><b>Material Source</b><td><% $material_source %></td></tr>
+                        <tr><td><b>Breeding Program</b></td><td><% $breeding_program %></td></tr>
+                        <tr><td><b>Availability</b></td><td><% $availability %></td></tr>
+                        <tr><td><b>Comment</b></td><td><% $comment %></td></tr>
+                    </table>
+                </div>
+                <div class="col-sm-6">
+                    <br/><br/>
+                    <& /util/barcode.mas, identifier => "$identifier_prefix"."$item_id", text=> "$identifier_prefix stock $item_id ($item_name)", format=>"stock_qrcode"  &>
+                    <br/><br/>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>

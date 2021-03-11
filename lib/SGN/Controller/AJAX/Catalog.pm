@@ -209,21 +209,21 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     my @catalog_items;
     my @catalog_list = @$catalog_ref;
     foreach my $catalog_item (@catalog_list) {
-        my @item_detail = ();
-        my @item_detail = @$catalog_item;
-        my $item_id = shift @item_detail;
+        my @item_details = ();
+        @item_details = @$catalog_item;
+        my $item_id = shift @item_details;
         my $stock_rs = $schema->resultset("Stock::Stock")->find({stock_id => $item_id });
         my $item_name = $stock_rs->uniquename();
         push @catalog_items, {
             item_id => $item_id,
             item_name => $item_name,
-            item_type => $item_detail[0],
-            category => $item_detail[1],
-            description => $item_detail[2],
-            material_source => $item_detail[3],
-            breeding_program => $item_detail[4],
-            availability => $item_detail[5],
-            comment => $item_detail[6]
+            item_type => $item_details[0],
+            category => $item_details[1],
+            description => $item_details[2],
+            material_source => $item_details[3],
+            breeding_program => $item_details[4],
+            availability => $item_details[5],
+            comment => $item_details[6]
         };
     }
 
