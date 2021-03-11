@@ -9,9 +9,9 @@
  */
 const JBROWSE_CONFIG_SEQUENCE_METADATA = {
     "enabled": false,
-    "base_url": "https://wheat.pw.usda.gov/jb/",
-    "data_dir": "/ggds/whe-iwgsc2018",
-    "tracks": ["DNA"]
+    "base_url": "<% $c->get_conf('jbrowse_path') %>",
+    "data_dir": "",
+    "tracks": []
 }
 
 </script>
