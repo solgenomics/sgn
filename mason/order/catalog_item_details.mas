@@ -1,6 +1,7 @@
 <%args>
 $item_id
 $item_name
+$species
 $item_type
 $category
 $description
@@ -23,6 +24,7 @@ $identifier_prefix
             <div class="row">
                 <div class="col-sm-6">
                     <table class="table table-bordered table-hover">
+                        <tr><td><b>Species</b></td><td><% $species %> </td></tr>
                         <tr><td><b>Item Type</b></td><td><% $item_type %> </td></tr>
                         <tr><td><b>Category</b></td><td><% $category %></td></tr>
                         <tr><td><b>Description</b></td><td><% $description %></td></tr>
@@ -37,6 +39,24 @@ $identifier_prefix
                     <& /util/barcode.mas, identifier => "$identifier_prefix"."$item_id", text=> "$identifier_prefix stock $item_id ($item_name)", format=>"stock_qrcode"  &>
                     <br/><br/>
                 </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title => 'Traits Assayed', collapsible=>1, collapsed=>1 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title => 'Images', collapsible=>1, collapsed=>1 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
             </div>
         </div>
     </div>
