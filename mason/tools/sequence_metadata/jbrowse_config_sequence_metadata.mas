@@ -1,0 +1,17 @@
+<script type="text/javascript">
+
+/**
+ * CONFIGURATION FOR JBROWSE INTEGRATION INTO SEQUENCE METADATA QUERY RESULTS
+ * enabled: true to enable JBrowse link/button in results table
+ * base_url: host and base url to JBrowse
+ * data_dir: JBRowse data directory to include
+ * tracks: list of track names to include with the sequence metadata
+ */
+const JBROWSE_CONFIG_SEQUENCE_METADATA = {
+    "enabled": false,
+    "base_url": "https://wheat.pw.usda.gov/jb/",
+    "data_dir": "/ggds/whe-iwgsc2018",
+    "tracks": ["DNA"]
+}
+
+</script>
