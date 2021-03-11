@@ -199,13 +199,10 @@ sub get_response {
 		};
 	}
 
-	my $result = $data;
 	my @data_files;
 
 	if ($array) {
-		my $data_window;
-		($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@variables, $page_size, $page);
-		%result = (data => $data);
+		my %result = (data => \@data);
 		return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Locations list result constructed');
 	} else {
 		$pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);

@@ -70,6 +70,8 @@ sub observation_levels {
 
 sub search {
     my $self = shift;
+    my $page_size = $self->page_size;
+    my $page = $self->page;
     my $inputs = shift;
     my $c = shift;
     my $status = $self->status;
