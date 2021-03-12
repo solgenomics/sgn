@@ -1,103 +1,94 @@
-
-<%doc>
-
-
-</%doc>
-
 <%args> 
-$datasets
+$trial_id => undef
 </%args>
 
-<& '/page/page_title.mas', title => "Fieldmap app" &>
+
+<& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
 
 <& '/util/import_javascript.mas', 
-  classes => ['jquery','d3.d3v4Min','fieldmap.BrAPI','fieldmap.leaflet','fieldmap.leaflet-search', 'brapi.BrAPIFieldmap','fieldmap.turf','fieldmap.L-Path-Transform.js']
-
+ classes => ['jquery','d3.d3v4Min', 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap']
 &>
 
 
-<style media="screen">
-  .groupBy-div:only-of-type .groupBy-remove{
-    display: none;
-  }
-  .boxplot .infotext{
-    opacity: 0;
-  }
-  .boxplot:hover .infotext{
-    opacity: 1;
-  }
-  #bxplt_result::-webkit-scrollbar {
-    -webkit-appearance: none;
-    width: 7px;
-  }
-  #bxplt_result::-webkit-scrollbar-thumb {
-      border-radius: 4px;
-      background-color: rgba(0,0,0,.5);
-      -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
-  }
-  #mainform>div>*, .groupBy-div:not(:first-of-type){
-    margin-top: 1em;
-    margin-bottom: 0;
-  }
-</style>
+<& '/page/page_title.mas', title => "Fieldmap app" &>
 
-<link rel="stylesheet" href="/documents/inc/fieldmap/leaflet.css" />
-<link rel="stylesheet" href="/documents/inc/fieldmap/leaflet-search.min.css">
-<!-- <script src="/documents/inc/fieldmap/leaflet.js"></script> -->
-<!-- <script src="/documents/inc/fieldmap/L.Path.Transform.js"></script> -->
-<!-- <script src="/documents/inc/fieldmap/leaflet-search.src.js"></script> -->
-<script src="/documents/inc/fieldmap/d3.js"></script>
-<!-- <script src="/documents/inc/fieldmap/turf.js"></script> -->
-<!-- <script src="/documents/inc/fieldmap/BrAPI.js"></script> -->
-<!-- <script src="/documents/inc/fieldmap/BrAPIFieldmap.js" charset="utf-8"></script> -->
+<div class="row">
+  <center class = "col-md-offset-2 col-md-8">
+      <div id="trialList" class="col-sm-12 col-md-12 col-lg-12">
+          <label for="select_trial_for_selection_index">Trial: </label>
+          <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
+      </div><br>
+  </center>
+</div>
+<br>
+<form id="formOptions" class="form-inline" style="padding:10px;">
+    <a class="btn btn-default" onclick="load()">Load plots</a>
+    <a class="btn btn-default" onclick="update()">Save Geo coordinates</a>
+</form>
 
-<form class="form-inline" style="padding:10px;">
-  <div class="form-group">
-    <!-- <label for="endpoint">BrAPI Base URL</label> -->
-      <!-- <input type="text" class="form-control" id="endpoint" value="http://localhost:3010/brapi/v1"> -->
-  </div>
-</form>
-<form class="form-inline" style="padding:10px;" id="studyform">
-  <div class="form-group" style="visibility: hidden">
-    <label for="studyDbId">StudyDbId</label>
-      <input type="text" class="form-control" id="studyDbId" value="186">
-  </div>
-  <!-- <a class="btn btn-default" onclick="fieldMap.setLocation(d3.select('#studyDbId').node().value)">Set location</a> -->
-</form>
-  <div>Select an area over the field to load the plots. Plot size will be determined based on this area and the plot layout</div>
-  <div>(Optional) override plot size (meters):</div>
-<form class="form-inline" style="padding:10px;" id="formwidth">
-  <div class="form-group">
-    <label for="width">width</label>
-    <input type="text" class="form-control" id="width" value="">
-  </div>
-  <div class="form-group">
-    <label for="length">length</label>
-    <input type="text" class="form-control" id="length" value="">
-  </div>
-</form>
-<form class="form-inline" style="padding:10px;">
-  <a class="btn btn-default" onclick="load(d3.select('#studyDbId').node().value)">Load plots</a>
-  <a class="btn btn-default" onclick="update()">Save Geo coordinates</a>
-</form>
-<div id="map" style="width: 980px; height: 600px"></div>
+
+<div id="map" style="width: 780px; height: 600px"></div>
 
 <script>
-  document.getElementById("formwidth").style.display="none";
-  document.getElementById("studyform").style.display="none";
 
-  function setupBrAPI() {
-    fieldMap.brapi_endpoint = "http://192.168.33.11:3010/brapi/v2"; //d3.select('#endpoint').node().value;
-    fieldMap.opts.plotLength = d3.select('#length').node().value;
-    fieldMap.opts.plotWidth = d3.select('#width').node().value;
-  }
-  function load(studyDbId) {
-    setupBrAPI();
-    fieldMap.load(studyDbId).then(()=>{},(resp)=>alert(resp));
-  }
-  function update() {
-    setupBrAPI();
-    fieldMap.update().then((resp)=>alert(resp), (resp)=>alert(resp));
-  }
-  var fieldMap = new Fieldmap("#map","http://192.168.33.11:3010/brapi/v2");
+    jQuery('#map').width(jQuery('#map').parent().width());
+    jQuery('#map').height(jQuery('#map').parent().width()*0.7);
+    document.getElementById("trialList").style.display="none";
+
+    jQuery(document).ready(function() {
+        jQuery('#ranking_formula').html("<center><i>Select a trial.</i></center>");
+        get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
+        jQuery('#select_trial_for_selection_index').change(load);
+        load();
+    });
+    document.getElementById("formOptions").style.display="none";
+ 
+    var brapi_endpoint = "/brapi/v2";
+    var auth_token;
+    var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+    if (require_login === '1'){
+        auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+        if (!auth_token){
+            alert("Login required to display field map");
+        }
+    }
+
+    function setupBrAPI() {
+        fieldMap.brapi_endpoint = brapi_endpoint;
+        fieldMap.opts.brapi_pageSize = 1000;
+        fieldMap.opts.brapi_auth = auth_token;
+    }
+
+    function load(){
+        var trialId = getStudyId();  
+        var studyDbId = '<% $trial_id %>' || trialId; // jQuery('#select_trial_for_selection_index').val();
+        setupBrAPI();
+
+        if (studyDbId){
+            fieldMap.load(studyDbId)
+                .then((value)=>{
+                  if (!value) return setLocation(studyDbId); 
+                  else { jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); }
+                }); 
+            document.getElementById("formOptions").style.display="block";
+        } else alert("Invalid trial!");
+    }
+
+    function setLocation(studyDbId) {
+        jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); 
+        fieldMap.setLocation(studyDbId).then(()=>alert("Please select an area over the field and click 'Load plots'."), ()=>alert("No geo reference for location in this trial!"));
+    }
+    
+    function update() {
+        setupBrAPI();
+        fieldMap.update().then((resp)=>alert(resp), (resp)=>alert(resp));
+    }
+
+    var fieldMap = new BrAPIFieldmap("#map",brapi_endpoint);
+
+    function getStudyId() {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        return urlParams.get('trial_id');
+    }
 </script>

@@ -59,8 +59,7 @@ sub validate {
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
-    open(my $fh, '<', $filename)
-        or die "Could not open file '$filename' $!";
+    open(my $fh, '<', $filename) or die "Could not open file '$filename' $!";
 
     if (!$fh) {
         $parse_result{'error'} = "Could not read file.";
@@ -70,7 +69,7 @@ sub validate {
 
     my $header_row = <$fh>;
     my @columns;
-    print STDERR Dumper $csv->fields();
+    # print STDERR Dumper $csv->fields();
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
@@ -98,8 +97,8 @@ sub validate {
         push @samples, $sample_name;
 
         foreach (@fields) {
-            if (not $_=~/^[+]?\d+\.?\d*$/){
-                $parse_result{'error'}= "It is not a real value for trancripts. Must be numeric: '$_'";
+            if (not $_=~/^[-+]?\d+\.?\d*$/ && $_ ne 'NA'){
+                $parse_result{'error'}= "It is not a real value for trancripts. Must be numeric or NA: '$_'";
                 return \%parse_result;
             }
         }
@@ -116,7 +115,7 @@ sub validate {
     }
 
     $header_row = <$fh>;
-    print STDERR Dumper $csv->fields();
+    # print STDERR Dumper $csv->fields();
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
@@ -283,9 +282,9 @@ sub parse {
         return \%parse_result;
     }
 
-    $header_row = <$fh>;
+    my $header_row = <$fh>;
     my @columns;
-    print STDERR Dumper $csv->fields();
+    # print STDERR Dumper $csv->fields();
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {

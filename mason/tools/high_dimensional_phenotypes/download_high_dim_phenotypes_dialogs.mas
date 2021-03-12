@@ -1,0 +1,231 @@
+<%args>
+$high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabolomics
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form' ] &>
+
+<!--button class="btn btn-primary" name="high_dimensional_phenotype_download_button">Upload High Dimensional Data</button-->
+
+<div class="modal fade" id="download_high_dim_phenotypes_dialog" name="download_high_dim_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadHighDimDataDialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="downloadHighDimDataDialog">Download High-Dimensional Phenotype Data</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "high_dim_data_download_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Intro" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through downloading high-dimensional data from the database." &>
+
+                    <center>
+                        <div class="well">
+                            <h4>High-dimensional phenotype data includes:</h4>
+                            <p>NIRS</p>
+                            <p>Transcriptomics</p>
+                            <p>Metabolomics</p>
+                        </div>
+                    </center>
+
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Data Type" &>
+                    <& /page/page_title.mas, title=>"Select the type of high-dimensional data to download" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Data Type: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="high_dim_data_download_type_select"> 
+%  if ($high_dimensional_phenotype_type eq 'NIRS') {
+                                    <option value="NIRS">NIRS</option>
+                                    <option disabled value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="Metabolomics">Metabolomics</option>
+%  } elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
+                                    <option value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="NIRS">NIRS</option>
+                                    <option disabled value="Metabolomics">Metabolomics</option>
+%  } elsif ($high_dimensional_phenotype_type eq 'Metabolomics') {
+                                    <option value="Metabolomics">Metabolomics</option>
+                                    <option disabled value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="NIRS">NIRS</option>
+%  } else {
+                                    <option value="NIRS">NIRS</option>
+                                    <option value="Transcriptomics">Transcriptomics</option>
+                                    <option value="Metabolomics">Metabolomics</option>
+%  }
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="high_dim_data_download_data_type_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Protocol Info" &>
+                    <& /page/page_title.mas, title=>"Select a protocol for the data to download" &>
+
+                    <div id="high_dim_data_download_protocol_select">
+                    </div>
+
+                    <hr>
+                    <center>
+                    <button class="btn btn-primary" id="high_dim_data_download_protocol_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Dataset" &>
+                    <& /page/page_title.mas, title=>"Select a dataset for the data to download" &>
+
+                    <div id="high_dim_data_download_dataset_select">
+                    </div>
+
+                    <hr>
+                    <center>
+                    <button class="btn btn-primary" id="high_dim_data_download_dataset_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Download" &>
+                    <& /page/page_title.mas, title=>"Download high dimensional phenotypes" &>
+
+                    <div class="form-horizontal" >
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Query Associated Stocks (e.g. Your dataset contains accessions, however, the high-dim phenotypes are saved for tissue samples of the accession): </label>
+                            <div class="col-sm-6" >
+                                <select class="form-control" id="high_dim_data_download_associated_stocks" name="high_dim_data_download_associated_stocks">
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Download File: </label>
+                            <div class="col-sm-6" >
+                                <select class="form-control" id="high_dim_data_download_file_type" name="high_dim_data_download_file_type">
+                                    <option value="data_matrix">High Dimensional Phenotypes</option>
+                                    <option value="identifier_metadata">Metadata of Phenotype Identifiers</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <center>
+                        <button type="button" class="btn btn-primary" name="high_dim_data_download_submit" id="high_dim_data_download_submit" title="Download">Download</button>
+                    </center>
+
+                </&>
+            </&>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+
+    jQuery('button[name=high_dimensional_phenotype_download_button]').click( function() {
+        jQuery('#download_high_dim_phenotypes_dialog').modal("show");
+
+        get_select_box('datasets','high_dim_data_download_dataset_select', {'checkbox_name':'high_dim_data_download_dataset_select_id'});
+    });
+
+    var high_dim_data_download_type = '';
+    jQuery('#high_dim_data_download_data_type_step').click(function(){
+        high_dim_data_download_type = jQuery('#high_dim_data_download_type_select').val();
+
+        if (high_dim_data_download_type == 'NIRS') {
+            get_select_box('high_dimensional_phenotypes_protocols','high_dim_data_download_protocol_select', {'checkbox_name':'high_dim_data_download_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol'});
+        }
+        else if (high_dim_data_download_type == 'Transcriptomics') {
+            get_select_box('high_dimensional_phenotypes_protocols','high_dim_data_download_protocol_select', {'checkbox_name':'high_dim_data_download_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_transcriptomics_protocol'});
+        }
+        else if (high_dim_data_download_type == 'Metabolomics') {
+            get_select_box('high_dimensional_phenotypes_protocols','high_dim_data_download_protocol_select', {'checkbox_name':'high_dim_data_download_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_metabolomics_protocol'});
+        }
+
+        Workflow.complete("#high_dim_data_download_data_type_step");
+        Workflow.focus('#high_dim_data_download_workflow', 2);
+    });
+
+    var high_dim_data_download_protocol_id;
+    jQuery('#high_dim_data_download_protocol_step').click(function(){
+        var selected = [];
+        jQuery('input[name="high_dim_data_download_protocol_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+
+        if(selected.length > 1 || selected.length == 0) {
+            alert('Please select one dataset!');
+            return false;
+        }
+        else {
+            high_dim_data_download_protocol_id = selected[0];
+
+            Workflow.complete("#high_dim_data_download_protocol_step");
+            Workflow.focus('#high_dim_data_download_workflow', 3);
+        }
+    });
+
+    var high_dim_data_download_dataset_id;
+    jQuery('#high_dim_data_download_dataset_step').click(function(){
+        var selected = [];
+        jQuery('input[name="high_dim_data_download_dataset_select_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+
+        if(selected.length > 1 || selected.length == 0) {
+            alert('Please select one dataset!');
+            return false;
+        }
+        else {
+            high_dim_data_download_dataset_id = selected[0];
+
+            Workflow.complete("#high_dim_data_download_dataset_step");
+            Workflow.focus('#high_dim_data_download_workflow', 4);
+        }
+    });
+
+    jQuery('#high_dim_data_download_submit').click(function(e){
+        e.preventDefault();
+
+        jQuery.ajax({
+            url : '/ajax/highdimensionalphenotypes/download_file',
+            type : 'POST',
+            data : {
+                'dataset_id' : high_dim_data_download_dataset_id,
+                'nd_protocol_id': high_dim_data_download_protocol_id,
+                'query_associated_stocks': jQuery('#high_dim_data_download_associated_stocks').val(),
+                'download_file_type': jQuery('#high_dim_data_download_file_type').val(),
+                'high_dimensional_phenotype_type': high_dim_data_download_type
+            },
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                console.log(response);
+                jQuery('#working_modal').modal('hide');
+
+                if (response.error) {
+                    alert(response.error);
+                    return false;
+                }
+
+                window.location.href = response.download_file_link;
+            },
+            error: function(response){
+                alert('Error downloading high dim phenotype file!');
+                jQuery('#working_modal').modal('hide');
+            }
+        });
+    });
+
+});
+</script>

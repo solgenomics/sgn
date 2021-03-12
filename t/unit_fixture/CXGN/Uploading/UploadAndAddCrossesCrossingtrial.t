@@ -424,6 +424,31 @@ is($after_updating_info_stocks, $before_updating_info_stocks);
 is($after_updating_info_stockprop, $before_updating_info_stockprop+3);
 is($after_updating_info_relationship, $before_updating_info_relationship);
 
+# test uploading additional parent info
+$file = $f->config->{basepath}."/t/data/cross/upload_additional_info.xls";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/cross/upload_info',
+    Content_Type => 'form-data',
+    Content => [
+        additional_info_upload_file => [ $file, 'upload_additional_info.xls', Content_Type => 'application/vnd.ms-excel', ],
+        "sgn_session_id" => $sgn_session_id
+    ]
+);
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+is_deeply($message_hash, {'success' => 1});
+
+my $after_upload_additional_info_stocks = $schema->resultset("Stock::Stock")->search({})->count();
+my $after_upload_additional_info_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
+my $after_upload_additional_info_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
+
+# note:added 3 more rows in stockprop table after uploading field crossing activities, then 3 more rows in stockprop table after uploading parent additional info
+is($after_upload_additional_info_stocks, $before_updating_info_stocks);
+is($after_upload_additional_info_stockprop, $before_updating_info_stockprop+6);
+is($after_upload_additional_info_relationship, $before_updating_info_relationship);
+
 # test retrieving crossing experimental info after updating
 $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_trial_id/cross_properties_trial");
 $response = decode_json $mech->content;

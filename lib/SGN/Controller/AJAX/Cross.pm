@@ -82,19 +82,17 @@ sub upload_cross_file_POST : Args(0) {
     if ($crosses_plots_upload) {
         $upload = $crosses_plots_upload;
         $upload_type = 'CrossesExcelFormat';
-        }
+    }
     if ($crosses_plants_upload) {
-            $upload = $crosses_plants_upload;
-            $upload_type = 'CrossesExcelFormat';
-            }
+        $upload = $crosses_plants_upload;
+        $upload_type = 'CrossesExcelFormat';
+    }
 
     if ($crosses_simple_upload) {
         $upload = $crosses_simple_upload;
         $upload_type = 'CrossesSimpleExcel';
     }
 
-    my $prefix = $c->req->param('upload_prefix');
-    my $suffix = $c->req->param('upload_suffix');
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
@@ -106,14 +104,12 @@ sub upload_cross_file_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_role;
     my $user_id;
     my $user_name;
     my $owner_name;
-    my $upload_file_type = "crosses excel";#get from form when more options are added
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
@@ -156,17 +152,12 @@ sub upload_cross_file_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
-
-    my $cross_properties_json = $c->config->{cross_properties};
-    my @properties = split ',', $cross_properties_json;
-    my $cross_properties = \@properties;
+    my $cross_additional_info_string = $c->config->{cross_additional_info};
+    my @additional_info = split ',', $cross_additional_info_string;
+    my $cross_additional_info = \@additional_info;
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_additional_info => $cross_additional_info);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
     #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
@@ -195,8 +186,10 @@ sub upload_cross_file_POST : Args(0) {
         dbh => $dbh,
         crossing_trial_id => $crossing_trial_id,
         crosses =>  $parsed_data->{crosses},
-        owner_name => $user_name
-	  });
+        user_id => $user_id,
+        archived_filename => $archived_filename_with_path,
+        archived_file_type => 'crosses'
+    });
 
     #validate the crosses
     if (!$cross_add->validate_crosses()){
@@ -210,51 +203,30 @@ sub upload_cross_file_POST : Args(0) {
         return;
     }
 
-    #add the progeny
-    if ($parsed_data->{number_of_progeny}) {
-        my %progeny_hash = %{$parsed_data->{number_of_progeny}};
+    if ($parsed_data->{'additional_info'}) {
+        my %cross_additional_info = %{$parsed_data->{additional_info}};
+        foreach my $cross_name (keys %cross_additional_info) {
+            my %info_hash = %{$cross_additional_info{$cross_name}};
+            foreach my $info_type (keys %info_hash) {
+                my $value = $info_hash{$info_type};
+                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
+                    chado_schema => $chado_schema,
+                    cross_name => $cross_name,
+                    key => $info_type,
+                    value => $value,
+                    data_type => 'cross_additional_info'
+                });
 
-        foreach my $cross_name_key (keys %progeny_hash) {
-            my $progeny_number = $progeny_hash{$cross_name_key};
-            my $progeny_increment = 1;
-            my @progeny_names;
+               $cross_add_info->add_info();
 
-            #create array of progeny names to add for this cross
-            while ($progeny_increment < $progeny_number + 1) {
-                $progeny_increment = sprintf "%03d", $progeny_increment;
-                my $stock_name = $cross_name_key.$prefix.$progeny_increment.$suffix;
-                push @progeny_names, $stock_name;
-                $progeny_increment++;
-            }
+               if (!$cross_add_info->add_info()){
+                   $c->stash->{rest} = {error_string => "Error saving info",};
+                   return;
+               }
 
-            #add array of progeny to the cross
-            my $progeny_add = CXGN::Pedigree::AddProgeny->new ({
-                chado_schema => $chado_schema,
-                phenome_schema => $phenome_schema,
-                dbh => $dbh,
-                cross_name => $cross_name_key,
-                progeny_names => \@progeny_names,
-                owner_name => $owner_name,
-            });
-            if (!$progeny_add->add_progeny()){
-                $c->stash->{rest} = {error_string => "Error adding progeny",};
-                #should delete crosses and other progeny if add progeny fails?
-                return;
             }
         }
     }
-
-#    while (my $info_type = shift (@properties)){
-#        if ($parsed_data->{$info_type}) {
-#            print STDERR "Handling info type $info_type\n";
-#            my %info_hash = %{$parsed_data->{$info_type}};
-#            foreach my $cross_name_key (keys %info_hash) {
-#                my $value = $info_hash{$cross_name_key};
-#                my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, key => $info_type, value => $value, } );
-#                $cross_add_info->add_info();
-#            }
-#        }
-#    }
 
     $c->stash->{rest} = {success => "1",};
 }
@@ -653,6 +625,10 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
     my $cross_id = $c->req->param("cross_id");
     my $type = $c->req->param("type");
     my $value = $c->req->param("value");
+    my $data_type = $c->req->param("data_type");
+#    print STDERR "DATA TYPE =".Dumper($data_type)."\n";
+#    print STDERR "TYPE =".Dumper($type)."\n";
+#    print STDERR "VALUE =".Dumper($value)."\n";
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cross_name = $schema->resultset("Stock::Stock")->find({stock_id => $cross_id})->uniquename();
@@ -661,7 +637,8 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
         chado_schema => $schema,
         cross_name => $cross_name,
         key => $type,
-        value => $value
+        value => $value,
+        data_type => $data_type
     });
     $cross_add_info->add_info();
 
@@ -751,6 +728,7 @@ sub add_individual_cross {
     my $cross_combination = shift;
 
     my $owner_name = $c->user()->get_object()->get_username();
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
     my @progeny_names;
     my $progeny_increment = 1;
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -852,7 +830,7 @@ sub add_individual_cross {
             dbh => $dbh,
             crossing_trial_id => $crossing_trial_id,
             crosses =>  \@array_of_pedigree_objects,
-            owner_name => $owner_name,
+            user_id => $user_id,
         });
 
         #add the crosses
@@ -981,7 +959,6 @@ sub upload_progenies_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_role;
@@ -1031,11 +1008,6 @@ sub upload_progenies_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
-
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
@@ -1061,6 +1033,7 @@ sub upload_progenies_POST : Args(0) {
 
     #add the progeny
     my %progeny_hash = %{$parsed_data};
+    my @all_crosses = keys %progeny_hash;
     foreach my $cross_name_key (keys %progeny_hash){
         my $progenies_ref = $progeny_hash{$cross_name_key};
         my @progenies = @{$progenies_ref};
@@ -1076,6 +1049,31 @@ sub upload_progenies_POST : Args(0) {
             $c->stash->{rest} = {error_string => "Error adding progeny",};
             return;
         }
+    }
+
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    my $md5checksum = $md5->hexdigest();
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($archived_filename_with_path),
+        dirname => dirname($archived_filename_with_path),
+        filetype => 'cross_progenies',
+        md5checksum => $md5checksum,
+        metadata_id => $md_row->metadata_id(),
+    });
+
+    my $file_id = $file_row->file_id();
+#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+    foreach my $cross_name (@all_crosses) {
+        my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
+        my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
+#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+        my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+            nd_experiment_id => $experiment_id,
+            file_id => $file_id,
+        });
     }
 
     $c->stash->{rest} = {success => "1",};
@@ -1104,7 +1102,6 @@ sub validate_upload_existing_progenies_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_role;
@@ -1151,10 +1148,6 @@ sub validate_upload_existing_progenies_POST : Args(0) {
         return;
     }
     unlink $upload_tempfile;
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
@@ -1179,23 +1172,32 @@ sub validate_upload_existing_progenies_POST : Args(0) {
             }
 
         }
-        $c->stash->{rest} = {error_string => $return_error, existing_pedigrees => $existing_pedigree, archived_file_name => $archived_filename_with_path};
+        $c->stash->{rest} = {error_string => $return_error, existing_pedigrees => $existing_pedigree, archived_file_name => $archived_filename_with_path, user_id => $user_id};
 }
 
 
 sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_progenies') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $archived_filename = $c->req->param('archived_file_name');
+    my $archived_filename_with_path = $c->req->param('archived_file_name');
+    my $user_id = $c->req->param('user_id');
+#    print STDERR "ARCHIVED FILE NAME =".Dumper($archived_filename_with_path)."\n";
+#    print STDERR "USER ID =".Dumper($user_id)."\n";
     my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $upload_type = 'StoreExistingProgeniesExcel';
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
 
-    my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename);
+    my $upload_type = 'StoreExistingProgeniesExcel';
+    my @all_crosses;
+
+    my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin($upload_type);
     my $parsed_data = $parser->parse();
     if ($parsed_data){
         my %progeny_hash = %{$parsed_data};
+        @all_crosses = keys %progeny_hash;
         foreach my $cross_name_key (keys %progeny_hash){
             my $progenies_ref = $progeny_hash{$cross_name_key};
             my @progenies = @{$progenies_ref};
@@ -1217,10 +1219,36 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
 
             if ($error){
                 $c->stash->{rest} = { error => $error };
-                $c->detach();
+                return;
             }
         }
     }
+
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    my $md5checksum = $md5->hexdigest();
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($archived_filename_with_path),
+        dirname => dirname($archived_filename_with_path),
+        filetype => 'cross_progenies',
+        md5checksum => $md5checksum,
+        metadata_id => $md_row->metadata_id(),
+    });
+
+    my $file_id = $file_row->file_id();
+#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+    foreach my $cross_name (@all_crosses) {
+        my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
+        my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
+#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+        my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+            nd_experiment_id => $experiment_id,
+            file_id => $file_id,
+        });
+    }
+
     $c->stash->{rest} = { success => 1 };
 }
 
@@ -1233,7 +1261,26 @@ sub upload_info_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload = $c->req->upload('crossinfo_upload_file');
+    my $cross_info_upload = $c->req->upload('crossinfo_upload_file');
+    my $additional_info_upload = $c->req->upload('additional_info_upload_file');
+    my $upload;
+    my $upload_type;
+    my $data_type;
+
+    if ($cross_info_upload) {
+        $upload = $cross_info_upload;
+        $upload_type = 'CrossInfoExcel';
+        $data_type = 'crossing_metadata_json';
+    }
+    if ($additional_info_upload) {
+        $upload = $additional_info_upload;
+        $upload_type = 'AdditionalInfoExcel';
+        $data_type = 'cross_additional_info';
+    }
+#    print STDERR "INFO UPLOAD =".Dumper($cross_info_upload)."\n";
+#    print STDERR "ADDITIONAL INFO UPLOAD =".Dumper($additional_info_upload)."\n";
+#    print STDERR "DATA TYPE =".Dumper($data_type)."\n";
+
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();
@@ -1245,13 +1292,11 @@ sub upload_info_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_role;
     my $user_id;
     my $user_name;
-    my $owner_name;
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
@@ -1294,20 +1339,19 @@ sub upload_info_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
-
-    my $cross_properties_json = $c->config->{cross_properties};
-    my @properties = split ',', $cross_properties_json;
+    my $cross_properties_string = $c->config->{cross_properties};
+    my @properties = split ',', $cross_properties_string;
     my $cross_properties = \@properties;
 
+    my $cross_additional_info_string = $c->config->{cross_additional_info};
+    my @additional_info = split ',', $cross_additional_info_string;
+    my $cross_additional_info = \@additional_info;
+
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties);
-    $parser->load_plugin('CrossInfoExcel');
+    $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, cross_properties => $cross_properties, cross_additional_info => $cross_additional_info);
+    $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
-    #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+#    print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
     if (!$parsed_data) {
         my $return_error = '';
@@ -1326,21 +1370,56 @@ sub upload_info_POST : Args(0) {
         $c->detach();
     }
 
-    while (my $info_type = shift (@properties)){
-        if ($parsed_data->{$info_type}) {
-            print STDERR "Handling info type $info_type\n";
-            my %info_hash = %{$parsed_data->{$info_type}};
-            foreach my $cross_name_key (keys %info_hash){
-                my $value = $info_hash{$cross_name_key};
+    my @all_crosses;
+    if ($parsed_data) {
+        my %cross_info = %{$parsed_data};
+        @all_crosses = keys %cross_info;
+        foreach my $cross_name (keys %cross_info) {
+            my %info_hash = %{$cross_info{$cross_name}};
+            foreach my $info_type (keys %info_hash) {
+                my $value = $info_hash{$info_type};
                 my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({
                     chado_schema => $chado_schema,
-                    cross_name => $cross_name_key,
+                    cross_name => $cross_name,
                     key => $info_type,
                     value => $value,
+                    data_type => $data_type
                 });
-                $cross_add_info->add_info();
+
+               $cross_add_info->add_info();
+
+               if (!$cross_add_info->add_info()){
+                   $c->stash->{rest} = {error_string => "Error saving info",};
+                   return;
+               }
             }
         }
+    }
+
+#    print STDERR "FILE =".Dumper($archived_filename_with_path)."\n";
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    my $md5checksum = $md5->hexdigest();
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($archived_filename_with_path),
+        dirname => dirname($archived_filename_with_path),
+        filetype => 'cross_info',
+        md5checksum => $md5checksum,
+        metadata_id => $md_row->metadata_id(),
+    });
+
+    my $file_id = $file_row->file_id();
+#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+    foreach my $cross_name (@all_crosses) {
+        my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
+        my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
+#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+        my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+            nd_experiment_id => $experiment_id,
+            file_id => $file_id,
+        });
     }
 
     $c->stash->{rest} = {success => "1",};
@@ -1368,7 +1447,6 @@ sub upload_family_names_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_role;
@@ -1418,11 +1496,6 @@ sub upload_family_names_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
-
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
     $parser->load_plugin('FamilyNameExcel');
@@ -1447,8 +1520,10 @@ sub upload_family_names_POST : Args(0) {
     }
 
     #add family name and associate with cross
+    my @all_crosses;
     if ($parsed_data){
         my %family_name_hash = %{$parsed_data};
+        @all_crosses = keys %family_name_hash;
         foreach my $cross_name(keys %family_name_hash){
             my $family_name = $family_name_hash{$cross_name};
 
@@ -1474,6 +1549,32 @@ sub upload_family_names_POST : Args(0) {
                 $c->detach();
             }
         }
+    }
+
+#    print STDERR "FILE =".Dumper($archived_filename_with_path)."\n";
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    my $md5checksum = $md5->hexdigest();
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($archived_filename_with_path),
+        dirname => dirname($archived_filename_with_path),
+        filetype => 'families',
+        md5checksum => $md5checksum,
+        metadata_id => $md_row->metadata_id(),
+    });
+
+    my $file_id = $file_row->file_id();
+#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+    foreach my $cross_name (@all_crosses) {
+        my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
+        my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
+#        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
+        my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
+            nd_experiment_id => $experiment_id,
+            file_id => $file_id,
+        });
     }
 
     $c->stash->{rest} = {success => "1",};
@@ -1538,7 +1639,6 @@ sub upload_intercross_file_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_role;
@@ -1586,11 +1686,6 @@ sub upload_intercross_file_POST : Args(0) {
         return;
     }
     unlink $upload_tempfile;
-
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="cross upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
@@ -1752,7 +1847,7 @@ sub upload_intercross_file_POST : Args(0) {
                 dbh => $dbh,
                 crossing_trial_id => $crossing_experiment_id,
                 crosses => \@new_crosses,
-                owner_name => $user_name
+                user_id => $user_id
             });
 
             if (!$cross_add->validate_crosses()){
@@ -1827,6 +1922,40 @@ sub get_cross_transactions :Path('/ajax/cross/transactions') Args(1) {
     }
 
     $c->stash->{rest} = {data => \@all_transactions};
+
+}
+
+
+sub get_cross_additional_info :Path('/ajax/cross/additional_info') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $cross_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $cross_additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_additional_info', 'stock_property')->cvterm_id();
+    my $cross_additional_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_additional_info_cvterm});
+
+    my $cross_info_json_string;
+    if($cross_additional_info_rs){
+        $cross_info_json_string = $cross_additional_info_rs->value();
+    }
+
+    my $cross_info_hash ={};
+    if($cross_info_json_string){
+        $cross_info_hash = decode_json $cross_info_json_string;
+    }
+
+    my $cross_additional_info = $c->config->{cross_additional_info};
+    my @column_order = split ',',$cross_additional_info;
+    my @props;
+    my @row;
+    foreach my $key (@column_order){
+        push @row, $cross_info_hash->{$key};
+    }
+
+    push @props,\@row;
+    $c->stash->{rest} = {data => \@props};
 
 }
 
