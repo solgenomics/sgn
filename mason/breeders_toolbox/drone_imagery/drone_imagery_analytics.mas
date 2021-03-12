@@ -363,6 +363,25 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <hr>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Fixed Effects: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_fixed_effect_select_div">
+                                            <option value="replicate">Replicate</option>
+                                            <option value="trait">Select a trait (e.g. soil elevation curvature)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="drone_imagery_analytics_fixed_effect_select_trait_div" style="display:none">
+                                    <label class="col-sm-3 control-label">Fixed Effect Trait: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="drone_imagery_analytics_fixed_effect_trait_select_div"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -449,6 +468,8 @@ jQuery(document).ready(function() {
             get_select_box('traits', 'drone_imagery_analytics_permanent_env_structure_phenotype_select_div', { 'name' : 'drone_imagery_analytics_permanent_env_structure_phenotype_select', 'id' : 'drone_imagery_analytics_permanent_env_structure_phenotype_select', 'empty':1, 'multiple':1, 'size':20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':'time_ontology', 'select_format':'component_table_select' });
 
             get_select_box('traits', 'drone_imagery_analytics_simulated_environment_real_data_trait_select_div', { 'name' : 'drone_imagery_analytics_simulated_environment_real_data_trait_select', 'id' : 'drone_imagery_analytics_simulated_environment_real_data_trait_select', 'empty':0, 'multiple':0, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('traits', 'drone_imagery_analytics_fixed_effect_trait_select_div', { 'name' : 'drone_imagery_analytics_fixed_effect_trait_select', 'id' : 'drone_imagery_analytics_fixed_effect_trait_select', 'empty':0, 'multiple':0, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot' });
 
             get_select_box('analytics_protocols', 'drone_imagery_analytics_analytics_protocols_select_div', { 'checkbox_name' : 'drone_imagery_analytics_analytics_protocols_select_id', 'analytics_protocol_type' : 'drone_imagery_analytics_env_simulation_protocol' });
 
@@ -616,6 +637,15 @@ jQuery(document).ready(function() {
         else {
             jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').hide();
             jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').hide();
+        }
+    });
+
+    jQuery('#drone_imagery_analytics_fixed_effect_select_div').change(function(){
+        if (jQuery(this).val() == 'replicate') {
+            jQuery('#drone_imagery_analytics_fixed_effect_select_trait_div').hide();
+        }
+        if (jQuery(this).val() == 'trait') {
+            jQuery('#drone_imagery_analytics_fixed_effect_select_trait_div').show();
         }
     });
 
