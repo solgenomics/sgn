@@ -12,16 +12,18 @@ my $d = SGN::Test::WWW::WebDriver->new();
 
 
 $d->while_logged_in_as("submitter", sub {
-    
+
     $d->get_ok('/solgs', 'solgs home page');
-    sleep(5); 
- $d->find_element_ok('//select[@id="list_type_training_pops_list_select"]/option[text()="trial2 NaCRRI plots"]', 'xpath', 'select list tr pop')->click();  
+    sleep(5);
+ $d->find_element_ok('//select[@id="list_type_training_pops_list_select"]/option[text()="trial2 NaCRRI plots"]', 'xpath', 'select list tr pop')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('plots list tr pop');
+    sleep(2);
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -33,6 +35,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP model list tr');
+    sleep(2);
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -47,12 +51,14 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(3);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
-    sleep(30);
+    sleep(130);
     $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP selection pred list tr');
+    sleep(2);
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(180);
@@ -67,7 +73,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->driver->go_back();
     sleep(5);
-  
+
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
@@ -80,6 +86,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('clones list sel pred');
+    sleep(2);
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -108,6 +116,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('dataset clones sel pred');
     sleep(2);
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
@@ -135,6 +145,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP-FRW modeling list tr');
     sleep(2);
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
@@ -156,6 +168,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP-FRW selection pred kasese');
     sleep(2);
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
@@ -176,6 +190,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('clones list dmc-frw sel pred');
     sleep(2);
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
@@ -186,7 +202,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "FRW")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
-    
+
     $d->driver->go_back();
     sleep(5);
 
@@ -198,7 +214,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('dataset clones sel pred');
+    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('dataset clones sel pred multi');
+    sleep(2);
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -215,7 +233,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
 
     $d->get('/solgs', 'solgs home page');
-    sleep(4); 
+    sleep(4);
 
     $d->find_element_ok('//select[@id="list_type_training_pops_list_select"]/option[text()="Trials list"]', 'xpath', 'trials list')->click();
     sleep(10);
@@ -225,10 +243,12 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('trials list tr pop');
     sleep(2);
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(200);
-    $d->get('/solgs/populations/combined/2804608595', 'plots list tr pop page');
-    sleep(4); 
+    $d->get('/solgs/populations/combined/2804608595/gp/1', 'plots list tr pop page');
+    sleep(4);
 
 
 
