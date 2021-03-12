@@ -125,6 +125,7 @@ sub check_log_analyses_names {
 	}
 }
 
+
 sub save_profile {
 	my ($self, $c) = @_;
 
@@ -223,6 +224,47 @@ sub create_selection_pop_page {
 }
 
 
+sub create_single_model_log_entries {
+	my ($self, $c, $analysis_log) = @_;
+
+	my $args = decode_json($analysis_log->{arguments});
+	my $trait_ids = $args->{training_traits_ids};
+
+	my $training_pop_id = $args->{training_pop_id}->[0];
+	my $entries;
+
+	my $analysis_time = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
+
+	foreach my $trait_id (@$trait_ids) {
+		$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+		my $trait_abbr = $c->stash->{trait_abbr};
+		my $analysis_page = '/solgs/trait/' . $trait_id .  '/population/' . $training_pop_id;
+		my $analysis_name = $analysis_log->{analysis_name} . ' -- ' . $trait_abbr;
+
+		$args->{analysis_page} = $analysis_page;
+		$args->{analysis_name} = $analysis_name;
+		$args->{trait_id} = [$trait_id];
+		$args->{training_traits_ids} = [$trait_id];
+		$args->{analysis_type} = 'single model';
+		$args->{analysis_time} = $analysis_time;
+
+		$entries .= join("\t", (
+					$analysis_log->{user_name},
+					$analysis_name,
+					$analysis_page,
+					'Submitted',
+					$analysis_time,
+					encode_json($args),)
+		);
+
+		$entries .= "\n";
+
+	}
+
+	return $entries;
+
+}
+
 sub format_log_entry {
 	my ($self, $c) = @_;
 
@@ -251,6 +293,12 @@ sub format_log_entry {
 	);
 
 	$entry .= "\n";
+
+	if ($profile->{analysis_page} =~ /solgs\/traits\/all\//)
+	{
+		my $traits_entries = $self->create_single_model_log_entries($c, $profile);
+		$entry .= $traits_entries;
+	}
 
 	$c->stash->{formatted_log_entry} = $entry;
 
