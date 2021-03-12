@@ -5101,7 +5101,7 @@ sub seedlot_single_transaction_fetch_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
-sub breedingmethods  : Chained('brapi') PathPart('breedingmethods') Args(0) : ActionClass('REST') { }
+sub breedingmethods : Chained('brapi') PathPart('breedingmethods') Args(0) : ActionClass('REST') { }
 
 sub breedingmethods_GET {
     my $self = shift;
@@ -5109,7 +5109,7 @@ sub breedingmethods_GET {
     my $auth = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
-    my $brapi_module = $brapi->brapi_wrapper('breedingmethods');
+    my $brapi_module = $brapi->brapi_wrapper('BreedingMethods');
     my $brapi_package_result = $brapi_module->search($clean_inputs);
 
     _standard_response_construction($c, $brapi_package_result);
