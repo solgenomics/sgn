@@ -371,7 +371,7 @@
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="drone_imagery_analytics_fixed_effect_select_div">
                                             <option value="replicate">Replicate</option>
-                                            <option value="trait">Select a trait (e.g. soil elevation curvature)</option>
+                                            <option value="fixed_effect_trait">Select a continuous trait (e.g. soil elevation curvature)</option>
                                         </select>
                                     </div>
                                 </div>
@@ -379,6 +379,17 @@
                                     <label class="col-sm-3 control-label">Fixed Effect Trait: </label>
                                     <div class="col-sm-9" >
                                         <div id="drone_imagery_analytics_fixed_effect_trait_select_div"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="drone_imagery_analytics_fixed_effect_select_quantile_div" style="display:none">
+                                    <label class="col-sm-3 control-label">Fixed Effect Continuous Trait Quantile Binning: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_fixed_effect_select_quantile">
+                                            <option value="4">25% Quantiles</option>
+                                            <option value="5">20% Quantiles</option>
+                                            <option value="10">10% Quantiles</option>
+                                            <option value="3">33% Quantiles</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -643,9 +654,11 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_analytics_fixed_effect_select_div').change(function(){
         if (jQuery(this).val() == 'replicate') {
             jQuery('#drone_imagery_analytics_fixed_effect_select_trait_div').hide();
+            jQuery('#drone_imagery_analytics_fixed_effect_select_quantile_div').hide();
         }
-        if (jQuery(this).val() == 'trait') {
+        if (jQuery(this).val() == 'fixed_effect_trait') {
             jQuery('#drone_imagery_analytics_fixed_effect_select_trait_div').show();
+            jQuery('#drone_imagery_analytics_fixed_effect_select_quantile_div').show();
         }
     });
 
@@ -762,6 +775,9 @@ jQuery(document).ready(function() {
                 'env_variance_percent':jQuery('#drone_imagery_analytics_env_variance').val(),
                 'simulated_environment_real_data_trait_id':jQuery('#drone_imagery_analytics_simulated_environment_real_data_trait_select').val(),
                 'sim_env_change_over_time_correlation':jQuery('#drone_imagery_analytics_sim_env_change_over_time_correlation').val(),
+                'fixed_effect_type':jQuery('#drone_imagery_analytics_fixed_effect_select_div').val(),
+                'fixed_effect_trait_id':jQuery('#drone_imagery_analytics_fixed_effect_trait_select').val(),
+                'fixed_effect_quantiles':jQuery('#drone_imagery_analytics_fixed_effect_select_quantile').val()
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");

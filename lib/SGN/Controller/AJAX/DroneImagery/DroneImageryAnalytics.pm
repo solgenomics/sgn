@@ -105,6 +105,22 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         $h->execute($analytics_protocol_name, $analytics_protocol_desc, $protocol_type_cvterm_id);
         ($analytics_protocol_id) = $h->fetchrow_array();
 
+        my $number_iterations = $c->req->param('number_iterations') || 2;
+        my $env_iterations;
+        for my $iterations (1..$number_iterations) {
+            my $a_env = rand(1);
+            my $b_env = rand(1);
+            my $ro_env = rand(1);
+            my $row_ro_env = rand(1);
+
+            $env_iterations->{$iterations} = {
+                a_env => $a_env,
+                b_env => $b_env,
+                ro_env => $ro_env,
+                row_ro_env => $row_ro_env,
+            };
+        }
+
         $protocol_properties = {
             analytics_select => $c->req->param('analytics_select') || 'minimize_local_env_effect',
             observation_variable_id_list => $c->req->param('observation_variable_id_list') ? decode_json $c->req->param('observation_variable_id_list') : [],
@@ -123,9 +139,13 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             permanent_environment_structure_phenotype_correlation_traits => decode_json $c->req->param('permanent_environment_structure_phenotype_correlation_traits'),
             permanent_environment_structure_phenotype_trait_ids => decode_json $c->req->param('permanent_environment_structure_phenotype_trait_ids'),
             env_variance_percent => $c->req->param('env_variance_percent') || "0.2,0.1,0.05,0.01,0.3",
-            number_iterations => $c->req->param('number_iterations') || 2,
+            number_iterations => $number_iterations,
             simulated_environment_real_data_trait_id => $c->req->param('simulated_environment_real_data_trait_id'),
-            sim_env_change_over_time_correlation => $c->req->param('sim_env_change_over_time_correlation') || '0.9'
+            sim_env_change_over_time_correlation => $c->req->param('sim_env_change_over_time_correlation') || '0.9',
+            fixed_effect_type => $c->req->param('fixed_effect_type'),
+            fixed_effect_trait_id => $c->req->param('fixed_effect_trait_id'),
+            fixed_effect_quantiles => $c->req->param('fixed_effect_quantiles'),
+            env_iterations => $env_iterations
         };
         my $q2 = "INSERT INTO nd_protocolprop (nd_protocol_id, value, type_id) VALUES (?,?,?);";
         my $h2 = $schema->storage->dbh()->prepare($q2);
@@ -181,6 +201,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $simulated_environment_real_data_trait_id = $protocol_properties->{simulated_environment_real_data_trait_id};
     my $correlation_between_times = $protocol_properties->{sim_env_change_over_time_correlation} || 0.9;
     my $sim_env_change_over_time = $correlation_between_times;
+    my $fixed_effect_type = $protocol_properties->{fixed_effect_type} || 'replicate';
+    my $fixed_effect_trait_id = $protocol_properties->{fixed_effect_trait_id};
+    my $fixed_effect_quantiles = $protocol_properties->{fixed_effect_quantiles};
+    my $env_iterations = $protocol_properties->{env_iterations};
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_drone_statistics";
@@ -266,6 +290,8 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_tempfile_2_fh, $stats_tempfile_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     $stats_tempfile_2 .= '.dat';
+    my ($stats_tempfile_fixed_effect_binning_fh, $stats_tempfile_fixed_effect_binning) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my ($stats_tempfile_fixed_effect_binned_fh, $stats_tempfile_fixed_effect_binned) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_prep_tempfile_fh, $stats_prep_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_prep_factor_tempfile_fh, $stats_prep_factor_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($parameter_tempfile_fh, $parameter_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -342,7 +368,6 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
     my $spatial_effects_plots;
     my $spatial_effects_files_store;
     my $env_corr_res;
-    my $env_iterations;
     my $env_varcomps;
 
     my (@sorted_trait_names, @unique_accession_names, @unique_plot_names, %trait_name_encoder, %trait_to_time_map);
@@ -351,17 +376,64 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
         for my $iterations (1..$number_iterations) {
             print STDERR "ITERATION $iterations\n";
 
-            my $a_env = rand(1);
-            my $b_env = rand(1);
-            my $ro_env = rand(1);
-            my $row_ro_env = rand(1);
+            my $a_env = $env_iterations->{$iterations}->{a_env};
+            my $b_env = $env_iterations->{$iterations}->{b_env};
+            my $ro_env = $env_iterations->{$iterations}->{ro_env};
+            my $row_ro_env = $env_iterations->{$iterations}->{row_ro_env};
 
-            $env_iterations->{$iterations} = {
-                a_env => $a_env,
-                b_env => $b_env,
-                ro_env => $ro_env,
-                row_ro_env => $row_ro_env,
-            };
+            my $fixed_effect_trait_data;
+            if ($fixed_effect_type eq 'fixed_effect_trait') {
+                my $phenotypes_search_fixed_effect = CXGN::Phenotypes::SearchFactory->instantiate(
+                    'MaterializedViewTable',
+                    {
+                        bcs_schema=>$schema,
+                        data_level=>'plot',
+                        trait_list=>[$fixed_effect_trait_id],
+                        trial_list=>$field_trial_id_list,
+                        include_timestamp=>0,
+                        exclude_phenotype_outlier=>0
+                    }
+                );
+                my ($fixed_effect_data, $fixed_effect_unique_traits) = $phenotypes_search_fixed_effect->search();
+
+                open(my $F, ">", $stats_tempfile_fixed_effect_binning) || die "Can't open file ".$stats_tempfile_fixed_effect_binning;
+                    print $F "stock_id\tvalue_continuous\tvalue_binned\n";
+                    foreach my $obs_unit (@$fixed_effect_data){
+                        my $obsunit_stock_id = $obs_unit->{observationunit_stock_id};
+                        my $observations = $obs_unit->{observations};
+                        foreach (@$observations){
+                            my $value = $_->{value};
+                            print $F "$obsunit_stock_id\t$value\t0\n";
+                        }
+                    }
+                close($F);
+
+                my $cmd_factor = 'R -e "library(data.table); library(dplyr);
+                mat <- fread(\''.$stats_tempfile_fixed_effect_binning.'\', header=TRUE, sep=\'\t\');
+                mat <- mat %>% mutate(value_binned = cut(value_continuous, breaks = unique(quantile(value_continuous,probs=seq.int(0,1, by=1/'.$fixed_effect_quantiles.'))), include.lowest=TRUE));
+                mat\$value_binned <- as.numeric(as.factor(mat\$value_binned));
+                write.table(mat, file=\''.$stats_tempfile_fixed_effect_binned.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+                my $status_factor = system($cmd_factor);
+
+                open(my $fh_factor, '<', $stats_tempfile_fixed_effect_binned) or die "Could not open file '$stats_tempfile_fixed_effect_binned' $!";
+                    print STDERR "Opened $stats_tempfile_fixed_effect_binned\n";
+                    my $header = <$fh_factor>;
+                    if ($csv->parse($header)) {
+                        my @header_cols = $csv->fields();
+                    }
+
+                    while (my $row = <$fh_factor>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        my $plot_id = $columns[0];
+                        my $value = $columns[1];
+                        my $value_binned = $columns[2];
+                        $fixed_effect_trait_data->{$plot_id} = $value_binned;
+                    }
+                close($fh_factor);
+            }
 
             my (%phenotype_data_original, @data_matrix_original, @data_matrix_phenotypes_original);
             my (%trait_name_encoder_rev, %stock_info, %unique_accessions, %seen_days_after_plantings, %seen_times, %obsunit_row_col, %stock_row_col, %stock_name_row_col, %stock_row_col_id, %seen_rows, %seen_cols, %seen_plots, %seen_plot_names, %plot_id_map, %trait_composing_info, %seen_trial_ids, %seen_trait_names, %unique_traits_ids, @phenotype_header, $header_string);
@@ -1469,24 +1541,29 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     close($fh);
 
                     open(my $F_prep, ">", $stats_prep_tempfile) || die "Can't open file ".$stats_prep_tempfile;
-                        print $F_prep "accession_id,accession_id_factor,plot_id,plot_id_factor,replicate,time,replicate_time,ind_replicate\n";
+                        print $F_prep "accession_id,accession_id_factor,plot_id,plot_id_factor,replicate,time,replicate_time,ind_replicate,fixed_effect_trait_binned\n";
                         foreach my $p (@unique_plot_names) {
                             my $replicate = $stock_name_row_col{$p}->{rep};
                             my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
                             my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
+                            my $fixed_effect_trait_value = defined($fixed_effect_trait_data->{$obsunit_stock_id}) ? $fixed_effect_trait_data->{$obsunit_stock_id} : 0;
                             foreach my $t (@sorted_trait_names) {
-                                print $F_prep "$germplasm_stock_id,,$obsunit_stock_id,,$replicate,$t,$replicate"."_"."$t,$germplasm_stock_id"."_"."$replicate\n";
+                                print $F_prep "$germplasm_stock_id,,$obsunit_stock_id,,$replicate,$t,$replicate"."_"."$t,$germplasm_stock_id"."_"."$replicate,$fixed_effect_trait_value\n";
                             }
                         }
                     close($F_prep);
 
-                    my $cmd_factor = 'R -e "library(data.table);
+                    my $cmd_factor = 'R -e "library(data.table); library(dplyr);
                     mat <- fread(\''.$stats_prep_tempfile.'\', header=TRUE, sep=\',\');
                     mat\$replicate_time <- as.numeric(as.factor(mat\$replicate_time));
                     mat\$ind_replicate <- as.numeric(as.factor(mat\$ind_replicate));
                     mat\$accession_id_factor <- as.numeric(as.factor(mat\$accession_id));
                     mat\$plot_id_factor <- as.numeric(as.factor(mat\$plot_id));
-                    write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
+                    ';
+                    if ($fixed_effect_type eq 'fixed_effect_trait') {
+                        $cmd_factor .= 'mat\$replicate_time <- as.numeric(as.factor(paste(mat\$fixed_effect_trait_binned, mat\$time, sep=\'_\')));';
+                    }
+                    $cmd_factor .= 'write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
                     my $status_factor = system($cmd_factor);
 
                     open(my $fh_factor, '<', $stats_prep_factor_tempfile) or die "Could not open file '$stats_prep_factor_tempfile' $!";
@@ -2066,7 +2143,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $result_blup_data_altered_env_6_1, $result_blup_data_delta_altered_env_6_1, $result_blup_spatial_data_altered_env_6_1, $result_blup_pe_data_altered_env_6_1, $result_blup_pe_data_delta_altered_env_6_1, $result_residual_data_altered_env_6_1, $result_fitted_data_altered_env_6_1, $fixed_effects_altered_env_hash_6_1, $rr_genetic_coefficients_altered_env_hash_6_1, $rr_temporal_coefficients_altered_env_hash_6_1, 
                 $rr_coeff_genetic_covariance_altered_env_array_6_1, $rr_coeff_env_covariance_altered_env_array_6_1, $rr_coeff_genetic_correlation_altered_env_array_6_1, $rr_coeff_env_correlation_altered_env_array_6_1, $rr_residual_variance_altered_env_6_1, $varcomp_altered_array_env_6_1,
                 $model_sum_square_residual_altered_env_6_1, $genetic_effect_min_altered_env_6_1, $genetic_effect_max_altered_env_6_1, $env_effect_min_altered_env_6_1, $env_effect_max_altered_env_6_1, $genetic_effect_sum_square_altered_env_6_1, $genetic_effect_sum_altered_env_6_1, $env_effect_sum_square_altered_env_6_1, $env_effect_sum_altered_env_6_1, $residual_sum_square_altered_env_6_1, $residual_sum_altered_env_6_1
-                ) = _perform_drone_imagery_analytics($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder, \%trait_name_encoder_rev, \%stock_info, \%plot_id_map, \@sorted_trait_names, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id);
+                ) = _perform_drone_imagery_analytics($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder, \%trait_name_encoder_rev, \%stock_info, \%plot_id_map, \@sorted_trait_names, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type);
 
                 eval {
                     print STDERR "PLOTTING CORRELATION\n";
@@ -3437,13 +3514,16 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     }
 
                     foreach my $p (@unique_plot_names) {
+                        my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
+                        if ($fixed_effect_type eq 'fixed_effect_trait') {
+                            $stock_name_row_col{$p}->{rep} = defined($fixed_effect_trait_data->{$obsunit_stock_id}) ? $fixed_effect_trait_data->{$obsunit_stock_id} : 0;
+                        }
                         my $row_number = $stock_name_row_col{$p}->{row_number};
                         my $col_number = $stock_name_row_col{$p}->{col_number};
                         my $replicate = $stock_name_row_col{$p}->{rep};
                         my $block = $stock_name_row_col{$p}->{block};
                         my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
                         my $germplasm_name = $stock_name_row_col{$p}->{germplasm_name};
-                        my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
 
                         my @row = ($replicate, $block, "S".$germplasm_stock_id, $obsunit_stock_id, $row_number, $col_number, $row_number, $col_number);
 
@@ -4351,7 +4431,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $result_blup_data_altered_env_6_2, $result_blup_data_delta_altered_env_6_2, $result_blup_spatial_data_altered_env_6_2, $result_blup_pe_data_altered_env_6_2, $result_blup_pe_data_delta_altered_env_6_2, $result_residual_data_altered_env_6_2, $result_fitted_data_altered_env_6_2, $fixed_effects_altered_env_hash_6_2, $rr_genetic_coefficients_altered_env_hash_6_2, $rr_temporal_coefficients_altered_env_hash_6_2, 
                 $rr_coeff_genetic_covariance_altered_env_array_6_2, $rr_coeff_env_covariance_altered_env_array_6_2, $rr_coeff_genetic_correlation_altered_env_array_6_2, $rr_coeff_env_correlation_altered_env_array_6_2, $rr_residual_variance_altered_env_6_2, $varcomp_altered_array_env_6_2,
                 $model_sum_square_residual_altered_env_6_2, $genetic_effect_min_altered_env_6_2, $genetic_effect_max_altered_env_6_2, $env_effect_min_altered_env_6_2, $env_effect_max_altered_env_6_2, $genetic_effect_sum_square_altered_env_6_2, $genetic_effect_sum_altered_env_6_2, $env_effect_sum_square_altered_env_6_2, $env_effect_sum_altered_env_6_2, $residual_sum_square_altered_env_6_2, $residual_sum_altered_env_6_2
-                ) = _perform_drone_imagery_analytics($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_2, \%trait_name_encoder_rev_2, \%stock_info_2, \%plot_id_map, \@sorted_trait_names_2, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map_2, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_2, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string_2, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id);
+                ) = _perform_drone_imagery_analytics($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_2, \%trait_name_encoder_rev_2, \%stock_info_2, \%plot_id_map, \@sorted_trait_names_2, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map_2, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_2, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string_2, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type);
 
                 eval {
                     print STDERR "PLOTTING CORRELATION\n";
@@ -5688,13 +5768,16 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     }
 
                     foreach my $p (@unique_plot_names) {
+                        my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
+                        if ($fixed_effect_type eq 'fixed_effect_trait') {
+                            $stock_name_row_col{$p}->{rep} = defined($fixed_effect_trait_data->{$obsunit_stock_id}) ? $fixed_effect_trait_data->{$obsunit_stock_id} : 0;
+                        }
                         my $row_number = $stock_name_row_col{$p}->{row_number};
                         my $col_number = $stock_name_row_col{$p}->{col_number};
                         my $replicate = $stock_name_row_col{$p}->{rep};
                         my $block = $stock_name_row_col{$p}->{block};
                         my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
                         my $germplasm_name = $stock_name_row_col{$p}->{germplasm_name};
-                        my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
 
                         my @row = ($replicate, $block, "S".$germplasm_stock_id, $obsunit_stock_id, $row_number, $col_number, $row_number, $col_number);
 
@@ -6602,7 +6685,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $result_blup_data_altered_env_6_3, $result_blup_data_delta_altered_env_6_3, $result_blup_spatial_data_altered_env_6_3, $result_blup_pe_data_altered_env_6_3, $result_blup_pe_data_delta_altered_env_6_3, $result_residual_data_altered_env_6_3, $result_fitted_data_altered_env_6_3, $fixed_effects_altered_env_hash_6_3, $rr_genetic_coefficients_altered_env_hash_6_3, $rr_temporal_coefficients_altered_env_hash_6_3, 
                 $rr_coeff_genetic_covariance_altered_env_array_6_3, $rr_coeff_env_covariance_altered_env_array_6_3, $rr_coeff_genetic_correlation_altered_env_array_6_3, $rr_coeff_env_correlation_altered_env_array_6_3, $rr_residual_variance_altered_env_6_3, $varcomp_altered_array_env_6_3,
                 $model_sum_square_residual_altered_env_6_3, $genetic_effect_min_altered_env_6_3, $genetic_effect_max_altered_env_6_3, $env_effect_min_altered_env_6_3, $env_effect_max_altered_env_6_3, $genetic_effect_sum_square_altered_env_6_3, $genetic_effect_sum_altered_env_6_3, $env_effect_sum_square_altered_env_6_3, $env_effect_sum_altered_env_6_3, $residual_sum_square_altered_env_6_3, $residual_sum_altered_env_6_3
-                ) = _perform_drone_imagery_analytics($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_2, \%trait_name_encoder_rev_2, \%stock_info_2, \%plot_id_map, \@sorted_trait_names_2, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map_2, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_2, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string_2, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id);
+                ) = _perform_drone_imagery_analytics($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_2, \%trait_name_encoder_rev_2, \%stock_info_2, \%plot_id_map, \@sorted_trait_names_2, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map_2, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_2, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string_2, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type);
 
                 eval {
                     print STDERR "PLOTTING CORRELATION\n";
@@ -8032,13 +8115,16 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     @ind_rep_factors = sort keys %seen_ind_reps;
 
                     foreach my $p (@unique_plot_names) {
+                        my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
+                        if ($fixed_effect_type eq 'fixed_effect_trait') {
+                            $stock_name_row_col{$p}->{rep} = defined($fixed_effect_trait_data->{$obsunit_stock_id}) ? $fixed_effect_trait_data->{$obsunit_stock_id} : 0;
+                        }
                         my $row_number = $stock_name_row_col{$p}->{row_number};
                         my $col_number = $stock_name_row_col{$p}->{col_number};
                         my $replicate = $stock_name_row_col{$p}->{rep};
                         my $block = $stock_name_row_col{$p}->{block};
                         my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
                         my $germplasm_name = $stock_name_row_col{$p}->{germplasm_name};
-                        my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
 
                         my $current_trait_index = 0;
                         my @row = (
@@ -8959,7 +9045,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $result_blup_data_altered_env_6_5, $result_blup_data_delta_altered_env_6_5, $result_blup_spatial_data_altered_env_6_5, $result_blup_pe_data_altered_env_6_5, $result_blup_pe_data_delta_altered_env_6_5, $result_residual_data_altered_env_6_5, $result_fitted_data_altered_env_6_5, $fixed_effects_altered_env_hash_6_5, $rr_genetic_coefficients_altered_env_hash_6_5, $rr_temporal_coefficients_altered_env_hash_6_5, 
                 $rr_coeff_genetic_covariance_altered_env_array_6_5, $rr_coeff_env_covariance_altered_env_array_6_5, $rr_coeff_genetic_correlation_altered_env_array_6_5, $rr_coeff_env_correlation_altered_env_array_6_5, $rr_residual_variance_altered_env_6_5, $varcomp_altered_array_env_6_5,
                 $model_sum_square_residual_altered_env_6_5, $genetic_effect_min_altered_env_6_5, $genetic_effect_max_altered_env_6_5, $env_effect_min_altered_env_6_5, $env_effect_max_altered_env_6_5, $genetic_effect_sum_square_altered_env_6_5, $genetic_effect_sum_altered_env_6_5, $env_effect_sum_square_altered_env_6_5, $env_effect_sum_altered_env_6_5, $residual_sum_square_altered_env_6_5, $residual_sum_altered_env_6_5
-                ) = _perform_drone_imagery_analytics($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_5, \%trait_name_encoder_rev_5, \%stock_info_5, \%plot_id_map, \@sorted_trait_names_5, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map_5, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_5, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string_5, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id);
+                ) = _perform_drone_imagery_analytics($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_5, \%trait_name_encoder_rev_5, \%stock_info_5, \%plot_id_map, \@sorted_trait_names_5, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map_5, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_5, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string_5, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type);
 
                 eval {
                     print STDERR "PLOTTING CORRELATION\n";
@@ -10384,13 +10470,16 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                     @ind_rep_factors = sort keys %seen_ind_reps;
 
                     foreach my $p (@unique_plot_names) {
+                        my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
+                        if ($fixed_effect_type eq 'fixed_effect_trait') {
+                            $stock_name_row_col{$p}->{rep} = defined($fixed_effect_trait_data->{$obsunit_stock_id}) ? $fixed_effect_trait_data->{$obsunit_stock_id} : 0;
+                        }
                         my $row_number = $stock_name_row_col{$p}->{row_number};
                         my $col_number = $stock_name_row_col{$p}->{col_number};
                         my $replicate = $stock_name_row_col{$p}->{rep};
                         my $block = $stock_name_row_col{$p}->{block};
                         my $germplasm_stock_id = $stock_name_row_col{$p}->{germplasm_stock_id};
                         my $germplasm_name = $stock_name_row_col{$p}->{germplasm_name};
-                        my $obsunit_stock_id = $stock_name_row_col{$p}->{obsunit_stock_id};
 
                         my $current_trait_index = 0;
                         my @row = (
@@ -11313,7 +11402,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
                 $result_blup_data_altered_env_6_6, $result_blup_data_delta_altered_env_6_6, $result_blup_spatial_data_altered_env_6_6, $result_blup_pe_data_altered_env_6_6, $result_blup_pe_data_delta_altered_env_6_6, $result_residual_data_altered_env_6_6, $result_fitted_data_altered_env_6_6, $fixed_effects_altered_env_hash_6_6, $rr_genetic_coefficients_altered_env_hash_6_6, $rr_temporal_coefficients_altered_env_hash_6_6, 
                 $rr_coeff_genetic_covariance_altered_env_array_6_6, $rr_coeff_env_covariance_altered_env_array_6_6, $rr_coeff_genetic_correlation_altered_env_array_6_6, $rr_coeff_env_correlation_altered_env_array_6_6, $rr_residual_variance_altered_env_6_6, $varcomp_altered_array_env_6_6,
                 $model_sum_square_residual_altered_env_6_6, $genetic_effect_min_altered_env_6_6, $genetic_effect_max_altered_env_6_6, $env_effect_min_altered_env_6_6, $env_effect_max_altered_env_6_6, $genetic_effect_sum_square_altered_env_6_6, $genetic_effect_sum_altered_env_6_6, $env_effect_sum_square_altered_env_6_6, $env_effect_sum_altered_env_6_6, $residual_sum_square_altered_env_6_6, $residual_sum_altered_env_6_6
-                ) = _perform_drone_imagery_analytics($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_6, \%trait_name_encoder_rev_6, \%stock_info_6, \%plot_id_map, \@sorted_trait_names_6, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map_6, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_6, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string_6, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id);
+                ) = _perform_drone_imagery_analytics($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, \@legendre_coeff_exec, \%trait_name_encoder_6, \%trait_name_encoder_rev_6, \%stock_info_6, \%plot_id_map, \@sorted_trait_names_6, \%accession_id_factor_map, \@rep_time_factors, \@ind_rep_factors, \@unique_accession_names, \%plot_id_count_map_reverse, \@sorted_scaled_ln_times, \%time_count_map_reverse, \%accession_id_factor_map_reverse, \%seen_times, \%plot_id_factor_map_reverse, \%trait_to_time_map_6, \@unique_plot_names, \%stock_name_row_col, \%phenotype_data_original_6, \%plot_rep_time_factor_map, \%stock_row_col, \%stock_row_col_id, \%polynomial_map, \@plot_ids_ordered, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string_6, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type);
 
                 eval {
                     print STDERR "PLOTTING CORRELATION\n";
@@ -12858,7 +12947,7 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
 }
 
 sub _perform_drone_imagery_analytics {
-    my ($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $legendre_coeff_exec_array, $trait_name_encoder_hash, $trait_name_encoder_rev_hash, $stock_info_hash, $plot_id_map_hash, $sorted_trait_names_array, $accession_id_factor_map_hash, $rep_time_factors_array, $ind_rep_factors_array, $unique_accession_names_array, $plot_id_count_map_reverse_hash, $sorted_scaled_ln_times_array, $time_count_map_reverse_hash, $accession_id_factor_map_reverse_hash, $seen_times_hash, $plot_id_factor_map_reverse_hash, $trait_to_time_map_hash, $unique_plot_names_array, $stock_name_row_col_hash, $phenotype_data_original_hash, $plot_rep_time_factor_map_hash, $stock_row_col_hash, $stock_row_col_id_hash, $polynomial_map_hash, $plot_ids_ordered_array, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id) = @_;
+    my ($c, $schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $legendre_coeff_exec_array, $trait_name_encoder_hash, $trait_name_encoder_rev_hash, $stock_info_hash, $plot_id_map_hash, $sorted_trait_names_array, $accession_id_factor_map_hash, $rep_time_factors_array, $ind_rep_factors_array, $unique_accession_names_array, $plot_id_count_map_reverse_hash, $sorted_scaled_ln_times_array, $time_count_map_reverse_hash, $accession_id_factor_map_reverse_hash, $seen_times_hash, $plot_id_factor_map_reverse_hash, $trait_to_time_map_hash, $unique_plot_names_array, $stock_name_row_col_hash, $phenotype_data_original_hash, $plot_rep_time_factor_map_hash, $stock_row_col_hash, $stock_row_col_id_hash, $polynomial_map_hash, $plot_ids_ordered_array, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type) = @_;
     my @legendre_coeff_exec = @$legendre_coeff_exec_array;
     my %trait_name_encoder = %$trait_name_encoder_hash;
     my %trait_name_encoder_rev = %$trait_name_encoder_rev_hash;
