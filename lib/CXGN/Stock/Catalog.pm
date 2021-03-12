@@ -76,4 +76,26 @@ sub get_catalog_items {
     return \@catalog_list;
 }
 
+
+sub get_item_details {
+    my $self = shift;
+    my $args = shift;
+    my $schema = $self->bcs_schema();
+    my $item_id = $self->parent_id();
+    my $type = $self->prop_type();
+    my $type_id = $self->_prop_type_id();
+    my $key_ref = $self->allowed_fields();
+    my @fields = @$key_ref;
+    my @item_details;
+    my $item_details_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $type_id});
+    my $details_json = $item_details_rs->value();
+    my $detail_hash = JSON::Any->jsonToObj($details_json);
+    foreach my $field (@fields){
+        push @item_details, $detail_hash->{$field};
+    }
+#    print STDERR "ITEM DETAILS =".Dumper(\@item_details)."\n";
+
+    return \@item_details;
+}
+
 1;
