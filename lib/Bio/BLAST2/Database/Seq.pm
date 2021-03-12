@@ -205,7 +205,7 @@ large, so can handle arbitrarily large sequences relatively well.
 
 =head2 new
 
-For use by Bio::BLAST::Database only.
+For use by Bio::BLAST2::Database only.
 
 Takes args -id and -bdb, which are the sequence's ID and the
 Bio::BLAST2::Database object it's from, respectively.
