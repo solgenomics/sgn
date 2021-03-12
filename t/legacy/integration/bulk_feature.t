@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Test::More tests => 34;
 
-use Digest::SHA1 qw/sha1_hex/;
+use Digest::SHA qw/sha1_hex/;
 use Data::Dumper;
 
 use lib 't/lib';

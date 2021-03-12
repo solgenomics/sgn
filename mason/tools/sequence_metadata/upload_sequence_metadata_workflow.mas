@@ -1,0 +1,722 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
+
+<div class="modal fade" id="upload_sequence_metadata_workflow_modal" name="upload_high_dim_phenotypes_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addHighDimDataDialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addHighDimDataDialog">Upload Sequence Metadata</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            
+          <&| /util/workflow.mas, id=> "upload_sequence_metadata_workflow" &>
+            
+            <!-- Step 1: Intro -->
+            <&| /util/workflow.mas:step, title=> "Intro" &>
+              <& /page/page_title.mas, title=>"Upload Sequence Metadata" &>
+              <div class="well">
+                  <p>This workflow will guide you through the process of uploading sequence metadata to the database using a 
+                  <a href="https://m.ensembl.org/info/website/upload/gff3.html">gff3-formatted</a> file.</p>
+                  <p>The following gff3 columns are used by the sequence metadata uploader:</p>
+                  <ul>
+                    <li>
+                      <strong>#1 / seqid:</strong> The name of the database feature (ie chromosome) the metadata is associated with<br />
+                      <em>The names in this column must match existing features in the database.</em>
+                    </li>
+                    <li><strong>#4 / start:</strong> The metadata's start position</li>
+                    <li><strong>#5 / end:</strong> The metadata's end position</li>
+                    <li><strong>#6 / score:</strong> The primary score attribute of the metadata</li>
+                    <li>
+                      <strong>#9 / attributes:</strong> Secondary key/value attributes to be saved with the score<br />
+                      <em>The attribute key cannot be either <strong>score</strong>, <strong>start</strong>, or <strong>end</strong>.</em>
+                    </li>
+                  </ul>
+              </div>
+
+              <div class="center">
+                <button class="btn btn-primary" id="sequence_metadata_intro_step">Go to Next Step</button>
+              </div>
+            </&>
+            <!-- End Intro -->
+
+
+            <!-- Step 2: Data Type -->
+            <&| /util/workflow.mas:step, title=> "Data Type" &>
+              <& /page/page_title.mas, title=>"Select the type of sequence metadata" &>
+              <br /><br />
+              <form class="form-horizontal">
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Data Type:&nbsp;</label>
+                  <div class="col-sm-9">
+                    <select class="form-control" id="sequence_metadata_upload_type_select" disabled>
+                      <option value="">Loading...</option>
+                    </select>
+                    <br />
+                    <div class="well">
+                      <p><span class="glyphicon glyphicon-info-sign"></span>&nbsp;<span id="sequence_metadata_upload_type_definition"></span></p>
+                    </div>
+                  </div>
+                </div>
+              </form>
+              <p><span class="glyphicon glyphicon-question-sign"></span>&nbsp;If your data is not one of the above data types, please <a href="/contact/form">contact us</a> about adding a new data type.</p>
+              
+              <br /><br />
+
+              <div class="center">
+                <button class="btn btn-primary" id="sequence_metadata_upload_type_step">Go to Next Step</button>
+              </div>
+            </&>
+            <!-- End Data Type -->
+
+
+            <!-- Step 3: Protocol Info -->
+            <&| /util/workflow.mas:step, title=> "Protocol Info" &>
+              <& /page/page_title.mas, title=>"Select a protocol for how your data was generated or create a new protocol" &>
+
+              <!-- Will be filled with existing protocol table -->
+              <div id="sequence_metadata_upload_protocol_select"></div>
+              
+              <!-- Form for creating a new protocol -->
+              <div id="sequence_metadata_upload_protocol_div" style="display:none">
+                <form class="form-horizontal" id="sequence_metadata_upload_protocol_form" name="sequence_metadata_upload_file_form">
+
+                  <h3>Protocol Information</h3>
+                  
+                  <!-- Protocol Name -->
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label">Protocol Name: </label>
+                    <div class="col-sm-9">
+                      <input class="form-control" id="sequence_metadata_upload_protocol_name" type="text">
+                    </div>
+                  </div>
+
+                  <!-- Protocol Description -->
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label">Protocol Description: </label>
+                    <div class="col-sm-9">
+                      <textarea class="form-control" id="sequence_metadata_upload_protocol_description" rows="5" placeholder="Include a description of the methods used to generate the data"></textarea>
+                    </div>
+                  </div>
+
+                  <!-- Sequence Metadata Type -->
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label">Sequence Metadata Type: </label>
+                    <div class="col-sm-9">
+                      <input class="form-control" id="sequence_metadata_upload_protocol_sequence_metadata_type" type="text" disabled>
+                    </div>
+                  </div>
+                  
+                  <!-- Reference Genome -->
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label">Reference Genome: </label>
+                    <div class="col-sm-9">
+                      <select class="form-control" id="sequence_metadata_upload_protocol_reference_genome" disabled>
+                        <option value="">Loading...</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Attribute Descriptions -->
+                  <h3>Attribute Descriptions</h3>
+
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label">Score Description: </label>
+                    <div class="col-sm-9">
+                      <input class="form-control" id="sequence_metadata_upload_score_description" type="text" placeholder="Include a description of the values in the 'score' column">
+                    </div>
+                  </div>
+
+                  <br />
+                  <p><strong>Add a description for each of the key/value pairs included in the attributes column.</strong></p>
+                  <p><em>Specifying the attribute here in the protocol will allow the attribute to be used as a filter in a query.  Make sure the attribute key exactly matches the key used in the gff file.</em></p>
+
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label">Attribute Key: </label>
+                    <div class="col-sm-9">
+                      <input class="form-control" id="sequence_metadata_upload_new_attribute_key" type="text" placeholder="Enter attribute key">
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="col-sm-3 control-label">Attribute Description: </label>
+                    <div class="col-sm-9">
+                      <input class="form-control" id="sequence_metadata_upload_new_attribute_description" type="text" placeholder="Enter a description of this attribute">
+                    </div>
+                  </div>
+
+                  <div class="form-group center">
+                    <button class="btn btn-info" id="sequence_metadata_upload_new_attribute_submit">Save Attribute</button>
+                  </div>
+
+                  <div>
+                    <p><strong>Saved Attributes:</strong></p>
+                    <table id="sequence_metadata_upload_new_attributes_table" class="table table-striped table-hover">
+                      <tr>
+                        <th>Key</th>
+                        <th>Description</th>
+                        <th></th>
+                      </tr>
+                    </table>
+                  </div>
+
+                </form>
+              </div>
+              <!-- End new protocol form -->
+
+              <br /><br />
+
+              <!-- Toggle New / Existing Protocol -->
+              <div class="center">
+                <button class="btn btn-info" id="sequence_metadata_upload_new_protocol"><span class="glyphicon glyphicon-plus"></span>&nbsp;Create New Protocol</button>
+              </div>
+
+              <br /><br />
+
+              <div class="center">
+                <button class="btn btn-primary" id="sequence_metadata_upload_protocol_step">Go to Next Step</button>
+              </div>
+
+            </&>
+            <!-- End Protocol Info -->
+
+
+            <!-- Step 4: Upload -->
+            <&| /util/workflow.mas:step, title=> "Upload" &>
+              <& /page/page_title.mas, title=>"Upload your gff3 file" &>
+              <br /><br />
+
+              <p>Select your gff3 file to upload.  Then, click the <strong>Verify</strong> button to upload your file and check its format and contents.  If 
+              successfully verified, click the <strong>Store</strong> button to store the data in the database.</p>
+
+              <br /><br />
+
+              <form id="sequence_metadata_upload_file_form" class="form-horizontal" enctype="multipart/form-data">
+                <div class="form-group">
+                  <label class="col-sm-3 control-label">Select GFF3 File: </label>
+                  <div class="col-sm-9" >
+                      <input type="file" id="sequence_metadata_upload_file_input" name="sequence_metadata_upload_file_input" encoding="multipart/form-data" />
+                  </div>
+                </div>
+              </form>
+
+              <br /><br />
+
+              <div class="center">
+                <button id="sequence_metadata_upload_verify" class="btn btn-info">Verify</button>
+                <button id="sequence_metadata_upload_store" class="btn btn-primary" disabled>Store</button>
+              </div>
+
+              <br /><br />
+
+              <div id="sequence_metdata_upload_messages">
+                <ul id="sequence_metadata_upload_messages_list" class='list-group'></ul>
+              </div>
+            </&>
+            <!-- End Upload -->
+
+          </&>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  div.center {
+    text-align: center
+  }
+</style>
+
+<script>
+
+var sequence_metadata_data_types = [];                // List of sequence metadata type properties (pulled from the database)
+var sequence_metadata_upload_type_id = undefined;     // Selected sequence metadata type id
+var new_attribute_count = 0;                          // Count of (max) number of attribute keys/descriptions added
+var use_existing_protocol = undefined;                // Flag set to true if user has selected an existing protocol
+var new_protocol_name = undefined;                    // Name of new protocol
+var new_protocol_description = undefined;             // Description of new protocol
+var processed_filepath = undefined;                   // Server filepath to processed file generated and returned by verification step
+
+jQuery(document).ready(function() {
+
+    // Start SMD Upload Workflow
+    jQuery('#upload_smd').click( function() {
+        jQuery('#upload_sequence_metadata_workflow_modal').modal("show");
+    });
+
+    // Complete the Intro Step
+    jQuery('#sequence_metadata_intro_step').click(complete_intro_step);
+
+    // Complete the Data Type Step
+    jQuery('#sequence_metadata_upload_type_step').click(complete_data_type_step);
+
+    // Complete Protocol Step
+    jQuery('#sequence_metadata_upload_protocol_step').click(complete_protocol_step);
+
+    // Toggle the existing protocol table / new protocol form
+    jQuery('#sequence_metadata_upload_new_protocol').click(function() {
+      jQuery('#sequence_metadata_upload_protocol_div').toggle();
+      jQuery('#sequence_metadata_upload_protocol_select').toggle();
+      jQuery('#sequence_metadata_upload_new_protocol').html(jQuery('#sequence_metadata_upload_protocol_select').is(':visible') ? "<span class='glyphicon glyphicon-plus'></span>&nbsp;Create New Protocol" : "<span class='glyphicon glyphicon-ok'></span>&nbsp;Select Existing Protocol");
+    });
+
+    // Save a new attribute description
+    jQuery('#sequence_metadata_upload_new_attribute_submit').click(save_attribute_description);
+
+    // Upload and Verify File
+    jQuery('#sequence_metadata_upload_verify').click(upload_and_verify); 
+
+    // Store Data
+    jQuery('#sequence_metadata_upload_store').click(store);
+
+});
+
+
+//
+// WORKFLOW STEP COMPLETION
+//
+
+/**
+ * Complete the Intro Step
+ * - Get the available data types from the DB
+ * - Set the data types select box in the Data Type step
+ * - Complete Intro Step and move to Data Type step
+ */
+function complete_intro_step() {
+  
+  // Get and set the data types
+  jQuery.ajax({
+    type: 'GET',
+    dataType: 'json',
+    url: '/ajax/sequence_metadata/types',
+    success: function(data) {
+      if ( data && data.types ) {
+        sequence_metadata_data_types = data.types;
+        let html = "";
+        for ( let i = 0; i < data.types.length; i++ ) {
+          html += "<option value='" + data.types[i].type_id + "'>" + data.types[i].type_name + "</option>";
+        }
+        jQuery('#sequence_metadata_upload_type_select').html(html);
+        jQuery('#sequence_metadata_upload_type_select').prop('disabled', false);
+        jQuery('#sequence_metadata_upload_type_select').on('change', function() {
+          setDataTypeDefinition(this.value);
+        });
+        setDataTypeDefinition(data.types[0].type_id);
+      }
+      else {
+        alert("ERROR: Could not load data types!");
+      }
+    },
+    error: function() {
+      alert("ERROR: Could not load data types!");
+    }
+  });
+
+  // Proceeed to Next Step
+  Workflow.complete('#sequence_metadata_intro_step');
+  Workflow.focus('#upload_sequence_metadata_workflow', 1);
+
+}
+
+/**
+ * Complete the Data Type Step
+ * - Set the selected sequence metadata type id
+ * - Get the existing protocols for matching data type from DB
+ * - Set existing protocol table in Protocol step
+ * - Get the available reference genomes from the DB
+ * - Set the reference genomes select box in the Protocol step
+ * - Complete Data Type step and move to Protocol step
+ */
+function complete_data_type_step() {
+  sequence_metadata_upload_type_id = jQuery('#sequence_metadata_upload_type_select').val();
+
+  // Set the existing protocol list
+  get_select_box('sequence_metadata_protocols', 'sequence_metadata_upload_protocol_select', {'checkbox_name': 'sequence_metadata_upload_protocol_id', 'sequence_metadata_data_type_id': sequence_metadata_upload_type_id});
+  
+  // Set sequence metadata type value
+  for ( let i = 0; i < sequence_metadata_data_types.length; i++ ) {
+    if ( parseInt(sequence_metadata_data_types[i].type_id) === parseInt(sequence_metadata_upload_type_id) ) {
+      jQuery('#sequence_metadata_upload_protocol_sequence_metadata_type:text').val(sequence_metadata_data_types[i].type_name);
+    }
+  }
+
+  // Set the reference genome list
+  jQuery.ajax({
+    type: 'GET',
+    dataType: 'json',
+    url: '/ajax/sequence_metadata/reference_genomes',
+    success: function(data) {
+      if ( data && data.reference_genomes ) {
+        let options = "";
+        for ( let i = 0; i < data.reference_genomes.length; i++ ) {
+          let rg_name = data.reference_genomes[i].reference_genome;
+          let sp_name = data.reference_genomes[i].species_name;
+          let rg_label = rg_name + " (" + sp_name + ")";
+          options += "<option value='" + rg_name + "'>" + rg_label + "</option>";
+        }
+        jQuery('#sequence_metadata_upload_protocol_reference_genome').html(options);
+        jQuery('#sequence_metadata_upload_protocol_reference_genome').prop('disabled', false);
+      }
+      else {
+        alert("ERROR: Could not load reference genomes!");
+      }
+    },
+    error: function() {
+      alert("ERROR: Could not load reference genomes");
+    }
+  });
+
+  Workflow.complete("#sequence_metadata_upload_type_step");
+  Workflow.focus('#upload_sequence_metadata_workflow', 2);
+}
+
+/**
+ * Complete the Protocol Step
+ * - Determine if user has selected an existing protocol / created a new protocol
+ * - Check for required protocol params
+ * - Complete the Protocol Step and move to Upload step
+ */
+function complete_protocol_step() {
+  use_existing_protocol = jQuery('#sequence_metadata_upload_protocol_select').is(':visible');
+  if ( use_existing_protocol ) {
+    if ( jQuery('input[name="sequence_metadata_upload_protocol_id"]:checked').length !== 1 ) {
+      alert('Please select one existing protocol!');
+      return false;
+    }
+  }
+  else {
+    new_protocol_name = jQuery('#sequence_metadata_upload_protocol_name').val();
+    new_protocol_description = jQuery('#sequence_metadata_upload_protocol_description').val();
+    if ( !new_protocol_name || new_protocol_name === "" ) {
+      alert('Please enter a name for the new protocol');
+      return false;
+    }
+    if ( !new_protocol_description || new_protocol_description === "" ) {
+      alert('Please enter a description for the new protocol');
+      return false;
+    }
+  }
+
+  jQuery('#sequence_metadata_upload_file_input').val(undefined);
+  jQuery('#sequence_metadata_upload_verify').attr('disabled', false);
+  jQuery('#sequence_metadata_upload_store').attr('disabled', true);
+  jQuery('#sequence_metadata_upload_messages_list').empty();
+
+  Workflow.complete("#sequence_metadata_upload_protocol_step");
+  Workflow.focus('#upload_sequence_metadata_workflow', 3);
+}
+
+//
+// VERIFY AND STORE
+//
+
+/**
+ * Upload and verify the gff file
+ * - Make POST request to verify endpoint (upload file, run verification script)
+ * - Handle response and display verification messages
+ * - Enable store button if verification passes
+ */
+function upload_and_verify() {
+  let file = jQuery('#sequence_metadata_upload_file_input').val();
+  if ( !file || file === '' ) {
+    alert("Please select your gff file");
+    return false;
+  }
+
+  // Setup working modal
+  jQuery('#working_msg').html("Uploading GFF File");
+  jQuery('#working_modal_progress').css('width', 0).attr('aria-valuenow', 0);
+  jQuery('#working_modal_progress_div').css('display', 'block');
+  jQuery('#working_modal').modal("show");
+  jQuery('#sequence_metadata_upload_messages_list').empty();
+  
+  
+  // Build the FormData to pass as POST arguments
+  let formData = new FormData();
+  formData.append('file', jQuery('#sequence_metadata_upload_file_input').prop('files')[0]);
+  formData.append('use_existing_protocol', use_existing_protocol);
+  if ( use_existing_protocol ) {
+    formData.append('existing_protocol_id', jQuery('input[name="sequence_metadata_upload_protocol_id"]:checked').val());
+  }
+  else {
+    formData.append('new_protocol_attribute_count', new_attribute_count);
+    for ( let i = 0; i <= new_attribute_count; i++ ) {
+      formData.append('new_protocol_attribute_key_' + i, jQuery('#sequence_metadata_upload_attribute_key_' + i).val());
+    }
+  }
+
+  // Make the POST request
+  jQuery.ajax({
+    url: '/ajax/sequence_metadata/file_upload_verify',
+    type: 'POST',
+    data: formData,
+    cache: false,
+    contentType: false,
+    processData: false,
+    xhr: function () {
+      var myXhr = jQuery.ajaxSettings.xhr();
+      if (myXhr.upload) {
+        myXhr.upload.addEventListener('progress', function (e) {
+          if (e.lengthComputable) {
+            let prog = (e.loaded / e.total)*100;
+            jQuery('#working_modal_progress').css('width', prog + "%").attr('aria-valuenow', prog);
+            if ( prog >= 100 ) {
+              jQuery('#working_msg').html("Verifying GFF File");
+            }
+          }
+        }, false);
+      }
+      return myXhr;
+    },
+    success: function(response) {
+
+      // Clear working modal
+      jQuery('#working_msg').html("");
+      jQuery('#working_modal_progress').css('width', 0).attr('aria-valuenow', 0);
+      jQuery('#working_modal_progress_div').css('display', 'none');
+      jQuery('#working_modal').modal("hide");
+
+      console.log("VERIFICATION RESPONSE");
+      console.log(response);
+
+      // Add Response Messages
+      if ( response && response.error ) {
+        add_message("error", response.error);
+      }
+      else if ( response && response.results ) {
+        if ( response.results.processed === 1 ) {
+          add_message("success", "File successfully uploaded and processed");
+        }
+        else {
+          add_message("error", "ERROR: File not successfully uploaded and processed!");
+        }
+        
+        if ( response.results.verified === 1 ) {
+          add_message("success", "File successfully verified");
+        }
+        else {
+          add_message("error", "ERROR: File not successfully verfied!");
+        }
+
+        if ( response.results.missing_features && response.results.missing_features.length > 0 ) {
+          let msg = "ERROR: The following features do not exist in the database.  Contact us to have them added or change the feature names to match existing features.";
+          msg += "<ul>";
+          for ( let i = 0; i < response.results.missing_features.length; i++ ) {
+            msg += "<li>" + response.results.missing_features[i] + "</li>";
+          }
+          msg += "</ul>";
+          add_message("error", msg);
+        }
+
+        if ( response.results.missing_attributes && response.results.missing_attributes.length > 0 ) {
+          let msg = "WARNING: The following attributes are defined in the protocol but are <em>not present in the gff file</em>.";
+          msg += "<ul>";
+          for ( let i = 0; i < response.results.missing_attributes.length; i++ ) {
+            msg += "<li>" + response.results.missing_attributes[i] + "</li>";
+          }
+          msg += "</ul>";
+          msg += "You can either <a href='javascript:Workflow.focus(\"#upload_sequence_metadata_workflow\", 2);'>remove the attributes from the protocol info</a> or continue to store the file with the attributes defined in the protocol but missing from the file."; 
+          add_message("warning", msg);
+        }
+
+        if ( response.results.undefined_attributes && response.results.undefined_attributes.length > 0 ) {
+          let msg = "WARNING: The following attributes are present in the gff file but are <em>not defined in the protocol</em>.";
+          msg += "<ul>";
+          for ( let i = 0; i < response.results.undefined_attributes.length; i++ ) {
+            msg += "<li>" + response.results.undefined_attributes[i] + "</li>";
+          }
+          msg += "</ul>";
+          msg += "You can either <a href='javascript:Workflow.focus(\"#upload_sequence_metadata_workflow\", 2);'>add the attributes to the protocol info</a> or continue to store the file with the attributes not defined in the protocol."; 
+          add_message("warning", msg);
+        }
+      }
+
+      // Enable the Store button if processed and verified
+      if ( response && response.results && response.results.processed && response.results.processed === 1 && response.results.verified && response.results.verified === 1 && response.results.processed_filepath ) {
+        jQuery('#sequence_metadata_upload_verify').attr('disabled', true);
+        jQuery('#sequence_metadata_upload_store').attr('disabled', false);
+        add_message("info", "Verification Complete.  Next, click the <strong>Store</strong> button to save the data to the database.");
+        processed_filepath = response.results.processed_filepath;
+      }
+
+    },
+    error: function() {
+      jQuery('#working_msg').html("");
+      jQuery('#working_modal_progress').css('width', 0).attr('aria-valuenow', 0);
+      jQuery('#working_modal_progress_div').css('display', 'none');
+      jQuery('#working_modal').modal("hide");
+
+      alert("ERROR: Could not upload and verify gff file due to server error!");
+    }
+  });
+}
+
+/**
+ * Store the Data
+ */
+function store() {
+
+  // Setup working modal
+  jQuery('#working_msg').html("Storing Sequence Metadata");
+  jQuery('#working_modal').modal("show");
+  jQuery('#sequence_metadata_upload_messages_list').empty();
+
+  // Setup FormData to pass as POST arguments
+  let formData = new FormData();
+  formData.append('processed_filepath', processed_filepath);
+  formData.append('use_existing_protocol', use_existing_protocol);
+  if ( use_existing_protocol ) {
+    formData.append('existing_protocol_id', jQuery('input[name="sequence_metadata_upload_protocol_id"]:checked').val());
+    formData.append('existing_protocol_sequence_metadata_type', jQuery('#sequence_metadata_upload_type_select option:selected').val());
+  }
+  else {
+    formData.append('new_protocol_name', new_protocol_name);
+    formData.append('new_protocol_description', new_protocol_description);
+    formData.append('new_protocol_sequence_metadata_type', jQuery('#sequence_metadata_upload_type_select option:selected').val());
+    formData.append('new_protocol_reference_genome', jQuery('#sequence_metadata_upload_protocol_reference_genome option:selected').val());
+    formData.append('new_protocol_score_description', jQuery('#sequence_metadata_upload_score_description').val());
+    formData.append('new_protocol_attribute_count', new_attribute_count);
+    for ( let i = 1; i <= new_attribute_count; i++ ) {
+      formData.append('new_protocol_attribute_key_' + i, jQuery('#sequence_metadata_upload_attribute_key_' + i).val());
+      formData.append('new_protocol_attribute_description_' + i, jQuery('#sequence_metadata_upload_attribute_description_' + i).val());
+    }
+  }
+
+  // Make the POST request
+  jQuery.ajax({
+    url: '/ajax/sequence_metadata/store',
+    type: 'POST',
+    data: formData,
+    cache: false,
+    contentType: false,
+    processData: false,
+    success: function(response) {
+
+      // Clear working modal
+      jQuery('#working_msg').html("");
+      jQuery('#working_modal').modal("hide");
+
+      console.log("STORE RESPONSE");
+      console.log(response);
+
+      // Add Response Messages
+      if ( response && response.error ) {
+        add_message("error", response.error);
+      }
+      else if ( response && response.results ) {
+        if ( response.results.stored === 1 ) {
+          add_message("success", "File successfully stored");
+          if ( response.results.chunks ) {
+            add_message("info", response.results.chunks + " chunks written to the database.");
+          }
+        }
+        else {
+          add_message("error", "ERROR: File not stored!");
+        }
+      }
+
+      // Disable the verify and store buttons
+      if ( response && response.results && response.results.stored && response.results.stored === 1 ) {
+        jQuery('#sequence_metadata_upload_verify').attr('disabled', true);
+        jQuery('#sequence_metadata_upload_store').attr('disabled', true);
+      }
+
+    },
+    error: function() {
+      jQuery('#working_msg').html("");
+      jQuery('#working_modal').modal("hide");
+      alert("ERROR: Could not store sequence metadata due to server error!");
+    }
+  });
+
+}
+
+
+//
+// HELPER FUNCTIONS
+//
+
+/**
+ * Callback listener for data type selection change
+ * - Update the data type definition
+ */
+function setDataTypeDefinition(id) {
+  for ( let i = 0; i < sequence_metadata_data_types.length; i++ ) {
+    if ( parseInt(sequence_metadata_data_types[i].type_id) === parseInt(id) ) {
+      jQuery('#sequence_metadata_upload_type_definition').html(sequence_metadata_data_types[i].type_definition);
+    }
+  }
+}
+
+/**
+ * Save attribute key and description
+ * - Get user inputs
+ * - Add key and description to table (along with hidden inputs used by the form)
+ */
+function save_attribute_description() {
+  new_attribute_count++;
+
+  let key = jQuery('#sequence_metadata_upload_new_attribute_key').val();
+  let description = jQuery('#sequence_metadata_upload_new_attribute_description').val();
+  if ( !key || key === "" ) {
+    alert("An attribute key is required!");
+    return false;
+  }
+
+  let html = "<tr id='sequence_metadata_upload_new_attributes_table_row_" + new_attribute_count + "'>";
+  html += "<td>" + key + "<input type='hidden' name='sequence_metadata_upload_attribute_key_" + new_attribute_count + "' id='sequence_metadata_upload_attribute_key_" + new_attribute_count + "' value='" + key + "'></td>";
+  html += "<td>" + description + "<input type='hidden' name='sequence_metadata_upload_attribute_description_" + new_attribute_count + "' id='sequence_metadata_upload_attribute_description_" + new_attribute_count + "' value='" + description + "'</td>";
+  html += "<td style='text-align: right'><button id='sequence_metadata_upload_new_attributes_table_remove_" + new_attribute_count + "' data-row='" + new_attribute_count + "' class='btn btn-danger btn-xs'><span class='glyphicon glyphicon-remove'></span></button></td>";
+  html += "</tr>";
+
+  jQuery('#sequence_metadata_upload_new_attribute_key').val("");
+  jQuery('#sequence_metadata_upload_new_attribute_description').val("");
+  jQuery('#sequence_metadata_upload_new_attributes_table').append(html);
+  jQuery('#sequence_metadata_upload_new_attributes_table_remove_' + new_attribute_count).click(function() {
+    let row = jQuery(this).attr('data-row');
+    jQuery('#sequence_metadata_upload_new_attributes_table_row_' + row).remove();
+  });
+
+  return false;
+}
+
+/**
+ * Add Message to Upload step
+ * @param {string} type Message Type (success, error)
+ * @param {string} message Message Text
+ */
+function add_message(type, message) {
+  let html = "";
+  let class_name = "danger";
+  let icon_name = "remove";
+  
+  if ( type === "success" ) {
+    class_name = "success";
+    icon_name = "ok";
+  }
+  else if ( type === "warning" ) {
+    class_name = "warning";
+    icon_name = "asterisk";
+  }
+  else if ( type === "info" ) {
+    class_name = "info";
+    icon_name = "info-sign";
+  }
+
+  html += "<li class='list-group-item list-group-item-" + class_name + "'>";
+  html += "<span class='badge'><span class='glyphicon glyphicon-" + icon_name + "'></span></span>";
+  html += message;
+  html += "</li>";
+
+  jQuery('#sequence_metadata_upload_messages_list').append(html);
+}
+</script>

@@ -51,6 +51,11 @@ has 'ontology_db_id_list' => (
     is => 'rw',
 );
 
+has 'ontology_db_name_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
 has 'trait_definition_list' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
@@ -58,6 +63,11 @@ has 'trait_definition_list' => (
 
 has 'trait_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'accession_list' => (
+    isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
 );
 
@@ -108,6 +118,14 @@ sub search {
         $and_conditions{cvterm_id} = { -in => $self->trait_id_list };
     }
 
+    if ($self->ontology_db_name_list && scalar(@{$self->ontology_db_name_list}) > 0){
+        $and_conditions{'db.name'} = { -in => $self->ontology_db_name_list };
+    }
+
+    if ($self->accession_list && scalar(@{$self->accession_list}) > 0){
+        $and_conditions{'dbxref.accession'} = { -in => $self->accession_list };
+    }
+
     if ($self->trait_definition_list && scalar(@{$self->trait_definition_list}) > 0){
         foreach (@{$self->trait_definition_list}){
             my @words = split '\s', $_;
@@ -139,7 +157,7 @@ sub search {
         $where_join{'type.name'} = 'VARIABLE_OF';
     }
 
-    #$schema->storage->debug(1);
+    # $schema->storage->debug(1);
     my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
         \%and_conditions,
         {
