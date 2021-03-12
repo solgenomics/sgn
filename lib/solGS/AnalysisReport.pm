@@ -481,7 +481,7 @@ sub check_kinship_analysis {
 	{
 
 	    my $kinship_file = $output_details->{$k}->{matrix_file};
-	    if ($kinship_file) 
+	    if ($kinship_file)
 	    {
 		while (1)
 		{
@@ -905,7 +905,7 @@ sub log_analysis_status {
 
     my @contents = read_file($log_file, {binmode => ':utf8'});
 
-    map{ $contents[$_] =~ m/\t$analysis_name\t/
+    map{ $contents[$_] =~ m/$analysis_name\s+-*/
 	     ? $contents[$_] =~ s/error|submitted/$status/ig
 	     : $contents[$_] } 0..$#contents;
 
