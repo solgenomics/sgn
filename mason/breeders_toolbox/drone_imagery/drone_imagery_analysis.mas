@@ -293,8 +293,6 @@
   </div>
 </div>
 
-<& /analyses/store_new_analysis_values_and_model.mas &>
-
 <script>
 
 jQuery(document).ready(function() {

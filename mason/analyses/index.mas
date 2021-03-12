@@ -29,6 +29,7 @@ Lukas Mueller <lam87@cornell.edu>
 
 <& /analyses/upload_analysis_dialogs.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_analysis.mas &>
+<& /analyses/store_new_analysis_values_and_model.mas &>
 
 <div class="well">
 <h3>Your Analyses</h3>

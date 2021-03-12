@@ -34,6 +34,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
 <& /breeders_toolbox/drone_imagery/drone_imagery_analytics.mas &>
 <& /breeders_toolbox/drone_imagery/drone_imagery_analysis.mas &>
+<& /analyses/store_new_analysis_values_and_model.mas &>
 
 <div id="manage_drone_imagery_standard_process_div" style="display:none">
 
