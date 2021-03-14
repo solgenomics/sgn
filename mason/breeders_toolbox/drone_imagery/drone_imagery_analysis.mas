@@ -1,6 +1,8 @@
 <%args>
 </%args>
 
+<!--button class='btn btn-success' style='margin:3px;float:right' id='drone_imagery_calculate_statistics_link'>Drone Imagery Statistics</button-->
+
 <div class="modal fade" id="drone_imagery_calculate_statistics_dialog" name="drone_imagery_calculate_statistics_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryCalculateStatisticsDialog" data-backdrop="static">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">

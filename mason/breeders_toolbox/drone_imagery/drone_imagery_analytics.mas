@@ -737,7 +737,7 @@ jQuery(document).ready(function() {
             }
         }
 
-        manage_drone_imagery_analytics_rr_env_structure_trait_ids = [];
+        var manage_drone_imagery_analytics_rr_env_structure_trait_ids = [];
         jQuery('input[name="drone_imagery_analytics_permanent_env_structure_phenotype_select"]').each(function() {
             if (this.checked){
                 manage_drone_imagery_analytics_rr_env_structure_trait_ids.push(jQuery(this).val());
