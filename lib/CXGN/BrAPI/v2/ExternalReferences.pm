@@ -22,6 +22,11 @@ has 'base_id' => (
     is => 'rw',
     required => 0,
 );
+has 'id' => (
+    isa => 'Maybe[ArrayRef]',
+    is => 'rw',
+    required => 0,
+);
 
 has 'table_name' => (
     isa => 'Str',
@@ -30,6 +35,12 @@ has 'table_name' => (
 );
 
 has 'base_id_key' => (
+    isa => 'Str',
+    is => 'rw',
+    required => 0,
+);
+
+has 'table_id_key' => (
     isa => 'Str',
     is => 'rw',
     required => 1,
@@ -131,11 +142,42 @@ has 'references_db' => (
     }
 );
 
+sub search {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $ids = $self->id();
+    my $table = $self->table_name();
+    my $table_id = $self->table_id_key();
+
+    # if (!defined($id)) {
+    #     CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: External References base id not specified, cannot be retrieve."});
+    # }
+print Dumper $ids;
+    my $query = "select db.name, db.url, ref.accession, s.$table_id from $table as s
+                join $table\_dbxref as o_dbxref using ($table_id)
+                join dbxref as ref on (ref.dbxref_id=o_dbxref.dbxref_id)
+                join db using (db_id)";
+    if ($ids) { 
+        my $list_ids = join ("," , @$ids);
+        $query = $query . " where s.$table_id in ($list_ids)"; 
+    }
+    print Dumper $query;
+    my $sth = $self->bcs_schema->storage()->dbh()->prepare($query);
+    $sth->execute();
+
+    my %result;
+    while (my @r = $sth->fetchrow_array()) {
+        push @{$result{$r[3]}} , \@r;
+    }
+    return \%result;
+}
+
 sub store {
     my $self = shift;
     my $schema = $self->bcs_schema();
     my $base_id = $self->base_id();
     my $base_id_key = $self->base_id_key();
+
 
     if (!defined($self->base_id)) {
         CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: External References base id not specified, cannot store"});
