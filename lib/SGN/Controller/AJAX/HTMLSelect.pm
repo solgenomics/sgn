@@ -314,12 +314,21 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $empty = $c->req->param("empty") || "";
     my $multiple = $c->req->param("multiple") || 0;
     my $live_search = $c->req->param("live_search") || 0;
+    my $include_location_year = $c->req->param("include_location_year");
 
     my @trials;
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
       foreach (@$field_trials) {
-          push @trials, $_;
+          my $trial_id = $_->[0];
+          my $trial_name = $_->[1];
+          if ($include_location_year) {
+              my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id });
+              my $location_array = $trial->get_location();
+              my $year = $trial->get_year();
+              $trial_name .= " (".$location_array->[1]." $year)";
+          }
+          push @trials, [$trial_id, $trial_name];
       }
     }
     if ($trial_name_values) {
