@@ -231,6 +231,7 @@ sub create_single_model_log_entries {
 	my $trait_ids = $args->{training_traits_ids};
 
 	my $training_pop_id = $args->{training_pop_id}->[0];
+	my $gp_id = $args->{genotyping_protocol_id};
 	my $entries;
 
 	my $analysis_time = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
@@ -238,7 +239,19 @@ sub create_single_model_log_entries {
 	foreach my $trait_id (@$trait_ids) {
 		$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 		my $trait_abbr = $c->stash->{trait_abbr};
-		my $analysis_page = '/solgs/trait/' . $trait_id .  '/population/' . $training_pop_id;
+
+		my $analysis_page ;
+		if ($analysis_log->{analysis_page} =~ /solgs\/traits\/all\//)
+		{
+			$analysis_page = '/solgs/trait/' . $trait_id
+			.  '/population/' . $training_pop_id . '/gp/' . $gp_id;
+		}
+		elsif ($analysis_log->{analysis_page} =~ /solgs\/models\/combined\/trials\//)
+		{
+			$analysis_page = '/solgs/model/combined/trials/'
+			. $training_pop_id . '/trait/' . $trait_id . '/gp/' . $gp_id;
+		}
+
 		my $analysis_name = $analysis_log->{analysis_name} . ' -- ' . $trait_abbr;
 
 		$args->{analysis_page} = $analysis_page;
@@ -264,6 +277,7 @@ sub create_single_model_log_entries {
 	return $entries;
 
 }
+
 
 sub format_log_entry {
 	my ($self, $c) = @_;
@@ -294,7 +308,7 @@ sub format_log_entry {
 
 	$entry .= "\n";
 
-	if ($profile->{analysis_page} =~ /solgs\/traits\/all\//)
+	if ($profile->{analysis_page} =~ /solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)
 	{
 		my $traits_entries = $self->create_single_model_log_entries($c, $profile);
 		$entry .= $traits_entries;
