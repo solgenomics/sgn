@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Stock::Search;
 use CXGN::Stock;
+use CXGN::BrAPI::v2::ExternalReferences;
 use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
@@ -86,6 +87,15 @@ sub search {
         }
     }
 
+    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        bcs_schema => $self->bcs_schema,
+        table_name => 'stock',
+        table_id_key => 'stock_id',
+        id => $germplasm_ids_arrayref
+    });
+    my $reference_result = $references->search();
+
+
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$self->bcs_schema,
         people_schema=>$self->people_schema,
@@ -142,6 +152,26 @@ sub search {
                 taxonId => $_
             };
         }
+        
+        #Get external references
+        my @references;
+
+        if (%$reference_result{$_->{stock_id}}){
+            foreach (@{%$reference_result{$_->{stock_id}}}){
+                # foreach (@$reference_result){
+                my $name = $_->[0];
+                my $url = $_->[1];
+                my $accession = $_->[2];
+                my $reference_id = ($accession) ? "$url/$accession" : $url;
+                my $reference_source = $name || undef;
+                push @references, {
+                    referenceID => $reference_id,
+                    referenceSource => $reference_source
+                };
+                
+            }
+        }
+
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'},
@@ -155,7 +185,7 @@ sub search {
             defaultDisplayName=>$_->{stock_name},
             documentationURL=>$_->{'PUI'},
             donors=>\@donors,
-            externalReferences=>[],
+            externalReferences=>\@references,
             genus=>$_->{genus},
             germplasmName=>$_->{uniquename},
             germplasmOrigin=>[],
