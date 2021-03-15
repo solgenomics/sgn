@@ -13226,7 +13226,7 @@ sub _perform_drone_imagery_analytics {
                 ';
             }
             elsif ($statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
-                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv.');
+                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
                 ';
             }
             $statistics_cmd .= 'if (!is.null(mix\$U)) {
@@ -14974,7 +14974,7 @@ sub _perform_drone_imagery_analytics {
                 ';
             }
             elsif ($statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
-                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv.');
+                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
                 ';
             }
             $statistics_cmd .= 'if (!is.null(mix\$U)) {
@@ -16635,7 +16635,7 @@ sub _perform_drone_imagery_analytics {
                 ';
             }
             elsif ($statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
-                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv.');
+                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
                 ';
             }
             $statistics_cmd .= 'if (!is.null(mix\$U)) {
@@ -18293,7 +18293,7 @@ sub _perform_drone_imagery_analytics {
                 ';
             }
             elsif ($statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
-                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv.');
+                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
                 ';
             }
             $statistics_cmd .= 'if (!is.null(mix\$U)) {
@@ -19953,7 +19953,7 @@ sub _perform_drone_imagery_analytics {
                 ';
             }
             elsif ($statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
-                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv.');
+                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
                 ';
             }
             $statistics_cmd .= 'if (!is.null(mix\$U)) {
@@ -21610,7 +21610,7 @@ sub _perform_drone_imagery_analytics {
                 ';
             }
             elsif ($statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
-                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv.');
+                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
                 ';
             }
             $statistics_cmd .= 'if (!is.null(mix\$U)) {
@@ -23236,7 +23236,7 @@ sub _perform_drone_imagery_analytics {
                 ';
             }
             elsif ($statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
-                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv.');
+                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
                 ';
             }
             $statistics_cmd .= 'if (!is.null(mix\$U)) {
@@ -24916,7 +24916,7 @@ sub _perform_drone_imagery_analytics {
                 ';
             }
             elsif ($statistics_select eq 'sommer_grm_univariate_spatial_pure_2dspl_genetic_blups') {
-                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv.');
+                $statistics_cmd .= 'mix <- mmer('.$t.'~1 + replicate, random=~vs(id, Gu=geno_mat) +vs(spl2D(rowNumber, colNumber)), rcov=~vs(units), data=mat, tolparinv='.$tolparinv_10.');
                 ';
             }
             $statistics_cmd .= 'if (!is.null(mix\$U)) {
