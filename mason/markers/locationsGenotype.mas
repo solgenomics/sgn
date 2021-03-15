@@ -1,0 +1,109 @@
+<%doc>
+
+=head1 NAME
+
+/markers/locationsGenotype.mas - a Mason component displaying information about map locations of markers
+
+=head1 DESCRIPTION
+
+parameters 
+
+=over 5
+
+=item *
+
+$marker - a CXGN::Marker object.
+
+=back
+
+=head1 AUTHOR
+
+Lukas Mueller <clb343@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$marker
+$dbh
+</%args>
+
+<%perl>
+
+use strict;
+
+my @row;
+my $url;
+my $protocol_name;
+my $species_name;
+my $reference;
+my %protocol_list;
+my %species_list;
+my %reference_list;
+my @protocol_set;
+my $protocol_str;
+my $locations_html = '';
+
+my $sth = $dbh->prepare("select nd_protocol_id, name from nd_protocol");
+$sth->execute();
+while (@row = $sth->fetchrow_array()) {
+  $protocol_list{$row[0]} = $row[1];
+}
+
+my $query = "select cvterm_id from cvterm where name = 'vcf_map_details'";
+$sth = $dbh->prepare($query);
+$sth->execute();
+my ($protocol_map_cvterm) = $sth->fetchrow_array();
+
+$query = "select cvterm_id from cvterm where name = 'vcf_map_details_markers'";
+$sth = $dbh->prepare($query);
+$sth->execute();
+my ($protocol_markers_cvterm) = $sth->fetchrow_array();
+
+$query = "select nd_protocol_id from nd_protocolprop WHERE '$marker' IN (SELECT jsonb_array_elements_text(nd_protocolprop.value->'marker_names') where type_id = $protocol_map_cvterm)";
+$sth = $dbh->prepare($query);
+$sth->execute();
+while (@row = $sth->fetchrow_array()) {
+    push @protocol_set, $row[0];
+}
+my $count = scalar @protocol_set;
+if ($count > 0) {
+    $protocol_str = join(',', @protocol_set);
+    $query = "select nd_protocol_id, nd_protocolprop.value->>'species_name', nd_protocolprop.value->>'reference_genome_name' from nd_protocolprop";
+    $query .= " WHERE nd_protocol_id IN ($protocol_str) and type_id = $protocol_map_cvterm";
+    $sth = $dbh->prepare($query);
+    $sth->execute();
+    while (@row = $sth->fetchrow_array()) {
+        $species_list{$row[0]} = $row[1];
+        $reference_list{$row[0]} = $row[2];
+    }
+    $query = "select nd_protocol_id , s.value->>'name' as alias ,s.value->>'chrom' as lg_name ,s.value->>'pos' as position, s.value->>'ref' as ref, s.value->>'alt' as alt";
+    $query .= " FROM nd_protocolprop, jsonb_each(nd_protocolprop.value) as s";
+    $query .= " WHERE nd_protocol_id IN ($protocol_str) AND type_id = $protocol_markers_cvterm AND s.value->>'name' = '$marker'";
+    $sth = $dbh->prepare($query);
+    $sth->execute();
+    $locations_html = "<br><table style=\"border-spacing: 10px; border-collapse: separate;\">";
+    $locations_html .= "<tr><th>marker<th>protocol<th>Reference<th>species<th>chromosome<th>position<th>ref<th>alt\n";
+    while (@row = $sth->fetchrow_array()) {
+        $protocol_name = $protocol_list{$row[0]};
+        $species_name = $species_list{$row[0]};
+        $reference = $reference_list{$row[0]};
+        $url = "<a href=\"/breeders_toolbox/protocol/$row[0]\">$protocol_name</a>";;
+        $locations_html .= "<tr><td>$row[1]<td>$url<td>$reference<td>$species_name<td>$row[2]<td>$row[3]<td>$row[4]<td>$row[5]";
+    }
+    $locations_html .=  "</table>";
+
+} else {
+   $locations_html = "No results found";
+}
+
+my $marker_name    = $marker;
+my @displayed_locs;
+my @displayed_pcr;
+
+</%perl>
+
+<&| /page/info_section.mas, title=>'Genotype locations', collapsible=>1, collapsed=>0 &>
+  <% $locations_html %>
+</&>
