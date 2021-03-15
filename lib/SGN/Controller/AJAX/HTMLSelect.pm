@@ -947,8 +947,7 @@ sub get_analysis_models : Path('/ajax/html/select/models') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-    my $model_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
+    my $model_properties_cvterm_id = $c->req->param('nd_protocol_type') ? SGN::Model::Cvterm->get_cvterm_row($schema, $c->req->param('nd_protocol_type'), 'protocol_property')->cvterm_id() : SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_properties', 'protocol_property')->cvterm_id();
 
     my $model_q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, model_type.value
         FROM nd_protocol

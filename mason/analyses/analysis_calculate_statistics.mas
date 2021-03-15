@@ -47,141 +47,154 @@ analysis_calculate_statistics_select<%args>
                 <&| /util/workflow.mas:step, title=> "Statistics" &>
                     <& /page/page_title.mas, title=>"Select statistics to calculate" &>
 
-                    <select class="form-control" id="analysis_calculate_statistics_select_input">
-                        <option value="">Select A Model</option>
-                        <option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+location_year+1|Germplasm. Univariate genetic effects across location_years</option>
-                        <option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+location_year+GRM. Multivariate genetic effects using GRM across location_years</option>
-                        <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+location_year+GRM+spatial. Multivariate genetic + 2Dspl spatial effects across location_years</option>
-                    </select>
-                    <hr>
+                    <div id="analysis_calculate_statistics_model_select_div"></div>
 
-                    <div class="well well-sm">
-                        <div id="analysis_calculate_statistics_relationship_matrix_type_div" style="display:none">
-                            <div class="form-horizontal">
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">Relationship Matrix Type: </label>
-                                    <div class="col-sm-9" >
-                                        <select class="form-control" id="analysis_calculate_statistics_relationship_matrix_type_select_div">
-                                            <option value="">Identity</option>
-                                            <option value="htp_phenotypes">High-throughput Phenotyping Data</option>
-                                            <option value="genotypes">Genotyping Data</option>
-                                        </select>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-default" id="analysis_calculate_statistics_create_new_model_button">My Model is Not Shown, So Create New Model</button>
+                    </center>
+
+                    <div id="analysis_calculate_statistics_create_new_model_div" style="display:none">
+                        <hr>
+
+                        <div class="well well-sm">
+                            <select class="form-control" id="analysis_calculate_statistics_select_input">
+                                <option value="">Select A Model</option>
+                                <option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+location_year+1|Germplasm. Univariate genetic effects across location_years</option>
+                                <option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+location_year+GRM. Multivariate genetic effects using GRM across location_years</option>
+                                <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+location_year+GRM+spatial. Multivariate genetic + 2Dspl spatial effects across location_years</option>
+                            </select>
+
+                            <div id="analysis_calculate_statistics_relationship_matrix_type_div" style="display:none">
+                                <hr>
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Relationship Matrix Type: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="analysis_calculate_statistics_relationship_matrix_type_select_div">
+                                                <option value="">Identity</option>
+                                                <option value="htp_phenotypes">High-throughput Phenotyping Data</option>
+                                                <option value="genotypes">Genotyping Data</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                                
-                        <div id="analysis_calculate_statistics_genotyping_protocol_div" style="display:none">
+                                    
+                            <div id="analysis_calculate_statistics_genotyping_protocol_div" style="display:none">
+                                <hr>
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Genotyping Protocol To Calculate Genomic Relationship Matrix (optional. If none selected, an identity matrix is used): </label>
+                                        <div class="col-sm-9" >
+                                            <div id="analysis_calculate_statistics_genotyping_protocol_select_div"></div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Compute Genotypes From Parents: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="analysis_calculate_statistics_genotyping_protocol_compute_from_parents_select">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_div" class="well well-sm" style="display:none">
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">How to calculate the relationship matrix with high-throughput phenotypes: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_select">
+                                                <option value="correlations">Correlations</option>
+                                                <option value="blues">BLUEs</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Time Points to Use: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_times_select">
+                                                <option value="all">All Available</option>
+                                                <option value="latest_trait">Up to latest days after planting selecting in traits</option>
+                                                <option value="vegetative" disabled>Vegetative Growth Stage</option>
+                                                <option value="reproductive" disabled>Reproductive Growth Stage</option>
+                                                <option value="mature" disabled>Mature Growth Stage</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select_div" style="display:none">
+                                        <label class="col-sm-3 control-label">HTP BLUEs Inversion Tolerance: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select">
+                                                <option value="0.00001">0.00001</option>
+                                                <option value="0.0001">0.0001</option>
+                                                <option value="0.001">0.001</option>
+                                                <option value="0.01">0.01</option>
+                                                <option value="0.1">0.1</option>
+                                                <option value="0.5">0.5</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <hr>
                             <div class="form-horizontal">
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Genotyping Protocol To Calculate Genomic Relationship Matrix (optional. If none selected, an identity matrix is used): </label>
+                                    <label class="col-sm-3 control-label">Inversion Tolerance: </label>
                                     <div class="col-sm-9" >
-                                        <div id="analysis_calculate_statistics_genotyping_protocol_select_div"></div>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">Compute Genotypes From Parents: </label>
-                                    <div class="col-sm-9" >
-                                        <select class="form-control" id="analysis_calculate_statistics_genotyping_protocol_compute_from_parents_select">
-                                            <option value="no">No</option>
-                                            <option value="yes">Yes</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_div" class="well well-sm" style="display:none">
-                            <div class="form-horizontal">
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">How to calculate the relationship matrix with high-throughput phenotypes: </label>
-                                    <div class="col-sm-9" >
-                                        <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_select">
-                                            <option value="correlations">Correlations</option>
-                                            <option value="blues">BLUEs</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">Time Points to Use: </label>
-                                    <div class="col-sm-9" >
-                                        <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_times_select">
-                                            <option value="all">All Available</option>
-                                            <option value="latest_trait">Up to latest days after planting selecting in traits</option>
-                                            <option value="vegetative" disabled>Vegetative Growth Stage</option>
-                                            <option value="reproductive" disabled>Reproductive Growth Stage</option>
-                                            <option value="mature" disabled>Mature Growth Stage</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-group" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select_div" style="display:none">
-                                    <label class="col-sm-3 control-label">HTP BLUEs Inversion Tolerance: </label>
-                                    <div class="col-sm-9" >
-                                        <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select">
+                                        <select class="form-control" id="analysis_calculate_statistics_tolparinv_select">
+                                            <option value="0.000001">0.000001</option>
                                             <option value="0.00001">0.00001</option>
                                             <option value="0.0001">0.0001</option>
                                             <option value="0.001">0.001</option>
                                             <option value="0.01">0.01</option>
+                                            <option value="0.05">0.05</option>
+                                            <option value="0.08">0.08</option>
                                             <option value="0.1">0.1</option>
+                                            <option value="0.2">0.2</option>
                                             <option value="0.5">0.5</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
+
+                            <hr>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Fixed Effects: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="analysis_calculate_statistics_fixed_effect_select_div">
+                                            <option value="replicate">Replicate</option>
+                                            <option value="fixed_effect_trait">Select a continuous trait (e.g. soil elevation curvature)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="analysis_calculate_statistics_fixed_effect_select_trait_div" style="display:none">
+                                    <label class="col-sm-3 control-label">Fixed Effect Trait: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="analysis_calculate_statistics_fixed_effect_trait_select_div"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="analysis_calculate_statistics_fixed_effect_select_quantile_div" style="display:none">
+                                    <label class="col-sm-3 control-label">Fixed Effect Continuous Trait Quantile Binning: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="analysis_calculate_statistics_fixed_effect_select_quantile">
+                                            <option value="10">10% Quantiles</option>
+                                            <option value="5">20% Quantiles</option>
+                                            <option value="4">25% Quantiles</option>
+                                            <option value="3">33% Quantiles</option>
+                                            <option value="20">5% Quantiles</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
-                        <hr>
-                        <div class="form-horizontal">
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Inversion Tolerance: </label>
-                                <div class="col-sm-9" >
-                                    <select class="form-control" id="analysis_calculate_statistics_tolparinv_select">
-                                        <option value="0.000001">0.000001</option>
-                                        <option value="0.00001">0.00001</option>
-                                        <option value="0.0001">0.0001</option>
-                                        <option value="0.001">0.001</option>
-                                        <option value="0.01">0.01</option>
-                                        <option value="0.05">0.05</option>
-                                        <option value="0.08">0.08</option>
-                                        <option value="0.1">0.1</option>
-                                        <option value="0.2">0.2</option>
-                                        <option value="0.5">0.5</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr>
-                        <div class="form-horizontal">
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label">Fixed Effects: </label>
-                                <div class="col-sm-9" >
-                                    <select class="form-control" id="analysis_calculate_statistics_fixed_effect_select_div">
-                                        <option value="replicate">Replicate</option>
-                                        <option value="fixed_effect_trait">Select a continuous trait (e.g. soil elevation curvature)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-group" id="analysis_calculate_statistics_fixed_effect_select_trait_div" style="display:none">
-                                <label class="col-sm-3 control-label">Fixed Effect Trait: </label>
-                                <div class="col-sm-9" >
-                                    <div id="analysis_calculate_statistics_fixed_effect_trait_select_div"></div>
-                                </div>
-                            </div>
-                            <div class="form-group" id="analysis_calculate_statistics_fixed_effect_select_quantile_div" style="display:none">
-                                <label class="col-sm-3 control-label">Fixed Effect Continuous Trait Quantile Binning: </label>
-                                <div class="col-sm-9" >
-                                    <select class="form-control" id="analysis_calculate_statistics_fixed_effect_select_quantile">
-                                        <option value="10">10% Quantiles</option>
-                                        <option value="5">20% Quantiles</option>
-                                        <option value="4">25% Quantiles</option>
-                                        <option value="3">33% Quantiles</option>
-                                        <option value="20">5% Quantiles</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <br/><br/>
@@ -259,6 +272,8 @@ jQuery(document).ready(function() {
 
             get_select_box('genotyping_protocol', 'analysis_calculate_statistics_genotyping_protocol_select_div', { 'name' : 'analysis_calculate_statistics_genotyping_protocol_select', 'id' : 'analysis_calculate_statistics_genotyping_protocol_select', 'empty':1 });
 
+            get_select_box('models', 'analysis_calculate_statistics_model_select_div', { 'name' : 'analysis_calculate_statistics_model_select', 'id' : 'analysis_calculate_statistics_model_select', 'empty':0, 'nd_protocol_type':'analysis_model_properties_multi_trial' });
+
             Workflow.complete("#analysis_calculate_statistics_field_trial_select_step");
             Workflow.focus('#analysis_calculate_statistics_workflow', 1);
         }
@@ -277,6 +292,10 @@ jQuery(document).ready(function() {
         Workflow.complete("#analysis_calculate_statistics_trait_select_step");
         Workflow.focus('#analysis_calculate_statistics_workflow', 2);
         return false;
+    });
+
+    jQuery('#analysis_calculate_statistics_create_new_model_button').click(function(){
+        jQuery('#analysis_calculate_statistics_create_new_model_div').show();
     });
 
     jQuery('#analysis_calculate_statistics_select_input').change(function(){

@@ -302,6 +302,7 @@ protocol_property	vcf_map_details	Information about protocol, such as marker nam
 protocol_property	vcf_map_details_markers	Genotyping protocol marker info in an object format	9/17/2019	nm529	00115
 protocol_property	vcf_map_details_markers_array	Genotyping protocol marker info in an array format	9/17/2019	nm529	00115
 protocol_property	analysis_model_properties	Properties of analysis model in json	6/8/2020	nm529	00125
+protocol_property	analysis_model_properties_multi_trial	Properties of analysis model for single/multi trials in json	3/15/2021	nm529	00140
 protocol_property	high_dimensional_phenotype_protocol_properties	Properties of high dimensional data protocol in json	11/16/2020	nm529	00132
 protocol_property	analytics_protocol_properties	Properties of an analytics protocol in json	1/21/2021	nm529	00136
 protocol_property	analytics_protocol_result_summary	Result summary of an analytics protocol in json	1/21/2021	nm529	00136
@@ -309,17 +310,15 @@ protocol_type	trained_keras_cnn_model	An nd_protocol for a saved trained keras c
 protocol_type	trained_keras_mask_r_cnn_model	An nd_protocol for a saved trained keras mask r cnn model	5/27/2020	nm529	00125
 protocol_type	sommer_grm_spatial_genetic_blups	An nd_protocol for analysis using R Sommer for multivariate genetic and spatial blups using replicate, genetic relationship matrix, and row and column positions	6/11/2020	nm529	00125
 protocol_type	sommer_grm_genetic_blups	An nd_protocol for analysis using R Sommer for multivariate genetic blups using replicate and genetic relationship matrix	9/20/2020	nm529	00130
-protocol_type	sommer_grm_temporal_random_regression_gdd_genetic_blups	An nd_protocol for analysis using R Sommer for temporal random regression with legendre polynomials on growing degree days to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and growing degree days	6/11/2020	nm529	00125
-protocol_type	sommer_grm_temporal_random_regression_dap_genetic_blups	An nd_protocol for analysis using R Sommer for temporal random regression with legendre polynomials on days after planting to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and days after planting	6/11/2020	nm529	00125
 protocol_type	lmer_germplasmname_replicate	An nd_protocol for analysis using R LMER for univariate genetic blups using replicate and germplasm name	6/11/2020	nm529	00125
-protocol_type	waves_nirs_spectral_predictions	A protocol type for NIRs spectral prediction models using the R waves (Jenna Hershberger) package	7/29/2020	nm529	00127
 protocol_type	uploaded_generic_analysis_model	An nd_protocol for analysis for uploaded user results	8/19/2020	nm529	00128
 protocol_type	blupf90_grm_random_regression_gdd_blups	An nd_protocol for analysis using BLUPf90 temporal random regression with legendre polynomials on growing degree days to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and growing degree days	8/27/2020	nm529	00128
 protocol_type	blupf90_grm_random_regression_dap_blups	An nd_protocol for analysis using BLUPf90 temporal random regression with legendre polynomials on days after planting to calculate genetic and permanent environment blups using replicate, genetic relationship matrix, and days after planting	8/27/2020	nm529	00128
+protocol_type	drone_imagery_analytics_env_simulation_protocol	An nd_protocol for storing analytics results from drone imagery environmental simulation	1/21/2021	nm529	00136
 protocol_type	high_dimensional_phenotype_nirs_protocol	An nd_protocol for storing high dimensional phenotype NIRS data	11/16/2020	nm529	00132
 protocol_type	high_dimensional_phenotype_transcriptomics_protocol	An nd_protocol for storing high dimensional phenotype transcriptomics data	11/16/2020	nm529	00132
 protocol_type	high_dimensional_phenotype_metabolomics_protocol	An nd_protocol for storing high dimensional phenotype metabolomics data	11/16/2020	nm529	00132
-protocol_type	drone_imagery_analytics_env_simulation_protocol	An nd_protocol for storing analytics results from drone imagery environmental simulation	1/21/2021	nm529	00136
+protocol_type	waves_nirs_spectral_predictions	A protocol type for NIRs spectral prediction models using the R waves (Jenna Hershberger) package	7/29/2020	nm529	00127
 composable_cvtypes	trait_ontology		05/01/2017		00073
 composable_cvtypes	composed_trait_ontology		05/01/2017		00073
 composable_cvtypes	object_ontology		05/01/2017		00073
