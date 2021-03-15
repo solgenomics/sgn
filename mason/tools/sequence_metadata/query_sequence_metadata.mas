@@ -828,7 +828,7 @@ function getJBrowseURL(config) {
     let base_url = config.base_url;
     let params = {
         data: config.data_dir,
-        loc: sel_feature_name + range,
+        loc: config.location_name(sel_feature_name) + range,
         tracks: config.tracks.concat(Object.values(sel_protocol_names)).join(','),
         addStores: JSON.stringify(stores),
         addTracks: JSON.stringify(tracks)
