@@ -1858,7 +1858,8 @@ sub get_owner_link {
 	$h->execute($sp_person_id);
 	my ( $first_name, $last_name )  = $h->fetchrow_array(); 
 	my $create_date = ${ $owners }{$sp_person_id};
-	$link .= qw|<a href="/solpeople/personal-info.pl?sp_person_id=$sp_person_id">| . $first_name . " " . $last_name . " " . $create_date . "</a><br />"; 
+	
+	$link .= '<a href="/solpeople/personal-info.pl?sp_person_id='.$sp_person_id. '">' . $first_name . " " . $last_name .  "</a> ". $create_date . "<br />"; 
     }
     return $link;
 }
@@ -1866,7 +1867,7 @@ sub get_owner_link {
 sub _get_trial_owners {
     my $self = shift;
     my $schema = $self->bcs_schema();
-    my $owner_q = "SELECT sp_person_id, create_date FROM phenome.project_owner WHERE project_id = ? ";
+    my $owner_q = "SELECT sp_person_id, date(create_date) FROM phenome.project_owner WHERE project_id = ? ";
     my $owner_h = $schema->storage->dbh()->prepare($owner_q);
     $owner_h ->execute($self->get_trial_id());
 
