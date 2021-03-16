@@ -34,7 +34,7 @@ sub search {
     foreach (@crosstypes){
         push @data, {
             abbreviation=>$_,
-            breedingMethodDbId=>$_,
+            breedingMethodDbId=>$_ =~ s/ /_/g,
             breedingMethodName=>$_,
             description=>$_,
         };
