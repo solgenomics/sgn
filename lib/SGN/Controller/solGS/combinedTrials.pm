@@ -157,8 +157,8 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
 	$c->controller('solGS::solGS')->get_all_traits($c, $combo_pops_id);
 	$c->controller('solGS::solGS')->get_acronym_pairs($c, $combo_pops_id);
 
-	$self->combined_trials_desc($c);
 
+	$self->combined_pops_summary($c);
 	$c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
     }
 }
@@ -206,10 +206,10 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 	@traits_ids = @{$c->stash->{traits_selection_list}} if $c->stash->{traits_selection_list};
     }
 
-    $self->combined_trials_desc($c);
-    my $training_pop_name = $c->stash->{project_name};
-    my $training_pop_desc = $c->stash->{project_desc};
-    my $training_pop_page = qq | <a href="/solgs/populations/combined/$combo_pops_id/gp/$protocol_id">$training_pop_name</a> |;
+	$self->combined_pops_summary($c);
+    my $training_pop_name = $c->stash->{training_pop_name};
+    my $training_pop_desc = $c->stash->{training_pop_desc};
+    my $training_pop_page = $c->stash->{training_pop_page};
 
     my @select_analysed_traits;
 
@@ -245,7 +245,11 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 	}
 
 	$c->stash->{training_pop_id} = $combo_pops_id;
+	$c->stash->{training_pop_name} = $training_pop_name;
+	$c->stash->{training_pop_desc} = $training_pop_desc;
+	$c->stash->{training_pop_page} = $training_pop_page;
 	$c->stash->{training_traits_ids} = \@traits_ids;
+
 	$c->controller('solGS::solGS')->analyzed_traits($c);
 	my $analyzed_traits = $c->stash->{analyzed_traits_ids};
 
@@ -257,7 +261,9 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 
 	$c->controller('solGS::solGS')->get_acronym_pairs($c, $combo_pops_id);
 
-	$c->stash->{template} = '/solgs/population/combined/multiple_traits_output.mas';
+
+	#$c->stash->{template} = '/solgs/population/combined/multiple_traits_output.mas';
+	$c->stash->{template} = '/solgs/population/multiple_traits_output.mas';
     }
 }
 
@@ -754,22 +760,18 @@ sub combined_pops_summary {
 
     foreach my $pop_id (@pops_ids)
     {
-        my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
+        $c->controller('solGS::solGS')->get_project_details($c, $pop_id);
+        my $pr_name = $c->stash->{project_name};
+		my $href = '/solgs/population/' . $pop_id . '/gp/' . 1;
+        $desc .= '<a href=' . $href . '> ' .  $pr_name . '</a>';
+       $desc .= $pop_id == $pops_ids[-1] ? '.' : ' and ';
 
-        while (my $row = $pr_rs->next)
+        $c->controller('solGS::solGS')->get_project_owners($c, $pop_id);
+        my $project_owner = $c->stash->{project_owners};
+
+        if ($project_owner)
         {
-            my $pr_id   = $row->id;
-            my $pr_name = $row->name;
-            $desc .= qq | <a href="/solgs/population/$pr_id/gp/$protocol_id">$pr_name </a>|;
-            $desc .= $pop_id == $pops_ids[-1] ? '.' : ' and ';
-        }
-
-        $c->controller('solGS::solGS')->get_project_owners($c, $_);
-        my $project_owners = $c->stash->{project_owners};
-
-        unless (!$project_owners)
-        {
-             $projects_owners.= $projects_owners ? ', ' . $project_owners : $project_owners;
+             $projects_owners .= $projects_owners ? ', ' . $project_owner : $project_owner;
         }
     }
 
@@ -779,19 +781,35 @@ sub combined_pops_summary {
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id   = $c->stash->{trait_id};
     my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
-    my $training_pop = "Training population $combo_pops_id";
-    my $model_link   = qq | <a href="/solgs/populations/combined/$combo_pops_id/gp/$protocol_id">$training_pop </a>|;
+    my $training_pop_name = "Training population $combo_pops_id";
+    my $pop_link   = qq | <a href="/solgs/populations/combined/$combo_pops_id/gp/$protocol_id">$training_pop_name </a>|;
+
+	my $model_link;
+	if ($trait_id)
+	{
+		$model_link   = qq | <a href="/solgs/model/combined/trials//$combo_pops_id/trait/$trait_id/gp/$protocol_id">$training_pop_name </a>|;
+	}
+
     my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
+
+	$c->controller('solGS::Files')->traits_acronym_file($c, $combo_pops_id);
+    my $traits_list_file = $c->stash->{traits_acronym_file};
+
+    my @traits_list = read_file($traits_list_file, {binmode => ':utf8'});
+    my $traits_no   = scalar(@traits_list) - 1;
 
     $c->stash(
 	markers_no   => $markers_no,
 	stocks_no    => $stocks_no,
+	traits_no => $traits_no,
 	training_pop_id => $combo_pops_id,
 	training_pop_desc => $desc,
-	training_pop_name => $training_pop,
+	training_pop_name => $training_pop_name,
+	training_pop_page => $pop_link,
 	owner        => $projects_owners,
 	protocol_url => $protocol,
-	model_link   => $model_link
+	pop_link   => $pop_link,
+	model_link => $model_link
         );
 
 }
@@ -1136,83 +1154,6 @@ sub combined_pops_gs_input_files {
 
     $c->stash->{combined_pops_gs_input_files} = $input_file;
 
-}
-
-
-sub combined_trials_desc {
-    my ($self, $c) = @_;
-
-    my $combo_pops_id = $c->stash->{combo_pops_id};
-    $self->get_combined_pops_list($c);
-    my $combined_pops_list = $c->stash->{combined_pops_list};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
-
-    my $desc = 'This training population is a combination of ';
-
-    my $projects_owners;
-
-    foreach my $pop_id (@$combined_pops_list)
-    {
-        my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
-
-        while (my $row = $pr_rs->next)
-        {
-            my $pr_id   = $row->id;
-            my $pr_name = $row->name;
-            $desc .= qq| <a href="/solgs/population/$pr_id/gp/$protocol_id">$pr_name</a>|;
-            $desc .= $pop_id == $combined_pops_list->[-1] ? '.' : ' and ';
-        }
-
-        $c->controller('solGS::solGS')->get_project_owners($c, $_);
-        my $project_owners = $c->stash->{project_owners};
-
-        unless (!$project_owners)
-        {
-             $projects_owners.= $projects_owners ? ', ' . $project_owners : $project_owners;
-        }
-
-    }
-
-    $c->stash->{pop_id} = $combined_pops_list->[0];
-    $c->controller('solGS::Files')->filtered_training_genotype_file($c);
-    my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
-
-    my $markers_no;
-    my @geno_lines;
-    my $dir = $c->{stash}->{solgs_cache_dir};
-
-    if (-s $filtered_geno_file)
-    {
-	@geno_lines = read_file($filtered_geno_file, {binmode => ':utf8'});
-	$markers_no = scalar(split('\t', $geno_lines[0])) - 1;
-    }
-    else
-    {
-	$c->controller('solGS::Files')->genotype_file_name($c, $combined_pops_list->[0]);
-	my $geno_file = $c->stash->{genotype_file_name};
-
-        @geno_lines   = read_file($geno_file, {binmode => ':utf8'});
-        $markers_no   = scalar(split ('\t', $geno_lines[0])) - 1;
-    }
-
-    $c->controller('solGS::Files')->traits_acronym_file($c, $combo_pops_id);
-    my $traits_list_file = $c->stash->{traits_acronym_file};
-
-    my @traits_list = read_file($traits_list_file, {binmode => ':utf8'});
-    my $traits_no   = scalar(@traits_list) - 1;
-    my $training_pop = "Training population $combo_pops_id";
-    my $protocol  = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
-    my $stocks_no = $self->count_combined_trials_lines_count($c, $combo_pops_id);
-
-    $c->stash(stocks_no => $stocks_no,
-	    markers_no => $markers_no,
-        traits_no => $traits_no,
-		training_pop_id => $combo_pops_id,
-    	training_pop_desc => $desc,
-        training_pop_name => $training_pop,
-        owner => $projects_owners,
-	    protocol_url => $protocol,
-        );
 }
 
 
