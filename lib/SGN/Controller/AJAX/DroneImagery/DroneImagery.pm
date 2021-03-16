@@ -7395,10 +7395,6 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
     $archive_temp_image .= '.png';
 
-    my $check_image_crop = SGN::Image->new( $bcs_schema->storage->dbh, $rotated_image_id, $c );
-    my $check_image_crop_fullpath = $check_image_crop->get_filename('original_converted', 'full');
-    my ($check_image_crop_width, $check_image_crop_height) = imgsize($check_image_crop_fullpath);
-
     my $check_cropping_return = _perform_image_cropping($c, $bcs_schema, $drone_run_band_project_id_input, $rotated_image_id, encode_json $image_crop, $user_id, $user_name, $user_role, $archive_temp_image, 1, 1);
     my $check_cropped_image_id = $check_cropping_return->{cropped_image_id};
 
@@ -7530,8 +7526,8 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
         my $check_image_apply_crop_fullpath = $check_image_apply_crop->get_filename('original_converted', 'full');
         my ($check_image_apply_crop_width, $check_image_apply_crop_height) = imgsize($check_image_apply_crop_fullpath);
 
-        my $apply_image_width_ratio = $check_image_crop_width/$check_image_apply_crop_width;
-        my $apply_image_height_ratio = $check_image_crop_height/$check_image_apply_crop_height;
+        my $apply_image_width_ratio = $check_image_width/$check_image_apply_crop_width;
+        my $apply_image_height_ratio = $check_image_height/$check_image_apply_crop_height;
 
         my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
         my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
