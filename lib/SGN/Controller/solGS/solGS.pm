@@ -1548,8 +1548,7 @@ sub check_training_population :Path('/solgs/check/training/population/') Args() 
     $c->stash->{pop_id} = $pop_id;
     $c->stash->{training_pop_id} = $pop_id;
 
-    $self->check_population_is_training_population($c, $pop_id, $protocol_id);
-    my $is_training_pop = $c->stash->{is_training_population};
+    my $is_training_pop = $self->check_population_is_training_population($c, $pop_id, $protocol_id);
 
     my $training_pop_data;
     if ($is_training_pop)
@@ -1594,8 +1593,12 @@ sub check_population_is_training_population {
 
     if ($is_gs || ($has_phenotype && $has_genotype))
     {
-	$c->stash->{is_training_population} = 1;
+	return 1;
     }
+	else
+	{
+		return 0;
+	}
 
 }
 
@@ -1652,7 +1655,7 @@ sub check_population_has_genotype {
 
     if (!$has_genotype)
     {
-	$has_genotype = $c->model('solGS::solGS')->has_genotype($pop_id, $protocol_id);
+		$has_genotype = $c->model('solGS::solGS')->has_genotype($pop_id, $protocol_id);
     }
 
     $c->stash->{population_has_genotype} = $has_genotype;
