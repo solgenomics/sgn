@@ -23,7 +23,7 @@ has 'base_id' => (
     required => 0,
 );
 has 'id' => (
-    isa => 'Maybe[ArrayRef]',
+    isa => 'Maybe[ArrayRef|Str]',
     is => 'rw',
     required => 0,
 );
@@ -152,7 +152,7 @@ sub search {
     # if (!defined($id)) {
     #     CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: External References base id not specified, cannot be retrieve."});
     # }
-print Dumper $ids;
+
     my $query = "select db.name, db.url, ref.accession, s.$table_id from $table as s
                 join $table\_dbxref as o_dbxref using ($table_id)
                 join dbxref as ref on (ref.dbxref_id=o_dbxref.dbxref_id)
@@ -161,7 +161,7 @@ print Dumper $ids;
         my $list_ids = join ("," , @$ids);
         $query = $query . " where s.$table_id in ($list_ids)"; 
     }
-    print Dumper $query;
+
     my $sth = $self->bcs_schema->storage()->dbh()->prepare($query);
     $sth->execute();
 
@@ -169,70 +169,41 @@ print Dumper $ids;
     while (my @r = $sth->fetchrow_array()) {
         push @{$result{$r[3]}} , \@r;
     }
+    print STDERR Dumper \%result;
     return \%result;
 }
 
 sub store {
     my $self = shift;
     my $schema = $self->bcs_schema();
-    my $base_id = $self->base_id();
-    my $base_id_key = $self->base_id_key();
+    my $table = $self->table_name();
+    my $table_id = $self->table_id_key();
+    my $id = $self->id();
+    my $external_references = $self->external_references();
 
+    foreach (@$external_references){
+        my $name = $_->{'referenceSource'};
+        my ($url,$object_id) = _check_brapi_url($_->{'referenceID'});
+        print STDERR "$url,$object_id";
+        my $create_db = $schema->resultset("General::Db")->find_or_create({
+            name => $name,
+            url => $url #'dbx.com/brapi/v2/germplasm',
+        });
 
-    if (!defined($self->base_id)) {
-        CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: External References base id not specified, cannot store"});
+        if($object_id){
+            my $create_dbxref = $schema->resultset("General::Dbxref")->find_or_create({
+                db_id => $create_db->db_id(),
+                accession => $object_id
+            });
+
+            my $create_stock_dbxref = $schema->resultset($table)->find_or_create({
+                $table_id => $id, # stock_id
+                dbxref_id => $create_dbxref->dbxref_id()
+            });
+        }
     }
 
-    my @references = @{$self->external_references()};
-    my $rank = 0;
-
-    # get cv_id for external references
-    my $cv_id = $self->cv_id;
-    # get cvterm ids for reference_id & reference_source
-    my $reference_id = $self->reference_id;
-    my $reference_source = $self->reference_source_id;
-
-    # delete previous references
-    $self->delete();
-
-    my $coderef = sub {
-
-        foreach my $reference (@references) {
-            my $id = $reference->{'referenceID'};
-            my $source = $reference->{'referenceSource'};
-
-            # write external reference info to prop table
-            my $prop_id = $schema->resultset($self->table_name())->create(
-                {
-                    $base_id_key => $base_id,
-                    type_id   => $reference_id,
-                    value     => $id,
-                    rank      => $rank
-                }
-            );
-
-            my $prop_source = $schema->resultset($self->table_name())->create(
-                {
-                    $base_id_key => $base_id,
-                    type_id   => $reference_source,
-                    value     => $source,
-                    rank      => $rank
-                }
-            );
-
-            $rank++;
-        }
-    };
-
-    my $transaction_error;
-
-    try {
-        $schema->txn_do($coderef);
-    } catch {
-        $transaction_error =  $_;
-    };
-
-    if ($transaction_error) {
+    if ($@) {
         return {error => "External References transaction error trying to write to db"}
     }
 
@@ -240,21 +211,20 @@ sub store {
 
 }
 
-sub delete {
-    my $self = shift;
-    my $schema = $self->bcs_schema();
 
-    $schema->resultset($self->table_name())->search(
-        {
-            $self->base_id_key => $self->base_id,
-            type_id   => { -in =>
-                [
-                    $self->reference_id,
-                    $self->reference_source_id,
-                ]
-            }
-        }
-    ) -> delete;
+
+sub _check_brapi_url {
+    my $url = shift;
+    
+    my $url_object_id;
+
+    if($url =~ m/brapi\/v2/){
+
+        my @parse = split /\//, $url;
+        $url_object_id = $parse[@parse - 1];
+        $url =~ s/$url_object_id//;
+    }
+    return ($url,$url_object_id);
 }
 
 1;
