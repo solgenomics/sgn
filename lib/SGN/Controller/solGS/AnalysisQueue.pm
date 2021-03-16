@@ -65,6 +65,27 @@ sub save_analysis_profile :Path('/solgs/save/analysis/profile') Args(0) {
 }
 
 
+sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
+	my ($self, $c) = @_;
+
+	my $analysis_profile = $c->req->params;
+	$c->stash->{analysis_profile} = $analysis_profile;
+
+	$self->parse_arguments($c);
+	$self->structure_output_details($c);
+	$self->run_analysis($c);
+
+	my $ret->{result} = $c->stash->{status};
+	$ret->{analysis_profile} = $analysis_profile;
+
+	$ret = to_json($ret);
+
+	$c->res->content_type('application/json');
+	$c->res->body($ret);
+
+}
+
+
 sub check_analysis_name :Path('/solgs/check/analysis/name') Args() {
 	my ($self, $c) = @_;
 
@@ -73,6 +94,39 @@ sub check_analysis_name :Path('/solgs/check/analysis/name') Args() {
 	my $match = $self->check_analyses_names($c, $new_name);
 
 	my $ret->{match} = $match;
+	$ret = to_json($ret);
+
+	$c->res->content_type('application/json');
+	$c->res->body($ret);
+
+}
+
+
+sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
+	my ($self, $c) = @_;
+
+	my $job_type = $self->get_confirm_msg($c);
+	my $user_id = $c->user()->get_object()->get_sp_person_id();
+	my $referer = $c->req->referer;
+
+	my $msg = "<p>$job_type</p>"
+	. "<p>You will receive an email when it is completed. "
+	. "You can also check the status of the job on "
+	. "<a href=\"/solpeople/profile/$user_id\">your profile page</a>"
+		. "<p><a href=\"$referer\">[ Go back ]</a></p>";
+
+	$c->controller('solGS::Utils')->generic_message($c, $msg);
+
+}
+
+
+sub display_analysis_status :Path('/solgs/display/analysis/status') Args(0) {
+	my ($self, $c) = @_;
+
+	my @panel_data = $self->solgs_analysis_status_log($c);
+
+	my $ret->{data} = \@panel_data;
+
 	$ret = to_json($ret);
 
 	$c->res->content_type('application/json');
@@ -315,27 +369,6 @@ sub format_log_entry {
 	}
 
 	$c->stash->{formatted_log_entry} = $entry;
-
-}
-
-
-sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
-	my ($self, $c) = @_;
-
-	my $analysis_profile = $c->req->params;
-	$c->stash->{analysis_profile} = $analysis_profile;
-
-	$self->parse_arguments($c);
-	$self->structure_output_details($c);
-	$self->run_analysis($c);
-
-	my $ret->{result} = $c->stash->{status};
-	$ret->{analysis_profile} = $analysis_profile;
-
-	$ret = to_json($ret);
-
-	$c->res->content_type('application/json');
-	$c->res->body($ret);
 
 }
 
@@ -621,22 +654,7 @@ sub structure_kinship_analysis_output {
 	my $geno_file  = $c->stash->{genotype_file_name};
 
 	my $coef_files = $c->controller('solGS::Kinship')->get_kinship_coef_files($c, $pop_id, $protocol_id, $trait_id);
-	# my $matrix_file;
-
-	# my $raw_matrix = "kinship\/analysis"
-	# 	. "|solgs\/traits\/all\/"
-	# 	. "|breeders\/trial"
-	# 	. "|solgs\/models\/combined\/trials\/";
-
-	# my $referer = $c->req->referer;
-
-	# if ($referer =~ /$raw_matrix/){
-	# 	$matrix_file = $coef_files->{matrix_file_raw};
-	# }
-	# else
-	# {
 	my $matrix_file = $coef_files->{matrix_file_adj};
-	#}
 
 	$output_details{'kinship_' . $pop_id} = {
 		'output_page'    => $kinship_page,
@@ -1203,24 +1221,6 @@ sub analysis_log_file {
 }
 
 
-sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
-	my ($self, $c) = @_;
-
-	my $job_type = $self->get_confirm_msg($c);
-	my $user_id = $c->user()->get_object()->get_sp_person_id();
-	my $referer = $c->req->referer;
-
-	my $msg = "<p>$job_type</p>"
-	. "<p>You will receive an email when it is completed. "
-	. "You can also check the status of the job on "
-	. "<a href=\"/solpeople/profile/$user_id\">your profile page</a>"
-		. "<p><a href=\"$referer\">[ Go back ]</a></p>";
-
-	$c->controller('solGS::Utils')->generic_message($c, $msg);
-
-}
-
-
 sub get_confirm_msg {
 	my ($self, $c) = @_;
 
@@ -1249,21 +1249,6 @@ sub get_confirm_msg {
 	}
 
 	return $job_type;
-
-}
-
-
-sub display_analysis_status :Path('/solgs/display/analysis/status') Args(0) {
-	my ($self, $c) = @_;
-
-	my @panel_data = $self->solgs_analysis_status_log($c);
-
-	my $ret->{data} = \@panel_data;
-
-	$ret = to_json($ret);
-
-	$c->res->content_type('application/json');
-	$c->res->body($ret);
 
 }
 
