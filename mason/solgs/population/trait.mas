@@ -28,16 +28,10 @@ $owner=>''
 $protocol_url => ''
 $combo_pops_id => ''
 $genotyping_protocol_id => ''
+$pop_link
 </%args>
 
 <%perl>
-my $pop_link;
-if ($c->req->path =~ /\/combined\/populations\//) {
-	$pop_link = qq | <a href="/solgs/populations/combined/$training_pop_id/gp/$genotyping_protocol_id">$training_pop_name</a> |;
-
-}else {
-	$pop_link = qq | <a href="/solgs/population/$training_pop_id/gp/$genotyping_protocol_id">$training_pop_name</a> |;
-}
 
 </%perl>
 

@@ -20,6 +20,7 @@ $analyzed_traits_ids => undef
 $training_pop_id
 $training_pop_name
 $training_pop_desc
+$pop_link
 
 $model_data
 $selection_prediction_download => undef
