@@ -162,7 +162,7 @@ sub selection_prediction_download_urls {
     my $selection_traits_ids;
     my $download_url;
 
-    my $selected_model_traits = $c->stash->{training_traits_ids};
+    my $selected_model_traits = $c->stash->{training_traits_ids} || [$c->stash->{trait_id}];
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     no warnings 'uninitialized';
@@ -205,7 +205,6 @@ sub selection_prediction_download_urls {
     if (!$download_url)
     {
 		my $trait_id = $selected_model_traits[0];
-
 		if ($page =~ /combined/)
 	    {
 	    	$download_url .= qq | <a href="/solgs/combined/model/$training_pop_id/selection/|
