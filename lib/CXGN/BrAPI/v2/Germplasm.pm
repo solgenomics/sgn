@@ -94,6 +94,7 @@ sub search {
         id => $germplasm_ids_arrayref
     });
     my $reference_result = $references->search();
+    $references->store();
 
 
     my $stock_search = CXGN::Stock::Search->new({
@@ -158,11 +159,10 @@ sub search {
 
         if (%$reference_result{$_->{stock_id}}){
             foreach (@{%$reference_result{$_->{stock_id}}}){
-                # foreach (@$reference_result){
                 my $name = $_->[0];
                 my $url = $_->[1];
                 my $accession = $_->[2];
-                my $reference_id = ($accession) ? "$url/$accession" : $url;
+                my $reference_id = ($accession) ? "$url$accession" : $url;
                 my $reference_source = $name || undef;
                 push @references, {
                     referenceID => $reference_id,
@@ -183,14 +183,14 @@ sub search {
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{stock_name},
-            documentationURL=>$_->{'PUI'},
+            documentationURL=>$_->{'PUI'} || "/stock/$_->{stock_id}/view",
             donors=>\@donors,
             externalReferences=>\@references,
             genus=>$_->{genus},
             germplasmName=>$_->{uniquename},
             germplasmOrigin=>[],
             germplasmDbId=>qq|$_->{stock_id}|,
-            germplasmPUI=>$_->{'PUI'},     
+            germplasmPUI=>$_->{'PUI'} || "/stock/$_->{stock_id}/view",     
             germplasmPreprocessing=>undef,
             instituteCode=>$_->{'institute code'},
             instituteName=>$_->{'institute name'},
@@ -642,6 +642,7 @@ sub store {
             my $typeOfGermplasmStorageCode = $params->{storageTypes}->[0]->{code} || undef;
             my $donors = $params->{donors} || undef;
             my $acquisitionDate = $params->{acquisitionDate} || undef;
+            my $externalReferences = $params->{externalReferences} || undef;
             #adding breedbase specific info using additionalInfo
             my $organization_name = $params->{additionalInfo}->{organizationName} || undef;
             my $population_name = $params->{additionalInfo}->{populationName} || undef;
@@ -652,6 +653,7 @@ sub store {
             my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
             my $description = $params->{additionalInfo}->{description} || undef;
             my $stock_id = $params->{additionalInfo}->{stock_id} || undef;
+            
             #not supported
             # speciesAuthority
             # genus
@@ -660,8 +662,7 @@ sub store {
             # germplasmSeedSourceDescription
             # breedingMethodDbId
             # collection
-            # documentationURL
-            # externalReferences
+            # documentationURL            
             # germplasmOrigin
             # germplasmPreprocessing
             # taxonIds
@@ -704,6 +705,16 @@ sub store {
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
+                print STDERR "germ_id:" . Dumper $added_stock_id;
+                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                    bcs_schema => $self->bcs_schema,
+                    table_name => 'Stock::StockDbxref',
+                    table_id_key => 'stock_id',
+                    external_references => $externalReferences,
+                    id => $added_stock_id
+                });
+                my $reference_result = $references->store();
+
             }
         }
     };
@@ -911,6 +922,14 @@ sub _simple_search {
 
     my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
 
+    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        bcs_schema => $self->bcs_schema,
+        table_name => 'stock',
+        table_id_key => 'stock_id',
+        id => $germplasm_ids_arrayref
+    });
+    my $reference_result = $references->search();
+
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$self->bcs_schema,
         people_schema=>$self->people_schema,
@@ -959,6 +978,22 @@ sub _simple_search {
                 taxonId => $_
             };
         }
+
+        my @references;
+        if (%$reference_result{$_->{stock_id}}){
+            foreach (@{%$reference_result{$_->{stock_id}}}){
+                my $name = $_->[0];
+                my $url = $_->[1];
+                my $accession = $_->[2];
+                my $reference_id = ($accession) ? "$url/$accession" : $url;
+                my $reference_source = $name || undef;
+                push @references, {
+                    referenceID => $reference_id,
+                    referenceSource => $reference_source
+                };
+            }
+        }
+
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'},
@@ -970,14 +1005,14 @@ sub _simple_search {
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{stock_name},
-            documentationURL=>$_->{'PUI'},
+            documentationURL=>$_->{'PUI'} || "/stock/$_->{stock_id}/view",
             donors=>\@donors,
-            externalReferences=>[],
+            externalReferences=>\@references,
             genus=>$_->{genus},
             germplasmName=>$_->{uniquename},
             germplasmOrigin=>[],
             germplasmDbId=>qq|$_->{stock_id}|,
-            germplasmPUI=>$_->{'PUI'},     
+            germplasmPUI=>$_->{'PUI'} || "/stock/$_->{stock_id}/view",
             germplasmPreprocessing=>undef,
             instituteCode=>$_->{'institute code'},
             instituteName=>$_->{'institute name'},
