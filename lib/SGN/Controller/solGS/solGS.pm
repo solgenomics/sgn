@@ -93,11 +93,11 @@ sub solgs_login_message :Path('/solgs/login/message') Args(0) {
 sub search : Path('/solgs/search') Args() {
     my ($self, $c) = @_;
 
-    #$self->gs_traits_index($c);
-    #my $gs_traits_index = $c->stash->{gs_traits_index};
+    $self->gs_traits_index($c);
+    # my $gs_traits_index = $c->stash->{gs_traits_index};
 
     $c->stash(template => $c->controller('solGS::Files')->template('/search/solgs.mas'),
-	   #   gs_traits_index => $gs_traits_index,
+	      # gs_traits_index => $gs_traits_index,
             );
 
 }
@@ -744,7 +744,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 
     if (!-s $gebvs_file)
     {
-    	my $model_page = qq | <a href="/solgs/trait/$trait_id/population/$training_pop_id">training model page</a> |;
+    	my $model_page = qq | <a href="/solgs/trait/$trait_id/population/$training_pop_id/gp/$protocol_id">training model page</a> |;
 
     	my $msg = "No cached output was found for this trait.\n"
     	    . " Please go to the $model_page and run the prediction.";
@@ -878,24 +878,25 @@ sub trait :Path('/solgs/trait') Args() {
     $c->stash->{training_pop_id} = $pop_id;
     $c->stash->{trait_id} = $trait_id;
 
+	my $pop_name;
+	my $pop_link;
     if ($pop_id && $trait_id)
     {
 	#$c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
 	#my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
 	$self->project_description($c, $pop_id);
-	$c->stash->{training_pop_name} = $c->stash->{project_name};
+	$pop_name = $c->stash->{project_name};
+	$c->stash->{training_pop_name} = $pop_name;
 	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
+
+	$pop_link = qq | <a href="/solgs/population/$pop_id/gp/$protocol_id">$pop_name </a>| ;
 
 	my $cached = $c->controller('solGS::CachedResult')->check_single_trial_model_output($c, $pop_id, $trait_id, $protocol_id);
 
 	if (!$cached)
 	{
-	    my $training_pop_name = $c->stash->{project_name};
-	    #my $training_pop_desc = $c->stash->{project_desc};
-	    my $training_pop_page = qq | <a href="/solgs/population/$pop_id">$training_pop_name</a> |;
-
 	    my $msg = "Cached output for this model does not exist anymore.\n"
-		. " Please go to $training_pop_page and run the analysis.";
+		. " Please go to $pop_link and run the analysis.";
 
 	    $c->controller('solGS::Utils')->generic_message($c, $msg);
 
@@ -915,6 +916,9 @@ sub trait :Path('/solgs/trait') Args() {
 	    }
 
 	    $self->model_phenotype_stat($c);
+
+		$c->stash->{pop_link} = $pop_link;
+
 	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
 	}
     }
@@ -1665,6 +1669,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     my $protocol_id        = $c->req->param('genotyping_protocol_id');
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+	$c->stash->{trait_id} = $trait_id;
 
     my $referer = $c->req->referer;
 
