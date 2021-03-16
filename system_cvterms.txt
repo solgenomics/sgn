@@ -154,6 +154,7 @@ project_property	drone_run_raw_images_saved_micasense_stacks	When uploading raw 
 project_property	drone_run_raw_images_saved_micasense_stacks_separated	After uploading raw Micasense images, the captures are separated based on the imaging pass	07/20/2020	nm529	00126
 project_property	drone_run_raw_images_saved_micasense_stacks_rotated	When interactively matching raw drone captures, this stores the rotated positions	07/06/2020	nm529	00126
 project_property	drone_run_raw_images_saved_gps_pixel_positions	When interactively matching raw drone captures, this stores the final positions	07/06/2020	nm529	00126
+project_property	drone_run_opendronemap_process_running	When an opendronemap process is running this is set to 1	03/16/2021	nm529	00140
 project_property	project_sp_person_id	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property	analysis_metadata_json	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property    product_profile_json    00131

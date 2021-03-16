@@ -133,6 +133,7 @@ sub upload_drone_imagery_POST : Args(0) {
         $c->detach();
     }
 
+    my $odm_process_running_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_opendronemap_process_running', 'project_property')->cvterm_id();
     if ($new_drone_run_band_stitching eq 'yes_open_data_map_stitch') {
         my $upload_file = $c->req->upload('upload_drone_images_zipfile');
         my $upload_panel_file = $c->req->upload('upload_drone_images_panel_zipfile');
@@ -142,6 +143,15 @@ sub upload_drone_imagery_POST : Args(0) {
         }
         if (!$upload_panel_file && $new_drone_run_camera_info eq 'micasense_5') {
             $c->stash->{rest} = { error => "Please provide a zipfile of images of the Micasense radiometric calibration panels!" };
+            $c->detach();
+        }
+
+        my $q = "SELECT count(*) FROM projectprop WHERE type_id=$odm_process_running_cvterm_id AND value='1';";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute();
+        my ($odm_running_count) = $h->fetchrow_array();
+        if ($odm_running_count >= $c->config->{opendronemap_max_processes}) {
+            $c->stash->{rest} = { error => "There are already the maximum number of OpenDroneMap processes running on this machine! Please check back later when those processes are complete." };
             $c->detach();
         }
     }
@@ -1087,6 +1097,13 @@ sub upload_drone_imagery_POST : Args(0) {
         my $upload_file = $c->req->upload('upload_drone_images_zipfile');
         my $upload_panel_file = $c->req->upload('upload_drone_images_panel_zipfile');
 
+        my $odm_check_prop = $schema->resultset("Project::Projectprop")->find_or_create({
+            project_id => $selected_drone_run_id,
+            type_id => $odm_process_running_cvterm_id
+        });
+        $odm_check_prop->value('1');
+        $odm_check_prop->update();
+
         my $upload_original_name = $upload_file->filename();
         my $upload_tempfile = $upload_file->tempname;
         my $time = DateTime->now();
@@ -1287,6 +1304,8 @@ sub upload_drone_imagery_POST : Args(0) {
             push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
         }
 
+        $odm_check_prop->value('0');
+        $odm_check_prop->update();
     }
 
     $c->stash->{rest} = { success => 1, drone_run_project_id => $selected_drone_run_id, drone_run_band_project_ids => \@return_drone_run_band_project_ids, drone_run_band_image_ids => \@return_drone_run_band_image_ids, drone_run_band_image_urls => \@return_drone_run_band_image_urls, drone_run_band_raw_image_boundaries_temp_images => \@raw_image_boundaries_temp_images, saved_image_stacks => \%saved_image_stacks };
