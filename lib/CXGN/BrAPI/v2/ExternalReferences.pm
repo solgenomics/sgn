@@ -184,27 +184,28 @@ sub store {
     foreach (@$external_references){
         my $name = $_->{'referenceSource'};
         my ($url,$object_id) = _check_brapi_url($_->{'referenceID'});
-        print STDERR "$url,$object_id";
-        my $create_db = $schema->resultset("General::Db")->find_or_create({
-            name => $name,
-            url => $url #'dbx.com/brapi/v2/germplasm',
-        });
 
-        if($object_id){
+        if($url){
+
+            my $create_db = $schema->resultset("General::Db")->find_or_create({
+                name => $name,
+                url => $url
+            });
+        
             my $create_dbxref = $schema->resultset("General::Dbxref")->find_or_create({
                 db_id => $create_db->db_id(),
                 accession => $object_id
             });
 
             my $create_stock_dbxref = $schema->resultset($table)->find_or_create({
-                $table_id => $id, # stock_id
+                $table_id => $id,
                 dbxref_id => $create_dbxref->dbxref_id()
             });
         }
     }
 
     if ($@) {
-        return {error => "External References transaction error trying to write to db"}
+        return {error => "External References transaction error trying to write to db"};
     }
 
     return { success => "External References added successfully" };
@@ -216,7 +217,7 @@ sub store {
 sub _check_brapi_url {
     my $url = shift;
     
-    my $url_object_id;
+    my $url_object_id = "";
 
     if($url =~ m/brapi\/v2/){
 

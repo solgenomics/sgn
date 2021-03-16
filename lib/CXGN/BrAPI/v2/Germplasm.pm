@@ -705,7 +705,7 @@ sub store {
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
-                print STDERR "germ_id:" . Dumper $added_stock_id;
+
                 my $references = CXGN::BrAPI::v2::ExternalReferences->new({
                     bcs_schema => $self->bcs_schema,
                     table_name => 'Stock::StockDbxref',
