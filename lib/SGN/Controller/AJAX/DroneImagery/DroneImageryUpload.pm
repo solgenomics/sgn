@@ -1097,13 +1097,6 @@ sub upload_drone_imagery_POST : Args(0) {
         my $upload_file = $c->req->upload('upload_drone_images_zipfile');
         my $upload_panel_file = $c->req->upload('upload_drone_images_panel_zipfile');
 
-        my $odm_check_prop = $schema->resultset("Project::Projectprop")->find_or_create({
-            project_id => $selected_drone_run_id,
-            type_id => $odm_process_running_cvterm_id
-        });
-        $odm_check_prop->value('1');
-        $odm_check_prop->update();
-
         my $upload_original_name = $upload_file->filename();
         my $upload_tempfile = $upload_file->tempname;
         my $time = DateTime->now();
@@ -1186,123 +1179,132 @@ sub upload_drone_imagery_POST : Args(0) {
         my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_images');
         my $temp_file_docker_log = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
 
+        my $odm_check_prop = $schema->resultset("Project::Projectprop")->find_or_create({
+            project_id => $selected_drone_run_id,
+            type_id => $odm_process_running_cvterm_id
+        });
+        $odm_check_prop->value('1');
+        $odm_check_prop->update();
+
         my @stitched_bands;
         my %raw_image_bands;
-        if ($new_drone_run_camera_info eq 'micasense_5') {
-            my $upload_panel_original_name = $upload_panel_file->filename();
-            my $upload_panel_tempfile = $upload_panel_file->tempname;
+        eval {
+            if ($new_drone_run_camera_info eq 'micasense_5') {
+                my $upload_panel_original_name = $upload_panel_file->filename();
+                my $upload_panel_tempfile = $upload_panel_file->tempname;
 
-            my $uploader_panel = CXGN::UploadFile->new({
-                tempfile => $upload_panel_tempfile,
-                subdirectory => "drone_imagery_upload_odm_panel_zips",
-                second_subdirectory => "$selected_drone_run_id",
-                archive_path => $c->config->{archive_path},
-                archive_filename => $upload_panel_original_name,
-                timestamp => $timestamp,
-                user_id => $user_id,
-                user_role => $user_role
-            });
-            my $archived_filename_panel_with_path = $uploader_panel->archive();
-            my $md5_panel = $uploader_panel->get_md5($archived_filename_panel_with_path);
-            if (!$archived_filename_panel_with_path) {
-                $c->stash->{rest} = { error => "Could not save file $archived_filename_panel_with_path in archive." };
-                $c->detach();
+                my $uploader_panel = CXGN::UploadFile->new({
+                    tempfile => $upload_panel_tempfile,
+                    subdirectory => "drone_imagery_upload_odm_panel_zips",
+                    second_subdirectory => "$selected_drone_run_id",
+                    archive_path => $c->config->{archive_path},
+                    archive_filename => $upload_panel_original_name,
+                    timestamp => $timestamp,
+                    user_id => $user_id,
+                    user_role => $user_role
+                });
+                my $archived_filename_panel_with_path = $uploader_panel->archive();
+                my $md5_panel = $uploader_panel->get_md5($archived_filename_panel_with_path);
+                if (!$archived_filename_panel_with_path) {
+                    $c->stash->{rest} = { error => "Could not save file $archived_filename_panel_with_path in archive." };
+                    $c->detach();
+                }
+                unlink $upload_panel_tempfile;
+                print STDERR "Archived Drone Image ODM Zip File: $archived_filename_panel_with_path\n";
+
+                # my $dtm_string = '';
+                # my $ua       = LWP::UserAgent->new();
+                # my $response = $ua->post( $c->config->{main_production_site_url}."/RunODMDocker.php", { 'file_path' => $image_path_remaining_host, 'dtm_string' => $dtm_string } );
+                # my $content  = $response->decoded_content();
+                # print STDERR Dumper $content;
+
+                my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm --radiometric-calibration camera > '.$temp_file_docker_log;
+                print STDERR $odm_command."\n";
+                my $odm_status = system($odm_command);
+
+                my $odm_b1 = "$image_path_remaining/odm_orthophoto/b1.png";
+                my $odm_b2 = "$image_path_remaining/odm_orthophoto/b2.png";
+                my $odm_b3 = "$image_path_remaining/odm_orthophoto/b3.png";
+                my $odm_b4 = "$image_path_remaining/odm_orthophoto/b4.png";
+                my $odm_b5 = "$image_path_remaining/odm_orthophoto/b5.png";
+                my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path $image_path_remaining/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5 --odm_radiocalibrated True";
+                my $odm_open_status = system($odm_cmd);
+
+                my $odm_dsm_png = "$image_path_remaining/odm_dem/dsm.png";
+                my $odm_dtm_png = "$image_path_remaining/odm_dem/dtm.png";
+                my $odm_subtract_png = "$image_path_remaining/odm_dem/subtract.png";
+                my $odm_dem_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImageDSM.py --image_path_dsm $image_path_remaining/odm_dem/dsm.tif --image_path_dtm $image_path_remaining/odm_dem/dtm.tif --outfile_path_dsm $odm_dsm_png --outfile_path_dtm $odm_dtm_png --outfile_path_subtract $odm_subtract_png --band_number 1";
+                my $odm_dem_open_status = system($odm_dem_cmd);
+
+                @stitched_bands = (
+                    ["Band 1", "OpenDroneMap Blue", "Blue (450-520nm)", $odm_b1],
+                    ["Band 2", "OpenDroneMap Green", "Green (515-600nm)", $odm_b2],
+                    ["Band 3", "OpenDroneMap Red", "Red (600-690nm)", $odm_b3],
+                    ["Band 4", "OpenDroneMap NIR", "NIR (780-3000nm)", $odm_b4],
+                    ["Band 5", "OpenDroneMap RedEdge", "Red Edge (690-750nm)", $odm_b5],
+                    ["Band 6", "OpenDroneMap DSM", "Black and White Image", $odm_dsm_png]
+                );
             }
-            unlink $upload_panel_tempfile;
-            print STDERR "Archived Drone Image ODM Zip File: $archived_filename_panel_with_path\n";
+            elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
+                my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm > '.$temp_file_docker_log;
+                print STDERR $odm_command."\n";
+                my $odm_status = system($odm_command);
 
-            # my $dtm_string = '';
-            # my $ua       = LWP::UserAgent->new();
-            # my $response = $ua->post( $c->config->{main_production_site_url}."/RunODMDocker.php", { 'file_path' => $image_path_remaining_host, 'dtm_string' => $dtm_string } );
-            # my $content  = $response->decoded_content();
-            # print STDERR Dumper $content;
+                my $odm_dsm_png = "$image_path_remaining/odm_dem/dsm.png";
+                my $odm_dtm_png = "$image_path_remaining/odm_dem/dtm.png";
+                my $odm_subtract_png = "$image_path_remaining/odm_dem/subtract.png";
+                my $odm_dem_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImageDSM.py --image_path_dsm $image_path_remaining/odm_dem/dsm.tif --image_path_dtm $image_path_remaining/odm_dem/dtm.tif --outfile_path_dsm $odm_dsm_png --outfile_path_dtm $odm_dtm_png --outfile_path_subtract $odm_subtract_png --band_number 1";
+                my $odm_dem_open_status = system($odm_dem_cmd);
 
-            my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm --radiometric-calibration camera > '.$temp_file_docker_log;
-            print STDERR $odm_command."\n";
-            my $odm_status = system($odm_command);
-
-            my $odm_b1 = "$image_path_remaining/odm_orthophoto/b1.png";
-            my $odm_b2 = "$image_path_remaining/odm_orthophoto/b2.png";
-            my $odm_b3 = "$image_path_remaining/odm_orthophoto/b3.png";
-            my $odm_b4 = "$image_path_remaining/odm_orthophoto/b4.png";
-            my $odm_b5 = "$image_path_remaining/odm_orthophoto/b5.png";
-            my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path $image_path_remaining/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5 --odm_radiocalibrated True";
-            my $odm_open_status = system($odm_cmd);
-
-            my $odm_dsm_png = "$image_path_remaining/odm_dem/dsm.png";
-            my $odm_dtm_png = "$image_path_remaining/odm_dem/dtm.png";
-            my $odm_subtract_png = "$image_path_remaining/odm_dem/subtract.png";
-            my $odm_dem_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImageDSM.py --image_path_dsm $image_path_remaining/odm_dem/dsm.tif --image_path_dtm $image_path_remaining/odm_dem/dtm.tif --outfile_path_dsm $odm_dsm_png --outfile_path_dtm $odm_dtm_png --outfile_path_subtract $odm_subtract_png --band_number 1";
-            my $odm_dem_open_status = system($odm_dem_cmd);
-
-            @stitched_bands = (
-                ["Band 1", "OpenDroneMap Blue", "Blue (450-520nm)", $odm_b1],
-                ["Band 2", "OpenDroneMap Green", "Green (515-600nm)", $odm_b2],
-                ["Band 3", "OpenDroneMap Red", "Red (600-690nm)", $odm_b3],
-                ["Band 4", "OpenDroneMap NIR", "NIR (780-3000nm)", $odm_b4],
-                ["Band 5", "OpenDroneMap RedEdge", "Red Edge (690-750nm)", $odm_b5],
-                ["Band 6", "OpenDroneMap DSM", "Black and White Image", $odm_dsm_png]
-            );
-        }
-        elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
-            my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm > '.$temp_file_docker_log;
-            print STDERR $odm_command."\n";
-            my $odm_status = system($odm_command);
-
-            my $odm_dsm_png = "$image_path_remaining/odm_dem/dsm.png";
-            my $odm_dtm_png = "$image_path_remaining/odm_dem/dtm.png";
-            my $odm_subtract_png = "$image_path_remaining/odm_dem/subtract.png";
-            my $odm_dem_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImageDSM.py --image_path_dsm $image_path_remaining/odm_dem/dsm.tif --image_path_dtm $image_path_remaining/odm_dem/dtm.tif --outfile_path_dsm $odm_dsm_png --outfile_path_dtm $odm_dtm_png --outfile_path_subtract $odm_subtract_png --band_number 1";
-            my $odm_dem_open_status = system($odm_dem_cmd);
-
-            @stitched_bands = (
-                ["Color Image", "OpenDroneMap RGB Color Image", "RGB Color Image", "$image_path_remaining/odm_orthophoto/odm_orthophoto.tif"],
-                ["DSM", "OpenDroneMap DSM", "Black and White Image", $odm_dsm_png]
-            );
-        }
-        else {
-            die "Camera info not supported for raw image upload ODM stitch: $new_drone_run_camera_info\n";
-        }
-
-        foreach my $m (@stitched_bands) {
-            my $project_rs = $schema->resultset("Project::Project")->create({
-                name => $new_drone_run_name."_".$m->[1],
-                description => $new_drone_run_desc.". ".$m->[0]." ".$m->[1].". Orthomosaic stitched by ImageBreed.",
-                projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $m->[2]}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
-                project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
-            });
-            my $selected_drone_run_band_id = $project_rs->project_id();
-
-            my $time = DateTime->now();
-            my $timestamp = $time->ymd()."_".$time->hms();
-            my $upload_original_name = $new_drone_run_name."_ImageBreed_stitched_".$m->[1].".png";
-
-            my $uploader = CXGN::UploadFile->new({
-                tempfile => $m->[3],
-                subdirectory => "drone_imagery_upload",
-                archive_path => $c->config->{archive_path},
-                archive_filename => $upload_original_name,
-                timestamp => $timestamp,
-                user_id => $user_id,
-                user_role => $user_role
-            });
-            my $archived_filename_with_path = $uploader->archive();
-            my $md5 = $uploader->get_md5($archived_filename_with_path);
-            if (!$archived_filename_with_path) {
-                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
-                $c->detach();
+                @stitched_bands = (
+                    ["Color Image", "OpenDroneMap RGB Color Image", "RGB Color Image", "$image_path_remaining/odm_orthophoto/odm_orthophoto.tif"],
+                    ["DSM", "OpenDroneMap DSM", "Black and White Image", $odm_dsm_png]
+                );
             }
-            unlink $upload_tempfile;
-            print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
+            else {
+                die "Camera info not supported for raw image upload ODM stitch: $new_drone_run_camera_info\n";
+            }
 
-            my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-            $image->set_sp_person_id($user_id);
-            my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
-            my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
-            push @return_drone_run_band_image_urls, $image->get_image_url('original');
-            push @return_drone_run_band_image_ids, $image->get_image_id();
-            push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
-        }
+            foreach my $m (@stitched_bands) {
+                my $project_rs = $schema->resultset("Project::Project")->create({
+                    name => $new_drone_run_name."_".$m->[1],
+                    description => $new_drone_run_desc.". ".$m->[0]." ".$m->[1].". Orthomosaic stitched by ImageBreed.",
+                    projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $m->[2]}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
+                    project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
+                });
+                my $selected_drone_run_band_id = $project_rs->project_id();
+
+                my $time = DateTime->now();
+                my $timestamp = $time->ymd()."_".$time->hms();
+                my $upload_original_name = $new_drone_run_name."_ImageBreed_stitched_".$m->[1].".png";
+
+                my $uploader = CXGN::UploadFile->new({
+                    tempfile => $m->[3],
+                    subdirectory => "drone_imagery_upload",
+                    archive_path => $c->config->{archive_path},
+                    archive_filename => $upload_original_name,
+                    timestamp => $timestamp,
+                    user_id => $user_id,
+                    user_role => $user_role
+                });
+                my $archived_filename_with_path = $uploader->archive();
+                my $md5 = $uploader->get_md5($archived_filename_with_path);
+                if (!$archived_filename_with_path) {
+                    $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                    $c->detach();
+                }
+                unlink $upload_tempfile;
+                print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
+
+                my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+                $image->set_sp_person_id($user_id);
+                my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+                my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
+                push @return_drone_run_band_image_urls, $image->get_image_url('original');
+                push @return_drone_run_band_image_ids, $image->get_image_id();
+                push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
+            }
+        };
 
         $odm_check_prop->value('0');
         $odm_check_prop->update();
