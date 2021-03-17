@@ -329,11 +329,6 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     my ($self, $c, $model_id, $sel_key, $selection_pop_id,
         $trait_key, $trait_id, $gp, $protocol_id) = @_;
 
-
-      # my ($self, $c, $selection_pop_id,
-      #   $model_key, $combined_key, $model_id,
-      #   $trait_key, $trait_id, $gp, $protocol_id) = @_;
-
     $c->stash->{combo_pops_id}        = $model_id;
 	$c->stash->{training_pop_id}        = $model_id;
     $c->stash->{trait_id}             = $trait_id;
