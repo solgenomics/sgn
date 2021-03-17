@@ -203,6 +203,11 @@
 
 
 
+<!-- JBROWSE CONFIGURATION -->
+<!-- OVERWRITE THIS FILE IN THE INSTANCE-SPECIFIC MASON REPO TO CONFIGURE -->
+<& /tools/sequence_metadata/jbrowse_config_sequence_metadata.mas &>
+
+
 <script type="text/javascript">
 
 var features = [];
@@ -244,6 +249,50 @@ jQuery(document).ready(function() {
     // Return to Query
     jQuery('#sequence_metadata_filter_return').click(toggle_sections);
 
+    // Set DataTables Buttons
+    let DT_BUTTONS = [
+        {
+            extend: 'excelHtml5',
+            title: 'sequence_metadata_results',
+            exportOptions: {
+                orthogonal: 'export'
+            }
+        },
+        {
+            extend: 'csvHtml5',
+            title: 'sequence_metadata_results',
+            exportOptions: {
+                orthogonal: 'export'
+            }
+        },
+        {
+            text: 'JSON',
+            action: function() {
+                download(getQueryURL('JSON'), "sequence_metadata.json");
+            }
+        },
+        {
+            text: 'GA4GH',
+            action: function() {
+                download(getQueryURL('GA4GH'), "sequence_metadata_ga4gh.json");
+            }
+        },
+        {
+            text: 'GFF',
+            action: function ( e, dt, button, config ) {
+                download(getQueryURL("gff"), "sequence_metadata.gff");
+            }
+        }
+    ];
+    if ( JBROWSE_CONFIG_SEQUENCE_METADATA && JBROWSE_CONFIG_SEQUENCE_METADATA.enabled ) {
+        DT_BUTTONS.push({
+            text: "<span class='glyphicon glyphicon-new-window'></span>&nbsp;JBrowse",
+            action: function() {
+                window.open(getJBrowseURL(JBROWSE_CONFIG_SEQUENCE_METADATA), '_blank');
+            }
+        });
+    }
+
     // Init DataTable
     jQuery('#sequence_metadata_filter_results').DataTable({
         dom: 'Bfrtip',
@@ -280,46 +329,7 @@ jQuery(document).ready(function() {
                 } 
             }
         ],
-        buttons: [
-            {
-                extend: 'excelHtml5',
-                title: 'sequence_metadata_results',
-                exportOptions: {
-                    orthogonal: 'export'
-                }
-            },
-            {
-                extend: 'csvHtml5',
-                title: 'sequence_metadata_results',
-                exportOptions: {
-                    orthogonal: 'export'
-                }
-            },
-            {
-                text: 'JSON',
-                action: function() {
-                    download(getQueryURL('JSON'), "sequence_metadata.json");
-                }
-            },
-            {
-                text: 'GA4GH',
-                action: function() {
-                    download(getQueryURL('GA4GH'), "sequence_metadata_ga4gh.json");
-                }
-            },
-            {
-                text: 'GFF',
-                action: function ( e, dt, button, config ) {
-                    download(getQueryURL("gff"), "sequence_metadata.gff");
-                }
-            },
-            {
-                text: "<span class='glyphicon glyphicon-new-window'></span>&nbsp;JBrowse",
-                action: function() {
-                    window.open(getJBrowseURL(), '_blank');
-                }
-            }
-        ],
+        buttons: DT_BUTTONS
     });
 
 });
@@ -747,9 +757,10 @@ function handle_query_results(response) {
 
 /**
  * Build a URL to view the seleceted data in jBrowse
+ * @params {Object} config JBrowse configuration properties
  * @returns {string} url to jbrowse with remote tracks added
  */
-function getJBrowseURL() {
+function getJBrowseURL(config) {
     // Get Selected Types
     let sel_types = jQuery('#sequence_metadata_filter_type').val();
     
@@ -814,11 +825,11 @@ function getJBrowseURL() {
     }
 
     // Build URL
-    let base_url = "https://wheat.pw.usda.gov/jb/";
+    let base_url = config.base_url;
     let params = {
-        data: "/ggds/whe-iwgsc2018",
-        loc: sel_feature_name + range,
-        tracks: ['DNA'].concat(Object.values(sel_protocol_names)).join(','),
+        data: config.data_dir,
+        loc: config.location_name(sel_feature_name) + range,
+        tracks: config.tracks.concat(Object.values(sel_protocol_names)).join(','),
         addStores: JSON.stringify(stores),
         addTracks: JSON.stringify(tracks)
     }
