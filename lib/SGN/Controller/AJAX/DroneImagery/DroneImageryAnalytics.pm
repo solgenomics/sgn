@@ -13633,7 +13633,8 @@ sub _perform_drone_imagery_analytics {
         print STDERR Dumper \@rr_coeff_env_correlation_original;
         my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
         print STDERR Dumper $res_se_string;
-        $rr_residual_variance_original = ($res_se_string**2)*$number_plots;
+        # $rr_residual_variance_original = ($res_se_string**2)*$number_plots;
+        $rr_residual_variance_original = $res_se_string;
         print STDERR Dumper $rr_residual_variance_original;
 
         my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
@@ -15293,7 +15294,8 @@ sub _perform_drone_imagery_analytics {
         print STDERR Dumper \@rr_coeff_env_correlation_altered;
         my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
         print STDERR Dumper $res_se_string;
-        $rr_residual_variance_altered = ($res_se_string**2)*$number_plots;
+        # $rr_residual_variance_altered = ($res_se_string**2)*$number_plots;
+        $rr_residual_variance_altered = $res_se_string;
         print STDERR Dumper $rr_residual_variance_altered;
 
         my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
@@ -16962,7 +16964,8 @@ sub _perform_drone_imagery_analytics {
         print STDERR Dumper \@rr_coeff_env_correlation_altered_env;
         my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
         print STDERR Dumper $res_se_string;
-        $rr_residual_variance_altered_env = ($res_se_string**2)*$number_plots;
+        # $rr_residual_variance_altered_env = ($res_se_string**2)*$number_plots;
+        $rr_residual_variance_altered_env = $res_se_string;
         print STDERR Dumper $rr_residual_variance_altered_env;
 
         my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
@@ -18621,7 +18624,8 @@ sub _perform_drone_imagery_analytics {
         print STDERR Dumper \@rr_coeff_env_correlation_altered_env_2;
         my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
         print STDERR Dumper $res_se_string;
-        $rr_residual_variance_altered_env_2 = ($res_se_string**2)*$number_plots;
+        # $rr_residual_variance_altered_env_2 = ($res_se_string**2)*$number_plots;
+        $rr_residual_variance_altered_env_2 = $res_se_string;
         print STDERR Dumper $rr_residual_variance_altered_env_2;
 
         my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
@@ -20281,7 +20285,8 @@ sub _perform_drone_imagery_analytics {
         print STDERR Dumper \@rr_coeff_env_correlation_altered_env_3;
         my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
         print STDERR Dumper $res_se_string;
-        $rr_residual_variance_altered_env_3 = ($res_se_string**2)*$number_plots;
+        # $rr_residual_variance_altered_env_3 = ($res_se_string**2)*$number_plots;
+        $rr_residual_variance_altered_env_3 = $res_se_string;
         print STDERR Dumper $rr_residual_variance_altered_env_3;
 
         my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
@@ -21938,7 +21943,8 @@ sub _perform_drone_imagery_analytics {
         print STDERR Dumper \@rr_coeff_env_correlation_altered_env_4;
         my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
         print STDERR Dumper $res_se_string;
-        $rr_residual_variance_altered_env_4 = ($res_se_string**2)*$number_plots;
+        # $rr_residual_variance_altered_env_4 = ($res_se_string**2)*$number_plots;
+        $rr_residual_variance_altered_env_4 = $res_se_string;
         print STDERR Dumper $rr_residual_variance_altered_env_4;
 
         my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
@@ -23415,8 +23421,7 @@ sub _perform_drone_imagery_analytics {
         my $status_r = system($statistics_cmd);
 
         my @pheno_var;
-        open(my $fh_r, '<', $stats_out_param_tempfile)
-            or die "Could not open file '$stats_out_param_tempfile' $!";
+        open(my $fh_r, '<', $stats_out_param_tempfile) or die "Could not open file '$stats_out_param_tempfile' $!";
             print STDERR "Opened $stats_out_param_tempfile\n";
 
             while (defined(my $row = <$fh_r>)) {
@@ -23566,7 +23571,8 @@ sub _perform_drone_imagery_analytics {
         print STDERR Dumper \@rr_coeff_env_correlation_altered_env_5;
         my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
         print STDERR Dumper $res_se_string;
-        $rr_residual_variance_altered_env_5 = ($res_se_string**2)*$number_plots;
+        # $rr_residual_variance_altered_env_5 = ($res_se_string**2)*$number_plots;
+        $rr_residual_variance_altered_env_5 = $res_se_string;
         print STDERR Dumper $rr_residual_variance_altered_env_5;
 
         my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
@@ -25245,7 +25251,8 @@ sub _perform_drone_imagery_analytics {
         print STDERR Dumper \@rr_coeff_env_correlation_altered_env_6;
         my ($res_se_string) = $log_output =~ /SE for R(.*?)\* FINISHED \(AIREMLF90\)/gs;
         print STDERR Dumper $res_se_string;
-        $rr_residual_variance_altered_env_6 = ($res_se_string**2)*$number_plots;
+        # $rr_residual_variance_altered_env_6 = ($res_se_string**2)*$number_plots;
+        $rr_residual_variance_altered_env_6 = $res_se_string;
         print STDERR Dumper $rr_residual_variance_altered_env_6;
 
         my $q_time = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
