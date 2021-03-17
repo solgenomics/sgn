@@ -724,13 +724,14 @@ sub check_training_pop_size : Path('/solgs/check/training/pop/size') Args(0) {
 }
 
 
-
 sub selection_trait :Path('/solgs/selection/') Args() {
     my ($self, $c, $selection_pop_id,
         $model_key, $training_pop_id,
         $trait_key, $trait_id, $gp, $protocol_id) = @_;
 
     $self->get_trait_details($c, $trait_id);
+	my $trait_abbr = $c->stash->{trait_abbr};
+
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_set_type} = 'single population';
@@ -782,6 +783,11 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 	    $c->stash->{training_pop_owner} = $c->stash->{project_owners};
 	}
 
+	my $training_pop_name = $c->stash->{training_pop_name};
+	my $model_url =  my $model_page = qq | <a href="/solgs/trait/$trait_id/population/$training_pop_id/gp/$protocol_id">$training_pop_name -- $trait_abbr</a> |;
+
+	$c->stash->{model_page_url} = $model_url;
+	
 	if ($selection_pop_id =~ /list/)
 	{
 	    $c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
@@ -917,7 +923,7 @@ sub trait :Path('/solgs/trait') Args() {
 
 	    $self->model_phenotype_stat($c);
 
-		$c->stash->{pop_link} = $pop_link;
+		$c->stash->{training_pop_url} = $pop_link;
 
 	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
 	}
@@ -2015,6 +2021,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 	 $c->stash->{training_pop_id} = $training_pop_id;
 	 $c->stash->{training_pop_name} = $training_pop_name;
 	 $c->stash->{training_pop_desc} = $training_pop_desc;
+	 $c->stash->{training_pop_url} = $training_pop_page;
 
 
 	 $self->get_acronym_pairs($c, $training_pop_id);

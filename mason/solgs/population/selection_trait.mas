@@ -28,6 +28,7 @@ $training_pop_desc => ''
 $training_pop_owner => ''
 $training_stocks_cnt => ''
 $training_markers_cnt => ''
+$training_pop_url => ''
 
 $selection_pop_id => ''
 $selection_pop_name => ''
@@ -36,7 +37,7 @@ $selection_pop_owner => ''
 $selection_stocks_cnt => ''
 $selection_markers_cnt => ''
 
-$model_link => ''
+$model_page_url => ''
 $owner => ''
 $protocol_url => ''
 $top_blups
@@ -49,11 +50,6 @@ $data_set_type => ''
 </%args>
 
 <%perl>
-
-if (!$model_link) {
-	$model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\">$training_pop_name</a>";
-}
-
 </%perl>
 
   <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS",
@@ -80,7 +76,8 @@ if (!$model_link) {
     pop_id   => $selection_pop_id,
     pop_name => $selection_pop_name,
     pop_desc => $selection_pop_desc,
-    model_link   => $model_link,
+    model_page_url   => $model_page_url,
+	training_pop_url => $training_pop_url,
     stocks_no    => $selection_stocks_cnt,
     markers_no   => $selection_markers_cnt,
     traits_no    => $traits_no,

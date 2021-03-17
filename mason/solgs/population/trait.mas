@@ -28,7 +28,7 @@ $owner=>''
 $protocol_url => ''
 $combo_pops_id => ''
 $genotyping_protocol_id => ''
-$pop_link
+$training_pop_url
 </%args>
 
 <%perl>
@@ -60,7 +60,7 @@ $pop_link
     pop_id   => $training_pop_id,
    	pop_name => $training_pop_name,
     pop_desc => $training_pop_desc,
-	pop_link     => $pop_link,
+	training_pop_url    => $training_pop_url,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,

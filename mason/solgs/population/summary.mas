@@ -18,8 +18,8 @@ $pop_id
 $pop_name
 $pop_desc
 
-$model_link => ''
-$pop_link => ''
+$model_page_url =>''
+$training_pop_url =>''
 $stocks_no
 $markers_no
 $traits_no
@@ -36,22 +36,13 @@ $combined_populations => ''
 $owner = 'NA' if !$owner;
 $traits_no = 'NA' if !$traits_no;
 
-my $project_link;
+$training_pop_url = $pop_name if !$training_pop_url;
 
-if ($model_link) {
-  $project_link = $model_link;
-}elsif ($pop_link) {
-  $project_link = $pop_link;
-}else {
-  $project_link = $pop_name;
-}
-
-my @data_c1 = (['Name', $pop_name],  ['Description', $pop_desc], ['Owner', $owner]);
+my @data_c1 = (['Name', $training_pop_url],  ['Description', $pop_desc], ['Owner', $owner]);
 my @data_c2 = (['No. of lines', $stocks_no],  ['No. of markers', $markers_no], ['Genotyping version', $protocol_url]);
 
 push @data_c2,  ['No. of traits', $traits_no] if $traits_no > 1;
-push @data_c2,  ['Training model', $model_link] if $model_link;
-push @data_c2,  ['Training population', $pop_link] if $pop_link;
+push @data_c2,  ['Training model', $model_page_url] if $model_page_url;
 
 </%perl>
 

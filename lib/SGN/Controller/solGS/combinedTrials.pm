@@ -342,7 +342,9 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     $c->stash->{combined_populations} = 1;
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	my $trait_abbr = $c->stash->{trait_abbr};
 
     if ($selection_pop_id =~ /list/)
     {
@@ -381,8 +383,8 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     $c->stash->{protocol_url} = $protocol;
 
     my $training_pop = "Training population $model_id";
-    my $model_link   = qq | <a href="/solgs/model/combined/trials/$model_id/trait/$trait_id/gp/$protocol_id">$training_pop </a>|;
-    $c->stash->{model_link} = $model_link;
+    my $model_link   = qq | <a href="/solgs/model/combined/trials/$model_id/trait/$trait_id/gp/$protocol_id">$training_pop -- $trait_abbr</a>|;
+    $c->stash->{model_page_url} = $model_link;
     $c->stash->{training_pop_name} = $training_pop;
 
     # my $identifier    = $model_id . '_' . $selection_pop_id;
@@ -787,7 +789,7 @@ sub combined_pops_summary {
 	my $model_link;
 	if ($trait_id)
 	{
-		$model_link   = qq | <a href="/solgs/model/combined/trials//$combo_pops_id/trait/$trait_id/gp/$protocol_id">$training_pop_name </a>|;
+		$model_link   = qq | <a href="/solgs/model/combined/trials//$combo_pops_id/trait/$trait_id/gp/$protocol_id">$training_pop_name -- $trait_abbr</a>|;
 	}
 
     my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
@@ -808,8 +810,8 @@ sub combined_pops_summary {
 	training_pop_page => $pop_link,
 	owner        => $projects_owners,
 	protocol_url => $protocol,
-	pop_link   => $pop_link,
-	model_link => $model_link
+	training_pop_url  => $pop_link,
+	model_page_url => $model_link
         );
 
 }
