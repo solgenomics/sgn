@@ -401,75 +401,65 @@ sub store {
             my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $trait_name)->cvterm_id();
             $trait_id_map{$trait_name} = $trait_cvterm_id;
         }
-        # # print STDERR Dumper \%trait_id_map;
-        # my @trait_ids = values %trait_id_map;
+        # print STDERR Dumper \%trait_id_map;
+        my @trait_ids = values %trait_id_map;
 
         my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $analysis_statistical_ontology_term)->cvterm_id();
 
-        # my $categories = {
-        #     object => [],
-        #     attribute => [$stat_cvterm_id],
-        #     method => [],
-        #     unit => [],
-        #     trait => \@trait_ids,
-        #     tod => [],
-        #     toy => [],
-        #     gen => [],
-        # };
-        #
-        # # print STDERR Dumper $analysis_result_trait_compose_info_time;
-        # my %time_term_map;
-        # if ($analysis_result_trait_compose_info_time) {
-        #     my %unique_toy;
-        #     foreach my $v (values %$analysis_result_trait_compose_info_time) {
-        #         foreach (@$v) {
-        #             my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $_)->cvterm_id();
-        #             $unique_toy{$trait_id}++;
-        #             $time_term_map{$_} = $trait_id;
-        #         }
-        #     }
-        #     my @toy = keys %unique_toy;
-        #     $categories->{toy} = \@toy;
-        # }
-        # # print STDERR Dumper $categories;
-        # # print STDERR Dumper \%time_term_map;
-        #
-        # my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($bcs_schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, $categories);
-        # my $existing_traits = $traits->{existing_traits};
-        # my $new_traits = $traits->{new_traits};
-        # # print STDERR Dumper $new_traits;
-        # # print STDERR Dumper $existing_traits;
-        # my %new_trait_names;
-        # foreach (@$new_traits) {
-        #     my $components = $_->[0];
-        #     $new_trait_names{$_->[1]} = join ',', @$components;
-        # }
-        #
+        my $categories = {
+            object => [],
+            attribute => [$stat_cvterm_id],
+            method => [],
+            unit => [],
+            trait => \@trait_ids,
+            tod => [],
+            toy => [],
+            gen => [],
+        };
+
+        # print STDERR Dumper $analysis_result_trait_compose_info_time;
+        my %time_term_map;
+        if ($analysis_result_trait_compose_info_time) {
+            my %unique_toy;
+            foreach my $v (values %$analysis_result_trait_compose_info_time) {
+                foreach (@$v) {
+                    my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $_)->cvterm_id();
+                    $unique_toy{$trait_id}++;
+                    $time_term_map{$_} = $trait_id;
+                }
+            }
+            my @toy = keys %unique_toy;
+            $categories->{toy} = \@toy;
+        }
+        # print STDERR Dumper $categories;
+        # print STDERR Dumper \%time_term_map;
+
+        my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($bcs_schema, $allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, $categories);
+        my $existing_traits = $traits->{existing_traits};
+        my $new_traits = $traits->{new_traits};
+        # print STDERR Dumper $new_traits;
+        # print STDERR Dumper $existing_traits;
+        my %new_trait_names;
+        foreach (@$new_traits) {
+            my $components = $_->[0];
+            $new_trait_names{$_->[1]} = join ',', @$components;
+        }
+
         my $onto = CXGN::Onto->new( { schema => $bcs_schema } );
-        # my $new_terms = $onto->store_composed_term(\%new_trait_names);
+        my $new_terms = $onto->store_composed_term(\%new_trait_names);
 
         my %composed_trait_map;
         while (my($trait_name, $trait_id) = each %trait_id_map) {
             my $components = [$trait_id, $stat_cvterm_id];
-            # if (exists($analysis_result_trait_compose_info_time->{$trait_name})) {
-            #     foreach (@{$analysis_result_trait_compose_info_time->{$trait_name}}) {
-            #         my $time_cvterm_id = $time_term_map{$_};
-            #         push @$components, $time_cvterm_id;
-            #     }
-            # }
-            my $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($bcs_schema, $components);
-            if ($composed_cvterm_id) {
-                my $composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($bcs_schema, $composed_cvterm_id, 'extended');
-                $composed_trait_map{$trait_name} = $composed_trait_name;
-            } else {
-                my ($name, $id) = split (/\|/ , $trait_name);
-                my ($analysis_name, $analysis_id) = split (/\|/ , $analysis_statistical_ontology_term);
-                my $composed_trait_name = $name . "|" . $analysis_name;
-                my %term_to_store;
-                $term_to_store{$composed_trait_name} = join ',', @$components;
-                my $new_term = $onto->store_composed_term(\%term_to_store);
-                $composed_trait_map{$trait_name} = @$new_term[0]->[1];
+            if (exists($analysis_result_trait_compose_info_time->{$trait_name})) {
+                foreach (@{$analysis_result_trait_compose_info_time->{$trait_name}}) {
+                    my $time_cvterm_id = $time_term_map{$_};
+                    push @$components, $time_cvterm_id;
+                }
             }
+            my $composed_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($bcs_schema, $components);
+            my $composed_trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($bcs_schema, $composed_cvterm_id, 'extended');
+            $composed_trait_map{$trait_name} = $composed_trait_name;
         }
         my @composed_trait_names = values %composed_trait_map;
 
