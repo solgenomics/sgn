@@ -813,9 +813,14 @@ function getJBrowseURL(config) {
     let stores = {};
     let tracks = [];
     for ( let i = 0; i < sel_protocols.length; i++ ) {
+        let query_url = window.location.protocol + "//" + window.location.host + getQueryURL("gff", sel_protocols[i]);
+        if ( config.query_params ) {
+            let q = new URLSearchParams(config.query_params).toString();
+            query_url += "&" + q;
+        }
         stores["url" + i] = {
             type: "JBrowse/Store/SeqFeature/GFF3",
-            urlTemplate: window.location.protocol + "//" + window.location.host + getQueryURL("gff", sel_protocols[i])
+            urlTemplate: query_url
         }
         tracks.push({
             label: sel_protocol_names[sel_protocols[i].toString()],

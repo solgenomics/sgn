@@ -477,6 +477,7 @@ sub sequence_metadata_store_POST : Args(0) {
 #       - GA4GH: (default) JSON output following Global Alliance for Genomics and Health API format
 #       - JSON: JSON output using internal/breedbase format
 #       - gff: gff3 format
+#   - prepend_chr_to_feature_name = (optional) when set to 1, the feature names will have 'chr' prepended, if not already present
 # RETURNS: an array of sequence metadata objects with the following keys:
 #   - feature_id = id of associated feature
 #   - feature_name = name of associated feature
@@ -501,6 +502,7 @@ sub sequence_metadata_query_GET : Args(0) {
     my @nd_protocol_ids = split(',', $c->req->param('nd_protocol_id'));
     my @attributes = split(',', $c->req->param('attribute'));
     my $format = $c->req->param('format');
+    my $prepend_chr_to_feature_name = $c->req->param('prepend_chr_to_feature_name');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $schema->storage->dbh();
@@ -547,6 +549,16 @@ sub sequence_metadata_query_GET : Args(0) {
 
     # Query Results
     my $results = $query->{'results'};
+
+
+    # Prepend chr to feature names, if requested
+    if ( defined $prepend_chr_to_feature_name && $prepend_chr_to_feature_name eq '1' ) {
+        foreach my $result (@$results) {
+            if ( $result->{feature_name} !~ /^chr/ ) {
+                $result->{feature_name} = 'chr' . $result->{feature_name};
+            }
+        }
+    }
 
 
     # Internal/Breedbase Format
