@@ -904,7 +904,15 @@ sub list_cross_wishlists : Path('/ajax/cross/list_cross_wishlists') : ActionClas
 sub list_cross_wishlists_GET : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $q = "SELECT file_id, basename, dirname, filetype, comment, m.create_date, m.create_person_id, p.first_name, p.last_name FROM metadata.md_files JOIN metadata.md_metadata as m USING(metadata_id) JOIN sgn_people.sp_person as p ON(p.sp_person_id=m.create_person_id) WHERE filetype ilike 'cross_wishlist_%';";
+    my $q = "SELECT file_table.id, file_table.file_name, mdf.dirname, mdf.filetype, mdf.comment, mdmd.create_date, mdmd.create_person_id, p.first_name, p.last_name
+        FROM
+        (SELECT mf.file_id AS id,mf.basename AS file_name FROM metadata.md_files AS mf WHERE file_id IN (SELECT MAX(file_id) AS file_id FROM metadata.md_files
+        WHERE filetype ilike 'cross_wishlist_%' group by basename))
+        AS file_table
+        JOIN metadata.md_files as mdf ON (file_table.id = mdf.file_id)
+        JOIN metadata.md_metadata AS mdmd ON (mdf.metadata_id = mdmd.metadata_id)
+        JOIN sgn_people.sp_person as p ON(p.sp_person_id = mdmd.create_person_id);";
+
     my $h = $c->dbc->dbh->prepare($q);
     $h->execute();
     my @files;
