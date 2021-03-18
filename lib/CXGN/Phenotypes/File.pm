@@ -25,6 +25,8 @@ has 'traits' => ( is => 'rw', isa => 'ArrayRef' );
 
 has 'levels' => ( is => 'rw', isa => 'HashRef' );
 
+has 'remove_quotes' => (is => 'rw', isa => 'Bool', default => sub { return 1; } );
+
 our $FACTOR_COUNT = 38; # number of columns in the file before traits columns start
 
 sub BUILD {
@@ -35,6 +37,15 @@ sub BUILD {
     chomp($header);
     
     my @keys = split("\t", $header);
+
+    if ($self->remove_quotes()) {
+	foreach my $k (@keys) { 
+	    print STDERR "Removing quotes from $k...";
+	    $k=~ s/^\"(.*)\"$/$1/;
+	    print STDERR "Now $k...\n";
+	}
+    }
+    
     
     my @data = ();
     my %line = ();
@@ -42,7 +53,13 @@ sub BUILD {
     
     for (my $i=1; $i<@lines; $i++) { 
 	my @fields = split /\t/, $lines[$i];
-	for(my $n=0; $n <@keys; $n++) { 
+	for(my $n=0; $n <@keys; $n++) {
+	    if ($self->remove_quotes()) {
+		print STDERR "Removing quotes from $fields[$n]...";
+		$fields[$n]=~ s/^\"(.*)\"$/$1/;
+		print STDERR "Now $fields[$n]...\n"; 
+	    }
+	    
 	    if (exists($fields[$n]) && defined($fields[$n])) {
 		$line{$keys[$n]}=$fields[$n];
 		if ($n<39) { 
