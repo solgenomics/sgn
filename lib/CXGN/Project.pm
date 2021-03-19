@@ -1878,7 +1878,7 @@ sub _get_trial_owners {
     return \%owners;
 }
 
-sub _set_trial_owner {
+sub set_trial_owner {
     my $self = shift;
     my $sp_person_id = shift;
     my $schema = $self->bcs_schema();
