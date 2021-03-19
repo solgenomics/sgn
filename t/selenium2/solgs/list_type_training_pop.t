@@ -28,7 +28,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
 
-    $d->get('/solgs/population/list_8', 'plots list tr pop page');
+    $d->get_ok('/solgs/population/list_8', 'plots list tr pop page');
     sleep(3);
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(3);
@@ -44,6 +44,16 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(10);
+
+	my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    sleep(2);
+    $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
+    sleep(120);
+	$d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
+    sleep(20);
+    $d->driver->go_back();
+    sleep(15);
 
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
