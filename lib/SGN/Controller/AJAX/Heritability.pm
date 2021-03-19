@@ -47,7 +47,7 @@ sub shared_phenotypes: Path('/ajax/heritability/shared_phenotypes') : {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
-    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
+    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
     print STDERR Dumper(@trait_info);
@@ -131,7 +131,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
 
     my $temppath = $heritability_tmp_output . "/" . $tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
 
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
