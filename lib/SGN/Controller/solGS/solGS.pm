@@ -239,27 +239,31 @@ sub format_trait_gs_projects {
    $c->stash->{genotyping_protocol_id} = $protocol_id;
     foreach my $pr_id (keys %$projects)
    {
+
        my $pr_name     = $projects->{$pr_id}{project_name};
        my $pr_desc     = $projects->{$pr_id}{project_desc};
        my $pr_year     = $projects->{$pr_id}{project_year};
        my $pr_location = $projects->{$pr_id}{project_location};
 
-       $c->stash->{pop_id} = $pr_id;
-       $self->check_population_has_genotype($c);
-       my $has_genotype = $c->stash->{population_has_genotype};
+	   if ($pr_location !~ /computation/i)
+	  {
+	       $c->stash->{pop_id} = $pr_id;
+	       $self->check_population_has_genotype($c);
+	       my $has_genotype = $c->stash->{population_has_genotype};
 
-       if ($has_genotype)
-       {
-	   #my $trial_compatibility_file = $self->trial_compatibility_file($c);
+	       if ($has_genotype)
+	       {
+			   #my $trial_compatibility_file = $self->trial_compatibility_file($c);
 
-	   #$self->trial_compatibility_table($c, $has_genotype);
-	   #my $match_code = $c->stash->{trial_compatibility_code};
+			   #$self->trial_compatibility_table($c, $has_genotype);
+			   #my $match_code = $c->stash->{trial_compatibility_code};
 
-	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
-	   #$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+			   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
+			   #$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id/gp/$protocol_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year];
-       }
+			   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id/gp/$protocol_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year];
+		     }
+   		}
    }
 
    $c->stash->{formatted_gs_projects} = \@formatted_projects;
@@ -284,20 +288,23 @@ sub format_gs_projects {
       # $c->stash->{pop_id} = $pr_id;
       # $self->check_population_has_genotype($c);
       # my $has_genotype = $c->stash->{population_has_genotype};
-       my $has_genotype = $c->config->{default_genotyping_protocol};
+	  if ($pr_location !~ /computation/i)
+	  {
+	       my $has_genotype = $c->config->{default_genotyping_protocol};
 
-       if ($has_genotype)
-       {
-	   my $trial_compatibility_file = $self->trial_compatibility_file($c);
+	       if ($has_genotype)
+	       {
+			   my $trial_compatibility_file = $self->trial_compatibility_file($c);
 
-	   $self->trial_compatibility_table($c, $has_genotype);
-	   my $match_code = $c->stash->{trial_compatibility_code};
+			   $self->trial_compatibility_table($c, $has_genotype);
+			   my $match_code = $c->stash->{trial_compatibility_code};
 
-	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
-	   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+			   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
+			   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/population/$pr_id/gp/$protocol_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
-       }
+			   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/population/$pr_id/gp/$protocol_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
+	       }
+   		}
    }
 
    $c->stash->{formatted_gs_projects} = \@formatted_projects;
@@ -787,7 +794,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 	my $model_url =  my $model_page = qq | <a href="/solgs/trait/$trait_id/population/$training_pop_id/gp/$protocol_id">$training_pop_name -- $trait_abbr</a> |;
 
 	$c->stash->{model_page_url} = $model_url;
-	
+
 	if ($selection_pop_id =~ /list/)
 	{
 	    $c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
