@@ -992,7 +992,7 @@ sub get_trait_list {
         WHERE accession.stock_id=? and phenotype.value~?
         GROUP BY cvterm.cvterm_id, db.name || ':' || dbxref.accession, cvterm.name";
     my $h = $self->schema()->storage()->dbh()->prepare($q);
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)+(e-?[0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($self->stock_id(), $numeric_regex);
     my @traits;
     while (my ($cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev) = $h->fetchrow_array()) {
@@ -1012,6 +1012,7 @@ sub get_trait_list {
         GROUP BY cvterm.cvterm_id, db.name || ':' || dbxref.accession, cvterm.name";
 
     $h = $self->schema()->storage()->dbh()->prepare($q);
+    $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($self->stock_id(), $numeric_regex);
 
     while (my ($cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev) = $h->fetchrow_array()) {

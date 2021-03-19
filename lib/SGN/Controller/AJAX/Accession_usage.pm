@@ -166,7 +166,7 @@ sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0
         $limit_clause
         $offset_clause;");
 
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)+(e-?[0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
     $h->execute($numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
 
     my @phenotype_data;

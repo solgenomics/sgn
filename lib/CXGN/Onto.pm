@@ -260,7 +260,7 @@ sub store_observation_variable_trait_method_scale {
 
     my $schema = $self->schema();
     my $dbh = $schema->storage->dbh;
-    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)+(e-?[0-9]+)?$';
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
 
     my $new_observation_variable_cvterm_check = $schema->resultset("Cv::Cvterm")->search({
         name => $new_observation_variable_name,
