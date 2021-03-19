@@ -307,8 +307,14 @@ sub parse {
 					    }
 					    my $trait_name_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_cvterm_ids);
 					    $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_name_cvterm_id, $composable_cvterm_format);
+					    print STDERR Dumper $trait_name_composed;
 					    if (!$trait_name) {
-						$trait_name = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name_composed, 'postcomposed_terms')->name();
+						my $term_check = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name_composed, 'postcomposed_terms');
+						$trait_name = $term_check ? $term_check->name() : undef;
+					    }
+					    if (!$trait_name) {
+						my $term_check = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name_composed, 'composed_trait');
+						$trait_name = $term_check ? $term_check->name() : undef;
 					    }
 					    $composed_trait_name_map{$trait_name_composed} = $trait_name;
 					}
