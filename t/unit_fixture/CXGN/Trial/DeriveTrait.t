@@ -73,7 +73,6 @@ print STDERR Dumper $design;
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
     design => $design,
     program => "test",
     trial_year => "2016",
@@ -81,7 +80,8 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_location => "test_location_for_trial_derive_trait",
     trial_name => "test_trial_derive_trait",
     design_type => "RCBD",
-    operator => "janedoe"
+    operator => "janedoe",
+    owner_id => 41
 }), "create trial object");
 
 ok(my $save = $trial_create->save_trial(), "save trial");

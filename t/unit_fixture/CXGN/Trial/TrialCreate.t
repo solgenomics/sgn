@@ -93,7 +93,6 @@ my $ayt_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'Advanced 
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
     design => $design,
     program => "test",
     trial_year => "2015",
@@ -102,8 +101,9 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_name => "new_test_trial_name",
     trial_type=>$ayt_cvterm_id,
     design_type => "RCBD",
-    operator => "janedoe"
-						    }), "create trial object");
+    operator => "janedoe",
+    owner_id => 41
+}), "create trial object");
 
 my $save = $trial_create->save_trial();
 ok($save->{'trial_id'}, "save trial");
@@ -146,7 +146,6 @@ ok(my $design = $trial_design->get_design(), "retrieve design");
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
     design => $design,
     program => "test",
     trial_year => "2015",
@@ -154,8 +153,9 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_location => "test_location_for_trial",
     trial_name => "new_test_trial_name_single",
     design_type => "RCBD",
-    operator => "janedoe"
-						    }), "create trial object");
+    operator => "janedoe",
+    owner_id => 41
+}), "create trial object");
 
 my $save = $trial_create->save_trial();
 ok($save->{'trial_id'}, "save trial");
@@ -316,10 +316,10 @@ my $genotyping_trial_create;
 ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
     program => "test",
     trial_location => "test_location_for_trial",
     operator => "janedoe",
+    owner_id => 41,
     trial_year => $plate_info->{year},
     trial_description => $plate_info->{description},
     design_type => 'genotyping_plate',
@@ -393,7 +393,6 @@ $ayt_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'Advanced Yie
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
     design => $design,
     program => "test",
     trial_year => "2015",
@@ -402,8 +401,9 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_name => "new_test_trial_name_westcott",
     trial_type=>$ayt_cvterm_id,
     design_type => "Westcott",
-    operator => "janedoe"
-						    }), "create trial object");
+    operator => "janedoe",
+    owner_id => 41
+}), "create trial object");
 
 $save = $trial_create->save_trial();
 ok($save->{'trial_id'}, "save trial");
@@ -466,7 +466,6 @@ $ayt_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'Advanced Yie
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
     design => $design,
     program => "test",
     trial_year => "2015",
@@ -477,8 +476,9 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     design_type => "splitplot",
     trial_has_subplot_entries => 2,
     trial_has_plant_entries => 4,
-    operator => "janedoe"
-						    }), "create trial object");
+    operator => "janedoe",
+    owner_id => 41
+}), "create trial object");
 
 $save = $trial_create->save_trial();
 print STDERR "TRIAL ID = ".$save->{trial_id}."\n";

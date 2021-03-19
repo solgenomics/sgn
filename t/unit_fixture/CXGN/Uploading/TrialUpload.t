@@ -193,12 +193,12 @@ my $trial_create = CXGN::Trial::TrialCreate
 	   trial_description => "Trial Upload Test",
 	   trial_location => "test_location",
 	   trial_name => "Trial_upload_test",
-	   user_name => "janedoe", #not implemented
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",
 	   upload_trial_file => $archived_filename_with_path,
-	   operator => "janedoe"
+	   operator => "janedoe",
+       owner_id => 41
 	  });
 
 my $save = $trial_create->save_trial();
@@ -391,27 +391,26 @@ my $igd_design_check = {
 is_deeply($design, $igd_design_check, "check igd design");
 
 
-my $trial_create = CXGN::Trial::TrialCreate
-    ->new({
-	chado_schema => $c->bcs_schema,
-     	dbh => $c->dbh(),
-     	user_name => 'janedoe', #not implemented
-     	trial_year => '2016',
-	trial_location => 'test_location',
-	program => 'test',
-	trial_description => "Test Genotyping Plate Upload",
-	design_type => 'genotyping_plate',
-	design => $design,
-	trial_name => "test_genotyping_trial_upload",
-	is_genotyping => 1,
-	genotyping_user_id => $meta->{user_id} || "unknown",
-	genotyping_project_name => $meta->{project_name} || "unknown",
+my $trial_create = CXGN::Trial::TrialCreate->new({
+    chado_schema => $c->bcs_schema,
+    dbh => $c->dbh(),
+    trial_year => '2016',
+    trial_location => 'test_location',
+    program => 'test',
+    trial_description => "Test Genotyping Plate Upload",
+    design_type => 'genotyping_plate',
+    design => $design,
+    trial_name => "test_genotyping_trial_upload",
+    is_genotyping => 1,
+    genotyping_user_id => $meta->{user_id} || "unknown",
+    genotyping_project_name => $meta->{project_name} || "unknown",
     genotyping_facility_submitted => 'no',
     genotyping_facility => 'igd',
     genotyping_plate_format => '96',
     genotyping_plate_sample_type => 'DNA',
-	operator => "janedoe"
-	  });
+    operator => "janedoe",
+    owner_id => 41
+});
 
 my $save = $trial_create->save_trial();
 
@@ -631,21 +630,20 @@ my $parsed_data_check = {
 
 is_deeply($parsed_data, $parsed_data_check, 'check trial excel parse data' );
 
-my $trial_create = CXGN::Trial::TrialCreate
-    ->new({
-	   chado_schema => $c->bcs_schema(),
-	   dbh => $c->dbh(),
-	   trial_year => "2016",
-	   trial_description => "Trial Upload Test",
-	   trial_location => "test_location",
-	   trial_name => "Trial_upload_with_seedlot_test",
-	   user_name => "janedoe", #not implemented
-	   design_type => "RCBD",
-	   design => $parsed_data,
-	   program => "test",
-	   upload_trial_file => $archived_filename_with_path,
-	   operator => "janedoe"
-	  });
+my $trial_create = CXGN::Trial::TrialCreate->new({
+    chado_schema => $c->bcs_schema(),
+    dbh => $c->dbh(),
+    trial_year => "2016",
+    trial_description => "Trial Upload Test",
+    trial_location => "test_location",
+    trial_name => "Trial_upload_with_seedlot_test",
+    design_type => "RCBD",
+    design => $parsed_data,
+    program => "test",
+    upload_trial_file => $archived_filename_with_path,
+    operator => "janedoe",
+    owner_id => 41
+});
 
 $trial_create->save_trial();
 

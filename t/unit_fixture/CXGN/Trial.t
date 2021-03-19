@@ -451,7 +451,6 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
     {
 	dbh => $f->dbh(),
 	chado_schema => $f->bcs_schema(),
-	user_name => 'janedoe', #not implemented
 	program => 'test',
 	trial_year => 2014,
 	trial_description => 'another test trial...',
@@ -460,7 +459,8 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
 	trial_location => 'test_location',
 	trial_name => "anothertrial",
 	design => $trial_design,
-    operator => 'janedoe'
+    operator => 'janedoe',
+    owner_id => 41
     });
 
 my $save = $new_trial->save_trial();
@@ -556,21 +556,24 @@ my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_names;
+my @traits_assayed_ids;
 #print STDERR Dumper $traits_assayed;
 foreach (@$traits_assayed) {
+    push @traits_assayed_ids, $_->[0];
     push @traits_assayed_names, $_->[1];
 }
 @traits_assayed_names = sort @traits_assayed_names;
 #print STDERR Dumper \@traits_assayed_names;
+print STDERR Dumper \@traits_assayed_ids;
 is_deeply(\@traits_assayed_names, ['dry yield|CO_334:0000014', 'root number counting|CO_334:0000011'], 'check traits assayed' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper \@pheno_for_trait_sorted;
+print STDERR Dumper \@pheno_for_trait_sorted;
 is_deeply(\@pheno_for_trait_sorted, ['30','40','50'], 'check traits assayed' );
 
 my $plot_pheno_for_trait = $tn->get_stock_phenotypes_for_traits([70727], 'all', ['plot_of','plant_of'], 'accession', 'subject');
-print STDERR Dumper "PHENO FOR TRAIT: $plot_pheno_for_trait\n";
+print STDERR Dumper $plot_pheno_for_trait;
 my @phenotyped_stocks;
 my @phenotyped_stocks_values;
 foreach (@$plot_pheno_for_trait) {
@@ -581,7 +584,7 @@ foreach (@$plot_pheno_for_trait) {
 @phenotyped_stocks_values = sort @phenotyped_stocks_values;
 my @expected_sorted_stocks = sort ($trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name});
 print STDERR Dumper \@phenotyped_stocks;
-#print STDERR Dumper \@expected_sorted_stocks;
+print STDERR Dumper \@expected_sorted_stocks;
 is_deeply(\@phenotyped_stocks, \@expected_sorted_stocks, "check phenotyped stocks");
 is_deeply(\@phenotyped_stocks_values, ['30', '40', '50'], "check phenotyped stocks 2");
 

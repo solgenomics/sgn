@@ -169,10 +169,10 @@ my $genotyping_trial_create;
 ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
     program => "test",
     trial_location => "test_location",
     operator => "janedoe",
+    owner_id => 41,
     trial_year => $plate_info->{year},
     trial_description => $plate_info->{description},
     design_type => 'genotyping_plate',

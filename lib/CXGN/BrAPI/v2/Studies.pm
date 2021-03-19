@@ -328,12 +328,12 @@ sub store {
 	            trial_location => $trial_location,
 	            trial_type => $trial_type,
 	            trial_name => $trial_name,
-	            user_name => $user_name, #not implemented
 	            design_type => $trial_design_method,
 	            design => {},
 	            program => $program,
 	            # upload_trial_file => $upload,
 	            operator => $user_name,
+                owner_id => $user_id,
 				trial_stock_type => 'accession' #can be cross or family name, not implemented
 	        );
 

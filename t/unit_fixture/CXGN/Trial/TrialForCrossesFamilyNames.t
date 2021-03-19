@@ -91,7 +91,6 @@ my $preliminary_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'P
 ok(my $crosses_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $schema,
     dbh => $dbh,
-    user_name => "janedoe", #not implemented
     design => $cross_design,
     program => "test",
     trial_year => "2020",
@@ -101,6 +100,7 @@ ok(my $crosses_trial_create = CXGN::Trial::TrialCreate->new({
     trial_type=>$preliminary_trial_cvterm_id,
     design_type => "RCBD",
     operator => "janedoe",
+    owner_id => 41,
     trial_stock_type => "cross"
 }), "create trial object");
 
@@ -213,7 +213,6 @@ my $fam_trial_create;
 ok($fam_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $schema,
     dbh => $dbh,
-    user_name => "janedoe", #not implemented
     design => $fam_design,
     program => "test",
     trial_year => "2020",
@@ -223,6 +222,7 @@ ok($fam_trial_create = CXGN::Trial::TrialCreate->new({
     trial_type=>$preliminary_trial_cvterm_id,
     design_type => "CRD",
     operator => "janedoe",
+    owner_id => 41,
     trial_stock_type => "family_name"
 }), "create trial object");
 
@@ -434,7 +434,6 @@ ok(my $design = $trial_design->get_design(), "retrieve design");
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
     design => $design,
     program => "test",
     trial_year => "2015",
@@ -444,6 +443,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_type=>$preliminary_trial_cvterm_id,
     design_type => "Westcott",
     operator => "janedoe",
+    owner_id => 41,
     trial_stock_type => 'cross'
 }), "create trial object");
 

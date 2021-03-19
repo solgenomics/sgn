@@ -426,6 +426,7 @@ sub create_and_store_analysis_design {
         trial_id => $self->get_trial_id(),
         chado_schema => $schema,
         dbh => $dbh,
+        owner_id => $self->user_id,
         operator => $user_name,
         design => $design,
         design_type => $analysis_experiment_type_id,

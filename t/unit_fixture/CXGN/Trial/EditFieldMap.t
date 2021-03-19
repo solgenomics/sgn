@@ -90,7 +90,6 @@ ok(my $design = $trial_design->get_design(), "retrieve design");
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
     design => $design,
     program => "test",
     trial_year => "2015",
@@ -98,8 +97,9 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_location => "test_location_for_trial",
     trial_name => "new_test_trial_fieldmap_name",
     design_type => "RCBD",
-    operator => "janedoe"
-						    }), "create trial object");
+    operator => "janedoe",
+    owner_id => 41
+}), "create trial object");
 
 my $save = $trial_create->save_trial();
 ok($save->{'trial_id'}, "save trial");

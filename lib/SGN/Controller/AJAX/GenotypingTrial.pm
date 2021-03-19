@@ -355,7 +355,7 @@ sub store_genotype_trial_POST : Args(0) {
         my $ct = CXGN::Trial::TrialCreate->new( {
             chado_schema => $schema,
             dbh => $c->dbc->dbh(),
-            user_name => $user_name, #not implemented,
+            owner_id => $user_id,
             operator => $user_name,
             trial_year => $plate_info->{year},
             trial_location => $location->description(),
