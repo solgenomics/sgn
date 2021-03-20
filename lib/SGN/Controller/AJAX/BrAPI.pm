@@ -195,27 +195,24 @@ sub _authenticate_user {
 	my $expired;
 	my $wildcard = 'any';
 
-	my @server_permission;
-	my $version = $c->request->captures->[0];
-
-	my $permissions = "CXGN::BrAPI::" . $version  . "::ServerInfo"; 
-	my @server_permission;
+	my %server_permission;
 	my $rc = eval{
-		my $server_permission =  $permissions->info()->{$c->request->method};
-		@server_permission  = split ',', $server_permission;
+		my $server_permission = $c->config->{"brapi_" . $c->request->method};
+		my @server_permission  = split ',', $server_permission;
+		%server_permission = map { $_ => 1 } @server_permission;
 	1; };
 
-	if(!$rc && !@server_permission){
-		push @server_permission, $wildcard;
+	if(!$rc && !%server_permission){
+		$server_permission{$wildcard} = 1;
 	}
 
 	# If our brapi config is set to authenticate or the controller calling this asks for forcing of
 	# authentication or serverinfo call method request auth, we authenticate.
-    if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !grep { $_ eq $wildcard } @server_permission){
+    if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !exists($server_permission{$wildcard})){
         ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
         #print STDERR $user_id." : ".$user_type." : ".$expired;
 
-        if (!$user_id || $expired || !$user_type || (grep {$_ ne $user_type} @server_permission && grep { $_ ne $wildcard } @server_permission)) {
+        if (!$user_id || $expired || !$user_type || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
 
             _standard_response_construction($c, $brapi_package_result, 401);
@@ -1983,7 +1980,7 @@ sub studies_search_new_GET {
         studyLocationNames => $clean_inputs->{locationName},
         seasons => $clean_inputs->{seasonDbId},
         seasonDbIds => $clean_inputs->{seasonDbId},
-        studyTypeName => $clean_inputs->{studyType},
+        studyTypes => $clean_inputs->{studyType},
         germplasmDbIds => $clean_inputs->{germplasmDbId},
         germplasmNames => $clean_inputs->{germplasmName},
         observationVariableDbIds => $clean_inputs->{observationVariableDbId},
@@ -2627,14 +2624,14 @@ sub observation_unit_single_PUT {
     my $c = shift;
     my $observation_unit_db_id = shift;
     my $clean_inputs = $c->stash->{clean_inputs};
-    my ($auth,$user_id) = _authenticate_user($c);
+    my ($auth) = _authenticate_user($c);
     my $observationUnits = $clean_inputs;
     $observationUnits->{observationUnitDbId} = $observation_unit_db_id;
     my @all_observations_units;
     push @all_observations_units, $observationUnits;	
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
-    my $brapi_package_result = $brapi_module->observationunits_update(\@all_observations_units,$user_id);
+    my $brapi_package_result = $brapi_module->observationunits_update(\@all_observations_units);
 
     _standard_response_construction($c, $brapi_package_result);
 }
@@ -3316,7 +3313,7 @@ sub observationvariable_list_GET {
 	my $brapi_package_result = $brapi_module->search({
 		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
 		traitClasses => $clean_inputs->{traitClass},
-		studyDbId => $clean_inputs->{studyDbId},
+		studyDbIds => $clean_inputs->{studyDbId},
 		externalReferenceIDs => $clean_inputs->{externalReferenceID},
 		externalReferenceSources => $clean_inputs->{externalReferenceSource},
 		supportedCrop =>$supported_crop,
@@ -5089,7 +5086,17 @@ sub save_results {
     my $c = shift;
     my $search_params = shift;
     my $search_type = shift;
-    my $auth = _authenticate_user($c);
+
+	my %server_permission;
+	my $rc = eval{
+		my $server_permission = $c->config->{"brapi_GET"};
+		my @server_permission  = split ',', $server_permission;
+		%server_permission = map { $_ => 1 } @server_permission;
+	1; };
+	if($rc && !$server_permission{'any'}){
+	    my $auth = _authenticate_user($c);
+	}
+
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper($search_type);
     my $search_result = $brapi_module->search($search_params,$c);
@@ -5108,6 +5115,7 @@ sub retrieve_results {
     my $search_id = shift;
     my $search_type = shift;
     my $auth = _authenticate_user($c);
+
     my $clean_inputs = $c->stash->{clean_inputs};
     my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
     my $brapi = $self->brapi_module;

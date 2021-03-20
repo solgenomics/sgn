@@ -90,12 +90,11 @@ sub search {
         if ( $altitude_max && $_->[4] > $altitude_max ) { next; } 
         if ( $altitude_min && $_->[4] < $altitude_min ) { next; } 
 
-		my @coordinates;
-		push @coordinates, {
+		my $coordinates = {
             geometry=>{
             	coordinates=>[
+            		$_->[3], #longitude
 	            	$_->[2], #latitude
-					$_->[3], #longitude
 					$_->[4], #altitude
             	],
             	type=>'Point'
@@ -118,7 +117,7 @@ sub search {
 			slope => undef,
 			coordinateDescription => undef,
 			environmentType => undef,
-			coordinates=>\@coordinates,
+			coordinates=>$coordinates,
 			topography => undef,
 			coordinateUncertainty => undef,
 			externalReferences=> undef
@@ -138,22 +137,21 @@ sub detail {
 	my $status = $self->status;
 	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema , $location_id);
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($locations,$page_size,$page);
-	my @data;
+	my $data;
 	
 	foreach (@$data_window){
-		my @coordinates;
-		push @coordinates, {
+		my $coordinates = {
             geometry=>{
             	coordinates=>[
-	            	$_->[2], #latitude
 					$_->[3], #longitude
+	            	$_->[2], #latitude
 					$_->[4], #altitude
             	],
             	type=>'Point'
             },
             type=>'Feature'
         };
-		push @data, {
+		$data = {
 			locationDbId => qq|$_->[0]|,
 			locationType=> $_->[8],
 			locationName=> $_->[1],
@@ -169,16 +167,16 @@ sub detail {
 			slope => undef,
 			coordinateDescription => undef,
 			environmentType => undef,
-			coordinates=>\@coordinates,
+			coordinates=>$coordinates,
 			topography => undef,
 			coordinateUncertainty => undef,
 			externalReferences=> undef
 		};
 	}
 
-	my %result = (data=>\@data);
+	my $result = $data;
 	my @data_files;
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Locations list result constructed');
+	return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Locations list result constructed');
 }
 
 sub store {
@@ -204,7 +202,7 @@ sub store {
 		my $country_code =  $params->{countryCode} || undef;
 		my $program_id =  $params->{additionalInfo}->{programDbId}  || undef;
 		my $type =  $params->{locationType} || undef;
-		my $geo_coordinates = $params->{coordinates}->{geometry}->{coordinates} || undef;
+		my $geo_coordinates = $params->{coordinates} || undef;
 		my $latitude = $geo_coordinates->[0] || undef;
 		my $longitude = $geo_coordinates->[1] || undef;
 		my $altitude  = $geo_coordinates->[2]|| undef;

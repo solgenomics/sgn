@@ -1,0 +1,74 @@
+
+<%doc>
+
+=head1 NAME
+
+/markers/indexGenotype.mas - a Mason component displaying a marker detail page.
+
+=head1 DESCRIPTION
+
+The following parameters are required: 
+
+=over 5
+
+=item *
+
+$dbh - a database handle
+
+=item *
+
+$marker_name - the name of a marker in the SGN database
+$protocol_id - the id of the protocol in the SGN database
+
+=back
+
+This component is based on Perl code developed by John Binns.
+
+=head1 AUTHOR
+
+Clay Birkett <clb343@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%args>
+$dbh
+$marker_name => undef
+$protocol_id => undef
+</%args>
+
+<%perl>
+
+use CXGN::Marker;
+use SGN::Exception;
+
+my $e = undef;
+
+if (!$marker_name) { 
+  $c->throw(
+     public_message => 'marker_name must be provided as an argument for this page',
+     is_client_error => 1,
+  );
+}
+
+my $marker = $marker_name;
+
+my $src_feature = "SL2.50";
+
+if (!$marker) { 
+  $e = SGN::Exception->new(title=>"Marker detail page error: Marker with name $marker_name does not exist in the database");
+ $m->comp('/site/error/exception.mas', exception=>$e);
+  return;
+}
+
+</%perl>
+
+<& /page/page_title.mas, title=> "Marker $marker_name" &>
+
+<& /markers/locationsGenotype.mas, marker=>$marker, dbh=>$dbh &>
+
+<&| /page/info_section.mas, title => "Genomic location of $marker_name", collapsible=>1 &>
+<& /feature/jbrowse_exact_match.mas, feature=> $marker_name, src_feature=> $src_feature &>
+</&>
+

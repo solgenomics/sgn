@@ -1,0 +1,21 @@
+<script type="text/javascript">
+
+/**
+ * CONFIGURATION FOR JBROWSE INTEGRATION INTO SEQUENCE METADATA QUERY RESULTS
+ * enabled: true to enable JBrowse link/button in results table
+ * base_url: host and base url to JBrowse (default: website host with jbrowse_path from sgn.conf)
+ * data_dir: JBRowse data directory to include
+ * tracks: list of track names to include with the sequence metadata
+ * location_name: function to convert sequence metadata feature name into JBrowse location name
+ */
+const JBROWSE_CONFIG_SEQUENCE_METADATA = {
+    "enabled": false,
+    "base_url": window.location.protocol + "//" + window.location.host + "<% $c->get_conf('jbrowse_path') %>",
+    "data_dir": "",
+    "tracks": [],
+    "location_name": function(feature) {
+        return feature;
+    }
+}
+
+</script>

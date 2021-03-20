@@ -60,8 +60,19 @@ sub image_analysis_submit_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $image_ids = decode_json $c->req->param('selected_image_ids');
     my $service = $c->req->param('service');
+    my $trait = $c->req->param('trait');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my $main_production_site_url = $c->config->{main_production_site_url};
+
+    unless (ref($image_ids) eq 'ARRAY') { $image_ids = [$image_ids]; }
+
+    my ($trait_name, $db_accession) = split(/\|/, $trait);
+    my ($db, $accession) = split(/:/, $db_accession);
+    my ($trait_details, $record_number) = CXGN::Trait::Search->new({
+        bcs_schema=>$schema,
+        ontology_db_name_list => [$db],
+        accession_list => [$accession]
+    })->search();
 
     my $image_search = CXGN::Image::Search->new({
         bcs_schema=>$schema,
@@ -74,7 +85,6 @@ sub image_analysis_submit_POST : Args(0) {
 
     my @image_urls;
     my @image_files;
-    my $trait_name;
     foreach (@$result) {
         my $image = SGN::Image->new($schema->storage->dbh, $_->{image_id}, $c);
         my $original_img = $main_production_site_url.$image->get_image_url("original");
@@ -164,12 +174,7 @@ sub image_analysis_submit_POST : Args(0) {
                 }
                 print STDERR Dumper $message_hashref;
                 $res{'value'} = $message_hashref->{trait_value};
-                $res{'trait'} = $message_hashref->{trait_name};
-                # get observationVariableDbId from trait name
-                my ($trait_details, $records_total) = CXGN::Trait::Search->new({
-                    bcs_schema=>$schema,
-                    trait_name_list => [$message_hashref->{trait_name}]
-                })->search();
+                $res{'trait'} = $trait;
                 $res{'trait_id'} = $trait_details->[0]->{trait_id};
             }
             else {
@@ -264,12 +269,18 @@ sub image_analysis_submit_POST : Args(0) {
         $it++;
     }
 
-    $result = _group_results_by_observationunit($result);
+    print STDERR "Before grouping result is: ".Dumper($result);
+
+    # $result = _group_results_by_observationunit($result);
     $c->stash->{rest} = { success => 1, results => $result };
 }
 
-sub _group_results_by_observationunit {
-    my $result = shift;
+sub image_analysis_group : Path('/ajax/image_analysis/group') : ActionClass('REST') { }
+sub image_analysis_group_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $result = decode_json $c->req->param('result');
+    # print STDERR Dumper($result);
     my %grouped_results = ();
     my @table_data = ();
 
@@ -319,14 +330,16 @@ sub _group_results_by_observationunit {
                     observationVariableDbId => $old_uniquename_data->{$trait}[0]->{'trait_id'},
                     observationVariableName => $trait,
                     value => $mean_value,
-                    details => $old_uniquename_data->{$trait}
+                    details => $details,
+                    numberAnalyzed => scalar @{$details}
+                    # Add previously observed trait value
                 };
             }
         }
         $old_uniquename = $uniquename;
     }
     # print STDERR "table data is ".Dumper(@table_data);
-    return \@table_data;
+    $c->stash->{rest} = { success => 1, results => \@table_data };
 }
 
 sub _check_user_login {

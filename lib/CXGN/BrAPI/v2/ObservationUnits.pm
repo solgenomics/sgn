@@ -127,7 +127,7 @@ sub search {
         my @brapi_treatments;
         my $treatments = $obs_unit->{treatments};
         while (my ($factor, $modality) = each %$treatments){
-            my $modality = $modality ? $modality : '';
+            my $modality = $modality ? $modality : undef;
             push @brapi_treatments, {
                 factor => $factor,
                 modality => $modality,
@@ -144,7 +144,7 @@ sub search {
             $geolocation_lookup{$r->stock_id} = $r->value;
         }
         my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{observationunit_stock_id}} ?$geolocation_lookup{$obs_unit->{observationunit_stock_id}} : '';
-        my $geo_coordinates =''; 
+        my $geo_coordinates; 
 
         if ($geo_coordinates_string){
             $geo_coordinates = decode_json $geo_coordinates_string;
@@ -190,9 +190,9 @@ sub search {
         my %observationUnitPosition = (
             entryType => $entry_type,
             geoCoordinates => $geo_coordinates,
-            positionCoordinateX => $obs_unit->{obsunit_col_number},
+            positionCoordinateX => $obs_unit->{obsunit_col_number} ? $obs_unit->{obsunit_col_number} + 0 : undef,
             positionCoordinateXType => 'GRID_COL',
-            positionCoordinateY => $obs_unit->{obsunit_row_number},
+            positionCoordinateY => $obs_unit->{obsunit_row_number} ? $obs_unit->{obsunit_row_number} + 0 : undef,
             positionCoordinateYType => 'GRID_ROW',
             # replicate => $obs_unit->{obsunit_rep}, #obsolete v2?
             observationLevel =>  { 
@@ -219,11 +219,11 @@ sub search {
             observationUnitPUI => qq|$obs_unit->{obsunit_plot_number}|,
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
-                #seedLotDbId
+            seedLotDbId => undef, # not implemented yet
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,
-            trialDbId => qq|$obs_unit->{folder_id}|,
+            trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : undef,
             trialName => $obs_unit->{folder_name},
         };
         $total_count = $obs_unit->{full_count};       
@@ -299,7 +299,7 @@ sub detail {
         my @brapi_treatments;
         my $treatments = $obs_unit->{treatments};
         while (my ($factor, $modality) = each %$treatments){
-            my $modality = $modality ? $modality : '';
+            my $modality = $modality ? $modality : undef;
             push @brapi_treatments, {
                 factor => $factor,
                 modality => $modality,
@@ -316,7 +316,7 @@ sub detail {
             $geolocation_lookup{$r->stock_id} = $r->value;
         }
         my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{observationunit_stock_id}} ?$geolocation_lookup{$obs_unit->{observationunit_stock_id}} : '';
-        my $geo_coordinates =''; 
+        my $geo_coordinates; 
 
         if ($geo_coordinates_string){
             $geo_coordinates = decode_json $geo_coordinates_string;
@@ -351,10 +351,10 @@ sub detail {
         my %observationUnitPosition = (
             entryType => $entry_type,
             geoCoordinates => $geo_coordinates,
-            positionCoordinateX => $obs_unit->{obsunit_col_number},
-            positionCoordinateXType => '',
-            positionCoordinateY => $obs_unit->{obsunit_row_number},
-            positionCoordinateYType => '',
+            positionCoordinateX => $obs_unit->{obsunit_col_number} ? $obs_unit->{obsunit_col_number} + 0 : undef,
+            positionCoordinateXType => 'GRID_COL',
+            positionCoordinateY => $obs_unit->{obsunit_row_number} ? $obs_unit->{obsunit_row_number} + 0 : undef,
+            positionCoordinateYType => 'GRID_ROW',
             observationLevel =>  { 
                 levelName => $obs_unit->{observationunit_type_name},       
                 levelOrder => $level_order,
@@ -379,7 +379,7 @@ sub detail {
             observationUnitPUI => qq|$obs_unit->{obsunit_plot_number}|,
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
-                #seedLotDbId
+            seedLotDbId => undef, # not implemented yet
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,
@@ -399,7 +399,6 @@ sub observationunits_update {
     my $self = shift;
     my $data = shift;
     my $c = shift;
-    my $user_id = shift;
 
     my $page_size = $self->page_size;
     my $page = $self->page;
