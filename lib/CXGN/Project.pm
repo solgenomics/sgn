@@ -2288,8 +2288,8 @@ sub delete_project_entry {
     my $self = shift;
 
     if ($self->phenotype_count() > 0) {
-	print STDERR "Cannot delete trial with associated phenotypes.\n";
-	return;
+        print STDERR "Cannot delete trial with associated phenotypes.\n";
+        return;
     }
 
     if (scalar(@{$self->get_genotyping_trials_from_field_trial}) > 0) {
@@ -2305,14 +2305,18 @@ sub delete_project_entry {
         return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
     }
 
+    my $q = "DELETE FROM phenome.project_owner WHERE project_id=?;";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($self->get_trial_id());
+
     eval {
-	my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
-	$row->delete();
-    print STDERR "deleted project ".$self->get_trial_id."\n";
+        my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
+        $row->delete();
+        print STDERR "deleted project ".$self->get_trial_id."\n";
     };
     if ($@) {
-	print STDERR "An error occurred during deletion: $@\n";
-	return $@;
+        print STDERR "An error occurred during deletion: $@\n";
+        return $@;
     }
 }
 

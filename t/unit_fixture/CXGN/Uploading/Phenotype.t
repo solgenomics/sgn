@@ -5550,12 +5550,17 @@ my $stored_image_ids = [2429,2430];
 # is(scalar(@{$response->{results}->[0]->{details}}), 1);
 
 my $stored_image_ids_string = encode_json $stored_image_ids;
-$mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=largest_contour_percent&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
+$mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=largest_contour_percent&selected_image_ids='.$stored_image_ids_string.'&trait=plant_stands|CO_334:0000010&sgn_session_id='.$sgn_session_id);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is(scalar(@{$response->{results}}), 1);
-is(scalar(@{$response->{results}->[0]->{details}}), 1);
-ok($response->{results}->[0]->{details}->[0]->{original_link});
-ok($response->{results}->[0]->{details}->[0]->{analyzed_link});
+is(scalar(@{$response->{results}}), 2);
+ok($response->{results}->[0]->{result}->{image_link});
+ok($response->{results}->[0]->{result}->{value});
+ok($response->{results}->[0]->{result}->{analyzed_image_id});
+ok($response->{results}->[0]->{result}->{original_image});
+ok($response->{results}->[1]->{result}->{image_link});
+ok($response->{results}->[1]->{result}->{value});
+ok($response->{results}->[1]->{result}->{analyzed_image_id});
+ok($response->{results}->[1]->{result}->{original_image});
 
 done_testing();
