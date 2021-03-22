@@ -362,7 +362,7 @@ sub store {
     my $user_name = $self->user_name();
     my $user_role = $self->user_role();
 
-    print STDERR Dumper $analysis_model_type;
+    # print Dumper $analysis_model_type;
     my $model_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $analysis_model_type, 'protocol_type')->cvterm_id();
 
     if ($analysis_to_save_boolean eq 'yes' && !$analysis_name) {
@@ -396,15 +396,16 @@ sub store {
     if ($analysis_to_save_boolean eq 'yes') {
 
         my %trait_id_map;
-        # print STDERR Dumper $analysis_trait_names;
+
         foreach my $trait_name (@$analysis_trait_names) {
-            my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $trait_name)->cvterm_id();
+
+        	my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $trait_name)->cvterm_id();
             $trait_id_map{$trait_name} = $trait_cvterm_id;
         }
         # # print STDERR Dumper \%trait_id_map;
         # my @trait_ids = values %trait_id_map;
 
-        my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $analysis_statistical_ontology_term)->cvterm_id();
+         my $stat_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($bcs_schema, $analysis_statistical_ontology_term)->cvterm_id();
 
         # my $categories = {
         #     object => [],
@@ -481,8 +482,8 @@ sub store {
             phenome_schema => $phenome_schema,
             name => $analysis_name,
         });
-        $saved_analysis_id = $a->get_trial_id();
 
+        $saved_analysis_id = $a->get_trial_id();
         if ($analysis_dataset_id !~ /^\d+$/) {
             print STDERR "Dataset ID $analysis_dataset_id not accetable.\n";
             $analysis_dataset_id = undef;
@@ -542,9 +543,6 @@ sub store {
         }
 
         print STDERR "Store analysis values...\n";
-        #print STDERR "value hash: ".Dumper($values);
-        print STDERR "traits: ".join(",",@composed_trait_names);
-
         my $analysis_result_values_save;
         if ($analysis_result_values_type eq 'analysis_result_values_match_precomputed_design') {
             while (my($field_plot_name, $trait_obj) = each %$analysis_result_values) {
@@ -559,14 +557,15 @@ sub store {
             foreach (values %$design) {
                 $analysis_result_values_fix_plot_names{$_->{stock_name}} = $_->{plot_name};
             }
+
             while (my ($accession_name, $trait_pheno) = each %$analysis_result_values) {
                 while (my($trait_name, $val) = each %$trait_pheno) {
                     $analysis_result_values_save->{$analysis_result_values_fix_plot_names{$accession_name}}->{$composed_trait_map{$trait_name}} = $val;
                 }
             }
         }
+
         my @analysis_instance_names = keys %$analysis_result_values_save;
-        # print STDERR Dumper $analysis_result_values_save;
 
         eval {
             $a->store_analysis_values(
@@ -600,6 +599,8 @@ sub store {
         phenome_schema=>$phenome_schema,
         nd_protocol_id=>$analysis_model_protocol_id
     });
+
+if ($analysis_model_file) {
     $analysis_model->store_analysis_model_files({
         project_id => $saved_analysis_id,
         archived_model_file_type=>$analysis_model_file_type,
@@ -611,6 +612,7 @@ sub store {
         user_id=>$user_id,
         user_role=>$user_role
     });
+}
 
     return { success => 1, analysis_id => $saved_analysis_id, model_id => $analysis_model_protocol_id };
 }

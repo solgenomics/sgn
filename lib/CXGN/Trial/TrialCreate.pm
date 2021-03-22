@@ -199,6 +199,7 @@ has 'is_sampling_trial' => (isa => 'Bool', is => 'rw', required => 0, default =>
 has 'sampling_trial_facility' => (isa => 'Str', is => 'rw');
 has 'sampling_trial_sample_type' => (isa => 'Str', is => 'rw');
 
+has 'owner_id' => (isa => 'Int' , is => 'rw');
 
 sub trial_name_already_exists {
     my $self = shift;
@@ -311,7 +312,7 @@ sub save_trial {
         trial_id => $project->project_id()
     });
 
-
+    $t->set_trial_owner($self->get_owner_id);
     #print STDERR "TRIAL TYPE = ".ref($t)."!!!!\n";
     my $nd_experiment_type_id;
     if ($self->get_is_genotyping()) {

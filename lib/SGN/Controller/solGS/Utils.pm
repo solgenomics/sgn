@@ -8,7 +8,7 @@ use File::Slurp qw /write_file read_file/;
 
 sub convert_arrayref_to_hashref {
     my ($self, $array_ref) = @_;
-  
+
     my %hash_var = ();
 
     foreach my $dt (@$array_ref)
@@ -22,24 +22,25 @@ sub convert_arrayref_to_hashref {
 sub count_cores {
     my $self= shift;
 
-    my $data = qx/lscpu | grep -e '^CPU(s)'/;   
+    my $data = qx/lscpu | grep -e '^CPU(s)'/;
     my ($name, $cores) = split(':', $data);
     $cores =~ s/\s+//g;
 
     return $cores;
-    
+
 }
 
 
 sub read_file_data {
     my ($self, $file) = @_;
- 
+
     my @lines = read_file($file, {binmode => ':utf8'});
-    shift(@lines); 
-  
+    shift(@lines);
+	chomp(@lines);
+
     my @data;
-    push @data, map{ [split(/\t/)] } @lines;
-   
+    push @data, map{ [split(/\t/)]} @lines;
+
     return \@data;
 
 }
@@ -49,16 +50,16 @@ sub structure_downloadable_data {
     my ($self, $file, $row_name) = @_;
 
     my @data;
-    if (-s $file) 
+    if (-s $file)
     {
 	my $count = 1;
 	foreach my $row (read_file($file, {binmode => ':utf8'}) )
 	{
 	    $row_name = "\t" if !$row_name;
-	    $row = $row_name . $row  if $count == 1;	              
+	    $row = $row_name . $row  if $count == 1;
 	    $row = join("\t", split(/\s/, $row));
 	    $row .= "\n";
-	    
+
 	    push @data, [ $row ];
 	    $count++;
 	}
@@ -70,22 +71,22 @@ sub structure_downloadable_data {
 
 sub top_10 {
     my ($self, $file) = @_;
-      
+
     my $lines = $self->read_file_data($file);
     my @top_10;
-  
-  
-    if (scalar(@$lines) > 10) 
+
+
+    if (scalar(@$lines) > 10)
     {
     	@top_10 = @$lines[0..9];
     }
-    else 
+    else
     {
     	@top_10 = @$lines;
     }
 
     return \@top_10;
-  
+
 }
 
 
@@ -96,23 +97,23 @@ sub abbreviate_term {
     $term =~ s/-/_/g;
     $term =~ s/\%/percent/g;
     $term =~ s/\((\w+\s*\w*)\)/_$2 $1/g;
-  
+
     my @words = split(/\s/, $term);
-   
+
     my $acronym;
-	
-    if (scalar(@words) == 1) 
+
+    if (scalar(@words) == 1)
     {
 	$acronym = shift(@words);
-    }  
-    else 
+    }
+    else
     {
-	foreach my $word (@words) 
-        {	  
+	foreach my $word (@words)
+        {
 	    if ($word =~ /^[A-Za-z]/)
             {
 		my $l = substr($word,0,1,q{});
-		
+
 		$acronym .= $l;
 	    }
 	    elsif ($word =~/^[0-9]/)
@@ -122,19 +123,19 @@ sub abbreviate_term {
 		my $str = join("", @str);
 		my @wrd = $word =~ /[A-Za-z]/g;
 		my $wrd = join("", @wrd);
-	
-		my $l = substr($wrd,0,1,q{});	
-		$acronym .= $str . uc($l);	
-	    } 
-            else 
+
+		my $l = substr($wrd,0,1,q{});
+		$acronym .= $str . uc($l);
+	    }
+            else
             {
                 $acronym .= $word;
             }
 
 	    $acronym = uc($acronym);
-	}	   
+	}
     }
-  
+
     return $acronym;
 
 }
@@ -142,13 +143,13 @@ sub abbreviate_term {
 
 sub acronymize_traits {
     my ($self, $traits) = @_;
-  
-    my $acronym_table = {};  
+
+    my $acronym_table = {};
     my $cnt = 0;
     my $acronymized_traits;
-    
+
     no warnings 'uninitialized';
-   
+
     foreach my $trait_name (@$traits)
     {
 	$cnt++;
@@ -156,14 +157,14 @@ sub acronymize_traits {
         my $abbr = $self->abbreviate_term($trait_name);
 
 	$abbr = $abbr . '.2' if $cnt > 1 && $acronym_table->{$abbr};
-	
+
         $acronymized_traits .= $abbr;
 	$acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
-	
+
         $acronym_table->{$abbr} = $trait_name if $abbr;
 	my $tr_h = $acronym_table->{$abbr};
     }
- 
+
     my $acronym_data = {
 	'acronymized_traits' => $acronymized_traits,
 	'acronym_table'      => $acronym_table
@@ -176,7 +177,7 @@ sub acronymize_traits {
 sub trial_traits {
     my ($self, $c, $trial_id) = @_;
 
-    my $trial = CXGN::Trial->new({bcs_schema => $self->schema($c), 
+    my $trial = CXGN::Trial->new({bcs_schema => $self->schema($c),
 				  trial_id => $trial_id});
 
     return $trial->get_traits_assayed();
@@ -190,7 +191,7 @@ sub clean_traits {
     $terms =~ s/(\|\w+:\d+)//g;
     $terms =~ s/\|/ /g;
     $terms =~ s/^\s+|\s+$//g;
-      
+
     return $terms;
 }
 
@@ -205,7 +206,7 @@ sub remove_ontology {
 	$name= $self->clean_traits($name);
 
 	my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
- 	push @clean_traits, $id_nm;	    	    
+ 	push @clean_traits, $id_nm;
     }
 
     return \@clean_traits;
@@ -237,12 +238,20 @@ sub save_metadata {
 
     if (!-s $metadata_file)
     {
-	my $metadata   = $c->model('solGS::solGS')->trial_metadata();   
+	my $metadata   = $c->model('solGS::solGS')->trial_metadata();
 	write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
     }
-    
+
 }
 
+
+sub generic_message {
+    my ($self, $c, $msg) = @_;
+
+    $c->stash->{message} = $msg;
+
+    $c->stash->{template} = "/generic_message.mas";
+}
 
 ####
 1;

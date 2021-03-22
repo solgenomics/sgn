@@ -14,6 +14,11 @@ has 'file_name' => ( isa => 'Str',
 		     default => '/tmp/dataset_file',
     );
 
+has 'quotes' => ( isa => 'Bool',
+		  is => 'rw',
+		  default => 1,
+    );
+
 override('retrieve_genotypes',
 	sub {
 	    my $self = shift;
@@ -119,19 +124,26 @@ override('retrieve_phenotypes',
 	     my $phenotype_string = "";
 	     my $s;
 	     foreach my $line (@$phenotypes) {
-		 $s = "";
-	         my $num_col = scalar(@{$line});
-		 for (my $j = 0; $j < $num_col; $j++) {
-                     if (@$line[$j]) {
-		         if ($s eq "") {
-	                    $s .= "\"@$line[$j]\"";
-		         } else {
-		            $s .= "\t\"@$line[$j]\"";
-			 }
-                     } else {
-                         $s .= "\t";
-                     }
-                 }			 
+		 if ($self->quotes()) {
+		     $s = join("\t", map { "\"$_\"" } @$line);
+		 }
+		 else {
+		     $s = join("\t", @$line);
+		 }
+		 # $s = "";
+	         # my $num_col = scalar(@{$line});
+		 # for (my $j = 0; $j < $num_col; $j++) {
+                 #     if (@$line[$j]) {
+		 #         if ($s eq "") {
+	         #            $s .= "\"@$line[$j]\"";
+		 #         } else {
+		 #            $s .= "\t\"@$line[$j]\"";
+		 # 	 }
+                 #     } else {
+                 #         $s .= "\t";
+                 #     }
+                 # }		
+		 
 		 $s =~ s/\n//g;
 		 $s =~ s/\r//g;
 		 $phenotype_string .= $s."\n";
