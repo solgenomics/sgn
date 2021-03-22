@@ -9,11 +9,11 @@ displays list of prediction populations and their GS output.
 $result => ''
 $selection_prediction_download
 $analyzed_traits
-$pop_id
-$project_name
-$prediction_pop_id
+$training_pop_id
+$training_pop_name
+$selection_pop_id
+$selection_pop_name => ''
 $list_of_prediction_pops => ''
-$prediction_pop_name => ''
 $prediction_pop_analyzed_traits => ''
 
 </%args>
@@ -35,18 +35,24 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
     title       => $title,
 &>
 
   <div  class="form-inline">
-    <input  type="text" class="form-control" placeholder="search for a selection population" size="30" id="population_search_entry"/>   
-    <button type="submit" class="btn btn-primary" id="search_selection_pop">
+    <input  type="text"
+	    class="form-control"
+	    placeholder="search for a selection population"
+	    size="30" id="population_search_entry"/>
+
+    <button type="submit"
+	    class="btn btn-success"
+	    id="search_selection_pop">
       <span class="glyphicon glyphicon-search"></span>
     </button>
-
+<div style="color:red" id="form-feedback-search-trials"> </div>
   <!-- <button id="search_all_selection_pops" style="position:absolute;right:20px;display:none;" class="btn btn-success" type="submit">  -->
   <!--     <span value="Search for all relevant selection populations">Search for all relevant selection populations</span>  -->
   <!--   </button> -->
@@ -56,7 +62,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
   <div id="selection_pops_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
 
   <div id="selection_populations" style="display:none;">
-    <table class="table" id="selection_pops_list" style="text-align:left;"> 
+    <table class="table" id="selection_pops_list" style="text-align:left;">
       <thead>
 	<tr>
 	  <th>Selection population</th>

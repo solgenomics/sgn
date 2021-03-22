@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME
- 
+
 /solgs/genetic_gain/genetic_gain.mas - template for multiple traits genetic gain viz.
 
 =AUTHOR
@@ -15,11 +15,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $pop_id => undef
-$prediction_pop_id => undef
 $analyzed_traits => undef
 $analyzed_traits_ids => undef
 $prediction_pop_analyzed_traits => undef
-$prediction_pop_name => undef
+$selection_pop_name => undef
 $project_name => undef
 
 $trait_id => undef
@@ -43,15 +42,15 @@ my $training_traits_ids = join(',', @$analyzed_traits_ids)  if $analyzed_traits_
 <& /util/import_css.mas, paths => [ '/static/css/solgs/spinner.css', '/static/css/solgs/solgs.css'] &>
 
 
-<&| /page/info_section.mas, 
-  collapsible => 1, 
-   collapsed  => 0, 
+<&| /page/info_section.mas,
+  collapsible => 1,
+   collapsed  => 0,
   title      => "Check Genetic Gain"
-  &> 
+  &>
 
 
 <div id="gg_canvas">
-  
+
 % if ($page =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) {
 
     <& /solgs/genetic_gain/multi_traits_genetic_gain.mas,
@@ -59,7 +58,7 @@ my $training_traits_ids = join(',', @$analyzed_traits_ids)  if $analyzed_traits_
       training_pop_id => $training_pop_id,
       training_traits_ids => $training_traits_ids
       &>
-    
+
 % } elsif ($page =~ /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//) {
 
       <& /solgs/genetic_gain/single_trait_genetic_gain.mas,
@@ -69,13 +68,13 @@ my $training_traits_ids = join(',', @$analyzed_traits_ids)  if $analyzed_traits_
 	&>
 
 % }
-    
+
 
 <& /solgs/spinner.mas &>
-    
+
   <div id="gg_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
   <div id="gg_plot"></div>
 
 </div>
-  
+
 </&>
