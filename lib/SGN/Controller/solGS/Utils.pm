@@ -255,11 +255,11 @@ sub model_page_url {
 
 	if ($training_pop_type =~ /combined/)
 	{
-		return "/solgs/trait/$trait_id/population/$pop_id/gp/$protocol_id";
+		return "/solgs/model/combined/populations/$pop_id/trait/$trait_id/gp/$protocol_id";
 	}
 	else
 	{
-		return "/solgs/model/combined/populations/$pop_id/trait/$trait_id/gp/$protocol_id";
+		return "/solgs/trait/$trait_id/population/$pop_id/gp/$protocol_id";
 	}
 
 }
