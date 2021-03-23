@@ -137,38 +137,38 @@ sub index_log_file_headers {
 }
 
 
-sub create_selection_pop_page {
-    my ($self, $c) = @_;
-
-    $self->parse_arguments($c);
-
-    my $tr_pop_id     = $c->stash->{training_pop_id};
-    my $sel_pop_id    = $c->stash->{selection_pop_id};
-    my $trait_id      = $c->stash->{trait_id};
-    my $data_set_type = $c->stash->{data_set_type};
-    my $protocol_id   = $c->stash->{genotyping_protocol_id};
-
-    my $sel_pop_page;
-    my $multi_traits_ids = $c->stash->{training_traits_ids};
-
-    if ($multi_traits_ids->[0] && scalar(@$multi_traits_ids) > 1)
-    {
-	$sel_pop_page = $c->req->referer;
-    }
-    else
-    {
-	if ($data_set_type =~ /combined populations/)
-	{
-	    $sel_pop_page  = "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
-	}
-	else
-	{
-	    $sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
-	}
-    }
-
-    $c->stash->{selection_pop_page} = $sel_pop_page;
-}
+# sub create_selection_pop_page {
+#     my ($self, $c) = @_;
+#
+#     $self->parse_arguments($c);
+#
+#     my $tr_pop_id     = $c->stash->{training_pop_id};
+#     my $sel_pop_id    = $c->stash->{selection_pop_id};
+#     my $trait_id      = $c->stash->{trait_id};
+#     my $data_set_type = $c->stash->{data_set_type};
+#     my $protocol_id   = $c->stash->{genotyping_protocol_id};
+#
+#     my $sel_pop_page;
+#     my $multi_traits_ids = $c->stash->{training_traits_ids};
+#
+#     if ($multi_traits_ids->[0] && scalar(@$multi_traits_ids) > 1)
+#     {
+# 	$sel_pop_page = $c->req->referer;
+#     }
+#     else
+#     {
+# 	if ($data_set_type =~ /combined populations/)
+# 	{
+# 	    $sel_pop_page  = "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
+# 	}
+# 	else
+# 	{
+# 	    $sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
+# 	}
+#     }
+#
+#     $c->stash->{selection_pop_page} = $sel_pop_page;
+# }
 
 
 sub format_log_entry {
@@ -177,12 +177,12 @@ sub format_log_entry {
 
     my $profile = $c->stash->{analysis_profile};
 
-    if ($profile->{analysis_page} =~ /solgs\/model\/(\d+|\w+_\d+)\/prediction\//)
-    {
-	 $self->create_selection_pop_page($c);
-	 my $sel_pop_page = $c->stash->{selection_pop_page};
-	 $profile->{analysis_page} = $sel_pop_page;
-    }
+    # if ($profile->{analysis_page} =~ /solgs\/model\/(\d+|\w+_\d+)\/prediction\//)
+    # {
+	#  $self->create_selection_pop_page($c);
+	#  my $sel_pop_page = $c->stash->{selection_pop_page};
+	#  $profile->{analysis_page} = $sel_pop_page;
+    # }
 
     my $time    = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
     my $entry   = join("\t",
@@ -824,40 +824,29 @@ sub structure_selection_prediction_output {
 		my $tr_pop_name;
 		my $sel_pop_name;
 
+		my $url_args = {
+		  'training_pop_id' => $tr_pop_id,
+		  'selection_pop_id' => $sel_pop_id,
+		  'trait_id' => $trait_id,
+		  'genotyping_protocol_id' => $protocol_id,
+		  'data_set_type' => $data_set_type,
+		};
+
 		if ($data_set_type =~ /combined populations/)
 		{
-			my $training_args = {
-	   		  'training_pop_id' => $tr_pop_id,
-	   		  'genotyping_protocol_id' => $protocol_id,
-	   		  'data_set_type' => $data_set_type
-	   	  	};
+	   	 	$tr_pop_page = $c->controller('solGS::solGS')->training_page_url($url_args);
 
-	   	 	my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($training_args);
-
-		    $tr_pop_page    = $base . $training_pop_page;
+		    $tr_pop_page    = $base . $tr_pop_page;
 		    $tr_pop_name    = 'Training population ' . $tr_pop_id;
+			$sel_pop_page =  $c->controller('solGS::solGS')->selection_page_url($url_args);
+		    $sel_pop_page = $base . $sel_pop_page;
 
-		    $sel_pop_page = $base. "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
-
-			my $args = {
-	 		   	'trait_id' => $trait_id,
-	    		'training_pop_id' => $tr_pop_id,
-	 			'genotyping_protocol_id' => $protocol_id,
-	 			'data_set_type' => $data_set_type
-	 		};
-
-	        my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+	       	$model_page = $c->controller('solGS::Utils')->model_page_url($url_args);
 		    $model_page   = $base . $model_page;
 		}
 		else
 		{
-			my $args = {
-	   		  'training_pop_id' => $tr_pop_id,
-	   		  'genotyping_protocol_id' => $protocol_id,
-	   		  'data_set_type' => $data_set_type
-	   	  	};
-
-	   	 	my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($args);
+	   	 	my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($url_args);
 
 		    $tr_pop_page    = $base . $training_pop_page;
 		    if ($tr_pop_id =~ /list/)
@@ -878,17 +867,11 @@ sub structure_selection_prediction_output {
 				$tr_pop_name   = $c->stash->{project_name};
 		    }
 
-		    $sel_pop_page = $base . "solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
+			$sel_pop_page =  $c->controller('solGS::solGS')->selection_page_url($url_args);
+		    $sel_pop_page = $base . $sel_pop_page;
 
-			my $model_args = {
-	 		   	'trait_id' => $trait_id,
-	    		'training_pop_id' => $tr_pop_id,
-	 			'genotyping_protocol_id' => $protocol_id,
-	 			'data_set_type' => $data_set_type
-	 		};
-
-	         my $model_page = $c->controller('solGS::Utils')->model_page_url($model_args);
-		    $model_page         = $base .  $model_page;
+	        $model_page = $c->controller('solGS::Utils')->model_page_url($url_args);
+		    $model_page = $base .  $model_page;
 		}
 
 		if ($sel_pop_id =~ /list/)

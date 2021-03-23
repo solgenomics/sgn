@@ -963,36 +963,36 @@ sub predict_selection_pop_combined_pops_model {
     my @prediction_traits;
     foreach my $trait_id (@selected_traits)
     {
-	my $identifier = $training_pop_id .'_' . $selection_pop_id;
-	$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+		my $identifier = $training_pop_id .'_' . $selection_pop_id;
+		$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
 
-     	if (!-s $c->stash->{rrblup_selection_gebvs_file})
-	{
-	    push @prediction_traits, $trait_id;
-	}
+	     if (!-s $c->stash->{rrblup_selection_gebvs_file})
+		{
+		    push @prediction_traits, $trait_id;
+		}
     }
 
     if (@prediction_traits)
     {
-	$c->stash->{training_traits_ids} = \@prediction_traits;
+		$c->stash->{training_traits_ids} = \@prediction_traits;
 
-	$c->controller('solGS::solGS')->get_selection_pop_query_args_file($c);
-	my $pre_req = $c->stash->{selection_pop_query_args_file};
+		$c->controller('solGS::solGS')->get_selection_pop_query_args_file($c);
+		my $pre_req = $c->stash->{selection_pop_query_args_file};
 
-	$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
+		$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
 
-	$c->controller('solGS::solGS')->get_gs_modeling_jobs_args_file($c);
-	my $dep_jobs =  $c->stash->{gs_modeling_jobs_args_file};
+		$c->controller('solGS::solGS')->get_gs_modeling_jobs_args_file($c);
+		my $dep_jobs =  $c->stash->{gs_modeling_jobs_args_file};
 
-	$c->stash->{prerequisite_jobs} = $pre_req;
-	$c->stash->{prerequisite_type} = 'selection_pop_download_data';
-	$c->stash->{dependent_jobs} =  $dep_jobs;
+		$c->stash->{prerequisite_jobs} = $pre_req;
+		$c->stash->{prerequisite_type} = 'selection_pop_download_data';
+		$c->stash->{dependent_jobs} =  $dep_jobs;
 
-	$c->controller('solGS::solGS')->run_async($c);
+		$c->controller('solGS::solGS')->run_async($c);
     }
     else
     {
-	croak "No traits to predict: $!\n";
+		croak "No traits to predict: $!\n";
     }
 
 }
@@ -1017,33 +1017,32 @@ sub combine_trait_data {
 
     unless ( $geno_cnt > 10  && $pheno_cnt > 10 )
     {
-	$self->get_combined_pops_list($c);
-	my $combined_pops_list = $c->stash->{combined_pops_list};
-	$c->stash->{trait_combine_populations} = $combined_pops_list;
+		$self->get_combined_pops_list($c);
+		my $combined_pops_list = $c->stash->{combined_pops_list};
+		$c->stash->{trait_combine_populations} = $combined_pops_list;
 
-	$self->prepare_multi_pops_data($c);
+		$self->prepare_multi_pops_data($c);
 
-	my $background_job = $c->stash->{background_job};
-	my $prerequisite_jobs = $c->stash->{multi_pops_data_jobs};
+		my $background_job = $c->stash->{background_job};
+		my $prerequisite_jobs = $c->stash->{multi_pops_data_jobs};
 
-	if ($background_job)
-	{
-	    if ($prerequisite_jobs =~ /^:+$/)
-	    {
-		$prerequisite_jobs = undef;
+		if ($background_job)
+		{
+		    if ($prerequisite_jobs =~ /^:+$/)
+		    {
+				$prerequisite_jobs = undef;
+		    }
+
+		    if ($prerequisite_jobs)
+		    {
+				###Needs work####
+				$c->stash->{prerequisite_jobs}  =  $prerequisite_jobs;
+				$c->stash->{prerequisite_type} = 'download_data';
+		    }
+		}
+
+		$self->r_combine_populations($c);
 	    }
-
-	    if ($prerequisite_jobs)
-	    {
-		###Needs work####
-		$c->stash->{prerequisite_jobs}  =  $prerequisite_jobs;
-		$c->stash->{prerequisite_type} = 'download_data';
-
-	    }
-	}
-
-	$self->r_combine_populations($c);
-    }
 
 }
 

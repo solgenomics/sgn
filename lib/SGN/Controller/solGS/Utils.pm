@@ -200,12 +200,13 @@ sub remove_ontology {
 
     my @clean_traits;
 
-    foreach my $tr (@$traits) {
-	my $name = $tr->[1];
-	$name= $self->clean_traits($name);
+    foreach my $tr (@$traits)
+	{
+		my $name = $tr->[1];
+		$name= $self->clean_traits($name);
 
-	my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
- 	push @clean_traits, $id_nm;
+		my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
+	 	push @clean_traits, $id_nm;
     }
 
     return \@clean_traits;
@@ -222,7 +223,7 @@ sub get_clean_trial_trait_names {
 
     foreach my $tr (@$clean_traits)
     {
-	push @trait_names, $tr->{trait_name};
+		push @trait_names, $tr->{trait_name};
     }
 
     return \@trait_names;
@@ -251,9 +252,7 @@ sub model_page_url {
 	my $pop_id = $args->{training_pop_id};
 	my $protocol_id = $args->{genotyping_protocol_id};
 
-	my $training_pop_type = $args->{data_set_type};
-
-	if ($training_pop_type =~ /combined/)
+	if ($args->{data_set_type} =~ /combined/)
 	{
 		return "/solgs/model/combined/populations/$pop_id/trait/$trait_id/gp/$protocol_id";
 	}
@@ -271,9 +270,7 @@ sub training_page_url {
 	my $pop_id = $args->{training_pop_id};
 	my $protocol_id = $args->{genotyping_protocol_id};
 
-	my $training_pop_type = $args->{data_set_type};
-
-	if ($training_pop_type =~ /combined/)
+	if ( $args->{data_set_type} =~ /combined/)
 	{
 		return "/solgs/populations/combined/$pop_id/gp/$protocol_id";
 	}
@@ -283,6 +280,27 @@ sub training_page_url {
 	}
 
 }
+
+
+sub selection_page_url {
+    my ($self, $args) = @_;
+
+    my $tr_pop_id      = $args->{training_pop_id};
+    my $sel_pop_id    = $args->{selection_pop_id};
+    my $trait_id           = $args->{trait_id};
+    my $protocol_id     = $args->{genotyping_protocol_id};
+
+	if ($args->{data_set_type} =~ /combined populations/)
+	{
+	   return "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
+	}
+	else
+	{
+	    return "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
+	}
+
+}
+
 
 ####
 1;
