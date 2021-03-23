@@ -264,6 +264,26 @@ sub model_page_url {
 
 }
 
+
+sub training_page_url {
+	my ($self, $args) = @_;
+
+	my $pop_id = $args->{training_pop_id};
+	my $protocol_id = $args->{genotyping_protocol_id};
+
+	my $training_pop_type = $args->{data_set_type};
+
+	if ($training_pop_type =~ /combined/)
+	{
+		return "/solgs/populations/combined/$pop_id/gp/$protocol_id";
+	}
+	else
+	{
+		return "/solgs/population/$pop_id/gp/$protocol_id";
+	}
+
+}
+
 ####
 1;
 ####

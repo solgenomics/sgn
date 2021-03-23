@@ -157,24 +157,27 @@ sub create_model_summary {
     my $tr_abbr = $c->stash->{trait_abbr};
 
     my $path = $c->req->path;
-    my $trait_page;
 
-    if ($path =~ /solgs\/traits\/all\/population\//)
-    {
-		my $args = {
- 		   	'trait_id' => $trait_id,
-    		'training_pop_id' => $model_id,
- 			'genotyping_protocol_id' => $protocol_id,
- 			'data_set_type' => 'single population'
- 		};
+	my $data_set_type;
+	if ($path =~ /solgs\/traits\/all\/population\//)
+	{
 
-         my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
-		$trait_page = qq | <a href="$model_page" onclick="solGS.waitPage()">$tr_abbr</a>|;
-    }
-    elsif ($path =~ /solgs\/models\/combined\/trials\//)
-    {
-		$trait_page = qq | <a href="/solgs/model/combined/populations/$model_id/trait/$trait_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
-    }
+	  	$data_set_type = 'single population';
+	}
+	elsif ($path =~ /solgs\/models\/combined\/trials\//)
+	{
+	 	$data_set_type = 'combined populations';
+	}
+
+	my $args = {
+		'trait_id' => $trait_id,
+		'training_pop_id' => $model_id,
+		'genotyping_protocol_id' => $protocol_id,
+		'data_set_type' => $data_set_type
+	};
+
+	my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+	my $trait_page = qq | <a href="$model_page" onclick="solGS.waitPage()">$tr_abbr</a>|;
 
     $self->get_model_accuracy_value($c, $model_id, $tr_abbr);
     my $accuracy_value = $c->stash->{accuracy_value};

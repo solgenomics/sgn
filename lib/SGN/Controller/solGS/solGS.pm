@@ -175,7 +175,15 @@ sub projects_links {
 
 	    #$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:30px">code</div> |;
 
-	    push @projects_pages, [$checkbox, qq|<a href="/solgs/population/$pr_id/gp/$protocol_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|,
+		my $args = {
+   		  'training_pop_id' => $pr_id,
+   		  'genotyping_protocol_id' => $protocol_id,
+   		  'data_set_type' => 'single population'
+   	  	};
+
+   	 	my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($args);
+
+	    push @projects_pages, [$checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|,
 				   $pr_desc, $pr_location, $pr_year
 		];
 
@@ -307,7 +315,15 @@ sub format_gs_projects {
 	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="solGS.combinedTrials.getPopIds()"/> </form> |;
 	   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
-	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/population/$pr_id/gp/$protocol_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
+	   my $args = {
+  		  'training_pop_id' => $pr_id,
+  		  'genotyping_protocol_id' => $protocol_id,
+  		  'data_set_type' => 'single population'
+  	  };
+
+  	 	my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($args);
+
+	   push @formatted_projects, [ $checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
        }
    }
 
@@ -372,24 +388,24 @@ sub get_projects_details {
     while (my $pr = $pr_rs->next)
     {
         $pr_id   = $pr->get_column('project_id');
-	$pr_name = $pr->get_column('name');
-	$pr_desc = $pr->get_column('description');
+		$pr_name = $pr->get_column('name');
+		$pr_desc = $pr->get_column('description');
 
-	my $pr_yr_rs = $c->model('solGS::solGS')->project_year($pr_id);
+		my $pr_yr_rs = $c->model('solGS::solGS')->project_year($pr_id);
 
-	while (my $pr = $pr_yr_rs->next)
-	{
-	    $year = $pr->value;
-	}
+		while (my $pr = $pr_yr_rs->next)
+		{
+		    $year = $pr->value;
+		}
 
-	my $location = $c->model('solGS::solGS')->project_location($pr_id);
+		my $location = $c->model('solGS::solGS')->project_location($pr_id);
 
-	$projects_details{$pr_id} = {
-	    project_name     => $pr_name,
-	    project_desc     => $pr_desc,
-	    project_year     => $year,
-	    project_location => $location,
-	};
+		$projects_details{$pr_id} = {
+		    project_name     => $pr_name,
+		    project_desc     => $pr_desc,
+		    project_year     => $year,
+		    project_location => $location,
+		};
     }
 
     $c->stash->{projects_details} = \%projects_details;
@@ -911,7 +927,15 @@ sub trait :Path('/solgs/trait') Args() {
 	{
 	    my $training_pop_name = $c->stash->{project_name};
 	    #my $training_pop_desc = $c->stash->{project_desc};
-	    my $training_pop_page = qq | <a href="/solgs/population/$pop_id">$training_pop_name</a> |;
+		my $args = {
+   		  'training_pop_id' => $pop_id,
+   		  'genotyping_protocol_id' => $protocol_id,
+   		  'data_set_type' => 'single population'
+   	  	};
+
+   	 	my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($args);
+
+	    my $training_pop_page = qq | <a href="$training_pop_page">$training_pop_name</a> |;
 
 	    $c->stash->{message} = "Cached output for this model does not exist anymore.\n" .
 	     " Please go to $training_pop_page and run the analysis.";
@@ -1232,13 +1256,21 @@ sub selection_prediction :Path('/solgs/model') Args() {
         $c->stash->{combo_pops_id}     = $combo_pops_id;
         $c->stash->{trait_id}          = $trait_id;
 
-	$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
+		$c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
 
         $c->controller('solGS::combinedTrials')->combined_pops_summary($c);
         $self->model_phenotype_stat($c);
         $self->gs_modeling_files($c);
 
-        $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id/gp/$protocol_id");
+		my $args = {
+			'trait_id' => $trait_id,
+			'training_pop_id' => $combo_pops_id,
+			'genotyping_protocol_id' => $protocol_id,
+			'data_set_type' => 'combined populations'
+		};
+
+		my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+        $c->res->redirect($model_page);
         $c->detach();
     }
     elsif ($referer =~ /solgs\/trait\//)
@@ -1981,7 +2013,15 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
      $self->project_description($c, $training_pop_id);
      my $training_pop_name = $c->stash->{project_name};
      my $training_pop_desc = $c->stash->{project_desc};
-     my $training_pop_page = qq | <a href="/solgs/population/$training_pop_id/gp/$protocol_id">$training_pop_name</a> |;
+
+	 my $args = {
+		  'training_pop_id' => $training_pop_id,
+		  'genotyping_protocol_id' => $protocol_id,
+		  'data_set_type' => 'single population'
+	  };
+
+	 my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($args);
+     $training_pop_page = qq | <a href="$training_pop_page">$training_pop_name</a> |;
 
      my @select_analysed_traits;
 
