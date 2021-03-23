@@ -6,6 +6,8 @@ $dataset_id => undef
 <& /util/import_javascript.mas, entries => ["wizard"] &>
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
+<& /breeders_toolbox/breeder_search_page_dataset_overlay.mas &>
+
 <& /page/page_title.mas, title=>"Search Wizard" &>
 
 <div class="row">
