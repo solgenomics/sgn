@@ -10,6 +10,7 @@ use CXGN::UploadFile;
 use SGN::Model::Cvterm;
 use CXGN::Genotype::SequenceMetadata;
 use CXGN::Genotype::Protocol;
+use CXGN::Marker::SearchJson;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -632,4 +633,59 @@ sub sequence_metadata_query_GET : Args(0) {
         $c->detach();
     }
    
+}
+
+#
+# Get the markers that are located on the feature between the specified start and end positions
+# PATH: GET /ajax/sequence_metadata/markers
+# PARAMS:
+#   - feature_id = id of the associated feature (chromosome)
+#   - start = start position of the query range
+#   - end = end position of the query range
+#   - nd_protocol_id = (optional) nd_protocol_id(s) of the genotype protocols to limit the markers results to (comma separated list of multiple protocol ids)
+#
+sub sequence_metadata_markers : Path('/ajax/sequence_metadata/markers') : ActionClass('REST') { }
+sub sequence_metadata_markers_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh();
+
+    my $feature_id = $c->req->param('feature_id');
+    my $start = $c->req->param('start');
+    my $end = $c->req->param('end');
+    my @nd_protocol_ids = split(',', $c->req->param('nd_protocol_id'));
+
+
+    # Check required parameters
+    if ( !defined $feature_id || $feature_id eq '' ) {
+        $c->stash->{rest} = {error => 'Feature id must be provided!'};
+        $c->detach();
+    }
+    if ( !defined $start || $start eq '' ) {
+        $c->stash->{rest} = {error => 'start location must be provided!'};
+        $c->detach();
+    }
+    if ( !defined $end || $end eq '' ) {
+        $c->stash->{rest} = {error => 'end location must be provided!'};
+        $c->detach();
+    }
+
+    # Get the feature name from the feature id
+    my $feature = $schema->resultset('Sequence::Feature')->search({ feature_id => $feature_id })->first();
+    if ( !defined $feature ) {
+        $c->stash->{rest} = {error => 'The provided feature_id could not be found in the database!'};
+        $c->detach();
+    }
+    my $feature_name = $feature->name();
+
+    # Perform JSON marker search
+    my $msearch = CXGN::Marker::SearchJson->new($dbh);
+    my $results = $msearch->find_markers_json($feature_name, $start, $end, \@nd_protocol_ids);
+
+    # Return the results as JSON
+    $c->stash->{rest} = {
+        results => $results
+    };
+
 }

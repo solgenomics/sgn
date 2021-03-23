@@ -165,6 +165,64 @@ sub search_marker_json {
     }
 }
 
+
+#
+# Find all markers stored in the nd_protocolprop table between the specified start and end positions 
+# on a specified chromosome, optionally filtered by one or more genotyping protocols
+#
+# Arguments:
+# - chr = chromosome name
+# - start = start position
+# - end = end position
+# - nd_protocol_ids = (optional) arrayref of genotyping protocols to filter by
+#
+# Returns an arrayref of hashes with the following keys:
+# - nd_protocol_id = id of genotyping protocol
+# - nd_protocol_name = name of genotyping protocol
+# - marker_name = name of marker
+# - chrom = chromosome where marker is located
+# - position = marker position
+# - ref = reference allele
+# - alt = alternate allele
+#
+sub find_markers_json {
+  my $self = shift;
+  my $chr = shift;
+  my $start = shift;
+  my $end = shift;
+  my $nd_protocol_ids = shift;
+
+  # Setup query parameters
+  my $query_where = "WHERE nd_protocolprop.type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'vcf_map_details_markers') ";
+  $query_where .= "AND s.value->>'chrom' = ? ";
+  $query_where .= "AND (s.value->>'pos')::int >= ? ";
+  $query_where .= "AND (s.value->>'pos')::int <= ? ";
+  my @query_params = ($chr, $start, $end);
+  if ( $nd_protocol_ids && @$nd_protocol_ids ) {
+    $query_where .= "AND nd_protocolprop.nd_protocol_id IN (@{[join',', ('?') x @$nd_protocol_ids]}) ";
+    push(@query_params, @$nd_protocol_ids);
+  }
+
+  # Build query
+  my $query = "SELECT nd_protocolprop.nd_protocol_id, nd_protocol.name AS nd_protocol_name, ";
+  $query .= "s.value->>'name' AS marker_name, s.value->>'chrom' AS chrom, ";
+  $query .= "s.value->>'pos' AS position, s.value->>'ref' AS ref, s.value->>'alt' AS alt ";
+  $query .= "FROM nd_protocolprop ";
+  $query .= "LEFT JOIN nd_protocol ON (nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id), ";
+  $query .= "jsonb_each(nd_protocolprop.value) AS s ";
+  $query .= $query_where;
+  $query .= "ORDER BY nd_protocol_name, marker_name;";
+
+  # Perform the search
+  my $h = $self->{dbh}->prepare($query);
+  $h->execute(@query_params);
+
+  # Return the results
+  my $results = $h->fetchall_arrayref({});
+  return $results;
+
+}
+
 sub perform_search {
 
   my ($self, $start, $end) = @_;
