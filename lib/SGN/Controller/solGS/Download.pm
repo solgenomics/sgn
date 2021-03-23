@@ -50,8 +50,8 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args() {
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{genotyping_protocol_id} = $protocol_id;
 
-    my $identifier = $training_pop_id . "_" . $selection_pop_id;
-    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+    # my $identifier = $training_pop_id . "_" . $selection_pop_id;
+    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
     my $selection_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
 
     unless (!-s $selection_gebvs_file)
@@ -162,7 +162,7 @@ sub selection_prediction_download_urls {
     my $selection_traits_ids;
     my $download_url;
 
-    my $selected_model_traits = $c->stash->{training_traits_ids};
+    my $selected_model_traits = $c->stash->{training_traits_ids} || [$c->stash->{trait_id}];
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     no warnings 'uninitialized';
@@ -181,6 +181,7 @@ sub selection_prediction_download_urls {
 
     my @selection_traits_ids = sort(@$selection_traits_ids) if $selection_traits_ids->[0];
     my @selected_model_traits = sort(@$selected_model_traits) if $selected_model_traits->[0];
+	my $page = $c->req->referer;
 
     if (@selected_model_traits ~~ @selection_traits_ids)
     {

@@ -10,130 +10,130 @@ JSAN.use("jquery.blockUI");
 
 
 var getCookieName =  function (trId) {
-    
+
     return 'trait_' + trId + '_populations';
-  
+
 };
 
 var getPopIds =  function() {
-    
+
     jQuery("input:checkbox[name='project']").change(function() {
-            
+
         var cookieArrayData = [];
-          
-        var trId = getTraitId(); 
-        var cookieName = getCookieName(trId); 
+
+        var trId = getTraitId();
+        var cookieName = getCookieName(trId);
         var existingPopIds = jQuery.cookie(cookieName);
         var eP = [];
          if (existingPopIds) {
-                  eP  = existingPopIds.split(",");                                     
+                  eP  = existingPopIds.split(",");
                 }
-        if (eP.length <= 1) {                       
-            jQuery("#select_done input").val('Select');   
-        }   
-        
-        if (jQuery(this).attr('checked')) {            
+        if (eP.length <= 1) {
+            jQuery("#select_done input").val('Select');
+        }
+
+        if (jQuery(this).attr('checked')) {
             var popId = jQuery(this).val();
-                            
+
             if (eP.length == 0) {
-                                    
-                jQuery("#select_done input").val('Select');   
-                       
-               
-                cookieArrayData.push(popId);                 
+
+                jQuery("#select_done input").val('Select');
+
+
+                cookieArrayData.push(popId);
                 jQuery.cookie(cookieName, cookieArrayData, {path: '/'});
-            } else {                  
+            } else {
                 var cookieData = jQuery.cookie(cookieName);
-                
+
                 if (cookieData) {
-                    cookieArrayData = cookieData.split(",");                                     
+                    cookieArrayData = cookieData.split(",");
                 }
 
                 var indexPopId = jQuery.inArray(popId, cookieArrayData);
-                if (indexPopId == -1) {                       
-                      
+                if (indexPopId == -1) {
+
                     cookieArrayData.push(popId);
                     cookieArrayData =  cookieArrayData.unique();
-                  
-                   if (cookieArrayData.length === 1) {                       
-                       jQuery("#select_done input").val('Select');   
-                   } else if (cookieArrayData.length > 1 )  {                       
-                        jQuery("#select_done input").val('Combine');  
-                    } 
-  
+
+                   if (cookieArrayData.length === 1) {
+                       jQuery("#select_done input").val('Select');
+                   } else if (cookieArrayData.length > 1 )  {
+                        jQuery("#select_done input").val('Combine');
+                    }
+
                     jQuery.cookie(cookieName, cookieArrayData, {path: '/'});
                 }
             }
         }
-        else  {               
+        else  {
             var popId = jQuery(this).val();
-  
+
             var cookieData =  jQuery.cookie(cookieName);
             cookieArrayData = cookieData.split(",");
-              
+
             var indexPopId = jQuery.inArray(popId, cookieArrayData);
-                
+
             if(indexPopId != -1) {
                 cookieArrayData.splice(indexPopId, 1);
-            } 
+            }
 
             cookieArrayData = cookieArrayData.unique();
             cookieArrayData = cookieArrayData.sort();
             jQuery.cookie(cookieName, cookieArrayData, {path: '/'});
-               
-        }          
+
+        }
     });
 };
 
 
 var selectedPops = function () {
-    
+
     var trId            = getTraitId();
     var cookieName      = getCookieName(trId);
     var cookieData      = jQuery.cookie(cookieName);
     var cookieArrayData = [];
-          
+
     if (cookieData) {
         cookieArrayData = cookieData.split(",");
         cookieArrayData = cookieArrayData.unique();
     }
-            
+
     if (cookieArrayData.length == 1) {
         var redirectUrl =  '/solgs/trait/' + trId + '/population/' + cookieData;
-                
+
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
 
-        jQuery.ajax({  
+        jQuery.ajax({
             type: 'POST',
             dataType: "json",
             url: redirectUrl,
             data: 'source=ajaxredirect',
-            success: function(res) {                                                                                
-                var suc = res.status;                            
-                if (suc == 'success') {                                                             
+            success: function(res) {
+                var suc = res.status;
+                if (suc == 'success') {
                     jQuery.cookie(cookieName, null, {expires: -1, path: '/'});
-                    window.location.href = redirectUrl;                                                               
+                    window.location.href = redirectUrl;
                 }
             }
-                    
-        });                
+
+        });
     }
 
     else if( cookieArrayData.length > 1 ) {
 
         var action = "/solgs/search/result/populations/" + trId;
         var selectedPops = trId + "=" + cookieArrayData + '&' + 'combine=confirm';
-        jQuery.ajax({  
+        jQuery.ajax({
             type: 'POST',
             dataType: "json",
             url: action,
             data: selectedPops,
-            success: function(res){                       
+            success: function(res){
                 var suc = res.status;
                 if (suc == 'success') {
                     var confirmPops = res.populations;
-                    var url = '/solgs/combine/populations/trait/confirm/' + trId;
+                    var url = '/solgs/combine/trials/trait/confirm/' + trId;
                     var form = jQuery('<form action="' + url + '" method="POST">' +
                                       '<input type="hidden" name="confirm_populations" value="' + confirmPops + '" />' +
                                       '</form>'
@@ -151,49 +151,49 @@ var selectedPops = function () {
 
     }
 };
- 
+
 
 var confirmSelections =  function() {
     var trId = getTraitId();
     var selections = [];
-    
+
     jQuery("input:checkbox[name='project']:checked").each( function() {
             selections.push(jQuery(this).val());
         });
-     
-    var action = "/solgs/combine/populations/trait/" + trId;
+
+    var action = "/solgs/combine/trials/trait/" + trId + '/gp/' + protocolId;
     var selectedPops = trId + "=" + selections + '&' + 'combine=combine';
-    
+
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});
-    
-    jQuery.ajax({  
+
+    jQuery.ajax({
             type: 'POST',
                 dataType: "json",
                 url: action,
                 data: selectedPops,
-                success: function(res) {                       
+                success: function(res) {
                 var suc = res.status;
-              
+
                 if (suc) {
                     //alert('combined pops');
                     var comboPopsId = res.combo_pops_id;
-                    var newUrl = '/solgs/model/combined/populations/' + comboPopsId + '/trait/' + trId;
-                    
-                    var form = jQuery('<form action="' + newUrl + '" method="POST">' + 
-                                      '<input type="hidden" name="combined_populations" value="' + 
+                    var newUrl = '/solgs/model/combined/trials/' + comboPopsId + '/trait/' + trId + '/gp/' + protocolId;
+
+                    var form = jQuery('<form action="' + newUrl + '" method="POST">' +
+                                      '<input type="hidden" name="combined_populations" value="' +
                                        selections + '" />' + '</form>');
 
                     jQuery('body').append(form);
                     jQuery(form).submit();
-                   
+
                     jQuery.unblockUI();
-                    
+
                 } else {
-                    
-                    if(res.not_matching_pops ){                        
-                        alert('populations ' + res.not_matching_pops + 
-                              ' were genotyped using different marker sets. ' + 
+
+                    if(res.not_matching_pops ){
+                        alert('populations ' + res.not_matching_pops +
+                              ' were genotyped using different marker sets. ' +
                               'Please make new selections to combine.' );
                         window.location.href =  '/solgs/search/result/populations/' + trId;
                     }
@@ -201,14 +201,14 @@ var confirmSelections =  function() {
                     if (res.redirect_url) {
                         window.location.href = res.redirect_url;
                     }
-                } 
+                }
             }
         });
 
     var trId = getTraitId();
     var cookieName = getCookieName(trId);
     jQuery.cookie(cookieName, null, {expires: -1, path: '/'});
-                  
+
 };
 
 
@@ -229,9 +229,6 @@ Array.prototype.unique = function() {
 
 var getTraitId = function () {
    var id = jQuery("input[name='trait_id']").val();
-   
+
    return id;
 };
-
-
-

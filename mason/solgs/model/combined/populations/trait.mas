@@ -64,12 +64,13 @@ $model_link
 &>
 
   <& /solgs/population/hidden_input.mas,
-      pop_id       => $combo_pops_id,
-     trait_id      => $trait_id,
-     combo_pops_id => $combo_pops_id,
-     genotyping_protocol_id => $genotyping_protocol_id,
-     pop_name => $project_name
-     &>
+     training_pop_id  => $combo_pops_id,
+    training_pop_name => $project_name
+    training_pop_desc => $project_desc,
+    trait_id      => $trait_id,
+    combo_pops_id => $combo_pops_id,
+    genotyping_protocol_id => $genotyping_protocol_id,  
+    &>
   
 </&>
 

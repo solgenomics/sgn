@@ -36,9 +36,10 @@ sub read_file_data {
 
     my @lines = read_file($file, {binmode => ':utf8'});
     shift(@lines);
+	chomp(@lines);
 
     my @data;
-    push @data, map{ [split(/\t/)] } @lines;
+    push @data, map{ [split(/\t/)]} @lines;
 
     return \@data;
 
@@ -205,8 +206,8 @@ sub remove_ontology {
 		my $name = $tr->[1];
 		$name= $self->clean_traits($name);
 
-		my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
-	 	push @clean_traits, $id_nm;
+	my $id_nm = {'trait_id' => $tr->[0], 'trait_name' => $name};
+ 	push @clean_traits, $id_nm;
     }
 
     return \@clean_traits;
@@ -301,6 +302,14 @@ sub selection_page_url {
 
 }
 
+
+sub generic_message {
+    my ($self, $c, $msg) = @_;
+
+    $c->stash->{message} = $msg;
+
+    $c->stash->{template} = "/generic_message.mas";
+}
 
 ####
 1;
