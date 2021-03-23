@@ -1,0 +1,189 @@
+
+<!-- 
+    DATASET CREATION PIPELINE FOR SEACH WIZARD:
+    When provided with the proper query params, the search wizard will walk the user through 
+    creating a dataset with the required parameters, save the dataset, and return to the 
+    originating page.
+
+    URL QUERY PARAMETERS:
+    dsp: dataset parameters
+            - a comma separated list of data set parameters for each column
+            - multiple types for a single column can be separated by a |
+            - multiple sets of parameters can be provided by including additional dsp query parameters
+        Examples:
+            ?dsp=trials,accessions -- require trials as the first parameter and accessions as the second parameter
+            ?dsp=trials|traits,accessions -- require trials or traits as the first parameter and accessions as the second parameter
+            ?dsp=trials,accessions&dsp=accessions,trials -- require trials as the first and accessions as the second parameters 
+                                                              OR accessions as the first and trials as the second parameters
+
+-->
+
+<style>
+    #dsp-help {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 50px;
+        background-color: #5bc0de;
+        z-index: 99999;
+    }
+    #dsp-help-instructions {
+        padding: 0 15px;
+        margin: 0;
+        position: absolute;
+        top: 50%;
+        -ms-transform: translateY(-50%);
+        transform: translateY(-50%);
+        color: #fff;
+    }
+    #dsp-help-next {
+        float: right;
+        height: 40px;
+        margin: 5px;
+    }
+    
+    .wizard-panel-selected {
+        border: 5px solid #5bc0de;
+    }
+    
+    .wizard-type-select option {
+        color: #000;
+        font-weight: 500;
+    }
+    .wizard-type-select option:disabled {
+        color: #999;
+        font-weight: 100;
+        font-style: italic;
+    }
+</style>
+
+<div id="dsp-help">
+    <p id="dsp-help-instructions"></p>
+    <button id="dsp-help-next" class='btn btn-success'>Next&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
+</div>
+
+<script type='text/javascript'>
+
+    let DSP_ENABLED = false;    // Flag to enable the dataset creation pipeline
+    let DSP_COLS = [];          // Allowed dataset column types
+
+    jQuery(document).ready(function() {
+
+        parseArgs();
+        if ( DSP_ENABLED ) {
+            setCol(0);
+        }
+
+    });
+
+
+    /**
+     * Parse the query parameters for the dataset pipeline arguments
+     * - Set DSP_ENABLED -- flag to indicate the dataset pipeline is enabled
+     * - Set DSP_COLS -- the allowed column type selections
+     */
+    function parseArgs() {
+
+        // Parse query params and get 'dsp' parameter(s)
+        let urlParams = new URLSearchParams(window.location.search);
+        if ( urlParams.has("dsp") ) {
+            DSP_ENABLED = true;
+            
+            // Parse each instance of the 'dsp' parameter
+            let dsp = urlParams.getAll("dsp");
+            for ( let i = 0; i < dsp.length; i++ ) {
+
+                // Parse each column of the 'dsp' parameter
+                let p = dsp[i].split(',');
+                let pa = [];
+                for ( let j = 0; j < p.length; j++ ) {
+                    let c = p[j].split('|');
+                    let ca = [];
+                    for ( let k = 0; k < c.length; k++ ) {
+                        ca.push(c[k].toLowerCase());
+                    }
+                    pa.push(ca);
+                }
+                
+                // Add the allowed column selections
+                DSP_COLS.push(pa);
+
+            }
+
+        }
+
+        console.log("DSP_COLS:");
+        console.log(JSON.stringify(DSP_COLS, null, 2));
+    }
+
+
+    function setCol(col) {
+        console.log("==> SET COLUMN #" + col);
+        
+        // Get selected data types of previous columns
+        let prev_sel_col_types = [];
+        for ( let i = 0; i < col; i++ ) {
+            prev_sel_col_types.push(jQuery('.wizard-type-select')[i].value);
+        }
+        console.log("SELECTIONS");
+        console.log(prev_sel_col_types);
+        
+        // Get items from DSP_COLS that match selected data types in previous columns
+        let valid_dsp_cols = DSP_COLS;
+        for ( let i = 0; i < col; i++ ) {
+            valid_dsp_cols = [];
+            let sel = prev_sel_col_types[i];
+            console.log("==> col " + i + " = " + sel);
+            for ( let j = 0; j < DSP_COLS.length; j++ ) {
+                console.log("--> allowed: " + DSP_COLS[j][i].toString());
+                if ( DSP_COLS[j][i].includes(sel) ) {
+                    valid_dsp_cols.push(DSP_COLS[j]);
+                }
+            }
+        }
+        console.log("VALID DSP COLS:");
+        console.log(JSON.stringify(valid_dsp_cols, null, 2));
+
+        // Get valid data types for the current column, from the list of valid_dsp_cols
+        let valid_col_types = [];
+        for ( let i = 0; i < valid_dsp_cols.length; i++ ) {
+            for ( let j = 0; j < valid_dsp_cols[i][col].length; j++ ) {
+                let t = valid_dsp_cols[i][col][j];
+                if ( !valid_col_types.includes(t) ) {
+                    valid_col_types.push(t);
+                }
+            }
+        }
+        console.log("VALID COL TYPES:");
+        console.log(valid_col_types);
+
+        // Disable invalid selection options for the current column
+        jQuery(jQuery('.wizard-type-select')[col]).find('option').each(function () {
+            let enabled = valid_col_types.includes(this.value) || valid_col_types.includes(jQuery(this).attr('data-type'));
+            jQuery(this).attr('disabled', !enabled);
+        });
+
+        // Display the instructions
+        showHelpCol(col, valid_col_types);
+    }
+
+
+    /**
+     * Display help instructions for selecting items from a column
+     * @param {int} col Column index to select
+     * @param {String[]} types List of valid types for the column
+     */
+    function showHelpCol(col, types) {
+        let step = col+1;
+        let html = "<strong>Step " + step + ":</strong> Choose items of type " + types.join(" or ") + " from column " + step + ".";
+        jQuery('#dsp-help-instructions').html(html);
+        jQuery('#dsp-help').css('display', 'block');
+        jQuery('.wizard-panel').removeClass('wizard-panel-selected');
+        jQuery(jQuery('.wizard-panel')[col]).addClass('wizard-panel-selected');
+        jQuery('#dsp-help-next').click(function() {
+            setCol(col+1);
+        });
+    }
+</script>

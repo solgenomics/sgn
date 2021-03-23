@@ -144,11 +144,11 @@ export function WizardSetup(main_id){
       if(private_lists.error) private_lists = [];
       resolve(private_lists.concat(public_lists))
     })).then(lists=>lists.reduce((acc,cur)=>{
-        acc[cur[0]] = cur[1];
+        acc[cur[0]] = { name: cur[1], type: cur[5] }
         return acc;
       },{}
     )).then(listdict=>{
-      // Dictionary of {"listID":"listName"} pairs, sets or resets lists show in dropdowns
+      // Dictionary of {"listID":{name:"listName",type:"typeName"}} pairs, sets or resets lists show in dropdowns
       wiz.lists(listdict)
     });
     
