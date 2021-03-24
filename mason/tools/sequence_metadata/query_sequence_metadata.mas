@@ -74,90 +74,98 @@
                 <p>Loading...</p>
             </div>
         </div>
-        <br /><br />
 
-        <h4>Attributes</h4>
+        <br /><br /><br />
 
-        <!-- Score Min / Max -->
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Score: </label>
-            <div class="col-sm-3">
-                <label class="control-label">Protocol</label><br />
-                <select class="form-control" id="sequence_metadata_filter_score_protocol" disabled>
-                    <option value="">Loading...</option>
-                </select>
-            </div>
-            <div class="col-sm-3">
-                <label class="control-label">Comparison</label><br />
-                <select class="form-control" id="sequence_metadata_filter_score_comparison">
-                    <option value="eq">Equal</option>
-                    <option value="lte">Less Than or Equal</option>
-                    <option value="lt">Less Than</option>
-                    <option value="gte">Greater Than or Equal</option>
-                    <option value="gt">Greater Than</option>
-                </select>
-            </div>
-            <div class="col-sm-3">
-                <label class="control-label">Value</label><br />
-                <input class="form-control" id="sequence_metadata_filter_score_value" type="text" value="">
-            </div>
-            <div class="col-sm-1">
-                <br />
-                <button id="sequence_metadata_filter_score_add" class="btn btn-info">Add</button>
-            </div>
-        </div>
-        <br /><br />
+        <&| /page/info_section.mas, title=>'Advanced Search', subtitle=>'Filter by attribute values', collapsible=>1, collapsed=>1 &>
 
-        <!-- Attribute Value -->
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Attribute: </label>
-            <div class="col-sm-3">
-                <label class="control-label">Protocol</label><br />
-                <select class="form-control" id="sequence_metadata_filter_attribute_protocol" disabled>
-                    <option value="">Loading...</option>
-                </select>
-            </div>
-            <div class="col-sm-2">
-                <label class="control-label">Key</label><br />
-                <select class="form-control" id="sequence_metadata_filter_attribute_key" disabled>
-                    <option value="">Loading...</option>
-                </select>
-            </div>
-            <div class="col-sm-2">
-                <label class="control-label">Comparison</label><br />
-                <select class="form-control" id="sequence_metadata_filter_attribute_comparison">
-                    <option value="con">Contains</option>
-                    <option value="eq">Equal</option>
-                    <option value="lte">Less Than or Equal</option>
-                    <option value="lt">Less Than</option>
-                    <option value="gte">Greater Than or Equal</option>
-                    <option value="gt">Greater Than</option>
-                </select>
-            </div>
-            <div class="col-sm-2">
-                <label class="control-label">Value</label><br />
-                <input class="form-control" id="sequence_metadata_filter_attribute_value" type="text" value="">
-            </div>
-            <div class="col-sm-1">
-                <br />
-                <button id="sequence_metadata_filter_attribute_add" class="btn btn-info">Add</button>
-            </div>
-        </div>
-        <br />
+            <p>Return only sequence metadata features that have attribute values that match the added comparisons.  If more than one attribute 
+            filter is added, the sequence metadata feature must match all of the filters.</p>
 
-        <!-- Attribute Table -->
-        <div>
-            <p><strong>Attribute Filters:</strong></p>
-            <table id="sequence_metadata_filter_attributes_table" class="table table-striped table-hover">
-                <tr>
-                    <th>Protocol</th>
-                    <th>Attribute</th>
-                    <th>Comparison</th>
-                    <th>Value</th>
-                    <th></th>
-                </tr>
-            </table>
-        </div>
+            <br />
+
+            <!-- Score Min / Max -->
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Score: </label>
+                <div class="col-sm-3">
+                    <label class="control-label">Protocol</label><br />
+                    <select class="form-control" id="sequence_metadata_filter_score_protocol" disabled>
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="col-sm-3">
+                    <label class="control-label">Comparison</label><br />
+                    <select class="form-control" id="sequence_metadata_filter_score_comparison">
+                        <option value="eq">Equal</option>
+                        <option value="lte">Less Than or Equal</option>
+                        <option value="lt">Less Than</option>
+                        <option value="gte">Greater Than or Equal</option>
+                        <option value="gt">Greater Than</option>
+                    </select>
+                </div>
+                <div class="col-sm-3">
+                    <label class="control-label">Value</label><br />
+                    <input class="form-control" id="sequence_metadata_filter_score_value" type="text" value="">
+                </div>
+                <div class="col-sm-1">
+                    <br />
+                    <button id="sequence_metadata_filter_score_add" class="btn btn-info">Add</button>
+                </div>
+            </div>
+            <br /><br />
+
+            <!-- Attribute Value -->
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Attribute: </label>
+                <div class="col-sm-3">
+                    <label class="control-label">Protocol</label><br />
+                    <select class="form-control" id="sequence_metadata_filter_attribute_protocol" disabled>
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="col-sm-2">
+                    <label class="control-label">Key</label><br />
+                    <select class="form-control" id="sequence_metadata_filter_attribute_key" disabled>
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="col-sm-2">
+                    <label class="control-label">Comparison</label><br />
+                    <select class="form-control" id="sequence_metadata_filter_attribute_comparison">
+                        <option value="con">Contains</option>
+                        <option value="eq">Equal</option>
+                        <option value="lte">Less Than or Equal</option>
+                        <option value="lt">Less Than</option>
+                        <option value="gte">Greater Than or Equal</option>
+                        <option value="gt">Greater Than</option>
+                    </select>
+                </div>
+                <div class="col-sm-2">
+                    <label class="control-label">Value</label><br />
+                    <input class="form-control" id="sequence_metadata_filter_attribute_value" type="text" value="">
+                </div>
+                <div class="col-sm-1">
+                    <br />
+                    <button id="sequence_metadata_filter_attribute_add" class="btn btn-info">Add</button>
+                </div>
+            </div>
+            <br />
+
+            <!-- Attribute Table -->
+            <div>
+                <p><strong>Attribute Filters:</strong></p>
+                <table id="sequence_metadata_filter_attributes_table" class="table table-striped table-hover">
+                    <tr>
+                        <th>Protocol</th>
+                        <th>Attribute</th>
+                        <th>Comparison</th>
+                        <th>Value</th>
+                        <th></th>
+                    </tr>
+                </table>
+            </div>
+
+        </&>
 
         <br /><br /><br />
         
@@ -202,6 +210,43 @@
 </div>
 
 
+<!-- MARKER SEARCH GENOTYPE PROTOCOL SELECTION -->
+<div class="modal fade" id="sequence_metadata_genotype_protocol_dialog" name="sequence_metadata_genotype_protocol_dialog" tabindex="-1" role="dialog" aria-labelledby="DeleteModelDataDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DeleteModelDataDialog">Select Genotype Protocol(s)</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <h4>Marker Search</h4>
+
+                    <p>You can search for markers located within the range of a sequence metadata feature. Here you can choose which genotype protocols to 
+                    include in that search.  NOTE: Including more genotype protocols increases the amount of time to perform the marker search.</p>
+
+                    <br />
+
+                    <!-- Genotype Protocols -->
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Genotype Protocol(s): </label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="sequence_metadata_filter_genoproto" size="10" multiple disabled>
+                                <option value="">Loading...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_delete_model_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="sequence_metadata_genotype_protocol_dialog_update" id="sequence_metadata_genotype_protocol_dialog_update">Set Genotype Protocol(s)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 <!-- JBROWSE CONFIGURATION -->
 <!-- OVERWRITE THIS FILE IN THE INSTANCE-SPECIFIC MASON REPO TO CONFIGURE -->
@@ -210,10 +255,13 @@
 
 <script type="text/javascript">
 
-var features = [];
-var data_types = [];
-var protocols = [];
-var attribute_filter_count = 0;
+var features = [];                          // List of sequence metadata features fetched from the database
+var data_types = [];                        // List of sequence metadata data types fetched from the database
+var protocols = [];                         // List of existing sequence metadata protocols fetched from the database
+var attribute_filter_count = 0;             // Current count of attribute filters added by user
+var genotype_protocols = [];                // List of genotype protocols fetched from the database
+var genotype_protocols_selected;            // List of user selected genotype protocols for the marker search
+var markers = {};                           // Object of queried markers from the database for specific ranges
 
 jQuery(document).ready(function() {
 
@@ -221,6 +269,12 @@ jQuery(document).ready(function() {
     get_features();
     get_types();
     get_protocols();
+    get_genotype_protocols();
+
+
+    //
+    // CLICK AND CHANGE LISTENERS
+    //
 
     // Toggle info boxes
     jQuery('#sequence_metadata_filter_type_info_btn').click(function() {
@@ -248,6 +302,16 @@ jQuery(document).ready(function() {
 
     // Return to Query
     jQuery('#sequence_metadata_filter_return').click(toggle_sections);
+
+    // Setup/Start Marker Search
+    jQuery('#sequence_metadata_filter_results').on('click', '.sequence_metadata_genotype_protocol_selection_button', setupMarkerSearch);
+    jQuery('#sequence_metadata_genotype_protocol_dialog_update').click(updateMarkerSearchGenotypeProtocols);
+    jQuery('#sequence_metadata_filter_results').on('click', '.sequence_metadata_marker_search_button', startMarkerSearch);
+
+
+    //
+    // DATATABLES SETUP
+    //
 
     // Set DataTables Buttons
     let DT_BUTTONS = [
@@ -299,41 +363,23 @@ jQuery(document).ready(function() {
         autoWidth: false,
         data: [],
         columns: [
-            { title: "Type", data: "type_name" },
             { title: "Protocol", data: "nd_protocol_name" },
             { title: "Feature", data: "feature_name" },
             { title: "Start", data: "start" },
             { title: "End", data: "end" },
+            { title: "Markers", data: renderMarkersColumn },
             { title: "Score", data: "score" },
-            { 
-                title: "Attributes", 
-                data: "attributes", 
-                render: function(data, type, row) {
-                    let rtn = [];
-                    let sep = type === 'export' ? ';' : '<br />';
-                    if ( data ) {
-                        var keys = Object.keys(data);
-                        keys.sort();
-                        for ( var i=0; i<keys.length; ++i ) {
-                            let key = keys[i];
-                            let value = data[keys[i]];
-                            if ( type === 'export' ) {
-                                rtn.push(key + '=' + value);
-                            }
-                            else {
-                                rtn.push("<strong>" + key + ":</strong>&nbsp;" + value);
-                            }
-                        }
-                    }
-                    return rtn.join(sep);
-                } 
-            }
+            { title: "Attributes", data: "attributes", render: renderAttributesColumn }
         ],
         buttons: DT_BUTTONS
     });
 
 });
 
+
+//
+// DATABASE QUERIES AND RESPONSE HANDLERS
+//
 
 /**
  * Get the features associated with stored sequence metadata
@@ -555,6 +601,65 @@ function set_protocols() {
 
 
 /**
+ * Get the genotype protocols from the database
+ * - populate the options for the genotype protocol select box
+ */
+function get_genotype_protocols() {
+    jQuery.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: '/ajax/sequence_metadata/genotype_protocols',
+        success: function(data) {
+            if ( data && data.genotype_protocols ) {
+                data.genotype_protocols.sort((a, b) => (a.protocol_name > b.protocol_name) ? 1 : -1)
+                genotype_protocols = data.genotype_protocols;
+                set_genotype_protocols();
+            }
+        },
+        error: function() {
+            alert("ERROR: Could not load genotype protocols");
+        }
+    });
+}
+
+/**
+ * Set the options for the genotype protocols select box
+ */
+function set_genotype_protocols() {
+    let options = "";
+
+    // Parse the genotype protocols into options
+    let parsed = {};
+    for ( let i = 0; i < genotype_protocols.length; i++ ) {
+        let id = genotype_protocols[i].protocol_id;
+        let name = genotype_protocols[i].protocol_name;
+        let species = genotype_protocols[i].species_name;
+        let markers = genotype_protocols[i].marker_count;
+        if ( !parsed.hasOwnProperty(species) ) {
+            parsed[species] = [];
+        }
+        let text = name + " (" + markers + " markers)";
+        let option = "<option value='" + id + "'>" + text + "</option>";
+        parsed[species].push(option);
+    }
+
+    // Group the options by species
+    for (let species in parsed) {
+        if ( parsed.hasOwnProperty(species) ) {
+            options += "<optgroup label='" + species + "'>";
+            let items = parsed[species];
+            for ( let i = 0; i < items.length; i++ ) {
+                options += items[i];
+            }
+            options += "</optgroup>";
+        }
+    }
+
+    jQuery("#sequence_metadata_filter_genoproto").html(options);
+    jQuery("#sequence_metadata_filter_genoproto").prop('disabled', false);
+}
+
+/**
  * Set the protocol lists for the score and attribute select menus
  */
 function set_attribute_protocols() {
@@ -656,6 +761,12 @@ function add_attribute_filter(type) {
         });
     }
 }
+
+
+
+//
+// QUERY FUNCTIONS
+//
 
 
 /**
@@ -840,6 +951,155 @@ function getJBrowseURL(config) {
 }
 
 
+
+//
+// MARKER SEARCH FUNCTIONS
+//
+
+
+/**
+ * Setup the marker search by having the user select the genotype protocols to use
+ */
+function setupMarkerSearch() {
+    jQuery('#sequence_metadata_genotype_protocol_dialog').modal('show');
+    return false;
+}
+
+
+/**
+ * Update the list of genotype protocols selected by the user
+ */
+function updateMarkerSearchGenotypeProtocols() {
+    genotype_protocols_selected = jQuery("#sequence_metadata_filter_genoproto").val();
+    markers = {};
+    refreshDataTables();
+    jQuery('#sequence_metadata_genotype_protocol_dialog').modal('hide');
+}
+
+
+/**
+ * Perform a marker search on the selected row's feature and sequence range, 
+ * optionally filtered by the user's selected genotype protocols
+ */
+function startMarkerSearch() {
+    let feature_id = jQuery(this).data("feature-id");
+    let start = jQuery(this).data("start");
+    let end = jQuery(this).data("end");
+    let key = feature_id + "-" + start + "-" + end;
+
+    // Update the DataTables
+    markers[key] = "Searching...";
+    refreshDataTables();
+
+    // Query the Database for Markers
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/sequence_metadata/markers',
+        data: {
+            feature_id: feature_id,
+            start: start,
+            end: end,
+            nd_protocol_id: genotype_protocols_selected ? genotype_protocols_selected.join(',') : undefined
+        },
+        dataType: 'json',
+        success: function(data) {
+
+            // Save the markers and update the DataTables
+            if ( data && data.results ) {
+                markers[key] = data.results;
+                refreshDataTables();
+            }
+
+        },
+        error: function() {
+            alert("ERROR: Could not perform marker search");
+        }
+    });
+
+    return false;
+}
+
+
+
+//
+// DATA TABLE RENDER FUNCTIONS
+//
+
+/**
+ * Render the Markers column
+ * @param {Object} row The current row's data
+ * @param {String} type The display type
+ * @returns {String} The text/html to display in the table
+ */
+function renderMarkersColumn(row, type) {
+    let data = "data-feature-id='" + row.feature_id + "' data-start='" + row.start + "' data-end='" + row.end + "'";
+    let key = row.feature_id + "-" + row.start + "-" + row.end;
+    let html = "";
+    
+    if ( !genotype_protocols_selected ) {
+        html = "<a class='sequence_metadata_genotype_protocol_selection_button' href='#'>Select Genotype Protocols</a>";
+    }
+    else if ( markers.hasOwnProperty(key) ) {
+        let value = markers[key];
+        if ( typeof value === 'string' ) {
+            html = "<p>" + value + "</p><br />";
+        }
+        else if ( Array.isArray(value) ) {
+            if ( value.length === 0 ) {
+                html = "<p>No Markers Found</p>";
+            }
+            else {
+                for ( let i = 0; i < value.length; i++ ) {
+                    html += "<strong><a href='/markerGeno/" + value[i].marker_name + "/details'>" + value[i].marker_name + "</a></strong> "
+                    html += "(<a href='/breeders_toolbox/protocol/" + value[i].nd_protocol_id + "'>" + value[i].nd_protocol_name + "</a>)<br />";
+                }
+                html += "<br />";
+            }
+        }
+        html +="<a class='sequence_metadata_genotype_protocol_selection_button' href='#'>Update Genotype Protocols</a>";
+    }
+    else {
+        html = "<a class='sequence_metadata_marker_search_button' " + data + " href='#'>Search for Markers</a><br /><br />";
+        html +="<a class='sequence_metadata_genotype_protocol_selection_button' href='#'>Update Genotype Protocols</a>";
+    }
+    
+    return html;
+}
+
+/**
+ * Render the Attributes column
+ * @param data The column's data for the current row
+ * @param {String} type The display type
+ * @param {Object} row The current row's data
+ * @returns {String} The text/html to display in the table
+ */
+function renderAttributesColumn(data, type, row) {
+    let rtn = [];
+    let sep = type === 'export' ? ';' : '<br />';
+    if ( data ) {
+        var keys = Object.keys(data);
+        keys.sort();
+        for ( var i=0; i<keys.length; ++i ) {
+            let key = keys[i];
+            let value = data[keys[i]];
+            if ( type === 'export' ) {
+                rtn.push(key + '=' + value);
+            }
+            else {
+                rtn.push("<strong>" + key + ":</strong>&nbsp;" + value);
+            }
+        }
+    }
+    return rtn.join(sep);
+} 
+
+
+
+//
+// HELPER FUNCTIONS
+//
+
+
 /**
  * Toggle the display of the query and results sections
  */
@@ -878,6 +1138,17 @@ function download(url, name) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+}
+
+/**
+ * Refresh the display of the DataTables displaying the filter results
+ */
+function refreshDataTables() {
+    let dt = jQuery('#sequence_metadata_filter_results').DataTable();
+    let d = dt.rows().data();
+    dt.clear();
+    dt.rows.add(d);
+    dt.draw(false);
 }
 
 </script>
