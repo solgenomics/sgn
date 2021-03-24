@@ -118,7 +118,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
    		  'data_set_type' => 'single population'
    	  	};
 
-   	 	my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($args);
+   	 	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
 
         $ret->{redirect_url} = $training_pop_page;
 		$ret->{pop_id} = $pop_id;
@@ -226,7 +226,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 			'data_set_type' => 'combined populations'
 		};
 
-	my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($args);
+	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
 	$training_pop_page = qq | <a href="$training_pop_page">$training_pop_name</a> |;
 
 	if (!@traits_ids)
@@ -408,7 +408,7 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
 		 'data_set_type' => 'combined populations'
 	 };
 
-	my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($args);
+	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
 
     my $pop_link   = qq | <a href="$training_pop_page">$training_pop </a>|;
     $c->stash->{pop_link} = $pop_link;
@@ -818,7 +818,7 @@ sub combined_pops_summary {
 	   		  'data_set_type' => 'single population'
 		   	  };
 
-	   	 	my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($args);
+	   	 	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
 
             $desc .= qq | <a href="$training_pop_page">$pop_name </a>|;
             $desc .= $pop_id == $pops_ids[-1] ? '.' : ' and ';
@@ -848,8 +848,8 @@ sub combined_pops_summary {
 			 'genotyping_protocol_id' => $protocol_id,
 			 'data_set_type' => 'combined populations'
 		};
-		$model_link = $c->controller('solGS::solGS')->model_page_url($args);
 
+		$model_link = $c->controller('solGS::Utils')->model_page_url($args);
 	}
 
     my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
@@ -861,7 +861,7 @@ sub combined_pops_summary {
 		 'data_set_type' => 'combined populations'
 	};
 
-	my $training_pop_page = $c->controller('solGS::solGS')->training_page_url($args);
+	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
 
     my $pop_link   = qq | <a href="$training_pop_page>$training_pop_name</a>|;
     my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
@@ -972,7 +972,6 @@ sub combine_data_build_multiple_traits_models {
 
 	$c->controller('solGS::solGS')->run_async($c);
     }
-
 
 }
 

@@ -200,13 +200,13 @@ sub selection_prediction_download_urls {
 	    if ($page =~ /combined/)
 	    {
 			$url_args->{data_set_type}= 'combined populations';
-			my $sel_pop_page =  $c->controller('solGS::solGS')->selection_page_url($url_args);
+			my $sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
 			$download_url .= qq | <a href="$sel_pop_page">$trait_abbr</a> |;
 	    }
 	    else
 	    {
 			$url_args->{data_set_type}= 'single population';
-			my $sel_pop_page =  $c->controller('solGS::solGS')->selection_page_url($url_args);
+			my $sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
 
 			$download_url .= qq |<a href="$sel_pop_page">$trait_abbr</a> |;
 	    }
@@ -216,7 +216,7 @@ sub selection_prediction_download_urls {
     if (!$download_url)
     {
 		$url_args->{data_set_type}= 'single population';
-		my $sel_pop_page =  $c->controller('solGS::solGS')->selection_page_url($url_args);
+		my $sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
 
 		$download_url = qq | <a href ="$sel_pop_page"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a>|;
     }
