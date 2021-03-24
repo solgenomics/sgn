@@ -20,6 +20,48 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
 );
 
+
+#
+# Get a list of genotype protocols and their properties
+# PATH: GET /ajax/sequence_metadata/genotype_protocols
+# RETURNS:
+#   - genotype_protocols: an array of genotype protocols
+#       - protocol_id: genotype protocol id
+#       - protocol_name: genotype protocol name
+#       - protocol_description: genotype protocol description
+#       - species_name: species name of organism sampled by genotype protocol
+#       - reference_genome_name: name of the reference genome used by the genotype protocol
+#       - marker_count: number of markers included in the genotype protocol
+#
+sub get_genotype_protocols : Path('/ajax/sequence_metadata/genotype_protocols') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    # Get Genotype Protocols
+    my $protocol_search_result = CXGN::Genotype::Protocol::list_simple($schema);
+
+    # Get reference genomes from the protocols
+    my @results = ();
+    foreach my $protocol (@$protocol_search_result) {
+        my %result = (
+            protocol_id => $protocol->{protocol_id},
+            protocol_name => $protocol->{protocol_name},
+            protocol_description => $protocol->{protocol_description},
+            species_name => $protocol->{species_name},
+            reference_genome_name => $protocol->{reference_genome_name},
+            marker_count => $protocol->{marker_count}
+        );
+        push(@results, \%result);
+    }
+
+    # Return the results
+    $c->stash->{rest} = {
+        genotype_protocols => \@results
+    };
+}
+
+
 #
 # Get a list of reference genomes from loaded genotype protocols
 # PATH: GET /ajax/sequence_metadata/reference_genomes
