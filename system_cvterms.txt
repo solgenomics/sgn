@@ -122,6 +122,8 @@ project_property	genotyping_facility_plate_id	To retrieve status info from genot
 project_property	drone_run_averaged_temperature_growing_degree_days	The averaged-temperature growing degree days corresponding to a drone run event	09/02/2019	nm529	00114
 project_property	drone_run_averaged_precipitation_sum	The averaged-precipitation across the growing season corresponding to a drone run event	09/02/2019	nm529	00130
 project_property	drone_run_related_time_cvterms_json	A json string containing time cvterms to annotate the drone run	09/02/2019	nm529	00114
+project_property	drone_run_base_date	A datetime YYYY/MM/DD HH:mm:ss for the base date of the imaging event. Useful when multiple, fixed, camera rigs are capturing different sections of the field experiment, and the cameras are not capturing at the exact same times.	03/24/2021	nm529	00141
+project_property	drone_run_camera_rig_description	A ddescription for camera rig, Useful when multiple, fixed, camera rigs are capturing different sections of the field experiment, and the cameras are not capturing at the exact same times.	03/24/2021	nm529	00141
 project_property	drone_run_is_raw_images	To distinguish when uploading raw images or orthomosaic images as drone runs	07/5172020	nm529	00126
 project_property	drone_run_ground_control_points	Ground control points (GCPs) can optionally be saved for a drone run	08/01/2020	nm529	00127
 project_property	drone_run_project_type	To distinguish the type of drone run being stored (Aerial Medium to High Res, Aerial Low Res)	10/5/2018	nm529	00103

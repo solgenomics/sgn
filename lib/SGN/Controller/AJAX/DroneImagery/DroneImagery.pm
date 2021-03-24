@@ -6674,19 +6674,26 @@ sub _perform_get_weeks_drone_run_after_planting {
     my $drone_run_project_id = shift;
 
     my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
+    my $drone_run_base_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_base_date', 'project_property')->cvterm_id();
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
     my $calendar_funcs = CXGN::Calendar->new({});
 
     my $drone_run_date_rs = $schema->resultset('Project::Projectprop')->search({project_id=>$drone_run_project_id, type_id=>$project_start_date_type_id});
     if ($drone_run_date_rs->count != 1) {
-        return { error => 'There is no drone run date saved! This should not be possible, please contact us; however you can still select the time manually.'};
+        return { error => 'There is no drone run date saved! This should not be possible, please contact us'};
     }
     my $drone_run_date = $drone_run_date_rs->first->value;
     my $drone_date = $calendar_funcs->display_start_date($drone_run_date);
 
+    my $drone_run_base_date_rs = $schema->resultset('Project::Projectprop')->search({project_id=>$drone_run_project_id, type_id=>$drone_run_base_date_type_id});
+    my $drone_run_base_date;
+    if ($drone_run_base_date_rs->count == 1) {
+        $drone_run_base_date = $calendar_funcs->display_start_date($drone_run_base_date_rs->first->value);
+    }
+
     my $field_trial_rs = $schema->resultset("Project::ProjectRelationship")->search({subject_project_id=>$drone_run_project_id, type_id=>$project_relationship_type_id});
     if ($field_trial_rs->count != 1) {
-        return { drone_run_date => $drone_date, error => 'There is no field trial saved to the drone run! This should not be possible, please contact us; however you can still select the time manually'};
+        return { drone_run_date => $drone_date, error => 'There is no field trial saved to the drone run! This should not be possible, please contact us'};
     }
     my $trial_id = $field_trial_rs->first->object_project_id;
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
@@ -6696,12 +6703,19 @@ sub _perform_get_weeks_drone_run_after_planting {
     my $drone_date_full_calendar_datetime = $drone_date_time_object->strftime("%Y/%m/%d %H:%M:%S");
 
     if (!$planting_date) {
-        return { drone_run_date => $drone_date, drone_run_date_calendar => $drone_date_full_calendar_datetime, error => 'The planting date is not set on the field trial, so we could not get the time of this flight automaticaly; however you can still select the time manually'};
+        return { drone_run_date => $drone_date, drone_run_date_calendar => $drone_date_full_calendar_datetime, error => 'The planting date is not set on the field trial, so we could not get the time of this flight automaticaly'};
     }
 
     my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
     my $planting_date_full_calendar_datetime = $planting_date_time_object->strftime("%Y/%m/%d %H:%M:%S");
-    my $time_diff = $drone_date_time_object - $planting_date_time_object;
+    my $time_diff;
+    if ($drone_run_base_date) {
+        my $imaging_event_base_date_time_object = Time::Piece->strptime($drone_run_base_date, "%Y/%m/%d %H:%M:%S");
+        $time_diff = $drone_date_time_object - $imaging_event_base_date_time_object;
+    }
+    else {
+        $time_diff = $drone_date_time_object - $planting_date_time_object;
+    }
     my $time_diff_weeks = $time_diff->weeks;
     my $time_diff_days = $time_diff->days;
     my $time_diff_hours = $time_diff->hours;
@@ -6737,7 +6751,7 @@ sub _perform_get_weeks_drone_run_after_planting {
     }
 
     if (!$week_cvterm_id) {
-        return { planting_date => $planting_date, planting_date_calendar => $planting_date_full_calendar_datetime, drone_run_date => $drone_date, drone_run_date_calendar => $drone_date_full_calendar_datetime, time_difference_weeks => $time_diff_weeks, time_difference_days => $time_diff_days, rounded_time_difference_weeks => $rounded_time_diff_weeks, error => 'The time ontology term was not found automatically! Maybe the field trial planting date or the drone run date are not correct in the database? The maximum number of weeks currently allowed between these two dates is 54 weeks. This should not be possible, please contact us; however you can still select the time manually'};
+        return { planting_date => $planting_date, planting_date_calendar => $planting_date_full_calendar_datetime, drone_run_date => $drone_date, drone_run_date_calendar => $drone_date_full_calendar_datetime, time_difference_weeks => $time_diff_weeks, time_difference_days => $time_diff_days, rounded_time_difference_weeks => $rounded_time_diff_weeks, error => 'The time ontology term was not found automatically! Maybe the field trial planting date or the drone run date are not correct in the database? This should not be possible, please contact us.'};
     }
 
     my $week_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $week_cvterm_id, 'extended');
