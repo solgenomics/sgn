@@ -1187,8 +1187,8 @@ sub upload_drone_imagery_POST : Args(0) {
             $c->detach();
         }
 
-        if ($current_odm_image_count < 50) {
-            $c->stash->{rest} = { error => "Upload more than $current_odm_image_count images! Atleast 50 are required for OpenDroneMap to stitch. Upload now and try again!", drone_run_project_id => $selected_drone_run_id, current_image_count => $current_odm_image_count };
+        if ($current_odm_image_count < 25) {
+            $c->stash->{rest} = { error => "Upload more than $current_odm_image_count images! Atleast 25 are required for OpenDroneMap to stitch. Upload now and try again!", drone_run_project_id => $selected_drone_run_id, current_image_count => $current_odm_image_count };
             $c->detach();
         }
 
@@ -1586,6 +1586,8 @@ sub upload_drone_imagery_bulk_POST : Args(0) {
         $c->detach;
     }
 
+    my @drone_run_project_ids;
+    my %drone_run_band_hash;
     open($fh, '<', $upload_imaging_events_file) or die "Could not open file '$upload_imaging_events_file' $!";
         print STDERR "Opened $upload_imaging_events_file\n";
         my $header = <$fh>;
@@ -1699,6 +1701,7 @@ sub upload_drone_imagery_bulk_POST : Args(0) {
                 nd_experiment_projects => [{nd_experiment_id => $drone_run_nd_experiment_id}]
             });
             my $selected_drone_run_id = $project_rs->project_id();
+            push @drone_run_project_ids, $selected_drone_run_id;
 
             my $vehicle_prop = decode_json $schema->resultset("Stock::Stockprop")->search({stock_id => $new_drone_run_vehicle_id, type_id=>$imaging_vehicle_properties_cvterm_id})->first()->value();
             $vehicle_prop->{batteries}->{$vehicle_battery}->{usage}++;
@@ -1752,11 +1755,16 @@ sub upload_drone_imagery_bulk_POST : Args(0) {
                 $image->set_sp_person_id($user_id);
                 my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
                 my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
+
+                push @{$drone_run_band_hash{$selected_drone_run_id}}, {
+                    drone_run_band_project_id => $selected_drone_run_band_id,
+                    band => $band
+                };
             }
         }
     close($fh);
 
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = { success => 1, drone_run_project_ids => \@drone_run_project_ids, drone_run_band_hash => \%drone_run_band_hash };
 }
 
 sub upload_drone_imagery_new_vehicle : Path('/api/drone_imagery/new_imaging_vehicle') : ActionClass('REST') { }

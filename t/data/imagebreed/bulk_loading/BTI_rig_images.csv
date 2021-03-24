@@ -1,0 +1,5 @@
+Imaging Event Name,Type,Description,Date,Vehicle Name,Vehicle Battery Set,Sensor,Field Trial Name,Base Date,Camera Rig
+Rig1_t1,Aerial Medium to High Res,Test bulk upload,2021/03/01 12:00:00,Drone1,blue,CCD Color Camera,test_trial,2021/03/01 12:00:00,rig1_name
+Rig2_t1,Aerial Medium to High Res,Test bulk upload,2021/03/01 12:10:00,Drone1,blue,CCD Color Camera,test_trial,2021/03/01 12:10:00,rig2_name
+Rig1_t2,Aerial Medium to High Res,Test bulk upload,2021/03/01 12:30:00,Drone1,blue,CCD Color Camera,test_trial,2021/03/01 12:00:00,rig1_name
+Rig2_t2,Aerial Medium to High Res,Test bulk upload,2021/03/01 12:40:00,Drone1,blue,CCD Color Camera,test_trial,2021/03/01 12:10:00,rig2_name

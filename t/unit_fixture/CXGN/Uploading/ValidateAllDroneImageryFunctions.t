@@ -6,6 +6,7 @@ use lib 't/lib';
 use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
+use LWP::Simple;
 use LWP::UserAgent;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::Search;
@@ -39,69 +40,6 @@ is_deeply($message_hash, {'success' => 1});
 
 my $field_trial_id = $schema->resultset("Project::Project")->search({name => 'test_trial'})->first->project_id();
 
-#Testing upload of unstitched Micasense RedEdge 5 band raw captures.
-
-# my $python_dependencies_installed = `locate keras.py`;
-#print STDERR "PYTHON DEPENDENCIES INSTALLED=".Dumper($python_dependencies_installed)."\n";
-
-# SKIP: {
-#     skip 'missing pyhton dependencies', 1 unless $python_dependencies_installed;
-
-my $micasense5bandimageszipfile = $f->config->{basepath}."/t/data/imagebreed/Micasense5BandRaw3Captures.zip";
-my $micasense5bandpanelzipfile = $f->config->{basepath}."/t/data/imagebreed/ExampleAerialDroneFlightMicasensePanel.zip";
-# $ua = LWP::UserAgent->new;
-# my $response_micasense_stitch = $ua->post(
-#         'http://localhost:3010/api/drone_imagery/upload_drone_imagery',
-#         Content_Type => 'form-data',
-#         Content => [
-#             "sgn_session_id"=>$sgn_session_id,
-#             upload_drone_images_zipfile => [ $micasense5bandimageszipfile, 'upload_drone_images_zipfile' ],
-#             upload_drone_images_panel_zipfile => [ $micasense5bandpanelzipfile, 'upload_drone_images_panel_zipfile' ],
-#             "drone_run_field_trial_id"=>$field_trial_id,
-#             "drone_run_name"=>"NewMicasenseUnstitchedDroneRunProject",
-#             "drone_run_type"=>"Aerial Medium to High Res",
-#             "drone_run_date"=>"2019/01/01 12:12:12",
-#             "drone_run_description"=>"test new drone run",
-#             "drone_image_upload_camera_info"=>"micasense_5",
-#             "drone_image_upload_drone_run_band_stitching"=>"yes"
-#         ]
-#     );
-# 
-# ok($response_micasense_stitch->is_success);
-# my $message_micasense_stitch = $response_micasense_stitch->decoded_content;
-# my $message_hash_micasense_stitch = decode_json $message_micasense_stitch;
-# print STDERR Dumper $message_hash_micasense_stitch;
-# is($message_hash_micasense_stitch->{success}, 1);
-# is(scalar(@{$message_hash_micasense_stitch->{drone_run_band_project_ids}}), 5);
-# is(scalar(@{$message_hash_micasense_stitch->{drone_run_band_image_ids}}), 5);
-
-#Testing upload of RGB unstitched raw captures.
-# my $rgbrawimageszipfile = $f->config->{basepath}."/t/data/imagebreed/ExampleRGBRawImages.zip";
-# $ua = LWP::UserAgent->new;
-# my $response_rgb_stitch = $ua->post(
-#         'http://localhost:3010/api/drone_imagery/upload_drone_imagery',
-#         Content_Type => 'form-data',
-#         Content => [
-#             "sgn_session_id"=>$sgn_session_id,
-#             upload_drone_images_zipfile => [ $rgbrawimageszipfile, 'upload_drone_images_zipfile' ],
-#             "drone_run_field_trial_id"=>$field_trial_id,
-#             "drone_run_name"=>"NewRGBUnstitchedDroneRunProject",
-#             "drone_run_type"=>"Aerial Medium to High Res",
-#             "drone_run_date"=>"2019/01/01 12:12:12",
-#             "drone_run_description"=>"test new drone run",
-#             "drone_image_upload_camera_info"=>"ccd_color",
-#             "drone_image_upload_drone_run_band_stitching"=>"yes"
-#         ]
-#     );
-
-# ok($response_rgb_stitch->is_success);
-# my $message_rgb_stitch = $response_rgb_stitch->decoded_content;
-# my $message_hash_rgb_stitch = decode_json $message_rgb_stitch;
-# print STDERR Dumper $message_hash_rgb_stitch;
-# is($message_hash_rgb_stitch->{success}, 1);
-# is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_project_ids}}), 1);
-# is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_image_ids}}), 1);
-
 $response = $ua->get('http://localhost:3010/api/drone_imagery/new_imaging_vehicle?sgn_session_id='.$sgn_session_id.'&vehicle_name=Drone1&vehicle_description=dronedesc&battery_names=blue,green');
 ok($response->is_success);
 my $message = $response->decoded_content;
@@ -110,6 +48,68 @@ print STDERR Dumper $message_hash;
 ok($message_hash->{success});
 ok($message_hash->{new_vehicle_id});
 my $new_vehicle_id = $message_hash->{new_vehicle_id};
+
+#Testing upload of unstitched Micasense RedEdge 5 band raw captures.
+my $file_micasense5channel_image_zip = "/tmp/micasense_5channel_image_zip.zip";
+getstore("https://imagebreed.org/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightRawCaptures.zip", $file_micasense5channel_image_zip);
+my $micasense5bandpanelzipfile = $f->config->{basepath}."/t/data/imagebreed/ExampleAerialDroneFlightMicasensePanel.zip";
+$ua = LWP::UserAgent->new;
+my $response_micasense_stitch = $ua->post(
+        'http://localhost:3010/api/drone_imagery/upload_drone_imagery',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            upload_drone_images_zipfile => [ $file_micasense5channel_image_zip, 'upload_drone_images_zipfile' ],
+            upload_drone_images_panel_zipfile => [ $micasense5bandpanelzipfile, 'upload_drone_images_panel_zipfile' ],
+            "drone_run_field_trial_id"=>$field_trial_id,
+            "drone_run_name"=>"NewMicasenseUnstitchedDroneRunProject",
+            "drone_run_type"=>"Aerial Medium to High Res",
+            "drone_run_date"=>"2019/01/01 12:12:12",
+            "drone_run_description"=>"test new drone run",
+            "drone_run_imaging_vehicle_id"=>$new_vehicle_id,
+            "drone_run_imaging_vehicle_battery_name"=>"blue",
+            "drone_image_upload_camera_info"=>"micasense_5",
+            "drone_image_upload_drone_run_band_stitching"=>"yes_open_data_map_stitch"
+        ]
+    );
+
+ok($response_micasense_stitch->is_success);
+my $message_micasense_stitch = $response_micasense_stitch->decoded_content;
+my $message_hash_micasense_stitch = decode_json $message_micasense_stitch;
+print STDERR Dumper $message_hash_micasense_stitch;
+is($message_hash_micasense_stitch->{success}, 1);
+is(scalar(@{$message_hash_micasense_stitch->{drone_run_band_project_ids}}), 5);
+is(scalar(@{$message_hash_micasense_stitch->{drone_run_band_image_ids}}), 5);
+
+#Testing upload of RGB unstitched raw captures.
+my $rgbrawimageszipfile = "/tmp/micasense_5channel_image_zip.zip";
+getstore("https://imagebreed.org/static_content/imagebreed/ExampleColorAerialDroneFlightRawCaptures.zip", $rgbrawimageszipfile);
+$ua = LWP::UserAgent->new;
+my $response_rgb_stitch = $ua->post(
+        'http://localhost:3010/api/drone_imagery/upload_drone_imagery',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            upload_drone_images_zipfile => [ $rgbrawimageszipfile, 'upload_drone_images_zipfile' ],
+            "drone_run_field_trial_id"=>$field_trial_id,
+            "drone_run_name"=>"NewRGBUnstitchedDroneRunProject",
+            "drone_run_type"=>"Aerial Medium to High Res",
+            "drone_run_date"=>"2019/01/01 12:12:12",
+            "drone_run_description"=>"test new drone run",
+            "drone_run_imaging_vehicle_id"=>$new_vehicle_id,
+            "drone_run_imaging_vehicle_battery_name"=>"blue",
+            "drone_image_upload_camera_info"=>"ccd_color",
+            "drone_image_upload_drone_run_band_stitching"=>"yes_open_data_map_stitch"
+        ]
+    );
+
+ok($response_rgb_stitch->is_success);
+my $message_rgb_stitch = $response_rgb_stitch->decoded_content;
+my $message_hash_rgb_stitch = decode_json $message_rgb_stitch;
+print STDERR Dumper $message_hash_rgb_stitch;
+is($message_hash_rgb_stitch->{success}, 1);
+is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_project_ids}}), 1);
+is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_image_ids}}), 1);
 
 #Testing upload of RGB unstitched raw captures.
 my $rasterblue = $f->config->{basepath}."/t/data/imagebreed/RasterBlue.png";
@@ -521,5 +521,26 @@ my $message_remove_image = $response_remove_image->decoded_content;
 my $message_hash_remove_image = decode_json $message_remove_image;
 print STDERR Dumper $message_hash_remove_image;
 ok($message_hash_remove_image->{status});
-# }
+
+#Testing upload of bulk imaging events
+my $bulk_loading_csv = $f->config->{basepath}."/t/data/imagebreed/bulk_loading/BTI_rig_images.csv";
+my $bulk_loading_image_zip = $f->config->{basepath}."/t/data/imagebreed/bulk_loading/BTI_rig_images.zip";
+$ua = LWP::UserAgent->new;
+my $response_raster = $ua->post(
+        'http://localhost:3010/api/drone_imagery/upload_drone_imagery_bulk',
+        Content_Type => 'form-data',
+        Content => [
+            "sgn_session_id"=>$sgn_session_id,
+            upload_drone_imagery_bulk_images_zipfile => [ $bulk_loading_image_zip, basename($bulk_loading_image_zip) ],
+            upload_drone_imagery_bulk_imaging_events => [ $bulk_loading_csv, basename($bulk_loading_csv) ],
+        ]
+    );
+
+ok($response_raster->is_success);
+my $message_raster = $response_raster->decoded_content;
+my $message_hash_raster = decode_json $message_raster;
+print STDERR Dumper $message_hash_raster;
+is($message_hash_raster->{success}, 1);
+is(scalar(@{$message_hash_raster->{drone_run_band_project_ids}}), 4);
+
 done_testing();
