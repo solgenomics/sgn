@@ -25,9 +25,11 @@
                         <p><b>Example Data:</b> <a href="https://imagebreed.org/static_content/imagebreed/ExampleAerialDroneFlightMicasensePanel.zip" download>MicaSense 5 Band Panel Images (MicaSense calibration panel images.) (Upload zipfile for ImageBreed to calibrate Micasense raw-captures.)</a></p>
                         <p><b>Example Data:</b> <a href="https://imagebreed.org/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightOrthomosaics.zip" download>MicaSense 5 Band Previously Stitched Orthophotomosaic Images (PNG Files in provided zipfile. Can upload each band separately into ImageBreed.)</a></p>
                         <p><b>Example Data:</b> <a href="https://imagebreed.org/static_content/imagebreed/ExampleColorAerialDroneFlightRawCaptures.zip" download>Color Camera Raw Captures (Unstitched JPG image-captures) (Upload zipfile to ImageBreed and let OpenDroneMap stitch orthophotos and DSM.)</a></p>
-                        <br/><br/>
+                        <br/>
                         <center>
-                        <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                        <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to upload a single imaging event</button>
+                        <br/><br/>
+                        <button class="btn btn-default" id="upload_drone_imagery_bulk_previous_button" >Go to bulk upload of previously processed imaging events</button>
                         </center>
                     </&>
                     <&| /util/workflow.mas:step, title=> "Field Trial" &>
@@ -69,27 +71,6 @@
                         <!-- If drone run is selected above, the drone_run_project_id is passed to controller, negating need to create new drone run -->
                         <input id="drone_run_id" name="drone_run_id" type="hidden" value=""/>
                         <input id="drone_image_upload_drone_run_band_stitching_odm_image_count" name="drone_image_upload_drone_run_band_stitching_odm_image_count" type="hidden" value=""/>
-
-                        <!-- If raw plot image boundaries are given -->
-                        <input id="drone_run_raw_image_boundaries_first_plot_corner" name="drone_run_raw_image_boundaries_first_plot_corner" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_second_plot_direction" name="drone_run_raw_image_boundaries_second_plot_direction" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_plot_orientation" name="drone_run_raw_image_boundaries_plot_orientation" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_corners_json" name="drone_run_raw_image_boundaries_corners_json" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_corners_gps_json" name="drone_run_raw_image_boundaries_corners_gps_json" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_rotate_angle" name="drone_run_raw_image_boundaries_rotate_angle" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_row_num" name="drone_run_raw_image_boundaries_row_num" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_col_num" name="drone_run_raw_image_boundaries_col_num" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_flight_direction" name="drone_run_raw_image_boundaries_flight_direction" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_plot_width" name="drone_run_raw_image_boundaries_plot_width" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_plot_length" name="drone_run_raw_image_boundaries_plot_length" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_corners_plots_json" name="drone_run_raw_image_boundaries_corners_plots_json" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_latitude_precision" name="drone_run_raw_image_boundaries_latitude_precision" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_start_direction" name="drone_run_raw_image_boundaries_start_direction" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_turn_direction" name="drone_run_raw_image_boundaries_turn_direction" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_geographic_position" name="drone_run_raw_image_boundaries_geographic_position" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_image_top_direction" name="drone_run_raw_image_boundaries_image_top_direction" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_row_alley_width" name="drone_run_raw_image_boundaries_row_alley_width" type="hidden" value=""/>
-                        <input id="drone_run_raw_image_boundaries_column_alley_width" name="drone_run_raw_image_boundaries_column_alley_width" type="hidden" value=""/>
 
                         <br/>
                         <div id="drone_image_upload_create_drone_inputs">
@@ -237,6 +218,162 @@
   </div>
 </div>
 
+<div class="modal fade" id="upload_drone_imagery_bulk_previous_dialog" name="upload_drone_imagery_bulk_previous_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadDroneImageryBulkPreviousDialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadDroneImageryBulkPreviousDialog">Upload Aerial Imagery in Bulk For Previously Processed Imaging Events</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_bulk_previous_form" name="upload_drone_imagery_bulk_previous_form">
+
+                <&| /util/workflow.mas, id=> "drone_imagery_upload_bulk_previous_workflow" &>
+                    <&| /util/workflow.mas:step, title=> "Intro" &>
+                        <& /page/page_title.mas, title=>"This workflow will guide you through uploading aerial images to the database for previously processed imaging events" &>
+                        <p>Your field trial(s) must already be in the database before you can upload images for it. Please go to <a href="/breeders/trials">Manage->Field Trials</a> if it is not.</p>
+                        <p>In this process first upload a spreadsheet detailing the individual imaging events, then upload a zipfile containing the orthophotomosaic images for the imaging events, and finally you upload a zipfile containing spreadsheets detailing the pixel positions of the plot polygons for the imaging events.</p>
+                        <br/>
+                        <center>
+                        <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to next step</button>
+                        </center>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Define Imaging Events" &>
+                        <& /page/page_title.mas, title=>"Define Imaging Events in Bulk" &>
+
+                        <h4>The uploaded file must have the following header:</h4>
+
+                        <table class="table table-bordered table-hover">
+                            <tbody>
+                                <tr>
+                                    <th>Imaging Event Name</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Date</th>
+                                    <th>Vehicle Name</th>
+                                    <th>Vehicle Battery Set</th>
+                                    <th>Sensor</th>
+                                    <th>Field Trial Name</th>
+                                    <th>Apply Rotation Degrees</th>
+                                    <th>Apply Cropping Top-Left X Pixel Position</th>
+                                    <th>Apply Cropping Top-Left Y Pixel Position</th>
+                                    <th>Apply Cropping Top-Right X Pixel Position</th>
+                                    <th>Apply Cropping Top-Right Y Pixel Position</th>
+                                    <th>Apply Cropping Bottom-Left X Pixel Position</th>
+                                    <th>Apply Cropping Bottom-Left Y Pixel Position</th>
+                                    <th>Apply Cropping Bottom-Right X Pixel Position</th>
+                                    <th>Apply Cropping Bottom-Right Y Pixel Position</th>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <ul>
+                            <li><b>Imaging Event Name</b>: (required) The globally unique name of the imaging event name (e.g. Field1Ortho01012020)</li>
+                            <li><b>Type</b>: (required) Either "Aerial Medium to High Res" or "Aerial Low Res" to indicate high or low resolution imagery.</li>
+                            <li><b>Description</b>: (required) Free-text description of the imaging event and how it was flown and/or processed.</li>
+                            <li><b>Date</b>: (required) The date and time of the imaging event in YYYY/MM/DD hh:mm:ss format (e.g. 2021/03/02 12:00:00)</li>
+                            <li><b>Vehicle Name</b>: (required) The name of the aerial vehicle which was used. This must already exist in the database.</li>
+                            <li><b>Vehicle Battery Set</b>: (required) The name of the aerial vehicle battery set which was used. This must already exist in the database.</li>
+                            <li><b>Sensor</b>: (required) The type of camera sensor used. Must be either "MicaSense 5 Channel Camera", "CCD Color Camera", or "CMOS Color Camera".</li>
+                            <li><b>Field Trial Name</b>: (required) The name of the field trial which was imaged. This must already exist in the database.</li>
+                            <li><b>Apply Rotation Degrees</b>: (optional) Clock-wise degree rotation, 0 to 360 degrees, to apply to the uploaded imagery (e.g. 92). Leave empty if no rotation should be applied to the uploaded imagery.</li>
+                            <li><b>Apply Cropping Top-Left X Pixel Position</b>: (optional) Pixel position of the top-left x-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
+                            <li><b>Apply Cropping Top-Left Y Pixel Position</b>: (optional) Pixel position of the top-left y-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
+                            <li><b>Apply Cropping Top-Right X Pixel Position</b>: (optional) Pixel position of the top-right x-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
+                            <li><b>Apply Cropping Top-Right Y Pixel Position</b>: (optional) Pixel position of the top-right y-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
+                            <li><b>Apply Cropping Bottom-Left X Pixel Position</b>: (optional) Pixel position of the bottom-left x-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
+                            <li><b>Apply Cropping Bottom-Left Y Pixel Position</b>: (optional) Pixel position of the bottom-left y-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
+                            <li><b>Apply Cropping Bottom-Right X Pixel Position</b>: (optional) Pixel position of the bottom-right x-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
+                            <li><b>Apply Cropping Bottom-Right Y Pixel Position</b>: (optional) Pixel position of the bottom-right y-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
+                        </ul>
+
+                        <hr>
+                        <center>
+                        <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to next step</button>
+                        </center>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Upload Orthophoto Rasters" &>
+                        <& /page/page_title.mas, title=>"Upload Orthophoto Rasters For Imaging Events in Bulk" &>
+
+                        <h4>Upload a zipfile (.zip) which contains orthophotos (.tiff, .png, .jpg) named in accordance with the imaging event names defined in the previous step.</h4>
+                        <h4>The images must be named as a concatenation of the imaging event name and the spectral type of the image, with an underline in between (e.g. Field1Ortho01012020_blue).</h4>
+
+                        <p>The allowed spectral types are: blue, green, red, rededge, nir, mir, fir, thir, rgb, and bw, corresponding to Blue (450-520nm), Green (515-600nm), Red (600-690nm), Red Edge (690-750nm), NIR (780-3000nm), MIR (3000-50000nm), FIR (50000-1000000nm), Thermal IR (9000-14000nm), RGB Color Image, and Black and White Image, respectively.</p>
+                        <p>The zipfile should be no larger than 2GB and should contain all of the orthophoto images for the defined imaging events.</p>
+                        <p>For an imaging event using a MicaSense 5-channel camera, the 5 separate orthophotos should be included in the zipfile and should be named as a concatenation of the imaging event name and the spectral type (e.g. Field1Ortho01012020_blue, Field1Ortho01012020_green, Field1Ortho01012020_red, Field1Ortho01012020_rededge, and Field1Ortho01012020_nir).</p>
+                        <p>Digital surface map (DSM) raster images can be uploaded as blank and white images (e.g. Field1Ortho01012020_bw.png)</p>
+
+                        <hr>
+                        <center>
+                        <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to next step</button>
+                        </center>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Define Plot Polygons" &>
+                        <& /page/page_title.mas, title=>"Define Plot Polygons in Bulk" &>
+
+                        <h4>Upload a zipfile (.zip) which contains comma-separated spreadsheets (.csv) detailing the pixel positions of the plot-polygons.</h4>
+
+                        <p>The spreadsheets should be named in accordance with the imaging event names defined in the previous step (e.g. Field1Ortho01012020).</p>
+                        <p>The zipfile should be no larger than 2GB.</p>
+
+                        <h4>The spreadsheets must each have the following header:</h4>
+
+                        <table class="table table-bordered table-hover">
+                            <tbody>
+                                <tr>
+                                    <th>Plot Name</th>
+                                    <th>Top-Left X Pixel Position</th>
+                                    <th>Top-Left Y Pixel Position</th>
+                                    <th>Top-Right X Pixel Position</th>
+                                    <th>Top-Right Y Pixel Position</th>
+                                    <th>Bottom-Left X Pixel Position</th>
+                                    <th>Bottom-Left Y Pixel Position</th>
+                                    <th>Bottom-Right X Pixel Position</th>
+                                    <th>Bottom-Right Y Pixel Position</th>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <ul>
+                            <li><b>Plot Name</b>: (required) The name of the plot for which the polygon is being defined. Must already exist in the database as part of the field trial.</li>
+                            <li><b>Top-Left X Pixel Position</b>: (required) The top-left x-axis pixel position for the defined plot polygon.</li>
+                            <li><b>Top-Left Y Pixel Position</b>: (required) The top-left y-axis pixel position for the defined plot polygon.</li>
+                            <li><b>Top-Right X Pixel Position</b>: (required) The top-right x-axis pixel position for the defined plot polygon.</li>
+                            <li><b>Top-Right Y Pixel Position</b>: (required) The top-right y-axis pixel position for the defined plot polygon.</li>
+                            <li><b>Bottom-Left X Pixel Position</b>: (required) The bottom-left x-axis pixel position for the defined plot polygon.</li>
+                            <li><b>Bottom-Left Y Pixel Position</b>: (required) The bottom-left y-axis pixel position for the defined plot polygon.</li>
+                            <li><b>Bottom-Right X Pixel Position</b>: (required) The bottom-right x-axis pixel position for the defined plot polygon.</li>
+                            <li><b>Bottom-Right Y Pixel Position</b>: (required) The bottom-right y-axis pixel position for the defined plot polygon.</li>
+                        </ul>
+
+                        <hr>
+                        <center>
+                        <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to next step</button>
+                        </center>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Submit" &>
+                        <& /page/page_title.mas, title=>"Submit to database" &>
+
+                        <center>
+                        <button type="button" class="btn btn-info" name="upload_drone_imagery_bulk_previous_submit" id="upload_drone_imagery_bulk_previous_submit">Submit</button>
+                        </center>
+                    </&>
+
+                </&>
+
+                <div id="upload_drone_imagery_bulk_previous_verify_status"></div>
+            </form><br/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="drone_run_imaging_vehicle_add_new_modal" name="drone_run_imaging_vehicle_add_new_modal" tabindex="-1" role="dialog" aria-labelledby="uploadDroneImageryAddNewVehicleDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -301,6 +438,12 @@ jQuery(document).ready(function() {
             destroy : true,
             ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=upload_drone_imagery_drone_run_select&field_trial_ids='+field_trial_id+'&disable=1'
         });
+    });
+
+    jQuery('#upload_drone_imagery_bulk_previous_button').click(function(e){
+        e.preventDefault();
+        jQuery('#upload_drone_imagery_bulk_previous_dialog').modal("show");
+        return;
     });
 
     jQuery('#upload_drone_image_field_trial_select_continue').click(function(){
