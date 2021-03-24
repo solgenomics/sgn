@@ -937,13 +937,27 @@ jQuery(document).ready( function() {
                 var col_max = Math.max.apply(Math,unique_cols);
                 var row_max = Math.max.apply(Math,unique_rows);
                 var rep_max = Math.max.apply(Math,replicates);
-                var block_max = Math.max.apply(Math,blocks);                
+                var block_max = Math.max.apply(Math,blocks);          
                 var col_length = cols[0]; 
                 var row_length = rows[0];
+
+
+                console.log(unique_rows);
+
+                unique_rows = [];
+                unique_cols = [];
+
+                for (let i=1; i<=row_max; i++){
+                    unique_rows.push(i);
+                }
+
+                for (let i=1; i<=col_max; i++){
+                    unique_cols.push(i);
+                }
+                
                 var controls = [];
                 var unique_ctrl = [];
                 var plots = plot_mums;
-                var col_max;
                 var stocks = accession_names;
                 for (var i = 0; i < check.length; i++) {
                     if ( check[i] == "Check") {
