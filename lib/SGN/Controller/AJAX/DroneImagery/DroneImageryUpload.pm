@@ -3,7 +3,7 @@
 
 SGN::Controller::AJAX::DroneImagery::DroneImageryUpload - a REST controller class to provide the
 functions for uploading drone imagery into the database. All other functions are
-controlled by SGN::Controller::AJAX::DroneImagery 
+controlled by SGN::Controller::AJAX::DroneImagery
 
 =head1 DESCRIPTION
 
@@ -277,7 +277,7 @@ sub upload_drone_imagery_POST : Args(0) {
         my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
         my $imaging_vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
         my $imaging_vehicle_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
-        
+
         my $drone_run_projectprops = [
             {type_id => $drone_run_type_cvterm_id, value => $new_drone_run_type},
             {type_id => $project_start_date_type_id, value => $drone_run_event},
@@ -819,7 +819,7 @@ sub upload_drone_imagery_POST : Args(0) {
         }
         elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
             # $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesRGB.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --output_path '$dir' --final_rgb_output_path '$temp_file_stitched_result_rgb'";
-            # 
+            #
             # @stitched_bands = (
             #     ["Color Image", "RGB Color Image", "RGB Color Image", $temp_file_stitched_result_rgb],
             # );
@@ -1433,7 +1433,7 @@ sub upload_drone_imagery_bulk_POST : Args(0) {
         my $temp_file = $image->upload_zipfile_images($_);
         my $imaging_event_name = $image_spectra[0];
         my $band = $image_spectra[1];
-        
+
         if (!exists($spectral_lookup{$band})) {
             $c->stash->{rest} = {error => "The spectral band $band is not allowed in the provided orthophoto $filename_only. Make sure the orthophotos are saved as a concatenation of the imaging event name and the spectral band, with a pipe (|) as the separator (e.g. Ortho1_01012020|blue.tiff) and the allowed spectral bands are blue,green,red,rededge,nir,mir,fir,thir,rgb,bw." };
             $c->detach;
@@ -1573,7 +1573,7 @@ sub upload_drone_imagery_bulk_POST : Args(0) {
                     push @parse_csv_errors, "The date of the imaging event $imaging_event_date is not after the base date $base_date!";
                 }
             }
-            
+
             if (!exists($filename_imaging_event_lookup{$imaging_event_name})) {
                 push @parse_csv_errors, "The imaging event name $imaging_event_name does not have orthophotos in the uploaded zipfile. Make sure the orthophotos are saved as a concatenation of the imaging event name and the spectral band, with a pipe (|) as the separator (e.g. Ortho1_01012020|blue.tiff)";
             }

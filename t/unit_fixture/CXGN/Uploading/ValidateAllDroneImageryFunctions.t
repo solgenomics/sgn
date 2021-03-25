@@ -50,10 +50,10 @@ ok($message_hash->{new_vehicle_id});
 my $new_vehicle_id = $message_hash->{new_vehicle_id};
 
 #Testing upload of unstitched Micasense RedEdge 5 band raw captures.
-my $file_micasense5channel_image_zip = "/tmp/micasense_5channel_image_zip.zip";
-getstore("https://imagebreed.org/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightRawCaptures.zip", $file_micasense5channel_image_zip);
+my $file_micasense5channel_image_zip = "/home/production/public/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightRawCaptures.zip";
 my $micasense5bandpanelzipfile = $f->config->{basepath}."/t/data/imagebreed/ExampleAerialDroneFlightMicasensePanel.zip";
 $ua = LWP::UserAgent->new;
+$ua->timeout(3600);
 my $response_micasense_stitch = $ua->post(
         'http://localhost:3010/api/drone_imagery/upload_drone_imagery',
         Content_Type => 'form-data',
@@ -64,7 +64,7 @@ my $response_micasense_stitch = $ua->post(
             "drone_run_field_trial_id"=>$field_trial_id,
             "drone_run_name"=>"NewMicasenseUnstitchedDroneRunProject",
             "drone_run_type"=>"Aerial Medium to High Res",
-            "drone_run_date"=>"2019/01/01 12:12:12",
+            "drone_run_date"=>"2019/01/03 12:12:12",
             "drone_run_description"=>"test new drone run",
             "drone_run_imaging_vehicle_id"=>$new_vehicle_id,
             "drone_run_imaging_vehicle_battery_name"=>"blue",
@@ -78,13 +78,13 @@ my $message_micasense_stitch = $response_micasense_stitch->decoded_content;
 my $message_hash_micasense_stitch = decode_json $message_micasense_stitch;
 print STDERR Dumper $message_hash_micasense_stitch;
 is($message_hash_micasense_stitch->{success}, 1);
-is(scalar(@{$message_hash_micasense_stitch->{drone_run_band_project_ids}}), 5);
-is(scalar(@{$message_hash_micasense_stitch->{drone_run_band_image_ids}}), 5);
+is(scalar(@{$message_hash_micasense_stitch->{drone_run_band_project_ids}}), 6);
+is(scalar(@{$message_hash_micasense_stitch->{drone_run_band_image_ids}}), 6);
 
 #Testing upload of RGB unstitched raw captures.
-my $rgbrawimageszipfile = "/tmp/micasense_5channel_image_zip.zip";
-getstore("https://imagebreed.org/static_content/imagebreed/ExampleColorAerialDroneFlightRawCaptures.zip", $rgbrawimageszipfile);
+my $rgbrawimageszipfile = "/home/production/public/static_content/imagebreed/ExampleColorAerialDroneFlightRawCaptures.zip";
 $ua = LWP::UserAgent->new;
+$ua->timeout(3600);
 my $response_rgb_stitch = $ua->post(
         'http://localhost:3010/api/drone_imagery/upload_drone_imagery',
         Content_Type => 'form-data',
@@ -94,7 +94,7 @@ my $response_rgb_stitch = $ua->post(
             "drone_run_field_trial_id"=>$field_trial_id,
             "drone_run_name"=>"NewRGBUnstitchedDroneRunProject",
             "drone_run_type"=>"Aerial Medium to High Res",
-            "drone_run_date"=>"2019/01/01 12:12:12",
+            "drone_run_date"=>"2019/01/02 12:12:12",
             "drone_run_description"=>"test new drone run",
             "drone_run_imaging_vehicle_id"=>$new_vehicle_id,
             "drone_run_imaging_vehicle_battery_name"=>"blue",
@@ -108,8 +108,8 @@ my $message_rgb_stitch = $response_rgb_stitch->decoded_content;
 my $message_hash_rgb_stitch = decode_json $message_rgb_stitch;
 print STDERR Dumper $message_hash_rgb_stitch;
 is($message_hash_rgb_stitch->{success}, 1);
-is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_project_ids}}), 1);
-is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_image_ids}}), 1);
+is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_project_ids}}), 2);
+is(scalar(@{$message_hash_rgb_stitch->{drone_run_band_image_ids}}), 2);
 
 #Testing upload of RGB unstitched raw captures.
 my $rasterblue = $f->config->{basepath}."/t/data/imagebreed/RasterBlue.png";
@@ -273,8 +273,7 @@ ok($response_drone_runs->is_success);
 my $message_drone_runs = $response_drone_runs->decoded_content;
 my $message_hash_drone_runs = decode_json $message_drone_runs;
 print STDERR Dumper $message_hash_drone_runs;
-# is(scalar(@{$message_hash_drone_runs->{data}}), 3);
-is(scalar(@{$message_hash_drone_runs->{data}}), 1);
+is(scalar(@{$message_hash_drone_runs->{data}}), 3);
 
 $ua = LWP::UserAgent->new;
 my $response_image_types = $ua->get('http://localhost:3010/api/drone_imagery/plot_polygon_types?select_checkbox_name=drone_test_checkbox&field_trial_id='.$field_trial_id);
@@ -541,6 +540,6 @@ my $message_raster = $response_raster->decoded_content;
 my $message_hash_raster = decode_json $message_raster;
 print STDERR Dumper $message_hash_raster;
 is($message_hash_raster->{success}, 1);
-is(scalar(@{$message_hash_raster->{drone_run_band_project_ids}}), 4);
+is(scalar(@{$message_hash_raster->{drone_run_project_ids}}), 4);
 
 done_testing();
