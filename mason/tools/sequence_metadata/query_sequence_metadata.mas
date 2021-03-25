@@ -261,7 +261,7 @@ var protocols = [];                         // List of existing sequence metadat
 var attribute_filter_count = 0;             // Current count of attribute filters added by user
 var genotype_protocols = [];                // List of genotype protocols fetched from the database
 var genotype_protocols_selected;            // List of user selected genotype protocols for the marker search
-var markers = {};                           // Object of queried markers from the database for specific ranges
+var markers;                                // Object of queried markers from the database for specific ranges
 
 jQuery(document).ready(function() {
 
@@ -372,6 +372,11 @@ jQuery(document).ready(function() {
             { title: "Attributes", data: "attributes", render: renderAttributesColumn }
         ],
         buttons: DT_BUTTONS
+    });
+
+    // Update the Marker Search display when the table is redrawn (on page change, etc...)
+    jQuery('#sequence_metadata_filter_results').DataTable().on('draw.dt', function() {
+        updateMarkerColumn();
     });
 
 });
@@ -846,6 +851,8 @@ function query() {
  *                 response.results array of sequence metadata objects
  */
 function handle_query_results(response) {
+
+    // Update DataTable
     let dt = jQuery('#sequence_metadata_filter_results').DataTable();
     dt.clear();
     if ( response && response.error ) {
@@ -860,8 +867,14 @@ function handle_query_results(response) {
     }
     dt.draw();
 
+    // Reset Markers
+    markers = undefined;
+    updateMarkerColumn();
+
+    // Reset Query Button
     jQuery('#sequence_metadata_filter_query').html('Query');
     jQuery('#sequence_metadata_filter_query').attr('disabled', false);
+
 }
 
 
@@ -971,8 +984,8 @@ function setupMarkerSearch() {
  */
 function updateMarkerSearchGenotypeProtocols() {
     genotype_protocols_selected = jQuery("#sequence_metadata_filter_genoproto").val();
-    markers = {};
-    refreshDataTables();
+    markers = undefined;
+    updateMarkerColumn();
     jQuery('#sequence_metadata_genotype_protocol_dialog').modal('hide');
 }
 
@@ -982,14 +995,16 @@ function updateMarkerSearchGenotypeProtocols() {
  * optionally filtered by the user's selected genotype protocols
  */
 function startMarkerSearch() {
-    let feature_id = jQuery(this).data("feature-id");
-    let start = jQuery(this).data("start");
-    let end = jQuery(this).data("end");
-    let key = feature_id + "-" + start + "-" + end;
+    let parent = jQuery(this).parents(".sequence_metadata_marker_search_markers");
+    let feature_id = parent.data("feature-id");
+    let start = parent.data("start");
+    let end = parent.data("end");
+    let key = [feature_id, start, end].join("-");
 
     // Update the DataTables
+    if ( !markers ) markers = {};
     markers[key] = "Searching...";
-    refreshDataTables();
+    updateMarkerColumn();
 
     // Query the Database for Markers
     jQuery.ajax({
@@ -1007,7 +1022,7 @@ function startMarkerSearch() {
             // Save the markers and update the DataTables
             if ( data && data.results ) {
                 markers[key] = data.results;
-                refreshDataTables();
+                updateMarkerColumn();
             }
 
         },
@@ -1017,6 +1032,59 @@ function startMarkerSearch() {
     });
 
     return false;
+}
+
+/**
+ * Update the contents of the marker column in the results table
+ */
+function updateMarkerColumn() {
+
+    // Update the markers (add search button or marker links)
+    // only if genotype protocol(s) has been selected
+    if ( genotype_protocols_selected ) {
+        jQuery('.sequence_metadata_marker_search_markers').each(function() {
+            let feature_id = jQuery(this).data("feature-id");
+            let start = jQuery(this).data("start");
+            let end = jQuery(this).data("end");
+            let key = [feature_id, start, end].join("-");
+            
+            let marker_html = "";
+            if ( markers && markers.hasOwnProperty(key) ) {
+                let value = markers[key];
+                if ( typeof value === 'string' ) {
+                    marker_html = "<p>" + value + "</p>";
+                }
+                else if ( Array.isArray(value) ) {
+                    if ( value.length === 0 ) {
+                        marker_html = "<p>No Markers Found</p>";
+                    }
+                    else {
+                        for ( let i = 0; i < value.length; i++ ) {
+                            marker_html += "<strong><a href='/markerGeno/" + value[i].marker_name + "/details'>" + value[i].marker_name + "</a></strong> "
+                            marker_html += "(<a href='/breeders_toolbox/protocol/" + value[i].nd_protocol_id + "'>" + value[i].nd_protocol_name + "</a>)<br />";
+                        }
+                        marker_html += "<br />";
+                    }
+                }
+            }
+            else {
+                marker_html = "<p><a class='sequence_metadata_marker_search_button' href='#'>Search for Markers</a></p>";
+            }
+            jQuery('.sequence_metadata_marker_search_markers_' + key).html(marker_html);
+        });
+    }
+
+    // Update the protocol buttons for all rows
+    let protocol_label = "";
+    if ( !genotype_protocols_selected ) {
+        protocol_label = "Select Genotype Protocols";
+    }
+    else {
+        protocol_label = "Update Genotype Protocols";
+    }
+    let protocol_html = "<a class='sequence_metadata_genotype_protocol_selection_button' href='#'>" + protocol_label + "</a>";
+    jQuery('.sequence_metadata_marker_search_protocols').html(protocol_html);
+
 }
 
 
@@ -1034,35 +1102,12 @@ function startMarkerSearch() {
 function renderMarkersColumn(row, type) {
     let data = "data-feature-id='" + row.feature_id + "' data-start='" + row.start + "' data-end='" + row.end + "'";
     let key = row.feature_id + "-" + row.start + "-" + row.end;
-    let html = "";
     
-    if ( !genotype_protocols_selected ) {
-        html = "<a class='sequence_metadata_genotype_protocol_selection_button' href='#'>Select Genotype Protocols</a>";
-    }
-    else if ( markers.hasOwnProperty(key) ) {
-        let value = markers[key];
-        if ( typeof value === 'string' ) {
-            html = "<p>" + value + "</p><br />";
-        }
-        else if ( Array.isArray(value) ) {
-            if ( value.length === 0 ) {
-                html = "<p>No Markers Found</p>";
-            }
-            else {
-                for ( let i = 0; i < value.length; i++ ) {
-                    html += "<strong><a href='/markerGeno/" + value[i].marker_name + "/details'>" + value[i].marker_name + "</a></strong> "
-                    html += "(<a href='/breeders_toolbox/protocol/" + value[i].nd_protocol_id + "'>" + value[i].nd_protocol_name + "</a>)<br />";
-                }
-                html += "<br />";
-            }
-        }
-        html +="<a class='sequence_metadata_genotype_protocol_selection_button' href='#'>Update Genotype Protocols</a>";
-    }
-    else {
-        html = "<a class='sequence_metadata_marker_search_button' " + data + " href='#'>Search for Markers</a><br /><br />";
-        html +="<a class='sequence_metadata_genotype_protocol_selection_button' href='#'>Update Genotype Protocols</a>";
-    }
-    
+    let html = "<div class='sequence_metadata_marker_search'>";
+    html += "<div class='sequence_metadata_marker_search_markers sequence_metadata_marker_search_markers_" + key + "' " + data + "></div>";
+    html += "<div class='sequence_metadata_marker_search_protocols'></div>";
+    html += "</div>";
+
     return html;
 }
 
@@ -1138,17 +1183,6 @@ function download(url, name) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-}
-
-/**
- * Refresh the display of the DataTables displaying the filter results
- */
-function refreshDataTables() {
-    let dt = jQuery('#sequence_metadata_filter_results').DataTable();
-    let d = dt.rows().data();
-    dt.clear();
-    dt.rows.add(d);
-    dt.draw(false);
 }
 
 </script>
