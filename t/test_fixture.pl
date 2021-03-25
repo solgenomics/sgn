@@ -68,7 +68,7 @@ my $cfg = Config::Any->load_files({files=> [$conf_file_base, $template_file], us
 my $config = $cfg->[0]->{$conf_file_base};
 my $template = $cfg->[1]->{$template_file};
 
-if ($list_config) { 
+if ($list_config) {
     print STDERR Dumper($cfg);
 }
 
@@ -167,7 +167,7 @@ else {
 
 	if (!$nocleanup) {
 	    print STDERR "# Removing test database ($dbname)... ";
-	    
+
 	    if ($noserver) {
 		print STDERR "# [ --noserver option: No logfile to remove]\n";
 	    }
@@ -219,7 +219,7 @@ unless( $prove_pid ) {
     my $app = App::Prove->new;
 
     my $v = $verbose ? 'v' : '';
-    
+
     $app->process_args(
         '-lr'.$v,
         ( map { -I => $_ } @INC ),
@@ -242,6 +242,10 @@ sleep(3);
 print STDERR "Done.\n";
 
 if (!$nocleanup) {
+    print STDERR "# Deleting test archive...\n";
+    my $archive_path = $config->{archive_path};
+    system("rm -rf $archive_path");
+
     print STDERR "# Removing test database ($dbname)... ";
     system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
     print STDERR "Done.\n";
