@@ -947,7 +947,6 @@ jQuery(document).ready( function() {
                 var row_length = rows[0];
 
 
-                console.log(unique_rows);
 
                 unique_rows = [];
                 unique_cols = [];
