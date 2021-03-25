@@ -154,7 +154,7 @@ $trial_name => undef
 <script>
     jQuery(document).ready(function() {
         jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
-        get_select_box('projects', 'select_trial_for_selection_index', { 'get_field_trials' : 1, 'include_analyses' : 1, 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'default': 'Select a trial or analysis', 'live_search': 1 });
+        get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
         var lo = new CXGN.List();
         jQuery('#sin_list').html(lo.listSelect('sin_list', ['dataset'], 'Select a formula', 'refresh', undefined));
         jQuery('#sin_list_list_select').change(
