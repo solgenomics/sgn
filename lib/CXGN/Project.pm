@@ -1663,6 +1663,28 @@ sub set_genotyping_vendor_order_id {
     $self->_set_projectprop('genotyping_vendor_order_id', $value);
 }
 
+=head2 accessors get_genotyping_vendor_submission_id(), set_genotyping_vendor_submission_id()
+
+ Usage: For genotyping plates, if a genotyping plate has been submitted to genotyping facility, the order id of that plate can be set here
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_vendor_submission_id {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_vendor_submission_id');
+}
+
+sub set_genotyping_vendor_submission_id {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_vendor_submission_id', $value);
+}
+
 =head2 accessors get_genotyping_plate_format(), set_genotyping_plate_format()
 
  Usage: For genotyping plates, this records if it is 96 wells or 384 or other

@@ -143,6 +143,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{genotyping_facility_submitted} = $trial->get_genotyping_facility_submitted;
         $c->stash->{genotyping_facility_status} = $trial->get_genotyping_facility_status;
         $c->stash->{genotyping_vendor_order_id} = $trial->get_genotyping_vendor_order_id;
+        $c->stash->{genotyping_vendor_submission_id} = $trial->get_genotyping_vendor_submission_id;
         $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
         if ($trial->get_genotyping_plate_format){
             $c->stash->{genotyping_plate_format} = $trial->get_genotyping_plate_format;
