@@ -18,6 +18,7 @@ $genotyping_facility => undef
 $genotyping_facility_status => undef
 $genotyping_facility_submitted => undef
 $genotyping_vendor_order_id => undef
+$genotyping_vendor_submission_id => undef
 $genotyping_plate_format => '96'
 $genotyping_plate_sample_type => undef
 $raw_data_link => undef
@@ -31,9 +32,13 @@ $raw_data_link => undef
 
 <%perl> 
     my $order_id;
+    my $submission_id;
     if($genotyping_vendor_order_id){
         my $order_info = JSON->new->allow_nonref->decode($genotyping_vendor_order_id);
-        $order_id = $order_info->{orderId};
+        $order_id = $order_info->{orderId} || undef;
+    } elsif($genotyping_vendor_submission_id){
+        my $order_info = JSON->new->allow_nonref->decode($genotyping_vendor_submission_id);
+        $submission_id = $order_info->{submissionId} || undef;
     }
  </%perl>
 
@@ -110,6 +115,7 @@ $raw_data_link => undef
                                 <tr><td><b>Genotyping Facility</b></td><td><div id="genotyping_facility_tab"><% $genotyping_facility %></div></td></tr>
                                 <tr><td><b>Submitted to Genotyping Facility</b></td><td><div id="genotyping_facility_submitted_tab"></div></td></tr>
                                 <tr><td><b>Genotyping Facility Order ID </b></td><td><div id="genotyping_vendor_order_id_tab"><% $order_id %></div></td></tr>
+                                <tr><td><b>Genotyping Facility Submission ID </b></td><td><div id="genotyping_vendor_submission_id_tab"><% $submission_id %></div></td></tr>
                                 <tr><td><b>Live Status From Genotyping Facility</b></td><td><div id="genotyping_trial_status_info"></div></td></tr>
                                 <tr><td><b>Download PDF</b></td><td><div id="download_trial_pdf"></div></td></tr>
                                 <tr><td><b>Raw Data Link</b></td><td><div id="raw_data_tab"></div></td></tr>
