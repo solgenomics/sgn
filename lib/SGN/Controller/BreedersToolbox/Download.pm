@@ -9,6 +9,7 @@ BEGIN { extends 'Catalyst::Controller'; }
 
 use strict;
 use warnings;
+use utf8;
 use JSON::XS;
 use Data::Dumper;
 use CGI;
@@ -380,8 +381,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     $c->res->content_type('Application/'.$format);
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
-    my $output = read_file($tempfile);
-
+    my $output = read_file($tempfile);  ## works for xls format
+    
     $c->res->body($output);
 }
 
@@ -611,7 +612,16 @@ sub download_action : Path('/breeders/download_action') Args(0) {
           expires => '+1m',
         };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-        $output = read_file($tempfile);
+
+	my $output = "";
+	open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
+	while (<$F>) {
+	    $output .= $_;
+	}
+	close($F);
+
+	#$output = read_file($tempfile, binmode=>':raw:utf8');  ## works for xls format
+	
         $c->res->body($output);
     }
 }
@@ -685,7 +695,10 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
           expires => '+1m',
         };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-        my $output = read_file($file_path);
+	
+
+        my $output = read_file($file_path);  ### works here because it is xls, otherwise does not work with utf8
+	
         $c->res->body($output);
     }
 
@@ -724,7 +737,14 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
           expires => '+1m',
         };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-        my $output = read_file($file_path);
+        #my $output = read_file($file_path);   ### Does not work with UTF8 text files
+	my $output = "";
+	open(my $F, "< :encoding(UTF-8)", $file_path) || die "Can't open file $file_path for reading.";
+	while (<$F>) {
+	    $output .= $_;
+	}
+	close($F);
+
         $c->res->body($output);
     }
 
@@ -823,9 +843,9 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
 
-    open my $FILE, '> :encoding(UTF-8)', $tempfile or die "Cannot open tempfile $tempfile: $!";
+    open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
 
-	print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
+    print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
     my $pedigrees_found = 0;
     my $stock = CXGN::Stock->new ( schema => $schema);
     my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, $ped_format);
@@ -847,8 +867,19 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
       value => $dl_token,
       expires => '+1m',
     };
-    $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
-    my $output = read_file($tempfile);
+
+    $c->res->header("Content-Disposition", qq[attachment; filename="$filename"]);
+
+
+    #my $output = read_file($tempfile, binmode => ':utf8' );
+
+    ### read_file does not read UTF-8 correctly, even with binmode :raw
+    my $output = "";
+    open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
+    while (<$F>) {
+	$output .= $_;
+    }
+    close($F);
 
     $c->res->body($output);
 }
@@ -1384,7 +1415,14 @@ sub download_sequencing_facility_spreadsheet : Path( '/breeders/genotyping/sprea
 
 
 
-    my $output = read_file($file_path, binmode=>':raw');
+    ####my $output = read_file($file_path, binmode=>':raw');
+    my $output = "";
+    open(my $F, "< :encoding(UTF-8)", $file_path) || die "Can't open file $file_path for reading.";
+    while (<$F>) {
+	$output .= $_;
+    }
+    close($F);
+
 
     close($fh);
     $c->res->body($output);
