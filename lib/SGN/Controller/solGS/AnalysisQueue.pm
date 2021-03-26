@@ -293,16 +293,13 @@ sub format_log_entry {
     # }
 
     my $time    = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
-    my $entry   = join("\t",
-		       (
+    my $entry   = join("\t", (
 			$profile->{user_name},
-			$profile->{user_email},
 			$profile->{analysis_name},
 			$profile->{analysis_page},
 			'Submitted',
 			$time,
-			$profile->{arguments},
-		       )
+			$profile->{arguments},)
 	);
 
 	$entry .= "\n";
@@ -1049,44 +1046,44 @@ sub run_analysis {
 }
 
 
-# sub create_training_data {
-# 	my ($self, $c) = @_;
-#
-#     my $analysis_page = $c->stash->{analysis_page};
-#     my $protocol_id = $c->stash->{genotyping_protocol_id};
-#
-#     if ($analysis_page =~ /solgs\/population\//)
-#     {
-# 	my $pop_id = $c->stash->{model_id};
-#
-# 	if ($analysis_page =~ /solgs\/population\//)
-# 	{
-# 		my $pop_id = $c->stash->{model_id};
-#
-# 		if ($pop_id =~ /list/)
-# 		{
-# 			$c->controller('solGS::List')->submit_list_training_data_query($c);
-# 			$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
-# 		}
-# 		elsif ($pop_id =~ /dataset/)
-# 		{
-# 			 $c->controller('solGS::Dataset')->submit_dataset_training_data_query($c);
-# 			 $c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);
-# 		}
-# 		else
-# 		{
-# 			$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, [$pop_id], $protocol_id);
-# 		}
-# 	}
-# 	elsif ($analysis_page =~ /solgs\/populations\/combined\//)
-# 	{
-# 			my $trials = $c->stash->{combo_pops_list};
-# 			$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, $trials, $protocol_id);
-# 	}
-#
-# }
-#
-#
+sub create_training_data {
+	my ($self, $c) = @_;
+
+    my $analysis_page = $c->stash->{analysis_page};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+
+    if ($analysis_page =~ /solgs\/population\//)
+    {
+		my $pop_id = $c->stash->{model_id};
+
+		if ($analysis_page =~ /solgs\/population\//)
+		{
+			my $pop_id = $c->stash->{model_id};
+
+			if ($pop_id =~ /list/)
+			{
+				$c->controller('solGS::List')->submit_list_training_data_query($c);
+				$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
+			}
+			elsif ($pop_id =~ /dataset/)
+			{
+				 $c->controller('solGS::Dataset')->submit_dataset_training_data_query($c);
+				 $c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);
+			}
+			else
+			{
+				$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, [$pop_id], $protocol_id);
+			}
+		}
+		elsif ($analysis_page =~ /solgs\/populations\/combined\//)
+		{
+				my $trials = $c->stash->{combo_pops_list};
+				$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, $trials, $protocol_id);
+		}
+	}
+}
+
+
 sub predict_training_traits {
 	my ($self, $c) = @_;
 
