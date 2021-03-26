@@ -46,7 +46,7 @@ my $db_patch_path = dirname(abs_path($0));
 chdir($db_patch_path);
 
 my @folders = grep /[0-9]{5}/, (split "\n", `ls -d */`);
-my $cmd = "echo -ne \"$dbpass\n\" | psql -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
+my $cmd = "echo -ne \"$dbpass\n\" | PGPASSWORD=$dbpass psql -h $host -U $dbuser -t -c \"select patch_name from Metadata.md_dbversion\" -d $db";
 my @installed = grep { !/^$/ } map { s/^\s+|\s+$//gr } `$cmd`;
 
 for (my $i = 0; $i < (scalar @folders); $i++) {
@@ -56,15 +56,17 @@ for (my $i = 0; $i < (scalar @folders); $i++) {
         my @patches = grep {!($_ ~~ @installed)} map { s/.pm//r } (split "\n", `ls`);
         for (my $j = 0; $j < (scalar @patches); $j++) {
             my $patch = $patches[$j];
-	    
-	    if ($patch =~ /\~$/) { 
-		print STDERR "Ignoring $patch...\n";
-		next;
-	    }
 
+            if ($patch =~ /\~$/ || $patch eq 'typescript') { 
+                print STDERR "Ignoring $patch...\n";
+                next;
+            }
 
+my $cmd = "script -c \"mx-run $patch -H $host -D $db -u $editinguser".($test?' -t':'')."\" << END_OF_INPUTS
+$dbuser
+$dbpass
+END_OF_INPUTS";
 
-            my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser".($test?' -t':'');
             print STDERR $cmd."\n";
             system("bash -c '$cmd'");
             print STDERR "\n\n\n";

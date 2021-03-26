@@ -20,7 +20,7 @@
                         <& /page/page_title.mas, title=>"This workflow will guide you through uploading aerial images to the database" &>
                         <p>Your field trial must already be in the database before you can upload images for it. Please go to <a href="/breeders/trials">Manage->Field Trials</a> if it is not.</p>
                         <p>If you have raw aerial images (.TIFF, .JPG, .PNG) that have not been stitched into an orthophotomosaic image of the whole field, your raw images should be uploaded using a zipfile (.zip). The maximum zipfile size is 2GB; however, you can upload many separate zipfiles. OpenDroneMap will be used to stitch the orthophotos and digital surface maps (DSM). OpenDroneMap works for color images and for MicaSense 5-channel multispectral images.</p>
-                        <p>If you already have an orthophotomosaic image of your entire field from external software, you can upload those images. The maximum size for each image is 200MB. Upload orthomosaics as .TIFF, .PNG, or .JPG images.</p>
+                        <p>If you already have an orthophotomosaic image of your entire field from external software, you can upload those images. The maximum size for each image is 200MB. Upload orthomosaics as .TIFF, .PNG, or .JPG images. Orthophotomosaics images for multi-spectral cameras are expected to be perfectly super-imposable for all spectra.</p>
                         <p><b>Example Data:</b> <a href="https://imagebreed.org/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightRawCaptures.zip" download>MicaSense 5 Band Raw Captures (Unstitched TIFF image-captures) (Upload zipfile to ImageBreed and let OpenDroneMap stitch orthophotos and DSM.)</a></p>
                         <p><b>Example Data:</b> <a href="https://imagebreed.org/static_content/imagebreed/ExampleAerialDroneFlightMicasensePanel.zip" download>MicaSense 5 Band Panel Images (MicaSense calibration panel images.) (Upload zipfile for ImageBreed to calibrate Micasense raw-captures.)</a></p>
                         <p><b>Example Data:</b> <a href="https://imagebreed.org/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightOrthomosaics.zip" download>MicaSense 5 Band Previously Stitched Orthophotomosaic Images (PNG Files in provided zipfile. Can upload each band separately into ImageBreed.)</a></p>
@@ -148,6 +148,7 @@
                                 <li>You can choose to upload orthophotomosaic images (PNG, TIFF) created using external software (Pix4d, Agisoft, etc).</li>
                                 <li>You can upload any image (PNG, TIFF, JPEG) which covers the entire experimental field, for example, interpolated soil data for altitude or electrical conductance EC measurements. Another example is for images from a phenotyping facility, greenhouse, or growth chamber.</li>
                                 <li>Up to seven distinct spectral band images can be uploaded.</li>
+                                <li>Images should be perfectly super-imposable for all spectra in an imaging event.</li>
                             </ul>
                         </div>
                         <div class="well">
@@ -307,6 +308,7 @@
                         <p>For an imaging event using a MicaSense 5-channel camera, the 5 separate orthophotos should be included in the zipfile and should be named as a concatenation of the imaging event name and the spectral type (e.g. Field1Ortho01012020__blue, Field1Ortho01012020__green, Field1Ortho01012020__red, Field1Ortho01012020__rededge, and Field1Ortho01012020__nir).</p>
                         <p>Digital surface map (DSM) raster images can be uploaded as blank and white images (e.g. Field1Ortho01012020__bw.png)</p>
                         <p>Do not upload duplicate spectral types for the same imaging event.</p>
+                        <p>Images should be perfectly super-imposable for different spectra in the same imaging event.</p>
 
                         <hr>
                         <center>
@@ -460,6 +462,7 @@
                         <p>For an imaging event using a MicaSense 5-channel camera, the 5 separate orthophotos should be included in the zipfile and should be named as a concatenation of the imaging event name and the spectral type (e.g. Field1Ortho01012020__blue, Field1Ortho01012020__green, Field1Ortho01012020__red, Field1Ortho01012020__rededge, and Field1Ortho01012020__nir).</p>
                         <p>Digital surface map (DSM) raster images can be uploaded as blank and white images (e.g. Field1Ortho01012020__bw.png)</p>
                         <p>Do not upload duplicate spectral types for the same imaging event.</p>
+                        <p>Images should be perfectly super-imposable for different spectra in the same imaging event.</p>
 
                         <br/>
                         <div class="well well-sm">
