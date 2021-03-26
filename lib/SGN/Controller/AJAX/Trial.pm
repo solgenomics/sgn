@@ -604,7 +604,7 @@ sub save_experimental_design_POST : Args(0) {
         if ($plot_length){
             $trial_info_hash{plot_length} = $plot_length;
         }
-
+	$trial_info_hash{owner_id} = $user_id;
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
 
         if ($trial_create->trial_name_already_exists()) {
@@ -998,7 +998,7 @@ sub upload_trial_file_POST : Args(0) {
         if ($plot_length){
             $trial_info_hash{plot_length} = $plot_length;
         }
-
+	$trial_info_hash{owner_id} = $user_id;
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
         $save = $trial_create->save_trial();
 

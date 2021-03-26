@@ -1,17 +1,32 @@
 <%args>
-$pop_id
-$pop_name
-$trait_id
+$training_pop_id
+$training_pop_name
+$training_pop_desc
+$trait_id => ''
 $combo_pops_id => ''
+
+$selection_pop_id => ''
+$selection_pop_name => ''
+$selection_pop_desc => ''
+
 $genotyping_protocol_id => ''
+
+$training_traits_ids => ''
+$selection_traits_ids => ''
 
 </%args>
 
-
-<input type="hidden" id="model_id" value="<% $pop_id %>" /> 
-<input type="hidden" id="population_id" value="<% $pop_id %>" />
-<input type="hidden" id="training_pop_id" value="<% $pop_id %>" />
-<input type="hidden" id="population_name" value="<% $pop_name %>" /> 
-<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
+<input type="hidden" id="model_id" value="<% $training_pop_id %>" />
+<input type="hidden" id="population_id" value="<% $training_pop_id %>" />
+<input type="hidden" id="training_pop_id" value="<% $training_pop_id %>" />
+<input type="hidden" id="training_pop_name" value="<% $training_pop_name %>" />
+<input type="hidden" id="training_pop_desc" value="<% $training_pop_desc %> "/>
+<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" />
 <input type="hidden" id="trait_id" value="<% $trait_id %>" />
+<input type="hidden" id="selection_pop_id" value="<% $selection_pop_id %>" />
+<input type="hidden" id="selection_pop_name" value="<% $selection_pop_name %>" />
+<input type="hidden" id="selection_pop_desc" value="<% $selection_pop_desc %>" />
 <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />
+
+<input type="hidden" id="training_traits_ids" value= "<% $training_traits_ids %>" />
+<input type="hidden" id="selection_traits_ids" value="<% $selection_traits_ids %>" />
