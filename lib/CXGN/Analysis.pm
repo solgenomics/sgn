@@ -17,9 +17,9 @@ The data structure is built using type ids that are different from a regular fie
 
 =item nd_experiment.type_id
 
-The nd_experiment.type_id links to 'analysis_experiment' (nd_experiment_property) (equivalent to 'field_experiment' in a trial), 
+The nd_experiment.type_id links to 'analysis_experiment' (nd_experiment_property) (equivalent to 'field_experiment' in a trial),
 
-=item stock.type_id 
+=item stock.type_id
 
 The stock.type_id links to 'analysis_instance' (stock_property) (equivalent to 'plot' in a trial)
 
@@ -52,7 +52,7 @@ Lukas Mueller <lam87@cornell.edu>
 =head1 METHODS
 
 =cut
-    
+
 package CXGN::Analysis;
 
 use Moose;
@@ -84,19 +84,19 @@ has 'bcs_schema' => (is => 'rw', isa => 'Bio::Chado::Schema', required => 1 );
 =head2 people_schema()
 
 =cut
-    
+
 has 'people_schema' => (is => 'rw', isa => 'CXGN::People::Schema', required=>1);
 
 =head2 metadata_schema()
 
 =cut
-    
+
 has 'metadata_schema' => (is => 'rw', isa => 'CXGN::Metadata::Schema', required=>1);
 
 =head2 phenome_schema()
 
 =cut
-    
+
 has 'phenome_schema' => (is => 'rw', isa => 'CXGN::Phenome::Schema', required=>1);
 
 =head2 project_id()
@@ -216,7 +216,7 @@ sub BUILD {
         my $rs = $self->bcs_schema()->resultset("Project::Projectprop")->search( { project_id => $self->get_trial_id(), type_id => $metadata_json_id });
 
         my $stockprop_id;
-        if ($rs->count() > 0) { 
+        if ($rs->count() > 0) {
             $stockprop_id = $rs->first()->projectprop_id();
         }
 
@@ -304,7 +304,7 @@ sub retrieve_analyses_by_user {
     }
 
     return @analyses;
-}    
+}
 
 sub create_and_store_analysis_design {
     my $self = shift;
@@ -352,9 +352,9 @@ sub create_and_store_analysis_design {
     print STDERR "Storing user info...\n";
     my $project_sp_person_term_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_sp_person_id', 'project_property')->cvterm_id();
     my $row = $schema->resultset("Project::Projectprop")->create({
-        project_id => $self->get_trial_id(), 
-        type_id=>$project_sp_person_term_cvterm_id, 
-        value=>$self->user_id(), 
+        project_id => $self->get_trial_id(),
+        type_id=>$project_sp_person_term_cvterm_id,
+        value=>$self->user_id(),
     });
 
     # Store metadata
@@ -369,8 +369,8 @@ sub create_and_store_analysis_design {
         $self->metadata()->create_timestamp($time->ymd()." ".$time->hms());
     }
 
-    # store dataset info, if available. Copy the actual dataset json, 
-    # so that dataset  info is frozen and does not reflect future 
+    # store dataset info, if available. Copy the actual dataset json,
+    # so that dataset  info is frozen and does not reflect future
     # changes.
     #
     if ($self->metadata()->dataset_id()) {
@@ -417,9 +417,11 @@ sub create_and_store_analysis_design {
         $saved_model_protocol_id = $self->analysis_model_protocol_id();
     }
 
-    my $analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_experiment', 'experiment_type')->cvterm_id(); 
+    my $analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_experiment', 'experiment_type')->cvterm_id();
+
     my $trial_create = CXGN::Trial::TrialCreate->new({
         trial_id => $self->get_trial_id(),
+		owner_id => $self->user_id(),
         chado_schema => $schema,
         dbh => $dbh,
         operator => $user_name,
@@ -435,21 +437,21 @@ sub create_and_store_analysis_design {
         analysis_model_protocol_id => $saved_model_protocol_id,
     });
 
-#    my $validate_error = $trial_create->validate_design(); 
-#    my $store_error; 
+#    my $validate_error = $trial_create->validate_design();
+#    my $store_error;
 #    if ($validate_error) {
 #	print STDERR "VALIDATE ERROR! "; #.Dumper($validate_error)."\n";
-#    } 
+#    }
 #    else {
 ##	print STDERR "Valiation successful. Storing...\n";
 #	try { $store_error = $design_store->store() }
 #	catch { $store_error = $_ };
-#    } 
-#    if ($store_error) { 
-#	die "ERROR SAVING TRIAL!: $store_error\n"; 
+#    }
+#    if ($store_error) {
+#	die "ERROR SAVING TRIAL!: $store_error\n";
 #    }
 
-    try { 
+    try {
         $trial_create->save_trial();
     }
     catch {
@@ -504,7 +506,7 @@ sub store_analysis_values {
         phenome_schema => $phenome_schema,
         user_id => $self->user_id(),
         stock_list => $plots,
-        trait_list => $traits, 
+        trait_list => $traits,
         values_hash => $values,
         has_timestamps => 0,
         overwrite_values => 1,
@@ -525,7 +527,7 @@ sub store_analysis_values {
     if ($stored_phenotype_error) {
 	die "An error occurred storing the phenotypes: $stored_phenotype_error\n";
     }
-    
+
 }
 
 sub _get_layout {
@@ -560,7 +562,7 @@ sub _load_accession_names {
 
     my $design = $self->design();
     #print STDERR "Design = ".Dumper($design);
-    
+
     my @accessions = $design->get_accession_names();
     print STDERR "ACCESSIONS: ". Dumper(\@accessions);
     # get the accessions from the design (not the dataset!)
@@ -581,7 +583,7 @@ sub _load_traits {
     #$self->traits($traits);
     return $traits;
 }
-	
+
 1;
 
 #__PACKAGE__->meta->make_immutable;
