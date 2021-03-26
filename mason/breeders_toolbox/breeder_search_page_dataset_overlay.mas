@@ -34,8 +34,13 @@
 
         parseArgs();
         if ( DSP_ENABLED ) {
-            jQuery('.wizard-type-select').prop('disabled', true);
-            setCol(0);
+            if ( isLoggedIn() ) {
+                jQuery('.wizard-type-select').prop('disabled', true);
+                setCol(0);
+            }
+            else {
+                jQuery('#site_login_dialog').modal("show");
+            }
         }
 
     });
@@ -82,7 +87,7 @@
         console.log("DSP_COLS:");
         console.log(JSON.stringify(DSP_COLS, null, 2));
     }
-
+    
 
     /**
      * Setup the selections and instructions for selecting items from the specified column
@@ -152,7 +157,7 @@
             jQuery('#dsp-help-instructions').html(html);
             jQuery('#dsp-help-next-label').html("Next");
             jQuery('#dsp-help-next').css('display', 'block');
-            jQuery('#dsp-help-next').click(function() {
+            jQuery('#dsp-help-next').off('click').on('click', function() {
                 setCol(col+1);
             });
             jQuery('#dsp-help').css('display', 'block');
@@ -203,7 +208,7 @@
         // Set Return Button
         if ( DSP_RETURN ) {
             jQuery('#dsp-help-next-label').html("Return");
-            jQuery('#dsp-help-next').click(function() {
+            jQuery('#dsp-help-next').off('click').on('click', function() {
                 window.location = DSP_RETURN;
                 return false;
             });
