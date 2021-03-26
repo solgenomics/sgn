@@ -956,10 +956,11 @@ sub structure_selection_prediction_output {
 		    $sel_pop_name = $c->stash->{project_name};
 		}
 
-		my $identifier = $tr_pop_id . '_' . $sel_pop_id;
-		$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $identifier, $trait_id);
+		#my $identifier = $tr_pop_id . '_' . $sel_pop_id;
+		$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $tr_pop_id, $sel_pop_id, $trait_id);
 		my $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
 
+		print STDERR "\nsel gebv file: $gebv_file\n";
 		$c->controller('solGS::Files')->genotype_file_name($c, $sel_pop_id, $protocol_id);
 		my $selection_geno_file = $c->stash->{genotype_file_name};
 
@@ -1001,21 +1002,26 @@ sub run_analysis {
 
     eval
     {
-		my $training_pages = 'solgs\/traits\/all\/population\/'
+		my $modeling_pages = 'solgs\/traits\/all\/population\/'
 		    . '|solgs\/models\/combined\/trials\/'
 		    . '|solgs\/trait\/'
 		    . '|solgs\/model\/combined\/trials\/';
 
-		if ($analysis_page =~ /solgs\/population\/|solgs\/populations\/combined\//)
+		my $selection_pages = '/solgs\/selection\/(\d+|\w+_\d+)\/model\/'
+			. '|solgs\/combined\/model\/(\d+|\w+_\d+)\/selection\/';
+
+		my $training_pages = '/solgs\/population\/'
+			. '|solgs\/populations\/combined\/';
+
+		if ($analysis_page =~  $training_pages)
 		{
 		    $self->create_training_data($c);
 		}
-		elsif ($analysis_page =~ /$training_pages/)
+		elsif ($analysis_page =~ /$modeling_pages/)
 		{
 		    $self->predict_training_traits($c);
 		}
-
-		elsif ($analysis_page =~ /solgs\/model\/(\d+|\w+_\d+)\/prediction\//)
+		elsif ($analysis_page =~ /$selection_pages/)
 		{
 		    $self->predict_selection_traits($c);
 		}

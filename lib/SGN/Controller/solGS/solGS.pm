@@ -771,21 +771,20 @@ sub selection_trait :Path('/solgs/selection/') Args() {
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    # my $identifier    = $training_pop_id . '_' . $selection_pop_id;
-
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
     my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
 
+	my $args = {
+		'trait_id' => $trait_id,
+		'training_pop_id' => $training_pop_id,
+		'genotyping_protocol_id' => $protocol_id,
+		'data_set_type' => 'single population'
+	};
+
+	my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+
     if (!-s $gebvs_file)
     {
-		my $args = {
- 		   	'trait_id' => $trait_id,
-    		'training_pop_id' => $training_pop_id,
- 			'genotyping_protocol_id' => $protocol_id,
- 			'data_set_type' => 'single population'
- 		};
-
-        my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
     	$model_page = qq | <a href="$model_page">training model page</a> |;
 
     	$c->stash->{message} = "No cached output was found for this trait.\n" .
@@ -882,7 +881,9 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 	$c->stash->{selection_stocks_cnt} = $self->predicted_lines_count($c, $args);
 
 	$self->top_blups($c, $gebvs_file);
-
+	my $training_pop_name = $c->stash->{training_pop_name};
+	$model_page = qq | <a href="$model_page">$training_pop_name -- $trait_abbr</a> |;
+	$c->stash->{model_page_url} = $model_page;
 	$c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$training_pop_id/prediction/$selection_pop_id/$trait_id/gp/$protocol_id">Download all GEBVs</a>|;
 
 	$c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
@@ -1780,14 +1781,14 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 
 	    if (!-s $selection_geno_file)
 	    {
-		$self->first_stock_genotype_data($c, $selection_pop_id, $protocol_id);
+			$self->first_stock_genotype_data($c, $selection_pop_id, $protocol_id);
 
-		$c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $protocol_id);
-		$selection_geno_file = $c->stash->{first_stock_genotype_file};
+			$c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $protocol_id);
+			$selection_geno_file = $c->stash->{first_stock_genotype_file};
 	    }
 
-	    $c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $protocol_id);
-	    my $selection_geno_file = $c->stash->{first_stock_genotype_file};
+	    # $c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $protocol_id);
+	    # my $selection_geno_file = $c->stash->{first_stock_genotype_file};
 
 	    $c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
 	    my $training_geno_file = $c->stash->{genotype_file_name};

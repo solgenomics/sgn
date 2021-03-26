@@ -188,6 +188,7 @@ sub selection_prediction_download_urls {
 	foreach my $trait_id (@selection_traits_ids)
 	{
 		$url_args->{trait_id} = $trait_id;
+
 	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 	    my $trait_abbr = $c->stash->{trait_abbr};
 
@@ -215,7 +216,10 @@ sub selection_prediction_download_urls {
 
     if (!$download_url)
     {
+		my $trait_id = $selected_model_traits[0];
+		$url_args->{trait_id} = $trait_id;
 		$url_args->{data_set_type}= 'single population';
+		
 		my $sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
 
 		$download_url = qq | <a href ="$sel_pop_page"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a>|;
