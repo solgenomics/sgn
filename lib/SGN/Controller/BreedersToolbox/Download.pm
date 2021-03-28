@@ -452,7 +452,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
 	my $output = "";
-	open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
+	open(my $F, "< :raw", $tempfile) || die "Can't open file $tempfile for reading.";
 	while (<$F>) {
 	    $output .= $_;
 	}
