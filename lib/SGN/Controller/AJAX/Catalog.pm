@@ -4,6 +4,7 @@ use Moose;
 use CXGN::Stock::Catalog;
 use Data::Dumper;
 use JSON;
+use CXGN::People::Person;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -30,6 +31,7 @@ sub add_catalog_item_POST : Args(0) {
     my $item_breeding_program = $c->req->param('item_breeding_program');
     my $item_availability = $c->req->param('item_availability');
     my $item_comment = $c->req->param('item_comment');
+    my $contact_person = $c->req->param('contact_person');
     my $item_stock_id;
 
     if (!$c->user()) {
@@ -46,6 +48,12 @@ sub add_catalog_item_POST : Args(0) {
         $item_stock_id = $item_rs->stock_id();
     }
 
+    my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person);
+    if (!$sp_person_id) {
+        $c->stash->{rest} = {error_string => "Contact person has no record in the database!",};
+        return;
+    }
+    print STDERR "PERSON ID =".Dumper($sp_person_id)."\n";
     my $program_rs = $schema->resultset('Project::Project')->find({project_id => $item_breeding_program});
     my $program_name = $program_rs->name();
 
@@ -58,6 +66,7 @@ sub add_catalog_item_POST : Args(0) {
         breeding_program => $program_name,
         availability => $item_availability,
         comment => $item_comment,
+        contact_person_id => $sp_person_id,
         parent_id => $item_stock_id
     });
 
@@ -181,6 +190,7 @@ sub upload_catalog_items_POST : Args(0) {
                 material_source => $catalog_info_hash{material_source},
                 breeding_program => $catalog_info_hash{breeding_program},
                 availability => $catalog_info_hash{availability},
+                contact_person_id => $catalog_info_hash{contact_person_id},
                 parent_id => $stock_id
             });
 

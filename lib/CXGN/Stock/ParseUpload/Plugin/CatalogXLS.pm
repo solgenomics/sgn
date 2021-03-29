@@ -6,11 +6,15 @@ use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
+use CXGN::People::Person;
 
 sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+
+    my $dbh = $self->get_chado_schema()->storage()->dbh();
+
     my @error_messages;
     my %errors;
     my $parser = Spreadsheet::ParseExcel->new();
@@ -51,6 +55,7 @@ sub _validate_with_plugin {
     my $material_source_header;
     my $breeding_program_header;
     my $availability_header;
+    my $contact_person_name;
     my $comment_header;
 
     if ($worksheet->get_cell(0,0)) {
@@ -75,7 +80,10 @@ sub _validate_with_plugin {
         $availability_header  = $worksheet->get_cell(0,6)->value();
     }
     if ($worksheet->get_cell(0,7)) {
-        $comment_header  = $worksheet->get_cell(0,7)->value();
+        $contact_person_header  = $worksheet->get_cell(0,7)->value();
+    }
+    if ($worksheet->get_cell(0,8)) {
+        $comment_header  = $worksheet->get_cell(0,8)->value();
     }
 
     if (!$name_header || $name_header ne 'name' ) {
@@ -99,9 +107,12 @@ sub _validate_with_plugin {
     if (!$availability_header || $availability_header ne 'availability') {
         push @error_messages, "Cell G1: availability is missing from the header";
     }
+    if (!$contact_person_header || $contact_person_header ne 'contact_person_name') {
+        push @error_messages, "Cell H1: contact_person_name is missing from the header";
+    }
     if ($comment_header) {
         if ($comment_header ne 'comment') {
-            push @error_messages, "Cell H1: comment is missing from the header";
+            push @error_messages, "Cell I1: comment is missing from the header";
         }
     }
 
@@ -117,6 +128,7 @@ sub _validate_with_plugin {
         my $material_source;
         my $breeding_program;
         my $availability;
+        my $contact_person_name;
 
         if ($worksheet->get_cell($row,0)) {
             $item_name = $worksheet->get_cell($row,0)->value();
@@ -137,7 +149,10 @@ sub _validate_with_plugin {
             $breeding_program =  $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
-            $availability =  $worksheet->get_cell($row,5)->value();
+            $availability =  $worksheet->get_cell($row,6)->value();
+        }
+        if ($worksheet->get_cell($row,7)) {
+            $contact_person_name =  $worksheet->get_cell($row,7)->value();
         }
 
         if (!$item_name || $item_name eq '') {
@@ -160,6 +175,14 @@ sub _validate_with_plugin {
         }
         if (!$availability || $availability eq '') {
             push @error_messages, "Cell G$row_name: availability missing";
+        }
+        if (!$contact_person_name || $contact_person_name eq '') {
+            push @error_messages, "Cell H$row_name: contact person name missing";
+        }
+
+        my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_name);
+        if (!$sp_person_id) {
+            push @error_messages, "Cell H$row_name: contact person name in not in database";
         }
 
         if ($item_name){
@@ -208,6 +231,9 @@ sub _parse_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+
+    my $dbh = $self->get_chado_schema()->storage()->dbh();
+
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
@@ -255,8 +281,14 @@ sub _parse_with_plugin {
             $availability =  $worksheet->get_cell($row,6)->value();
         }
         if ($worksheet->get_cell($row,7)) {
-            $comment =  $worksheet->get_cell($row,7)->value();
+            $contact_person_name =  $worksheet->get_cell($row,7)->value();
         }
+        if ($worksheet->get_cell($row,8)) {
+            $comment =  $worksheet->get_cell($row,8)->value();
+        }
+
+        my $contact_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_name);
+
 
         $parsed_result{$item_name} = {
             'item_type' => $item_type,
@@ -265,6 +297,7 @@ sub _parse_with_plugin {
             'material_source' => $material_source,
             'breeding_program' => $breeding_program,
             'availability' => $availability,
+            'contact_person_id' => $contact_person_id,
             'comments' => $comment
         }
     }

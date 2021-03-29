@@ -53,6 +53,7 @@
             </div>
             <div class="modal-footer">
                 <button id="close_cart_item_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="submit_order" type="button" class="btn btn-primary" >Submit Order</button>
             </div>
         </div>
     </div>
@@ -89,13 +90,22 @@ jQuery(document).ready( function() {
         var list_id = myCart[0][0];
     }
 
-    jQuery("#your_cart_button").click(function(){
-
-        jQuery("#cart_item_dialog").modal("show");
+    jQuery('#your_cart_button').click(function(){
+        jQuery('#cart_item_dialog').modal('show');
         showListItems('cart_items', list_id);
-
-
     });
+
+    jQuery('#submit_order').click( function() {
+        jQuery.ajax({
+            url: '/ajax/order/submit',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'list_id' : list_id,
+            },
+        });
+    });
+
 
 });
 

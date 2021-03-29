@@ -451,7 +451,6 @@ CXGN.List.prototype = {
         var list_name = this.listNameById(list_id);
         var html = '';
         if (list_type == 'catalog_items'){
-            html += '<table class="table"><tr><td>Cart ID</td><td id="list_id_div">'+list_id+'</td></tr>';
             html += '<div class="well well-sm"><table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 
             for(var n=0; n<items.length; n++) {

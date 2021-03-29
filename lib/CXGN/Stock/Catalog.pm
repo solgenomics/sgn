@@ -33,6 +33,8 @@ has 'category' => ( isa => 'Str', is => 'rw' );
 # additional info
 has 'comment' => ( isa => 'Str', is => 'rw') ;
 
+has 'contact_person_id' => ( isa => 'Int', is => 'rw') ;
+
 
 sub BUILD {
     my $self = shift;
@@ -43,7 +45,7 @@ sub BUILD {
     $self->prop_primary_key('stockprop_id');
     $self->prop_type('stock_catalog_json');
     $self->cv_name('stock_property');
-    $self->allowed_fields( [ qw | item_type category description material_source breeding_program availability comment | ] );
+    $self->allowed_fields( [ qw | item_type category description material_source breeding_program availability comment contact_person_id | ] );
     $self->parent_table('stock');
     $self->parent_primary_key('stock_id');
 
