@@ -2,7 +2,7 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <& /page/page_title.mas, title => "Catalog" &>
@@ -28,12 +28,38 @@
                 </div>
             </div>
         </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button id="your_cart_button" type="button" class="btn btn-primary btn-sm">
+                    <span class="glyphicon glyphicon-shopping-cart"></span> Your Cart
+                </button>
+            </div>
+        </div>
     </div>
 </&>
 
+<div class="modal fade" id="cart_item_dialog" name="cart_item_dialog" tabindex="-1" role="dialog" aria-labelledby="cartItemDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align:center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cartItemDialog">Your Cart</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="cart_items_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_cart_item_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <& /order/upload_catalog_items_dialog.mas &>
 <& /order/add_catalog_item_dialog.mas &>
-
 
 <script>
 
@@ -55,6 +81,20 @@ jQuery(document).ready( function() {
             { title: "Comment", "data": "comment" },
             { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+row.item_id+"\", \""+row.item_type+"\", \""+row.breeding_program+"\", \""+row.availability+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
         ],
+    });
+
+    var lo = new CXGN.List();
+    var myCart = lo.availableLists('catalog_items')
+    if (myCart.length > 0) {
+        var list_id = myCart[0][0];
+    }
+
+    jQuery("#your_cart_button").click(function(){
+
+        jQuery("#cart_item_dialog").modal("show");
+        showListItems('cart_items', list_id);
+
+
     });
 
 });
