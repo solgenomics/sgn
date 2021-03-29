@@ -804,25 +804,23 @@ sub combined_pops_summary {
     my $desc = 'This training population is a combination of ';
     my $projects_owners;
 
+	my $tr_page_args = {
+	  'genotyping_protocol_id' => $protocol_id,
+	  };
+
+	my $training_pop_page;
     foreach my $pop_id (@pops_ids)
     {
-        my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
+		$c->controller('solGS::solGS')->get_project_details($c, $pop_id);
+        my $pr_name = $c->stash->{project_name};
 
-        while (my $row = $pr_rs->next)
-        {
-            my $pop_name = $row->name;
+		$tr_page_args->{training_pop_id} = $pop_id;
+		$tr_page_args->{ 'data_set_type'} => 'single population';
 
-			my $args = {
-	   		  'training_pop_id' => $pop_id,
-	   		  'genotyping_protocol_id' => $protocol_id,
-	   		  'data_set_type' => 'single population'
-		   	  };
+	   	$training_pop_page = $c->controller('solGS::Utils')->training_page_url($tr_page_args);
 
-	   	 	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
-
-            $desc .= qq | <a href="$training_pop_page">$pop_name </a>|;
-            $desc .= $pop_id == $pops_ids[-1] ? '.' : ' and ';
-        }
+		$desc .= '<a href=' .  $training_pop_page. '> ' .  $pr_name . '</a>';
+        $desc .= $pop_id == $pops_ids[-1] ? '.' : ' and ';
 
         $c->controller('solGS::solGS')->get_project_owners($c, $pop_id);
         my $project_owner = $c->stash->{project_owners};
@@ -833,7 +831,12 @@ sub combined_pops_summary {
         }
     }
 
-    my $marker_args = {'training_pop' => 1, 'training_pop_id' => $combo_pops_id};
+    my $marker_args = {
+		'training_pop' => 1,
+		'training_pop_id' => $combo_pops_id,
+		'data_set_type' => 'combined populations'
+	};
+	
     my $markers_no = $c->controller('solGS::solGS')->get_markers_count($c, $marker_args);
 
     my $trait_abbr = $c->stash->{trait_abbr};
@@ -842,28 +845,25 @@ sub combined_pops_summary {
 	my $model_link;
 	if ($trait_id)
 	{
-		my $args = {
+		my $model_page_args = {
 			 'training_pop_id' => $combo_pops_id,
 			 'trait_id' => $trait_id,
 			 'genotyping_protocol_id' => $protocol_id,
 			 'data_set_type' => 'combined populations'
 		};
 
-		$model_link = $c->controller('solGS::Utils')->model_page_url($args);
+		$model_link = $c->controller('solGS::Utils')->model_page_url($model_page_args);
 	}
 
     my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
     my $training_pop_name = "Training population $combo_pops_id";
 
-	my $args = {
-		 'training_pop_id' => $combo_pops_id,
-		 'genotyping_protocol_id' => $protocol_id,
-		 'data_set_type' => 'combined populations'
-	};
+	$tr_page_args->{'training_pop_id'} = $combo_pops_id;
+	$tr_page_args->{'data_set_type'} => 'combined populations';
 
-	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+	$training_pop_page = $c->controller('solGS::Utils')->training_page_url($tr_page_args);
 
-    my $pop_link   = qq | <a href="$training_pop_page>$training_pop_name</a>|;
+    my $pop_link   = qq | <a href="$training_pop_page">$training_pop_name</a>|;
     my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
 
 	$c->controller('solGS::Files')->traits_acronym_file($c, $combo_pops_id);

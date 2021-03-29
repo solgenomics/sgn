@@ -558,57 +558,47 @@ sub get_project_details {
 sub get_markers_count {
     my ($self, $c, $pop_hash) = @_;
 
-    my $filtered_geno_file;
-    my $markers_cnt;
-
+    my $geno_file;
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     if ($pop_hash->{training_pop})
     {
-	my $training_pop_id = $pop_hash->{training_pop_id};
-	$c->stash->{pop_id} = $training_pop_id;
-	$c->controller('solGS::Files')->filtered_training_genotype_file($c, $training_pop_id, $protocol_id);
-	$filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
+		my $training_pop_id = $pop_hash->{training_pop_id};
+		$c->stash->{pop_id} = $training_pop_id;
+		$c->controller('solGS::Files')->filtered_training_genotype_file($c, $training_pop_id, $protocol_id);
+		$geno_file  = $c->stash->{filtered_training_genotype_file};
 
-	if (-s $filtered_geno_file)
-	{
-	    my @geno_lines = read_file($filtered_geno_file, {binmode => ':utf8'});
-	    $markers_cnt = scalar(split('\t', $geno_lines[0]));
-	}
-	else
-	{
-	    $c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
-	    my $geno_file  = $c->stash->{genotype_file_name};
+		if (!-s $geno_file)
+		{
+			if ($pop_hash->{data_set_type} =~ /combined populations/)
+			{
+				$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $training_pop_id);
+				my $pops_list = $c->stash->{combined_pops_list};
+				$training_pop_id = $pops_list->[0];
+			}
 
-	    my  @geno_lines = read_file($geno_file, {binmode => ':utf8'});
-	    $markers_cnt= scalar(split ('\t', $geno_lines[0]));
-	}
-
+		    $c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
+		   	$geno_file  = $c->stash->{genotype_file_name};
+		}
     }
     elsif ($pop_hash->{selection_pop})
     {
-	my $selection_pop_id = $pop_hash->{selection_pop_id};
-	$c->stash->{pop_id} = $selection_pop_id;
-	$c->controller('solGS::Files')->filtered_selection_genotype_file($c);
-	$filtered_geno_file  = $c->stash->{filtered_selection_genotype_file};
+		my $selection_pop_id = $pop_hash->{selection_pop_id};
+		$c->stash->{selection_pop_id} = $selection_pop_id;
+		$c->controller('solGS::Files')->filtered_selection_genotype_file($c);
+		$geno_file  = $c->stash->{filtered_selection_genotype_file};
 
-	if (-s $filtered_geno_file)
-	{
-	    my @geno_lines = read_file($filtered_geno_file, {binmode => ':utf8'});
-	    $markers_cnt = scalar(split('\t', $geno_lines[0]));
-
-	}
-	else
-	{
-	    $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
-	    my $geno_file  = $c->stash->{genotype_file_name};
-
-	    my @geno_lines = read_file($geno_file, {binmode => ':utf8'});
-	    $markers_cnt= scalar(split ('\t', $geno_lines[0]));
-	}
+		if (!-s $geno_file)
+		{
+		    $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
+		    $geno_file  = $c->stash->{genotype_file_name};
+		}
     }
 
-    return $markers_cnt - 1;
+	my $markers = qx / head -n 1 $geno_file /;
+	my $markers_cnt = split(/\t/, $markers) - 1 ;
+
+    return $markers_cnt;
 
 }
 
