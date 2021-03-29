@@ -159,9 +159,6 @@ sub training_prediction_download_urls {
 sub selection_prediction_download_urls {
     my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
 
-    my $selection_traits_ids;
-    my $download_url;
-
     my $selected_model_traits = $c->stash->{training_traits_ids} || [$c->stash->{trait_id}];
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
@@ -173,6 +170,8 @@ sub selection_prediction_download_urls {
 	  'genotyping_protocol_id' => $protocol_id,
 	};
 
+	my $selection_traits_ids;
+
     if ($selection_pop_id)
     {
         $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
@@ -181,47 +180,40 @@ sub selection_prediction_download_urls {
 
     my @selection_traits_ids = sort(@$selection_traits_ids) if $selection_traits_ids->[0];
     my @selected_model_traits = sort(@$selected_model_traits) if $selected_model_traits->[0];
+
 	my $page = $c->req->referer;
+	my $data_set_type = $page =~ /combined/ ? 'combined populations' : 'single population';
+	$url_args->{data_set_type} = $data_set_type;
+
+	my $sel_pop_page;
+ 	my $download_url;
 
     if (@selected_model_traits ~~ @selection_traits_ids)
     {
-	foreach my $trait_id (@selection_traits_ids)
-	{
-		$url_args->{trait_id} = $trait_id;
+		foreach my $trait_id (@selection_traits_ids)
+		{
+			$url_args->{trait_id} = $trait_id;
 
-	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-	    my $trait_abbr = $c->stash->{trait_abbr};
+		    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+		    my $trait_abbr = $c->stash->{trait_abbr};
 
-	    my $page = $c->req->referer;
-	    if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
-	    {
-		$download_url .= " | " if $download_url;
-	    }
+			$sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
 
-	    if ($page =~ /combined/)
-	    {
-			$url_args->{data_set_type}= 'combined populations';
-			my $sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
-			$download_url .= qq | <a href="$sel_pop_page">$trait_abbr</a> |;
-	    }
-	    else
-	    {
-			$url_args->{data_set_type}= 'single population';
-			my $sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
+			if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
+		    {
+				$download_url .= " | " if $download_url;
+		    }
 
 			$download_url .= qq |<a href="$sel_pop_page">$trait_abbr</a> |;
-	    }
-	}
+		}
     }
 
     if (!$download_url)
     {
 		my $trait_id = $selected_model_traits[0];
 		$url_args->{trait_id} = $trait_id;
-		$url_args->{data_set_type}= 'single population';
-		
-		my $sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
 
+		$sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
 		$download_url = qq | <a href ="$sel_pop_page"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a>|;
     }
 
