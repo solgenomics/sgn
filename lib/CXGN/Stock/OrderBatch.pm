@@ -37,41 +37,41 @@ sub BUILD {
 # class functions
 #
 
-sub get_orders_by_person_id {
-    my $class = shift;
-    my $bcs_schema = shift;
-    my $person_id = shift;
+# sub get_orders_by_person_id {
+#     my $class = shift;
+#     my $bcs_schema = shift;
+#     my $person_id = shift;
     
-    my $dbh = $bcs_schema->storage->dbh();
+#     my $dbh = $bcs_schema->storage->dbh();
     
-    my $q = "SELECT stockprop_id FROM stockprop where value similar to 'order_by_person_id => ?,'";
-    my $h = $dbh ->prepare($q);
+#     my $q = "SELECT stockprop_id FROM stockprop where value similar to 'order_by_person_id => ?,'";
+#     my $h = $dbh ->prepare($q);
 
-    $h->execute($person_id);
+#     $h->execute($person_id);
 
-    my %persons;
+#     my %persons;
     
-    my @orders;
-    while (my ($stockprop_id) = $h->fetchrow_array()) {
-	my $order = CXGN::Stock::StockOrder->new( { $bcs_schema => $bcs_schema, prop_id => $stockprop_id });
+#     my @orders;
+#     while (my ($stockprop_id) = $h->fetchrow_array()) {
+# 	my $order = CXGN::Stock::StockOrder->new( { $bcs_schema => $bcs_schema, prop_id => $stockprop_id });
 
-	if (!$persons{$order->order_from_person_id()}) {
-	    my $p = CXGN::People::Person->new( $dbh, $order->order_from_person_id() );
-	    $persons{$order->order_from_person_id()} = $p->first_name." ".$p->last_name();
-	}
+# 	if (!$persons{$order->order_from_person_id()}) {
+# 	    my $p = CXGN::People::Person->new( $dbh, $order->order_from_person_id() );
+# 	    $persons{$order->order_from_person_id()} = $p->first_name." ".$p->last_name();
+# 	}
 
-	if (!$persons{$order->order_to_person_id()}) {
-	    my $p = CXGN::People::Person->new( $dbh, $order->order_to_person_id() );
-	    $persons{$order->order_to_person_id()} = $p->first_name." ".$p->last_name();
-	}
+# 	if (!$persons{$order->order_to_person_id()}) {
+# 	    my $p = CXGN::People::Person->new( $dbh, $order->order_to_person_id() );
+# 	    $persons{$order->order_to_person_id()} = $p->first_name." ".$p->last_name();
+# 	}
 
-	my $stock = CXGN::Stock->new( { schema => $bcs_schema, stock_id => $order->parent_id() });
+# 	my $stock = CXGN::Stock->new( { schema => $bcs_schema, stock_id => $order->parent_id() });
 	
-	push @orders, [ $persons{$order->order_from_person_id()}, $persons{$order->order_to_person_id()}, $stock->uniquename(), $stock->order_status(), $stock->comments() ];
-    }
+# 	push @orders, [ $persons{$order->order_from_person_id()}, $persons{$order->order_to_person_id()}, $stock->uniquename(), $stock->order_status(), $stock->comments() ];
+#     }
 
 
-    return \@orders;
-}
+#     return \@orders;
+# }
 
 1;
