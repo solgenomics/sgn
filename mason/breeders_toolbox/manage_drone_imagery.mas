@@ -89,16 +89,18 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
             <& /page/page_title.mas, title=>"Use ground control points (GCPs) to automate the entire standard process" &>
 
             <div class="well well-sm">
-                <p>If a previous imaging event on this field experiment has already completed the standard process and has ground control points (GCPs) defined, then that imaging event can be used to automate the rest of the standard process on this new imaging event.</p>
+                <p>If a previous imaging event on this field experiment has already completed the standard process, then that imaging event can be used to automate the rest of the standard process on this new imaging event.</p>
+                <p>If ground control points (GCPs) were defined for a previous imaging event, then GCPs can automate the standard process for this new imaging event.</p>
             </div>
 
             <div class="form-horizontal">
                 <div class="form-group form-group-sm">
-                    <label class="col-sm-6 control-label">Has a previous imaging event on this field trial completed the standard process and also has GCPs defined already?: </label>
+                    <label class="col-sm-6 control-label">Has a previous imaging event on this field trial completed the standard process already?: </label>
                     <div class="col-sm-6">
                         <select class="form-control" id="manage_drone_imagery_standard_process_ground_control_points_option">
                             <option value="No">No</option>
-                            <option value="Yes">Yes</option>
+                            <option value="Yes">Yes, and it has GCPs defined.</option>
+                            <option value="Yes_camera_rig">Yes, and the same fixed camera rig was used.</option>
                         </select>
                     </div>
                 </div>
@@ -143,6 +145,23 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                             <canvas id="project_drone_imagery_standard_process_ground_control_points_canvas_div"></canvas>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div id="manage_drone_imagery_standard_process_previous_camera_rig_select_div" style="display:none">
+                <div class="well well-sm">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Select the aerial imaging event to use as a template. The same rotation, cropping, and plot-polygon template will be applied: </label>
+                                <div class="col-sm-6">
+                                    <div id="manage_drone_imagery_standard_process_previous_camera_rig_select"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <center>
+                    <button class="btn btn-primary" id="manage_drone_imagery_standard_process_previous_camera_rig_step_confirm">Confirm and Save</button>
+                    </center>
                 </div>
             </div>
             <div id="manage_drone_imagery_standard_process_ground_control_points_skip_div" style="display:none">
@@ -2314,6 +2333,8 @@ jQuery(document).ready(function() {
             jQuery('#manage_drone_imagery_standard_process_ground_control_points_skip_div').show();
 
             get_select_box('drone_runs_with_gcps', 'manage_drone_imagery_standard_process_ground_control_points_select', {'id':'manage_drone_imagery_standard_process_ground_control_points_select_id', 'name':'manage_drone_imagery_standard_process_ground_control_points_select_id', 'field_trial_id':manage_drone_imagery_standard_process_field_trial_id, 'empty':1});
+
+            get_select_box('drone_runs', 'manage_drone_imagery_standard_process_previous_camera_rig_select', {'id':'manage_drone_imagery_standard_process_previous_camera_rig_select_id', 'name':'manage_drone_imagery_standard_process_previous_camera_rig_select_id', 'field_trial_id':manage_drone_imagery_standard_process_field_trial_id, 'empty':1});
         }
     });
 
@@ -2321,10 +2342,17 @@ jQuery(document).ready(function() {
         if (jQuery(this).val() == 'Yes') {
             jQuery('#manage_drone_imagery_standard_process_ground_control_points_skip_div').hide();
             jQuery('#manage_drone_imagery_standard_process_ground_control_points_select_div').show();
+            jQuery('#manage_drone_imagery_standard_process_previous_camera_rig_select_div').hide();
+        }
+        else if (jQuery(this).val() == 'Yes_camera_rig') {
+            jQuery('#manage_drone_imagery_standard_process_ground_control_points_skip_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_ground_control_points_select_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_previous_camera_rig_select_div').show();
         }
         else {
             jQuery('#manage_drone_imagery_standard_process_ground_control_points_skip_div').show();
             jQuery('#manage_drone_imagery_standard_process_ground_control_points_select_div').hide();
+            jQuery('#manage_drone_imagery_standard_process_previous_camera_rig_select_div').hide();
         }
     });
 
@@ -2433,6 +2461,61 @@ jQuery(document).ready(function() {
             });
             alert('The standard process will continue in the background and may take some time. You can check the indicator on the manage drone imagery page to see when it is complete.');
             location.reload();
+        }
+    });
+
+    jQuery('#manage_drone_imagery_standard_process_previous_camera_rig_step_confirm').click(function(){
+        var manage_drone_imagery_standard_process_previous_camera_rig_step_drone_run_project_id = jQuery('#manage_drone_imagery_standard_process_previous_camera_rig_select_id').val();
+        if (manage_drone_imagery_standard_process_previous_camera_rig_step_drone_run_project_id == '') {
+            alert('Please select a previous imaging event to use as the template!');
+            return false;
+        } else {
+            jQuery.ajax({
+                type: 'GET',
+                url: '/api/drone_imagery/get_weeks_after_planting_date?drone_run_project_id='+manage_drone_imagery_standard_process_drone_run_project_id,
+                dataType: "json",
+                beforeSend: function (){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response){
+                    jQuery('#working_modal').modal('hide');
+                    console.log(response);
+                    if (response.error) {
+                        alert(response.error);
+                    }
+
+                    manage_drone_imagery_standard_process_phenotype_time = response.time_ontology_day_cvterm_id;
+
+                    jQuery.ajax({
+                        type : 'POST',
+                        url : '/api/drone_imagery/standard_process_apply_previous_imaging_event',
+                        data : {
+                            'previous_drone_run_project_id':manage_drone_imagery_standard_process_previous_camera_rig_step_drone_run_project_id,
+                            'field_trial_id':manage_drone_imagery_standard_process_field_trial_id,
+                            'drone_run_project_id':manage_drone_imagery_standard_process_drone_run_project_id,
+                            'drone_run_band_project_id':manage_drone_imagery_standard_process_drone_run_band_project_id,
+                            'time_cvterm_id':manage_drone_imagery_standard_process_phenotype_time
+                        },
+                        success: function(response){
+                            console.log(response);
+                            if (response.error) {
+                                alert(response.error);
+                            }
+                        },
+                        error: function(response){
+                            alert('Error doing standard process with previous imaging event!');
+                        }
+                    });
+
+                    alert('The standard process will continue in the background and may take some time. You can check the indicator on the manage drone imagery page to see when it is complete.');
+                    location.reload();
+                },
+                error: function(response){
+                    alert('Error getting time terms for standard process with previous imaging event!');
+                    jQuery('#working_modal').modal('hide');
+                }
+            });
+
         }
     });
 

@@ -1659,6 +1659,45 @@ sub get_drone_imagery_drone_runs_with_gcps : Path('/ajax/html/select/drone_runs_
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_drone_imagery_drone_runs : Path('/ajax/html/select/drone_runs') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $id = $c->req->param("id") || "drone_imagery_drone_run_select";
+    my $name = $c->req->param("name") || "drone_imagery_drone_run_select";
+    my $empty = $c->req->param("empty") || "";
+
+    my $field_trial_id = $c->req->param('field_trial_id');
+
+    my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+    my $processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_completed', 'project_property')->cvterm_id();
+
+    my $q = "SELECT project.project_id, project.name
+        FROM project
+        JOIN projectprop AS processed ON(project.project_id = processed.project_id AND processed.type_id=$processed_cvterm_id)
+        JOIN project_relationship ON(project.project_id=project_relationship.subject_project_id AND project_relationship.type_id=$drone_run_field_trial_project_relationship_type_id_cvterm_id)
+        WHERE project_relationship.object_project_id=?;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($field_trial_id);
+
+    my @result;
+    while( my ($project_id, $name) = $h->fetchrow_array()) {
+        push @result, [$project_id, $name];
+    }
+
+    if ($empty) {
+        unshift @result, ['', "Select one"];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@result,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_drone_imagery_plot_polygon_types : Path('/ajax/html/select/drone_imagery_plot_polygon_types') Args(0) {
     my $self = shift;
     my $c = shift;

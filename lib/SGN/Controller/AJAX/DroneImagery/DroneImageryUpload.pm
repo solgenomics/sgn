@@ -83,7 +83,7 @@ sub upload_drone_imagery_POST : Args(0) {
     my $new_drone_run_date = $c->req->param('drone_run_date');
     my $new_drone_base_date = $c->req->param('drone_run_base_date');
     my $new_drone_run_desc = $c->req->param('drone_run_description');
-    my $new_drone_rig_desc = $c->req->param('drone_run_rig_desc');
+    my $new_drone_rig_desc = $c->req->param('drone_run_camera_rig_description');
     my $new_drone_run_vehicle_id = $c->req->param('drone_run_imaging_vehicle_id');
     my $new_drone_run_battery_name = $c->req->param('drone_run_imaging_vehicle_battery_name');
 

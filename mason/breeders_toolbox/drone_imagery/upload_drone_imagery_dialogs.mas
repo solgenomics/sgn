@@ -132,6 +132,18 @@
                                     <input class="form-control" id="drone_run_date" name="drone_run_date" title="drone_run_date" type="text" />
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Fixed Camera Rig Name (For Fixed Camera Rigs e.g. Greenhouse or Growth Chambers) (Leave empty if not applicable):</label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="drone_run_camera_rig_description" name="drone_run_camera_rig_description" title="drone_run_camera_rig_description" type="text" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Base Date and Hour (For Fixed Camera Rigs e.g. Greenhouse or Growth Chambers) (Useful for fixed camera rigs capturing different pieces of a field experiment, and the capture time is not synchronized across camera rigs, but the rigs are on identical intervals. Can be the time of the first image for the rig.) (Leave empty if not applicable):</label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="drone_run_base_date" name="drone_run_base_date" title="drone_run_base_date" type="text" />
+                                </div>
+                            </div>
                         </div>
                         <br/>
 
@@ -620,6 +632,20 @@ jQuery(document).ready(function() {
         },
         function(start){
             drone_run_date_element.val(start.format('YYYY/MM/DD HH:mm:ss'));
+        }
+    );
+
+    var drone_run_base_date_element = jQuery("#drone_run_base_date");
+    jQuery('input[title="drone_run_base_date"]').daterangepicker(
+        {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+            "timePicker": true,
+            "timePicker24Hour": true,
+        },
+        function(start){
+            drone_run_base_date_element.val(start.format('YYYY/MM/DD HH:mm:ss'));
         }
     );
 
