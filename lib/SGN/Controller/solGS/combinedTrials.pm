@@ -85,7 +85,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 
         $self->catalogue_combined_pops($c, \@pops_ids);
 
-	$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
+	# $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
 
 	$self->multi_pops_geno_files($c, \@pops_ids);
         my $geno_files = $c->stash->{multi_pops_geno_files};
@@ -110,7 +110,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
     {
         my $pop_id = $pops_ids[0];
 		$c->stash->{training_pop_id} = $pop_id;
-        $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
+        # $c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, \@pops_ids);
 
 		my $args = {
    		  'training_pop_id' => $pop_id,
@@ -363,6 +363,7 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	my $trait_abbr = $c->stash->{trait_abbr};
 
     if ($selection_pop_id =~ /list/)
     {
@@ -400,21 +401,24 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
     $c->stash->{protocol_url} = $protocol;
 
-    my $training_pop = "Training population $model_id";
-
 	my $args = {
 		 'training_pop_id' => $model_id,
+		 'trait_id' => $trait_id,
 		 'genotyping_protocol_id' => $protocol_id,
 		 'data_set_type' => 'combined populations'
 	 };
 
 	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
-
+	my $training_pop = "Training population $model_id";
     my $pop_link   = qq | <a href="$training_pop_page">$training_pop </a>|;
+
     $c->stash->{pop_link} = $pop_link;
     $c->stash->{training_pop_name} = $training_pop;
 
-    # my $identifier    = $model_id . '_' . $selection_pop_id;
+	my $training_model_page = $c->controller('solGS::Utils')->model_page_url($args);
+    my $model_link   = qq | <a href="$training_model_page">$training_pop -- $trait_abbr </a>|;
+	$c->stash->{model_page_url} = $model_link;
+
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $model_id, $selection_pop_id, $trait_id);
     my $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
 
@@ -425,7 +429,6 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
 
     $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$model_id/prediction/$selection_pop_id/$trait_id/gp/$protocol_id">Download all GEBVs</a>|;
 
-    #$c->stash->{template} = $c->controller('solGS::Files')->template('/selection/combined/selection_trait.mas');
     $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
 
 }
@@ -781,7 +784,7 @@ sub get_combined_pops_list {
 
 		    if ($id == $combo_pops_id)
 		    {
-				my @pops_list = split(',', $pops);
+				@pops_list = split(',', $pops);
 				$c->stash->{combined_pops_list} = \@pops_list;
 				$c->stash->{trait_combo_pops} = \@pops_list;
 		    }
@@ -836,7 +839,7 @@ sub combined_pops_summary {
 		'training_pop_id' => $combo_pops_id,
 		'data_set_type' => 'combined populations'
 	};
-	
+
     my $markers_no = $c->controller('solGS::solGS')->get_markers_count($c, $marker_args);
 
     my $trait_abbr = $c->stash->{trait_abbr};
@@ -855,11 +858,12 @@ sub combined_pops_summary {
 		$model_link = $c->controller('solGS::Utils')->model_page_url($model_page_args);
 	}
 
+	print STDERR "\nmodle_link: $model_link\n";
     my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
     my $training_pop_name = "Training population $combo_pops_id";
 
 	$tr_page_args->{'training_pop_id'} = $combo_pops_id;
-	$tr_page_args->{'data_set_type'} => 'combined populations';
+	$tr_page_args->{'data_set_type'} = 'combined populations';
 
 	$training_pop_page = $c->controller('solGS::Utils')->training_page_url($tr_page_args);
 
