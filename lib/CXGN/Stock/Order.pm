@@ -2,7 +2,7 @@
 package CXGN::Stock::Order;
 
 use Moose;
-
+use Data::Dumper;
 use CXGN::Stock::OrderBatch;
 
 has 'people_schema' => ( isa => 'Ref', is => 'rw', required => 1 );
@@ -103,6 +103,7 @@ sub store {
 	order_from_id => $self->order_from_id(),
 	order_to_id => $self->order_to_id(),
 	comments => $self->comments(),
+    create_date => $self->create_date(),
 	);
 
     if ($self->sp_order_id()) { $data{sp_order_id} = $self->sp_order_id(); }
@@ -110,11 +111,13 @@ sub store {
     my $rs = $self->people_schema()->resultset('SpOrder');
 
     my $row = $rs->update_or_create( \%data );
-    print STDERR "sp_order_id = ".$row->sp_order_id()."\n";
-    foreach my $b (@{$self->batches}) {
-	$b->store();
-    }
+#    print STDERR "sp_order_id = ".$row->sp_order_id()."\n";
+#    foreach my $b (@{$self->batches}) {
+#	$b->store();
+#    }
     return $row->sp_order_id();
 }
+
+
 
 1;
