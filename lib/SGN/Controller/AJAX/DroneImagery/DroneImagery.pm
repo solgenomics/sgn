@@ -10122,6 +10122,14 @@ sub drone_imagery_get_image_for_time_series_GET : Args(0) {
 
     my $calendar_funcs = CXGN::Calendar->new({});
 
+    my %image_type_map = (
+        "denoised_stitched_drone_imagery" => "",
+        "calculate_tgi_drone_imagery" => " (TGI)",
+        "calculate_vari_drone_imagery" => " (VARI)",
+        "calculate_ndvi_drone_imagery" => " (NDVI)",
+        "calculate_ndre_drone_imagery" => " (NDRE)"
+    );
+
     my %image_ids;
     my %seen_epoch_seconds;
     my %seen_image_types;
@@ -10129,7 +10137,7 @@ sub drone_imagery_get_image_for_time_series_GET : Args(0) {
     foreach (@$result) {
         # print STDERR Dumper $_;
         if ($_->{drone_run_band_plot_polygons}) {
-            my $image_type = $_->{drone_run_band_project_type}." (".$_->{project_image_type_name}.")";
+            my $image_type = $_->{drone_run_band_project_type}.$image_type_map{$_->{project_image_type_name}};
             my $drone_run_date = $calendar_funcs->display_start_date($_->{drone_run_date});
             my $drone_run_date_object = Time::Piece->strptime($drone_run_date, "%Y-%B-%d %H:%M:%S");
             my $epoch_seconds = $drone_run_date_object->epoch;

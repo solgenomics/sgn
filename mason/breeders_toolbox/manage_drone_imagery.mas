@@ -3035,7 +3035,7 @@ jQuery(document).ready(function() {
                 manage_drone_imagery_field_trial_time_series_image_id = manage_drone_imagery_field_trial_time_series_image_id_hash[manage_drone_imagery_field_trial_time_series_time][manage_drone_imagery_field_trial_time_series_image_type]['image_id'];
             }
             else {
-                if (manage_drone_imagery_field_trial_time_series_image_type_counter > 0) {
+                if (manage_drone_imagery_field_trial_time_series_image_type_counter > manage_drone_imagery_field_trial_time_series_sorted_image_types.length) {
                     manage_drone_imagery_field_trial_time_series_image_type_counter = 0;
                 }
                 else {
