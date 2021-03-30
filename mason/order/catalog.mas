@@ -80,7 +80,7 @@ jQuery(document).ready( function() {
             { title: "Breeding Program", "data": "breeding_program" },
             { title: "Availability", "data": "availability" },
             { title: "Comment", "data": "comment" },
-            { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+row.item_id+"\", \""+row.item_type+"\", \""+row.breeding_program+"\", \""+row.availability+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
+            { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+row.description+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
         ],
     });
 
@@ -109,19 +109,24 @@ jQuery(document).ready( function() {
 
 });
 
-function addToCart(item_name, item_id, item_type, breeding_program, availability){
-    var item_obj = {id:item_id, name:item_name, type:item_type, program:breeding_program, availability:availability};
-    var itemJSON = JSON.stringify(item_obj);
+function addToCart(item_name, description){
+//    var item_obj = {'Item Name':item_name, 'Description':description};
+//    var itemJSON = JSON.stringify(item_obj);
+
+//    var item_info = [item_name, description];
+//    var item_string = item_info.toString();
+
+//    var item_string = item_name.concat("(").concat(description).concat(")");
     var lo = new CXGN.List();
 
     var myCart = lo.availableLists('catalog_items')
     if (myCart.length > 0) {
         var list_id = myCart[0][0];
-        var itemAdded = lo.addToList(list_id, itemJSON);
+        var itemAdded = lo.addToList(list_id, item_name);
         lo.setListType(list_id, 'catalog_items');
     } else if (myCart.length == 0) {
         var list_id = lo.newList('your_cart');
-        var itemAdded = lo.addToList(list_id, itemJSON);
+        var itemAdded = lo.addToList(list_id, item_name);
         lo.setListType(list_id, 'catalog_items');
     } else {
         alert ('Error retrieving your cart')

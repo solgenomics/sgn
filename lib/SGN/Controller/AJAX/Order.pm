@@ -5,6 +5,7 @@ use Moose;
 use CXGN::Stock::StockOrder;
 use Data::Dumper;
 use JSON;
+use DateTime;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -60,9 +61,12 @@ sub submit_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $dbh = $c->dbc->dbh;
+    my $dbh = $c->dbc->dbh();
     my $list_id = $c->req->param('list_id');
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd();
     print STDERR "LIST ID =".Dumper($list_id)."\n";
+    print STDERR "TIME =".Dumper($timestamp)."\n";
 
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
@@ -72,6 +76,31 @@ sub submit_order_POST : Args(0) {
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_name = $c->user()->get_object()->get_username();
     my $user_role = $c->user->get_object->get_user_type();
+
+    my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
+    my $items = $list->elements();
+    print STDERR "ITEMS =".Dumper($items)."\n";
+    my $catalog_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_catalog_json', 'stock_property')->cvterm_id();
+    my $contact_person_id;
+    my %group_by_contact_id;
+    my @all_items = @$items;
+    foreach my $item_name (@all_items) {
+        my $item_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $item_name });
+        my $item_id = $item_rs->stock_id();
+        print STDERR "ITEM ID =".Dumper($item_id)."\n";
+        my $item_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $catalog_cvterm_id});
+        my $item_info_string = $item_info_rs->value();
+        my $item_info_hash = decode_json $item_info_string;
+        $contact_person_id = $item_info_hash->{'contact_person_id'};
+        my $item_type = $item_info_hash->{'item_type'};
+        print STDERR "CONTACT PERSON ID =".Dumper($contact_person_id)."\n";
+        print STDERR "ITEM TYPE =".Dumper($item_type)."\n";
+        $group_by_contact_id{$contact_person_id}{$item_name} = $item_type;
+        print STDERR "GROUP BY CONTACT ID =".Dumper(\%group_by_contact_id)."\n";
+    }
+
+
+
 }
 
 1;
