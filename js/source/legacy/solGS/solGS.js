@@ -46,7 +46,6 @@ solGS.submitJob = {
 		    }
 		}
 		else {
-			console.log(' goto matchItems ' + matchItems)
 	    	  this.goToPage(page, args);
 		}
     },

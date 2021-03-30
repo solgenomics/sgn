@@ -255,7 +255,7 @@ sub model_page_url {
 
 	if ($args->{data_set_type} =~ /combined/)
 	{
-		return "/solgs/model/combined/populations/$pop_id/trait/$trait_id/gp/$protocol_id";
+		return "/solgs/model/combined/trials/$pop_id/trait/$trait_id/gp/$protocol_id";
 	}
 	else
 	{
