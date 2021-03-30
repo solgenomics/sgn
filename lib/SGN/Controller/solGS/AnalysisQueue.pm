@@ -261,20 +261,20 @@ sub create_selection_pop_page {
 
     if ($multi_traits_ids->[0] && scalar(@$multi_traits_ids) > 1)
     {
-	$sel_pop_page = $c->req->referer;
+		$sel_pop_page = $c->req->referer;
     }
     else
     {
-	if ($data_set_type =~ /combined populations/)
-	{
-	    $sel_pop_page  = "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
-	}
-	else
-	{
-	    $sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
-	}
+		if ($data_set_type =~ /combined populations/)
+		{
+		    $sel_pop_page  = "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
+		}
+		else
+		{
+		    $sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
+		}
     }
-
+	
     $c->stash->{selection_pop_page} = $sel_pop_page;
 }
 
@@ -282,14 +282,17 @@ sub create_selection_pop_page {
 sub create_single_model_log_entries {
 	my ($self, $c, $analysis_log) = @_;
 
-	my $args = decode_json($analysis_log->{arguments});
+	my $json = JSON->new;
+	$analysis_log = $json->decode($analysis_log);
+
+	my $args = $self->log_analysis_time($analysis_log->{arguments});
+	$args = $json->decode($args);
+
 	my $trait_ids = $args->{training_traits_ids};
 
 	my $training_pop_id = $args->{training_pop_id}->[0];
 	my $gp_id = $args->{genotyping_protocol_id};
 	my $entries;
-
-	my $analysis_time = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
 
 	foreach my $trait_id (@$trait_ids)
 	{
@@ -315,15 +318,14 @@ sub create_single_model_log_entries {
 		$args->{trait_id} = [$trait_id];
 		$args->{training_traits_ids} = [$trait_id];
 		$args->{analysis_type} = 'single model';
-		$args->{analysis_time} = $analysis_time;
 
 		$entries .= join("\t", (
 					$analysis_log->{user_name},
 					$analysis_name,
 					$analysis_page,
 					'Submitted',
-					$analysis_time,
-					encode_json($args),)
+					$args->{analysis_time},
+					$json->encode($args),)
 		);
 
 		$entries .= "\n";
@@ -334,27 +336,41 @@ sub create_single_model_log_entries {
 
 }
 
+
+sub log_analysis_time {
+	my ($self, $args ) = @_;
+
+	my $analysis_time = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
+
+	my $json = JSON->new;
+	my $args = $json->decode($args);
+
+	$args->{analysis_time} = $analysis_time;
+	$args = $json->encode($args);
+
+	return $args;
+
+}
+
+
 sub format_log_entry {
     my ($self, $c) = @_;
 
-
     my $profile = $c->stash->{analysis_profile};
 
-    # if ($profile->{analysis_page} =~ /solgs\/model\/(\d+|\w+_\d+)\/prediction\//)
-    # {
-	#  $self->create_selection_pop_page($c);
-	#  my $sel_pop_page = $c->stash->{selection_pop_page};
-	#  $profile->{analysis_page} = $sel_pop_page;
-    # }
+	my $args = $profile->{arguments};
+	$args = $self->log_analysis_time($args);
 
-    my $time    = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
+	my $json = JSON->new;
+	my $time = $json->decode($args)->{analysis_time};
+
     my $entry   = join("\t", (
 			$profile->{user_name},
 			$profile->{analysis_name},
 			$profile->{analysis_page},
 			'Submitted',
 			$time,
-			$profile->{arguments},)
+			$args)
 	);
 
 	$entry .= "\n";
@@ -451,7 +467,7 @@ sub parse_arguments {
 
   if ($arguments)
   {
-      my $json = JSON->new();
+      my $json = JSON->new;
       $arguments = $json->decode($arguments);
 
       foreach my $k ( keys %{$arguments} )
@@ -1113,35 +1129,35 @@ sub create_training_data {
     my $analysis_page = $c->stash->{analysis_page};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    if ($analysis_page =~ /solgs\/population\//)
-    {
+    # if ($analysis_page =~ /solgs\/population\//)
+    # {
+	my $pop_id = $c->stash->{model_id};
+
+	if ($analysis_page =~ /solgs\/population\//)
+	{
 		my $pop_id = $c->stash->{model_id};
 
-		if ($analysis_page =~ /solgs\/population\//)
+		if ($pop_id =~ /list/)
 		{
-			my $pop_id = $c->stash->{model_id};
-
-			if ($pop_id =~ /list/)
-			{
-				$c->controller('solGS::List')->submit_list_training_data_query($c);
-				$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
-			}
-			elsif ($pop_id =~ /dataset/)
-			{
-				 $c->controller('solGS::Dataset')->submit_dataset_training_data_query($c);
-				 $c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);
-			}
-			else
-			{
-				$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, [$pop_id], $protocol_id);
-			}
+			$c->controller('solGS::List')->submit_list_training_data_query($c);
+			$c->controller('solGS::List')->create_list_population_metadata_file($c, $pop_id);
 		}
-		elsif ($analysis_page =~ /solgs\/populations\/combined\//)
+		elsif ($pop_id =~ /dataset/)
 		{
-				my $trials = $c->stash->{combo_pops_list};
-				$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, $trials, $protocol_id);
+			 $c->controller('solGS::Dataset')->submit_dataset_training_data_query($c);
+			 $c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);
+		}
+		else
+		{
+			$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, [$pop_id], $protocol_id);
 		}
 	}
+	elsif ($analysis_page =~ /solgs\/populations\/combined\//)
+	{
+			my $trials = $c->stash->{combo_pops_list};
+			$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, $trials, $protocol_id);
+	}
+	# }
 }
 
 
