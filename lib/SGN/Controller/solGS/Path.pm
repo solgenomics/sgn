@@ -61,6 +61,72 @@ sub selection_page_url {
 }
 
 
+sub create_hyperlink {
+	my ($self, $url, $text) = @_;
+
+	my $link = qq | <a href="$url">$text</a> |;
+
+	return $link;
+
+}
+
+
+sub page_type {
+	my ($self, $c) = @_;
+
+	my $path = $c->req->path;
+	my $type;
+
+	if ($path =~ /solgs\/trait\/|solgs\/model\/combined\/trials\//)
+	{
+		$type = 'training model';
+	}
+	else
+	{
+		$type = 'selection population';
+	}
+
+	return $type;
+
+}
+
+
+sub parse_ids {
+	my ($self, $c) = @_;
+
+	my $page_type = $self->page_type($c);
+	my $path = $c->req->path;
+
+	my $ids = {};
+	if ($page_type =~ /selection/)
+	{
+		my @parts = split(/\//, $path);
+		my @num = grep(/\d+/, @parts);
+
+		if ($path =~ /combined/)
+		{
+			$ids = {
+				'training_pop_id' => $num[0],
+				'selection_pop_id' => $num[1],
+				'trait_id' => $num[2],
+				'genotyping_protocol_id' => $num[3]
+			};
+		}
+		else
+		{
+			$ids = {
+				'training_pop_id' => $num[1],
+				'selection_pop_id' => $num[0],
+				'trait_id' => $num[2],
+				'genotyping_protocol_id' => $num[3]
+			};
+
+		}
+	}
+
+	return $ids;
+}
+
 ####
 1;
 ####
