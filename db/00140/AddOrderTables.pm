@@ -69,12 +69,18 @@ CREATE TABLE sgn_people.sp_order (
    completion_date varchar(100)
 );
 
+GRANT select,insert,update,delete ON sgn_people.sp_order TO web_usr;
+GRANT USAGE ON sgn_people.sp_order_sp_order_id_seq TO web_usr;
+
 CREATE TABLE sgn_people.sp_orderprop ( 
     sp_orderprop_id serial primary key,
     type_id bigint references cvterm,
     value jsonb,
     rank int not null
 );
+
+GRANT select,insert,update,delete ON sgn_people.sp_orderprop TO web_usr;
+GRANT USAGE ON sgn_people.sp_orderprop_sp_orderprop_id_seq TO web_usr;
 
 
 
