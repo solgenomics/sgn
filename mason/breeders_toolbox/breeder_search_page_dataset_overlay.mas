@@ -37,9 +37,16 @@
         parseArgs();
         if ( DSP_ENABLED ) {
             if ( isLoggedIn() ) {
+
+                // Disable the columns (they are enabled as we proceed through the steps)
                 jQuery('.wizard-type-select').prop('disabled', true);
+
+                // Start the first step (setup the first column)
                 setCol(0);
-                
+
+                // Add event listener for the selected items lists
+                jQuery('.wizard-list-selected').on('DOMSubtreeModified', selectionListener)
+
             }
             else {
                 jQuery('#site_login_dialog').modal("show");
@@ -159,6 +166,7 @@
             let html = "<strong>Step " + step + ":</strong> Choose items of type <strong>" + valid_col_types.join(" or ") + "</strong> from column " + step + ".";
             jQuery('#dsp-help-instructions').html(html);
             jQuery('#dsp-help-next-label').html("Next");
+            jQuery("#dsp-help-next").prop('disabled', true);
             jQuery('#dsp-help-next').css('display', 'block');
             jQuery('#dsp-help-next').off('click').on('click', function() {
                 setCol(col+1);
@@ -214,6 +222,20 @@
             jQuery('#dsp-help-next').css('display', 'block');
         }
 
+    }
+
+    /**
+     * Listener for the selected item lists
+     * - Enable the next button if there are selected items, disable if none
+     */
+    function selectionListener() {
+        let children = jQuery(this).children().length;
+        if ( children > 2 ) {
+            jQuery("#dsp-help-next").prop('disabled', false);
+        }
+        else {
+            jQuery("#dsp-help-next").prop('disabled', true);
+        }
     }
 </script>
 
