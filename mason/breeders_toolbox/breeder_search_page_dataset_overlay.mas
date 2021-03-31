@@ -23,6 +23,7 @@
     <div id="dsp-help-container">
         <p id="dsp-help-instructions"></p>
         <button id="dsp-help-next" class='btn btn-primary'><span id="dsp-help-next-label">Next</span>&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
+        <a id="dsp-help-cancel" href="#"><span class='glyphicon glyphicon-remove'></span></a>
     </div>
 </div>
 
@@ -46,6 +47,9 @@
 
                 // Add event listener for the selected items lists
                 jQuery('.wizard-list-selected').on('DOMSubtreeModified', selectionListener)
+
+                // Add cancel button listener
+                jQuery('#dsp-help-cancel').click(disableDatasetPipeline);
 
             }
             else {
@@ -237,6 +241,22 @@
             jQuery("#dsp-help-next").prop('disabled', true);
         }
     }
+
+    /**
+     * Disable the dataset creation pipeline and restore the normal search wizard
+     */
+    function disableDatasetPipeline() {
+        var r = confirm("Are you sure you want to close the dataset creation help?");
+        if ( r == true ) {
+            DSP_ENABLED = false;
+            jQuery("#dsp-help").css('display', 'none');
+            jQuery('.wizard-panel').removeClass('wizard-panel-selected');
+            jQuery('.wizard-datasets > .panel').removeClass('wizard-panel-selected');
+            jQuery('.wizard-type-select').prop('disabled', false);
+            jQuery('.wizard-type-select option').prop('disabled', false);
+        }
+        return false;
+    }
 </script>
 
 <style>
@@ -246,7 +266,7 @@
     #dsp-help-container {
         display: flex;
         align-items: center;
-        margin: 15px 0;
+        margin: 5px 0 15px 0;
         width: 100%;
         min-height: 50px;
         background-color: #ffc107;
@@ -262,6 +282,14 @@
     #dsp-help-next {
         height: 40px;
         margin: 5px;
+    }
+    #dsp-help-cancel {
+        margin: 10px;
+        color: #000;
+        opacity: 70%;
+    }
+    #dsp-help-cancel:hover {
+        opacity: 85%;
     }
     
     .wizard-panel-selected {
