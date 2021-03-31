@@ -20,8 +20,10 @@
 -->
 
 <div id="dsp-help">
-    <p id="dsp-help-instructions"></p>
-    <button id="dsp-help-next" class='btn btn-primary'><span id="dsp-help-next-label">Next</span>&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
+    <div id="dsp-help-container">
+        <p id="dsp-help-instructions"></p>
+        <button id="dsp-help-next" class='btn btn-primary'><span id="dsp-help-next-label">Next</span>&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
+    </div>
 </div>
 
 <script type='text/javascript'>
@@ -37,6 +39,7 @@
             if ( isLoggedIn() ) {
                 jQuery('.wizard-type-select').prop('disabled', true);
                 setCol(0);
+                
             }
             else {
                 jQuery('#site_login_dialog').modal("show");
@@ -175,10 +178,6 @@
      */
     function saveDataset(step) {
 
-        // Scroll to Datasets
-        let anchor = jQuery('.wizard-datasets');
-        jQuery('html,body').animate({scrollTop: anchor.offset().top}, 'fast');
-
         // Highlight Panel
         jQuery('.wizard-panel').removeClass('wizard-panel-selected');
         jQuery('.wizard-datasets > .panel').addClass('wizard-panel-selected');
@@ -221,25 +220,24 @@
 <style>
     #dsp-help {
         display: none;
-        position: fixed;
-        bottom: 0;
-        left: 0;
+    }
+    #dsp-help-container {
+        display: flex;
+        align-items: center;
+        margin: 15px 0;
         width: 100%;
-        height: 50px;
+        min-height: 50px;
         background-color: #ffc107;
-        z-index: 99999;
+        border-radius: 5px;
+        vertical-align: middle;
     }
     #dsp-help-instructions {
-        padding: 0 15px;
-        margin: 0;
-        position: absolute;
-        top: 50%;
-        -ms-transform: translateY(-50%);
-        transform: translateY(-50%);
+        flex-grow: 1;
         color: #000;
+        margin: 0;
+        padding-left: 15px;
     }
     #dsp-help-next {
-        float: right;
         height: 40px;
         margin: 5px;
     }
