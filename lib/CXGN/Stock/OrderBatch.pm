@@ -25,11 +25,11 @@ sub BUILD {
     $self->prop_namespace('CXGN::People::Schema::Result::SpOrderprop');
     $self->prop_primary_key('orderprop_id');
     $self->prop_type('order_batch_json');
-    $self->cv_name('stock_property');
+    $self->cv_name('sp_order_property');
 #    $self->allowed_fields( [ qw | order_from_person_id order_to_person_id order_status comments | ] );
     $self->allowed_fields( [ qw | clone_list | ] );
     $self->parent_table('stock');
-    $self->parent_primary_key('stock_id');
+    $self->parent_primary_key('sp_order_id');
 
     $self->load();
 }
