@@ -269,9 +269,8 @@ sub image_analysis_submit_POST : Args(0) {
         $it++;
     }
 
-    print STDERR "Before grouping result is: ".Dumper($result);
+    # print STDERR "Before grouping result is: ".Dumper($result);
 
-    # $result = _group_results_by_observationunit($result);
     $c->stash->{rest} = { success => 1, results => $result };
 }
 
@@ -284,21 +283,21 @@ sub image_analysis_group_POST : Args(0) {
     my %grouped_results = ();
     my @table_data = ();
 
-    my ($uniquename, $trait, $value, $results_ref);
+    my ($uniquename, $next_uniquename, $trait, $value, $results_ref, $next_results_ref);
     # sort result hash array by $stock_id
     my @sorted_result = sort {$$a{"stock_id"} <=> $$b{"stock_id"} } @{$result};
-    my $old_uniquename = $sorted_result[0]->{'stock_uniquename'};
+    # my $old_uniquename = $sorted_result[0]->{'stock_uniquename'};
     $grouped_results{$sorted_result[0]->{'stock_uniquename'}}{$sorted_result[0]->{'result'}->{'trait'}} = [];
 
     for (my $i = 0; $i <= $#sorted_result; $i++) {
         $results_ref = $sorted_result[$i];
-        # print STDERR "Results ref is ".Dumper($results_ref);
+        # print STDERR "\n\nResults ref is ".Dumper($results_ref)."\n\n";
         $uniquename = $results_ref->{'stock_uniquename'};
         $trait = $results_ref->{'result'}->{'trait'};
         $value = $results_ref->{'result'}->{'value'};
 
         if ($trait && $value) {
-            print STDERR "Working a $trait for $uniquename. Saving the details \n";
+            print STDERR "Working on $trait for $uniquename. Saving the details \n";
             push @{$grouped_results{$uniquename}{$trait}}, {
                         stock_id => $results_ref->{'stock_id'},
                         collector => $results_ref->{'image_username'},
@@ -309,25 +308,28 @@ sub image_analysis_group_POST : Args(0) {
                         value => $value + 0
                     };
         }
-        else { print STDERR "No usable data in this results_ref \n"} # if no result returned for an image, skip it.
+        else { print STDERR "No usable analysis data in this results_ref \n"} # if no result returned for an image, skip it.
 
-        if ( ($uniquename ne $old_uniquename) || ($i == $#sorted_result) ) {
-            if ($i == $#sorted_result) { $old_uniquename = $uniquename; }
-            print STDERR "Calculating mean value for $old_uniquename before moving on to a new stock \n";
+        $next_results_ref = $sorted_result[$i+1];
+        $next_uniquename = $next_results_ref->{'stock_uniquename'};
 
-            my $old_uniquename_data = $grouped_results{$old_uniquename};
+        if ($next_uniquename ne $uniquename) {
 
-            foreach my $trait (keys %{$old_uniquename_data}) {
-                my $details = $old_uniquename_data->{$trait};
-                my @values = map { $_->{'value'}} @{$old_uniquename_data->{$trait}};
+            print STDERR "Calculating mean value for $uniquename\n";
+
+            my $uniquename_data = $grouped_results{$uniquename};
+
+            foreach my $trait (keys %{$uniquename_data}) {
+                my $details = $uniquename_data->{$trait};
+                my @values = map { $_->{'value'}} @{$uniquename_data->{$trait}};
                 my $mean_value = @values ? sprintf("%.2f", sum(@values)/@values) : undef;
-
+                print STDERR "Mean value is $mean_value\n";
                 push @table_data, {
-                    observationUnitDbId => $old_uniquename_data->{$trait}[0]->{'stock_id'},
-                    observationUnitName => $old_uniquename,
-                    collector => $old_uniquename_data->{$trait}[0]->{'collector'},
+                    observationUnitDbId => $uniquename_data->{$trait}[0]->{'stock_id'},
+                    observationUnitName => $uniquename,
+                    collector => $uniquename_data->{$trait}[0]->{'collector'},
                     observationTimeStamp => localtime()->datetime,
-                    observationVariableDbId => $old_uniquename_data->{$trait}[0]->{'trait_id'},
+                    observationVariableDbId => $uniquename_data->{$trait}[0]->{'trait_id'},
                     observationVariableName => $trait,
                     value => $mean_value,
                     details => $details,
@@ -336,7 +338,6 @@ sub image_analysis_group_POST : Args(0) {
                 };
             }
         }
-        $old_uniquename = $uniquename;
     }
     # print STDERR "table data is ".Dumper(@table_data);
     $c->stash->{rest} = { success => 1, results => \@table_data };
