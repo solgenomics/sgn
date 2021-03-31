@@ -96,19 +96,30 @@ sub submit_order_POST : Args(0) {
         my $item_type = $item_info_hash->{'item_type'};
 #        print STDERR "CONTACT PERSON ID =".Dumper($contact_person_id)."\n";
 #        print STDERR "ITEM TYPE =".Dumper($item_type)."\n";
-        $group_by_contact_id{$contact_person_id}{$item_name} = $item_type;
-#        print STDERR "GROUP BY CONTACT ID =".Dumper(\%group_by_contact_id)."\n";
+#        $group_by_contact_id{$contact_person_id}{$item_name} = $item_type;
+        $group_by_contact_id{$contact_person_id}{$item_name}++;
+
+        print STDERR "GROUP BY CONTACT ID =".Dumper(\%group_by_contact_id)."\n";
     }
 
     foreach my $contact_id (keys %group_by_contact_id) {
+        my $item_ref = $group_by_contact_id{$contact_id};
+        my %items = %{$item_ref};
+        my @item_array = keys %items;
+        print STDERR "ITEM ARRAY =".Dumper(\@item_array)."\n";
         my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema});
         $new_order->order_from_id($user_id);
-        $new_order->order_to_id($contact_person_id);
+        $new_order->order_to_id($contact_id);
         $new_order->order_status("submitted");
         $new_order->create_date($timestamp);
         my $order_id = $new_order->store();
         print STDERR "ORDER ID =".($order_id)."\n";
 
+        my $order_prop = CXGN::Stock::OrderBatch->new({ people_schema => $people_schema });
+        $order_prop->clone_list(\@item_array);
+        $order_prop->parent_id($order_id);
+    	my $order_prop_id = $order_prop->store();
+        print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
     }
 
 
