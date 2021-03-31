@@ -274,7 +274,7 @@ sub create_selection_pop_page {
 		    $sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
 		}
     }
-	
+
     $c->stash->{selection_pop_page} = $sel_pop_page;
 }
 
@@ -719,7 +719,7 @@ sub structure_training_modeling_output {
 		{
 			$url_args->{data_set_type} = 'single population';
 
-	        my $model_page = $c->controller('solGS::Utils')->model_page_url($url_args);
+	        my $model_page = $c->controller('solGS::Path')->model_page_url($url_args);
 		    $trait_page = $base . $model_page;
 
 		    if ($analysis_page =~ m/solgs\/traits\/all\/population\//)
@@ -737,7 +737,7 @@ sub structure_training_modeling_output {
 		{
 			$url_args->{data_set_type} = 'single population';
 
-	        my $model_page = $c->controller('solGS::Utils')->model_page_url($url_args);
+	        my $model_page = $c->controller('solGS::Path')->model_page_url($url_args);
 		    $trait_page = $base . $model_page;
 		}
 
@@ -745,7 +745,7 @@ sub structure_training_modeling_output {
 		{
 			$url_args->{data_set_type} = 'combined populations';
 
-	        my $model_page = $c->controller('solGS::Utils')->model_page_url($url_args);
+	        my $model_page = $c->controller('solGS::Path')->model_page_url($url_args);
 		    $trait_page = $base . $model_page;
 
 		    if ($analysis_page =~ m/solgs\/models\/combined\/trials\//)
@@ -764,7 +764,7 @@ sub structure_training_modeling_output {
 		{
 			$url_args->{data_set_type} = 'combined populations';
 
-	        my $model_page = $c->controller('solGS::Utils')->model_page_url($url_args);
+	        my $model_page = $c->controller('solGS::Path')->model_page_url($url_args);
 
 		    $trait_page = $base . $model_page;
 
@@ -803,7 +803,7 @@ sub structure_training_single_pop_data_output {
 		 'data_set_type' => 'single population'
 	};
 
-	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
     my $population_page = $base . $training_pop_page;
 
 	my $data_set_type   = $c->stash->{data_set_type};
@@ -872,7 +872,7 @@ sub structure_training_combined_pops_data_output {
 		 'data_set_type' => 'combined populations'
 	 };
 
-	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
 
     my $combined_pops_page = $base . $training_pop_page;
     my @combined_pops_ids = @{$c->stash->{combo_pops_list}};
@@ -898,7 +898,7 @@ sub structure_training_combined_pops_data_output {
 		 	'data_set_type' => 'single population'
 		};
 
-		my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+		my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
 
 		my $population_page = $base . $training_pop_page;
 
@@ -966,19 +966,19 @@ sub structure_selection_prediction_output {
 
 		if ($data_set_type =~ /combined populations/)
 		{
-	   	 	$tr_pop_page = $c->controller('solGS::Utils')->training_page_url($url_args);
+	   	 	$tr_pop_page = $c->controller('solGS::Path')->training_page_url($url_args);
 
 		    $tr_pop_page    = $base . $tr_pop_page;
 		    $tr_pop_name    = 'Training population ' . $tr_pop_id;
-			$sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
+			$sel_pop_page =  $c->controller('solGS::Path')->selection_page_url($url_args);
 		    $sel_pop_page = $base . $sel_pop_page;
 
-	       	$model_page = $c->controller('solGS::Utils')->model_page_url($url_args);
+	       	$model_page = $c->controller('solGS::Path')->model_page_url($url_args);
 		    $model_page   = $base . $model_page;
 		}
 		else
 		{
-	   	 	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($url_args);
+	   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($url_args);
 
 		    $tr_pop_page    = $base . $training_pop_page;
 		    if ($tr_pop_id =~ /list/)
@@ -999,10 +999,10 @@ sub structure_selection_prediction_output {
 				$tr_pop_name   = $c->stash->{project_name};
 		    }
 
-			$sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
+			$sel_pop_page =  $c->controller('solGS::Path')->selection_page_url($url_args);
 		    $sel_pop_page = $base . $sel_pop_page;
 
-	        $model_page = $c->controller('solGS::Utils')->model_page_url($url_args);
+	        $model_page = $c->controller('solGS::Path')->model_page_url($url_args);
 		    $model_page = $base .  $model_page;
 		}
 

@@ -118,7 +118,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
    		  'data_set_type' => 'single population'
    	  	};
 
-   	 	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
 
         $ret->{redirect_url} = $training_pop_page;
 		$ret->{pop_id} = $pop_id;
@@ -226,7 +226,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 			'data_set_type' => 'combined populations'
 		};
 
-	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
 	$training_pop_page = qq | <a href="$training_pop_page">$training_pop_name</a> |;
 
 	if (!@traits_ids)
@@ -249,7 +249,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 	  			'data_set_type' => 'combined populations'
 	  		};
 
-	        my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+	        my $model_page = $c->controller('solGS::Path')->model_page_url($args);
 		    $c->res->redirect($model_page);
 		    $c->detach();
 		}
@@ -308,7 +308,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 			 'data_set_type' => 'combined populations'
 		 };
 
-		my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+		my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
 	    $training_pop_page   = qq | <a href="$training_pop_page">training population page </a>|;
 
 	    my $msg = "Cached output for this model does not exist anymore.\n"
@@ -411,14 +411,14 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
 		 'data_set_type' => 'combined populations'
 	 };
 
-	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
 	my $training_pop = "Training population $model_id";
     my $pop_link   = qq | <a href="$training_pop_page">$training_pop </a>|;
 
     $c->stash->{pop_link} = $pop_link;
     $c->stash->{training_pop_name} = $training_pop;
 
-	my $training_model_page = $c->controller('solGS::Utils')->model_page_url($args);
+	my $training_model_page = $c->controller('solGS::Path')->model_page_url($args);
     my $model_link   = qq | <a href="$training_model_page">$training_pop -- $trait_abbr </a>|;
 	$c->stash->{model_page_url} = $model_link;
 
@@ -517,7 +517,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args() {
 			'data_set_type' => 'single population'
 		 };
 
-	 	my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+	 	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
         $ret->{redirect_url} = $model_page;
     }
 
@@ -574,7 +574,7 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
  			'data_set_type' => 'single population'
  		};
 
-         my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+         my $model_page = $c->controller('solGS::Path')->model_page_url($args);
         $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
 
 		push @selected_pops_details, [$checkbox,  qq|<a href="$model_page" onclick="solGS.waitPage()">$pop_name</a>|,
@@ -820,7 +820,7 @@ sub combined_pops_summary {
 		$tr_page_args->{training_pop_id} = $pop_id;
 		$tr_page_args->{ 'data_set_type'} => 'single population';
 
-	   	$training_pop_page = $c->controller('solGS::Utils')->training_page_url($tr_page_args);
+	   	$training_pop_page = $c->controller('solGS::Path')->training_page_url($tr_page_args);
 
 		$desc .= '<a href=' .  $training_pop_page. '> ' .  $pr_name . '</a>';
         $desc .= $pop_id == $pops_ids[-1] ? '.' : ' and ';
@@ -855,7 +855,7 @@ sub combined_pops_summary {
 			 'data_set_type' => 'combined populations'
 		};
 
-		$model_link = $c->controller('solGS::Utils')->model_page_url($model_page_args);
+		$model_link = $c->controller('solGS::Path')->model_page_url($model_page_args);
 	}
 
     my $stocks_no    =  $self->count_combined_trials_lines_count($c, $combo_pops_id, $trait_id);
@@ -864,7 +864,7 @@ sub combined_pops_summary {
 	$tr_page_args->{'training_pop_id'} = $combo_pops_id;
 	$tr_page_args->{'data_set_type'} = 'combined populations';
 
-	$training_pop_page = $c->controller('solGS::Utils')->training_page_url($tr_page_args);
+	$training_pop_page = $c->controller('solGS::Path')->training_page_url($tr_page_args);
 
     my $pop_link   = qq | <a href="$training_pop_page">$training_pop_name</a>|;
     my $protocol = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);

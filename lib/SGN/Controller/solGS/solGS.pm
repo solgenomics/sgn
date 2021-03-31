@@ -181,7 +181,7 @@ sub projects_links {
 	   		  'data_set_type' => 'single population'
 	   	  	};
 
-	   	 	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+	   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
 
 		    push @projects_pages, [$checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|,
 					   $pr_desc, $pr_location, $pr_year
@@ -277,7 +277,7 @@ sub format_trait_gs_projects {
 					'data_set_type' => 'single population'
 				};
 
-		      	my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+		      	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
 
 			   push @formatted_projects, [ $checkbox, qq|<a href="$model_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year];
 	       }
@@ -326,7 +326,7 @@ sub format_gs_projects {
 		  		  'data_set_type' => 'single population'
 		  	  	};
 
-	  	 		my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+	  	 		my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
 
 		   		push @formatted_projects, [ $checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
 	       }
@@ -771,7 +771,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 		'data_set_type' => 'single population'
 	};
 
-	my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
 
     if (!-s $gebvs_file)
     {
@@ -936,7 +936,7 @@ sub trait :Path('/solgs/trait') Args() {
    		  'data_set_type' => 'single population'
    	  	};
 
-   	 	my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
 
 	    my $training_pop_page = qq | <a href="$training_pop_page">$training_pop_name</a> |;
 
@@ -1277,7 +1277,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
 			'data_set_type' => 'combined populations'
 		};
 
-		my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+		my $model_page = $c->controller('solGS::Path')->model_page_url($args);
         $c->res->redirect($model_page);
         $c->detach();
     }
@@ -1300,7 +1300,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
 			 'data_set_type' => 'single population'
 		 };
 
-	 	my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+	 	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
 
 		$c->res->redirect($model_page);
 		$c->detach();
@@ -2039,7 +2039,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 		  'data_set_type' => 'single population'
 	  };
 
-	 my $training_pop_page = $c->controller('solGS::Utils')->training_page_url($args);
+	 my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
      $training_pop_page = qq | <a href="$training_pop_page">$training_pop_name</a> |;
 
      my @select_analysed_traits;
@@ -2065,7 +2065,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
   			'data_set_type' => 'single population'
   		};
 
-        my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+        my $model_page = $c->controller('solGS::Path')->model_page_url($args);
 	    $c->res->redirect($model_page);
 	    $c->detach();
 	 }
@@ -3374,7 +3374,7 @@ sub get_rrblup_output {
 			'data_set_type' => 'single population'
 		};
 
-        my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+        my $model_page = $c->controller('solGS::Path')->model_page_url($args);
 
         push @trait_pages, [ qq | <a href="$model_page" onclick="solGS.waitPage()">$tr</a>| ];
         }

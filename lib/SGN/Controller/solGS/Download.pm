@@ -197,7 +197,7 @@ sub selection_prediction_download_urls {
 		    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 		    my $trait_abbr = $c->stash->{trait_abbr};
 
-			$sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
+			$sel_pop_page =  $c->controller('solGS::Path')->selection_page_url($url_args);
 
 			if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
 		    {
@@ -213,7 +213,7 @@ sub selection_prediction_download_urls {
 		my $trait_id = $selected_model_traits[0];
 		$url_args->{trait_id} = $trait_id;
 
-		$sel_pop_page =  $c->controller('solGS::Utils')->selection_page_url($url_args);
+		$sel_pop_page =  $c->controller('solGS::Path')->selection_page_url($url_args);
 		$download_url = qq | <a href ="$sel_pop_page"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a>|;
     }
 

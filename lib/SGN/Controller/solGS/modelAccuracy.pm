@@ -176,7 +176,7 @@ sub create_model_summary {
 		'data_set_type' => $data_set_type
 	};
 
-	my $model_page = $c->controller('solGS::Utils')->model_page_url($args);
+	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
 	my $trait_page = qq | <a href="$model_page" onclick="solGS.waitPage()">$tr_abbr</a>|;
 
     $self->get_model_accuracy_value($c, $model_id, $tr_abbr);
