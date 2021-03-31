@@ -306,7 +306,7 @@ $ua = LWP::UserAgent->new;
 $ua->timeout(1200);
 my $apply_drone_run_band_project_ids = encode_json $message_hash_raster->{drone_run_band_project_ids};
 my $vegetative_indices = encode_json ['TGI','VARI','NDVI','NDRE'];
-my $response_standard_process = $ua->post('http://localhost:3010/api/drone_imagery/standard_process_apply?sgn_session_id='.$sgn_session_id.'&apply_drone_run_band_project_ids='.$apply_drone_run_band_project_ids.'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&drone_run_project_id='.$message_hash_raster->{drone_run_project_id}.'&vegetative_indices='.$vegetative_indices);
+my $response_standard_process = $ua->post('http://localhost:3010/api/drone_imagery/standard_process_apply?sgn_session_id='.$sgn_session_id.'&apply_drone_run_band_project_ids='.$apply_drone_run_band_project_ids.'&drone_run_band_project_id='.$message_hash_raster->{drone_run_band_project_ids}->[0].'&drone_run_project_id='.$message_hash_raster->{drone_run_project_id}.'&vegetative_indices='.$vegetative_indices.'&field_trial_id='.$field_trial_id);
 ok($response_standard_process->is_success);
 my $message_standard_process = $response_standard_process->decoded_content;
 my $message_hash_standard_process = decode_json $message_standard_process;

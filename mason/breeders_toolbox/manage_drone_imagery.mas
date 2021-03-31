@@ -408,6 +408,15 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
                         <input name="drone_imagery_standard_process_phenotypes_select" value="zonal" type="checkbox" checked disabled> Zonal Statistics: nonzero_pixel_count, total_pixel_sum, mean_pixel_value, harmonic_mean_value, median_pixel_value, variance_pixel_value, stdev_pixel_value, pstdev_pixel_value, min_pixel_value, max_pixel_value, minority_pixel_value, minority_pixel_count, majority_pixel_value, majority_pixel_count, pixel_variety_count <br/>
                     </div>
                 </div>
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Apply same standard process to all uploaded imaging events that use the same camera rig: </label>
+                    <div class="col-sm-6">
+                        <select class="form-control" id="drone_imagery_standard_process_camera_rig_apply_select">
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                </div>
             </form>
             <br/>
 
@@ -2983,7 +2992,9 @@ jQuery(document).ready(function() {
                     'vegetative_indices': JSON.stringify(manage_drone_imagery_standard_process_apply_drone_run_band_vegetative_indices),
                     'phenotype_types': JSON.stringify(selected),
                     'time_cvterm_id': manage_drone_imagery_standard_process_phenotype_time,
-                    'standard_process_type': 'minimal'
+                    'standard_process_type': 'minimal',
+                    'field_trial_id':manage_drone_imagery_standard_process_field_trial_id,
+                    'apply_to_all_drone_runs_from_same_camera_rig':jQuery('#drone_imagery_standard_process_camera_rig_apply_select').val()
                 },
                 success: function(response){
                     console.log(response);
