@@ -1032,7 +1032,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-            <form class="form-horizontal">
+            <form class="form-horizontal" id="drone_imagery_plot_polygon_remove_polygon_form">
                 <div class="form-group">
                     <label class="col-sm-5 control-label">Polygon Identifier:</label>
                     <div class="col-sm-7">
@@ -2244,7 +2244,7 @@ jQuery(document).ready(function() {
             paging : true,
             ajax : '/api/drone_imagery/imaging_vehicles'
         });
-    
+
         jQuery('#drone_imagery_view_imaging_vehicles_modal').modal('show');
     })
 
@@ -2774,7 +2774,7 @@ jQuery(document).ready(function() {
     jQuery('#drone_imagery_standard_process_plot_polygons_switch_image_url').click(function() {
         if (plot_polygons_standard_process_default_image_type_is_background_removed == 1) {
             showPlotPolygonStart(manage_drone_imagery_standard_process_removed_background_image_id, drone_run_band_project_id, 'drone_imagery_standard_process_plot_polygons_original_stitched_div', 'drone_imagery_standard_process_plot_polygons_top_section', 'manage_drone_imagery_standard_process_plot_polygons_load_div', 0);
-            plot_polygons_standard_process_default_image_type_is_background_removed = 0; 
+            plot_polygons_standard_process_default_image_type_is_background_removed = 0;
         }
         else {
             showPlotPolygonStart(manage_drone_imagery_standard_process_denoised_image_id, drone_run_band_project_id, 'drone_imagery_standard_process_plot_polygons_original_stitched_div', 'drone_imagery_standard_process_plot_polygons_top_section', 'manage_drone_imagery_standard_process_plot_polygons_load_div', 0);
@@ -5039,7 +5039,7 @@ jQuery(document).ready(function() {
             success: function(response){
                 console.log(response);
                 jQuery("#working_modal").modal("hide");
-                
+
                 manage_drone_imagery_standard_process_image_width = response.image_width;
                 manage_drone_imagery_standard_process_image_height = response.image_height;
 
@@ -6116,6 +6116,15 @@ jQuery(document).ready(function() {
 
     jQuery(document).on('click', '#drone_imagery_plot_polygons_clear_one', function(){
         jQuery('#drone_imagery_plot_polygon_remove_polygon').modal('show');
+        return false;
+    });
+
+    jQuery("#drone_imagery_plot_polygon_remove_polygon_form").submit( function() {
+        event.preventDefault();
+        var polygon_number = jQuery('#drone_imagery_plot_polygon_remove_polygon_number').val();
+        drone_imagery_plot_polygons_removed_numbers.push(polygon_number);
+        draw_canvas_image(background_image_url, plot_polygons_total_height_generated/plot_polygons_num_rows_generated);
+        plotPolygonManualAssignPlotNumberTableStandard('drone_imagery_standard_process_generated_polygons_table', 'drone_imagery_standard_process_generated_polygons_table_id', 'drone_imagery_standard_process_generated_polygons_table_input', 'drone_imagery_standard_process_generated_polygons_table_input_generate_button', 'drone_imagery_standard_process_plot_polygons_submit_bottom');
         return false;
     });
 
@@ -7905,7 +7914,7 @@ jQuery(document).ready(function() {
 
     jQuery(document).on('click', 'button[name="project_drone_imagery_quality_control_check"]',function() {
         showManageDroneImagerySection('manage_drone_imagery_quality_control_div');
-        
+
         alert('Clicking any of these checkboxes will obsolete the image and cannot be readily reversed!');
 
         manage_drone_imagery_quality_control_field_trial_id = jQuery(this).data('field_trial_id');
