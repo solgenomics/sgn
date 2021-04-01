@@ -225,7 +225,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
     my $statistics_select = $c->req->param('statistics_select');
     my $field_trial_id_list = $c->req->param('field_trial_id_list') ? decode_json $c->req->param('field_trial_id_list') : [];
     my $field_trial_id_list_string = join ',', @$field_trial_id_list;
-    
+
     if (scalar(@$field_trial_id_list) != 1) {
         $c->stash->{rest} = { error => "Please select one field trial!"};
         return;
@@ -468,7 +468,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     my $trait_name = $_->{trait_name};
                     $phenotype_data{$obsunit_stock_uniquename}->{$trait_name} = $_->{value};
                     $seen_trait_names{$trait_name}++;
-                    
+
                     if ($_->{associated_image_project_time_json}) {
                         my $related_time_terms_json = decode_json $_->{associated_image_project_time_json};
                         my $time_days_cvterm = $related_time_terms_json->{day};
@@ -1983,13 +1983,13 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     }
                 }
                 elsif ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'vegetative') {
-                    
+
                 }
                 elsif ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'reproductive') {
-                    
+
                 }
                 elsif ($compute_relationship_matrix_from_htp_phenotypes_time_points eq 'mature') {
-                    
+
                 }
                 else {
                     $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes_time_points htp_pheno_rel_matrix_time_points is not valid!" };
@@ -2399,7 +2399,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
         elsif ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
             $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000005) when saving results
-        
+
             $analysis_result_values_type = "analysis_result_values_match_accession_names";
 
             if ($statistics_select eq 'sommer_grm_temporal_random_regression_dap_genetic_blups') {
@@ -2483,7 +2483,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             open(my $fh, '<', $stats_out_tempfile_permanent_environment)
                 or die "Could not open file '$stats_out_tempfile_permanent_environment' $!";
-            
+
                 print STDERR "Opened $stats_out_tempfile_permanent_environment\n";
                 $header = <$fh>;
                 if ($csv->parse($header)) {
@@ -2516,14 +2516,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             open(my $fh_residual, '<', $stats_out_tempfile_residual)
                 or die "Could not open file '$stats_out_tempfile_residual' $!";
-            
+
                 print STDERR "Opened $stats_out_tempfile_residual\n";
                 my $header_residual = <$fh_residual>;
                 my @header_cols_residual;
                 if ($csv->parse($header_residual)) {
                     @header_cols_residual = $csv->fields();
                 }
-            
+
                 while (my $row = <$fh_residual>) {
                     my @columns;
                     if ($csv->parse($row)) {
@@ -2651,7 +2651,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
         elsif ($statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || $statistics_select eq 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') {
             $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004";
-        
+
             $analysis_result_values_type = "analysis_result_values_match_accession_names";
 
             if ($statistics_select eq 'sommer_grm_genetic_only_random_regression_dap_genetic_blups') {
@@ -2731,14 +2731,14 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
 
             open(my $fh_residual, '<', $stats_out_tempfile_residual)
                 or die "Could not open file '$stats_out_tempfile_residual' $!";
-            
+
                 print STDERR "Opened $stats_out_tempfile_residual\n";
                 my $header_residual = <$fh_residual>;
                 my @header_cols_residual;
                 if ($csv->parse($header_residual)) {
                     @header_cols_residual = $csv->fields();
                 }
-            
+
                 while (my $row = <$fh_residual>) {
                     my @columns;
                     if ($csv->parse($row)) {
@@ -2822,7 +2822,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         elsif ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'blupf90_grm_random_regression_dap_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_dap_blups') {
 
             $statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000004"; #In the JS this is set to either the genetic of permanent environment BLUP term (Multivariate linear mixed model permanent environment BLUPs using genetic relationship matrix and temporal Legendre polynomial random regression on days after planting computed using Sommer R|SGNSTAT:0000005) when saving results
-        
+
             $analysis_result_values_type = "analysis_result_values_match_accession_names";
 
             if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups') {
@@ -4675,7 +4675,7 @@ sub _perform_match_raw_images_sequential {
         #     print STDERR "LAT UP OBJS: ".scalar(@$gps_obj_src_lat_up_objects)."\n";
         #     foreach (@$gps_obj_src_lat_up_objects) {
         #         my $gps_obj_src_lat_up_image_id = $_->{nir_image_id};
-        # 
+        #
         #         if ($gps_obj_src_lat_up_image_id && $nir_image_hash{$gps_obj_src_lat_up_image_id} && $nir_image_hash{$gps_obj_src_lat_up_image_id}->{match_src_to}) {
         #             my $match2 = _drone_imagery_match_and_align_images($c, $schema, $gps_obj_src_lat_up_image_id, $image_id2, $nir_image_hash{$gps_obj_src_lat_up_image_id}, $gps_obj_dst, $max_features, $rotate_radians, $total_image_count, $image_counter, $skipped_counter);
         #             my $smallest_diff2 = $match2->{smallest_diff};
@@ -4686,7 +4686,7 @@ sub _perform_match_raw_images_sequential {
         #             my $x_pos_translation2 = $match2->{x_pos_translation};
         #             my $y_pos_translation2 = $match2->{y_pos_translation};
         #             my $align_temp_image2 = $match2->{align_temp_image};
-        # 
+        #
         #             if ($smallest_diff2 <= 50) {
         #                 $smallest_diff = ($smallest_diff + $smallest_diff2) / 2;
         #                 $x_pos_match_dst = ($x_pos_match_dst + $x_pos_match_dst2) / 2;
@@ -4949,7 +4949,7 @@ sub drone_imagery_save_gps_images_POST : Args(0) {
     if ($saved_gps_positions_json) {
         $saved_gps_positions_full = decode_json $saved_gps_positions_json->value();
     }
-    
+
     $saved_gps_positions_full->{$flight_pass_counter} = $gps_images;
 
     my $drone_run_band_rotate_angle = $schema->resultset('Project::Projectprop')->update_or_create({
@@ -5004,7 +5004,7 @@ sub drone_imagery_calculate_statistics_store_analysis_POST : Args(0) {
     $a->metadata()->traits($trait_names);
     #$a->metadata()->analysis_protocol($params->{analysis_protocol});
     $a->metadata()->model($model_string);
-    
+
     my ($verified_warning, $verified_error);
 
     print STDERR "Storing the analysis...\n";
@@ -5427,7 +5427,7 @@ sub _perform_plot_polygon_assign {
     my @plot_polygon_image_fullpaths;
     my @plot_polygon_image_urls;
 
-    my $dir = $c->tempfiles_subdir('/drone_imagery_plot_polygons');    
+    my $dir = $c->tempfiles_subdir('/drone_imagery_plot_polygons');
     my $bulk_input_temp_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_plot_polygons/bulkinputXXXX');
 
     open(my $F, ">", $bulk_input_temp_file) || die "Can't open file ".$bulk_input_temp_file;
@@ -7557,7 +7557,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     {
         key=>'projectprop_c1'
     });
-    
+
     my $drone_run_process_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$processed_cvterm_id,
         project_id=>$drone_run_project_id_input,
@@ -7567,7 +7567,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     {
         key=>'projectprop_c1'
     });
-    
+
     my $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$processed_minimal_vi_cvterm_id,
         project_id=>$drone_run_project_id_input,
@@ -7799,7 +7799,7 @@ sub standard_process_apply_previous_imaging_event_POST : Args(0) {
     {
         key=>'projectprop_c1'
     });
-    
+
     my $drone_run_process_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$processed_cvterm_id,
         project_id=>$drone_run_project_id_input,
@@ -7809,7 +7809,7 @@ sub standard_process_apply_previous_imaging_event_POST : Args(0) {
     {
         key=>'projectprop_c1'
     });
-    
+
     my $drone_run_process_minimal_vi_completed = $bcs_schema->resultset('Project::Projectprop')->update_or_create({
         type_id=>$processed_minimal_vi_cvterm_id,
         project_id=>$drone_run_project_id_input,
@@ -8106,12 +8106,12 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
     my %drone_run_band_info;
     my $band_counter = 0;
 
-    my $dir = $c->tempfiles_subdir('/drone_imagery_plot_polygons');    
+    my $dir = $c->tempfiles_subdir('/drone_imagery_plot_polygons');
     my $bulk_input_temp_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_plot_polygons/bulkinputXXXX');
 
     open(my $F, ">", $bulk_input_temp_file) || die "Can't open file ".$bulk_input_temp_file;
     # print STDERR Dumper \%polygons_images_positions;
-    
+
     my $plot_polygon_type_hash = CXGN::DroneImagery::ImageTypes::get_all_project_md_image_observation_unit_plot_polygon_types($schema);
     my @input_bulk_hash;
     foreach my $apply_drone_run_band_project_id (@$apply_drone_run_band_project_ids) {
