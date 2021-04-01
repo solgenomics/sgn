@@ -24,7 +24,7 @@ sub BUILD {
 
     $self->prop_table('sp_orderprop');
     $self->prop_namespace('CXGN::People::Schema::Result::SpOrderprop');
-    $self->prop_primary_key('orderprop_id');
+    $self->prop_primary_key('sp_orderprop_id');
     $self->prop_type('order_batch_json');
     $self->cv_name('sp_order_property');
 #    $self->allowed_fields( [ qw | order_from_person_id order_to_person_id order_status comments | ] );
