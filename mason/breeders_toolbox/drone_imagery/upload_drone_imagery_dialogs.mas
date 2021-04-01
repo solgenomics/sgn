@@ -290,10 +290,10 @@
                             <li><b>Description</b>: (required) Free-text description of the imaging event and how it was flown and/or processed.</li>
                             <li><b>Date</b>: (required) The date and time of the imaging event in YYYY/MM/DD hh:mm:ss format (e.g. 2021/03/02 12:00:00)</li>
                             <li><b>Vehicle Name</b>: (required) The name of the aerial vehicle which was used. This must already exist in the database.</li>
-                            <li><b>Vehicle Battery Set</b>: (required) The name of the aerial vehicle battery set which was used. This must already exist in the database.</li>
+                            <li><b>Vehicle Battery Set</b>: (optional) The name of the aerial vehicle battery set which was used.</li>
                             <li><b>Sensor</b>: (required) The type of camera sensor used. Must be either "MicaSense 5 Channel Camera", "CCD Color Camera", or "CMOS Color Camera".</li>
                             <li><b>Field Trial Name</b>: (required) The name of the field trial which was imaged. This must already exist in the database.</li>
-                            <li><b>Apply Rotation Degrees</b>: (optional) Clock-wise degree rotation, 0 to 360 degrees, to apply to the uploaded imagery (e.g. 92). Leave empty if no rotation should be applied to the uploaded imagery.</li>
+                            <li><b>Apply Rotation Degrees</b>: (optional) Clockwise degree rotation, 0 to 360 degrees, to apply to the uploaded imagery (e.g. 92). Leave empty if no rotation should be applied to the uploaded imagery.</li>
                             <li><b>Apply Cropping Top-Left X Pixel Position</b>: (optional) Pixel position of the top-left x-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
                             <li><b>Apply Cropping Top-Left Y Pixel Position</b>: (optional) Pixel position of the top-left y-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
                             <li><b>Apply Cropping Top-Right X Pixel Position</b>: (optional) Pixel position of the top-right x-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
