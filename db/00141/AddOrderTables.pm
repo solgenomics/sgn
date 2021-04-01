@@ -74,6 +74,7 @@ GRANT USAGE ON sgn_people.sp_order_sp_order_id_seq TO web_usr;
 
 CREATE TABLE sgn_people.sp_orderprop ( 
     sp_orderprop_id serial primary key,
+    sp_order_id bigint references sgn_people.sp_order,
     type_id bigint references cvterm,
     value jsonb,
     rank int not null
