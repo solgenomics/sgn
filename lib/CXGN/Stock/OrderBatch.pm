@@ -5,7 +5,8 @@ use Moose;
 
 extends 'CXGN::JSONProp';
 
-has 'clone_list' => (is => 'rw', isa => 'ArrayRef[HashRef]' );
+#has 'clone_list' => (is => 'rw', isa => 'ArrayRef[HashRef]' );
+has 'clone_list' => (is => 'rw', isa => 'Str' );
 
 has 'type' => ( is => 'rw', isa => 'Str' );
 
@@ -28,7 +29,7 @@ sub BUILD {
     $self->cv_name('sp_order_property');
 #    $self->allowed_fields( [ qw | order_from_person_id order_to_person_id order_status comments | ] );
     $self->allowed_fields( [ qw | clone_list | ] );
-    $self->parent_table('stock');
+    $self->parent_table('sp_order');
     $self->parent_primary_key('sp_order_id');
 
     $self->load();
