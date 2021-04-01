@@ -1142,6 +1142,8 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
 sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot_accessions_using_file') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $trial_id = $c->stash->{trial_id};
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $user_id;
     my $user_name;
     my $user_role;
@@ -1218,6 +1220,18 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
     }
 
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+
+    my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    });
+
+    my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();
+     if ($return_error) {
+       $c->stash->{rest} = { error => $return_error };
+       return;
+     }
+
     my $upload_change_plot_accessions_txn = sub {
         my @stock_names;
         print STDERR Dumper $parsed_data;
