@@ -18,9 +18,12 @@
                 <&| /util/workflow.mas, id=> "drone_imagery_upload_workflow" &>
                     <&| /util/workflow.mas:step, title=> "Intro" &>
                         <& /page/page_title.mas, title=>"This workflow will guide you through uploading aerial images to the database" &>
-                        <p>Your field trial must already be in the database before you can upload images for it. Please go to <a href="/breeders/trials">Manage->Field Trials</a> if it is not.</p>
-                        <p>If you have raw aerial images (.TIFF, .JPG, .PNG) that have not been stitched into an orthophotomosaic image of the whole field, your raw images should be uploaded using a zipfile (.zip). The maximum zipfile size is 2GB; however, you can upload many separate zipfiles. OpenDroneMap will be used to stitch the orthophotos and digital surface maps (DSM). OpenDroneMap works for color images and for MicaSense 5-channel multispectral images.</p>
-                        <p>If you already have an orthophotomosaic image of your entire field from external software, you can upload those images. The maximum size for each image is 200MB. Upload orthomosaics as .TIFF, .PNG, or .JPG images. Orthophotomosaics images for multi-spectral cameras are expected to be perfectly super-imposable for all spectra.</p>
+                        <ul>
+                            <li>Your field trial must already be in the database before you can upload images for it. Please go to <a href="/breeders/trials">Manage->Field Trials</a> if it is not.</li>
+                            <li><b>For Raw Image Captures</b>: If you have raw aerial images (.TIFF, .JPG, .PNG) that have not been stitched into an orthophotomosaic image of the whole field, your raw images should be uploaded using a zipfile (.zip). The maximum zipfile size is 2GB; however, you can upload many separate zipfiles. OpenDroneMap will be used to stitch the orthophotos and digital surface maps (DSM). OpenDroneMap works for color RGB images and for MicaSense 5-channel multispectral images.</li>
+                            <li><b>For Orthophotomosaics</b>: If you already have an orthophotomosaic image of your entire field from external software, you can upload those images. The maximum size for each image is 200MB. Upload orthomosaics as .TIFF, .PNG, or .JPG images. Do not upload GeoTIFFs, instead upload reflectance raster images (.TIFF, .PNG, or .JPG). Orthophotomosaic images for multi-spectral cameras are expected to be perfectly super-imposable for all spectra.</li>
+                        </ul>
+                        <hr>
                         <p><b>Example Data:</b> <a href="https://imagebreed.org/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightRawCaptures.zip" download>MicaSense 5 Band Raw Captures (Unstitched TIFF image-captures) (Upload zipfile to ImageBreed and let OpenDroneMap stitch orthophotos and DSM.)</a></p>
                         <p><b>Example Data:</b> <a href="https://imagebreed.org/static_content/imagebreed/ExampleAerialDroneFlightMicasensePanel.zip" download>MicaSense 5 Band Panel Images (MicaSense calibration panel images.) (Upload zipfile for ImageBreed to calibrate Micasense raw-captures.)</a></p>
                         <p><b>Example Data:</b> <a href="https://imagebreed.org/static_content/imagebreed/AlfalfaExample35MeterMicasenseAerialDroneFlightOrthomosaics.zip" download>MicaSense 5 Band Previously Stitched Orthophotomosaic Images (PNG Files in provided zipfile. Can upload each band separately into ImageBreed.)</a></p>
@@ -157,7 +160,7 @@
                         <div class="well">
                             <center><h4>Uploading already stitched orthophotomosaics or complete images of experimental field</h4></center>
                             <ul>
-                                <li>You can choose to upload orthophotomosaic images (PNG, TIFF) created using external software (Pix4d, Agisoft, etc).</li>
+                                <li>You can choose to upload orthophotomosaic images (PNG, TIFF) created using external software (Pix4d, Agisoft, etc). Do not upload GeoTIFFs, instead upload reflectance raster images (.TIFF, .PNG, or .JPG).</li>
                                 <li>You can upload any image (PNG, TIFF, JPEG) which covers the entire experimental field, for example, interpolated soil data for altitude or electrical conductance EC measurements. Another example is for images from a phenotyping facility, greenhouse, or growth chamber.</li>
                                 <li>Up to seven distinct spectral band images can be uploaded.</li>
                                 <li>Images should be perfectly super-imposable for all spectra in an imaging event.</li>
@@ -258,7 +261,7 @@
                     <&| /util/workflow.mas:step, title=> "Define Imaging Events" &>
                         <& /page/page_title.mas, title=>"Define Imaging Events in Bulk" &>
 
-                        <h4>The uploaded file must have the following header:</h4>
+                        <h4>The uploaded Excel file (.xls) must have the following header:</h4>
 
                         <table class="table table-bordered table-hover">
                             <tbody>
@@ -271,15 +274,8 @@
                                     <th>Vehicle Battery Set</th>
                                     <th>Sensor</th>
                                     <th>Field Trial Name</th>
-                                    <th>Apply Rotation Degrees</th>
-                                    <th>Apply Cropping Top-Left X Pixel Position</th>
-                                    <th>Apply Cropping Top-Left Y Pixel Position</th>
-                                    <th>Apply Cropping Top-Right X Pixel Position</th>
-                                    <th>Apply Cropping Top-Right Y Pixel Position</th>
-                                    <th>Apply Cropping Bottom-Left X Pixel Position</th>
-                                    <th>Apply Cropping Bottom-Left Y Pixel Position</th>
-                                    <th>Apply Cropping Bottom-Right X Pixel Position</th>
-                                    <th>Apply Cropping Bottom-Right Y Pixel Position</th>
+                                    <th>GeoJSON Filename</th>
+                                    <th>Image Filenames</th>
                                 </tr>
                             </tbody>
                         </table>
@@ -293,15 +289,8 @@
                             <li><b>Vehicle Battery Set</b>: (optional) The name of the aerial vehicle battery set which was used.</li>
                             <li><b>Sensor</b>: (required) The type of camera sensor used. Must be either "MicaSense 5 Channel Camera", "CCD Color Camera", or "CMOS Color Camera".</li>
                             <li><b>Field Trial Name</b>: (required) The name of the field trial which was imaged. This must already exist in the database.</li>
-                            <li><b>Apply Rotation Degrees</b>: (optional) Clockwise degree rotation, 0 to 360 degrees, to apply to the uploaded imagery (e.g. 92). Leave empty if no rotation should be applied to the uploaded imagery.</li>
-                            <li><b>Apply Cropping Top-Left X Pixel Position</b>: (optional) Pixel position of the top-left x-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
-                            <li><b>Apply Cropping Top-Left Y Pixel Position</b>: (optional) Pixel position of the top-left y-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
-                            <li><b>Apply Cropping Top-Right X Pixel Position</b>: (optional) Pixel position of the top-right x-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
-                            <li><b>Apply Cropping Top-Right Y Pixel Position</b>: (optional) Pixel position of the top-right y-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
-                            <li><b>Apply Cropping Bottom-Left X Pixel Position</b>: (optional) Pixel position of the bottom-left x-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
-                            <li><b>Apply Cropping Bottom-Left Y Pixel Position</b>: (optional) Pixel position of the bottom-left y-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
-                            <li><b>Apply Cropping Bottom-Right X Pixel Position</b>: (optional) Pixel position of the bottom-right x-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
-                            <li><b>Apply Cropping Bottom-Right Y Pixel Position</b>: (optional) Pixel position of the bottom-right y-axis of a cropping to apply to the uploaded imagery (e.g. 200). Leave empty if no cropping should be applied to the uploaded imagery.</li>
+                            <li><b>GeoJSON Filename</b>: (required) The name of the GeoJSON plot-polygon file that corresponds to this imaging event. This filename must exist in the uploaded GeoJSON zipfile. The same GeoJSON file can be used for multiple imaging events.</li>
+                            <li><b>Image Filenames</b>: (required) Comma-separated list of image filenames that corresponds to this imaging event (e.g. Field1Ortho01012020__nir.tiff,Field1Ortho01012020__rgb.tiff,Field1Ortho01012020__bw.tiff). The image filenames must exist in the uploaded images zipfile. The same image file can be used for multiple imaging events.</li>
                         </ul>
 
                         <hr>
@@ -309,61 +298,34 @@
                         <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to next step</button>
                         </center>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Upload Orthophoto Rasters" &>
-                        <& /page/page_title.mas, title=>"Upload Orthophoto Rasters For Imaging Events in Bulk" &>
+                    <&| /util/workflow.mas:step, title=> "Upload Orthophoto GeoTIFFs" &>
+                        <& /page/page_title.mas, title=>"Upload Orthophoto GeoTIFFs For Imaging Events in Bulk" &>
 
-                        <h4>Upload a zipfile (.zip) which contains orthophotos (.tiff, .png, .jpg) named in accordance with the imaging event names defined in the previous step.</h4>
-                        <h4>The images must be named as a concatenation of the imaging event name and the spectral type of the image, with a double-underscore (__) in between (e.g. Field1Ortho01012020__blue).</h4>
+                        <h4>Upload a zipfile (.zip) which contains orthophotos GeoTIFFs (.tiff) named in accordance with the "Image Filenames" defined in the previous step.</h4>
+                        <h4>The images must be named as a concatenation with the spectral type of the image, with a double-underscore (__) in between (e.g. Field1Ortho01012020__blue).</h4>
 
                         <p>The allowed spectral types are: blue, green, red, rededge, nir, mir, fir, thir, rgb, and bw, corresponding to Blue (450-520nm), Green (515-600nm), Red (600-690nm), Red Edge (690-750nm), NIR (780-3000nm), MIR (3000-50000nm), FIR (50000-1000000nm), Thermal IR (9000-14000nm), RGB Color Image, and Black and White Image, respectively.</p>
                         <p>The zipfile should be no larger than 2GB and should contain all of the orthophoto images for the defined imaging events.</p>
-                        <p>For an imaging event using a MicaSense 5-channel camera, the 5 separate orthophotos should be included in the zipfile and should be named as a concatenation of the imaging event name and the spectral type (e.g. Field1Ortho01012020__blue, Field1Ortho01012020__green, Field1Ortho01012020__red, Field1Ortho01012020__rededge, and Field1Ortho01012020__nir).</p>
-                        <p>Digital surface map (DSM) raster images can be uploaded as blank and white images (e.g. Field1Ortho01012020__bw.png)</p>
+                        <p>For an imaging event using a MicaSense 5-channel camera, the 5 separate orthophotos should be included in the zipfile and should be named as a concatenation with the spectral type (e.g. Field1Ortho01012020__blue, Field1Ortho01012020__green, Field1Ortho01012020__red, Field1Ortho01012020__rededge, and Field1Ortho01012020__nir).</p>
+                        <p>Digital surface map (DSM) raster images can be uploaded as black and white images (e.g. Field1Ortho01012020__bw.png)</p>
                         <p>Do not upload duplicate spectral types for the same imaging event.</p>
                         <p>Images should be perfectly super-imposable for different spectra in the same imaging event.</p>
+                        <p>The same image can be used for several imaging events.</p>
 
                         <hr>
                         <center>
                         <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to next step</button>
                         </center>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Define Plot Polygons" &>
+                    <&| /util/workflow.mas:step, title=> "Define Plot Polygons GeoJSON" &>
                         <& /page/page_title.mas, title=>"Define Plot Polygons in Bulk" &>
 
-                        <h4>Upload a zipfile (.zip) which contains comma-separated spreadsheets (.csv) detailing the pixel positions of the plot-polygons.</h4>
+                        <h4>Upload a zipfile (.zip) which contains GeoJSON (.geojson) files detailing the coordinate positions of the plot-polygons.</h4>
 
-                        <p>The spreadsheets should be named in accordance with the imaging event names defined in the previous step (e.g. Field1Ortho01012020).</p>
+                        <p>The spreadsheets should be named in accordance with the "GeoJSON Filenames" defined in the previous step.</p>
+                        <p>The coordinate system (e.g. WGS84, UTM) in the GeoTIFFs should be the same as the coordinate system defining the GeoJSON files.</p>
                         <p>The zipfile should be no larger than 2GB.</p>
-
-                        <h4>The spreadsheets must each have the following header:</h4>
-
-                        <table class="table table-bordered table-hover">
-                            <tbody>
-                                <tr>
-                                    <th>Plot Name</th>
-                                    <th>Top-Left X Pixel Position</th>
-                                    <th>Top-Left Y Pixel Position</th>
-                                    <th>Top-Right X Pixel Position</th>
-                                    <th>Top-Right Y Pixel Position</th>
-                                    <th>Bottom-Left X Pixel Position</th>
-                                    <th>Bottom-Left Y Pixel Position</th>
-                                    <th>Bottom-Right X Pixel Position</th>
-                                    <th>Bottom-Right Y Pixel Position</th>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <ul>
-                            <li><b>Plot Name</b>: (required) The name of the plot for which the polygon is being defined. Must already exist in the database as part of the field trial.</li>
-                            <li><b>Top-Left X Pixel Position</b>: (required) The top-left x-axis pixel position for the defined plot polygon.</li>
-                            <li><b>Top-Left Y Pixel Position</b>: (required) The top-left y-axis pixel position for the defined plot polygon.</li>
-                            <li><b>Top-Right X Pixel Position</b>: (required) The top-right x-axis pixel position for the defined plot polygon.</li>
-                            <li><b>Top-Right Y Pixel Position</b>: (required) The top-right y-axis pixel position for the defined plot polygon.</li>
-                            <li><b>Bottom-Left X Pixel Position</b>: (required) The bottom-left x-axis pixel position for the defined plot polygon.</li>
-                            <li><b>Bottom-Left Y Pixel Position</b>: (required) The bottom-left y-axis pixel position for the defined plot polygon.</li>
-                            <li><b>Bottom-Right X Pixel Position</b>: (required) The bottom-right x-axis pixel position for the defined plot polygon.</li>
-                            <li><b>Bottom-Right Y Pixel Position</b>: (required) The bottom-right y-axis pixel position for the defined plot polygon.</li>
-                        </ul>
+                        <p>The same GeoJSON file can be used for several imaging events.</p>
 
                         <hr>
                         <center>
@@ -472,7 +434,7 @@
                         <p>The allowed spectral types are: blue, green, red, rededge, nir, mir, fir, thir, rgb, and bw, corresponding to Blue (450-520nm), Green (515-600nm), Red (600-690nm), Red Edge (690-750nm), NIR (780-3000nm), MIR (3000-50000nm), FIR (50000-1000000nm), Thermal IR (9000-14000nm), RGB Color Image, and Black and White Image, respectively.</p>
                         <p>The zipfile should be no larger than 2GB and should contain all of the orthophoto images for the defined imaging events.</p>
                         <p>For an imaging event using a MicaSense 5-channel camera, the 5 separate orthophotos should be included in the zipfile and should be named as a concatenation of the imaging event name and the spectral type (e.g. Field1Ortho01012020__blue, Field1Ortho01012020__green, Field1Ortho01012020__red, Field1Ortho01012020__rededge, and Field1Ortho01012020__nir).</p>
-                        <p>Digital surface map (DSM) raster images can be uploaded as blank and white images (e.g. Field1Ortho01012020__bw.png)</p>
+                        <p>Digital surface map (DSM) raster images can be uploaded as black and white images (e.g. Field1Ortho01012020__bw.png)</p>
                         <p>Do not upload duplicate spectral types for the same imaging event.</p>
                         <p>Images should be perfectly super-imposable for different spectra in the same imaging event.</p>
 
