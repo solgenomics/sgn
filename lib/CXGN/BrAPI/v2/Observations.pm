@@ -38,10 +38,14 @@ sub search {
     # observationUnitLevelName
     # observationUnitLevelOrder
     # observationUnitLevelCode
-    my $trial_ids;
-    if ($study_ids_arrayref || $trial_ids_arrayref){
-        $trial_ids = ($study_ids_arrayref, $trial_ids_arrayref); 
+    my @trial_ids;
+    if ($study_ids_arrayref){ 
+        push @trial_ids, @$study_ids_arrayref;
     }
+    if ($trial_ids_arrayref){ 
+        push @trial_ids, @$trial_ids_arrayref;
+    }
+    my $trial_ids = \@trial_ids;
 
     my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
