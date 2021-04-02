@@ -36,16 +36,13 @@ $role => "stock_orderer"
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <div style="overflow:scroll">
-                    <table id = "current_clones" class="table table-hover table-striped">
+                    <table id = "current_orders" class="table table-hover table-striped">
                         <thead>
                             <tr>
                                 <th>Order Number</th>
                                 <th>Ordered By</th>
-                                <th>Submitted Date</th>
-                                <th>Items</th>
-                                <th>Priority</th>
                                 <th>Send Order To</th>
-                                <th>Comment</th>
+                                <th>Submitted Date</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -178,6 +175,16 @@ $(window).ready( function() {
             url: '/ajax/order/',
         });
     });
+
+
+    jQuery('#current_orders').DataTable( {
+        'ajax': '/ajax/order/current',
+    });
+
+
+
+
+
 });
 
 

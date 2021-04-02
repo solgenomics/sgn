@@ -4,8 +4,11 @@ package CXGN::Stock::Order;
 use Moose;
 use Data::Dumper;
 use CXGN::Stock::OrderBatch;
+use CXGN::People::Person;
 
 has 'people_schema' => ( isa => 'Ref', is => 'rw', required => 1 );
+
+has 'dbh' => (is  => 'rw', required => 1,);
 
 has 'sp_order_id' => (isa => 'Int', is => 'rw' );
 
@@ -118,6 +121,31 @@ sub store {
     return $row->sp_order_id();
 }
 
+
+sub get_orders_from_person_id {
+    my $self = shift;
+    my $people_schema = $self->people_schema();
+    my $person_id = $self->order_from_id();
+    my $dbh = $self->dbh();
+
+    my $order_rs = $people_schema->resultset('SpOrder')->search( { order_from_id => $person_id } );
+
+    my @orders;
+    while (my $result = $order_rs->next()){
+        my $order_id = $result->sp_order_id();
+        my $order_from_id = $result->order_from_id();
+        my $order_to_id = $result->order_to_id();
+        my $order_status = $result->order_status();
+        my $create_date = $result->create_date();
+        my $person= CXGN::People::Person->new($dbh, $order_to_id);
+        my $order_to_name=$person->get_first_name()." ".$person->get_last_name();
+
+#        print STDERR "ORDER ID =".Dumper($order_id);
+        push @orders, [$order_id, $order_from_id, $order_to_name, $create_date, $order_status];
+    }
+    print STDERR "ORDERS =".Dumper(\@orders)."\n";
+    return \@orders;
+}
 
 
 1;
