@@ -5,6 +5,7 @@ use Moose;
 use Data::Dumper;
 use CXGN::Stock::OrderBatch;
 use CXGN::People::Person;
+use JSON;
 
 has 'people_schema' => ( isa => 'Ref', is => 'rw', required => 1 );
 
@@ -129,9 +130,9 @@ sub get_orders_from_person_id {
     my $dbh = $self->dbh();
 
     my $order_rs = $people_schema->resultset('SpOrder')->search( { order_from_id => $person_id } );
-
     my @orders;
     while (my $result = $order_rs->next()){
+        my $item_list;
         my $order_id = $result->sp_order_id();
         my $order_from_id = $result->order_from_id();
         my $order_to_id = $result->order_to_id();
@@ -140,8 +141,21 @@ sub get_orders_from_person_id {
         my $person= CXGN::People::Person->new($dbh, $order_to_id);
         my $order_to_name=$person->get_first_name()." ".$person->get_last_name();
 
+        my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
+        while (my $item_result = $orderprop_rs->next()){
+            my $item_json = $item_result->value();
+            my $item_hash = JSON::Any->jsonToObj($item_json);
+            my $item_list_string = $item_hash->{'clone_list'};
+            my $item_list_ref = decode_json $item_list_string;
+            my %list_hash = %{$item_list_ref};
+            my @list = keys %list_hash;
+            my @sort_list = sort @list;
+            $item_list = join("<br>", @sort_list);
+#            print STDERR "ITEM =".Dumper($item)."\n";
+        }
+
 #        print STDERR "ORDER ID =".Dumper($order_id);
-        push @orders, [$order_id, $order_from_id, $order_to_name, $create_date, $order_status];
+        push @orders, [$order_id, $order_from_id, $order_to_name, $create_date, $item_list, $order_status];
     }
     print STDERR "ORDERS =".Dumper(\@orders)."\n";
     return \@orders;

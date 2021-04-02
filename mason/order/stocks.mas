@@ -43,6 +43,7 @@ $role => "stock_orderer"
                                 <th>Ordered By</th>
                                 <th>Send Order To</th>
                                 <th>Submitted Date</th>
+                                <th>Items</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
