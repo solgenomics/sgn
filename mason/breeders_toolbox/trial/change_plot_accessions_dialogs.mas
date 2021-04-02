@@ -110,7 +110,7 @@ jQuery(document).ready(function () {
                 alert(response.error);
             }
             else {
-		        jQuery('#trial_design_change_accessions_dialog').modal("hide");
+		jQuery('#trial_design_change_accessions_dialog').modal("hide");
                 jQuery('#trial_design_replace_accessions_dialog_message').modal("show");
             }
         },
