@@ -148,6 +148,28 @@ $trial_owner => undef
 
 <&| /page/info_section.mas, title=>"Trial Status", is_subsection => 0, collapsible=>1, collapsed=>1  &>
 
+<div class="modal  fade" id="hm_replace_accessions_dialog_message" name="hm_replace_accessions_dialog_message" tabindex="-1" role="dialog" aria-labelledby="HmDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmDialog"><b>Replace Plot Accessions</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <p3> Plot accession was replaced successfully...</p3>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_hmfieldma_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <div data-offset-top="0" style="max-height: 100%; overflow-y: auto;">
     <div class="panel panel-info">
         <div class="panel-heading">Completion</div>
