@@ -38,7 +38,7 @@ export function Wizard(main_id,col_number){
    * @param {string} target Type of column contents to load.
    * @param {Array.<Wizard~columnItem>} categories Array of pervious column types in order
    * @param {Object.<string,Array.<Wizard~columnItem>>} selections Object where keys are categories and values are arrays of items selected in those categories
-   * @param {Object.<string,boolean>} operations Object where keys are categories and values are booleans (true if interect, false if union)
+   * @param {Object.<string,number>} operations Object where keys are categories and values are the match value (0=any, 1=all, 0-1=match min percent)
    * @returns {Array.<Wizard~columnItem>} contents of column
    */
   var load_selection = (target,categories,selections,operations)=>[];
@@ -97,7 +97,7 @@ export function Wizard(main_id,col_number){
   for (var i = 0; i < col_number; i++) {
     col_objects.push({index:i,type:null,filter:()=>true});
     col_objects[i].items = [];
-    col_objects[i].intersect = false;
+    col_objects[i].match = 0;
     col_objects[i].loading = false;
     col_objects[i].load_promise = Promise.resolve(true);
     col_objects[i].reflowing = false;
@@ -132,7 +132,7 @@ export function Wizard(main_id,col_number){
             var selections = {};
             var operations = {};
             prev.forEach(c=>selections[c.type]=c.items.filter(i=>i.selected).map(i=>i.value));
-            prev.forEach(c=>operations[c.type]=c.intersect);
+            prev.forEach(c=>operations[c.type]=c.match);
 
             return load_selection(
               col.type,
@@ -196,10 +196,10 @@ export function Wizard(main_id,col_number){
     return col_objects;
   }
 
-  function setColumn(index, new_type, intersect, selector, list_content){
+  function setColumn(index, new_type, match, selector, list_content){
     var col = col_objects[index];
 
-    if(new_type==col.type && intersect==undefined && selector==undefined){
+    if(new_type==col.type && match==undefined && selector==undefined){
       return;
     }
 
@@ -213,7 +213,7 @@ export function Wizard(main_id,col_number){
     }
     redraw_types();
 
-    col.intersect = intersect!=undefined ? intersect : col.intersect;
+    col.match = match!=undefined ? match : col.match;
 
     selector = selector || (()=>null);
     col.reload(list_content).then(()=>{
@@ -242,7 +242,6 @@ export function Wizard(main_id,col_number){
   }
 
   //Init Columns
-  console.log(main);
   var cols = main.select(".wizard-columns").selectAll(".wizard-column")
     .data(col_objects,d=>d.id);
   var allCols = cols.enter().append("div")
@@ -258,15 +257,29 @@ export function Wizard(main_id,col_number){
     }
     reflow(d.index);
   }).filter(d=>d.index>0).select(".wizard-lists-group").remove();
-  allCols.select('.wizard-union-toggle').on("click",function(d) {
-    d.intersect = !d.intersect;
-    d3.select(this).selectAll('.btn:not(.disabled)').each(function(){
-      d3.select(this).classed("active",!d3.select(this).classed("active"));
-      d3.select(this).classed("btn-primary",!d3.select(this).classed("btn-primary"));
-      d3.select(this).classed("btn-default",!d3.select(this).classed("btn-default"));
-    })
+
+  allCols.select('.wizard-union-toggle-btn-any').on("click", function(d) {
+    toggleMatch(this, d, "any");
+  });
+  allCols.select('.wizard-union-toggle-btn-min').on("click", function(d) {
+    toggleMatch(this, d, "min");
+  });
+  allCols.select('.wizard-union-toggle-btn-all').on("click", function(d) {
+    toggleMatch(this, d, "all");
+  });
+
+  allCols.select('.wizard-union-toggle-min-type-percent').on("click", function(d) {
+    toggleMinType(this, d, "percent");
+  });
+  allCols.select('.wizard-union-toggle-min-type-count').on("click", function(d) {
+    toggleMinType(this, d, "count");
+  });
+
+  allCols.select('.wizard-union-toggle-min-value').on("input", function(d) {
+    d.match = getMinMatchValue(d);
     reflow(d.index, true);
   });
+
   allCols.select(".wizard-select-all").on("click",function(d){
       var s = d3.selectAll(".wizard-search").filter(function(e, i) { return i === d.index });
       var search_txt = s ? s.property("value").replace(/\s+/g, "").toLowerCase() : undefined;
@@ -343,6 +356,7 @@ export function Wizard(main_id,col_number){
         .attr("href",d=>d.url);
       li.select(".wizard-list-add").on("click",function(d){
         d.selected = true;
+        coldat.match = getMatchValue(coldat, 1);
         reflow(coldat.index,true);
       });
     });
@@ -353,6 +367,7 @@ export function Wizard(main_id,col_number){
         .attr("href",d=>d.url);
       li.select(".wizard-list-rem").on("click",function(d){
         d.selected = false;
+        coldat.match = getMatchValue(coldat, -1);
         reflow(coldat.index,true);
       });
     });
@@ -478,7 +493,7 @@ export function Wizard(main_id,col_number){
     var selections = {};
     var operations = {};
     filled_cols.forEach(c=>selections[c.type]=c.items.filter(i=>i.selected).map(i=>i.value));
-    filled_cols.forEach(c=>operations[c.type]=c.intersect);
+    filled_cols.forEach(c=>operations[c.type]=c.match);
 
     on_change_cbs.forEach(cb=>cb(
       categories,
@@ -531,6 +546,100 @@ export function Wizard(main_id,col_number){
       opts.exit().remove();
     })
   }
+
+  /**
+   * Handle the selection of a match toggle button
+   * @param {Element} el DOM element that was selected
+   * @param {Object} d Data propagated from selected element
+   * @param {string} type Toggle type selected ("any", "min", "all")
+   */
+  function toggleMatch(el, d, type) {
+    el = d3.select(el);
+    var bg = el.select(function() { return this.parentNode; });
+    var tg = bg.select(function() { return this.parentNode; });
+    var mg = tg.select('.wizard-union-toggle-min-group');
+
+    bg.selectAll('.wizard-union-toggle-btn')
+      .classed('btn-primary', false)
+      .classed('btn-default', true)
+      .classed('active', false);
+    el.classed('btn-primary', true).classed('active', true);
+    mg.style("display", type === 'min' ? 'table' : 'none');
+
+    d.match = getMatchValue(d);
+
+    reflow(d.index, true);
+  }
+
+  /**
+   * Handle the selection of a min match type toggle button
+   * @param {Element} el DOM element that was selected
+   * @param {Object} d Data propagated from selected element
+   * @param {string} type Min match type selected ("percent", "count")
+   */
+  function toggleMinType(el, d, type) {
+    el = d3.select(el);
+    var bg = el.select(function() { return this.parentNode; });
+
+    bg.selectAll('.wizard-union-toggle-min-type')
+      .classed('btn-primary', false)
+      .classed('btn-default', true)
+      .classed('active', false);
+    el.classed('btn-primary', true).classed('active', true);
+
+    d.match = getMinMatchValue(d);
+
+    reflow(d.index, true);
+  }
+
+  /**
+   * Get the match value for the column
+   * @param {Object} d Column data
+   * @param {int} [adjust_selected] Adjust selected count by this amount 
+   *                                (for calculating min match percent from a count)
+   * @returns match value, percentage between 0 and 1
+   */
+  function getMatchValue(d, adjust_selected) {
+    var col = allCols.filter(_d=>_d.index==d.index);
+    var ac = col.select('.wizard-union-toggle-btn.active').attr("class");
+    var type = ac.includes("toggle-btn-any") ? 'any' : 
+      ac.includes("toggle-btn-min") ? 'min' : 
+      ac.includes("toggle-btn-all") ? 'all' : 
+      undefined;
+
+    var rtn = type === 'any' ? 0 : 
+      type === 'all' ? 1 : 
+      type === 'min' ? getMinMatchValue(d, adjust_selected) : 
+      0;
+
+    return rtn;
+  }
+
+  /**
+   * Get the min match value from the user input
+   * @param {Object} d Column data
+   * @param {int} [adjust_selected] Adjust selected count by this amount 
+   *                                (for calculating min match percent from a count)
+   * @returns match percentage value between 0 and 1
+   */
+  function getMinMatchValue(d, adjust_selected) {
+    var col = allCols.filter(_d=>_d.index==d.index)
+    var v = parseInt(col.select('.wizard-union-toggle-min-value').property("value"));
+    var tc = col.select('.wizard-union-toggle-min-type.active').attr("class").includes("count");
+    
+    if ( v && tc ) {
+      var t = d.selectedList.get().length;
+      if ( adjust_selected ) t = t+adjust_selected;
+      v = v / t;
+    }
+    else if ( v && !tc ) {
+      v = v / 100;
+    }
+
+    return v && v >= 0 && v <= 1 ? v : 0;
+  }
+
+
 
   var wizard = {
 
