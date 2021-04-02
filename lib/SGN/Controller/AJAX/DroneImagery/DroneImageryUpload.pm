@@ -127,6 +127,7 @@ sub upload_drone_imagery_POST : Args(0) {
     my $new_drone_run_band_stitching = $c->req->param('drone_image_upload_drone_run_band_stitching');
     my $new_drone_run_band_stitching_odm_more_images = $c->req->param('drone_image_upload_drone_run_band_stitching_odm_more_images') || 'No';
     my $new_drone_run_band_stitching_odm_current_image_count = $c->req->param('drone_image_upload_drone_run_band_stitching_odm_image_count') || 0;
+    my $new_drone_run_band_stitching_odm_radiocalibration = $c->req->param('drone_image_upload_drone_run_band_stitching_odm_radiocalibration') eq "Yes" ? 1 : 0;
 
     if (!$new_drone_run_camera_info) {
         $c->stash->{rest} = { error => "Please indicate the type of camera!" };
@@ -1244,7 +1245,9 @@ sub upload_drone_imagery_POST : Args(0) {
                 # my $content  = $response->decoded_content();
                 # print STDERR Dumper $content;
 
-                my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm --radiometric-calibration camera > '.$temp_file_docker_log;
+                my $odm_radiometric_calibration = $new_drone_run_band_stitching_odm_radiocalibration ? '--radiometric-calibration camera' : '';
+
+                my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm '.$odm_radiometric_calibration.' > '.$temp_file_docker_log;
                 print STDERR $odm_command."\n";
                 my $odm_status = system($odm_command);
 
@@ -1291,10 +1294,18 @@ sub upload_drone_imagery_POST : Args(0) {
                 die "Camera info not supported for raw image upload ODM stitch: $new_drone_run_camera_info\n";
             }
 
+            my $calibration_info = '';
+            if ($new_drone_run_band_stitching_odm_radiocalibration && $new_drone_run_camera_info eq 'micasense_5') {
+                $calibration_info = ' with radiocalibration';
+            }
+            elsif (!$new_drone_run_band_stitching_odm_radiocalibration && $new_drone_run_camera_info eq 'micasense_5') {
+                $calibration_info = ' without radiocalibration';
+            }
+
             foreach my $m (@stitched_bands) {
                 my $project_rs = $schema->resultset("Project::Project")->create({
                     name => $new_drone_run_name."_".$m->[1],
-                    description => $new_drone_run_desc.". ".$m->[0]." ".$m->[1].". Orthomosaic stitched by OpenDroneMap in ImageBreed.",
+                    description => $new_drone_run_desc.". ".$m->[0]." ".$m->[1].". Orthomosaic stitched by OpenDroneMap in ImageBreed".$calibration_info.".",
                     projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $m->[2]}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
                     project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
                 });
