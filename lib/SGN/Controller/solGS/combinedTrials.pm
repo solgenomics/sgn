@@ -430,7 +430,9 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
 
     $c->controller('solGS::solGS')->top_blups($c, $gebvs_file);
 
-    $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$model_id/prediction/$selection_pop_id/$trait_id/gp/$protocol_id">Download all GEBVs</a>|;
+	my $gebvs_download = $c->controller('solGS::Download')->gebvs_download_url($c);
+	$gebvs_download = $c->controller('solGS::Path')->create_hyperlink($gebvs_download, 'Download GEBVs');
+	$c->stash->{blups_download_url} = $gebvs_download;
 
     $c->stash->{template} = $c->controller('solGS::Files')->template('/population/selection_trait.mas');
 
