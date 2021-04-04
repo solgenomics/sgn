@@ -252,7 +252,7 @@
                     <&| /util/workflow.mas:step, title=> "Intro" &>
                         <& /page/page_title.mas, title=>"This workflow will guide you through uploading aerial images to the database for previously processed imaging events" &>
                         <p>Your field trial(s) must already be in the database before you can upload images for it. Please go to <a href="/breeders/trials">Manage->Field Trials</a> if it is not. Make sure the planting date is also set!</p>
-                        <p>In this process first upload a spreadsheet detailing the individual imaging events, then upload a zipfile containing the orthophotomosaic images for the imaging events, and finally you upload a zipfile containing spreadsheets detailing the pixel positions of the plot polygons for the imaging events.</p>
+                        <p>In this process first upload a spreadsheet detailing the individual imaging events, then upload a zipfile containing the orthophotomosaic images for the imaging events, and finally upload a zipfile containing GeoJSON files detailing the positions of the plot-polygons for the imaging events.</p>
                         <br/>
                         <center>
                         <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to next step</button>
@@ -276,6 +276,7 @@
                                     <th>Field Trial Name</th>
                                     <th>GeoJSON Filename</th>
                                     <th>Image Filenames</th>
+                                    <th>Coordinate System</th>
                                 </tr>
                             </tbody>
                         </table>
@@ -291,6 +292,7 @@
                             <li><b>Field Trial Name</b>: (required) The name of the field trial which was imaged. This must already exist in the database.</li>
                             <li><b>GeoJSON Filename</b>: (required) The name of the GeoJSON plot-polygon file that corresponds to this imaging event. This filename must exist in the uploaded GeoJSON zipfile. The same GeoJSON file can be used for multiple imaging events.</li>
                             <li><b>Image Filenames</b>: (required) Comma-separated list of image filenames that corresponds to this imaging event (e.g. Field1Ortho01012020__nir.tiff,Field1Ortho01012020__rgb.tiff,Field1Ortho01012020__bw.tiff). The image filenames must exist in the uploaded images zipfile. The same image file can be used for multiple imaging events.</li>
+                            <li><b>Coordinate System</b>: (required) The coordinate system for the supplied images and GeoJSON files of this imaging event. Must be either "UTM", "WGS84", or "Pixels". If either "UTM" or "WGS84" are used, then the uploaded orthophoto images must be GeoTIFFs containing the coordinate system AND the GeoJSON files must be of the same coordinate system. If "Pixels" is used, then the uploaded orthophoto images must be simple raster images (.tiff, .png., .jpeg) and not GeoTIFFs, AND the GeoJSON files must describe the pixel positions of the plot-polygons relative to the provided images.</li>
                         </ul>
 
                         <hr>
@@ -298,10 +300,10 @@
                         <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to next step</button>
                         </center>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Upload Orthophoto GeoTIFFs" &>
-                        <& /page/page_title.mas, title=>"Upload Orthophoto GeoTIFFs For Imaging Events in Bulk" &>
+                    <&| /util/workflow.mas:step, title=> "Upload Orthophoto Images" &>
+                        <& /page/page_title.mas, title=>"Upload Orthophoto Images For Imaging Events in Bulk" &>
 
-                        <h4>Upload a zipfile (.zip) which contains orthophotos GeoTIFFs (.tiff) named in accordance with the "Image Filenames" defined in the previous step.</h4>
+                        <h4>Upload a zipfile (.zip) which contains orthophotos images (.tiff, .png, .jpeg) named in accordance with the "Image Filenames" defined in the previous step.</h4>
                         <h4>The images must be named as a concatenation with the spectral type of the image, with a double-underscore (__) in between (e.g. Field1Ortho01012020__blue).</h4>
 
                         <p>The allowed spectral types are: blue, green, red, rededge, nir, mir, fir, thir, rgb, and bw, corresponding to Blue (450-520nm), Green (515-600nm), Red (600-690nm), Red Edge (690-750nm), NIR (780-3000nm), MIR (3000-50000nm), FIR (50000-1000000nm), Thermal IR (9000-14000nm), RGB Color Image, and Black and White Image, respectively.</p>
@@ -311,6 +313,7 @@
                         <p>Do not upload duplicate spectral types for the same imaging event.</p>
                         <p>Images should be perfectly super-imposable for different spectra in the same imaging event.</p>
                         <p>The same image can be used for several imaging events.</p>
+                        <p>If the coordinate system of the imaging event is either "UTM" of "WGS84", then the orthophoto images must be GeoTIFFs (.tiff) containing the coordinate system. If the coordinate system is "Pixels", then the orthophoto images are simple raster images (.tiff, .jpeg, .png).</p>
 
                         <hr>
                         <center>
@@ -323,7 +326,7 @@
                         <h4>Upload a zipfile (.zip) which contains GeoJSON (.geojson) files detailing the coordinate positions of the plot-polygons.</h4>
 
                         <p>The spreadsheets should be named in accordance with the "GeoJSON Filenames" defined in the previous step.</p>
-                        <p>The coordinate system (e.g. WGS84, UTM) in the GeoTIFFs should be the same as the coordinate system defining the GeoJSON files.</p>
+                        <p>The coordinate system (e.g. WGS84, UTM) of the orthophotos should be the same as the coordinate system defining the GeoJSON files. If the coordinate system is "Pixels", then the GeoJSON files should define the pixel positions of the plot-polygons relative to the uploaded images.</p>
                         <p>The zipfile should be no larger than 2GB.</p>
                         <p>The same GeoJSON file can be used for several imaging events.</p>
 
