@@ -34,7 +34,7 @@
                         <br/><br/>
                         <button class="btn btn-default" id="upload_drone_imagery_bulk_button" >Go to bulk upload of imaging events</button>
                         <br/><br/>
-                        <!--button class="btn btn-default" id="upload_drone_imagery_bulk_previous_button" >Go to bulk upload of previously processed imaging events</button-->
+                        <button class="btn btn-default" id="upload_drone_imagery_bulk_previous_button" >Go to bulk upload of previously processed imaging events (GeoJSON defitions included)</button>
                         </center>
                     </&>
                     <&| /util/workflow.mas:step, title=> "Field Trial" &>
@@ -329,6 +329,38 @@
                         <p>The coordinate system (e.g. WGS84, UTM) of the orthophotos should be the same as the coordinate system defining the GeoJSON files. If the coordinate system is "Pixels", then the GeoJSON files should define the pixel positions of the plot-polygons relative to the uploaded images.</p>
                         <p>The zipfile should be no larger than 2GB.</p>
                         <p>The same GeoJSON file can be used for several imaging events.</p>
+
+                        <p>The GeoJSON should be the following format:
+                        <br/>
+                        <div class="well well-sm">
+                        {<br/>
+                            &nbsp;&nbsp;"type":"FeatureCollection",<br/>
+                            &nbsp;&nbsp;"features":[<br/>
+                                &nbsp;&nbsp;&nbsp;&nbsp;{<br/>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"type":"Feature",<br/>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"properties":{<br/>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ID":1<br/>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"geometry":{<br/>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"type":"Polygon",<br/>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"coordinates":[<br/>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[<br/>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[312295.7451,1567250.9971],<br/>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[312295.3147,1567250.5791],<br/>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[312294.0605,1567251.8701],<br/>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[312294.4909,1567252.2881],<br/>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[312295.7451,1567250.9971]<br/>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;]<br/>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>
+                                &nbsp;&nbsp;&nbsp;&nbsp;},<br/>
+                                &nbsp;&nbsp;&nbsp;&nbsp;...## ALL PLOT-POLYGONS ##<br/>
+                            &nbsp;&nbsp;]<br/>
+                        }
+                        </div>
+                        </p>
+                        <p>The ID field should give the unique plot number for the plot polygon. The plot number is defined in the field design as a unique number e.g. (1 to 100).</p>
+                        <p>The coordinates should match the coordinate system of "UTM", "WGS84", or "Pixels".</p>
 
                         <hr>
                         <center>
