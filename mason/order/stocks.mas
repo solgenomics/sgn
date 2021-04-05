@@ -8,8 +8,9 @@ $role => "stock_orderer"
 <&| /page/page_title.mas, title => "Order Clones" &>
 
 </&>
-
-<button id="stock_order_button" class="btn btn-primary">New Order</button>
+<td>
+    <a href="/catalog/view"><p>Go to Catalog Page</p></a>
+</td>
 
 <br />
 <br />

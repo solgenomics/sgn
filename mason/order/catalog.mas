@@ -35,6 +35,9 @@
                 </button>
             </div>
         </div>
+        <td>
+            <a href="/order/stocks/view"><p>Go to Manage Order Page</p></a>
+        </td>
     </div>
 </&>
 
