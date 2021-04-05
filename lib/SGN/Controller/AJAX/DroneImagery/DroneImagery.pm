@@ -13328,6 +13328,25 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
     my $drone_run_project_ids = decode_json $c->req->param('drone_run_project_ids');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
+    my $plot_polygon_template_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+    my $drone_run_drone_run_band_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+    my $original_denoised_image_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+
+    foreach my $drone_run_project_id (@$drone_run_project_ids) {
+        my $q = "SELECT plot_polygons.value, drone_run.project_id, drone_run.name, drone_run_band.project_id, drone_run_band.name, project_image.image_id
+            FROM project AS drone_run_band
+            JOIN project_relationship ON(project_relationship.subject_project_id = drone_run_band.project_id AND project_relationship.type_id = $drone_run_drone_run_band_type_id)
+            JOIN project AS drone_run ON(project_relationship.object_project_id = drone_run.project_id)
+            JOIN projectprop AS plot_polygons ON(drone_run_band.project_id = plot_polygons.project_id AND plot_polygons.type_id=$plot_polygon_template_type_id)
+            JOIN phenome.project_md_image AS project_image ON(drone_run_band.project_id = project_image.project_id AND project_image.type_id=$original_denoised_image_type_id)
+            WHERE drone_run.project_id = ?;";
+
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($drone_run_project_id);
+        while (my ($plot_polygons_value, $drone_run_project_id, $drone_run_project_name, $drone_run_band_project_id, $drone_run_band_project_name, $image_id) = $h->fetchrow_array()) {
+
+        }
+    }
 
     $c->stash->{rest} = {success => 1};
 }
