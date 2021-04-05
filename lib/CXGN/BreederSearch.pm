@@ -105,6 +105,7 @@ sub metadata_query {
   print STDERR "target_table=". $target_table . "\n";
   my $target = $target_table;
   $target =~ s/s$//;
+  print STDERR "target=$target\n";
 
   my $select = "SELECT ".$target."_id, ".$target."_name ";
   my $group = "GROUP BY ".$target."_id, ".$target."_name ";
@@ -119,6 +120,8 @@ sub metadata_query {
 	  my @queries;
 	  foreach my $category (@$criteria_list) {
 
+      print STDERR "==> BUILDING QUERY FOR CATEGORY: $category\n";
+
       if ($dataref->{$criteria_list->[-1]}->{$category}) {
         my $query;
 		    my @categories = ($target_table, $category);
@@ -126,9 +129,11 @@ sub metadata_query {
 	      my $from = "FROM public.". $categories[0] ."x". $categories[1] . " JOIN public." . $target_table . " USING(" . $target."_id) ";
         my $criterion = $category;
         $criterion =~ s/s$//;
-        my $intersect = $queryref->{$criteria_list->[-1]}->{$category};
+        my $match = $queryref->{$criteria_list->[-1]}->{$category};
 
-        if ($intersect) {
+        print STDERR "... Match: $match\n";
+
+        if ( $match == 1 ) {
           my @parts;
           my @ids = split(/,/, $dataref->{$criteria_list->[-1]}->{$category});
           foreach my $id (@ids) {
@@ -137,19 +142,28 @@ sub metadata_query {
             push @parts, $statement;
           }
           $query = join (" INTERSECT ", @parts);
+          print STDERR "... Query [All]: $query\n";
           push @queries, $query;
         }
         else {
+          my $total = scalar(split(',', $dataref->{$criteria_list->[-1]}->{$category}));
+          my $inner_select = $select . ", COUNT(" . $criterion . "_id)/" . $total . "::decimal AS match ";
           my $where = "WHERE ". $criterion. "_id IN (" . $dataref->{$criteria_list->[-1]}->{$category} . ") ";
-          $query = $select . $from . $where . $group;
-          push @queries, $query;
+          $query = $inner_select . $from . $where . $group;
+
+          my $outer_query = "SELECT i." . $target . "_id, i." . $target . "_name, i.match ";
+          $outer_query .= "FROM ($query) AS i ";
+          $outer_query .= "WHERE i.match >= " . $match;
+
+          print STDERR "... Query [Any]: $outer_query\n";
+          push @queries, $outer_query;
         }
       }
     }
     $full_query = join (" INTERSECT ", @queries);
   }
   $full_query .= " ORDER BY 2";
-  print STDERR "QUERY: $full_query\n";
+  print STDERR "FULL QUERY: $full_query\n";
   $h = $self->dbh->prepare($full_query);
   $h->execute();
 
