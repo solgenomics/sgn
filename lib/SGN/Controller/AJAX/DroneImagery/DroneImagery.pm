@@ -13318,6 +13318,20 @@ sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
     $c->stash->{rest} = {success => 1, activation_output => $archive_temp_output_activation_file, bounding_boxes => \@bounding_boxes};
 }
 
+sub drone_imagery_export_drone_runs : Path('/api/drone_imagery/export_drone_runs') : ActionClass('REST') { }
+sub drone_imagery_export_drone_runs_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $drone_run_project_ids = decode_json $c->req->param('drone_run_project_ids');
+    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+
+
+    $c->stash->{rest} = {success => 1};
+}
+
 sub _check_user_login {
     my $c = shift;
     my $role_check = shift;
