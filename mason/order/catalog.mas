@@ -62,6 +62,49 @@
     </div>
 </div>
 
+<div class="modal fade" id="cart_message_dialog" name="cart_message_dialog" tabindex="-1" role="dialog" aria-labelledby="cartMessageDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align:center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="cartMessageDialog">Your Cart</h4>
+            </div>
+            <div class="modal-body" style="text-align:center">
+                <div class="container-fluid">
+                    <p>
+                        You do not have any item in your cart
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_cart_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="order_saved_dialog" name="order_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="orderSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="orderSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Your order has been submitted successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_order_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <& /order/upload_catalog_items_dialog.mas &>
 <& /order/add_catalog_item_dialog.mas &>
 
@@ -94,8 +137,12 @@ jQuery(document).ready( function() {
     }
 
     jQuery('#your_cart_button').click(function(){
-        jQuery('#cart_item_dialog').modal('show');
-        showListItems('cart_items', list_id);
+        if (!list_id) {
+            jQuery('#cart_message_dialog').modal('show');
+        } else {
+            jQuery('#cart_item_dialog').modal('show');
+            showListItems('cart_items', list_id);
+        }
     });
 
     jQuery('#submit_order').click( function() {
@@ -106,7 +153,29 @@ jQuery(document).ready( function() {
             data : {
                 'list_id' : list_id,
             },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#order_saved_dialog').modal('show');
+                    jQuery('#cart_item_dialog').modal('hide');
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred saving your order');
+            }
+
         });
+    });
+
+    jQuery("#dismiss_order_saved_dialog").click(function(){
+        location.reload();
     });
 
 
@@ -136,6 +205,7 @@ function addToCart(item_name, description){
     }
     if (itemAdded) {
         alert("Saved " + item_name + " in your cart");
+        location.reload();
     }
 
 }

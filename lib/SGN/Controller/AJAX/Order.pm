@@ -110,20 +110,32 @@ sub submit_order_POST : Args(0) {
         print STDERR "ORDER LIST =".Dumper($order_list)."\n";
 #        my @item_array = keys %items;
 #        print STDERR "ITEM ARRAY =".Dumper(\@item_array)."\n";
-        my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema});
+        my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema, dbh => $dbh});
         $new_order->order_from_id($user_id);
         $new_order->order_to_id($contact_id);
         $new_order->order_status("submitted");
         $new_order->create_date($timestamp);
         my $order_id = $new_order->store();
         print STDERR "ORDER ID =".($order_id)."\n";
+        if (!$order_id){
+            $c->stash->{rest} = {error_string => "Error saving your order",};
+            return;
+        }
 
         my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
         $order_prop->clone_list($order_list);
         $order_prop->parent_id($order_id);
     	my $order_prop_id = $order_prop->store_sp_orderprop();
         print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
+
+        if (!$order_prop_id){
+            $c->stash->{rest} = {error_string => "Error saving your order",};
+            return;
+        }
     }
+
+    $c->stash->{rest} = {success => "1",};
+
 }
 
 
