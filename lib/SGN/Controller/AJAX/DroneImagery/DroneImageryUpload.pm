@@ -1804,6 +1804,15 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
     my $drone_run_related_cvterms_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
     my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+    my $process_indicator_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_in_progress', 'project_property')->cvterm_id();
+    my $processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_completed', 'project_property')->cvterm_id();
+    my $processed_minimal_vi_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_vi_completed', 'project_property')->cvterm_id();
+    my $drone_run_band_type_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
+    my $rotate_angle_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_rotate_angle', 'project_property')->cvterm_id();
+    my $cropping_polygon_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_cropped_polygon', 'project_property')->cvterm_id();
+    my $plot_polygon_template_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
+    my $project_image_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $drone_run_drone_run_band_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
     my $calendar_funcs = CXGN::Calendar->new({});
 
     my %spectral_lookup = (
@@ -1926,13 +1935,48 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         my $filename = $_->fileName();
         my $temp_file = $image->upload_zipfile_images($_);
 
-        print STDERR Dumper [$filename, $temp_file];
-        $filename_imaging_event_geojson_lookup{$filename} = $temp_file;
+        my @zipfile_comp = split '\/', $filename;
+        my $filename_wext = $zipfile_comp[1];
+
+        print STDERR Dumper [$filename, $temp_file, $filename_wext];
+        $filename_imaging_event_geojson_lookup{$filename_wext} = $temp_file;
+
+        open(my $fh_geojson_check, '<', $temp_file) or die "Could not open file '$temp_file' $!";
+            print STDERR "Opened $temp_file\n";
+            my $geojson_value_check = decode_json <$fh_geojson_check>;
+            if (!$geojson_value_check->{features}) {
+                $c->stash->{rest} = {error => 'The GeoJSON file '.$filename.' does not have a \'features\' key in it. Make sure the GeoJSON is formatted correctly.</br></br>'};
+                return;
+            }
+            foreach (@{$geojson_value_check->{features}}) {
+                if (!$_->{properties}) {
+                    $c->stash->{rest} = {error => 'The GeoJSON file '.$filename.' does not have a \'properties\' key in it. Make sure the GeoJSON is formatted correctly.</br></br>'};
+                    return;
+                }
+                if (!$_->{properties}->{ID}) {
+                    $c->stash->{rest} = {error => 'The GeoJSON file '.$filename.' does not have an \'ID\' key in the \'properties\' object. Make sure the GeoJSON is formatted correctly.</br></br>'};
+                    return;
+                }
+                if (!$_->{geometry}) {
+                    $c->stash->{rest} = {error => 'The GeoJSON file '.$filename.' does not have a \'geometry\' key in it. Make sure the GeoJSON is formatted correctly.</br></br>'};
+                    return;
+                }
+                if (!$_->{geometry}->{coordinates}) {
+                    $c->stash->{rest} = {error => 'The GeoJSON file '.$filename.' does not have a \'coordinates\' key in the \'geometry\' object. Make sure the GeoJSON is formatted correctly.</br></br>'};
+                    return;
+                }
+                if (scalar(@{$_->{geometry}->{coordinates}}) < 4) {
+                    $c->stash->{rest} = {error => 'The GeoJSON file '.$filename.' \'coordinates\' object has less than 4 objects in it. Make sure the GeoJSON is formatted correctly.</br></br>'};
+                    return;
+                }
+            }
+        close($fh_geojson_check);
     }
 
     my $csv = Text::CSV->new({ sep_char => "," });
     my @parse_csv_errors;
     my %field_trial_name_lookup;
+    my %field_trial_layout_lookup;
     my %vehicle_name_lookup;
     open(my $fh, '<', $upload_imaging_events_file) or die "Could not open file '$upload_imaging_events_file' $!";
         print STDERR "Opened $upload_imaging_events_file\n";
@@ -2038,6 +2082,9 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
             }
 
             my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $field_trial_id });
+            my $trial_layout = $trial->get_layout();
+            $field_trial_layout_lookup{$field_trial_id} = $trial_layout;
+
             my $planting_date = $trial->get_planting_date();
             if (!$planting_date) {
                 $c->stash->{rest} = {error => "The field trial $field_trial_name does not have a planting date set! Please set this first!" };
@@ -2070,6 +2117,16 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
             if (!exists($filename_imaging_event_geojson_lookup{$geojson_filename})) {
                 push @parse_csv_errors, "The GeoJSON filename $geojson_filename does not exist in the uploaded GeoJSON zipfile!";
             }
+            open(my $fh_geojson_check, '<', $filename_imaging_event_geojson_lookup{$geojson_filename}) or die "Could not open file '".$filename_imaging_event_geojson_lookup{$geojson_filename}."' $!";
+                print STDERR "Opened ".$filename_imaging_event_geojson_lookup{$geojson_filename}."\n";
+                my $geojson_value_check = decode_json <$fh_geojson_check>;
+                foreach (@{$geojson_value_check->{features}}) {
+                    my $plot_number = $_->{properties}->{ID};
+                    if (!exists($trial_layout->{$plot_number})) {
+                        push @parse_csv_errors, "The ID $plot_number in the GeoJSON file $geojson_filename does not exist in the field trial $field_trial_name!";
+                    }
+                }
+            close($fh_geojson_check);
         }
     close($fh);
 
@@ -2080,7 +2137,8 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
     }
 
     my @drone_run_project_ids;
-    my %drone_run_band_hash;
+    my @drone_run_projects;
+    my %drone_run_project_info;
     open($fh, '<', $upload_imaging_events_file) or die "Could not open file '$upload_imaging_events_file' $!";
         print STDERR "Opened $upload_imaging_events_file\n";
         my $header = <$fh>;
@@ -2216,6 +2274,8 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
             foreach (@orthoimage_names) {
                 push @ortho_images, $filename_imaging_event_lookup{$imaging_event_name};
             }
+            my @drone_run_band_projects;
+            my @drone_run_band_project_ids;
             foreach my $m (@ortho_images) {
                 my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
                 my $band = $m->{band};
@@ -2233,8 +2293,13 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
                 my $timestamp = $time->ymd()."_".$time->hms();
                 my $upload_original_name = $imaging_event_name."_".$band_short.".png";
 
+                my $ortho_file;
+                if ($coordinate_system eq 'Pixels') {
+                    $ortho_file = $file;
+                }
+
                 my $uploader = CXGN::UploadFile->new({
-                    tempfile => $file,
+                    tempfile => $ortho_file,
                     subdirectory => "drone_imagery_upload",
                     archive_path => $c->config->{archive_path},
                     archive_filename => $upload_original_name,
@@ -2256,17 +2321,226 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
                 my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
                 my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
 
-                push @{$drone_run_band_hash{$selected_drone_run_id}}, {
+                push @drone_run_band_projects, {
                     drone_run_band_project_id => $selected_drone_run_band_id,
                     band => $band
                 };
+                push @drone_run_band_project_ids, $selected_drone_run_band_id;
             }
 
-            my $geojson_filename = $filename_imaging_event_geojson_lookup{$geojson_filename};
+            my $geojson_temp_filename = $filename_imaging_event_geojson_lookup{$geojson_filename};
+            push @drone_run_projects, {
+                drone_run_project_id => $selected_drone_run_id,
+                drone_run_band_projects => \@drone_run_band_projects,
+                drone_run_band_project_ids => \@drone_run_band_project_ids,
+                geojson_temp_filename => $geojson_temp_filename,
+                time_cvterm_id => $day_cvterm_id,
+                field_trial_id => $selected_trial_id,
+                coordinate_system => $coordinate_system
+            };
+
+            $drone_run_project_info{$selected_drone_run_id} = {
+                name => $project_rs->name()
+            };
         }
     close($fh);
 
-    $c->stash->{rest} = { success => 1, drone_run_project_ids => \@drone_run_project_ids, drone_run_band_hash => \%drone_run_band_hash };
+    my $vegetative_indices = ['VARI', 'TGI', 'NDRE', 'NDVI'];
+    my $phenotype_methods = ['zonal'];
+    my $standard_process_type = 'minimal';
+
+    foreach (@drone_run_projects) {
+        my $drone_run_project_id_in = $_->{drone_run_project_id};
+        my $time_cvterm_id = $_->{time_cvterm_id};
+        my $apply_drone_run_band_project_ids = $_->{drone_run_band_project_ids};
+        my $geojson_filename = $_->{geojson_temp_filename};
+        my $field_trial_id = $_->{field_trial_id};
+        my $coordinate_system = $_->{coordinate_system};
+
+        my $drone_run_process_in_progress = $schema->resultset('Project::Projectprop')->update_or_create({
+            type_id=>$process_indicator_cvterm_id,
+            project_id=>$drone_run_project_id_in,
+            rank=>0,
+            value=>1
+        },
+        {
+            key=>'projectprop_c1'
+        });
+
+        my $drone_run_process_completed = $schema->resultset('Project::Projectprop')->update_or_create({
+            type_id=>$processed_cvterm_id,
+            project_id=>$drone_run_project_id_in,
+            rank=>0,
+            value=>0
+        },
+        {
+            key=>'projectprop_c1'
+        });
+
+        my $drone_run_process_minimal_vi_completed = $schema->resultset('Project::Projectprop')->update_or_create({
+            type_id=>$processed_minimal_vi_cvterm_id,
+            project_id=>$drone_run_project_id_in,
+            rank=>0,
+            value=>0
+        },
+        {
+            key=>'projectprop_c1'
+        });
+
+        my %vegetative_indices_hash;
+        foreach (@$vegetative_indices) {
+            $vegetative_indices_hash{$_}++;
+        }
+
+        my $rotate_value = 0;
+        my $plot_polygons_value;
+        my $geojson_value;
+
+        open(my $fh_geojson, '<', $geojson_filename) or die "Could not open file '$geojson_filename' $!";
+            print STDERR "Opened $geojson_filename\n";
+            $geojson_value = decode_json <$fh_geojson>;
+        close($fh_geojson);
+
+        my $trial_lookup = $field_trial_layout_lookup{$field_trial_id};
+
+        foreach (@{$geojson_value->{features}}) {
+            my $plot_number = $_->{properties}->{ID};
+            my $coordinates = $_->{geometry}->{coordinates};
+            my $stock_name = $trial_lookup->{$plot_number}->{uniquename};
+            my @coords;
+            foreach my $crd (@{$coordinates->[0]}) {
+                if ($coordinate_system eq 'Pixels') {
+                    push @coords, {
+                        x => $crd->[0],
+                        y => $crd->[1],
+                    };
+                }
+            }
+            $plot_polygons_value->{$stock_name} = \@coords;
+        }
+
+        my %selected_drone_run_band_types;
+        my $q2 = "SELECT project_md_image.image_id, drone_run_band_type.value, drone_run_band.project_id
+            FROM project AS drone_run_band
+            JOIN projectprop AS drone_run_band_type ON(drone_run_band_type.project_id = drone_run_band.project_id AND drone_run_band_type.type_id = $drone_run_band_type_type_id)
+            JOIN phenome.project_md_image AS project_md_image ON(project_md_image.project_id = drone_run_band.project_id)
+            JOIN metadata.md_image ON(project_md_image.image_id = metadata.md_image.image_id)
+            WHERE project_md_image.type_id = $project_image_type_id
+            AND drone_run_band.project_id = ?
+            AND metadata.md_image.obsolete = 'f';";
+
+        my $h2 = $schema->storage->dbh()->prepare($q2);
+
+        my $term_map = CXGN::DroneImagery::ImageTypes::get_base_imagery_observation_unit_plot_polygon_term_map();
+
+        my %drone_run_band_info;
+        foreach my $apply_drone_run_band_project_id (@$apply_drone_run_band_project_ids) {
+            my $h2 = $schema->storage->dbh()->prepare($q2);
+            $h2->execute($apply_drone_run_band_project_id);
+            my ($image_id, $drone_run_band_type, $drone_run_band_project_id) = $h2->fetchrow_array();
+            $selected_drone_run_band_types{$drone_run_band_type} = $drone_run_band_project_id;
+
+            my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+            my $image_fullpath = $image->get_filename('original_converted', 'full');
+
+            my @size = imgsize($image_fullpath);
+            my $width = $size[0];
+            my $length = $size[1];
+
+            my $cropping_value = encode_json [[{x=>0, y=>0}, {x=>$width, y=>0}, {x=>$width, y=>$length}, {x=>0, y=>$length}]];
+
+            my $apply_image_width_ratio = 1;
+            my $apply_image_height_ratio = 1;
+
+            my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
+            my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
+            $archive_rotate_temp_image .= '.png';
+
+            my $rotate_return = _perform_image_rotate($c, $schema, $metadata_schema, $drone_run_band_project_id, $image_id, $rotate_value, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0);
+            my $rotated_image_id = $rotate_return->{rotated_image_id};
+
+            $dir = $c->tempfiles_subdir('/drone_imagery_cropped_image');
+            my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
+            $archive_temp_image .= '.png';
+
+            my $cropping_return = _perform_image_cropping($c, $schema, $drone_run_band_project_id, $rotated_image_id, $cropping_value, $user_id, $user_name, $user_role, $archive_temp_image, $apply_image_width_ratio, $apply_image_height_ratio);
+            my $cropped_image_id = $cropping_return->{cropped_image_id};
+
+            $dir = $c->tempfiles_subdir('/drone_imagery_denoise');
+            my $archive_denoise_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_denoise/imageXXXX');
+            $archive_denoise_temp_image .= '.png';
+
+            my $denoise_return = _perform_image_denoise($c, $schema, $metadata_schema, $cropped_image_id, $drone_run_band_project_id, $user_id, $user_name, $user_role, $archive_denoise_temp_image);
+            my $denoised_image_id = $denoise_return->{denoised_image_id};
+
+            $drone_run_band_info{$drone_run_band_project_id} = {
+                denoised_image_id => $denoised_image_id,
+                rotate_value => $rotate_value,
+                cropping_value => $cropping_value,
+                drone_run_band_type => $drone_run_band_type,
+                drone_run_project_id => $drone_run_project_id_in,
+                drone_run_project_name => $drone_run_project_info{$drone_run_project_id_in}->{name},
+                plot_polygons_value => $plot_polygons_value
+            };
+
+            my @denoised_plot_polygon_type = @{$term_map->{$drone_run_band_type}->{observation_unit_plot_polygon_types}->{base}};
+            my @denoised_background_threshold_removed_imagery_types = @{$term_map->{$drone_run_band_type}->{imagery_types}->{threshold_background}};
+            my @denoised_background_threshold_removed_plot_polygon_types = @{$term_map->{$drone_run_band_type}->{observation_unit_plot_polygon_types}->{threshold_background}};
+
+            foreach (@denoised_plot_polygon_type) {
+                my $plot_polygon_original_denoised_return = _perform_plot_polygon_assign($c, $schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, $_, $user_id, $user_name, $user_role, 0, 0, $apply_image_width_ratio, $apply_image_height_ratio);
+            }
+
+            for my $iterator (0..(scalar(@denoised_background_threshold_removed_imagery_types)-1)) {
+                $dir = $c->tempfiles_subdir('/drone_imagery_remove_background');
+                my $archive_remove_background_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_remove_background/imageXXXX');
+                $archive_remove_background_temp_image .= '.png';
+
+                my $background_removed_threshold_return = _perform_image_background_remove_threshold_percentage($c, $schema, $denoised_image_id, $drone_run_band_project_id, $denoised_background_threshold_removed_imagery_types[$iterator], '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
+
+                my $plot_polygon_return = _perform_plot_polygon_assign($c, $schema, $metadata_schema, $background_removed_threshold_return->{removed_background_image_id}, $drone_run_band_project_id, $plot_polygons_value, $denoised_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0, 0, $apply_image_width_ratio, $apply_image_height_ratio);
+            }
+        }
+
+        print STDERR Dumper \%selected_drone_run_band_types;
+        print STDERR Dumper \%vegetative_indices_hash;
+
+        _perform_minimal_vi_standard_process($c, $schema, $metadata_schema, \%vegetative_indices_hash, \%selected_drone_run_band_types, \%drone_run_band_info, $user_id, $user_name, $user_role);
+
+        $drone_run_process_in_progress = $schema->resultset('Project::Projectprop')->update_or_create({
+            type_id=>$process_indicator_cvterm_id,
+            project_id=>$drone_run_project_id_in,
+            rank=>0,
+            value=>0
+        },
+        {
+            key=>'projectprop_c1'
+        });
+
+        $drone_run_process_completed = $schema->resultset('Project::Projectprop')->update_or_create({
+            type_id=>$processed_cvterm_id,
+            project_id=>$drone_run_project_id_in,
+            rank=>0,
+            value=>1
+        },
+        {
+            key=>'projectprop_c1'
+        });
+
+        $drone_run_process_minimal_vi_completed = $schema->resultset('Project::Projectprop')->update_or_create({
+            type_id=>$processed_minimal_vi_cvterm_id,
+            project_id=>$drone_run_project_id_in,
+            rank=>0,
+            value=>1
+        },
+        {
+            key=>'projectprop_c1'
+        });
+
+        my $return = _perform_phenotype_automated($c, $schema, $metadata_schema, $phenome_schema, $drone_run_project_id_in, $time_cvterm_id, $phenotype_methods, $standard_process_type, 1, undef, $user_id, $user_name, $user_role);
+    }
+
+    $c->stash->{rest} = { success => 1, drone_run_project_ids => \@drone_run_project_ids, drone_run_bands => \@drone_run_projects };
 }
 
 sub upload_drone_imagery_new_vehicle : Path('/api/drone_imagery/new_imaging_vehicle') : ActionClass('REST') { }
