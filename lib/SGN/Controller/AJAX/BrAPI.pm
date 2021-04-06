@@ -742,9 +742,9 @@ sub germplasm_search_old_POST {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub germplasm_search  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') { }
+sub germplasm  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') { }
 
-sub germplasm_search_GET {
+sub germplasm_GET {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
@@ -756,7 +756,7 @@ sub germplasm_search_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub germplasm_search_POST {
+sub germplasm_POST {
     my $self = shift;
     my $c = shift;
     my ($auth,$user_id) = _authenticate_user($c);
@@ -824,12 +824,6 @@ sub germplasm_single  : Chained('brapi') PathPart('germplasm') CaptureArgs(1) {
 
 
 sub germplasm_detail  : Chained('germplasm_single') PathPart('') Args(0) : ActionClass('REST') { }
-
-sub germplasm_detail_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
-}
 
 sub germplasm_detail_GET {
 	my $self = shift;
@@ -1960,9 +1954,9 @@ sub studies_search_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub studies_search_new  : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
+sub studies  : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
 
-sub studies_search_new_GET {
+sub studies_GET {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
@@ -1994,7 +1988,7 @@ sub studies_search_new_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub studies_search_new_POST {
+sub studies_POST {
     my $self = shift;
     my $c = shift;
     my ($auth, $user_id) = _authenticate_user($c);
@@ -2024,16 +2018,6 @@ sub studies_search_retrieve : Chained('brapi') PathPart('search/studies') Args(1
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'Studies');
 }
-
-# sub studies : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
-
-# sub studies_GET {
-# 	my $self = shift;
-# 	my $c = shift;
-
-# 	# Use the studies-search end point for this
-# 	studies_search_GET($self, $c);
-# }
 
 
 =head2 brapi/v1/studies/{studyId}/germplasm?pageSize=20&page=1
@@ -2284,12 +2268,6 @@ sub studies_layouts_GET {
 
 sub studies_observations : Chained('studies_single') PathPart('observationunits') Args(0) : ActionClass('REST') { }
 
-sub studies_observations_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
-}
-
 sub studies_observations_GET {
 	my $self = shift;
 	my $c = shift;
@@ -2339,13 +2317,6 @@ sub studies_observations_GET {
 =cut
 
 sub studies_table : Chained('studies_single') PathPart('table') Args(0) : ActionClass('REST') { }
-
-sub studies_table_POST {
-	my $self = shift;
-	my $c = shift;
-	my $trait_id = shift;
-	#my $auth = _authenticate_user($c);
-}
 
 sub studies_table_GET {
 	my $self = shift;
@@ -3373,9 +3344,9 @@ sub _sample_search_process {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
-sub samples_list_new : Chained('brapi') PathPart('samples') Args(0) : ActionClass('REST') { }
+sub samples : Chained('brapi') PathPart('samples') Args(0) : ActionClass('REST') { }
 
-sub samples_list_new_GET {
+sub samples_GET {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
