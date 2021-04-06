@@ -13420,7 +13420,7 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
     # my $geojson_zip = Archive::Zip->new();
     # my $dir_geojson_member = $geojson_zip->addDirectory( 'geojson_files/' );
     my $images_zip = Archive::Zip->new();
-    my $dir_images_member = $images_zip->addDirectory( 'orthoimage_files/' );
+    # my $dir_images_member = $images_zip->addDirectory( 'orthoimage_files/' );
 
     while (my($drone_run_project_id, $drone_run_info) = each %drone_run_csv_info) {
         my $field_trial_name = $drone_run_info->{field_trial_name};
