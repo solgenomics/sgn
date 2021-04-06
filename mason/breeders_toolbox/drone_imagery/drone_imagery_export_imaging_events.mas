@@ -3,6 +3,8 @@
 
 <& /util/import_javascript.mas, classes => [ ] &>
 
+<!--button class='btn btn-default' style='margin:3px' id='export_drone_imagery_events'>Export Imaging Events</button-->
+
 <div class="modal fade" id="export_drone_imagery_dialog" name="export_drone_imagery_dialog" tabindex="-1" role="dialog" aria-labelledby="exportDroneImageryDialog">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
@@ -29,13 +31,16 @@
                 <&| /util/workflow.mas:step, title=> "Field Trial" &>
                     <& /page/page_title.mas, title=>"Select your field trial" &>
 
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">Field Trial: </label>
-                        <div class="col-sm-9" >
-                            <div id="export_drone_image_trial_select_div"></div>
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial: </label>
+                            <div class="col-sm-9" >
+                                <div id="export_drone_image_trial_select_div"></div>
+                            </div>
                         </div>
                     </div>
 
+                    <br/>
                     <center>
                     <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                     </center>
@@ -87,6 +92,10 @@
 
 jQuery(document).ready(function() {
 
+    jQuery('#export_drone_imagery_events').on('click', function(){
+        jQuery('#export_drone_imagery_dialog').modal('show');
+    });
+
     get_select_box('trials', 'export_drone_image_trial_select_div', { 'name' : 'export_drone_run_field_trial_id', 'id' : 'export_drone_run_field_trial_id', 'empty':1, 'multiple':0 });
 
     jQuery(document).on('change', '#export_drone_run_field_trial_id', function() {
@@ -127,6 +136,7 @@ jQuery(document).ready(function() {
                 }
                 else {
                     Workflow.complete('#export_drone_imagery_submit');
+                    Workflow.focus('#drone_imagery_export_workflow', 3);
                     return false;
                 }
             },
@@ -136,4 +146,5 @@ jQuery(document).ready(function() {
         });
     });
 
+});
 </script>

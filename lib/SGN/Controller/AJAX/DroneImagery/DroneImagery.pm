@@ -52,6 +52,7 @@ use Math::Polygon;
 use Math::Trig;
 use List::MoreUtils qw(first_index);
 use List::Util qw(sum);
+use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -13331,20 +13332,106 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
     my $plot_polygon_template_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
     my $drone_run_drone_run_band_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
     my $original_denoised_image_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
+    my $imaging_vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
+    my $imaging_vehicle_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
+    my $drone_run_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_experiment', 'experiment_type')->cvterm_id();
+    my $drone_run_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_project_type', 'project_property')->cvterm_id();
+    my $drone_run_camera_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_camera_type', 'project_property')->cvterm_id();
+    my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
+    my $drone_run_base_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_base_date', 'project_property')->cvterm_id();
+    my $drone_run_rig_desc_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_camera_rig_description', 'project_property')->cvterm_id();
+    my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+    my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
+    my $calendar_funcs = CXGN::Calendar->new({});
 
+    my %spectral_lookup = (
+        "Blue (450-520nm)" => "blue",
+        "Green (515-600nm)" => "green",
+        "Red (600-690nm)" => "red",
+        "Red Edge (690-750nm)" => "rededge",
+        "NIR (780-3000nm)" => "nir",
+        "MIR (3000-50000nm)" => "mir",
+        "FIR (50000-1000000nm)" => "fir",
+        "Thermal IR (9000-14000nm)" => "thir",
+        "RGB Color Image" => "rgb",
+        "Black and White Image" => "bw"
+    );
+
+    my %sensor_map = (
+        "micasense_5" => "MicaSense 5 Channel Camera",
+        "ccd_color" => "CCD Color Camera",
+        "cmos_color" => "CMOS Color Camera"
+    );
+
+    my %drone_run_csv_info;
     foreach my $drone_run_project_id (@$drone_run_project_ids) {
-        my $q = "SELECT plot_polygons.value, drone_run.project_id, drone_run.name, drone_run_band.project_id, drone_run_band.name, project_image.image_id
+        my $q = "SELECT plot_polygons.value, drone_run.project_id, drone_run.name, drone_run.description, drone_run_band.project_id, drone_run_band.name, drone_run_band.description, project_image.image_id, project_image_type.name, stock.uniquename, stock.stock_id, imaging_event_type.value, camera.value, imaging_event_date.value, base_date.value, camera_rig.value, field_trial.name, field_trial.project_id, drone_run_band_type.value
             FROM project AS drone_run_band
             JOIN project_relationship ON(project_relationship.subject_project_id = drone_run_band.project_id AND project_relationship.type_id = $drone_run_drone_run_band_type_id)
             JOIN project AS drone_run ON(project_relationship.object_project_id = drone_run.project_id)
             JOIN projectprop AS plot_polygons ON(drone_run_band.project_id = plot_polygons.project_id AND plot_polygons.type_id=$plot_polygon_template_type_id)
+            JOIN projectprop AS drone_run_band_type ON(drone_run_band.project_id = drone_run_band_type.project_id AND drone_run_band_type.type_id=$drone_run_band_type_cvterm_id)
             JOIN phenome.project_md_image AS project_image ON(drone_run_band.project_id = project_image.project_id AND project_image.type_id=$original_denoised_image_type_id)
+            JOIN cvterm AS project_image_type ON(project_image.type_id = project_image_type.cvterm_id)
+            JOIN nd_experiment_project ON(nd_experiment_project.project_id = drone_run.project_id)
+            JOIN nd_experiment ON(nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id AND nd_experiment.type_id=$drone_run_experiment_type_id)
+            JOIN nd_experiment_stock ON(nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+            JOIN stock ON(nd_experiment_stock.stock_id=stock.stock_id AND stock.type_id=$imaging_vehicle_cvterm_id)
+            JOIN projectprop AS imaging_event_type ON(imaging_event_type.project_id = drone_run.project_id AND imaging_event_type.type_id=$drone_run_type_cvterm_id)
+            JOIN projectprop AS camera ON(camera.project_id = drone_run.project_id AND camera.type_id=$drone_run_camera_type_cvterm_id)
+            JOIN projectprop AS imaging_event_date ON(imaging_event_date.project_id = drone_run.project_id AND imaging_event_date.type_id=$project_start_date_type_id)
+            JOIN projectprop AS base_date ON(base_date.project_id = drone_run.project_id AND base_date.type_id=$drone_run_base_date_type_id)
+            JOIN projectprop AS camera_rig ON(camera_rig.project_id = drone_run.project_id AND camera_rig.type_id=$drone_run_rig_desc_type_id)
+            JOIN project_relationship AS field_trial_rel ON(field_trial_rel.subject_project_id = drone_run.project_id AND field_trial_rel.type_id = $project_relationship_type_id)
+            JOIN project AS field_trial ON(field_trial_rel.object_project_id = field_trial.project_id)
             WHERE drone_run.project_id = ?;";
 
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute($drone_run_project_id);
-        while (my ($plot_polygons_value, $drone_run_project_id, $drone_run_project_name, $drone_run_band_project_id, $drone_run_band_project_name, $image_id) = $h->fetchrow_array()) {
+        while (my ($plot_polygons_value, $drone_run_project_id, $drone_run_project_name, $drone_run_description, $drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_description, $image_id, $project_image_type, $imaging_vehicle_name, $imaging_vehicle_id, $imaging_event_type, $camera, $imaging_event_calendar, $base_date_calendar, $camera_rig, $field_trial_name, $field_trial_id, $drone_run_band_type) = $h->fetchrow_array()) {
+            my $imaging_event_date = $imaging_event_calendar ? $calendar_funcs->display_start_date($imaging_event_calendar) : '';
+            my $imaging_event_base_date = $base_date_calendar ? $calendar_funcs->display_start_date($base_date_calendar) : '';
+            $drone_run_csv_info{$drone_run_project_id}->{plot_polygons_value} = $plot_polygons_value;
+            $drone_run_csv_info{$drone_run_project_id}->{imaging_event_date} = $imaging_event_date;
+            $drone_run_csv_info{$drone_run_project_id}->{imaging_event_base_date} = $imaging_event_base_date;
+            $drone_run_csv_info{$drone_run_project_id}->{drone_run_name} = $drone_run_project_name;
+            $drone_run_csv_info{$drone_run_project_id}->{drone_run_description} = $drone_run_description;
+            $drone_run_csv_info{$drone_run_project_id}->{imaging_vehicle_name} = $imaging_vehicle_name;
+            $drone_run_csv_info{$drone_run_project_id}->{imaging_vehicle_id} = $imaging_vehicle_id;
+            $drone_run_csv_info{$drone_run_project_id}->{imaging_event_type} = $imaging_event_type;
+            $drone_run_csv_info{$drone_run_project_id}->{camera} = $sensor_map{$camera};
+            $drone_run_csv_info{$drone_run_project_id}->{camera_rig} = $camera_rig;
+            $drone_run_csv_info{$drone_run_project_id}->{field_trial_name} = $field_trial_name;
+            $drone_run_csv_info{$drone_run_project_id}->{field_trial_id} = $field_trial_id;
+            push @{$drone_run_csv_info{$drone_run_project_id}->{drone_run_bands}}, {
+                drone_run_band_project_id => $drone_run_band_project_id,
+                drone_run_band_project_name => $drone_run_band_project_name,
+                drone_run_band_description => $drone_run_band_description,
+                image_id => $image_id,
+                project_image_type => $project_image_type,
+                drone_run_band_type => $drone_run_band_type,
+                drone_run_band_type_short => $spectral_lookup{$drone_run_band_type},
+            };
+        }
+    }
+    print STDERR Dumper \%drone_run_csv_info;
 
+    # my $geojson_zip = Archive::Zip->new();
+    # my $dir_geojson_member = $geojson_zip->addDirectory( 'geojson_files/' );
+    # my $images_zip = Archive::Zip->new();
+    # my $dir_images_member = $images_zip->addDirectory( 'orthoimage_files/' );
+
+    while (my($drone_run_project_id, $drone_run_info) = each %drone_run_csv_info) {
+        my $field_trial_name = $drone_run_info->{field_trial_name};
+        my $drone_run_name = $drone_run_info->{drone_run_name};
+        my $drone_run_bands = $drone_run_info->{drone_run_bands};
+        foreach my $band (@$drone_run_bands) {
+            print STDERR Dumper $band;
+            my $spec = $band->{drone_run_band_type_short};
+            my $image = SGN::Image->new( $schema->storage->dbh, $band->{image_id}, $c );
+            my $image_fullpath = $image->get_filename('original_converted', 'full');
+            print STDERR Dumper $image_fullpath;
+            # my $file_member = $images_zip->addFile( $image_fullpath, $image_id."__".$spec."" );
         }
     }
 
