@@ -1936,8 +1936,8 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
             $c->detach;
         }
         my $spectral_band = $spectral_lookup{$band};
-        print STDERR Dumper [$filename, $temp_file, $imaging_event_name, $spectral_band];
-        push @{$filename_imaging_event_lookup{$imaging_event_name}}, {
+        print STDERR Dumper [$filename_wext, $filename, $temp_file, $imaging_event_name, $spectral_band];
+        $filename_imaging_event_lookup{$filename_wext} = {
             file => $temp_file,
             band => $spectral_band,
             band_short => $band
@@ -2018,8 +2018,8 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
                     $c->stash->{rest} = {error => 'The GeoJSON file '.$filename.' does not have a \'coordinates\' key in the \'geometry\' object. Make sure the GeoJSON is formatted correctly.</br></br>'};
                     $c->detach;
                 }
-                if (scalar(@{$_->{geometry}->{coordinates}->[0]}) < 4) {
-                    $c->stash->{rest} = {error => 'The GeoJSON file '.$filename.' \'coordinates\' first object has less than 4 objects in it. Make sure the GeoJSON is formatted correctly.</br></br>'};
+                if (scalar(@{$_->{geometry}->{coordinates}->[0]}) != 5) {
+                    $c->stash->{rest} = {error => 'The GeoJSON file '.$filename.' \'coordinates\' first object has less than 4 objects in it. The polygons must be rectangular Make sure the GeoJSON is formatted correctly.</br></br>'};
                     $c->detach;
                 }
             }
@@ -2089,9 +2089,9 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         if ($worksheet->get_cell($row,4)) {
             $vehicle_name = $worksheet->get_cell($row,4)->value();
         }
-        my $vehicle_battery;
+        my $vehicle_battery = 'default_battery';
         if ($worksheet->get_cell($row,5)) {
-            $vehicle_battery = $worksheet->get_cell($row,5)->value() || 'default';
+            $vehicle_battery = $worksheet->get_cell($row,5)->value();
         }
         my $sensor;
         if ($worksheet->get_cell($row,6)) {
@@ -2182,7 +2182,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         }
 
         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $field_trial_id });
-        my $trial_layout = $trial->get_layout();
+        my $trial_layout = $trial->get_layout()->get_design();
         $field_trial_layout_lookup{$field_trial_id} = $trial_layout;
 
         my $planting_date = $trial->get_planting_date();
@@ -2250,14 +2250,14 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         my $imaging_event_desc = $worksheet->get_cell($row,2)->value();
         my $imaging_event_date = $worksheet->get_cell($row,3)->value();
         my $vehicle_name = $worksheet->get_cell($row,4)->value();
-        my $vehicle_battery = $worksheet->get_cell($row,5)->value() || 'default';
+        my $vehicle_battery = $worksheet->get_cell($row,5) ? $worksheet->get_cell($row,5)->value() : 'default_battery';
         my $sensor = $worksheet->get_cell($row,6)->value();
         my $field_trial_name = $worksheet->get_cell($row,7)->value();
         my $geojson_filename = $worksheet->get_cell($row,8)->value();
         my $image_filenames = $worksheet->get_cell($row,9)->value();
         my $coordinate_system = $worksheet->get_cell($row,10)->value();
-        my $base_date = $worksheet->get_cell($row,11)->value();
-        my $rig_desc = $worksheet->get_cell($row,12)->value();
+        my $base_date = $worksheet->get_cell($row,11) ? $worksheet->get_cell($row,11)->value() : '';
+        my $rig_desc = $worksheet->get_cell($row,12) ? $worksheet->get_cell($row,12)->value() : '';
 
         my $new_drone_run_vehicle_id = $vehicle_name_lookup{$vehicle_name};
         my $selected_trial_id = $field_trial_name_lookup{$field_trial_name};
@@ -2366,7 +2366,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         my @orthoimage_names = split ',', $image_filenames;
         my @ortho_images;
         foreach (@orthoimage_names) {
-            push @ortho_images, $filename_imaging_event_lookup{$imaging_event_name};
+            push @ortho_images, $filename_imaging_event_lookup{$_};
         }
         my @drone_run_band_projects;
         my @drone_run_band_project_ids;
@@ -2499,7 +2499,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         foreach (@{$geojson_value->{features}}) {
             my $plot_number = $_->{properties}->{ID};
             my $coordinates = $_->{geometry}->{coordinates};
-            my $stock_name = $trial_lookup->{$plot_number}->{uniquename};
+            my $stock_name = $trial_lookup->{$plot_number}->{plot_name};
             my @coords;
             foreach my $crd (@{$coordinates->[0]}) {
                 if ($coordinate_system eq 'Pixels') {
@@ -2509,8 +2509,10 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
                     };
                 }
             }
+            my $last_point = pop @coords;
             $plot_polygons_value->{$stock_name} = \@coords;
         }
+        $plot_polygons_value = encode_json $plot_polygons_value;
 
         my %selected_drone_run_band_types;
         my $q2 = "SELECT project_md_image.image_id, drone_run_band_type.value, drone_run_band.project_id

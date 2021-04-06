@@ -34,7 +34,7 @@
                         <br/><br/>
                         <button class="btn btn-default" id="upload_drone_imagery_bulk_button" >Go to bulk upload of imaging events</button>
                         <br/><br/>
-                        <!--button class="btn btn-default" id="upload_drone_imagery_bulk_previous_button" >Go to bulk upload of previously processed imaging events (GeoJSON defitions included)</button-->
+                        <button class="btn btn-default" id="upload_drone_imagery_bulk_previous_button" >Go to bulk upload of previously processed imaging events (GeoJSON defitions included)</button>
                         </center>
                     </&>
                     <&| /util/workflow.mas:step, title=> "Field Trial" &>
