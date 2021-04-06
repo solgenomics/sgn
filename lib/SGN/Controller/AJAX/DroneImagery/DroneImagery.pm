@@ -13372,6 +13372,7 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
             JOIN projectprop AS plot_polygons ON(drone_run_band.project_id = plot_polygons.project_id AND plot_polygons.type_id=$plot_polygon_template_type_id)
             JOIN projectprop AS drone_run_band_type ON(drone_run_band.project_id = drone_run_band_type.project_id AND drone_run_band_type.type_id=$drone_run_band_type_cvterm_id)
             JOIN phenome.project_md_image AS project_image ON(drone_run_band.project_id = project_image.project_id AND project_image.type_id=$original_denoised_image_type_id)
+            JOIN metadata.md_image AS md_image ON(md_image.image_id = project_image.image_id)
             JOIN cvterm AS project_image_type ON(project_image.type_id = project_image_type.cvterm_id)
             JOIN nd_experiment_project ON(nd_experiment_project.project_id = drone_run.project_id)
             JOIN nd_experiment ON(nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id AND nd_experiment.type_id=$drone_run_experiment_type_id)
@@ -13384,7 +13385,7 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
             JOIN projectprop AS camera_rig ON(camera_rig.project_id = drone_run.project_id AND camera_rig.type_id=$drone_run_rig_desc_type_id)
             JOIN project_relationship AS field_trial_rel ON(field_trial_rel.subject_project_id = drone_run.project_id AND field_trial_rel.type_id = $project_relationship_type_id)
             JOIN project AS field_trial ON(field_trial_rel.object_project_id = field_trial.project_id)
-            WHERE drone_run.project_id = ?;";
+            WHERE drone_run.project_id = ? AND md_image.obsolete='f';";
 
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute($drone_run_project_id);
@@ -13414,28 +13415,38 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
             };
         }
     }
-    print STDERR Dumper \%drone_run_csv_info;
+    # print STDERR Dumper \%drone_run_csv_info;
 
     # my $geojson_zip = Archive::Zip->new();
     # my $dir_geojson_member = $geojson_zip->addDirectory( 'geojson_files/' );
-    # my $images_zip = Archive::Zip->new();
-    # my $dir_images_member = $images_zip->addDirectory( 'orthoimage_files/' );
+    my $images_zip = Archive::Zip->new();
+    my $dir_images_member = $images_zip->addDirectory( 'orthoimage_files/' );
 
     while (my($drone_run_project_id, $drone_run_info) = each %drone_run_csv_info) {
         my $field_trial_name = $drone_run_info->{field_trial_name};
         my $drone_run_name = $drone_run_info->{drone_run_name};
         my $drone_run_bands = $drone_run_info->{drone_run_bands};
         foreach my $band (@$drone_run_bands) {
-            print STDERR Dumper $band;
             my $spec = $band->{drone_run_band_type_short};
-            my $image = SGN::Image->new( $schema->storage->dbh, $band->{image_id}, $c );
+            my $image_id = $band->{image_id};
+            my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
             my $image_fullpath = $image->get_filename('original_converted', 'full');
             print STDERR Dumper $image_fullpath;
-            # my $file_member = $images_zip->addFile( $image_fullpath, $image_id."__".$spec."" );
+            my $file_member = $images_zip->addFile( $image_fullpath, $image_id."__".$spec.".JPG" );
         }
     }
 
-    $c->stash->{rest} = {success => 1};
+    my $output_image_zipfile_dir = $c->tempfiles_subdir('/drone_imagery_export_image_zipfile_dir');
+    my $orthoimage_zipfile = $c->tempfile( TEMPLATE => 'drone_imagery_export_image_zipfile_dir/orthoimagezipfileXXXX');
+    $orthoimage_zipfile .= ".zip";
+    my $orthoimage_zipfile_file_path = $c->config->{basepath}."/".$orthoimage_zipfile;
+
+    unless ( $images_zip->writeToFileNamed($orthoimage_zipfile_file_path) == AZ_OK ) {
+        $c->stash->{rest} = {error => "Images zipfile could not be saved!"};
+        $c->detach;
+    }
+
+    $c->stash->{rest} = {success => 1, orthoimage_zipfile => $orthoimage_zipfile};
 }
 
 sub _check_user_login {

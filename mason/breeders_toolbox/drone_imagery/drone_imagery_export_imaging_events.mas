@@ -71,6 +71,9 @@
                 <&| /util/workflow.mas:step, title=> "Submit" &>
                     <& /page/page_title.mas, title=>"Export Imaging Event(s)" &>
 
+                    <div id="export_drone_imagery_submit_div">
+                    </div>
+
                     <center>
                     <button type="button" class="btn btn-info" name="export_drone_imagery_submit" id="export_drone_imagery_submit">Submit</button>
                     </center>
@@ -135,8 +138,8 @@ jQuery(document).ready(function() {
                     return false;
                 }
                 else {
-                    Workflow.complete('#export_drone_imagery_submit');
-                    Workflow.focus('#drone_imagery_export_workflow', 3);
+                    var html = '<a href="'+response.orthoimage_zipfile+'">Download Orthoimage Zipfile</a>';
+                    jQuery('#export_drone_imagery_submit_div').html(html);
                     return false;
                 }
             },
