@@ -68,7 +68,7 @@ sub search {
     if ($location_names_arrayref && scalar(@$location_names_arrayref)>0){
         %location_names_arrayref = map { $_ => 1} @$location_names_arrayref;
     }
-        
+
     my %location_types_arrayref;
     if ($location_types_arrayref && scalar(@$location_types_arrayref)>0){
         %location_types_arrayref = map { $_ => 1} @$location_types_arrayref;
@@ -77,7 +77,7 @@ sub search {
 	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema ); #, $location_id);
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($locations,$page_size,$page);
 	my @data;
-	
+
 	foreach (@$data_window){
 		if ( (%location_ids_arrayref && !exists($location_ids_arrayref{$_->[0]}))) { next; }
 		if ( (%abbreviations_arrayref && !exists($abbreviations_arrayref{$_->[9]}))) { next; }
@@ -87,8 +87,8 @@ sub search {
         # if ( (%institute_names_arrayref && !exists($institute_names_arrayref{$_->[]}))) { next; }
         if ( (%location_names_arrayref && !exists($location_names_arrayref{$_->[1]}))) { next; }
         if ( (%location_types_arrayref && !exists($location_types_arrayref{$_->[8]}))) { next; }
-        if ( $altitude_max && $_->[4] > $altitude_max ) { next; } 
-        if ( $altitude_min && $_->[4] < $altitude_min ) { next; } 
+        if ( $altitude_max && $_->[4] > $altitude_max ) { next; }
+        if ( $altitude_min && $_->[4] < $altitude_min ) { next; }
 
 		my $coordinates = {
             geometry=>{
@@ -138,7 +138,7 @@ sub detail {
 	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema , $location_id);
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($locations,$page_size,$page);
 	my $data;
-	
+
 	foreach (@$data_window){
 		my $coordinates = {
             geometry=>{
@@ -204,12 +204,12 @@ sub store {
 		my $program_id =  $params->{additionalInfo}->{programDbId}  || undef;
 		my $type =  $params->{locationType} || undef;
 		my $geo_coordinates = $params->{coordinates}->{geometry}->{coordinates} || undef;
-		my $latitude = $geo_coordinates->[0] || undef;
-		my $longitude = $geo_coordinates->[1] || undef;
+		my $latitude = $geo_coordinates->[1] || undef;
+		my $longitude = $geo_coordinates->[0] || undef;
 		my $altitude  = $geo_coordinates->[2]|| undef;
 		my $noaa_station_id    = $params->{additionalInfo}->{noaaStationId} || undef;
 		my $program_name;
-	
+
 		my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
 		if ($existing_name_count > 0) {
 			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Location name %s already exists.', $name ));

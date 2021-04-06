@@ -219,10 +219,13 @@ sub detail {
             my $folder_db_id = $folder->project_parent->project_id();
             my $breeding_program_id = $folder->breeding_program->project_id();
 
-            my $experimental_design = {
-	        	PUI => undef,
-	        	description => $t->get_design_type(),
-	        };
+            my $experimental_design = {};
+
+            if ($t->get_design_type()){
+		        	$experimental_design = { PUI => undef,
+		        	description => $t->get_design_type(),
+		        };
+		    }
 
 			%result = (
 				active=>JSON::true,
@@ -645,10 +648,13 @@ sub _search {
         #     };
         # }
         my $data_agreement = ''; # = $t->get_data_agreement() ? $t->get_data_agreement() : '';
-        my $experimental_design = {
-        	PUI => undef,
-        	description =>qq|$_->{design}|,
-        };
+        my $experimental_design = {};
+
+        if ($t->get_design_type()){
+	        	$experimental_design = { 
+	        		PUI => undef,
+	        		description => $t->get_design_type() };
+	    }
 
         my $folder_id = $t->get_folder()->id();
         my $folder_name = $t->get_folder()->name();
