@@ -256,8 +256,8 @@ sub search {
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,
-            trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : undef,
-            trialName => $obs_unit->{folder_name},
+            trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
+            trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
         };
         $total_count = $obs_unit->{full_count};       
         
@@ -449,16 +449,15 @@ sub detail {
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,
-            trialDbId => qq|$obs_unit->{folder_id}|,
-            trialName => $obs_unit->{folder_name},
+            trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
+            trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
         };
         $total_count = $obs_unit->{full_count};
         $counter++;
     }
-
-    my %result = (data=>\@data_window);
+ 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Units search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(@data_window, $pagination, \@data_files, $status, 'Observation Units search result constructed');
 }
 
 sub observationunits_update {
@@ -555,15 +554,17 @@ sub observationunits_update {
             my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
         }
 
-        #store/update externla references
-        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-            bcs_schema => $self->bcs_schema,
-            table_name => 'Stock::StockDbxref',
-            table_id_key => 'stock_id',
-            external_references => $observationUnit_x_ref,
-            id => $observation_unit_db_id
-        });
-        my $reference_result = $references->store();
+        #store/update external references
+        if ($observationUnit_x_ref){
+            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema => $self->bcs_schema,
+                table_name => 'Stock::StockDbxref',
+                table_id_key => 'stock_id',
+                external_references => $observationUnit_x_ref,
+                id => $observation_unit_db_id
+            });
+            my $reference_result = $references->store();
+        }
 
     }
 
@@ -679,6 +680,7 @@ sub observationunits_store {
     }
 
     #TODO get design ids to store external references
+    #if ($externalReferences){
        #  my $externalReferences = $params->{externalReferences} ? $params->{externalReferences} : undef;
 
        #  my $references = CXGN::BrAPI::v2::ExternalReferences->new({
@@ -689,6 +691,7 @@ sub observationunits_store {
        #      id => $added_stock_id
        #  });
        # my $reference_result = $references->store();
+    #}
      ###
      
     if(!$error){
