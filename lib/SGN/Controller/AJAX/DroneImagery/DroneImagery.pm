@@ -53,6 +53,7 @@ use Math::Trig;
 use List::MoreUtils qw(first_index);
 use List::Util qw(sum);
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
+use Spreadsheet::WriteExcel;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -13417,26 +13418,77 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
     }
     # print STDERR Dumper \%drone_run_csv_info;
 
-    # my $geojson_zip = Archive::Zip->new();
-    # my $dir_geojson_member = $geojson_zip->addDirectory( 'geojson_files/' );
     my $images_zip = Archive::Zip->new();
     # my $dir_images_member = $images_zip->addDirectory( 'orthoimage_files/' );
 
-    while (my($drone_run_project_id, $drone_run_info) = each %drone_run_csv_info) {
-        my $field_trial_name = $drone_run_info->{field_trial_name};
-        my $drone_run_name = $drone_run_info->{drone_run_name};
-        my $drone_run_bands = $drone_run_info->{drone_run_bands};
-        foreach my $band (@$drone_run_bands) {
-            my $spec = $band->{drone_run_band_type_short};
-            my $image_id = $band->{image_id};
-            my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-            my $image_fullpath = $image->get_filename('original_converted', 'full');
-            print STDERR Dumper $image_fullpath;
-            my $file_member = $images_zip->addFile( $image_fullpath, $image_id."__".$spec.".JPG" );
-        }
-    }
-
     my $output_image_zipfile_dir = $c->tempfiles_subdir('/drone_imagery_export_image_zipfile_dir');
+    my $imaging_events_file = $c->tempfile( TEMPLATE => 'drone_imagery_export_image_zipfile_dir/imagingeventsXXXX');
+    $imaging_events_file .= ".xls";
+    my $imaging_events_file_path = $c->config->{basepath}."/".$imaging_events_file;
+
+    my $workbook = Spreadsheet::WriteExcel->new($imaging_events_file_path);
+    my $worksheet = $workbook->add_worksheet();
+
+        $worksheet->write_row(0, 0, ['Imaging Event Name','Type','Description','Date','Vehicle Name','Sensor','Field Trial Name','GeoJSON Filename','Image Filenames','Coordinate System','Base Date','Camera Rig']);
+        my $line_number = 1;
+
+        my %geojson_hash;
+        while (my($drone_run_project_id, $drone_run_info) = each %drone_run_csv_info) {
+            my $plot_polygons_value = decode_json $drone_run_info->{plot_polygons_value};
+            my $field_trial_id = $drone_run_info->{field_trial_id};
+            my $field_trial_name = $drone_run_info->{field_trial_name};
+            my $drone_run_name = $drone_run_info->{drone_run_name};
+            my $imaging_event_date = $drone_run_info->{imaging_event_date};
+            my $imaging_event_base_date = $drone_run_info->{imaging_event_base_date} || '';
+            my $drone_run_description = $drone_run_info->{drone_run_description};
+            my $imaging_vehicle_name = $drone_run_info->{imaging_vehicle_name};
+            my $imaging_event_type = $drone_run_info->{imaging_event_type};
+            my $camera = $drone_run_info->{camera};
+            my $camera_rig = $drone_run_info->{camera_rig} || '';
+            my $drone_run_bands = $drone_run_info->{drone_run_bands};
+            my @image_filenames;
+            foreach my $band (@$drone_run_bands) {
+                my $spec = $band->{drone_run_band_type_short};
+                my $image_id = $band->{image_id};
+                my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
+                my $image_fullpath = $image->get_filename('original_converted', 'full');
+                print STDERR Dumper $image_fullpath;
+                my $image_name = $image_id."__".$spec.".JPG";
+                my $file_member = $images_zip->addFile( $image_fullpath, $image_name );
+                push @image_filenames, $image_name;
+            }
+
+            my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $field_trial_id });
+            my $trial_layout = $trial->get_layout()->get_design();
+            # print STDERR Dumper $trial_layout;
+            # print STDERR Dumper $plot_polygons_value;
+
+            my %plot_name_lookup;
+            while (my ($plot_number, $plot_info) = each %$trial_layout) {
+                $plot_name_lookup{$plot_info->{plot_name}} = $plot_number;
+            }
+
+            foreach my $stock_name (keys %$plot_polygons_value) {
+                my $polygon = $plot_polygons_value->{$stock_name};
+                my @coords;
+                foreach my $point (@$polygon) {
+                    my $x = $point->{x};
+                    my $y = $point->{y};
+                    push @coords, [$x, $y];
+                }
+                $geojson_hash{$drone_run_project_id}->{$plot_name_lookup{$stock_name}} = \@coords;
+            }
+            my $geojson_filename = $drone_run_project_id.".geojson";
+
+            my $orthoimage_filenames = join ',', @image_filenames;
+            $drone_run_info->{orthoimage_files} = $orthoimage_filenames;
+            $drone_run_info->{geojson_file} = $geojson_filename;
+
+            $worksheet->write_row($line_number, 0, [$drone_run_name, $imaging_event_type, $drone_run_description, $imaging_event_date, $imaging_vehicle_name, $camera, $field_trial_name, $geojson_filename, $orthoimage_filenames, "Pixels", $imaging_event_base_date, $camera_rig]);
+            $line_number++;
+        }
+    $workbook->close();
+
     my $orthoimage_zipfile = $c->tempfile( TEMPLATE => 'drone_imagery_export_image_zipfile_dir/orthoimagezipfileXXXX');
     $orthoimage_zipfile .= ".zip";
     my $orthoimage_zipfile_file_path = $c->config->{basepath}."/".$orthoimage_zipfile;
@@ -13446,7 +13498,56 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
         $c->detach;
     }
 
-    $c->stash->{rest} = {success => 1, orthoimage_zipfile => $orthoimage_zipfile};
+    my $geojson_zip = Archive::Zip->new();
+    # my $dir_geojson_member = $geojson_zip->addDirectory( 'geojson_files/' );
+
+    my $output_geojson_zipfile_dir = $c->tempfiles_subdir('/drone_imagery_export_image_geojson_dir');
+
+    while (my($drone_run_project_id, $plot_geo) = each %geojson_hash) {
+        my @features_geojson;
+        while (my($plot_number, $coords) = each %$plot_geo) {
+            my $first_coord = $coords->[0];
+            push @$coords, $first_coord;
+            my %feature_geojson = (
+                type => "Feature",
+                field_trial_name => $drone_run_csv_info{$drone_run_project_id}->{field_trial_name},
+                properties => {
+                    ID => $plot_number
+                },
+                geometry => {
+                    type => "Polygon",
+                    coordinates => [$coords]
+                }
+            );
+            push @features_geojson, \%feature_geojson;
+        }
+
+        my %geojson = (
+            type => "FeatureCollection",
+            features => \@features_geojson
+        );
+        my $geojson_string = encode_json \%geojson;
+
+        my $geojson_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_export_image_geojson_dir/geojsonXXXX');
+
+        open(my $fh_geojson, '>', $geojson_file) or die "Could not open file '$geojson_file' $!";
+            print STDERR "Opened $geojson_file\n";
+            print $fh_geojson $geojson_string;
+        close($fh_geojson);
+
+        my $file_member = $geojson_zip->addFile( $geojson_file, $drone_run_csv_info{$drone_run_project_id}->{geojson_file} );
+    }
+
+    my $geojson_zipfile = $c->tempfile( TEMPLATE => 'drone_imagery_export_image_zipfile_dir/geojsonzipfileXXXX');
+    $geojson_zipfile .= ".zip";
+    my $geojson_zipfile_file_path = $c->config->{basepath}."/".$geojson_zipfile;
+
+    unless ( $geojson_zip->writeToFileNamed($geojson_zipfile_file_path) == AZ_OK ) {
+        $c->stash->{rest} = {error => "GeoJSON zipfile could not be saved!"};
+        $c->detach;
+    }
+
+    $c->stash->{rest} = {success => 1, orthoimage_zipfile => $orthoimage_zipfile, geojson_zipfile => $geojson_zipfile, imaging_events_spreadsheet => $imaging_events_file};
 }
 
 sub _check_user_login {
