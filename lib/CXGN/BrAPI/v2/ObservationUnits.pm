@@ -66,7 +66,7 @@ sub search {
     my $lt = CXGN::List::Transform->new();
     my $trait_ids_arrayref = $lt->transform($self->bcs_schema, "traits_2_trait_ids", $trait_list_arrayref)->{transform};
 
-    my $limit = $page_size*($page+1);
+    my $limit = $page_size;
     my $offset = $page_size*$page;
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
@@ -252,7 +252,7 @@ sub search {
             observationUnitPUI => qq|$obs_unit->{obsunit_plot_number}|,
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
-            seedLotDbId => undef, # not implemented yet
+            seedLotDbId => $obs_unit->{seedlot_stock_id} ? qq|$obs_unit->{seedlot_stock_id}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,
@@ -286,8 +286,6 @@ sub detail {
             data_level=>'all',
             include_timestamp=>1,
             plot_list=>[$observation_unit_db_id],
-            # limit=>$limit,
-            offset=>$offset,
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
@@ -445,7 +443,7 @@ sub detail {
             observationUnitPUI => qq|$obs_unit->{obsunit_plot_number}|,
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
-            seedLotDbId => undef, # not implemented yet
+            seedLotDbId => $obs_unit->{seedlot_stock_id} ? qq|$obs_unit->{seedlot_stock_id}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,
@@ -617,7 +615,7 @@ sub observationunits_store {
         my $range_number = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
         my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
         my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
-        my $seedlot_name = $params->{seedLotDbId} ? $params->{seedLotDbId} : undef;
+        my $seedlot_id = $params->{seedLotDbId} ? $params->{seedLotDbId} : undef;
         my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates} ? $params->{observationUnitPosition}->{geoCoordinates} : undef;
         my $levels = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
         my $block_number;
