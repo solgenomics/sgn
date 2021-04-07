@@ -276,9 +276,6 @@ sub detail {
     my $status = $self->status;
     my @data_files;
 
-    my $limit = $page_size*($page+1)-1;
-    my $offset = $page_size*$page;
-
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
         {
