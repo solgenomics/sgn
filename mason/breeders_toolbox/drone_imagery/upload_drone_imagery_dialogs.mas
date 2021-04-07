@@ -446,7 +446,7 @@
                     <&| /util/workflow.mas:step, title=> "Define Imaging Events" &>
                         <& /page/page_title.mas, title=>"Define Imaging Events in Bulk" &>
 
-                        <h4>The uploaded comma-separated (.csv) file must have the following header:</h4>
+                        <h4>The uploaded Excel file (.xls) must have the following header:</h4>
 
                         <table class="table table-bordered table-hover">
                             <tbody>
@@ -459,6 +459,8 @@
                                     <th>Vehicle Battery Set</th>
                                     <th>Sensor</th>
                                     <th>Field Trial Name</th>
+                                    <th>Image Filenames</th>
+                                    <th>Coordinate System</th>
                                     <th>Base Date</th>
                                     <th>Camera Rig</th>
                                 </tr>
@@ -469,11 +471,13 @@
                             <li><b>Imaging Event Name</b>: (required) The globally unique name of the imaging event name (e.g. Field1Ortho01012020)</li>
                             <li><b>Type</b>: (required) Either "Aerial Medium to High Res" or "Aerial Low Res" to indicate high or low resolution imagery.</li>
                             <li><b>Description</b>: (required) Free-text description of the imaging event and how it was flown and/or processed.</li>
-                            <li><b>Date</b>: (required) The date and time of the imaging event in YYYY/MM/DD hh:mm:ss format (e.g. 2021/03/02 12:00:00).</li>
+                            <li><b>Date</b>: (required) The date and time of the imaging event in YYYY/MM/DD hh:mm:ss format (e.g. 2021/03/02 12:00:00)</li>
                             <li><b>Vehicle Name</b>: (required) The name of the aerial vehicle which was used. This must already exist in the database.</li>
-                            <li><b>Vehicle Battery Set</b>: (optional) The name of the aerial vehicle battery set which was used. By default, the "default" battery will be used.</li>
+                            <li><b>Vehicle Battery Set</b>: (optional) The name of the aerial vehicle battery set which was used.</li>
                             <li><b>Sensor</b>: (required) The type of camera sensor used. Must be either "MicaSense 5 Channel Camera", "CCD Color Camera", or "CMOS Color Camera".</li>
                             <li><b>Field Trial Name</b>: (required) The name of the field trial which was imaged. This must already exist in the database.</li>
+                            <li><b>Image Filenames</b>: (required) Comma-separated list of image filenames that corresponds to this imaging event (e.g. Field1Ortho01012020__nir.tiff,Field1Ortho01012020__rgb.tiff,Field1Ortho01012020__bw.tiff). The image filenames must exist in the uploaded images zipfile. The same image file can be used for multiple imaging events.</li>
+                            <li><b>Coordinate System</b>: (required) The coordinate system for the supplied images and GeoJSON files of this imaging event. Must be either "UTM", "WGS84", or "Pixels". If either "UTM" or "WGS84" are used, then the uploaded orthophoto images must be GeoTIFFs containing the coordinate system AND the GeoJSON files must be of the same coordinate system. If "Pixels" is used, then the uploaded orthophoto images must be simple raster images (.tiff, .png., .jpeg) and not GeoTIFFs, AND the GeoJSON files must describe the pixel positions of the plot-polygons relative to the provided images.</li>
                             <li><b>Base Date</b>: (optional) The date and time to reference the imaging event in YYYY/MM/DD hh:mm:ss format (e.g. 2021/03/02 12:00:00). This is useful when separate, fixed, camera rigs are capturing different sections of the field experiment, and they are not capturing images at precisely the same time.</li>
                             <li><b>Camera Rig</b>: (optional) Free-text description of the camera rig. This is useful when separate, fixed, camera rigs are capturing different sections of the field experiment.</li>
                         </ul>
@@ -481,7 +485,7 @@
                         <br/>
                         <div class="well well-sm">
                             <div class="form-group">
-                                <label class="col-sm-6 control-label">Bulk Imaging Events (.csv): </label>
+                                <label class="col-sm-6 control-label">Bulk Imaging Events (.xls): </label>
                                 <div class="col-sm-6" >
                                     <input type="file" id="upload_drone_imagery_bulk_imaging_events" name="upload_drone_imagery_bulk_imaging_events" encoding="multipart/form-data" />
                                 </div>
@@ -495,15 +499,17 @@
                     <&| /util/workflow.mas:step, title=> "Upload Orthophoto Rasters" &>
                         <& /page/page_title.mas, title=>"Upload Orthophoto Rasters For Imaging Events in Bulk" &>
 
-                        <h4>Upload a zipfile (.zip) which contains orthophotos (.tiff, .png, .jpg) named in accordance with the imaging event names defined in the previous step.</h4>
-                        <h4>The images must be named as a concatenation of the imaging event name and the spectral type of the image, with a double-underscore (__) in between (e.g. Field1Ortho01012020__blue).</h4>
+                        <h4>Upload a zipfile (.zip) which contains orthophotos images (.tiff, .png, .jpeg) named in accordance with the "Image Filenames" defined in the previous step.</h4>
+                        <h4>The images must be named as a concatenation with the spectral type of the image, with a double-underscore (__) in between (e.g. Field1Ortho01012020__blue).</h4>
 
                         <p>The allowed spectral types are: blue, green, red, rededge, nir, mir, fir, thir, rgb, and bw, corresponding to Blue (450-520nm), Green (515-600nm), Red (600-690nm), Red Edge (690-750nm), NIR (780-3000nm), MIR (3000-50000nm), FIR (50000-1000000nm), Thermal IR (9000-14000nm), RGB Color Image, and Black and White Image, respectively.</p>
                         <p>The zipfile should be no larger than 2GB and should contain all of the orthophoto images for the defined imaging events.</p>
-                        <p>For an imaging event using a MicaSense 5-channel camera, the 5 separate orthophotos should be included in the zipfile and should be named as a concatenation of the imaging event name and the spectral type (e.g. Field1Ortho01012020__blue, Field1Ortho01012020__green, Field1Ortho01012020__red, Field1Ortho01012020__rededge, and Field1Ortho01012020__nir).</p>
+                        <p>For an imaging event using a MicaSense 5-channel camera, the 5 separate orthophotos should be included in the zipfile and should be named as a concatenation with the spectral type (e.g. Field1Ortho01012020__blue, Field1Ortho01012020__green, Field1Ortho01012020__red, Field1Ortho01012020__rededge, and Field1Ortho01012020__nir).</p>
                         <p>Digital surface map (DSM) raster images can be uploaded as black and white images (e.g. Field1Ortho01012020__bw.png)</p>
                         <p>Do not upload duplicate spectral types for the same imaging event.</p>
                         <p>Images should be perfectly super-imposable for different spectra in the same imaging event.</p>
+                        <p>The same image can be used for several imaging events.</p>
+                        <p>If the coordinate system of the imaging event is either "UTM" of "WGS84", then the orthophoto images must be GeoTIFFs (.tiff) containing the coordinate system. If the coordinate system is "Pixels", then the orthophoto images are simple raster images (.tiff, .jpeg, .png).</p>
 
                         <br/>
                         <div class="well well-sm">
@@ -1059,6 +1065,7 @@ jQuery(document).ready(function() {
         json: true,
         post: function () {
             jQuery('#working_modal').modal("show");
+            jQuery('#working_msg').html("It can take time for this process to complete; however, once your files have been transfered to the server you can refresh this page and come back later.");
         },
         complete: function (response) {
             console.log(response);

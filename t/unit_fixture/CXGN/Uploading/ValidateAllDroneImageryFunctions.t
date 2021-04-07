@@ -522,7 +522,7 @@ print STDERR Dumper $message_hash_remove_image;
 ok($message_hash_remove_image->{status});
 
 #Testing upload of bulk imaging events
-my $bulk_loading_csv = $f->config->{basepath}."/t/data/imagebreed/bulk_loading/BTI_rig_images.csv";
+my $bulk_loading_csv = $f->config->{basepath}."/t/data/imagebreed/bulk_loading/BTI_rig_images.xls";
 my $bulk_loading_image_zip = $f->config->{basepath}."/t/data/imagebreed/bulk_loading/BTI_rig_images.zip";
 $ua = LWP::UserAgent->new;
 my $response_raster = $ua->post(
