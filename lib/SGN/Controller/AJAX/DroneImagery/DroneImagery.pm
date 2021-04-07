@@ -13382,8 +13382,8 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
             JOIN projectprop AS imaging_event_type ON(imaging_event_type.project_id = drone_run.project_id AND imaging_event_type.type_id=$drone_run_type_cvterm_id)
             JOIN projectprop AS camera ON(camera.project_id = drone_run.project_id AND camera.type_id=$drone_run_camera_type_cvterm_id)
             JOIN projectprop AS imaging_event_date ON(imaging_event_date.project_id = drone_run.project_id AND imaging_event_date.type_id=$project_start_date_type_id)
-            JOIN projectprop AS base_date ON(base_date.project_id = drone_run.project_id AND base_date.type_id=$drone_run_base_date_type_id)
-            JOIN projectprop AS camera_rig ON(camera_rig.project_id = drone_run.project_id AND camera_rig.type_id=$drone_run_rig_desc_type_id)
+            LEFT JOIN projectprop AS base_date ON(base_date.project_id = drone_run.project_id AND base_date.type_id=$drone_run_base_date_type_id)
+            LEFT JOIN projectprop AS camera_rig ON(camera_rig.project_id = drone_run.project_id AND camera_rig.type_id=$drone_run_rig_desc_type_id)
             JOIN project_relationship AS field_trial_rel ON(field_trial_rel.subject_project_id = drone_run.project_id AND field_trial_rel.type_id = $project_relationship_type_id)
             JOIN project AS field_trial ON(field_trial_rel.object_project_id = field_trial.project_id)
             WHERE drone_run.project_id = ? AND md_image.obsolete='f';";
@@ -13405,15 +13405,18 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
             $drone_run_csv_info{$drone_run_project_id}->{camera_rig} = $camera_rig;
             $drone_run_csv_info{$drone_run_project_id}->{field_trial_name} = $field_trial_name;
             $drone_run_csv_info{$drone_run_project_id}->{field_trial_id} = $field_trial_id;
-            push @{$drone_run_csv_info{$drone_run_project_id}->{drone_run_bands}}, {
-                drone_run_band_project_id => $drone_run_band_project_id,
-                drone_run_band_project_name => $drone_run_band_project_name,
-                drone_run_band_description => $drone_run_band_description,
-                image_id => $image_id,
-                project_image_type => $project_image_type,
-                drone_run_band_type => $drone_run_band_type,
-                drone_run_band_type_short => $spectral_lookup{$drone_run_band_type},
-            };
+            my $spec = $spectral_lookup{$drone_run_band_type};
+            if ($spec) {
+                push @{$drone_run_csv_info{$drone_run_project_id}->{drone_run_bands}}, {
+                    drone_run_band_project_id => $drone_run_band_project_id,
+                    drone_run_band_project_name => $drone_run_band_project_name,
+                    drone_run_band_description => $drone_run_band_description,
+                    image_id => $image_id,
+                    project_image_type => $project_image_type,
+                    drone_run_band_type => $drone_run_band_type,
+                    drone_run_band_type_short => $spec,
+                };
+            }
         }
     }
     # print STDERR Dumper \%drone_run_csv_info;
