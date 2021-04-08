@@ -91,7 +91,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
         my $geno_files = $c->stash->{multi_pops_geno_files};
         @g_files = split(/\t/, $geno_files);
 
-        $c->controller('solGS::solGS')->compare_genotyping_platforms($c, \@g_files);
+        $c->controller('solGS::Search')->compare_genotyping_platforms($c, \@g_files);
         $not_matching_pops =  $c->stash->{pops_with_no_genotype_match};
 
         if (!$not_matching_pops)
@@ -388,12 +388,12 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     }
     else
     {
-		$c->controller('solGS::solGS')->get_project_details($c, $selection_pop_id);
+		$c->controller('solGS::Search')->get_project_details($c, $selection_pop_id);
 		$c->stash->{selection_pop_id} = $c->stash->{project_id};
 		$c->stash->{selection_pop_name} = $c->stash->{project_name};
 		$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
 
-        $c->controller('solGS::solGS')->get_project_owners($c, $selection_pop_id);
+        $c->controller('solGS::Search')->get_project_owners($c, $selection_pop_id);
         $c->stash->{selection_pop_owner} = $c->stash->{project_owners};
     }
 
@@ -471,7 +471,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args() {
         my $geno_files = $c->stash->{multi_pops_geno_files};
         my @g_files = split(/\t/, $geno_files);
 
-        $c->controller('solGS::solGS')->compare_genotyping_platforms($c, \@g_files);
+        $c->controller('solGS::Search')->compare_genotyping_platforms($c, \@g_files);
         my $not_matching_pops =  $c->stash->{pops_with_no_genotype_match};
 
         if (!$not_matching_pops)
@@ -554,12 +554,12 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
         my @markers     = split(/\t/, $markers);
         my $markers_num = scalar(@markers);
 
-        $c->controller('solGS::solGS')->trial_compatibility_table($c, $markers_num);
+        $c->controller('solGS::Search')->trial_compatibility_table($c, $markers_num);
         my $match_code = $c->stash->{trial_compatibility_code};
 
-        my $pop_rs = $c->model('solGS::solGS')->project_details($pop_id);
+        my $pop_rs = $c->model('solGS::Search')->project_details($pop_id);
 
-		$c->controller('solGS::solGS')->get_projects_details($c, $pop_rs);
+		$c->controller('solGS::Search')->get_projects_details($c, $pop_rs);
 		#my $pop_details  = $self->get_projects_details($c, $pop_rs);
 		my $pop_details  = $c->stash->{projects_details};
         my $pop_name     = $pop_details->{$pop_id}{project_name};
@@ -816,7 +816,7 @@ sub combined_pops_summary {
 	my $training_pop_page;
     foreach my $pop_id (@pops_ids)
     {
-		$c->controller('solGS::solGS')->get_project_details($c, $pop_id);
+		$c->controller('solGS::Search')->get_project_details($c, $pop_id);
         my $pr_name = $c->stash->{project_name};
 
 		$tr_page_args->{training_pop_id} = $pop_id;
@@ -827,7 +827,7 @@ sub combined_pops_summary {
 		$desc .= '<a href=' .  $training_pop_page. '> ' .  $pr_name . '</a>';
         $desc .= $pop_id == $pops_ids[-1] ? '.' : ' and ';
 
-        $c->controller('solGS::solGS')->get_project_owners($c, $pop_id);
+        $c->controller('solGS::Search')->get_project_owners($c, $pop_id);
         my $project_owner = $c->stash->{project_owners};
 
         if ($project_owner)
@@ -1306,7 +1306,7 @@ sub process_trials_list_details {
     {
 		foreach my $p_id (@$pops_ids)
 		{
-		    my $pr_rs = $c->controller('solGS::solGS')->get_project_details($c, $p_id);
+		    my $pr_rs = $c->controller('solGS::Search')->get_project_details($c, $p_id);
 		    $pops_names{$p_id} = $c->stash->{project_name};
 		}
 

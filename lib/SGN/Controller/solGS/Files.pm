@@ -188,7 +188,7 @@ sub phenotype_file_name {
     $self->cache_file($c, $cache_data);
 
 	return $c->stash->{phenotype_file_name};
-	
+
 }
 
 
@@ -540,7 +540,7 @@ sub rrblup_selection_gebvs_file {
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $file_id = "${training_pop_id}_${selection_pop_id}-${trait_abbr}-GP-${protocol_id}";
 
-    my $cache_data = {key       => 'rrblup_selection_gebvs_' . $file_id,
+    my $cache_data = {key  => 'rrblup_selection_gebvs_' . $file_id,
                       file      => 'rrblup_selection_gebvs_' . $file_id . '.txt',
                       stash_key => 'rrblup_selection_gebvs_file',
 		      cache_dir => $c->stash->{solgs_cache_dir}

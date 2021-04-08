@@ -63,7 +63,7 @@ sub solgs_population_search_autocomplete_GET :Args(0) {
 		my $is_training_pop;
 		if ($location !~ /computation/i)
 		{
-			$is_training_pop = $c->controller('solGS::solGS')->check_population_is_training_population($c);
+			$is_training_pop = $c->controller('solGS::Search')->check_population_is_training_population($c);
 		}
 
 		if ($is_training_pop)
