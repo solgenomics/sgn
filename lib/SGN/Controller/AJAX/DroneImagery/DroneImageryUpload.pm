@@ -1877,6 +1877,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
     my $imaging_vehicle_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
     my $drone_run_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_experiment', 'experiment_type')->cvterm_id();
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
+    my $geoparam_coordinates_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_geoparam_coordinates', 'project_property')->cvterm_id();
     my $drone_run_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_project_type', 'project_property')->cvterm_id();
     my $drone_run_is_raw_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_is_raw_images', 'project_property')->cvterm_id();
     my $drone_run_camera_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_camera_type', 'project_property')->cvterm_id();
@@ -1990,7 +1991,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         my $band = $image_spectra[1];
 
         if (!exists($spectral_lookup{$band})) {
-            $c->stash->{rest} = {error => "The spectral band $band is not allowed in the provided orthophoto $filename. Make sure the orthophotos are saved as a concatenation of the imaging event name and the spectral band, with a pipe (|) as the separator (e.g. Ortho1_01012020|blue.tiff) and the allowed spectral bands are blue,green,red,rededge,nir,mir,fir,thir,rgb,bw." };
+            $c->stash->{rest} = {error => "The spectral band $band is not allowed in the provided orthophoto $filename. Make sure the orthophotos are saved as a concatenation with the spectral band, with a double-underscore (__) as the separator (e.g. Ortho1_01012020|blue.tiff) and the allowed spectral bands are blue,green,red,rededge,nir,mir,fir,thir,rgb,bw." };
             $c->detach;
         }
         my $spectral_band = $spectral_lookup{$band};
@@ -2205,10 +2206,10 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         if ($coordinate_system ne 'UTM' && $coordinate_system ne 'WGS84' && $coordinate_system ne 'Pixels') {
             push @parse_csv_errors, "The given coordinate system $coordinate_system is not one of: UTM, WGS84, or Pixels!";
         }
-        if ($coordinate_system ne 'Pixels') {
-            $c->stash->{rest} = {error => "Only the Pixels coordinate system is currently supported. In the future GeoTIFFs will be supported, but for now please only upload simple raster images (.png, .tiff, .jpg)." };
-            $c->detach;
-        }
+        # if ($coordinate_system ne 'Pixels') {
+        #     $c->stash->{rest} = {error => "Only the Pixels coordinate system is currently supported. In the future GeoTIFFs will be supported, but for now please only upload simple raster images (.png, .tiff, .jpg)." };
+        #     $c->detach;
+        # }
 
         my $field_trial_rs = $schema->resultset("Project::Project")->search({name=>$field_trial_name});
         if ($field_trial_rs->count != 1) {
@@ -2302,6 +2303,8 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         $c->stash->{rest} = {error_string => $error_string };
         $c->detach;
     }
+
+    my $dir = $c->tempfiles_subdir('/upload_drone_imagery_bulk_previous');
 
     my @drone_run_project_ids;
     my @drone_run_projects;
@@ -2432,33 +2435,57 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         }
         my @drone_run_band_projects;
         my @drone_run_band_project_ids;
+        my @drone_run_band_geoparams_coordinates;
         foreach my $m (@ortho_images) {
             my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
             my $band = $m->{band};
             my $band_short = $m->{band_short};
             my $file = $m->{file};
-            my $project_rs = $schema->resultset("Project::Project")->create({
-                name => $imaging_event_name."_".$band_short,
-                description => $imaging_event_desc.". ".$band,
-                projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $band}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
-                project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
-            });
-            my $selected_drone_run_band_id = $project_rs->project_id();
 
             my $time = DateTime->now();
             my $timestamp = $time->ymd()."_".$time->hms();
             my $upload_original_name = $imaging_event_name."_".$band_short.".png";
 
             my $ortho_file;
+            my @geoparams_coordinates;
             if ($coordinate_system eq 'Pixels') {
                 $ortho_file = $file;
             }
             else {
                 if ($band_short eq 'rgb') {
-                    # my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path $image_path_remaining/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5 --odm_radiocalibrated True";
-                    # my $odm_open_status = system($odm_cmd);
+                    my $outfile_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_bulk_previous/imageXXXX').".png";
+                    my $outfile_image_r = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_bulk_previous/imageXXXX').".png";
+                    my $outfile_image_g = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_bulk_previous/imageXXXX').".png";
+                    my $outfile_image_b = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_bulk_previous/imageXXXX').".png";
+                    my $outfile_geoparams = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_bulk_previous/fileXXXX').".csv";
+
+                    my $geo_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/GDALOpenImageRGBGeoTiff.py --image_path $file --outfile_path_image $outfile_image --outfile_path_image_1 $outfile_image_r --outfile_path_image_2 $outfile_image_g --outfile_path_image_3 $outfile_image_b --outfile_path_geo_params $outfile_geoparams ";
+                    print STDERR $geo_cmd."\n";
+                    my $geo_cmd_status = system($geo_cmd);
+                    $ortho_file = $outfile_image;
+
+                    open(my $fh_geoparams, '<', $outfile_geoparams) or die "Could not open file '".$outfile_geoparams."' $!";
+                        print STDERR "Opened ".$outfile_geoparams."\n";
+                        my $geoparams = <$fh_geoparams>;
+                        chomp $geoparams;
+                        @geoparams_coordinates = split ',', $geoparams;
+                        print STDERR Dumper [$geoparams, \@geoparams_coordinates];
+                    close($fh_geoparams);
                 }
             }
+            push @drone_run_band_geoparams_coordinates, \@geoparams_coordinates;
+
+            my $project_rs = $schema->resultset("Project::Project")->create({
+                name => $imaging_event_name."_".$band_short,
+                description => $imaging_event_desc.". ".$band,
+                projectprops => [
+                    {type_id => $drone_run_band_type_cvterm_id, value => $band},
+                    {type_id => $design_cvterm_id, value => 'drone_run_band'},
+                    {type_id => $geoparam_coordinates_cvterm_id, value => encode_json \@geoparams_coordinates}
+                ],
+                project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
+            });
+            my $selected_drone_run_band_id = $project_rs->project_id();
 
             my $uploader = CXGN::UploadFile->new({
                 tempfile => $ortho_file,
@@ -2498,7 +2525,8 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
             geojson_temp_filename => $geojson_temp_filename,
             time_cvterm_id => $day_cvterm_id,
             field_trial_id => $selected_trial_id,
-            coordinate_system => $coordinate_system
+            coordinate_system => $coordinate_system,
+            drone_run_band_geoparams_coordinates => \@drone_run_band_geoparams_coordinates
         };
 
         $drone_run_project_info{$selected_drone_run_id} = {
@@ -2517,6 +2545,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         my $geojson_filename = $_->{geojson_temp_filename};
         my $field_trial_id = $_->{field_trial_id};
         my $coordinate_system = $_->{coordinate_system};
+        my $drone_run_band_geoparams_coordinates = $_->{drone_run_band_geoparams_coordinates};
 
         my $drone_run_process_in_progress = $schema->resultset('Project::Projectprop')->update_or_create({
             type_id=>$process_indicator_cvterm_id,
@@ -2554,7 +2583,6 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         }
 
         my $rotate_value = 0;
-        my $plot_polygons_value;
         my $geojson_value;
 
         open(my $fh_geojson, '<', $geojson_filename) or die "Could not open file '$geojson_filename' $!";
@@ -2563,24 +2591,6 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         close($fh_geojson);
 
         my $trial_lookup = $field_trial_layout_lookup{$field_trial_id};
-
-        foreach (@{$geojson_value->{features}}) {
-            my $plot_number = $_->{properties}->{ID};
-            my $coordinates = $_->{geometry}->{coordinates};
-            my $stock_name = $trial_lookup->{$plot_number}->{plot_name};
-            my @coords;
-            foreach my $crd (@{$coordinates->[0]}) {
-                if ($coordinate_system eq 'Pixels') {
-                    push @coords, {
-                        x => $crd->[0],
-                        y => $crd->[1],
-                    };
-                }
-            }
-            my $last_point = pop @coords;
-            $plot_polygons_value->{$stock_name} = \@coords;
-        }
-        $plot_polygons_value = encode_json $plot_polygons_value;
 
         my %selected_drone_run_band_types;
         my $q2 = "SELECT project_md_image.image_id, drone_run_band_type.value, drone_run_band.project_id
@@ -2597,7 +2607,41 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         my $term_map = CXGN::DroneImagery::ImageTypes::get_base_imagery_observation_unit_plot_polygon_term_map();
 
         my %drone_run_band_info;
+        my $drone_run_band_counter = 0;
         foreach my $apply_drone_run_band_project_id (@$apply_drone_run_band_project_ids) {
+
+            my $plot_polygons_value;
+            foreach (@{$geojson_value->{features}}) {
+                my $plot_number = $_->{properties}->{ID};
+                my $coordinates = $_->{geometry}->{coordinates};
+                my $stock_name = $trial_lookup->{$plot_number}->{plot_name};
+                my @coords;
+                foreach my $crd (@{$coordinates->[0]}) {
+                    if ($coordinate_system eq 'Pixels') {
+                        push @coords, {
+                            x => $crd->[0],
+                            y => $crd->[1],
+                        };
+                    }
+                    else {
+                        my $geocoords = $drone_run_band_geoparams_coordinates->[$drone_run_band_counter];
+                        my $xOrigin = $geocoords->[0];
+                        my $yOrigin = $geocoords->[3];
+                        my $pixelWidth = $geocoords->[1];
+                        my $pixelHeight = -1*$geocoords->[5];
+                        my $x_pos = round(($crd->[0] - $xOrigin) / $pixelWidth);
+                        my $y_pos = round(($yOrigin - $crd->[1] ) / $pixelHeight);
+                        push @coords, {
+                            x => $x_pos,
+                            y => $y_pos,
+                        };
+                    }
+                }
+                my $last_point = pop @coords;
+                $plot_polygons_value->{$stock_name} = \@coords;
+            }
+            $plot_polygons_value = encode_json $plot_polygons_value;
+
             my $h2 = $schema->storage->dbh()->prepare($q2);
             $h2->execute($apply_drone_run_band_project_id);
             my ($image_id, $drone_run_band_type, $drone_run_band_project_id) = $h2->fetchrow_array();
@@ -2651,7 +2695,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
             my @denoised_background_threshold_removed_plot_polygon_types = @{$term_map->{$drone_run_band_type}->{observation_unit_plot_polygon_types}->{threshold_background}};
 
             foreach (@denoised_plot_polygon_type) {
-                my $plot_polygon_original_denoised_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_plot_polygon_assign($c, $schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, $_, $user_id, $user_name, $user_role, 0, 0, $apply_image_width_ratio, $apply_image_height_ratio);
+                my $plot_polygon_original_denoised_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_plot_polygon_assign($c, $schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, $_, $user_id, $user_name, $user_role, 0, 0, $apply_image_width_ratio, $apply_image_height_ratio, 'rectangular_polygon');
             }
 
             for my $iterator (0..(scalar(@denoised_background_threshold_removed_imagery_types)-1)) {
@@ -2661,14 +2705,16 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
 
                 my $background_removed_threshold_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_image_background_remove_threshold_percentage($c, $schema, $denoised_image_id, $drone_run_band_project_id, $denoised_background_threshold_removed_imagery_types[$iterator], '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
 
-                my $plot_polygon_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_plot_polygon_assign($c, $schema, $metadata_schema, $background_removed_threshold_return->{removed_background_image_id}, $drone_run_band_project_id, $plot_polygons_value, $denoised_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0, 0, $apply_image_width_ratio, $apply_image_height_ratio);
+                my $plot_polygon_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_plot_polygon_assign($c, $schema, $metadata_schema, $background_removed_threshold_return->{removed_background_image_id}, $drone_run_band_project_id, $plot_polygons_value, $denoised_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0, 0, $apply_image_width_ratio, $apply_image_height_ratio, 'rectangular_polygon');
             }
+
+            $drone_run_band_counter++;
         }
 
         print STDERR Dumper \%selected_drone_run_band_types;
         print STDERR Dumper \%vegetative_indices_hash;
 
-        SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_minimal_vi_standard_process($c, $schema, $metadata_schema, \%vegetative_indices_hash, \%selected_drone_run_band_types, \%drone_run_band_info, $user_id, $user_name, $user_role);
+        SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_minimal_vi_standard_process($c, $schema, $metadata_schema, \%vegetative_indices_hash, \%selected_drone_run_band_types, \%drone_run_band_info, $user_id, $user_name, $user_role, 'rectangular_polygon');
 
         $drone_run_process_in_progress = $schema->resultset('Project::Projectprop')->update_or_create({
             type_id=>$process_indicator_cvterm_id,
