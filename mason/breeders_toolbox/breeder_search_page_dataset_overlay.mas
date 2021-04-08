@@ -66,7 +66,6 @@
      * - Set DSP_COLS -- the allowed column type selections
      */
     function parseArgs() {
-        console.log("==> PARSE ARGS");
 
         // Parse query params and get 'dsp' parameter(s)
         let urlParams = new URLSearchParams(window.location.search);
@@ -98,8 +97,6 @@
             DSP_RETURN = urlParams.get("dsr");
         }
 
-        console.log("DSP_COLS:");
-        console.log(JSON.stringify(DSP_COLS, null, 2));
     }
     
 
@@ -108,31 +105,27 @@
      * @param {int} col Column indx
      */
     function setCol(col) {
-        console.log("==> SET COLUMN #" + col);
         
         // Get selected data types of previous columns
         let prev_sel_col_types = [];
         for ( let i = 0; i < col; i++ ) {
-            prev_sel_col_types.push(jQuery('.wizard-type-select')[i].value);
+            let sel = jQuery(jQuery('.wizard-type-select option:selected')[i]);
+            prev_sel_col_types.push((sel.attr("data-type") ? sel.attr("data-type") : sel.html()).toLowerCase());
         }
-        console.log("PREV SELECTIONS");
-        console.log(prev_sel_col_types);
         
         // Get items from DSP_COLS that match selected data types in previous columns
         let valid_dsp_cols = DSP_COLS;
         for ( let i = 0; i < col; i++ ) {
             valid_dsp_cols = [];
             let sel = prev_sel_col_types[i];
-            console.log("==> col " + i + " = " + sel);
             for ( let j = 0; j < DSP_COLS.length; j++ ) {
-                console.log("--> allowed: " + DSP_COLS[j][i].toString());
-                if ( DSP_COLS[j][i].includes(sel) ) {
-                    valid_dsp_cols.push(DSP_COLS[j]);
+                if ( DSP_COLS[j][i] ) {
+                    if ( DSP_COLS[j][i].includes(sel) ) {
+                        valid_dsp_cols.push(DSP_COLS[j]);
+                    }
                 }
             }
         }
-        console.log("VALID DSP COLS:");
-        console.log(JSON.stringify(valid_dsp_cols, null, 2));
 
         // Get valid data types for the current column, from the list of valid_dsp_cols
         let valid_col_types = [];
@@ -146,8 +139,6 @@
                 }
             }
         }
-        console.log("VALID COL TYPES:");
-        console.log(valid_col_types);
 
         // Update column with valid column types
         if ( valid_col_types && valid_col_types.length > 0 ) {
@@ -225,6 +216,9 @@
             });
             jQuery('#dsp-help-next').css('display', 'block');
         }
+
+        // Scroll to Top
+        jQuery(window).scrollTop(0);
 
     }
 
