@@ -367,6 +367,7 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
 #   - new_protocol_description = description of new protocol
 #   - new_protocol_sequence_metadata_type = cvterm id of sequence metadata type
 #   - new_protocol_reference_genome = name of reference genome
+#   - new_protocol_species = name of species
 #   - new_protocol_score_description = description of score field
 #   - new_protocol_attribute_count = max number of attributes to read (some may be missing if an attribute was removed)
 #   - new_protocol_attribute_key_{n} = key name of nth attribute
@@ -414,6 +415,7 @@ sub sequence_metadata_store_POST : Args(0) {
         my $protocol_description = $c->req->param('new_protocol_description');
         my $protocol_sequence_metadata_type_id = $c->req->param('new_protocol_sequence_metadata_type');
         my $protocol_reference_genome = $c->req->param('new_protocol_reference_genome');
+        my $protocol_species = $c->req->param('new_protocol_species');
         my $protocol_score_description = $c->req->param('new_protocol_score_description');
         my $protocol_attribute_count = $c->req->param('new_protocol_attribute_count');
         if ( !defined $protocol_name || $protocol_name eq '' ) {
@@ -432,6 +434,10 @@ sub sequence_metadata_store_POST : Args(0) {
             $c->stash->{rest} = {error => 'The new protocol reference genome must be defined!'};
             $c->detach();
         }
+        if ( !defined $protocol_species || $protocol_species eq '' ) {
+            $c->stash->{rest} = {error => 'The new protocol species must be defined!'};
+            $c->detach();
+        }
 
         my $sequence_metadata_type_cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $protocol_sequence_metadata_type_id });
         if ( !defined $sequence_metadata_type_cvterm ) {
@@ -442,7 +448,8 @@ sub sequence_metadata_store_POST : Args(0) {
         my %sequence_metadata_protocol_props = (
             sequence_metadata_type_id => $protocol_sequence_metadata_type_id,
             sequence_metadata_type => $sequence_metadata_type_cvterm->name(),
-            reference_genome => $protocol_reference_genome
+            reference_genome => $protocol_reference_genome,
+            species => $protocol_species
         );
         if ( defined $protocol_score_description && $protocol_score_description ne '' ) {
             $sequence_metadata_protocol_props{'score_description'} = $protocol_score_description;

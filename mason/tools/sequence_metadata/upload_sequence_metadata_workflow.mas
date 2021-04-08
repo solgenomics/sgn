@@ -361,7 +361,7 @@ function complete_data_type_step() {
           let rg_name = data.reference_genomes[i].reference_genome;
           let sp_name = data.reference_genomes[i].species_name;
           let rg_label = rg_name + " (" + sp_name + ")";
-          options += "<option value='" + rg_name + "'>" + rg_label + "</option>";
+          options += "<option value='" + rg_name + "' data-species='" + sp_name + "'>" + rg_label + "</option>";
         }
         jQuery('#sequence_metadata_upload_protocol_reference_genome').html(options);
         jQuery('#sequence_metadata_upload_protocol_reference_genome').prop('disabled', false);
@@ -583,6 +583,7 @@ function store() {
     formData.append('new_protocol_description', new_protocol_description);
     formData.append('new_protocol_sequence_metadata_type', jQuery('#sequence_metadata_upload_type_select option:selected').val());
     formData.append('new_protocol_reference_genome', jQuery('#sequence_metadata_upload_protocol_reference_genome option:selected').val());
+    formData.append('new_protocol_species', jQuery('#sequence_metadata_upload_protocol_reference_genome option:selected').attr('data-species'));
     formData.append('new_protocol_score_description', jQuery('#sequence_metadata_upload_score_description').val());
     formData.append('new_protocol_attribute_count', new_attribute_count);
     for ( let i = 1; i <= new_attribute_count; i++ ) {
