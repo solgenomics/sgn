@@ -89,15 +89,15 @@ sub search_trials : Path('/solgs/search/trials') Args() {
 
     if (@$projects_ids)
     {
-		my $projects_rs = $c->model('solGS::solGS')->project_details($projects_ids);
+	my $projects_rs = $c->model('solGS::solGS')->project_details($projects_ids);
 
-		$self->get_projects_details($c, $projects_rs);
-		my $projects = $c->stash->{projects_details};
+	$self->get_projects_details($c, $projects_rs);
+	my $projects = $c->stash->{projects_details};
 
-		$self->format_gs_projects($c, $projects);
-		$formatted_trials = $c->stash->{formatted_gs_projects};
+	$self->format_gs_projects($c, $projects);
+	$formatted_trials = $c->stash->{formatted_gs_projects};
 
-		$ret->{status} = 'success';
+	$ret->{status} = 'success';
     }
 
     $ret->{trials}   = $formatted_trials;
@@ -133,16 +133,16 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args() {
 
     if (@$projects_ids)
     {
-		my $projects_rs  = $c->model('solGS::solGS')->project_details($projects_ids);
-		my $trait        = $c->model('solGS::solGS')->trait_name($trait_id);
+	my $projects_rs  = $c->model('solGS::solGS')->project_details($projects_ids);
+	my $trait        = $c->model('solGS::solGS')->trait_name($trait_id);
 
-		$self->get_projects_details($c, $projects_rs);
-		my $projects = $c->stash->{projects_details};
+	$self->get_projects_details($c, $projects_rs);
+	my $projects = $c->stash->{projects_details};
 
-		$self->format_trait_gs_projects($c, $trait_id, $projects, $protocol_id);
-		$formatted_projects = $c->stash->{formatted_gs_projects};
+	$self->format_trait_gs_projects($c, $trait_id, $projects, $protocol_id);
+	$formatted_projects = $c->stash->{formatted_gs_projects};
 
-		$ret->{status} = 'success';
+	$ret->{status} = 'success';
     }
 
     $ret->{trials}   = $formatted_projects;
@@ -183,26 +183,26 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
 
     if ($index =~ /^\w{1}$/)
     {
-        $self->traits_starting_with($c, $index);
-        my $traits_gr = $c->stash->{trait_subgroup};
+    $self->traits_starting_with($c, $index);
+    my $traits_gr = $c->stash->{trait_subgroup};
 
-	foreach my $trait (@$traits_gr)
-	{
-	    $self->hyperlink_traits($c, $trait);
-	    my $trait_url = $c->stash->{traits_urls};
+    foreach my $trait (@$traits_gr)
+    {
+    $self->hyperlink_traits($c, $trait);
+    my $trait_url = $c->stash->{traits_urls};
 
-	    $self->get_trait_details($c, $trait);
-	    push @traits_list, [$trait_url, $c->stash->{trait_def}];
-	}
+    $self->get_trait_details($c, $trait);
+    push @traits_list, [$trait_url, $c->stash->{trait_def}];
+    }
 
-	$c->stash( template    => $c->controller('solGS::Files')->template('/search/traits/list.mas'),
+    $c->stash( template    => $c->controller('solGS::Files')->template('/search/traits/list.mas'),
                    index       => $index,
                    traits_list => \@traits_list
             );
     }
     else
     {
-        $c->forward('search');
+    $c->forward('search');
     }
 }
 
@@ -1090,7 +1090,8 @@ sub gs_traits_index {
     my $trait_index;
     foreach my $v_i (@valid_indices)
     {
-        $trait_index .= qq | <a href=/solgs/traits/$v_i>$v_i</a> |;
+        my $url = "/solgs/traits/$v_i";
+        $trait_index .= $c->controller('solGS::Path')->create_hyperlink($url, $v_i);
 	unless ($v_i eq $valid_indices[-1])
         {
 	    $trait_index .= " | ";
@@ -1110,14 +1111,17 @@ sub hyperlink_traits {
 	my @traits_urls;
 	foreach my $tr (@$traits)
 	{
-	    push @traits_urls, [ qq | <a href="/solgs/search/result/traits/$tr">$tr</a> | ];
+        my $url = "/solgs/search/result/traits/$tr";
+        my $trait_url = $c->controller('solGS::Path')->create_hyperlink($url, $tr);
+	    push @traits_urls, [$trait_url];
 	}
 
 	$c->stash->{traits_urls} = \@traits_urls;
     }
     else
     {
-	$c->stash->{traits_urls} = qq | <a href="/solgs/search/result/traits/$traits">$traits</a> |;
+    my $url = "/solgs/search/result/traits/$traits";
+	$c->stash->{traits_urls} = $c->controller('solGS::Path')->create_hyperlink($url, $traits);
     }
 }
 
@@ -1151,15 +1155,15 @@ sub all_gs_traits_list {
 
     if (!$matview)
     {
-        $c->model('solGS::solGS')->materialized_view_all_gs_traits();
+    $c->model('solGS::solGS')->materialized_view_all_gs_traits();
 	$c->model('solGS::solGS')->insert_matview_public($mv_name);
     }
     else
     {
 	if (!-s $file)
 	{
-	    $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
-	    $c->model('solGS::solGS')->update_matview_public($mv_name);
+    $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
+    $c->model('solGS::solGS')->update_matview_public($mv_name);
 	}
     }
 
