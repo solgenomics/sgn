@@ -281,6 +281,16 @@ has 'exclude_phenotype_outlier' => (
 
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
+=head2 autopopulate_accessions_from_trials()
+
+=cut
+
+has 'autopopulate_accessions_from_trials' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
 sub BUILD {
     my $self = shift;
 
@@ -289,29 +299,42 @@ sub BUILD {
 
     if ($self->has_sp_dataset_id()) {
         print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
-	my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
-	if (!$row) { die "The dataset with id ".$self->sp_dataset_id()." does not exist"; }
-	my $dataset = JSON::Any->decode($row->dataset());
-	$self->data($dataset);
-	$self->name($row->name());
-	$self->description($row->description());
-	$self->sp_person_id($row->sp_person_id());
-	$self->accessions($dataset->{categories}->{accessions});
-	$self->plots($dataset->{categories}->{plots});
-	$self->plants($dataset->{categories}->{plants});
-	$self->trials($dataset->{categories}->{trials});
-	$self->traits($dataset->{categories}->{traits});
-	$self->years($dataset->{categories}->{years});
-	$self->locations($dataset->{categories}->{locations});
-	$self->breeding_programs($dataset->{categories}->{breeding_programs});
-	$self->genotyping_protocols($dataset->{categories}->{genotyping_protocols});
-	$self->trial_designs($dataset->{categories}->{trial_designs});
-	$self->trial_types($dataset->{categories}->{trial_types});
-	$self->category_order($dataset->{category_order});
-	$self->is_live($dataset->{is_live});
-	$self->is_public($dataset->{is_public});
-    }
+        my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
+        if (!$row) { die "The dataset with id ".$self->sp_dataset_id()." does not exist"; }
+        my $dataset = JSON::Any->decode($row->dataset());
+        $self->data($dataset);
+        $self->name($row->name());
+        $self->description($row->description());
+        $self->sp_person_id($row->sp_person_id());
+        $self->accessions($dataset->{categories}->{accessions});
+        $self->plots($dataset->{categories}->{plots});
+        $self->plants($dataset->{categories}->{plants});
+        $self->trials($dataset->{categories}->{trials});
+        $self->traits($dataset->{categories}->{traits});
+        $self->years($dataset->{categories}->{years});
+        $self->locations($dataset->{categories}->{locations});
+        $self->breeding_programs($dataset->{categories}->{breeding_programs});
+        $self->genotyping_protocols($dataset->{categories}->{genotyping_protocols});
+        $self->trial_designs($dataset->{categories}->{trial_designs});
+        $self->trial_types($dataset->{categories}->{trial_types});
+        $self->category_order($dataset->{category_order});
+        $self->is_live($dataset->{is_live});
+        $self->is_public($dataset->{is_public});
 
+        if ($self->autopopulate_accessions_from_trials) {
+            if ( (!$self->accessions || scalar(@{$self->accessions}) == 0 ) && $self->trials && scalar(@{$self->trials}) > 0) {
+                my @all_trial_accessions;
+                foreach my $trial_id (@{$self->trials}) {
+                    my $trial = CXGN::Trial->new( { bcs_schema => $self->schema, trial_id => $trial_id });
+                    my $accessions = $trial->get_accessions();
+                    foreach (@$accessions) {
+                        push @all_trial_accessions, $_->{stock_id};
+                    }
+                }
+                $self->accessions(\@all_trial_accessions);
+            }
+        }
+    }
     else { print STDERR "Creating empty dataset object\n"; }
 
 }
@@ -344,8 +367,8 @@ sub get_datasets_by_user {
     while (my $row = $rs->next()) {
 	$found = 0;
 	for (@datasets_id) {
-	    if ( $_ == $row->sp_dataset_id() ) { 
-	        $found = 1; 
+	    if ( $_ == $row->sp_dataset_id() ) {
+	        $found = 1;
 	    }
 	}
         if (!$found) {
@@ -405,18 +428,18 @@ sub set_dataset_public {
 
 sub set_dataset_private {
     my $self = shift;
-    
+
     my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
-    
+
     if (! $row) {
         return "The specified dataset does not exist";
-    } else { 
+    } else {
         eval {
            $row->is_public(0);
            $row->sp_person_id($self->sp_person_id());
            $row->sp_dataset_id($self->sp_dataset_id());
            $row->update();
-        }; 
+        };
         if ($@) {
             return "An error occurred, $@";
         } else {
@@ -455,19 +478,19 @@ sub exists_dataset_name {
 =head1 METHODS
 
 
-=head2 to_hashref() 
+=head2 to_hashref()
 
 
 =cut
- 
-sub to_hashref { 
+
+sub to_hashref {
     my $self = shift;
 
     my $dataref = $self->get_dataset_data();
 
     my $json = JSON::Any->encode($dataref);
-    
-    my $data = { 
+
+    my $data = {
 	name => $self->name(),
 	description => $self->description(),
 	sp_person_id => $self->sp_person_id(),
