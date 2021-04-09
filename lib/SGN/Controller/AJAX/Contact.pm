@@ -48,9 +48,10 @@ sub submit_contact_form_POST : Args(0) {
     my $website_name = $c->config->{project_name};
     my $ua = LWP::UserAgent->new;
 
-    my $server_endpoint = "https://api.github.com/repos/solgenomics/contactform/issues?access_token=$github_access_token";
+    my $server_endpoint = "https://api.github.com/repos/nickmorales/imagebreed/issues";
     my $req = HTTP::Request->new(POST => $server_endpoint);
     $req->header('content-type' => 'application/json');
+    $req->header("Authorization" => "token $github_access_token");
 
     $body .= "\n\nSent from website: $website_name";
     $body .= "\n\nPlease remember to include the contact person's email in any replies which are directed to them. Please include the github.reply email address as a recipient in all messages, so that they are logged with the open ticket.";
@@ -68,6 +69,9 @@ sub submit_contact_form_POST : Args(0) {
             $c->stash->{rest} = {error => 'The message was not posted to github correctly. Please try again.'};
         }
     } else {
+        my $message = $resp->decoded_content;
+        my $message_hash = decode_json $message;
+        print STDERR Dumper $message_hash;
         $c->stash->{rest} = {error => "There was an error submitting the message. Please try again."};
     }
 }
