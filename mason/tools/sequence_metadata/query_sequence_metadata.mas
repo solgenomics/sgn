@@ -210,44 +210,6 @@
 </div>
 
 
-<!-- MARKER SEARCH GENOTYPE PROTOCOL SELECTION -->
-<div class="modal fade" id="sequence_metadata_genotype_protocol_dialog" name="sequence_metadata_genotype_protocol_dialog" tabindex="-1" role="dialog" aria-labelledby="DeleteModelDataDialog">
-    <div class="modal-dialog " role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="DeleteModelDataDialog">Select Genotype Protocol(s)</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <h4>Marker Search</h4>
-
-                    <p>You can search for markers located within the range of a sequence metadata feature. Here you can choose which genotype protocols to 
-                    include in that search.  NOTE: Including more genotype protocols increases the amount of time to perform the marker search.</p>
-
-                    <br />
-
-                    <!-- Genotype Protocols -->
-                    <div class="form-group">
-                        <label class="col-sm-2 control-label">Genotype Protocol(s): </label>
-                        <div class="col-sm-10">
-                            <select class="form-control" id="sequence_metadata_filter_genoproto" size="10" multiple disabled>
-                                <option value="">Loading...</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_delete_model_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="sequence_metadata_genotype_protocol_dialog_update" id="sequence_metadata_genotype_protocol_dialog_update">Set Genotype Protocol(s)</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
 <!-- JBROWSE CONFIGURATION -->
 <!-- OVERWRITE THIS FILE IN THE INSTANCE-SPECIFIC MASON REPO TO CONFIGURE -->
 <& /tools/sequence_metadata/jbrowse_config_sequence_metadata.mas &>
@@ -259,8 +221,6 @@ var features = [];                          // List of sequence metadata feature
 var data_types = [];                        // List of sequence metadata data types fetched from the database
 var protocols = [];                         // List of existing sequence metadata protocols fetched from the database
 var attribute_filter_count = 0;             // Current count of attribute filters added by user
-var genotype_protocols = [];                // List of genotype protocols fetched from the database
-var genotype_protocols_selected;            // List of user selected genotype protocols for the marker search
 var markers;                                // Object of queried markers from the database for specific ranges
 
 jQuery(document).ready(function() {
@@ -302,11 +262,6 @@ jQuery(document).ready(function() {
 
     // Return to Query
     jQuery('#sequence_metadata_filter_return').click(toggle_sections);
-
-    // Setup/Start Marker Search
-    jQuery('#sequence_metadata_filter_results').on('click', '.sequence_metadata_genotype_protocol_selection_button', setupMarkerSearch);
-    jQuery('#sequence_metadata_genotype_protocol_dialog_update').click(updateMarkerSearchGenotypeProtocols);
-    jQuery('#sequence_metadata_filter_results').on('click', '.sequence_metadata_marker_search_button', startMarkerSearch);
 
 
     //
@@ -367,16 +322,16 @@ jQuery(document).ready(function() {
             { title: "Feature", data: "feature_name" },
             { title: "Start", data: "start" },
             { title: "End", data: "end" },
-            { title: "Markers", data: renderMarkersColumn },
             { title: "Score", data: "score" },
-            { title: "Attributes", data: "attributes", render: renderAttributesColumn }
+            { title: "Attributes", data: "attributes", render: renderAttributesColumn },
+            { title: "Markers", data: renderMarkersColumn }
         ],
         buttons: DT_BUTTONS
     });
 
     // Update the Marker Search display when the table is redrawn (on page change, etc...)
     jQuery('#sequence_metadata_filter_results').DataTable().on('draw.dt', function() {
-        updateMarkerColumn();
+        updateMarkers();
     });
 
 });
@@ -869,7 +824,6 @@ function handle_query_results(response) {
 
     // Reset Markers
     markers = undefined;
-    updateMarkerColumn();
 
     // Reset Query Button
     jQuery('#sequence_metadata_filter_query').html('Query');
@@ -971,58 +925,63 @@ function getJBrowseURL(config) {
 
 
 /**
- * Setup the marker search by having the user select the genotype protocols to use
+ * Update the contents of the marker column in the results table
+ * for the currently displayed rows of results
  */
-function setupMarkerSearch() {
-    jQuery('#sequence_metadata_genotype_protocol_dialog').modal('show');
-    return false;
+function updateMarkers() {
+    let containers = jQuery('.sequence_metadata_marker_search_markers');
+    for ( let i = 0; i < containers.length; i++ ) {
+        let container = jQuery(containers[i]);
+        let feature_id = container.data("feature-id");
+        let start = container.data("start");
+        let end = container.data("end");
+        let key = [feature_id, start, end].join("-");
+        if ( markers && markers[key] ) {
+            displayMarkers(key);
+        }
+        else {
+            let nd_protocol_id = container.data("nd-protocol-id");
+            getMarkers(nd_protocol_id, feature_id, start, end);
+        }
+    }
+
 }
 
-
 /**
- * Update the list of genotype protocols selected by the user
+ * Get markers matching the specified sequence metadata
+ * - Query the DB for matching markers
+ * - Update the display of the markers
+ * @param {int} nd_protocol_id ID of the sequence metadata protocol
+ * @param {int} feature_id ID of the sequence metadata's associated feature
+ * @param {int} start Start position of the sequence metadata
+ * @praam {int} end End position of the sequence metadata
  */
-function updateMarkerSearchGenotypeProtocols() {
-    genotype_protocols_selected = jQuery("#sequence_metadata_filter_genoproto").val();
-    markers = undefined;
-    updateMarkerColumn();
-    jQuery('#sequence_metadata_genotype_protocol_dialog').modal('hide');
-}
-
-
-/**
- * Perform a marker search on the selected row's feature and sequence range, 
- * optionally filtered by the user's selected genotype protocols
- */
-function startMarkerSearch() {
-    let parent = jQuery(this).parents(".sequence_metadata_marker_search_markers");
-    let feature_id = parent.data("feature-id");
-    let start = parent.data("start");
-    let end = parent.data("end");
+function getMarkers(nd_protocol_id, feature_id, start, end) {
     let key = [feature_id, start, end].join("-");
 
-    // Update the DataTables
+    // Display searching
     if ( !markers ) markers = {};
     markers[key] = "Searching...";
-    updateMarkerColumn();
+    displayMarkers(key);
 
     // Query the Database for Markers
     jQuery.ajax({
         type: 'GET',
         url: '/ajax/sequence_metadata/markers',
         data: {
+            nd_protocol_id: nd_protocol_id,
             feature_id: feature_id,
             start: start,
-            end: end,
-            nd_protocol_id: genotype_protocols_selected ? genotype_protocols_selected.join(',') : undefined
+            end: end
         },
         dataType: 'json',
         success: function(data) {
 
             // Save the markers and update the DataTables
             if ( data && data.results ) {
+                if ( !markers ) markers = {};
                 markers[key] = data.results;
-                updateMarkerColumn();
+                displayMarkers(key);
             }
 
         },
@@ -1030,63 +989,31 @@ function startMarkerSearch() {
             alert("ERROR: Could not perform marker search");
         }
     });
-
-    return false;
 }
+
 
 /**
- * Update the contents of the marker column in the results table
+ * Display the marker info for the specified sequence metadata row
+ * @param {string} key Sequence Metadata results key (feature_id-start-end)
  */
-function updateMarkerColumn() {
-
-    // Update the markers (add search button or marker links)
-    // only if genotype protocol(s) has been selected
-    if ( genotype_protocols_selected ) {
-        jQuery('.sequence_metadata_marker_search_markers').each(function() {
-            let feature_id = jQuery(this).data("feature-id");
-            let start = jQuery(this).data("start");
-            let end = jQuery(this).data("end");
-            let key = [feature_id, start, end].join("-");
-            
-            let marker_html = "";
-            if ( markers && markers.hasOwnProperty(key) ) {
-                let value = markers[key];
-                if ( typeof value === 'string' ) {
-                    marker_html = "<p>" + value + "</p>";
-                }
-                else if ( Array.isArray(value) ) {
-                    if ( value.length === 0 ) {
-                        marker_html = "<p>No Markers Found</p>";
-                    }
-                    else {
-                        for ( let i = 0; i < value.length; i++ ) {
-                            marker_html += "<strong><a href='/markerGeno/" + value[i].marker_name + "/details'>" + value[i].marker_name + "</a></strong> "
-                            marker_html += "(<a href='/breeders_toolbox/protocol/" + value[i].nd_protocol_id + "'>" + value[i].nd_protocol_name + "</a>)<br />";
-                        }
-                        marker_html += "<br />";
-                    }
-                }
+function displayMarkers(key) {
+    let marker_info = markers[key];
+    let container = jQuery('.sequence_metadata_marker_search_markers_' + key);
+    if ( typeof marker_info === 'string' ) {
+        container.html('<p>' + marker_info + '</p>');
+    }
+    else if ( Array.isArray(marker_info) ) {
+        let html = [];
+        for ( let i = 0; i < marker_info.length; i++ ) {
+            let name = marker_info[i].marker_name;
+            let protocol = marker_info[i].nd_protocol_name;
+            if ( name !== '.' ) {
+                html.push("<a href='/markerGeno/" + name + "/details'><strong>" + name + "</strong> (" + protocol + ")</a>");
             }
-            else {
-                marker_html = "<p><a class='sequence_metadata_marker_search_button' href='#'>Search for Markers</a></p>";
-            }
-            jQuery('.sequence_metadata_marker_search_markers_' + key).html(marker_html);
-        });
+        }
+        container.html(html.join("<br />"));
     }
-
-    // Update the protocol buttons for all rows
-    let protocol_label = "";
-    if ( !genotype_protocols_selected ) {
-        protocol_label = "Select Genotype Protocols";
-    }
-    else {
-        protocol_label = "Update Genotype Protocols";
-    }
-    let protocol_html = "<a class='sequence_metadata_genotype_protocol_selection_button' href='#'>" + protocol_label + "</a>";
-    jQuery('.sequence_metadata_marker_search_protocols').html(protocol_html);
-
 }
-
 
 
 //
@@ -1100,12 +1027,11 @@ function updateMarkerColumn() {
  * @returns {String} The text/html to display in the table
  */
 function renderMarkersColumn(row, type) {
-    let data = "data-feature-id='" + row.feature_id + "' data-start='" + row.start + "' data-end='" + row.end + "'";
-    let key = row.feature_id + "-" + row.start + "-" + row.end;
+    let data = "data-feature-id='" + row.feature_id + "' data-start='" + row.start + "' data-end='" + row.end + "' data-nd-protocol-id='" + row.nd_protocol_id + "'";
+    let key = [row.feature_id, row.start, row.end].join("-");
     
     let html = "<div class='sequence_metadata_marker_search'>";
     html += "<div class='sequence_metadata_marker_search_markers sequence_metadata_marker_search_markers_" + key + "' " + data + "></div>";
-    html += "<div class='sequence_metadata_marker_search_protocols'></div>";
     html += "</div>";
 
     return html;
