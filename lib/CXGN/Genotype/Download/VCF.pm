@@ -27,7 +27,8 @@ my $genotypes_search = CXGN::Genotype::Download::VCF->new({
     limit=>$limit,
     offset=>$offset,
     compute_from_parents=>0, #Whether to look at the pedigree to see if parents are genotyped and to calculate genotype from parents
-    forbid_cache=>0 #If you want to get a guaranteed fresh result not from the file cache
+    forbid_cache=>0, #If you want to get a guaranteed fresh result not from the file cache
+    return_only_first_genotypeprop_for_stock=>1
 });
 my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
