@@ -54,6 +54,7 @@ use List::MoreUtils qw(first_index);
 use List::Util qw(sum);
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 use Spreadsheet::WriteExcel;
+use CXGN::Location;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -13331,6 +13332,7 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $drone_run_project_ids = decode_json $c->req->param('drone_run_project_ids');
+    my $field_trial_id = $c->req->param('field_trial_id');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
 
     my $plot_polygon_template_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_plot_polygons', 'project_property')->cvterm_id();
@@ -13435,7 +13437,7 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
     my $workbook = Spreadsheet::WriteExcel->new($imaging_events_file_path);
     my $worksheet = $workbook->add_worksheet();
 
-        $worksheet->write_row(0, 0, ['Imaging Event Name','Type','Description','Date','Vehicle Name','Sensor','Field Trial Name','GeoJSON Filename','Image Filenames','Coordinate System','Base Date','Camera Rig']);
+        $worksheet->write_row(0, 0, ['Imaging Event Name','Type','Description','Date','Vehicle Name','Vehicle Battery Set','Sensor','Field Trial Name','GeoJSON Filename','Image Filenames','Coordinate System','Base Date','Camera Rig']);
         my $line_number = 1;
 
         my %geojson_hash;
@@ -13490,7 +13492,7 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
             $drone_run_info->{orthoimage_files} = $orthoimage_filenames;
             $drone_run_info->{geojson_file} = $geojson_filename;
 
-            $worksheet->write_row($line_number, 0, [$drone_run_name, $imaging_event_type, $drone_run_description, $imaging_event_date, $imaging_vehicle_name, $camera, $field_trial_name, $geojson_filename, $orthoimage_filenames, "Pixels", $imaging_event_base_date, $camera_rig]);
+            $worksheet->write_row($line_number, 0, [$drone_run_name, $imaging_event_type, $drone_run_description, $imaging_event_date, $imaging_vehicle_name, '', $camera, $field_trial_name, $geojson_filename, $orthoimage_filenames, "Pixels", $imaging_event_base_date, $camera_rig]);
             $line_number++;
         }
     $workbook->close();
@@ -13553,7 +13555,24 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
         $c->detach;
     }
 
-    $c->stash->{rest} = {success => 1, orthoimage_zipfile => $orthoimage_zipfile, geojson_zipfile => $geojson_zipfile, imaging_events_spreadsheet => $imaging_events_file};
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $field_trial_id });
+    my $trial_layout = $trial->get_layout()->get_design();
+    my $planting_date = $trial->get_planting_date();
+    my $trial_desc = $trial->get_description();
+    my $trial_year = $trial->get_year();
+    my $trial_location = $trial->get_location();
+    my $location_id = $trial_location->[0];
+    my $location = CXGN::Location->new( { bcs_schema => $schema, nd_geolocation_id => $location_id } );
+
+    $c->stash->{rest} = {
+        success => 1,
+        orthoimage_zipfile => $orthoimage_zipfile,
+        geojson_zipfile => $geojson_zipfile,
+        imaging_events_spreadsheet => $imaging_events_file,
+        field_trial_id => $field_trial_id,
+        planting_date => $planting_date,
+        trial_layout => $trial_layout
+    };
 }
 
 sub _check_user_login {

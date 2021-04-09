@@ -101,11 +101,12 @@ jQuery(document).ready(function() {
 
     get_select_box('trials', 'export_drone_image_trial_select_div', { 'name' : 'export_drone_run_field_trial_id', 'id' : 'export_drone_run_field_trial_id', 'empty':1, 'multiple':0 });
 
+    var export_imaging_events_field_trial_id;
     jQuery(document).on('change', '#export_drone_run_field_trial_id', function() {
-        var field_trial_id = jQuery(this).val();
+        export_imaging_events_field_trial_id = jQuery(this).val();
         jQuery('#drone_image_export_drone_runs_table').DataTable({
             destroy : true,
-            ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=export_drone_imagery_drone_run_select&field_trial_ids='+field_trial_id
+            ajax : '/api/drone_imagery/drone_runs?select_checkbox_name=export_drone_imagery_drone_run_select&field_trial_ids='+export_imaging_events_field_trial_id
         });
     });
 
@@ -129,7 +130,7 @@ jQuery(document).ready(function() {
 
     jQuery('#export_drone_imagery_submit').click(function(){
         jQuery.ajax({
-            url : '/api/drone_imagery/export_drone_runs?drone_run_project_ids='+JSON.stringify(export_imaging_events_drone_run_ids),
+            url : '/api/drone_imagery/export_drone_runs?drone_run_project_ids='+JSON.stringify(export_imaging_events_drone_run_ids)+'&field_trial_id='+export_imaging_events_field_trial_id,
             success: function(response){
                 console.log(response);
 
