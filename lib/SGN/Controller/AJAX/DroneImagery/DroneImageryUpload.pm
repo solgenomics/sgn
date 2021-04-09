@@ -2005,7 +2005,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
             $c->stash->{rest} = {error => "Do not upload duplicate spectral types for the same imaging event. There is already a $band image for $imaging_event_name in the zipfile! Make sure the orthophotos are saved as a concatenation of the imaging event name and the spectral band, with a pipe (|) as the separator (e.g. Ortho1_01012020|blue.tiff)" };
             $c->detach;
         } else {
-            $filename_imaging_event_band_check{$imaging_event_name} = $spectral_band;
+            $filename_imaging_event_band_check{$imaging_event_name}->{$spectral_band}++;
         }
     }
 
