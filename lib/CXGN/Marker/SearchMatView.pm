@@ -99,8 +99,9 @@ sub query {
     my $dbh = $schema->storage->dbh();
 
     # Build query
-    my $query = "SELECT nd_protocol_id, species_name, reference_genome_name, marker_name, alias, chrom, pos, ref, alt";
+    my $query = "SELECT markers_all.nd_protocol_id, nd_protocol.name AS nd_protocol_name, species_name, reference_genome_name, marker_name, alias, chrom, pos, ref, alt";
     $query .= " FROM sgn.markers_all";
+    $query .= " LEFT JOIN nd_protocol USING (nd_protocol_id)";
 
     # Add filter parameters
     my @where = ();
@@ -143,6 +144,9 @@ sub query {
         $query .= " WHERE " . join(' AND ', @where);
     }
 
+    # Sort by Marker Name
+    $query .= " ORDER BY marker_name";
+
     # print STDERR "QUERY:\n";
     # print STDERR "$query\n";
     # use Data::Dumper;
@@ -155,9 +159,10 @@ sub query {
 
     # Parse the results
     my @results = ();
-    while (my ($nd_protocol_id, $species_name, $reference_genome_name, $marker_name, $alias, $chrom, $pos, $ref, $alt) = $h->fetchrow_array()) {
+    while (my ($nd_protocol_id, $nd_protocol_name, $species_name, $reference_genome_name, $marker_name, $alias, $chrom, $pos, $ref, $alt) = $h->fetchrow_array()) {
         my %result = (
             nd_protocol_id => $nd_protocol_id,
+            nd_protocol_name => $nd_protocol_name, 
             species_name => $species_name,
             reference_genome_name => $reference_genome_name,
             marker_name => $marker_name,
