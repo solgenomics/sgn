@@ -279,37 +279,45 @@ sub create_selection_pop_page {
 }
 
 
-sub create_single_model_log_entries {
+sub create_itemized_prediction_log_entries {
 	my ($self, $c, $analysis_log) = @_;
 
-	my $json = JSON->new;
-	$analysis_log = $json->decode($analysis_log);
+    # my $args = $analysis_log->{arguments};
+    $analysis_log = $self->log_analysis_time($analysis_log);
 
-	my $args = $self->log_analysis_time($analysis_log->{arguments});
-	$args = $json->decode($args);
+    my $json = JSON->new;
+	my $args = $json->decode($analysis_log->{arguments});
 
 	my $trait_ids = $args->{training_traits_ids};
 
-	my $training_pop_id = $args->{training_pop_id}->[0];
-	my $gp_id = $args->{genotyping_protocol_id};
-	my $entries;
+	# my $training_pop_id = $args->{training_pop_id}->[0];
+	# my $gp_id = $args->{genotyping_protocol_id};
+    my $analysis_type = $args->{analysis_type};
 
+    my $url_args = {
+        'training_pop_id' => $args->{training_pop_id}->[0],
+        'selection_pop_id' => $args->{selection_pop_id}->[0],
+        'genotyping_protocol_id' => $args->{genotyping_protocol_id},
+        'data_set_type' => $args->{data_set_type},
+    };
+
+    my $entries;
 	foreach my $trait_id (@$trait_ids)
 	{
 		$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 		my $trait_abbr = $c->stash->{trait_abbr};
+        $url_args->{trait_id} = $trait_id;
 
-		my $analysis_page ;
-		if ($analysis_log->{analysis_page} =~ /solgs\/traits\/all\//)
-		{
-			$analysis_page = '/solgs/trait/' . $trait_id
-			.  '/population/' . $training_pop_id . '/gp/' . $gp_id;
-		}
-		elsif ($analysis_log->{analysis_page} =~ /solgs\/models\/combined\/trials\//)
-		{
-			$analysis_page = '/solgs/model/combined/trials/'
-			. $training_pop_id . '/trait/' . $trait_id . '/gp/' . $gp_id;
-		}
+		my $analysis_page;
+        if ($analysis_type =~ /selection prediction/)
+        {
+           $analysis_page = $c->controller('solGS::Path')->selection_page_url($url_args);
+        }
+        else
+        {
+            $analysis_page = $c->controller('solGS::Path')->model_page_url($url_args);
+            $analysis_type = 'single model';
+        }
 
 		my $analysis_name = $analysis_log->{analysis_name} . ' -- ' . $trait_abbr;
 
@@ -317,7 +325,7 @@ sub create_single_model_log_entries {
 		$args->{analysis_name} = $analysis_name;
 		$args->{trait_id} = [$trait_id];
 		$args->{training_traits_ids} = [$trait_id];
-		$args->{analysis_type} = 'single model';
+		$args->{analysis_type} = $analysis_type;
 
 		$entries .= join("\t", (
 					$analysis_log->{user_name},
@@ -338,17 +346,17 @@ sub create_single_model_log_entries {
 
 
 sub log_analysis_time {
-	my ($self, $args ) = @_;
+	my ($self, $analysis_log ) = @_;
 
 	my $analysis_time = POSIX::strftime("%m/%d/%Y %H:%M", localtime);
 
 	my $json = JSON->new;
-	my $args = $json->decode($args);
+	my $args = $json->decode($analysis_log->{arguments});
 
 	$args->{analysis_time} = $analysis_time;
-	$args = $json->encode($args);
+	$analysis_log->{arguments} = $json->encode($args);
 
-	return $args;
+	return $analysis_log;
 
 }
 
@@ -357,17 +365,36 @@ sub format_log_entry {
     my ($self, $c) = @_;
 
     my $profile = $c->stash->{analysis_profile};
-
-	my $args = $profile->{arguments};
-	$args = $self->log_analysis_time($args);
+	$profile= $self->log_analysis_time($profile);
+    my $args = $profile->{arguments};
 
 	my $json = JSON->new;
 	my $time = $json->decode($args)->{analysis_time};
 
+    my $traits_args = $json->decode($args);
+    my $traits_ids = $traits_args->{training_traits_ids} || $traits_args->{trait_id};
+
+    my $multi_traits_page;
+
+    my $analysis_page;
+    if (scalar(@$traits_ids) > 1)
+    {
+        $multi_traits_page = $c->req->referer;
+        my $base = $c->req->base;
+        $multi_traits_page =~ s/$base//;
+        $analysis_page = '/' . $multi_traits_page;
+        $traits_args->{analysis_page} = $analysis_page;
+        $args = $json->encode($traits_args);
+    }
+    else
+    {
+        $analysis_page = $profile->{analysis_page};
+    }
+
     my $entry   = join("\t", (
 			$profile->{user_name},
 			$profile->{analysis_name},
-			$profile->{analysis_page},
+			$analysis_page,
 			'Submitted',
 			$time,
 			$args)
@@ -375,9 +402,10 @@ sub format_log_entry {
 
 	$entry .= "\n";
 
-	if ($profile->{analysis_page} =~ /solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)
+	# if ($profile->{analysis_page} =~ /solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)
+    if (scalar(@$traits_ids) > 1)
 	{
-		my $traits_entries = $self->create_single_model_log_entries($c, $profile);
+		my $traits_entries = $self->create_itemized_prediction_log_entries($c, $profile);
 		$entry .= $traits_entries;
 	}
 
@@ -840,7 +868,7 @@ sub structure_training_single_pop_data_output {
 		$pheno_file = $c->stash->{phenotype_file_name};
 		$geno_file  = $c->stash->{genotype_file_name};
 
-		$c->controller('solGS::solGS')->get_project_details($c, $pop_id);
+		$c->controller('solGS::Search')->get_project_details($c, $pop_id);
 		$pop_name = $c->stash->{project_name};
 	}
 
@@ -889,7 +917,7 @@ sub structure_training_combined_pops_data_output {
     my %output_details = ();
     foreach my $pop_id (@combined_pops_ids)
     {
-		$c->controller('solGS::solGS')->get_project_details($c, $pop_id);
+		$c->controller('solGS::Search')->get_project_details($c, $pop_id);
 		my $population_name = $c->stash->{project_name};
 
 		$args = {
@@ -995,7 +1023,7 @@ sub structure_selection_prediction_output {
 		    }
 		    else
 		    {
-				$c->controller('solGS::solGS')->get_project_details($c, $tr_pop_id);
+				$c->controller('solGS::Search')->get_project_details($c, $tr_pop_id);
 				$tr_pop_name   = $c->stash->{project_name};
 		    }
 
@@ -1023,7 +1051,7 @@ sub structure_selection_prediction_output {
 		}
 		else
 		{
-		    $c->controller('solGS::solGS')->get_project_details($c, $sel_pop_id);
+		    $c->controller('solGS::Search')->get_project_details($c, $sel_pop_id);
 		    $sel_pop_name = $c->stash->{project_name};
 		}
 
