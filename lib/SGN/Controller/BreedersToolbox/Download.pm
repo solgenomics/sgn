@@ -255,7 +255,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
     my $output = read_file($tempfile);  ## works for xls format
-    
+
     $c->res->body($output);
 }
 
@@ -459,7 +459,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	close($F);
 
 	#$output = read_file($tempfile, binmode=>':raw:utf8');  ## works for xls format
-	
+
         $c->res->body($output);
     }
 }
@@ -470,7 +470,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
 #
 # Download a file of accession properties (in the same format as the accession upload template)
-# 
+#
 # POST Params:
 #   accession_properties_accession_list_list_select = list id of an accession list
 #   file_format: format of the file output (.xls or .csv)
@@ -533,10 +533,10 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
           expires => '+1m',
         };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-	
+
 
         my $output = read_file($file_path);  ### works here because it is xls, otherwise does not work with utf8
-	
+
         $c->res->body($output);
     }
 
@@ -588,7 +588,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
 
 }
 
-# 
+#
 # Build Accession Properties Info
 #
 # Generate the rows in the accession info table for the specified Accessions
@@ -625,7 +625,7 @@ sub build_accession_properties_info {
     foreach my $stock_id ( @$accession_ids ) {
         my $a = new CXGN::Stock::Accession({ schema => $schema, stock_id => $stock_id});
         my $synonym_string = join(',', @{$a->synonyms()});
-        
+
         # Setup row with required stock props
         my @r = (
             $a->uniquename(),
@@ -643,7 +643,7 @@ sub build_accession_properties_info {
 
         push(@accession_rows, \@r);
     }
-    
+
     return \@accession_rows;
 }
 
@@ -814,6 +814,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+    $return_only_first_genotypeprop_for_stock = $c->req->param('include_duplicate_genotypes') eq 'true' ? 0 : 1;
     my $marker_set_list_id = $c->req->param('marker_set_list_id');
 
     my @marker_name_list;
@@ -844,7 +845,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             end_position=>$end_position,
             compute_from_parents=>$compute_from_parents,
             forbid_cache=>$forbid_cache,
-            marker_name_list=>\@marker_name_list
+            marker_name_list=>\@marker_name_list,
+            return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock,
             #markerprofile_id_list=>$markerprofile_id_list,
             #genotype_data_project_list=>$genotype_data_project_list,
             #limit=>$limit,
