@@ -45,7 +45,8 @@ sub generate_spectral_plot_POST : Args(0) {
     my $ds = CXGN::Dataset->new({
         people_schema => $people_schema,
         schema => $schema,
-        sp_dataset_id => $dataset_id
+        sp_dataset_id => $dataset_id,
+        autopopulate_accessions_from_trials => 1
     });
     my $accession_ids = $ds->accessions();
     my $plot_ids = $ds->plots();
@@ -62,6 +63,11 @@ sub generate_spectral_plot_POST : Args(0) {
     });
     my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
     # print STDERR Dumper $data_matrix;
+
+    if ($data_matrix->{error}) {
+        $c->stash->{rest} = {error => $data_matrix->{error}};
+        $c->detach();
+    }
 
     my @training_data_input;
     while ( my ($stock_id, $o) = each %$data_matrix) {
@@ -154,7 +160,12 @@ sub generate_results_POST : Args(0) {
     my $output_figure2_filepath = $tempfile."_figure2_results.png";
     my $output_model_filepath = $tempfile."_model.Rds";
 
-    my $training_dataset = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $train_dataset_id});
+    my $training_dataset = CXGN::Dataset->new({
+        people_schema => $people_schema,
+        schema => $schema,
+        sp_dataset_id => $train_dataset_id,
+        autopopulate_accessions_from_trials => 1
+    });
     my ($training_pheno_data, $train_unique_traits) = $training_dataset->retrieve_phenotypes_ref();
 
     my %training_pheno_data;
@@ -181,7 +192,12 @@ sub generate_results_POST : Args(0) {
 
     my %testing_pheno_data;
     if ($test_dataset_id) {
-        my $test_dataset = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $test_dataset_id});
+        my $test_dataset = CXGN::Dataset->new({
+            people_schema => $people_schema,
+            schema => $schema,
+            sp_dataset_id => $test_dataset_id,
+            autopopulate_accessions_from_trials => 1
+        });
         my ($test_pheno_data, $test_unique_traits) = $test_dataset->retrieve_phenotypes_ref();
         # print STDERR Dumper $test_pheno_data;
 
@@ -207,10 +223,10 @@ sub generate_results_POST : Args(0) {
     #     my @full_training_plots = keys %training_pheno_data;
     #     my $cutoff = int(scalar(@full_training_plots)*0.2);
     #     my @random_plots = shuffle(@full_training_plots);
-    # 
+    #
     #     my @testing_plots = @random_plots[0..$cutoff];
     #     my @training_plots = @random_plots[$cutoff+1..scalar(@full_training_plots)-1];
-    # 
+    #
     #     my %training_pheno_data_split;
     #     my %testing_pheno_data_split;
     #     foreach (@training_plots) {
@@ -233,7 +249,7 @@ sub generate_results_POST : Args(0) {
         JOIN metadata.md_json USING(json_id)
         WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ? ;";
     print STDERR Dumper $nirs_training_q;
-    my $nirs_training_h = $dbh->prepare($nirs_training_q);    
+    my $nirs_training_h = $dbh->prepare($nirs_training_q);
     $nirs_training_h->execute($format_id);
     while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {
         $spectra = decode_json $spectra;
@@ -317,9 +333,9 @@ sub generate_results_POST : Args(0) {
     #         # don't block and wait if the cluster looks full
     #         max_cluster_jobs => 1_000_000_000,
     #     });
-    # 
+    #
     #     # print STDERR Dumper $pheno_filepath;
-    # 
+    #
     # # my $job;
     # $cmd->run_cluster(
     #         "Rscript ",
@@ -427,7 +443,12 @@ sub generate_predictions_POST : Args(0) {
     my $model_file = $saved_model_object->{model_files}->{"jennasrwaves_V1.01_waves_nirs_spectral_predictions_weights_file"};
     my $performance_file = $saved_model_object->{model_files}->{"jennasrwaves_V1.01_waves_nirs_spectral_predictions_performance_output"};
 
-    my $training_dataset = CXGN::Dataset->new({people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id});
+    my $training_dataset = CXGN::Dataset->new({
+        people_schema => $people_schema,
+        schema => $schema,
+        sp_dataset_id => $dataset_id,
+        autopopulate_accessions_from_trials => 1
+    });
     my ($training_pheno_data, $train_unique_traits) = $training_dataset->retrieve_phenotypes_ref();
     # print STDERR Dumper $training_pheno_data;
 
@@ -458,7 +479,7 @@ sub generate_predictions_POST : Args(0) {
         JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
         JOIN metadata.md_json USING(json_id)
         WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ? ;";
-    my $nirs_training_h = $dbh->prepare($nirs_training_q);    
+    my $nirs_training_h = $dbh->prepare($nirs_training_q);
     $nirs_training_h->execute($format_id);
     while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {
         $spectra = decode_json $spectra;

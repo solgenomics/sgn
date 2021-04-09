@@ -547,7 +547,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my @error_status;
     my @warning_status;
 
-    my $parser = CXGN::Phenotypes::ParseUpload->new(); 
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $validate_type = "highdimensionalphenotypes spreadsheet transcriptomics";
     my $metadata_file_type = "transcriptomics spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
@@ -899,7 +899,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
-    
+
     });
 
     my $warning_status;
@@ -1398,7 +1398,8 @@ sub high_dimensional_phenotypes_download_file_POST : Args(0) {
     my $ds = CXGN::Dataset->new({
         people_schema => $people_schema,
         schema => $schema,
-        sp_dataset_id => $dataset_id
+        sp_dataset_id => $dataset_id,
+        autopopulate_accessions_from_trials => 1
     });
     my $accession_ids = $ds->accessions();
     my $plot_ids = $ds->plots();
@@ -1414,6 +1415,12 @@ sub high_dimensional_phenotypes_download_file_POST : Args(0) {
         plant_list=>$plant_ids
     });
     my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+
+    if ($data_matrix->{error}) {
+        $c->stash->{rest} = {error => $data_matrix->{error}};
+        $c->detach();
+    }
+
     # print STDERR Dumper $data_matrix;
     # print STDERR Dumper $identifier_metadata;
     # print STDERR Dumper $identifier_names;
@@ -1559,7 +1566,8 @@ sub high_dimensional_phenotypes_download_relationship_matrix_file_POST : Args(0)
     my $ds = CXGN::Dataset->new({
         people_schema => $people_schema,
         schema => $schema,
-        sp_dataset_id => $dataset_id
+        sp_dataset_id => $dataset_id,
+        autopopulate_accessions_from_trials => 1
     });
     my $accession_ids = $ds->accessions();
     my $plot_ids = $ds->plots();
