@@ -105,6 +105,27 @@
     </div>
 </div>
 
+<div class="modal fade" id="add_item_detail_dialog" name="add_item_detail_dialog" tabindex="-1" role="dialog" aria-labelledby="addItemDetailDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addItemDetailDialog">Add Item Details</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="add_item_detail_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_add_item_detail_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="add_item_button" type="button" class="btn btn-primary" >Add Item</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <& /order/upload_catalog_items_dialog.mas &>
 <& /order/add_catalog_item_dialog.mas &>
 
@@ -136,31 +157,55 @@ jQuery(document).ready( function() {
     if (myCart.length > 0) {
         list_id = myCart[0][0];
     }
-    var list_data = lo.getListData(list_id);
-    var items = list_data.elements;
-
 
     jQuery('#your_cart_button').click(function(){
         if (!list_id) {
             jQuery('#cart_message_dialog').modal('show');
         } else {
             jQuery('#cart_item_dialog').modal('show');
-            showCatalogItems('cart_items', list_id);
+            showListItems('cart_items', list_id);
         }
     });
 
+    jQuery('#add_item_button').click(function(){
+        var item_name = jQuery('#cart_item_name').val();
+        var item_quantity = jQuery('#item_quantity').val();
+        if (!item_quantity) {
+            item_quantity = '1';
+        }
+        var item_comment = jQuery('#item_comment').val();
+
+        var item_obj = {'Item Name':item_name, 'Quantity':item_quantity};
+        var itemJSON = JSON.stringify(item_obj);
+
+//    var item_info = [item_name, description];
+//    var item_string = item_info.toString();
+
+//    var item_string = item_name.concat("(").concat(description).concat(")");
+
+        var lo = new CXGN.List();
+
+        var myCart = lo.availableLists('catalog_items')
+        if (myCart.length > 0) {
+            var list_id = myCart[0][0];
+            var itemAdded = lo.addToList(list_id, itemJSON);
+        } else if (myCart.length == 0) {
+            var list_id = lo.newList('your_cart');
+            var itemAdded = lo.addToList(list_id, itemJSON);
+            lo.setListType(list_id, 'catalog_items');
+        } else {
+            alert ('Error retrieving your cart')
+        }
+        if (itemAdded) {
+            jQuery('#add_item_detail_dialog').modal('hide');
+            alert("Saved " + item_name + " in your cart");
+            location.reload();
+        }
+
+    });
+
+
     jQuery('#submit_order').click( function() {
-    var lo = new CXGN.List();
-    var list_data = lo.getListData(list_id);
-    var items = list_data.elements;
-
-    var item_quantity = [];
-    for (var i=0; i<items.length; i++) {
-        var each_quantity = jQuery("#item_quantity_'+items[n][0]+'").val();
-
-        alert(each_quantity);
-        item_quantity.push(each_quantity);
-    }
 
         jQuery.ajax({
             url: '/ajax/order/submit',
@@ -200,74 +245,17 @@ jQuery(document).ready( function() {
         location.reload();
     });
 
-
 });
 
 function addToCart(item_name, description){
-//    var item_obj = {'Item Name':item_name, 'Description':description};
-//    var itemJSON = JSON.stringify(item_obj);
-
-//    var item_info = [item_name, description];
-//    var item_string = item_info.toString();
-
-//    var item_string = item_name.concat("(").concat(description).concat(")");
-    var lo = new CXGN.List();
-
-    var myCart = lo.availableLists('catalog_items')
-    if (myCart.length > 0) {
-        var list_id = myCart[0][0];
-        var itemAdded = lo.addToList(list_id, item_name);
-        lo.setListType(list_id, 'catalog_items');
-    } else if (myCart.length == 0) {
-        var list_id = lo.newList('your_cart');
-        var itemAdded = lo.addToList(list_id, item_name);
-        lo.setListType(list_id, 'catalog_items');
-    } else {
-        alert ('Error retrieving your cart')
-    }
-    if (itemAdded) {
-        alert("Saved " + item_name + " in your cart");
-        location.reload();
-    }
-
-}
-
-function showCatalogItems(div, list_id) {
-    var lo = new CXGN.List();
-    var list_data = lo.getListData(list_id);
-    var items = list_data.elements;
-    var list_type = list_data.type_name;
-    var list_name = lo.listNameById(list_id);
     var html = '';
-        html += '<div class="well well-sm"><table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th> </th></th>&nbsp;<th>&nbsp;</th></tr></thead><tbody>';
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Comment: </label><div class="col-sm-9" ><input class="form-control" id="item_comment" name="item_comment" </div><br><br>';
 
-        for(var n=0; n<items.length; n++) {
-            html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="item_quantity_'+items[n][0]+'" type="text" class="form-control" placeholder="Quantity"/></td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
-        }
-        html += '</tbody></table></div>';
-
-        jQuery('#'+div+'_div').html(html);
-
-        jQuery('#list_item_dialog_datatable').DataTable({
-            destroy: true,
-            ordering: false,
-            scrollY:        '30vh',
-            scrollCollapse: true,
-            paging:         false,
-        });
-        for (var n=0; n<items.length; n++) {
-            var list_item_id = items[n][0];
-
-            jQuery('#'+items[n][0]).click( function() {
-                var lo = new CXGN.List();
-                var i = lo.availableLists();
-
-                lo.removeItem(list_id, this.id );
-                lo.renderItems(div, list_id);
-                lo.renderLists('list_dialog');
-            });
-        }
-
+    jQuery('#add_item_detail_div').html(html);
+    jQuery('#add_item_detail_dialog').modal('show');
 }
+
 
 </script>
