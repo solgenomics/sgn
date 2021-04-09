@@ -49,7 +49,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
     my %html_hash;
     foreach my $name (@composable_cvs) {
         $name =~ s/^\s+|\s+$//g; # remove whitespace
-        if ($name eq 'time' || $name eq 'tod' || $name eq 'toy' || $name eq 'gen' || $name eq 'evt' ) {
+        if ($name eq 'time' || $name eq 'tod' || $name eq 'toy' || $name eq 'gen' || $name eq 'evt' || $name eq 'pst' ) {
             print STDERR "Skipping time-related cv\n";
             next;
         }
@@ -106,6 +106,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
     $c->stash->{composable_toy_root_cvterm} = $c->config->{composable_toy_root_cvterm};
     $c->stash->{composable_gen_root_cvterm} = $c->config->{composable_gen_root_cvterm};
     $c->stash->{composable_evt_root_cvterm} = $c->config->{composable_evt_root_cvterm};
+    $c->stash->{composable_pst_root_cvterm} = $c->config->{composable_pst_root_cvterm};
 
     $c->stash->{user} = $c->user();
     $c->stash->{template} = '/ontology/compose_trait.mas';
