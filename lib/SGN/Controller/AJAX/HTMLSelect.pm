@@ -756,9 +756,28 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
-    my $html = '<table class="table table-bordered table-hover" id="html-select-sdmprotocol-table"><thead><tr><th>Select</th><th>Protocol Name</th><th>Description</th><th>Properties</th></tr></thead><tbody>';
+    my $html = '<table class="table table-bordered table-hover" id="html-select-sdmprotocol-table">';
+    $html .= '<thead><tr><th>Select</th><th>Protocol Name</th><th>Description</th><th>Properties</th><th>Features</th></tr></thead>';
+    $html .= '<tbody>';
 
     while (my ($nd_protocol_id, $name, $description, $props_json) = $h->fetchrow_array()) {
+
+        # get features used by the protocol and the count of sequence metadata features
+        my $qq = "SELECT uniquename, SUM(jsonb_array_length(json))
+                    FROM featureprop_json
+                    JOIN feature USING (feature_id)
+                    WHERE nd_protocol_id = $nd_protocol_id
+                    GROUP BY uniquename
+                    ORDER BY uniquename;";
+        my $hh = $schema->storage->dbh()->prepare($qq);
+        $hh->execute();
+
+        # build list of features and smd feature counts
+        my $features = "";
+        while ( my ($feature_name, $smd_count) = $hh->fetchrow_array()) {
+            $features .= "<strong>" . $feature_name . ":</strong>&nbsp;" . $smd_count . "&nbsp;features<br />";
+        }
+        
         my $props = decode_json $props_json;
         $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>';
         while (my($k,$v) = each %$props) {
@@ -772,7 +791,7 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
                 $html .= "$k: $v<br />";
             }
         }
-        $html .= '</td></tr>';
+        $html .= '</td><td>'.$features.'</td></tr>';
     }
     $html .= "</tbody></table>";
 
