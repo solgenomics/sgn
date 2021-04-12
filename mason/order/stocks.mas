@@ -183,10 +183,12 @@ $(window).ready( function() {
     });
 
     jQuery('#user_current_orders').DataTable( {
+        'autoWidth': false,
         'ajax': '/ajax/order/current',
     });
 
     jQuery('#contact_person_orders').DataTable( {
+        'autoWidth': false,
         'ajax': '/ajax/order/contact_person_orders',
     });
 
