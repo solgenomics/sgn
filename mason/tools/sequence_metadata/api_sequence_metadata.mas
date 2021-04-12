@@ -48,7 +48,7 @@ endpoints related to sequence metadata that can be used to query the database us
         </tr>
         <tr>
             <td>reference_genome<br /><strong>REQUIRED</strong><br />if&nbsp;either&nbsp;<code>start</code> or&nbsp;<code>end</code> positions are provided</td>
-            <td>Name of the parent feature (i.e., chromosome) associated with the sequence metadata</td>
+            <td>Name of the reference genome used for the start and/or end positions</td>
             <td><code>1A</code></td>
         </tr>
         <tr>
