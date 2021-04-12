@@ -86,7 +86,10 @@ sub submit_order_POST : Args(0) {
     my $contact_person_id;
     my %group_by_contact_id;
     my @all_items = @$items;
-    foreach my $item_name (@all_items) {
+    foreach my $ordered_item (@all_items) {
+        my $ordered_item_hash_ref = decode_json $ordered_item;
+        my $item_name = $ordered_item_hash_ref->{'Item Name'};
+        print STDERR "ITEM NAME =".Dumper($item_name)."\n";
         my $item_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $item_name });
         my $item_id = $item_rs->stock_id();
 #        print STDERR "ITEM ID =".Dumper($item_id)."\n";
@@ -97,8 +100,8 @@ sub submit_order_POST : Args(0) {
         my $item_type = $item_info_hash->{'item_type'};
 #        print STDERR "CONTACT PERSON ID =".Dumper($contact_person_id)."\n";
 #        print STDERR "ITEM TYPE =".Dumper($item_type)."\n";
-        $group_by_contact_id{$contact_person_id}{$item_name} = $item_type;
-#        $group_by_contact_id{$contact_person_id}{$item_name}++;
+#        $group_by_contact_id{$contact_person_id}{$item_name} = $item_type;
+        $group_by_contact_id{$contact_person_id}{$ordered_item} = $item_type;
 
 #        print STDERR "GROUP BY CONTACT ID =".Dumper(\%group_by_contact_id)."\n";
     }

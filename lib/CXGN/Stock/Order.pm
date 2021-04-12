@@ -134,7 +134,7 @@ sub get_orders_from_person_id {
     while (my $result = $order_rs->next()){
         my $item_list;
         my $order_id = $result->sp_order_id();
-        my $order_from_id = $result->order_from_id();
+#        my $order_from_id = $result->order_from_id();
         my $order_to_id = $result->order_to_id();
         my $order_status = $result->order_status();
         my $create_date = $result->create_date();
@@ -155,7 +155,7 @@ sub get_orders_from_person_id {
         }
 
 #        print STDERR "ORDER ID =".Dumper($order_id);
-        push @orders, [$order_id, $order_from_id, $order_to_name, $create_date, $item_list, $order_status];
+        push @orders, [$order_id, $order_to_name, $create_date, $item_list, $order_status];
     }
     print STDERR "ORDERS =".Dumper(\@orders)."\n";
     return \@orders;

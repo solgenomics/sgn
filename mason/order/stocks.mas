@@ -41,7 +41,6 @@ $role => "stock_orderer"
                         <thead>
                             <tr>
                                 <th>Order Number</th>
-                                <th>Ordered By</th>
                                 <th>Send Order To</th>
                                 <th>Submitted Date</th>
                                 <th>Items</th>
