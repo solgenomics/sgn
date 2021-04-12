@@ -32,7 +32,7 @@ sub search {
     my $species_arrayref = $params->{species} || ($params->{species} || ());
     my $synonyms_arrayref = $params->{synonym} || ($params->{synonyms} || ());
     my $subtaxa = $params->{germplasmSubTaxa}->[0];
-    my $match_method = $params->{matchMethod}->[0] || 'exact';  
+    my $match_method = $params->{matchMethod}->[0] || 'exact';
     my $collection = $params->{collection} || ($params->{collections} || ());
     my $study_db_id = $params->{studyDbId} || ($params->{studyDbIds} || ());
     my $study_names = $params->{studyName} || ($params->{studyNames} || ());
@@ -154,7 +154,7 @@ sub search {
                 taxonId => $_
             };
         }
-        
+
         #Get external references
         my @references;
 
@@ -165,7 +165,7 @@ sub search {
                 my $accession = $_->[2];
                 my $reference_id;
 
-                if($reference_source eq 'DOI') { 
+                if($reference_source eq 'DOI') {
                     $reference_id = ($url) ? "$url$accession" : "doi:$accession";
                 } else {
                     $reference_id = ($accession) ? "$url$accession" : $url;
@@ -175,9 +175,16 @@ sub search {
                     referenceID => $reference_id,
                     referenceSource => $reference_source
                 };
-                
+
             }
         }
+
+        my $cross_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross_type', 'nd_experiment_property')->cvterm_id();
+    	my $q = "SELECT value FROM nd_experimentprop JOIN nd_experiment_stock ON nd_experimentprop.nd_experiment_id=nd_experiment_stock.nd_experiment_id WHERE stock_id = ? AND nd_experimentprop.type_id = ?;";
+    	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    	$h->execute($_->{stock_id}, $cross_type_cvterm_id);
+    	my ($cross_type) = $h->fetchrow_array();
+
 
         push @data, {
             accessionNumber=>$_->{'accession number'},
@@ -185,7 +192,7 @@ sub search {
             additionalInfo=>undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
-            breedingMethodDbId=>undef,
+            breedingMethodDbId=>$cross_type,
             collection=>undef,
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
@@ -197,13 +204,13 @@ sub search {
             germplasmName=>$_->{uniquename},
             germplasmOrigin=>[],
             germplasmDbId=>qq|$_->{stock_id}|,
-            germplasmPUI=>$_->{'PUI'} || $main_production_site_url . "/stock/$_->{stock_id}/view",     
+            germplasmPUI=>$_->{'PUI'} || $main_production_site_url . "/stock/$_->{stock_id}/view",
             germplasmPreprocessing=>undef,
             instituteCode=>$_->{'institute code'},
             instituteName=>$_->{'institute name'},
             pedigree=>$_->{pedigree},
             seedSource=>$_->{'seed source'},
-            seedSourceDescription=>$_->{'seed source'}, 
+            seedSourceDescription=>$_->{'seed source'},
             species=>$_->{species},
             speciesAuthority=>$_->{speciesAuthority},
             storageTypes=>\@type_of_germplasm_storage_codes,
@@ -227,7 +234,6 @@ sub germplasm_detail {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my @data_files;
-
     my $verify_id = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$stock_id});
     if (!$verify_id) {
         return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database');
@@ -291,7 +297,7 @@ sub germplasm_pedigree {
             INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id) AND stock_relationship1.type_id = ?
             INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ?
             LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
-            LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id) "; 
+            LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id) ";
 
         my $h;
 
@@ -341,12 +347,12 @@ sub germplasm_pedigree {
             my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "family_name", "stock_type")->cvterm_id();
             my $project_year_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project year', 'project_property')->cvterm_id();
 
-            my $q = "SELECT project.project_id, project.name, project.description, stock.stock_id, stock.uniquename, year.value 
+            my $q = "SELECT project.project_id, project.name, project.description, stock.stock_id, stock.uniquename, year.value
                 FROM nd_experiment_stock
                 JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id) AND nd_experiment.type_id = ?
                 JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
                 JOIN project ON (nd_experiment_project.project_id = project.project_id)
-                LEFT JOIN projectprop AS year ON (project.project_id=year.project_id) 
+                LEFT JOIN projectprop AS year ON (project.project_id=year.project_id)
                 LEFT JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.subject_id) AND stock_relationship.type_id = ?
                 LEFT JOIN stock ON (stock_relationship.object_id = stock.stock_id) AND stock.type_id = ?
                 WHERE nd_experiment_stock.stock_id = ? AND year.type_id = ?";
@@ -354,7 +360,7 @@ sub germplasm_pedigree {
             my $h = $self->bcs_schema->storage->dbh()->prepare($q);
             $h->execute($cross_experiment_type_id, $cross_member_of_type_id, $family_name_type_id, $stock_id, $project_year_cvterm_id);
 
-            
+
             while (my ($crossing_experiment_id, $crossing_experiment_name, $description, $family_id, $family_name, $year) = $h->fetchrow_array()){
                 push @membership_info, [$crossing_experiment_id, $crossing_experiment_name, $description, $family_id, $family_name, $year]
             }
@@ -474,7 +480,7 @@ sub germplasm_mcpd {
         stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
         display_pedigree=>1
     });
-    
+
     my ($result, $total_count) = $stock_search->search();
 
     my %result;
@@ -540,16 +546,16 @@ sub germplasm_mcpd {
             germplasmPUI=>$_->{'PUI'},
             ancestralData=>$_->{pedigree},
             commonCropName=>$_->{common_name},
-            instituteCode=>$_->{'institute code'}, 
+            instituteCode=>$_->{'institute code'},
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             countryOfOrigin=>$_->{'country of origin'},
-            storageTypeCodes=>\@type_of_germplasm_storage_codes, 
+            storageTypeCodes=>\@type_of_germplasm_storage_codes,
             genus=>$_->{genus},
             species=>$_->{species},
             speciesAuthority=>$_->{speciesAuthority},
             subtaxon=>$_->{subtaxa},
             subtaxonAuthority=>$_->{subtaxaAuthority},
-            donorInfo=>\@donors, 
+            donorInfo=>\@donors,
             acquisitionDate=>$_->{'acquisition date'}
         );
     }
@@ -660,7 +666,7 @@ sub store {
             my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
             my $description = $params->{additionalInfo}->{description} || undef;
             my $stock_id = $params->{additionalInfo}->{stock_id} || undef;
-            
+
             #not supported
             # speciesAuthority
             # genus
@@ -669,7 +675,7 @@ sub store {
             # germplasmSeedSourceDescription
             # breedingMethodDbId
             # collection
-            # documentationURL            
+            # documentationURL
             # germplasmOrigin
             # germplasmPreprocessing
             # taxonIds
@@ -731,7 +737,7 @@ sub store {
 
     try {
        $schema->txn_do($coderef_bcs);
-    } 
+    }
     catch {
         $transaction_error = $_;
     };
@@ -1005,7 +1011,7 @@ sub _simple_search {
                 my $accession = $_->[2];
                 my $reference_id;
 
-                if($reference_source eq 'DOI') { 
+                if($reference_source eq 'DOI') {
                     $reference_id = ($url) ? "$url$accession" : "doi:$accession";
                 } else {
                     $reference_id = ($accession) ? "$url$accession" : $url;
@@ -1024,7 +1030,7 @@ sub _simple_search {
             additionalInfo=>undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
-            breedingMethodDbId=>undef,
+            breedingMethodDbId=>$_->{common_name},
             collection=>undef,
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
@@ -1042,7 +1048,7 @@ sub _simple_search {
             instituteName=>$_->{'institute name'},
             pedigree=>$_->{pedigree},
             seedSource=>$_->{'seed source'},
-            seedSourceDescription=>$_->{'seed source'}, 
+            seedSourceDescription=>$_->{'seed source'},
             species=>$_->{species},
             speciesAuthority=>$_->{speciesAuthority},
             storageTypes=>\@type_of_germplasm_storage_codes,
