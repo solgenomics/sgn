@@ -20,9 +20,14 @@ $role => "stock_orderer"
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <div style="overflow:scroll">
-                    <table id = "manage_orders" class="table table-hover table-striped">
+                    <table id = "contact_person_orders" class="table table-hover table-striped">
                         <thead>
                             <tr>
+                                <th>Order Number</th>
+                                <th>Ordered by</th>
+                                <th>Submitted Date</th>
+                                <th>Items</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                     </table>
@@ -37,7 +42,7 @@ $role => "stock_orderer"
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <div style="overflow:scroll">
-                    <table id = "current_orders" class="table table-hover table-striped">
+                    <table id = "user_current_orders" class="table table-hover table-striped">
                         <thead>
                             <tr>
                                 <th>Order Number</th>
@@ -177,14 +182,13 @@ $(window).ready( function() {
         });
     });
 
-
-    jQuery('#current_orders').DataTable( {
+    jQuery('#user_current_orders').DataTable( {
         'ajax': '/ajax/order/current',
     });
 
-
-
-
+    jQuery('#contact_person_orders').DataTable( {
+        'ajax': '/ajax/order/contact_person_orders',
+    });
 
 });
 
