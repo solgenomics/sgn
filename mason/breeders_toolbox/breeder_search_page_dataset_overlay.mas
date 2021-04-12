@@ -1,0 +1,302 @@
+
+<!-- 
+    DATASET CREATION PIPELINE FOR SEACH WIZARD:
+    When provided with the proper query params, the search wizard will walk the user through 
+    creating a dataset with the required parameters, save the dataset, and return to the 
+    originating page.
+
+    URL QUERY PARAMETERS:
+    dsp: dataset parameters
+            - a comma separated list of data set parameters for each column
+            - multiple types for a single column can be separated by a |
+            - multiple sets of parameters can be provided by including additional dsp query parameters
+        Examples:
+            ?dsp=trials,accessions -- require trials as the first parameter and accessions as the second parameter
+            ?dsp=trials|traits,accessions -- require trials or traits as the first parameter and accessions as the second parameter
+            ?dsp=trials,accessions&dsp=accessions,trials -- require trials as the first and accessions as the second parameters 
+                                                              OR accessions as the first and trials as the second parameters
+    dsr: dataset return URL
+        Example: &dsr=/solgs/search
+-->
+
+<div id="dsp-help">
+    <div id="dsp-help-container">
+        <p id="dsp-help-instructions"></p>
+        <button id="dsp-help-next" class='btn btn-primary'><span id="dsp-help-next-label">Next</span>&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
+        <a id="dsp-help-cancel" href="#"><span class='glyphicon glyphicon-remove'></span></a>
+    </div>
+</div>
+
+<script type='text/javascript'>
+
+    let DSP_ENABLED = false;    // Flag to enable the dataset creation pipeline
+    let DSP_COLS = [];          // Allowed dataset column types
+    let DSP_RETURN;             // Return URL for dataset creation
+
+    jQuery(document).ready(function() {
+
+        parseArgs();
+        if ( DSP_ENABLED ) {
+            if ( isLoggedIn() ) {
+
+                // Disable the columns (they are enabled as we proceed through the steps)
+                jQuery('.wizard-type-select').prop('disabled', true);
+
+                // Start the first step (setup the first column)
+                setCol(0);
+
+                // Add event listener for the selected items lists
+                jQuery('.wizard-list-selected').on('DOMSubtreeModified', selectionListener)
+
+                // Add cancel button listener
+                jQuery('#dsp-help-cancel').click(disableDatasetPipeline);
+
+            }
+            else {
+                jQuery('#site_login_dialog').modal("show");
+            }
+        }
+
+    });
+
+
+    /**
+     * Parse the query parameters for the dataset pipeline arguments
+     * - Set DSP_ENABLED -- flag to indicate the dataset pipeline is enabled
+     * - Set DSP_COLS -- the allowed column type selections
+     */
+    function parseArgs() {
+
+        // Parse query params and get 'dsp' parameter(s)
+        let urlParams = new URLSearchParams(window.location.search);
+        if ( urlParams.has("dsp") ) {
+            DSP_ENABLED = true;
+            
+            // Parse each instance of the 'dsp' parameter
+            let dsp = urlParams.getAll("dsp");
+            for ( let i = 0; i < dsp.length; i++ ) {
+
+                // Parse each column of the 'dsp' parameter
+                let p = dsp[i].split(',');
+                let pa = [];
+                for ( let j = 0; j < p.length; j++ ) {
+                    let c = p[j].split('|');
+                    let ca = [];
+                    for ( let k = 0; k < c.length; k++ ) {
+                        ca.push(c[k].toLowerCase());
+                    }
+                    pa.push(ca);
+                }
+                
+                // Add the allowed column selections
+                DSP_COLS.push(pa);
+
+            }
+
+            // Set Return URL
+            DSP_RETURN = urlParams.get("dsr");
+        }
+
+    }
+    
+
+    /**
+     * Setup the selections and instructions for selecting items from the specified column
+     * @param {int} col Column indx
+     */
+    function setCol(col) {
+        
+        // Get selected data types of previous columns
+        let prev_sel_col_types = [];
+        for ( let i = 0; i < col; i++ ) {
+            let sel = jQuery(jQuery('.wizard-type-select option:selected')[i]);
+            prev_sel_col_types.push((sel.attr("data-type") ? sel.attr("data-type") : sel.html()).toLowerCase());
+        }
+        
+        // Get items from DSP_COLS that match selected data types in previous columns
+        let valid_dsp_cols = DSP_COLS;
+        for ( let i = 0; i < col; i++ ) {
+            valid_dsp_cols = [];
+            let sel = prev_sel_col_types[i];
+            for ( let j = 0; j < DSP_COLS.length; j++ ) {
+                if ( DSP_COLS[j][i] ) {
+                    if ( DSP_COLS[j][i].includes(sel) ) {
+                        valid_dsp_cols.push(DSP_COLS[j]);
+                    }
+                }
+            }
+        }
+
+        // Get valid data types for the current column, from the list of valid_dsp_cols
+        let valid_col_types = [];
+        for ( let i = 0; i < valid_dsp_cols.length; i++ ) {
+            if ( valid_dsp_cols[i][col] ) {
+                for ( let j = 0; j < valid_dsp_cols[i][col].length; j++ ) {
+                    let t = valid_dsp_cols[i][col][j];
+                    if ( !valid_col_types.includes(t) ) {
+                        valid_col_types.push(t);
+                    }
+                }
+            }
+        }
+
+        // Update column with valid column types
+        if ( valid_col_types && valid_col_types.length > 0 ) {
+            
+            // Enable the column
+            jQuery(jQuery('.wizard-type-select')[col]).prop('disabled', false);
+
+            // Disable invalid selection options for the current column
+            jQuery(jQuery('.wizard-type-select')[col]).find('option').each(function () {
+                let enabled = valid_col_types.includes(this.value) || valid_col_types.includes(jQuery(this).attr('data-type'));
+                jQuery(this).attr('disabled', !enabled);
+            });
+
+            // Highlight Column
+            jQuery('.wizard-panel').removeClass('wizard-panel-selected');
+            jQuery(jQuery('.wizard-panel')[col]).addClass('wizard-panel-selected');
+
+            // Update Instructions
+            let step = col+1;
+            let html = "<strong>Step " + step + ":</strong> Choose items of type <strong>" + valid_col_types.join(" or ") + "</strong> from column " + step + ".";
+            jQuery('#dsp-help-instructions').html(html);
+            jQuery('#dsp-help-next-label').html("Next");
+            jQuery("#dsp-help-next").prop('disabled', true);
+            jQuery('#dsp-help-next').css('display', 'block');
+            jQuery('#dsp-help-next').off('click').on('click', function() {
+                setCol(col+1);
+            });
+            jQuery('#dsp-help').css('display', 'block');
+
+        }
+
+        // Move on to saving...
+        else {
+            saveDataset(col+1);
+        }
+    }
+
+    /**
+     * Prompt the user to save a new dataset
+     */
+    function saveDataset(step) {
+
+        // Highlight Panel
+        jQuery('.wizard-panel').removeClass('wizard-panel-selected');
+        jQuery('.wizard-datasets > .panel').addClass('wizard-panel-selected');
+
+        // Focus dataset name
+        jQuery('.wizard-dataset-name').focus();
+
+        // Update Instructions
+        let html = "<strong>Step " + step + ":</strong> Enter a name for your dataset and click the <strong>Create</strong> button.";
+        jQuery('#dsp-help-instructions').html(html);
+        jQuery('#dsp-help-next').css('display', 'none');
+
+    }
+
+    /**
+     * Return to the source page when dataset is created
+     */
+    function returnToSource() {
+
+        // Remove Highlight
+        jQuery('.wizard-datasets > .panel').removeClass('wizard-panel-selected');
+
+        // Update Instructions
+        let html = "<strong>Dataset Created:</strong> Return to the Analysis tool";
+        jQuery('#dsp-help-instructions').html(html);
+
+        // Set Return Button
+        if ( DSP_RETURN ) {
+            jQuery('#dsp-help-next-label').html("Return");
+            jQuery('#dsp-help-next').off('click').on('click', function() {
+                window.location = DSP_RETURN;
+                return false;
+            });
+            jQuery('#dsp-help-next').css('display', 'block');
+        }
+
+        // Scroll to Top
+        jQuery(window).scrollTop(0);
+
+    }
+
+    /**
+     * Listener for the selected item lists
+     * - Enable the next button if there are selected items, disable if none
+     */
+    function selectionListener() {
+        let children = jQuery(this).children().length;
+        if ( children > 2 ) {
+            jQuery("#dsp-help-next").prop('disabled', false);
+        }
+        else {
+            jQuery("#dsp-help-next").prop('disabled', true);
+        }
+    }
+
+    /**
+     * Disable the dataset creation pipeline and restore the normal search wizard
+     */
+    function disableDatasetPipeline() {
+        var r = confirm("Are you sure you want to close the dataset creation help?");
+        if ( r == true ) {
+            DSP_ENABLED = false;
+            jQuery("#dsp-help").css('display', 'none');
+            jQuery('.wizard-panel').removeClass('wizard-panel-selected');
+            jQuery('.wizard-datasets > .panel').removeClass('wizard-panel-selected');
+            jQuery('.wizard-type-select').prop('disabled', false);
+            jQuery('.wizard-type-select option').prop('disabled', false);
+        }
+        return false;
+    }
+</script>
+
+<style>
+    #dsp-help {
+        display: none;
+    }
+    #dsp-help-container {
+        display: flex;
+        align-items: center;
+        margin: 5px 0 15px 0;
+        width: 100%;
+        min-height: 50px;
+        background-color: #ffc107;
+        border-radius: 5px;
+        vertical-align: middle;
+    }
+    #dsp-help-instructions {
+        flex-grow: 1;
+        color: #000;
+        margin: 0;
+        padding-left: 15px;
+    }
+    #dsp-help-next {
+        height: 40px;
+        margin: 5px;
+    }
+    #dsp-help-cancel {
+        margin: 10px;
+        color: #000;
+        opacity: 70%;
+    }
+    #dsp-help-cancel:hover {
+        opacity: 85%;
+    }
+    
+    .wizard-panel-selected {
+        border: 5px solid #ffc107;
+    }
+    
+    .wizard-type-select option {
+        color: #000;
+        font-weight: normal;
+    }
+    .wizard-type-select option:disabled {
+        color: #999;
+        font-weight: 100;
+        font-style: italic;
+    }
+</style>
