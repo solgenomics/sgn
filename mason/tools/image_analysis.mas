@@ -175,7 +175,7 @@ tr.shown td.details-control {
 
 var service_traits = {
     'necrosis': {
-        "CBSDpct|CO_334:0002078" : "Cassava",
+        "CBSDpct|CO_331:0000302" : "Cassava",
     },
     'largest_contour_percent': {},
     'count_contours': {},
@@ -431,7 +431,7 @@ jQuery(document).ready(function(){
     jQuery('#image_analysis_save_results').click(function(){
 
         var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
-        // console.log(table_data);
+        console.log(table_data);
         jQuery.ajax({
             url: '/brapi/v2/observations/',
             method: 'POST',
@@ -485,12 +485,19 @@ function _load_image_search_results() {
 function format ( d ) {
     var detail_rows = '';
     d.details.forEach(function (image, index) {
-      detail_rows +=
-      `<tr>
-        <td>`+image.image_name+`</td>
-        <td><img src="`+image.analyzed_link+`"></td>
-        <td>`+image.value+`</td>
-      </tr>`
+        var result = image.analyzed_link;
+        var text;
+        if (result.startsWith("Error: ")) {
+            text = result;
+        } else {
+            text = '<img src="'+result+'">';
+        }
+        detail_rows +=
+        `<tr>
+          <td>`+image.image_name+`</td>
+          <td>`+text+`</td>
+          <td>`+image.value+`</td>
+        </tr>`
     });
 
 return `<table class="table">
