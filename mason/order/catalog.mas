@@ -175,23 +175,20 @@ jQuery(document).ready( function() {
         }
         var item_comment = jQuery('#item_comment').val();
 
-        var item_obj = {'Item Name':item_name, 'Quantity':item_quantity};
-        var itemJSON = JSON.stringify(item_obj);
+//        var item_obj = {'Item Name':item_name, 'Quantity':item_quantity};
+//        var itemJSON = JSON.stringify(item_obj);
 
-//    var item_info = [item_name, description];
-//    var item_string = item_info.toString();
-
-//    var item_string = item_name.concat("(").concat(description).concat(")");
+    var item_string = item_name.concat("  ","Quantity:",item_quantity);
 
         var lo = new CXGN.List();
 
         var myCart = lo.availableLists('catalog_items')
         if (myCart.length > 0) {
             var list_id = myCart[0][0];
-            var itemAdded = lo.addToList(list_id, itemJSON);
+            var itemAdded = lo.addToList(list_id, item_string);
         } else if (myCart.length == 0) {
             var list_id = lo.newList('your_cart');
-            var itemAdded = lo.addToList(list_id, itemJSON);
+            var itemAdded = lo.addToList(list_id, item_string);
             lo.setListType(list_id, 'catalog_items');
         } else {
             alert ('Error retrieving your cart')
