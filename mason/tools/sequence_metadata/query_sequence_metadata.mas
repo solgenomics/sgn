@@ -919,11 +919,13 @@ function getJBrowseURL(config) {
     }
     
     // Get Selected Feature (for jBrowse chromosome name)
+    let sel_species = jQuery("#sequence_metadata_filter_reference_genome option:selected").data("species");
     let sel_feature = jQuery('#sequence_metadata_filter_feature').val();
     let sel_feature_name = '';
-    for ( let i = 0; i < features.length; i++ ) {
-        if ( parseInt(features[i].feature_id) === parseInt(sel_feature) ) {
-            sel_feature_name = features[i].feature_name;
+    let f = features[sel_species];
+    for ( let i = 0; i < f.length; i++ ) {
+        if ( parseInt(f[i].feature_id) === parseInt(sel_feature) ) {
+            sel_feature_name = f[i].feature_name;
         }
     }
 
