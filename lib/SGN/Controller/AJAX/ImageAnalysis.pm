@@ -306,9 +306,20 @@ sub image_analysis_group_POST : Args(0) {
                         image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
                         trait_id => $results_ref->{'result'}->{'trait_id'},
                         value => $value + 0
-                    };
+                };
         }
-        else { print STDERR "No usable analysis data in this results_ref \n"} # if no result returned for an image, skip it.
+        else { # if no result returned for an image, include it with error details.
+            print STDERR "No usable analysis data in this results_ref \n";
+            push @{$grouped_results{$uniquename}{$trait}}, {
+                        stock_id => $results_ref->{'stock_id'},
+                        collector => $results_ref->{'image_username'},
+                        original_link => $results_ref->{'result'}->{'original_image'},
+                        analyzed_link => 'Error: ' . $results_ref->{'result'}->{'error'},
+                        image_name => $results_ref->{'image_original_filename'}.$results_ref->{'image_file_ext'},
+                        trait_id => $results_ref->{'result'}->{'trait_id'},
+                        value => 'NA'
+                };
+        }
 
         $next_results_ref = $sorted_result[$i+1];
         $next_uniquename = $next_results_ref->{'stock_uniquename'};
@@ -322,6 +333,8 @@ sub image_analysis_group_POST : Args(0) {
             foreach my $trait (keys %{$uniquename_data}) {
                 my $details = $uniquename_data->{$trait};
                 my @values = map { $_->{'value'}} @{$uniquename_data->{$trait}};
+                @values= grep { $_ != 'NA' } @values; # remove NAs before calculating mean
+                print STDERR "\n\n\nVALUES ARE @values and length is ". scalar @values . "\n\n\n";
                 my $mean_value = @values ? sprintf("%.2f", sum(@values)/@values) : undef;
                 print STDERR "Mean value is $mean_value\n";
                 push @table_data, {
@@ -333,7 +346,7 @@ sub image_analysis_group_POST : Args(0) {
                     observationVariableName => $trait,
                     value => $mean_value,
                     details => $details,
-                    numberAnalyzed => scalar @{$details}
+                    numberAnalyzed => scalar @values
                     # Add previously observed trait value
                 };
             }
