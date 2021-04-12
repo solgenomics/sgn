@@ -36,6 +36,7 @@ my $query_results = $smd->query({
     feature_id => $feature_id, 
     start => $start_pos, 
     end => $end_pos,
+    reference_genome => $reference_genome,
     type_ids => \@type_ids,
     nd_protocol_ids => \@nd_protocol_ids,
     attributes => \@attributes
@@ -403,10 +404,11 @@ sub _write_chunk() {
 #
 # Query the sequence metadata stored in the featureprop_json table with the provided filter parameters
 #
-# Arguments:
+# Arguments (as a hash with the following keys):
 # - feature_id = id of feature associated with the sequence metadata
 # - start = (optional) start position of query region (default: 0)
 # - end = (optional) end position of query region (default: feature max)
+# - reference_genome = (required if start and/or end provided) the reference genome name of the start and/or end positions
 # - type_ids = (optional) array of sequence metadata cvterm ids (default: object type_id, if defined, or include all)
 # - nd_protocol_ids = (optional) array of nd_protocol_ids (default: object nd_protocol_id, if defined, or include all)
 # - attributes = (optional) an array of attribute properties to include in the filter (default: none)
@@ -436,6 +438,7 @@ sub query {
     my $feature_id = $args->{feature_id};
     my $start = $args->{start};
     my $end = $args->{end};
+    my $reference_genome = $args->{reference_genome};
     my $min_score = $args->{min_score};
     my $max_score = $args->{max_score};
     my $type_ids = $args->{type_ids};
@@ -453,6 +456,10 @@ sub query {
     # Check for required parameters
     if ( !defined $feature_id || $feature_id eq '' ) {
         $results{'error'} = "Feature ID not provided!";
+        return(\%results);
+    }
+    if ( (!defined $reference_genome || $reference_genome eq '') && (defined $start || defined $end) ) {
+        $results{'error'} = "Reference genome must be provided with start and/or end positions(s)!";
         return(\%results);
     }
 
@@ -514,6 +521,10 @@ sub query {
     if ( $nd_protocol_ids && @$nd_protocol_ids ) {
         $query_where .= " AND featureprop_json.nd_protocol_id IN (@{[join',', ('?') x @$nd_protocol_ids]})";
         push(@query_params, @$nd_protocol_ids);
+    }
+    if ( defined $reference_genome && $reference_genome ne '' ) {
+        $query_where .= " AND featureprop_json.nd_protocol_id IN (SELECT nd_protocol_id FROM nd_protocolprop WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name='sequence_metadata_protocol_properties') AND value->>'reference_genome' = ?) ";
+        push(@query_params, $reference_genome);
     }
 
     # Estimate result size by getting number of matching chunks
@@ -590,11 +601,11 @@ LEFT JOIN public.nd_protocol ON nd_protocol.nd_protocol_id = featureprop_json.nd
         $query .= ") ";
     }
 
-    # print STDERR "QUERY:\n";
-    # print STDERR "$query\n";
-    # print STDERR "QUERY PARAMS:\n";
-    # use Data::Dumper;
-    # print STDERR Dumper \@query_params;
+    print STDERR "QUERY:\n";
+    print STDERR "$query\n";
+    print STDERR "QUERY PARAMS:\n";
+    use Data::Dumper;
+    print STDERR Dumper \@query_params;
 
     # Perform the search
     my $h = $dbh->prepare($query);

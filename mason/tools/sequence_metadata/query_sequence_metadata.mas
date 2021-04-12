@@ -16,6 +16,16 @@
 
         <h4>Query Range</h4>
         
+        <!-- Refence Genome -->
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Reference Genome: </label>
+            <div class="col-sm-10">
+                <select class="form-control" id="sequence_metadata_filter_reference_genome" disabled>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+        </div>
+
         <!-- Feature -->
         <div class="form-group">
             <label class="col-sm-2 control-label">Feature: </label>
@@ -217,24 +227,29 @@
 
 <script type="text/javascript">
 
-var features = [];                          // List of sequence metadata features fetched from the database
+var reference_genomes = [];                 // List of reference genomes / species fetched from the database
+var features = {};                          // Object of features (key = species) fetched from the database
 var data_types = [];                        // List of sequence metadata data types fetched from the database
-var protocols = [];                         // List of existing sequence metadata protocols fetched from the database
+var protocols = {};                         // Object of sequence metadata protocols (key = reference) fetched from the database
 var attribute_filter_count = 0;             // Current count of attribute filters added by user
 var markers;                                // Object of queried markers from the database for specific ranges
 
 jQuery(document).ready(function() {
 
-    // Get the filter features, types, and protocols
-    get_features();
+    // Get the filter reference genomes, features, types, and protocols
+    get_reference_genomes(function() {
+        get_features();
+        get_protocols();
+    });
     get_types();
-    get_protocols();
-    get_genotype_protocols();
 
 
     //
     // CLICK AND CHANGE LISTENERS
     //
+
+    // Reference Genome Change Listener
+    jQuery('#sequence_metadata_filter_reference_genome').change(set_features).change(set_protocols).change(set_attribute_protocols);
 
     // Toggle info boxes
     jQuery('#sequence_metadata_filter_type_info_btn').click(function() {
@@ -342,8 +357,42 @@ jQuery(document).ready(function() {
 //
 
 /**
+ * Get the reference genomes / species associated with the stored genotype protocols
+ * - populate the options for the reference genome select box
+ * @param {Function} [callback] Callback function() (only called if successful)
+ */
+function get_reference_genomes(callback) {
+    jQuery.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: '/ajax/sequence_metadata/reference_genomes',
+        success: function(data) {
+            if ( data && data.reference_genomes ) {
+                reference_genomes = data.reference_genomes;
+                let options = "";
+                for ( let i = 0; i < reference_genomes.length; i++ ) {
+                    let reference = reference_genomes[i].reference_genome;
+                    let species = reference_genomes[i].species_name;
+                    let label = reference + " (" + species + ")";
+                    options += "<option value='" + reference + "' data-species='" + species + "'>" + label + "</option>";
+                }
+                jQuery('#sequence_metadata_filter_reference_genome').html(options);
+                jQuery('#sequence_metadata_filter_reference_genome').prop('disabled', false);
+                if ( callback ) return callback();
+            }
+            else {
+                alert("ERROR: Could not load reference genomes!");
+            }
+        },
+        error: function() {
+            alert("ERROR: Could not load reference genomes!");
+        }
+    });
+}
+
+/**
  * Get the features associated with stored sequence metadata
- * - populate the options for the feature select box
+ * - call set_features() to populate the options for the feature select box
  */
 function get_features() {
     jQuery.ajax({
@@ -351,18 +400,21 @@ function get_features() {
         dataType: 'json',
         url: '/ajax/sequence_metadata/features',
         success: function(data) {
-            features = data.features;
             if ( data && data.features ) {
-                let options = "";
+
+                // Save features by species
+                features = {};
                 for ( let i = 0; i < data.features.length; i++ ) {
-                    let f_id = data.features[i].feature_id;
-                    let f_name = data.features[i].feature_name;
-                    let o_name = data.features[i].organism_name;
-                    let f_label = f_name + " (" + o_name + ")";
-                    options += "<option value='" + f_id + "'>" + f_label + "</option>";
+                    let s = data.features[i].organism_name;
+                    if ( !features.hasOwnProperty(s) ) {
+                        features[s] = [];
+                    }
+                    features[s].push(data.features[i]);
                 }
-                jQuery('#sequence_metadata_filter_feature').html(options);
-                jQuery('#sequence_metadata_filter_feature').prop('disabled', false);
+
+                // Set feature options
+                set_features();
+
             }
             else {
                 alert("ERROR: Could not load features!");
@@ -375,8 +427,27 @@ function get_features() {
 }
 
 /**
+ * Set the options for the features select box based on the currently selected reference genome
+ */
+function set_features() {
+    let s = jQuery("#sequence_metadata_filter_reference_genome option:selected").data("species");
+    let f = features[s];
+    let options = "";
+    if ( f ) {
+        for ( let i = 0; i < f.length; i++ ) {
+            let f_id = f[i].feature_id;
+            let f_name = f[i].feature_name;
+            options += "<option value='" + f_id + "'>" + f_name + "</option>";
+        }
+    }
+    jQuery('#sequence_metadata_filter_feature').html(options);
+    jQuery('#sequence_metadata_filter_feature').prop('disabled', false);
+}
+
+/**
  * Get the types associated with stored sequence metadata
- * - populate the options for the type select box
+ * - call set_types() to populate the options for the type select box
+ * - build the data type info table
  */
 function get_types() {
     jQuery.ajax({
@@ -415,6 +486,7 @@ function get_types() {
  * Set the options for the Data Types select box
  */
 function set_types() {
+    let sel_reference_genome = jQuery('#sequence_metadata_filter_reference_genome').val();
     let sel_types = jQuery('#sequence_metadata_filter_type').val();
     let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
 
@@ -437,11 +509,14 @@ function set_types() {
         let disabled = false;
         if ( sel_protocols && sel_protocols.length > 0 ) {
             disabled = true;
-            for ( let j = 0; j < protocols.length; j++ ) {
-                for ( let k = 0; k < sel_protocols.length; k++ ) {
-                    if ( parseInt(protocols[j].nd_protocol_id) === parseInt(sel_protocols[k]) ) {
-                        if ( parseInt(protocols[j].nd_protocol_properties.sequence_metadata_type_id) === parseInt(t_id) ) {
-                            disabled = false;
+            let p = protocols[sel_reference_genome];
+            if ( p ) {
+                for ( let j = 0; j < p.length; j++ ) {
+                    for ( let k = 0; k < sel_protocols.length; k++ ) {
+                        if ( parseInt(p[j].nd_protocol_id) === parseInt(sel_protocols[k]) ) {
+                            if ( parseInt(p[j].nd_protocol_properties.sequence_metadata_type_id) === parseInt(t_id) ) {
+                                disabled = false;
+                            }
                         }
                     }
                 }
@@ -458,7 +533,9 @@ function set_types() {
 
 /**
  * Get the protocols associated with stored sequence metadata
- * - populate the options for the protocol select box
+ * - call set_protocols() to populate the options for the protocol select box'
+ * - call set_attribute_protocols() to set the options for the protocol lists for the attributes
+ * - build the protocol info table
  */
 function get_protocols() {
     jQuery.ajax({
@@ -467,7 +544,16 @@ function get_protocols() {
         url: '/ajax/sequence_metadata/protocols',
         success: function(data) {
             if ( data && data.protocols ) {
-                protocols = data.protocols;
+                
+                // Save protocols by reference genome
+                protocols = {};
+                for ( let i = 0; i < data.protocols.length; i++ ) {
+                    let g = data.protocols[i].nd_protocol_properties.reference_genome;
+                    if ( !protocols.hasOwnProperty(g) ) {
+                        protocols[g] = [];
+                    }
+                    protocols[g].push(data.protocols[i]);
+                }
 
                 // Set Select Options
                 set_protocols();
@@ -516,143 +602,93 @@ function get_protocols() {
  * Set the options for the Protocol select box
  */
 function set_protocols() {
+    let sel_reference_genome = jQuery('#sequence_metadata_filter_reference_genome').val();
     let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
     let sel_types = jQuery('#sequence_metadata_filter_type').val();
 
+    // Get protocols for the selected reference genome
+    let p = protocols[sel_reference_genome];
+
     let options = "";
-    for ( let i = 0; i < protocols.length; i++ ) {
-        let p_id = protocols[i].nd_protocol_id;
-        let p_name = protocols[i].nd_protocol_name;
-        let p_type_id = protocols[i].nd_protocol_properties.sequence_metadata_type_id;
-        
-        // Reselect previosuly selected items
-        let selected = false;
-        if ( sel_protocols ) {
-            for ( let j = 0; j < sel_protocols.length; j++ ) {
-                if ( parseInt(sel_protocols[j]) === parseInt(p_id) ) {
-                    selected = true;
+    if ( p ) {
+        for ( let i = 0; i < p.length; i++ ) {
+            let p_id = p[i].nd_protocol_id;
+            let p_name = p[i].nd_protocol_name;
+            let p_type_id = p[i].nd_protocol_properties.sequence_metadata_type_id;
+            
+            // Reselect previosuly selected items
+            let selected = false;
+            if ( sel_protocols ) {
+                for ( let j = 0; j < sel_protocols.length; j++ ) {
+                    if ( parseInt(sel_protocols[j]) === parseInt(p_id) ) {
+                        selected = true;
+                    }
                 }
             }
-        }
 
-        // Disable protocols based on selected data types
-        let disabled = false;
-        if ( sel_types && sel_types.length > 0 ) {
-            disabled = true;
-            for ( let j = 0; j < data_types.length; j++ ) {
-                for ( let k = 0; k < sel_types.length; k++ ) {
-                    if ( parseInt(data_types[j].type_id) === parseInt(sel_types[k]) ) {
-                        if ( parseInt(data_types[j].type_id) === parseInt(p_type_id) ) {
-                            disabled = false;
+            // Disable protocols based on selected data types
+            let disabled = false;
+            if ( sel_types && sel_types.length > 0 ) {
+                disabled = true;
+                for ( let j = 0; j < data_types.length; j++ ) {
+                    for ( let k = 0; k < sel_types.length; k++ ) {
+                        if ( parseInt(data_types[j].type_id) === parseInt(sel_types[k]) ) {
+                            if ( parseInt(data_types[j].type_id) === parseInt(p_type_id) ) {
+                                disabled = false;
+                            }
                         }
                     }
                 }
             }
+            let d = disabled ? 'disabled' : '';
+            let s = disabled ? '' : selected ? 'selected' : '';
+            options += "<option value='" + p_id + "' " + d + " " + s + ">" + p_name + "</option>";
         }
-        let d = disabled ? 'disabled' : '';
-        let s = disabled ? '' : selected ? 'selected' : '';
-        options += "<option value='" + p_id + "' " + d + " " + s + ">" + p_name + "</option>";
-    }
+        }
 
     // Set protocol selection options
     jQuery('#sequence_metadata_filter_protocol').html(options);
     jQuery('#sequence_metadata_filter_protocol').prop('disabled', false);
 }
 
-
-/**
- * Get the genotype protocols from the database
- * - populate the options for the genotype protocol select box
- */
-function get_genotype_protocols() {
-    jQuery.ajax({
-        type: 'GET',
-        dataType: 'json',
-        url: '/ajax/sequence_metadata/genotype_protocols',
-        success: function(data) {
-            if ( data && data.genotype_protocols ) {
-                data.genotype_protocols.sort((a, b) => (a.protocol_name > b.protocol_name) ? 1 : -1)
-                genotype_protocols = data.genotype_protocols;
-                set_genotype_protocols();
-            }
-        },
-        error: function() {
-            alert("ERROR: Could not load genotype protocols");
-        }
-    });
-}
-
-/**
- * Set the options for the genotype protocols select box
- */
-function set_genotype_protocols() {
-    let options = "";
-
-    // Parse the genotype protocols into options
-    let parsed = {};
-    for ( let i = 0; i < genotype_protocols.length; i++ ) {
-        let id = genotype_protocols[i].protocol_id;
-        let name = genotype_protocols[i].protocol_name;
-        let species = genotype_protocols[i].species_name;
-        let markers = genotype_protocols[i].marker_count;
-        if ( !parsed.hasOwnProperty(species) ) {
-            parsed[species] = [];
-        }
-        let text = name + " (" + markers + " markers)";
-        let option = "<option value='" + id + "'>" + text + "</option>";
-        parsed[species].push(option);
-    }
-
-    // Group the options by species
-    for (let species in parsed) {
-        if ( parsed.hasOwnProperty(species) ) {
-            options += "<optgroup label='" + species + "'>";
-            let items = parsed[species];
-            for ( let i = 0; i < items.length; i++ ) {
-                options += items[i];
-            }
-            options += "</optgroup>";
-        }
-    }
-
-    jQuery("#sequence_metadata_filter_genoproto").html(options);
-    jQuery("#sequence_metadata_filter_genoproto").prop('disabled', false);
-}
-
 /**
  * Set the protocol lists for the score and attribute select menus
  */
 function set_attribute_protocols() {
+    let sel_reference_genome = jQuery('#sequence_metadata_filter_reference_genome').val();
     let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
     let sel_types = jQuery('#sequence_metadata_filter_type').val();
 
     let options = "";
-    for ( let i = 0; i < protocols.length; i++ ) {
-        let p_id = protocols[i].nd_protocol_id;
-        let p_name = protocols[i].nd_protocol_name;
-        let p_type_id = protocols[i].nd_protocol_properties.sequence_metadata_type_id;
+    let p = protocols[sel_reference_genome];
+    if ( p ) {
+        for ( let i = 0; i < p.length; i++ ) {
+            let p_id = p[i].nd_protocol_id;
+            let p_name = p[i].nd_protocol_name;
+            let p_type_id = p[i].nd_protocol_properties.sequence_metadata_type_id;
 
-        // Only enable selected protocols or selected data types
-        let enabled = true;
-        if ( sel_protocols ) {
-            enabled = false;
-            for ( let j = 0; j < sel_protocols.length; j++ ) {
-                if ( parseInt(sel_protocols[j]) === parseInt(p_id) ) {
-                    enabled = true;
+            // Only enable selected protocols or selected data types
+            let enabled = true;
+            if ( sel_protocols ) {
+                enabled = false;
+                for ( let j = 0; j < sel_protocols.length; j++ ) {
+                    if ( parseInt(sel_protocols[j]) === parseInt(p_id) ) {
+                        enabled = true;
+                    }
                 }
             }
-        }
-        else if ( sel_types ) {
-            enabled = false;
-            for ( let j = 0; j < sel_types.length; j++ ) {
-                if ( parseInt(sel_types[j]) === parseInt(p_type_id) ) {
-                    enabled = true;
+            else if ( sel_types ) {
+                enabled = false;
+                for ( let j = 0; j < sel_types.length; j++ ) {
+                    if ( parseInt(sel_types[j]) === parseInt(p_type_id) ) {
+                        enabled = true;
+                    }
                 }
             }
-        }
 
-        let d = !enabled ? 'disabled' : '';
-        options += "<option value='" + p_id + "' " + d + ">" + p_name + "</option>";
+            let d = !enabled ? 'disabled' : '';
+            options += "<option value='" + p_id + "' " + d + ">" + p_name + "</option>";
+        }
     }
 
     // Set protocol selection options
@@ -670,14 +706,18 @@ function set_attribute_protocols() {
  * Set the attribute keys for the currently selected attribute protocol
  */
 function set_attribute_keys() {
+    let sel_reference_genome = jQuery('#sequence_metadata_filter_reference_genome').val();
     let sel_attribute_protocol = jQuery('#sequence_metadata_filter_attribute_protocol').val();
     
     let options = "";
-    for ( let i = 0; i < protocols.length; i++ ) {
-        if ( parseInt(sel_attribute_protocol) === parseInt(protocols[i].nd_protocol_id) ) {
-            let attrs = Object.keys(protocols[i].nd_protocol_properties.attribute_descriptions);
-            for ( let j = 0; j < attrs.length; j++ ) {
-                options += "<option val='" + attrs[j] + "'>" + attrs[j] + "</option>";
+    let p = protocols[sel_reference_genome];
+    if ( p ) {
+        for ( let i = 0; i < p.length; i++ ) {
+            if ( parseInt(sel_attribute_protocol) === parseInt(p[i].nd_protocol_id) ) {
+                let attrs = Object.keys(p[i].nd_protocol_properties.attribute_descriptions);
+                for ( let j = 0; j < attrs.length; j++ ) {
+                    options += "<option val='" + attrs[j] + "'>" + attrs[j] + "</option>";
+                }
             }
         }
     }
@@ -736,6 +776,7 @@ function add_attribute_filter(type) {
  * @returns {string} relative URL to query endpoint
  */
 function getQueryURL(format, nd_protocol_id) {
+    let reference_genome = jQuery('#sequence_metadata_filter_reference_genome').val();
     let feature_id = jQuery('#sequence_metadata_filter_feature option:selected').val();
     let start = jQuery('#sequence_metadata_filter_start').val();
     let end = jQuery('#sequence_metadata_filter_end').val();
@@ -748,6 +789,7 @@ function getQueryURL(format, nd_protocol_id) {
     }
     if ( start && start !== '' ) params.start = start;
     if ( end && end !== '' ) params.end = end;
+    if ( reference_genome && reference_genome !== '' ) params.reference_genome = reference_genome;
     if ( type_ids && type_ids.length > 0 ) params.type_id = type_ids;
     if ( nd_protocol_id ) {
         params.nd_protocol_id = nd_protocol_id;
@@ -841,31 +883,37 @@ function handle_query_results(response) {
 function getJBrowseURL(config) {
     // Get Selected Types
     let sel_types = jQuery('#sequence_metadata_filter_type').val();
+    let sel_reference_genome = jQuery('#sequence_metadata_filter_reference_genome').val();
+    let p = protocols[sel_reference_genome];
     
     // Get Selected Protocols (or all enabled protocols, if none selected)
     let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
     if ( !sel_protocols ) {
         sel_protocols = [];
-        for ( let i = 0; i < protocols.length; i++ ) {
-            if ( sel_types && sel_types.length > 0 ) {
-                for ( let j = 0; j < sel_types.length; j++ ) {
-                    if ( parseInt(protocols[i].nd_protocol_properties.sequence_metadata_type_id) === parseInt(sel_types[j]) ) {
-                        sel_protocols.push(protocols[i].nd_protocol_id);
+        if ( p ) {
+            for ( let i = 0; i < p.length; i++ ) {
+                if ( sel_types && sel_types.length > 0 ) {
+                    for ( let j = 0; j < sel_types.length; j++ ) {
+                        if ( parseInt(p[i].nd_protocol_properties.sequence_metadata_type_id) === parseInt(sel_types[j]) ) {
+                            sel_protocols.push(p[i].nd_protocol_id);
+                        }
                     }
                 }
-            }
-            else {
-                sel_protocols.push(protocols[i].nd_protocol_id);
+                else {
+                    sel_protocols.push(p[i].nd_protocol_id);
+                }
             }
         }
     }
 
     // Get Selected Protocol names (for track labels)
     let sel_protocol_names = {};
-    for ( let i = 0; i < sel_protocols.length; i++ ) {
-        for ( let j = 0; j < protocols.length; j++ ) {
-            if ( parseInt(sel_protocols[i]) === parseInt(protocols[j].nd_protocol_id) ) {
-                sel_protocol_names[sel_protocols[i].toString()] = protocols[j].nd_protocol_name.replaceAll(" ", "&nbsp;");
+    if ( p ) {
+        for ( let i = 0; i < sel_protocols.length; i++ ) {
+            for ( let j = 0; j < p.length; j++ ) {
+                if ( parseInt(sel_protocols[i]) === parseInt(p[j].nd_protocol_id) ) {
+                    sel_protocol_names[sel_protocols[i].toString()] = p[j].nd_protocol_name.replaceAll(" ", "&nbsp;");
+                }
             }
         }
     }
@@ -1000,7 +1048,7 @@ function displayMarkers(key) {
     let marker_info = markers[key];
     let container = jQuery('.sequence_metadata_marker_search_markers_' + key);
     if ( typeof marker_info === 'string' ) {
-        container.html('<p>' + marker_info + '</p>');
+        container.html(marker_info);
     }
     else if ( Array.isArray(marker_info) ) {
         let html = [];

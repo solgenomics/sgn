@@ -513,19 +513,25 @@ sub sequence_metadata_store_POST : Args(0) {
 # Perform a query of sequence metadata for a specific feature and range
 # PATH: GET /ajax/sequence_metadata/query
 # PARAMS:
+#   REQUIRED:
 #   - feature_id = id of the associated feature
-#   - start = (optional) start position of the query range (default: 0)
-#   - end = (optional) end position of the query range (default: feature max)
-#   - type_id = (optional) cvterm_id(s) of sequence metadata type(s) (comma separated list of multiple type ids)
-#   - nd_protocol_id = (optional) nd_protocol_id(s) of sequence metadata protocol(s) (comma separated list of multiple protocol ids)
-#   - attribute = (optional) attribute(s) and their properties (protocol id, comparison, and value - | separated) (comma separated list of multiple attributes)
+#   OR
+#   - feature_name = name of the associated feature
+#   - species_name = name of the organism associated with the feature
+#   OPTIONAL:
+#   - start = start position of the query range (default: 0)
+#   - end = end position of the query range (default: feature max)
+#   - reference_genome = (required if start or end are provided) = name of referene genome used by start and/or end positions
+#   - type_id = cvterm_id(s) of sequence metadata type(s) (comma separated list of multiple type ids)
+#   - nd_protocol_id = nd_protocol_id(s) of sequence metadata protocol(s) (comma separated list of multiple protocol ids)
+#   - attribute = attribute(s) and their properties (protocol id, comparison, and value - | separated) (comma separated list of multiple attributes)
 #       attribute format: 
 #           {attribute name}|{protocol id}|{comparison}|{value}
 #           where comparison = con, eq, lt, lte, gt, gte
 #       examples:
 #           attribute=score|12|lt|0
 #           attribute=score|12|lt|0,trait|13|eq|yield
-#   - format = (optional) define the output format
+#   - format = define the output format
 #       - GA4GH: (default) JSON output following Global Alliance for Genomics and Health API format
 #       - JSON: JSON output using internal/breedbase format
 #       - gff: gff3 format
@@ -547,8 +553,11 @@ sub sequence_metadata_query_GET : Args(0) {
     my $c = shift;
     
     my $feature_id = $c->req->param('feature_id');
+    my $feature_name = $c->req->param('feature_name');
+    my $species_name = $c->req->param('species_name');
     my $start = $c->req->param('start');
     my $end = $c->req->param('end');
+    my $reference_genome = $c->req->param('reference_genome');
     my @type_ids = split(',', $c->req->param('type_id'));
     my @nd_protocol_ids = split(',', $c->req->param('nd_protocol_id'));
     my @attributes = split(',', $c->req->param('attribute'));
@@ -559,8 +568,16 @@ sub sequence_metadata_query_GET : Args(0) {
 
 
     # Check required parameters
-    if ( !defined $feature_id || $feature_id eq '' ) {
-        $c->stash->{rest} = {error => 'Feature id must be provided!'};
+    if ( (!defined $feature_id || $feature_id eq '') && (!defined $feature_name && !defined $species_name) ) {
+        $c->stash->{rest} = {error => 'Feature id OR Feature name and species name must be provided!'};
+        $c->detach();
+    }
+    if ( (!defined $feature_name || $feature_name eq '' || !defined $species_name || $species_name eq '') && (!defined $feature_id) ) {
+        $c->stash->{rest} = {error => 'Feature id OR Feature name and species name must be provided!'};
+        $c->detach();
+    }
+    if ( (!defined $reference_genome || $reference_genome eq '') && (defined $start || defined $end) ) {
+        $c->stash->{rest} = {error => 'Reference genome must be provided with start and/or end position!'};
         $c->detach();
     }
 
@@ -579,12 +596,30 @@ sub sequence_metadata_query_GET : Args(0) {
     }
 
 
+    # Get feature id from name and species, if provided
+    if ( defined $feature_name && defined $species_name ) {
+        my $q = "SELECT feature_id, CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), '')) AS species
+                    FROM public.feature 
+                    LEFT JOIN public.organism USING (organism_id)
+                    WHERE uniquename = ? AND species = ?;";
+        my $h = $dbh->prepare($q);
+        $h->execute($feature_name, $species_name);
+        ($feature_id) = $h->fetchrow_array();
+
+        if ( !defined $feature_id || $feature_id eq '' ) {
+            $c->stash->{rest} = {error => 'No matching feature found [' . $feature_name . ' / ' . $species_name . ']!'};
+            $c->detach();
+        }
+    }
+
+
     # Perform query
     my $smd =  CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema);
     my $query = $smd->query({
         feature_id => $feature_id, 
         start => defined $start && $start ne '' ? $start : undef, 
         end => defined $end && $end ne '' ? $end : undef,
+        reference_genome => defined $reference_genome && $reference_genome ne '' ? $reference_genome : undef,
         type_ids => @type_ids ? \@type_ids : undef,
         nd_protocol_ids => @nd_protocol_ids ? \@nd_protocol_ids : undef,
         attributes => @attributes_parsed ? \@attributes_parsed : undef

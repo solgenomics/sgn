@@ -7,7 +7,7 @@ endpoints related to sequence metadata that can be used to query the database us
 <br />
 
 <h3>Sequence Metadata Query</h3>
-<p class='sequence_metadata_description'>Perform a query of the stored sequence metadata for a specific parent feature (i.e., chromosome) using any combination of additional filter criteria, provided as query parameters</p>
+<p class='sequence_metadata_description'>Perform a query of the stored sequence metadata for a specific parent feature (i.e., chromosome) using any combination of additional filter criteria, provided as query parameters.  The feature must be provided, either by the feature ID or by the feature and species names.  If either the start or end positions are given, the name of the reference genome for those positions must be provided.</p>
 <code class='sequence_metadata_method'>GET</code>&nbsp;
 <code class='sequence_metadata_path'><span class='sequence_metadata_host'></span>/ajax/sequence_metadata/query</code>
 <br /><br />
@@ -22,9 +22,19 @@ endpoints related to sequence metadata that can be used to query the database us
     </thead>
     <tbody>
         <tr>
-            <td>feature_id<br /><strong>REQUIRED</strong></td>
+            <td>feature_id<br /><strong>REQUIRED</strong><br />if&nbsp;<code>feature_name</code> and&nbsp;<code>species_name</code> are not provided</td>
             <td>ID of the parent feature (i.e., chromosome) associated with the sequence metadata</td>
             <td><code>2881383</code></td>
+        </tr>
+        <tr>
+            <td>feature_name<br /><strong>REQUIRED</strong><br />with&nbsp;<code>species_name</code> if&nbsp;<code>feature_id</code> is not provided</td>
+            <td>Name of the parent feature (i.e., chromosome) associated with the sequence metadata</td>
+            <td><code>1A</code></td>
+        </tr>
+        <tr>
+            <td>species_name<br /><strong>REQUIRED</strong><br />with&nbsp;<code>feature_name</code> if&nbsp;<code>feature_id</code> is not provided</td>
+            <td>Name of the species associated with the provided feature name</td>
+            <td><code>Triticum aestivum</code></td>
         </tr>
         <tr>
             <td>start</td>
@@ -35,6 +45,11 @@ endpoints related to sequence metadata that can be used to query the database us
             <td>end</td>
             <td>end position of the query range<br /><strong>default:</strong> max of specified feature</td>
             <td><code>2000000</code></td>
+        </tr>
+        <tr>
+            <td>reference_genome<br /><strong>REQUIRED</strong><br />if&nbsp;either&nbsp;<code>start</code> or&nbsp;<code>end</code> positions are provided</td>
+            <td>Name of the parent feature (i.e., chromosome) associated with the sequence metadata</td>
+            <td><code>1A</code></td>
         </tr>
         <tr>
             <td>type_id</td>
