@@ -448,6 +448,7 @@ function upload_and_verify() {
     formData.append('existing_protocol_id', jQuery('input[name="sequence_metadata_upload_protocol_id"]:checked').val());
   }
   else {
+    formData.append('species', jQuery('#sequence_metadata_upload_protocol_reference_genome option:selected').attr('data-species'));
     formData.append('new_protocol_attribute_count', new_attribute_count);
     for ( let i = 0; i <= new_attribute_count; i++ ) {
       formData.append('new_protocol_attribute_key_' + i, jQuery('#sequence_metadata_upload_attribute_key_' + i).val());
