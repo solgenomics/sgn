@@ -53,6 +53,9 @@ CXGN.List = function () {
 };
 
 
+
+    
+
 CXGN.List.prototype = {
 
     // Return the data as a straight list
@@ -756,6 +759,7 @@ CXGN.List.prototype = {
 
     validate: function(list_id, type, non_interactive) {
         var missing = new Array();
+	var wrong_case = new Array();
         var error = 0;
         jQuery.ajax( {
             url: '/list/validate/'+list_id+'/'+type,
@@ -766,6 +770,7 @@ CXGN.List.prototype = {
                     alert(response.error);
                 } else {
                     missing = response.missing;
+		    wrong_case = response.wrong_case;
                 }
             },
             error: function(response) {
@@ -776,7 +781,7 @@ CXGN.List.prototype = {
 
         if (error === 1 ) { return; }
 
-        if (missing.length==0) {
+        if (missing.length==0 && wrong_case.length==0) {
             if (!non_interactive) { alert("This list passed validation."); }
             return 1;
         } else {
@@ -784,7 +789,7 @@ CXGN.List.prototype = {
                 if (type == 'accessions') {
                     jQuery("#validate_accession_error_display tbody").html('');
 
-                    var missing_accessions_html = "<div class='well well-sm'><h3>List of Accessions Not Valid!</h3><div id='validate_stock_missing_accessions' style='display:none'></div></div><div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div><button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br/><br/><div class='well well-sm'><h3>Optional: Add Missing Accessions to A List</h3><div id='validate_stock_add_missing_accessions_for_list_div'></div></div>";
+                    var missing_accessions_html = "<div class='well well-sm'><h3>List of Accessions Not Valid!</h3><div id='validate_stock_missing_accessions' style='display:none'></div></div><div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div><button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br/><br/><div class='well well-sm'><h3>Optional: Add Missing Accessions to A List</h3><div id='validate_stock_add_missing_accessions_for_list_div'></div><div id='stocks_with_wrong_case'></div></div>";
 
 
                     jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
@@ -803,11 +808,55 @@ CXGN.List.prototype = {
                         listType: 'accessions'
                     });
 
-                    jQuery("#validate_accession_error_display tbody").append(missing_accessions_vals);
+		    jQuery("#validate_accession_error_display tbody").html(missing_accessions_vals);
+
+		    var wrong_case_accessions_table = "<style>td { padding:5px;border-spacing:10px; }</style><table><tr><td cellspacing=20 cellpadding=20><b>in list</b></td><td><b>in database</b></td></tr>";
+		    var wrong_case_accessions_for_list = '';
+
+		    for(var i=0; i<wrong_case.length; i++) {
+			wrong_case_accessions_table += '<tr><td>'+wrong_case[i][0]+'</td><td>'+wrong_case[i][1]+'</td></tr>';
+			wrong_case_accessions_for_list += wrong_case[i] + '\n';
+		    }
+		    wrong_case_accessions_table += '</table>';
+		    wrong_case_accessions_table += '<br /><div><ul><li>It is recommended to adjust the case of the items in the list to the case in the database.</li><li>To adjust the case, click the Adjust Case button below.</li></ul></div>';
+
+
+
+		    if (wrong_case.length > 0) { 
+			jQuery('#adjust_case_div').html('<h3>Mismatched case</h3>'+wrong_case_accessions_table);
+
+			jQuery('#adjust_case_action_button').prop('disabled', false);
+		    }
+
+
+		     jQuery('#adjust_case_action_button').click( function() {
+		    	 jQuery.ajax( {
+		    	     url : '/ajax/list/adjust_case',
+			     data: { 'list_id' : list_id },
+		    	     error: function() { alert('An error occurred'); },
+		    	     success: function(r) {
+				 if (r.error) { alert(r.error); }
+
+				 else {
+				     alert('Converted the following ids: '+JSON.stringify(r.mapping));
+				     var lo = new CXGN.List();
+				     lo.renderItems('list_item_dialog', list_id);
+				     jQuery('#adjust_case_div').html("<br /><br /><h3>Mismatched case</h3><b>The case has been successfully adjusted.</b>");
+				     jQuery('#adjust_case_action_button').prop('disabled', true);
+
+				 }
+			     }
+		    	 });
+			
+		     });
+
+
                     jQuery('#validate_accession_error_display').modal("show");
 
-                    //alert("List validation failed. Elements not found: "+ missing.join(","));
-                    //return 0;
+
+
+                   //alert("List validation failed. Elements not found: "+ missing.join(","));
+                   //return 0;
                 } else {
                     alert('List did not pass validation because of these items: '+missing.join(", "));
                 }
@@ -1033,7 +1082,7 @@ CXGN.List.prototype = {
                 new_type = 'plots_2_plot_ids';
                 break;
             default:
-                return { 'error' : "cannot convert the list because of unknown type" };
+            return { 'error' : "cannot convert the list because of unknown type" };
         }
         //if (window.console) console.log("new type = "+new_type);
         var transformed = this.transform(list_id, new_type);
@@ -1602,3 +1651,6 @@ jQuery(document).ready(function() {
     jQuery("#list_dialog").draggable();
     jQuery("#public_list_dialog").draggable();
 });
+
+
+

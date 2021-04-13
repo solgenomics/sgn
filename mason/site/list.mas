@@ -75,10 +75,13 @@
                     <div id="validate_stock_add_missing_accessions_html">
                     </div>
                     <div class="well">
-                    <h3>Elements not found:</h3>
-                    <table>
+                      <h3>Elements not found:</h3>
+                      <table>
                         <tbody></tbody>
                     </table>
+
+		      <div id="adjust_case_div"><br /><br /><br /></div>
+		    <button class="btn btn-default" id="adjust_case_action_button" disabled>Adjust Case</button>
                     </div>
                 </div>
             </div>
