@@ -44,6 +44,7 @@ my %reference_list;
 my @protocol_set;
 my $protocol_str;
 my $locations_html = '';
+my %smd_params;
 
 my $sth = $dbh->prepare("select nd_protocol_id, name from nd_protocol");
 $sth->execute();
@@ -91,6 +92,19 @@ if ($count > 0) {
         $reference = $reference_list{$row[0]};
         $url = "<a href=\"/breeders_toolbox/protocol/$row[0]\">$protocol_name</a>";;
         $locations_html .= "<tr><td>$row[1]<td>$url<td>$reference<td>$species_name<td>$row[2]<td>$row[3]<td>$row[4]<td>$row[5]";
+
+        my $chrom = $row[2];
+        my $pos = $row[3];
+        my $smd_id = $reference.'-'.$species_name.'-'.$chrom.'-'.$pos;
+        $smd_id =~ s/\s//g;
+        $smd_params{$smd_id} = {
+          'feature' => $chrom,
+          'species' => $species_name,
+          'reference_genome' => $reference,
+          'start' => $pos,
+          'end' => $pos
+        };
+
     }
     $locations_html .=  "</table>";
 
@@ -106,4 +120,10 @@ my @displayed_pcr;
 
 <&| /page/info_section.mas, title=>'Genotype locations', collapsible=>1, collapsed=>0 &>
   <% $locations_html %>
+</&>
+
+<&| /page/info_section.mas, title=>'Sequence Metadata', collapsible=>1, collapsed=>0 &>
+  <& /tools/sequence_metadata/quick_query_sequence_metadata.mas, 
+    params=>\%smd_params
+  &>
 </&>
