@@ -21,15 +21,6 @@ $role => "stock_orderer"
             <div class = "panel-body">
                 <div style="overflow:scroll">
                     <table id = "contact_person_orders" class="table table-hover table-striped">
-                        <thead>
-                            <tr>
-                                <th>Order Number</th>
-                                <th>Ordered by</th>
-                                <th>Submitted Date</th>
-                                <th>Items</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
                     </table>
                 </div>
             </div>
@@ -152,6 +143,27 @@ $role => "stock_orderer"
     </div>
 </div>
 
+<div class="modal fade" id="update_order_dialog" name="update_order_dialog" tabindex="-1" role="dialog" aria-labelledby="updateOrderDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateOrderDialog">Update Order</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="update_order_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="update_order_button" type="button" class="btn btn-primary" >Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
@@ -190,9 +202,32 @@ $(window).ready( function() {
     jQuery('#contact_person_orders').DataTable( {
         'autoWidth': false,
         'ajax': '/ajax/order/contact_person_orders',
+        columns: [
+            { title: "Order Number", "data": "order_id" },
+            { title: "Ordered by", "data": "order_from_name" },
+            { title: "Submitted Date", "data": "create_date" },
+            { title: "Items", "data": "item_list" },
+            { title: "Status", "data": "order_status" },
+            { title: "Update", "data": "null", "render": function ( data, type, row ) { return "<a onclick='updateOrder(\""+row.order_id+"\", \""+row.order_from_name+"\")' >Update</a>"; } },
+        ]
     });
 
 });
 
+function updateOrder(order_id, order_from_name){
+    var html = '';
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Order Number: </label><div class="col-sm-9" ><input class="form-control" id="update_order_id" name="update_order_id" value="'+order_id+'" disabled></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Ordered by: </label><div class="col-sm-9" ><input class="form-control" id="ordered_by_name" name="ordered_by_name" value="'+order_from_name+'" disabled></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Status: </label><div class="col-sm-9" ><select class="form-control" id="update_order_status" name="update_order_status"><option disabled value="" selected hidden>Select a status</option>';
+    html = html + '<option value='+"Being Processed"+'>'+"Being Processed"+'</option>';
+    html = html + '<option value='+"Shipped"+'>'+"Shipped"+'</option>';
+    html = html + '<option value='+"Completed"+'>'+"Completed"+'</option>';
+    html = html + '<option value='+"Cancelled"+'>'+"Cancelled"+'</option>';
+
+
+    jQuery('#update_order_div').html(html);
+    jQuery('#update_order_dialog').modal('show');
+
+}
 
 </script>

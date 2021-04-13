@@ -154,7 +154,6 @@ sub get_orders_from_person_id {
 #            print STDERR "ITEM =".Dumper($item)."\n";
         }
 
-#        print STDERR "ORDER ID =".Dumper($order_id);
         push @orders, [$order_id, $order_to_name, $create_date, $item_list, $order_status];
     }
     print STDERR "ORDERS =".Dumper(\@orders)."\n";
@@ -193,13 +192,17 @@ sub get_orders_to_person_id {
 #            print STDERR "ITEM =".Dumper($item)."\n";
         }
 
-#        print STDERR "ORDER ID =".Dumper($order_id);
-        push @orders, [$order_id, $order_from_name, $create_date, $item_list, $order_status];
+        push @orders, {
+            order_id => $order_id,
+            order_from_name => $order_from_name,
+            create_date => $create_date,
+            item_list => $item_list,
+            order_status => $order_status
+        }
     }
     print STDERR "ORDERS =".Dumper(\@orders)."\n";
     return \@orders;
 }
-
 
 
 1;
