@@ -49,7 +49,7 @@ endpoints related to sequence metadata that can be used to query the database us
         <tr>
             <td>reference_genome<br /><strong>REQUIRED</strong><br />if&nbsp;either&nbsp;<code>start</code> or&nbsp;<code>end</code> positions are provided</td>
             <td>Name of the reference genome used for the start and/or end positions</td>
-            <td><code>1A</code></td>
+            <td><code>RefSeq_v1</code></td>
         </tr>
         <tr>
             <td>type_id</td>
@@ -483,6 +483,7 @@ chr1A	.	.	1211057	1211057	0.0454952857260828	.	.	Population="TCAP90K_SpringAM_pa
 chr1A	.	.	1234797	1234797	0.0454952857260828	.	.	ID=RAC875_c95364_59;pvalue=0.00080725065468678;zvalue=3.350296620481;qvalue=0.0454952857260828;Trait="SDS sedimentation";Variable=CO_321:0001138;Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon";Locus=TraesCS1A02G002500
 chr1A	.	.	1342766	1342766	0.0394888300035745	.	.	ID=Kukri_c2408_857;qvalue=0.0394888300035745;pvalue=0.000513039677027759;zvalue=3.4738542266235;Trait="SDS sedimentation";Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon";Locus=TraesCS1A02G002700;Variable=CO_321:0001138
     </pre>
+  </div>
 </div>
 
 <br /><br /><br />

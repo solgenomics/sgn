@@ -1,0 +1,201 @@
+<!-- 
+==== Sequence Metadata Quick Query Component ====
+This mason component can be used to embed one or more tables of stored sequence metadata features 
+over a relatively small sequence range.  The `params` argument to the component takes a hashref 
+containing the sequence metadata query parameters in the following format:
+my %params = (
+    'table1' => {
+        'feature' => '1A',
+        'species' => 'Triticum aestivum',
+        'reference_genome' => 'RefSeq_v1',
+        'start' => 1176337,
+        'end' => 1176337
+    },
+    'table2' => {
+        'feature' => '1A',
+        'species' => 'Triticum durum',
+        'reference_genome' => 'Triticum durum',
+        'start' => 1176337,
+        'end' => 1176337
+    }
+);
+-->
+
+<%args>
+    $params => undef
+</%args>
+
+<%init>
+    if (!defined $params ) {
+        print "<p class='args-error'><strong>ERROR: </strong>missing component arguments!</p>";
+    }
+</%init>
+
+
+<!-- Results Table(s) -->
+% foreach my $id (keys %$params) {
+    <br />
+    <div class="well">
+        <table class="table quick-query-table">
+            <thead><tr>
+                <th>Reference Genome</th>
+                <th>Species</th>
+                <th>Feature</th>
+                <th>Start</th>
+                <th>End</th>
+                <th></th>
+            </tr></thead>
+            <tr>
+                <td><% $params->{$id}->{'reference_genome'} %></td>
+                <td><% $params->{$id}->{'species'} %></td>
+                <td><% $params->{$id}->{'feature'} %></td>
+                <td><% $params->{$id}->{'start'} %></td>
+                <td><% $params->{$id}->{'end'} %></td>
+                <td><a href="/search/sequence_metadata?reference_genome=<% $params->{$id}->{'reference_genome'} %>&feature=<% $params->{$id}->{'feature'} %>&start=<% $params->{$id}->{'start'} %>&end=<% $params->{$id}->{'end'} %>">Modify&nbsp;Query</a></td>
+            </tr>
+        </table>
+        <table id="<% $id %>" class="display"></table>
+    </div>
+    <br />
+% }
+
+
+<script type="text/javascript">
+
+/**
+ * Perform the query with the provided parameters
+ * - call display_results() with the query results, if successful
+ * @param {string} id Table ID
+ * @param {string} species Species Name
+ * @param {string} reference Reference Genome Name
+ * @param {string} feature Feature/Chromosome Name
+ * @param {int} start Start Position
+ * @param {int} end End Position
+ */
+function quick_query(id, species, reference, feature, start, end) {
+
+    // Build Query URL
+    let params = {
+        feature_name: feature,
+        species_name: species,
+        reference_genome: reference,
+        start: start,
+        end: end,
+        format: 'JSON'
+    }
+    let q = new URLSearchParams(params).toString();
+    let url = '/ajax/sequence_metadata/query?' + q;
+
+    // Query Database
+    jQuery.ajax({
+        type: 'GET',
+        url: url,
+        dataType: 'json',
+        success: function(data) {
+            display_results(id, data);
+        },
+        error: function() {
+            console.log("ERROR: Could not query sequence metadata!");
+        }
+    });
+
+}
+
+/**
+ * Display the query results in the specified table
+ * @param {string} id Table ID
+ * @param {Object} data Query Results
+ */
+function display_results(id, data) {
+    let dt = jQuery('#' + id).DataTable();
+    dt.clear();
+    if ( data && data.error ) {
+        console.log("ERROR: Could not query sequence metadata")
+        console.log(data.error);
+    }
+    else if ( data && data.results && data.results.length > 0) {
+        dt.rows.add(data.results);
+    }
+    else {
+        console.log("No sequence metadata results found");
+    }
+    dt.draw();
+}
+
+/**
+ * Render the Attributes column
+ * @param data The column's data for the current row
+ * @param {String} type The display type
+ * @param {Object} row The current row's data
+ * @returns {String} The text/html to display in the table
+ */
+function renderAttributesColumn(data, type, row) {
+    let rtn = [];
+    let sep = type === 'export' ? ';' : '<br />';
+    if ( data ) {
+        var keys = Object.keys(data);
+        keys.sort();
+        for ( var i=0; i<keys.length; ++i ) {
+            let key = keys[i];
+            let value = data[keys[i]];
+            if ( type === 'export' ) {
+                rtn.push(key + '=' + value);
+            }
+            else {
+                rtn.push("<strong>" + key + ":</strong>&nbsp;" + value);
+            }
+        }
+    }
+    return rtn.join(sep);
+}
+
+</script>
+
+
+
+<!-- Init each table and perform the query -->
+% foreach my $id (keys %$params) {
+    <script type="text/javascript">
+        jQuery(document).ready(function() {
+
+            // Init DataTable
+            jQuery("#<% $id %>").DataTable({
+                dom: 'rtip',
+                autoWidth: false,
+                data: [],
+                columns: [
+                    { title: "Protocol", data: "nd_protocol_name" },
+                    { title: "Feature", data: "feature_name" },
+                    { title: "Start", data: "start" },
+                    { title: "End", data: "end" },
+                    { title: "Score", data: "score" },
+                    { title: "Attributes", data: "attributes", render: renderAttributesColumn },
+                ]
+            });
+
+            // Perform Query
+            quick_query(
+                "<% $id %>",
+                "<% $params->{$id}->{'species'} %>",
+                "<% $params->{$id}->{'reference_genome'} %>",
+                "<% $params->{$id}->{'feature'} %>",
+                "<% $params->{$id}->{'start'} %>",
+                "<% $params->{$id}->{'end'} %>"
+            );
+        });
+    </script>
+% }
+
+
+
+
+<style>
+    .args-error {
+        width: 100%;
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid;
+    }
+</style>
