@@ -23,16 +23,21 @@ use strict;
 use Getopt::Std;
 use DBI;
 use Bio::Chado::Schema;
+use SGN::Model::Cvterm;
 use CXGN::Phenome::Schema;
 
-our ($opt_H, $opt_D, $opt_t);
-getopts('H:D:t');
+our ($opt_H, $opt_D, $opt_s, $opt_t);
+getopts('H:D:ts:');
 
 my $file = shift;
 
 print "Password for $opt_H / $opt_D: \n";
 my $pw = <>;
 chomp($pw);
+
+my $stock_type = $opt_s || 'accession';
+print STDERR "Working with stock_type $stock_type\n";
+
 
 print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
@@ -42,6 +47,8 @@ my $dbh = DBI->connect($dsn, "postgres", $pw);
 print STDERR "Connecting to DBI schema...\n";
 my $bcs_schema = Bio::Chado::Schema->connect($dsn, "postgres", $pw);
 my $phenome_schema = CXGN::Phenome::Schema->connect($dsn, "postgres", $pw,  { on_connect_do => ['set search_path to public,phenome;'] });
+
+my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($bcs_schema, $stock_type, 'stock_type')->cvterm_id();
     
 my $stock_count = 0;
 my $deleted_stock_count = 0;
@@ -63,10 +70,10 @@ while (<$F>) {
 
     print STDERR "Processing $stock\n";
 
-    my $stock_row = $bcs_schema->resultset("Stock::Stock")->find( { uniquename => $stock });
+    my $stock_row = $bcs_schema->resultset("Stock::Stock")->find( { uniquename => $stock , type_id => $stock_type_id });
     
     if (!$stock_row) { 
-	print STDERR "Could not find stock $stock. Skipping...\n";
+	print STDERR "Could not find stock $stock of type $stock_type. Skipping...\n";
 	$missing_stocks++;
 	next;
     }
