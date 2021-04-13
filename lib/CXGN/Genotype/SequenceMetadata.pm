@@ -601,11 +601,11 @@ LEFT JOIN public.nd_protocol ON nd_protocol.nd_protocol_id = featureprop_json.nd
         $query .= ") ";
     }
 
-    print STDERR "QUERY:\n";
-    print STDERR "$query\n";
-    print STDERR "QUERY PARAMS:\n";
-    use Data::Dumper;
-    print STDERR Dumper \@query_params;
+    # print STDERR "QUERY:\n";
+    # print STDERR "$query\n";
+    # print STDERR "QUERY PARAMS:\n";
+    # use Data::Dumper;
+    # print STDERR Dumper \@query_params;
 
     # Perform the search
     my $h = $dbh->prepare($query);

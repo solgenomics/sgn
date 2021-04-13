@@ -648,9 +648,43 @@ sub sequence_metadata_query_GET : Args(0) {
     }
 
 
-    # Internal/Breedbase Format
-    if ( $format eq 'JSON' ) {
-        $c->stash->{rest} = { results => $results };
+    # GA4GH JSON Format
+    if ( $format eq 'GA4GH' ) {
+        my @features = ();
+
+        my $count = 0;
+        foreach my $item (@$results) {
+            my $id = $item->{featureprop_json_id} . '.' . $count;
+
+            my %attributes = ();
+            my $ra = $item->{attributes};
+            $ra->{score} = $item->{score};
+            foreach my $key (keys %$ra) {
+                $attributes{$key} = [$ra->{$key}];
+            }
+            my %bb_metadata = (
+                type_id => [$item->{type_id}],
+                type_name => [$item->{type_name}],
+                nd_protocol_id => [$item->{nd_protocol_id}],
+                nd_protocol_name => [$item->{nd_protocol_name}]
+            );
+            $attributes{'bb_metadata'} = \%bb_metadata;
+
+            my %feature = (
+                id => $id,
+                parent_id => $item->{feature_id},
+                reference_name => $item->{feature_name},
+                feature_set_id => $item->{nd_protocol_id},
+                start => $item->{start},
+                end => $item->{end},
+                attributes => \%attributes
+            );
+            push(@features, \%feature);
+
+            $count++;
+        }
+
+        $c->stash->{rest} = { features => \@features };
         $c->detach();
     }
 
@@ -691,43 +725,9 @@ sub sequence_metadata_query_GET : Args(0) {
         $c->detach();
     }
 
-    # GA4GH JSON Response
+    # Internal/Breedbase JSON Format
     else {
-        my @features = ();
-
-        my $count = 0;
-        foreach my $item (@$results) {
-            my $id = $item->{featureprop_json_id} . '.' . $count;
-
-            my %attributes = ();
-            my $ra = $item->{attributes};
-            $ra->{score} = $item->{score};
-            foreach my $key (keys %$ra) {
-                $attributes{$key} = [$ra->{$key}];
-            }
-            my %bb_metadata = (
-                type_id => [$item->{type_id}],
-                type_name => [$item->{type_name}],
-                nd_protocol_id => [$item->{nd_protocol_id}],
-                nd_protocol_name => [$item->{nd_protocol_name}]
-            );
-            $attributes{'bb_metadata'} = \%bb_metadata;
-
-            my %feature = (
-                id => $id,
-                parent_id => $item->{feature_id},
-                reference_name => $item->{feature_name},
-                feature_set_id => $item->{nd_protocol_id},
-                start => $item->{start},
-                end => $item->{end},
-                attributes => \%attributes
-            );
-            push(@features, \%feature);
-
-            $count++;
-        }
-
-        $c->stash->{rest} = { features => \@features };
+        $c->stash->{rest} = { results => $results };
         $c->detach();
     }
    
