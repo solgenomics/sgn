@@ -3,7 +3,7 @@ function display_matching_traits () {
 
 var component_ids = get_component_ids();
 // restrict to allowed combos here
-//console.log("component_ids are "+component_ids);
+console.log("component_ids are "+component_ids);
 var response = retrieve_matching_traits(component_ids);
 var matching_traits = [];
 if (response[0]) {matching_traits = response[0]};
@@ -48,7 +48,9 @@ function get_component_ids () {
   if (jQuery("#tod_select").val()) { component_ids.push(jQuery("#tod_select").val()); }
   if (jQuery("#toy_select").val()) { component_ids.push(jQuery("#toy_select").val()); }
   if (jQuery("#gen_select").val()) { component_ids.push(jQuery("#gen_select").val()); }
+  if (jQuery("#pst_select").val()) { component_ids.push(jQuery("#pst_select").val()); }
   if (jQuery("#evt_select").val()) { component_ids.push(jQuery("#evt_select").val()); }
+    
   return component_ids;
 }
 
@@ -65,8 +67,9 @@ function retrieve_matching_traits (component_ids) {
   ids["tod_ids"] = jQuery("#tod_select").val();
   ids["toy_ids"] = jQuery("#toy_select").val();
   ids["gen_ids"] = jQuery("#gen_select").val();
+  ids["pst_ids"] = jQuery("#pst_select").val();
   ids["evt_ids"] = jQuery("#evt_select").val();
-
+    
 jQuery.ajax( {
   url: '/ajax/onto/get_traits_from_component_categories',
   async: false,
@@ -78,6 +81,7 @@ jQuery.ajax( {
           'tod_ids': ids["tod_ids"],
           'toy_ids': ids["toy_ids"],
           'gen_ids': ids["gen_ids"],
+  	  'pst_ids': ids["pst_ids"],
           'evt_ids': ids["evt_ids"],
         },
   success: function(response) {
