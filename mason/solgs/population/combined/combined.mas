@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME
- 
+
 /solgs/population/combined/combined.mas - displays a list of traits common to the combined trials
 
 =AUTHOR
@@ -19,8 +19,9 @@ $combo_pops_id
 $show_data => 1;
 $traits_form => ''
 $all_traits_file
-$project_name
-$project_desc
+$training_pop_id
+$training_pop_name
+$training_pop_desc
 $markers_no
 $traits_no
 $stocks_no
@@ -31,7 +32,7 @@ $genotyping_protocol_id
 </%args>
 
 <%perl>
-
+	if (!$training_pop_id) {$training_pop_id = $combo_pops_id;}
 </%perl>
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
@@ -40,20 +41,20 @@ $genotyping_protocol_id
 <br />
 <br />
 
-<& /page/page_title.mas, 
-   title => "Select one or more traits from training population \"$project_name\" to build a GS model and predict GEBVs for."
+<& /page/page_title.mas,
+   title => "Select one or more traits from training population \"$training_pop_name\" to build a GS model and predict GEBVs for."
 &>
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
     title       => "Training population summary",
   &>
 
  <& summary.mas,
-    project_id   => $combo_pops_id,
-    project_name => $project_name,
-    project_desc => $project_desc,
+    training_pop_id   => $combo_pops_id,
+    training_pop_name => $training_pop_name,
+    training_pop_desc => $training_pop_desc,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
     stocks_no    => $stocks_no,
@@ -61,19 +62,28 @@ $genotyping_protocol_id
     owner        => $owner,
  &>
 
+ <& /solgs/population/hidden_input.mas,
+    training_pop_id  => $combo_pops_id,
+   combo_pops_id => $combo_pops_id,
+ 	training_pop_name => $training_pop_name,
+ 	training_pop_desc => $training_pop_desc,
+ 	genotyping_protocol_id => $genotyping_protocol_id,
+
+   &>
+
 </&>
 
-% if ($show_data) 
+% if ($show_data)
 %{
- 
 
-<&| /page/info_section.mas, 
-      collapsible => 1, 
-      collapsed   => 0, 
+
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 0,
       title       => "Traits"
 &>
-       
-<& select_traits.mas, 
+
+<& select_traits.mas,
      combo_pops_id      => $combo_pops_id,
      traits_form        => $traits_form,
   all_traits_file    => $all_traits_file,
@@ -82,7 +92,7 @@ $genotyping_protocol_id
 
 </&>
 
-       
+
 
 
 <& /solgs/population/acronym.mas,
@@ -93,9 +103,9 @@ $genotyping_protocol_id
 % else
 %{
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
     title       => "Data Accessibility",
   &>
 
@@ -103,6 +113,3 @@ $genotyping_protocol_id
 
 </&>
 %}
-
- <input type="hidden" id="population_id" value="<% $combo_pops_id %>" />
- <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

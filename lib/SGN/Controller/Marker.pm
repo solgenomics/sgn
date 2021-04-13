@@ -8,6 +8,8 @@ package SGN::Controller::Marker;
 use Moose;
 use namespace::autoclean;
 use CXGN::Marker::Search;
+use CXGN::Marker::SearchJson;
+use strict;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -47,7 +49,6 @@ Show the HTML detail page for this marker.
 
 =cut
 
-
 sub marker_details: Chained('get_marker') PathPart('details') :Args(0) {
   my ( $self, $c ) = @_;
 
@@ -56,7 +57,6 @@ sub marker_details: Chained('get_marker') PathPart('details') :Args(0) {
       dbh       => $c->dbc->dbh,
      );
 }
-
 
 =head2 get_marker
 
@@ -67,17 +67,47 @@ id.  The marker ID is an SGN-M identifier.
 
 =cut
 
-
 sub get_marker: Chained('/') PathPart('marker') :CaptureArgs(1) {
-    my ( $self, $c, $marker_id ) = @_;
+    my ( $self, $c, $marker ) = @_;
 
-    ($marker_id) = $marker_id =~ /^SGN-M(\d+)$/i
-        and $c->stash->{marker} = CXGN::Marker->new( $c->dbc->dbh, $marker_id)
-        or $c->throw_404('No marker found with that ID');
-
-    $c->stash->{marker_id} = $marker_id;
+    if ($marker =~/^SGN-M(\d+)*/i) {
+	my ($marker_id) = $marker =~ /^SGN-M(\d+)$/i;
+        $c->stash->{marker} = CXGN::Marker->new( $c->dbc->dbh, $marker_id);
+	$c->stash->{marker_id} = $marker_id;
+    } else {
+        $c->throw_404('No marker found with that ID');
+    }
 }
 
+=head2 marker_details_name
+
+Public path: /marker/IWA10/details
+
+Show the HTML detail page for this marker.
+
+=cut
+
+sub marker_details_name: Chained('get_marker_json') PathPart('details') :Args(0) {
+  my ( $self, $c ) = @_;
+
+  $c->stash(
+      template  => '/markers/indexGenotype.mas',
+      dbh       => $c->dbc->dbh,
+     );
+}
+
+=head2 get_marker_json
+
+Public path: /marker/IWA10
+
+Chaining base for fetching the marker indicated by the given marker name
+
+=cut
+
+sub get_marker_json: Chained('/') PathPart('markerGeno') :CaptureArgs(1) {
+    my ( $self, $c, $marker ) = @_;
+    $c->stash->{marker_name} = $marker;
+}
 
 =head2 view_by_name 
 
@@ -124,43 +154,53 @@ sub search_marker : Private {
     my $dbh = $c->dbc->dbh();
     
     my $msearch = CXGN::Marker::Search->new($dbh);
+    my $msearchJ = CXGN::Marker::SearchJson->new($dbh);
     $msearch->name_like($marker_query);
     $msearch->perform_search();
     my @marker_ids = $msearch->fetch_id_list();
+    my @marker_entries = $msearchJ->search_marker_json($marker_query);
 
     my @filtered_marker_ids = _uniq(@marker_ids);
-    my $count = scalar @filtered_marker_ids;
+    my $countm = scalar @filtered_marker_ids;
+    my @filtered_marker_entries = _uniq(@marker_entries);
+    my $countp = scalar @filtered_marker_entries;
 
-    
     # NO MATCH FOUND
-    if ( $count == 0 ) {
-        $c->stash->{template} = "generic_message.mas";
-        $c->stash->{message} = "<strong>No Matching Marker Found</strong> ($marker_query)<br />You can view and search for markers from the <a href='/search/markers'>Marker Search Page</a>";
-    }
+    if ( ($countm == 0) && ($countp == 0) ) {
+	$c->stash->{template} = "generic_message.mas";
+	$c->stash->{message} = "<strong>No Matching Marker Found</strong> ($marker_query)<br />You can view and search for markers from the <a href='/search/markers'>Marker Search Page</a>";
 
     # MULTIPLE MATCHES FOUND
-    elsif ( $count > 1 ) {
-        my @marker_objs = $msearch->fetch_full_markers();
-        my $list = "<ul>";
-        foreach (@marker_objs) {
-            my $marker_id = $_->marker_id();
+    } elsif ( ($countm > 1) || ($countp > 1) ) {
+	my @marker_objs = $msearch->fetch_full_markers();
+        my $list = "<table style=\"border-spacing: 10px; border-collapse: separate;\">";
+	foreach (@marker_objs) {
+	    my $marker_id = $_->marker_id();
             my $marker_name = $_->name_that_marker();
             my $url = "/search/markers/markerinfo.pl?marker_id=$marker_id";
-            $list .= "<li><a href='$url'>$marker_name</a></li>";
+            $list .= "<tr><td><a href='$url'>$marker_name</a><td>marker is present on maps</li>";
+	}
+        foreach (@marker_entries) {
+	    my $link = split(/<td>/, $_);
+	    my $url = "/search/markers/markerinfojson.pl?protocol_id=";
+            $list .= "<tr><td>$_<td>marker is from genotype protocols";
         }
-        $list .= "</ul>";
-        $c->stash->{template} = "generic_message.mas";
-        $c->stash->{message} = "<strong>Multiple Markers Found</strong><br />" . $list;
-    }
-
+        $list .= "</table>";
+	$c->stash->{template} = "generic_message.mas";
+	$c->stash->{message} = "<strong>Markers Results</strong><br />" . $list;
     # 1 MATCH FOUND - FORWARD TO VIEW MARKER
-    else {
-        my $marker_id = $filtered_marker_ids[0];
-        $c->res->redirect('/search/markers/markerinfo.pl?marker_id=' . $marker_id, 301);
-        $c->detach();
+    } else {
+	if ($countm > 0) {
+	    my $marker_id = $filtered_marker_ids[0];
+            $c->res->redirect('/search/markers/markerinfo.pl?marker_id=' . $marker_id, 301);
+        } elsif ($countp > 0) {
+            $c->res->redirect('/search/markers/markerinfo.pl?marker_name=' . $marker_query, 301);
+	} else {
+	    $c->stash->{template} = "generic_message.mas";
+            $c->stash->{message} = "<strong>No Matching Marker Found</strong> ($marker_query)<br />You can view and search for markers from the <a href='/search/markers'>Marker Search Page</a>";
+	}
+	$c->detach();
     }
-
-
 }
 
 sub _uniq : Private {

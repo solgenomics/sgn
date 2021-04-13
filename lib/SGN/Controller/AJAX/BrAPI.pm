@@ -156,7 +156,7 @@ sub _clean_inputs {
 	if($alldata){
 		my %data = ref $alldata eq 'ARRAY' ? map { $_ => $_} @{$alldata} : %{$alldata};
 		%$params = $params ? (%data, %$params) : %data;
-	} 
+	}
 
 	foreach (keys %$params){
 		my $values = $params->{$_};
@@ -195,27 +195,24 @@ sub _authenticate_user {
 	my $expired;
 	my $wildcard = 'any';
 
-	my @server_permission;
-	my $version = $c->request->captures->[0];
-
-	my $permissions = "CXGN::BrAPI::" . $version  . "::ServerInfo"; 
-	my @server_permission;
+	my %server_permission;
 	my $rc = eval{
-		my $server_permission =  $permissions->info()->{$c->request->method};
-		@server_permission  = split ',', $server_permission;
+		my $server_permission = $c->config->{"brapi_" . $c->request->method};
+		my @server_permission  = split ',', $server_permission;
+		%server_permission = map { $_ => 1 } @server_permission;
 	1; };
 
-	if(!$rc && !@server_permission){
-		push @server_permission, $wildcard;
+	if(!$rc && !%server_permission){
+		$server_permission{$wildcard} = 1;
 	}
 
 	# If our brapi config is set to authenticate or the controller calling this asks for forcing of
 	# authentication or serverinfo call method request auth, we authenticate.
-    if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !grep { $_ eq $wildcard } @server_permission){
+    if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !exists($server_permission{$wildcard})){
         ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
         #print STDERR $user_id." : ".$user_type." : ".$expired;
 
-        if (!$user_id || $expired || !$user_type || (grep {$_ ne $user_type} @server_permission && grep { $_ ne $wildcard } @server_permission)) {
+        if (!$user_id || $expired || !$user_type || (!exists($server_permission{$user_type}) && !exists($server_permission{$wildcard}))) {
             my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
 
             _standard_response_construction($c, $brapi_package_result, 401);
@@ -399,7 +396,7 @@ sub calls_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Calls');
-	my $brapi_package_result = $brapi_module->search( 
+	my $brapi_package_result = $brapi_module->search(
 		$clean_inputs
 	);
 	_standard_response_construction($c, $brapi_package_result);
@@ -745,9 +742,9 @@ sub germplasm_search_old_POST {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub germplasm_search  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') { }
+sub germplasm  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') { }
 
-sub germplasm_search_GET {
+sub germplasm_GET {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
@@ -759,7 +756,7 @@ sub germplasm_search_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub germplasm_search_POST {
+sub germplasm_POST {
     my $self = shift;
     my $c = shift;
     my ($auth,$user_id) = _authenticate_user($c);
@@ -827,12 +824,6 @@ sub germplasm_single  : Chained('brapi') PathPart('germplasm') CaptureArgs(1) {
 
 
 sub germplasm_detail  : Chained('germplasm_single') PathPart('') Args(0) : ActionClass('REST') { }
-
-sub germplasm_detail_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
-}
 
 sub germplasm_detail_GET {
 	my $self = shift;
@@ -1963,9 +1954,9 @@ sub studies_search_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub studies_search_new  : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
+sub studies  : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
 
-sub studies_search_new_GET {
+sub studies_GET {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
@@ -1997,7 +1988,7 @@ sub studies_search_new_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
-sub studies_search_new_POST {
+sub studies_POST {
     my $self = shift;
     my $c = shift;
     my ($auth, $user_id) = _authenticate_user($c);
@@ -2027,16 +2018,6 @@ sub studies_search_retrieve : Chained('brapi') PathPart('search/studies') Args(1
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'Studies');
 }
-
-# sub studies : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
-
-# sub studies_GET {
-# 	my $self = shift;
-# 	my $c = shift;
-
-# 	# Use the studies-search end point for this
-# 	studies_search_GET($self, $c);
-# }
 
 
 =head2 brapi/v1/studies/{studyId}/germplasm?pageSize=20&page=1
@@ -2287,12 +2268,6 @@ sub studies_layouts_GET {
 
 sub studies_observations : Chained('studies_single') PathPart('observationunits') Args(0) : ActionClass('REST') { }
 
-sub studies_observations_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
-}
-
 sub studies_observations_GET {
 	my $self = shift;
 	my $c = shift;
@@ -2342,13 +2317,6 @@ sub studies_observations_GET {
 =cut
 
 sub studies_table : Chained('studies_single') PathPart('table') Args(0) : ActionClass('REST') { }
-
-sub studies_table_POST {
-	my $self = shift;
-	my $c = shift;
-	my $trait_id = shift;
-	#my $auth = _authenticate_user($c);
-}
 
 sub studies_table_GET {
 	my $self = shift;
@@ -2631,7 +2599,7 @@ sub observation_unit_single_PUT {
     my $observationUnits = $clean_inputs;
     $observationUnits->{observationUnitDbId} = $observation_unit_db_id;
     my @all_observations_units;
-    push @all_observations_units, $observationUnits;	
+    push @all_observations_units, $observationUnits;
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
     my $brapi_package_result = $brapi_module->observationunits_update(\@all_observations_units);
@@ -2665,7 +2633,7 @@ sub observation_units_search_retrieve  : Chained('brapi') PathPart('search/obser
     my $search_id = shift;
     retrieve_results($self, $c, $search_id, 'ObservationUnits');
 }
- 
+
 
 sub phenotypes_search_table : Chained('brapi') PathPart('phenotypes-search/table') Args(0) : ActionClass('REST') { }
 
@@ -3292,7 +3260,7 @@ sub variables_search_save  : Chained('brapi') PathPart('search/variables') Args(
 
 sub variables_search_save_POST {
     my $self = shift;
-    my $c = shift; 
+    my $c = shift;
     save_results($self,$c,$c->stash->{clean_inputs},'ObservationVariables');
 }
 
@@ -3316,7 +3284,7 @@ sub observationvariable_list_GET {
 	my $brapi_package_result = $brapi_module->search({
 		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
 		traitClasses => $clean_inputs->{traitClass},
-		studyDbId => $clean_inputs->{studyDbId},
+		studyDbIds => $clean_inputs->{studyDbId},
 		externalReferenceIDs => $clean_inputs->{externalReferenceID},
 		externalReferenceSources => $clean_inputs->{externalReferenceSource},
 		supportedCrop =>$supported_crop,
@@ -3376,9 +3344,9 @@ sub _sample_search_process {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
-sub samples_list_new : Chained('brapi') PathPart('samples') Args(0) : ActionClass('REST') { }
+sub samples : Chained('brapi') PathPart('samples') Args(0) : ActionClass('REST') { }
 
-sub samples_list_new_GET {
+sub samples_GET {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
@@ -3765,7 +3733,7 @@ sub observations_detail_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Observations');
-    my $brapi_package_result = $brapi_module->detail({ 
+    my $brapi_package_result = $brapi_module->detail({
     	observationDbId => $c->stash->{observation_id}
     });
     _standard_response_construction($c, $brapi_package_result);
@@ -3896,7 +3864,7 @@ sub markers_search_retrieve : Chained('brapi') PathPart('search/markers') Args(1
  Usage: To retrieve variants
  Desc: BrAPI v2.0
  Args:
- Side Effects: 
+ Side Effects:
 
 =cut
 
@@ -3928,7 +3896,7 @@ sub variants_detail_GET {
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Variants');
-    my $brapi_package_result = $brapi_module->detail({ 
+    my $brapi_package_result = $brapi_module->detail({
     	variantDbId => $c->stash->{variants_id}
     });
     _standard_response_construction($c, $brapi_package_result);
@@ -4201,7 +4169,7 @@ sub images_single_PUT {
     my $image = $clean_inputs;
     $image->{imageDbId} = $c->stash->{image_id};
     my @all_images;
-    push @all_images, $image;   
+    push @all_images, $image;
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Images');
     my $image_dir = File::Spec->catfile($c->config->{static_datasets_path}, $c->config->{image_dir});
@@ -4758,7 +4726,7 @@ sub referencesets_search_retrieve : Chained('brapi') PathPart('search/references
 
 =head2 brapi/v2/reference
 
- Usage: To retrieve data for reference 
+ Usage: To retrieve data for reference
  Desc:
  Return JSON example:
         {
@@ -5082,6 +5050,20 @@ sub seedlot_single_transaction_fetch_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub breedingmethods : Chained('brapi') PathPart('breedingmethods') Args(0) : ActionClass('REST') { }
+
+sub breedingmethods_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('BreedingMethods');
+    my $brapi_package_result = $brapi_module->search($clean_inputs);
+
+    _standard_response_construction($c, $brapi_package_result);
+}
+
 
 #functions
 sub save_results {
@@ -5090,13 +5072,13 @@ sub save_results {
     my $search_params = shift;
     my $search_type = shift;
 
-	my $version = $c->request->captures->[0];
-	my $permissions = "CXGN::BrAPI::" . $version  . "::ServerInfo"; 
-	my $server_permission;
+	my %server_permission;
 	my $rc = eval{
-		$server_permission =  $permissions->info()->{'GET'};
+		my $server_permission = $c->config->{"brapi_GET"};
+		my @server_permission  = split ',', $server_permission;
+		%server_permission = map { $_ => 1 } @server_permission;
 	1; };
-	if($rc && $server_permission ne 'any'){
+	if($rc && !$server_permission{'any'}){
 	    my $auth = _authenticate_user($c);
 	}
 
@@ -5117,16 +5099,7 @@ sub retrieve_results {
     my $c = shift;
     my $search_id = shift;
     my $search_type = shift;
-    
-	my $version = $c->request->captures->[0];
-	my $permissions = "CXGN::BrAPI::" . $version  . "::ServerInfo"; 
-	my $server_permission;
-	my $rc = eval{
-		$server_permission =  $permissions->info()->{'GET'};
-	1; };
-	if($rc && $server_permission ne 'any'){
-	    my $auth = _authenticate_user($c);
-	}
+    my $auth = _authenticate_user($c);
 
     my $clean_inputs = $c->stash->{clean_inputs};
     my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');

@@ -1665,6 +1665,28 @@ sub set_genotyping_vendor_order_id {
     $self->_set_projectprop('genotyping_vendor_order_id', $value);
 }
 
+=head2 accessors get_genotyping_vendor_submission_id(), set_genotyping_vendor_submission_id()
+
+ Usage: For genotyping plates, if a genotyping plate has been submitted to genotyping facility, the order id of that plate can be set here
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_genotyping_vendor_submission_id {
+    my $self = shift;
+    return $self->_get_projectprop('genotyping_vendor_submission_id');
+}
+
+sub set_genotyping_vendor_submission_id {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('genotyping_vendor_submission_id', $value);
+}
+
 =head2 accessors get_genotyping_plate_format(), set_genotyping_plate_format()
 
  Usage: For genotyping plates, this records if it is 96 wells or 384 or other
@@ -1847,6 +1869,47 @@ sub _set_projectprop {
     });
     $row->value($value);
     $row->update();
+}
+
+sub get_owner_link {
+    my $self = shift;
+    my $owners = $self->_get_trial_owners();
+    my @sp_person_ids = keys % { $owners } ;
+    my $q = "SELECT first_name, last_name FROM sgn_people.sp_person WHERE sp_person_id=?;";
+    my $link;
+    foreach my $sp_person_id (@sp_person_ids) {
+	my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+	$h->execute($sp_person_id);
+	my ( $first_name, $last_name )  = $h->fetchrow_array(); 
+	my $create_date = ${ $owners }{$sp_person_id};
+	
+	$link .= '<a href="/solpeople/personal-info.pl?sp_person_id='.$sp_person_id. '">' . $first_name . " " . $last_name .  "</a> ". $create_date . "<br />"; 
+    }
+    return $link;
+}
+
+sub _get_trial_owners {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $owner_q = "SELECT sp_person_id, date(create_date) FROM phenome.project_owner WHERE project_id = ? ";
+    my $owner_h = $schema->storage->dbh()->prepare($owner_q);
+    $owner_h ->execute($self->get_trial_id());
+
+    my %owners;
+    while (my ($sp_person_id, $create_date) = $owner_h->fetchrow_array()) {
+	$owners{$sp_person_id} = $create_date;
+    }
+    return \%owners;
+}
+
+sub set_trial_owner {
+    my $self = shift;
+    my $sp_person_id = shift;
+    my $schema = $self->bcs_schema();
+    my $trial_id = $self->get_trial_id();
+    my $q = "INSERT INTO phenome.project_owner (project_id, sp_person_id, create_date) VALUES (?,?,now())";
+    my $h =  $schema->storage->dbh()->prepare($q);
+    $h->execute($trial_id,$sp_person_id);
 }
 
 =head2 function delete_phenotype_data()

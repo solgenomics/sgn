@@ -2,7 +2,7 @@ package CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 
 =head1 NAME
 
-CXGN::Phenotypes::HighDimensionalPhenotypesSearch - an object to handle searching phenotypes across database. called from factory CXGN::Phenotypes::SearchFactory. Processes phenotype search against cxgn schema.
+CXGN::Phenotypes::HighDimensionalPhenotypesSearch - an object to handle searching high dim phenotypes (NIRS, Trnascriptomics, Metabolomics) across database.
 
 =head1 USAGE
 

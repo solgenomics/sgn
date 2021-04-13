@@ -378,7 +378,7 @@ jQuery(document).ready(function($) {
                 jQuery('#working_modal').modal('hide');
                 var html = '';
                 if(response.success){
-                    html += "<table class='table table-bordered table-hover'><thead><tr><th>File</th><th>Created By</th><th>Date</th></tr></thead><tbody>";
+                    html += "<table class='table table-bordered table-hover'><thead><tr><th>File</th><th>Updated By</th><th>Date</th></tr></thead><tbody>";
                     for(var i=0; i<response.files.length; i++){
                         html += "<tr><td><a href='/breeders/phenotyping/download/"+response.files[i][0]+"' >"+response.files[i][1]+"</a></td><td><a href='/solpeople/personal-info.pl?sp_person_id="+response.files[i][6]+"' >"+response.files[i][7]+" "+response.files[i][8]+"</a></td><td>"+response.files[i][5]+"</td></tr>";
                     }

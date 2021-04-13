@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME
- 
+
 /solgs/population/genetic_correlation.mas - genetic correlation output section
 
 =AUTHOR
@@ -14,18 +14,18 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$pop_id
-$prediction_pop_id => ''
+$training_pop_id
+$selection_pop_id => ''
 $analyzed_traits
 $prediction_pop_analyzed_traits => ''
-$prediction_pop_name => ''
-$project_name
+$selection_pop_name => ''
+$training_pop_name
 
 </%args>
 
 <%perl>
 
- my $pop_type = $pop_id =~ /[A-Za-z]/ ? 'list_training' : 'training';
+ my $pop_type = $training_pop_id =~ /[A-Za-z]/ ? 'list_training' : 'training';
 
 </%perl>
 
@@ -46,16 +46,16 @@ $project_name
 
 
 <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.correlation"] &>
-<&| /page/info_section.mas, 
-      collapsible => 1, 
-      collapsed   => 0, 
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 0,
       title       => "Genetic correlation analysis"
   &>
-  
+
   <div id="correlation_canvas">
-    
-     
-    <div class="row">  
+
+
+    <div class="row">
       <div class="form-group col-sm-3" id="corre_select_a_population_div" style="margin-right:35px"></div>
       <input class="button" type="submit" value="Run correlation" id="run_genetic_correlation"/>
     </div>
@@ -63,13 +63,13 @@ $project_name
     <& /solgs/spinner.mas &>
     <div id="correlation_message"  class="message">
     </div>
-    
-    <div id="corre_selected_population_div" style="display:none">    
-      <input type="hidden" id="model_id" value="<% $pop_id %>" />
-      <input type="hidden" id="model_name" value="<% $project_name %>" />
-      <input type="hidden" id="population_id" value="<% $pop_id %>" />
-      <input type="hidden" id="default_corre_selected_population_name" value="<% $project_name %>"/>
-      <input type="hidden" id="default_corre_selected_population_id" value="<% $pop_id %>"/>
+
+    <div id="corre_selected_population_div" style="display:none">
+      <input type="hidden" id="model_id" value="<% $training_pop_id %>" />
+      <input type="hidden" id="model_name" value="<% $training_pop_name %>" />
+      <input type="hidden" id="population_id" value="<% $training_pop_id %>" />
+      <input type="hidden" id="default_corre_selected_population_name" value="<% $training_pop_name %>"/>
+      <input type="hidden" id="default_corre_selected_population_id" value="<% $training_pop_id %>"/>
       <input type="hidden" id="default_corre_selected_population_type" value="<% $pop_type %>"/>
       <input type="hidden" id="corre_selected_population_name" value="" />
       <input type="hidden" id="corre_selected_population_id" value="" />

@@ -736,6 +736,51 @@ sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dim
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_protocols') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $checkbox_name = $c->req->param('checkbox_name');
+    my $data_type_cvterm_id = $c->req->param('sequence_metadata_data_type_id');
+    
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol', 'protocol_type')->cvterm_id();
+    my $protocolprop_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol_properties', 'protocol_property')->cvterm_id();
+
+    # Only select protocols that have a type of 'sequence_metadata_protocol' and its protocolprop of 'sequence_metadata_type' is the same as the provided $data_type
+    my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocolprop.value
+        FROM nd_protocol
+        JOIN nd_protocolprop USING(nd_protocol_id)
+        WHERE nd_protocol.type_id=$protocol_type_cvterm_id AND nd_protocolprop.type_id=$protocolprop_type_cvterm_id
+        AND (nd_protocolprop.value->>'sequence_metadata_type_id')::integer = $data_type_cvterm_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+
+    my $html = '<table class="table table-bordered table-hover" id="html-select-sdmprotocol-table"><thead><tr><th>Select</th><th>Protocol Name</th><th>Description</th><th>Properties</th></tr></thead><tbody>';
+
+    while (my ($nd_protocol_id, $name, $description, $props_json) = $h->fetchrow_array()) {
+        my $props = decode_json $props_json;
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>';
+        while (my($k,$v) = each %$props) {
+            if (ref $v eq ref {}) {
+                $html .= "$k:<br />";
+                while (my($k2,$v2) = each %$v) {
+                    $html .= "&nbsp;&nbsp;$k2: $v2<br />";
+                }
+            }
+            else {
+                $html .= "$k: $v<br />";
+            }
+        }
+        $html .= '</td></tr>';
+    }
+    $html .= "</tbody></table>";
+
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-sdmprotocol-table').DataTable({ }); } );</script>";
+
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_trained_nirs_models : Path('/ajax/html/select/trained_nirs_models') Args(0) {
     my $self = shift;
     my $c = shift;

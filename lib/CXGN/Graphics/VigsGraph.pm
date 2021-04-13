@@ -5,7 +5,7 @@ use Moose;
 use GD::Image;
 use Data::Dumper;
 use Bio::SeqIO;
-use Bio::BLAST::Database;
+use Bio::BLAST2::Database;
 
 # get all arguments from Vigs.pm (Ajax controllers), subroutine view
 has 'bwafile' => ( is=>'rw' );
@@ -275,7 +275,7 @@ sub subjects_by_match_count {
 	# print STDERR "BLAST db: $db\n";
 	
 	if ($db) {
-		$fs = Bio::BLAST::Database->open(full_file_basename => "$db",);
+		$fs = Bio::BLAST2::Database->open(full_file_basename => "$db",);
 	}
 
 	foreach my $s (keys %$matches) { 

@@ -1,6 +1,8 @@
 <%args>
 
-$pop_id
+$training_pop_id
+$training_pop_name
+$training_pop_desc =>''
 $show_data => 1;
 $accuracy_report
 $model_parameters
@@ -11,56 +13,54 @@ $top_marker_effects
 $validation_download_url
 $trait_abbr
 $trait_name
-$project_name
-$project_desc
+
 $stocks_no
 $markers_no
-$traits_no
+$traits_no =>''
 $trait_id
 $descriptive_stat
 $selection_prediction_download =>''
-$prediction_pop_id => ''
+$selection_pop_id => ''
+$selection_pop_name => ''
 $list_of_prediction_pops=> ''
-$prediction_pop_name => ''
 $analyzed_traits => ''
 $owner=>''
 $protocol_url => ''
 $combo_pops_id => ''
 $genotyping_protocol_id => ''
+$training_pop_url
 </%args>
 
 <%perl>
-
-my $pop_link = qq | <a href="/solgs/population/$pop_id/gp/$genotyping_protocol_id">$project_name</a> |;
 
 </%perl>
 
 
 
-    <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.phenotypeDataFlot", 
-                                              "flot.flot", "flot.categories", 
-                                              "flot.tooltip", "flot.selection", "flot.navigate", 
-                                              "flot.axisLabels", "statistics/simple_statistics"] 
+    <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.phenotypeDataFlot",
+                                              "flot.flot", "flot.categories",
+                                              "flot.tooltip", "flot.selection", "flot.navigate",
+                                              "flot.axisLabels", "statistics/simple_statistics"]
     &>
 
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
-<& /page/page_title.mas, 
-   title => "Genomic selection model for $trait_name ($trait_abbr) in $project_name"
+<& /page/page_title.mas,
+   title => "Genomic selection model for $trait_name ($trait_abbr) in $training_pop_name"
 &>
 
-<&| /page/info_section.mas, 
-  collapsible => 1, 
-  collapsed   => 0, 
+<&| /page/info_section.mas,
+  collapsible => 1,
+  collapsed   => 0,
   title       => "Training population summary",
   &>
 
  <& summary.mas,
-    project_id   => $pop_id,
-    pop_link     => $pop_link,
-    project_name => $project_name,
-    project_desc => $project_desc,
+    pop_id   => $training_pop_id,
+   	pop_name => $training_pop_name,
+    pop_desc => $training_pop_desc,
+	training_pop_url    => $training_pop_url,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
@@ -69,86 +69,87 @@ my $pop_link = qq | <a href="/solgs/population/$pop_id/gp/$genotyping_protocol_i
  &>
 
    <& /solgs/population/hidden_input.mas,
-      pop_id       => $pop_id,
-     trait_id      => $trait_id,
+      training_pop_id  => $training_pop_id,
+     training_pop_name => $training_pop_name,
+     training_pop_desc => $training_pop_desc,
+     trait_id => $trait_id,
      combo_pops_id => $combo_pops_id,
      genotyping_protocol_id => $genotyping_protocol_id,
-     pop_name => $project_name
+
      &>
 </&>
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
   title       => "Trait phenotype data"
-&> 
-  
+&>
+
 <& trait_phenotype_data.mas,
-   pop_id           => $pop_id,
+   pop_id           => $training_pop_id,
    trait_id         => $trait_id,
    descriptive_stat => $descriptive_stat,
-   
+
  &>
 
 </&>
 
 <& /solgs/pca/analysis.mas &>
-<& /solgs/cluster/analysis.mas &>  
+<& /solgs/cluster/analysis.mas &>
 
-% if ($show_data) 
+% if ($show_data)
 %{
 
-<& /solgs/model/model_parameters.mas, 
+<& /solgs/model/model_parameters.mas,
    model_parameters => $model_parameters,
 &>
 
-<& /solgs/model/accuracy.mas, 
+<& /solgs/model/accuracy.mas,
    accuracy_report        => $accuracy_report,
   validation_download_url => $validation_download_url
 &>
 
-<& /solgs/model/gebvs.mas, 
+<& /solgs/model/gebvs.mas,
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
-   pop_id             => $pop_id,
+   pop_id             => $training_pop_id,
   trait_id            => $trait_id
   &>
 
   <& /solgs/population/gebv_pheno_regression.mas,
-        pop_id       => $pop_id,
+        pop_id       => $training_pop_id,
        trait_id      => $trait_id,
        combo_pops_id => $combo_pops_id,
 &>
 
 
-<& /solgs/kinship/analysis.mas, 
-   pop_id  => $pop_id,
+<& /solgs/kinship/analysis.mas,
+   pop_id  => $training_pop_id,
   &>
-  
-<& /solgs/model/marker_effects.mas, 
+
+<& /solgs/model/marker_effects.mas,
    top_marker_effects          => $top_marker_effects,
    marker_effects_download_url => $marker_effects_download_url
 &>
 
-<& selection_populations.mas, 
+<& selection_populations.mas,
    selection_prediction_download     => $selection_prediction_download,
    analyzed_traits         => $analyzed_traits,
-   pop_id                  => $pop_id,
-   project_name            => $project_name,
-   prediction_pop_id       => $prediction_pop_id,
-   list_of_prediction_pops => $list_of_prediction_pops,
-   prediction_pop_name     => $prediction_pop_name, 
+   training_pop_id        => $training_pop_id,
+   training_pop_name   => $training_pop_name,
+   selection_pop_id       => $selection_pop_id,
+   selection_pop_name     => $selection_pop_name,
+    list_of_prediction_pops => $list_of_prediction_pops,
 &>
 
 %}
 % else
 %{
-<&| /page/info_section.mas, 
-  collapsible => 1, 
-  collapsed   => 0, 
+<&| /page/info_section.mas,
+  collapsible => 1,
+  collapsed   => 0,
   title       => "Data Accessibility",
   &>
 <p>This is private data.</p>
 </&>
 %}
-
