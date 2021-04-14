@@ -13391,7 +13391,8 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
             LEFT JOIN projectprop AS camera_rig ON(camera_rig.project_id = drone_run.project_id AND camera_rig.type_id=$drone_run_rig_desc_type_id)
             JOIN project_relationship AS field_trial_rel ON(field_trial_rel.subject_project_id = drone_run.project_id AND field_trial_rel.type_id = $project_relationship_type_id)
             JOIN project AS field_trial ON(field_trial_rel.object_project_id = field_trial.project_id)
-            WHERE drone_run.project_id = ? AND md_image.obsolete='f';";
+            WHERE drone_run.project_id = ? AND md_image.obsolete='f'
+            ORDER BY drone_run_band.project_id;";
 
         my $h = $schema->storage->dbh()->prepare($q);
         $h->execute($drone_run_project_id);
@@ -13434,14 +13435,19 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
     $imaging_events_file .= ".xls";
     my $imaging_events_file_path = $c->config->{basepath}."/".$imaging_events_file;
 
+    my @imaging_events_spreadsheet_rows;
+    my @images_file_names_return;
     my $workbook = Spreadsheet::WriteExcel->new($imaging_events_file_path);
     my $worksheet = $workbook->add_worksheet();
-
-        $worksheet->write_row(0, 0, ['Imaging Event Name','Type','Description','Date','Vehicle Name','Vehicle Battery Set','Sensor','Field Trial Name','GeoJSON Filename','Image Filenames','Coordinate System','Base Date','Camera Rig']);
+        my $header_row = ['Imaging Event Name','Type','Description','Date','Vehicle Name','Vehicle Battery Set','Sensor','Field Trial Name','GeoJSON Filename','Image Filenames','Coordinate System','Base Date','Camera Rig'];
+        $worksheet->write_row(0, 0, $header_row);
+        push @imaging_events_spreadsheet_rows, $header_row;
         my $line_number = 1;
 
         my %geojson_hash;
-        while (my($drone_run_project_id, $drone_run_info) = each %drone_run_csv_info) {
+        foreach my $drone_run_project_id (sort keys %drone_run_csv_info) {
+            my $drone_run_info = $drone_run_csv_info{$drone_run_project_id};
+
             my $plot_polygons_value = decode_json $drone_run_info->{plot_polygons_value};
             my $field_trial_id = $drone_run_info->{field_trial_id};
             my $field_trial_name = $drone_run_info->{field_trial_name};
@@ -13463,6 +13469,7 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
                 print STDERR Dumper $image_fullpath;
                 my $image_name = $image_id."__".$spec.".JPG";
                 my $file_member = $images_zip->addFile( $image_fullpath, $image_name );
+                push @images_file_names_return, $image_name;
                 push @image_filenames, $image_name;
             }
 
@@ -13492,7 +13499,9 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
             $drone_run_info->{orthoimage_files} = $orthoimage_filenames;
             $drone_run_info->{geojson_file} = $geojson_filename;
 
-            $worksheet->write_row($line_number, 0, [$drone_run_name, $imaging_event_type, $drone_run_description, $imaging_event_date, $imaging_vehicle_name, '', $camera, $field_trial_name, $geojson_filename, $orthoimage_filenames, "Pixels", $imaging_event_base_date, $camera_rig]);
+            my $imaging_event_row = [$drone_run_name, $imaging_event_type, $drone_run_description, $imaging_event_date, $imaging_vehicle_name, '', $camera, $field_trial_name, $geojson_filename, $orthoimage_filenames, "Pixels", $imaging_event_base_date, $camera_rig];
+            $worksheet->write_row($line_number, 0, $imaging_event_row);
+            push @imaging_events_spreadsheet_rows, $imaging_event_row;
             $line_number++;
         }
     $workbook->close();
@@ -13511,7 +13520,10 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
 
     my $output_geojson_zipfile_dir = $c->tempfiles_subdir('/drone_imagery_export_image_geojson_dir');
 
-    while (my($drone_run_project_id, $plot_geo) = each %geojson_hash) {
+    my @geojson_file_names_return;
+    foreach my $drone_run_project_id (sort keys %geojson_hash) {
+        my $plot_geo = $geojson_hash{$drone_run_project_id};
+
         my @features_geojson;
         while (my($plot_number, $coords) = each %$plot_geo) {
             my $first_coord = $coords->[0];
@@ -13543,7 +13555,9 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
             print $fh_geojson $geojson_string;
         close($fh_geojson);
 
-        my $file_member = $geojson_zip->addFile( $geojson_file, $drone_run_csv_info{$drone_run_project_id}->{geojson_file} );
+        my $geojson_filename_save = $drone_run_csv_info{$drone_run_project_id}->{geojson_file};
+        my $file_member = $geojson_zip->addFile( $geojson_file, $geojson_filename_save );
+        push @geojson_file_names_return, $geojson_filename_save;
     }
 
     my $geojson_zipfile = $c->tempfile( TEMPLATE => 'drone_imagery_export_image_zipfile_dir/geojsonzipfileXXXX');
@@ -13571,7 +13585,11 @@ sub drone_imagery_export_drone_runs_GET : Args(0) {
         imaging_events_spreadsheet => $imaging_events_file,
         field_trial_id => $field_trial_id,
         planting_date => $planting_date,
-        trial_layout => $trial_layout
+        trial_layout => $trial_layout,
+        drone_run_csv_info => \%drone_run_csv_info,
+        imaging_events_spreadsheet_rows => \@imaging_events_spreadsheet_rows,
+        images_file_names_return => \@images_file_names_return,
+        geojson_file_names_return => \@geojson_file_names_return
     };
 }
 
