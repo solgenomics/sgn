@@ -229,6 +229,8 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
     my $dbh = $c->dbc->dbh;
     my $order_id = $c->req->param('order_id');
     my $new_status = $c->req->param('new_status');
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd();
     my $user_role;
     my $user_id;
     my $user_name;
@@ -254,8 +256,14 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
-    my $order = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status});
-    my $order_id = $order->store();
+    my $order_obj;
+    if ($new_status eq 'completed') {
+        $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, completion_date => $timestamp});
+    } else {
+        $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status});
+    }
+
+    my $order_id = $order_obj->store();
     print STDERR "UPDATED ORDER ID =".Dumper($order_id)."\n";
     if (!$order_id){
         $c->stash->{rest} = {error_string => "Error updating the order",};

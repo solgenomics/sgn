@@ -23,6 +23,8 @@ has 'comments' => ( isa => 'Str', is => 'rw');
 
 has 'create_date' => ( isa => 'Str', is => 'rw');
 
+has 'completion_date' => ( isa => 'Str', is => 'rw');
+
 has 'batches' => ( isa => 'Ref', is => 'rw', default => sub { return []; } );
 
 
@@ -44,6 +46,8 @@ sub BUILD {
 
     $self->order_from_id($row->order_from_id);
     $self->order_to_id($row->order_to_id);
+    $self->create_date($row->create_date);
+
 #    $self->order_status($row->order_status);
 #    $self->comments($row->comments);
 
@@ -108,8 +112,10 @@ sub store {
 	order_to_id => $self->order_to_id(),
 #	comments => $self->comments(),
     create_date => $self->create_date(),
+    completion_date => $self->completion_date(),
 	);
     print STDERR "NEW ORDER STATUS =".Dumper($self->order_status())."\n";
+    print STDERR "COMPLETION DATE =".Dumper($self->completion_date())."\n";
 
     if ($self->sp_order_id()) { $data{sp_order_id} = $self->sp_order_id(); }
 
