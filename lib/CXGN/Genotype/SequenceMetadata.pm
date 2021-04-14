@@ -543,7 +543,7 @@ sub query {
 
 
     # Build query
-    my $query = "SELECT featureprop_json.featureprop_json_id, featureprop_json.feature_id, feature.name AS feature_name, featureprop_json.type_id, cvterm.name AS type_name, featureprop_json.nd_protocol_id, nd_protocol.name AS nd_protocol_name, s AS attributes
+    my $query = "SELECT featureprop_json.featureprop_json_id, featureprop_json.feature_id, feature.name AS feature_name, (s->>'start')::int AS start, (s->>'end')::int AS end, featureprop_json.type_id, cvterm.name AS type_name, featureprop_json.nd_protocol_id, nd_protocol.name AS nd_protocol_name, s AS attributes
 FROM featureprop_json
 LEFT JOIN jsonb_array_elements(featureprop_json.json) as s(data) on true
 LEFT JOIN public.feature ON feature.feature_id = featureprop_json.feature_id
@@ -552,8 +552,13 @@ LEFT JOIN public.nd_protocol ON nd_protocol.nd_protocol_id = featureprop_json.nd
 
     # Add aditional conditions
     $query .= $query_where;
-    $query .= " AND (s->>'start')::int >= ? AND (s->>'end')::int <= ?";
-    push(@query_params, $start, $end);
+    $query .= " AND (
+((s->>'start')::int >= ? AND (s->>'end')::int <= ?) 
+OR ((s->>'start')::int >= ? AND (s->>'start')::int <= ? AND (s->>'end')::int > ?) 
+OR ((s->>'start')::int < ? AND (s->>'end')::int >= ? AND (s->>'end')::int <= ?) 
+OR ((s->>'start')::int < ? AND (s->>'end')::int > ?)
+)";
+    push(@query_params, $start, $end, $start, $end, $end, $start, $start, $end, $start, $end);
     if ( $attributes && @$attributes ) {
         $query .= " AND (";
         my @aq = ();
@@ -600,6 +605,7 @@ LEFT JOIN public.nd_protocol ON nd_protocol.nd_protocol_id = featureprop_json.nd
         $query .= join(" AND ", @aq);
         $query .= ") ";
     }
+    $query .= " ORDER BY start ASC";
 
     # print STDERR "QUERY:\n";
     # print STDERR "$query\n";
@@ -613,11 +619,9 @@ LEFT JOIN public.nd_protocol ON nd_protocol.nd_protocol_id = featureprop_json.nd
 
     # Parse the results
     my @matches = ();
-    while (my ($featureprop_json_id, $feature_id, $feature_name, $type_id, $type_name, $nd_protocol_id, $nd_protocol_name, $attributes_json) = $h->fetchrow_array()) {
+    while (my ($featureprop_json_id, $feature_id, $feature_name, $start, $end, $type_id, $type_name, $nd_protocol_id, $nd_protocol_name, $attributes_json) = $h->fetchrow_array()) {
         my $attributes = decode_json $attributes_json;
         my $score = $attributes->{score};
-        my $start = $attributes->{start};
-        my $end = $attributes->{end};
         delete $attributes->{score};
         delete $attributes->{start};
         delete $attributes->{end};
