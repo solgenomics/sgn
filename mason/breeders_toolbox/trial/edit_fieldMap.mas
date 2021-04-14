@@ -26,7 +26,7 @@ $trial_stock_type => undef
             <div class="modal-footer">
                 <button id="close_edit_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="replace_trial_stock_submit" id="replace_trial_stock_submit"></button>
-                <button type="button" class="btn btn-primary" name="substitute_stock_submit" id="substitute_stock_submit"></button>
+                <!-- <button type="button" class="btn btn-primary" name="substitute_stock_submit" id="substitute_stock_submit"></button> -->
             </div>
         </div>
     </div>
@@ -69,7 +69,7 @@ $trial_stock_type => undef
     </div>
 </div>
 
-
+<!--
 <div class="modal fade" id="substitute_plot_stocks_dialog" name="substitute_plot_stocks_dialog" tabindex="-1" role="dialog" aria-labelledby="substitute_plot_dialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
@@ -105,6 +105,7 @@ $trial_stock_type => undef
         </div>
     </div>
 </div>
+-->
 
 <div class="modal  fade" id="replace_stock_dialog_success_message" name="replace_stock_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="replace_stock_message_title">
     <div class="modal-dialog " role="document">
@@ -414,32 +415,32 @@ jQuery(document).ready(function () {
     } else {
         edit_dialog_title = 'Replace Trial Accessions Or Substitute Accessions Within A Trial Plots';
         replace_button_label = 'Replace Accession';
-        substitute_button_label = 'Substitute Accession';
+        // substitute_button_label = 'Substitute Accession';
         replace_dialog_title = 'Replace Trial Accession in '.concat(trial_name);
         replace_stock_text1 = 'Select Accession: ';
         replace_stock_text2 = 'Enter New Accession: ';
         replace_button_submit = 'Replace Trial Accession';
-        substitute_dialog_title = 'Substitute Plot Accession in '.concat(trial_name);
-        substitute_button_submit = 'Substitute Plot Accession';
+        // substitute_dialog_title = 'Substitute Plot Accession in '.concat(trial_name);
+        // substitute_button_submit = 'Substitute Plot Accession';
         replace_message_title = 'Replace Trial Accession';
         replace_success_message = 'Accession was replaced successfully.';
-        subs_message_title = 'Substitute Plot Accession';
-        subs_success_message = 'Accession was substituted successfully.';
+        // subs_message_title = 'Substitute Plot Accession';
+        // subs_success_message = 'Accession was substituted successfully.';
     }
 
     jQuery('#edit_field_map_title').text(edit_dialog_title);
     jQuery('#replace_trial_stock_submit').text(replace_button_label);
-    jQuery('#substitute_stock_submit').text(substitute_button_label);
+    // jQuery('#substitute_stock_submit').text(substitute_button_label);
     jQuery('#replace_stocks_dialog').text(replace_dialog_title);
     jQuery('#replace_stock_label1').text(replace_stock_text1);
     jQuery('#replace_stock_label2').text(replace_stock_text2);
     jQuery('#replace_stock_submit').text(replace_button_submit);
-    jQuery('#substitute_plot_dialog').text(substitute_dialog_title);
-    jQuery('#substitute_plot_stock_submit').text(substitute_button_submit);
+    // jQuery('#substitute_plot_dialog').text(substitute_dialog_title);
+    // jQuery('#substitute_plot_stock_submit').text(substitute_button_submit);
     jQuery('#replace_stock_message_title').text(replace_message_title);
     jQuery('#replace_stock_success_message').text(replace_success_message);
-    jQuery('#subs_stock_message_title').text(subs_message_title);
-    jQuery('#subs_stock_success_message').text(subs_success_message);
+    // jQuery('#subs_stock_message_title').text(subs_message_title);
+    // jQuery('#subs_stock_success_message').text(subs_success_message);
 
 });
 
