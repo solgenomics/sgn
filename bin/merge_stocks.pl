@@ -59,6 +59,9 @@ my $file = shift;
 open(my $F, "<", $file) || die "Can't open file $file.\n";
 
 my $header = <$F>;
+
+my @merged_stocks_to_delete = ();
+
 print STDERR "Skipping header line $header\n";
 eval {
     while (<$F>) {
@@ -83,8 +86,32 @@ eval {
 	my $merge_stock = CXGN::Stock->new( { schema => $schema, stock_id => $merge_row->stock_id });
 
 	print STDERR "Merging stock $merge_stock_name into $good_stock_name... ";
-	$good_stock->merge($merge_stock->stock_id(), $delete_merged_stock);
+	$good_stock->merge($merge_stock->stock_id());
+
+	if ($delete_merged_stock) {
+	    push @merged_stocks_to_delete, $merge_stock->stock_id();
+	}
+	
 	print STDERR "Done.\n";
+    }
+
+
+    if ($delete_merged_stock) {
+	print STDERR "Delete merged stocks ( -x option)...\n";
+	foreach my $remove_stock_id (@merged_stocks_to_delete) {
+	    my $q = "delete from phenome.stock_owner where stock_id=?";
+	    my $h = $dbh->prepare($q);
+	    $h->execute($remove_stock_id);
+
+	    $q = "delete from phenome.stock_image where stock_id=?";
+	    $h = $dbh->prepare($q);
+	    $h->execute($remove_stock_id);
+	    
+	    my $row = $schema->resultset('Stock::Stock')->find( { stock_id => $remove_stock_id });
+	    print STDERR "Deleting stock ".$row->uniquename." (id=$remove_stock_id)\n";
+	    $row->delete();
+	}
+	print STDERR "Done with deletions.\n";
     }
 
 };
