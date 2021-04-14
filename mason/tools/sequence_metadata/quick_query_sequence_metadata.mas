@@ -170,7 +170,8 @@ function renderAttributesColumn(data, type, row) {
                     { title: "End", data: "end" },
                     { title: "Score", data: "score" },
                     { title: "Attributes", data: "attributes", render: renderAttributesColumn },
-                ]
+                ],
+                order: [[ 2, "asc" ]]
             });
 
             // Perform Query

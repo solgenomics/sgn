@@ -369,6 +369,7 @@ jQuery(document).ready(function() {
             { title: "Attributes", data: "attributes", render: renderAttributesColumn },
             { title: "Markers", data: renderMarkersColumn }
         ],
+        order: [[ 2, "asc" ]],
         buttons: DT_BUTTONS
     });
 
@@ -1070,16 +1071,16 @@ function updateMarkers() {
     let containers = jQuery('.sequence_metadata_marker_search_markers');
     for ( let i = 0; i < containers.length; i++ ) {
         let container = jQuery(containers[i]);
+        let reference_genome = container.data("reference-genome");
         let feature_id = container.data("feature-id");
         let start = container.data("start");
         let end = container.data("end");
-        let key = [feature_id, start, end].join("-");
+        let key = [reference_genome, feature_id, start, end].join("-");
         if ( markers && markers[key] ) {
             displayMarkers(key);
         }
         else {
-            let nd_protocol_id = container.data("nd-protocol-id");
-            getMarkers(nd_protocol_id, feature_id, start, end);
+            getMarkers(reference_genome, feature_id, start, end);
         }
     }
 
@@ -1089,13 +1090,13 @@ function updateMarkers() {
  * Get markers matching the specified sequence metadata
  * - Query the DB for matching markers
  * - Update the display of the markers
- * @param {int} nd_protocol_id ID of the sequence metadata protocol
+ * @param {int} reference_genome Name of the reference genome
  * @param {int} feature_id ID of the sequence metadata's associated feature
  * @param {int} start Start position of the sequence metadata
  * @praam {int} end End position of the sequence metadata
  */
-function getMarkers(nd_protocol_id, feature_id, start, end) {
-    let key = [feature_id, start, end].join("-");
+function getMarkers(reference_genome, feature_id, start, end) {
+    let key = [reference_genome, feature_id, start, end].join("-");
 
     // Display searching
     if ( !markers ) markers = {};
@@ -1107,10 +1108,11 @@ function getMarkers(nd_protocol_id, feature_id, start, end) {
         type: 'GET',
         url: '/ajax/sequence_metadata/markers',
         data: {
-            nd_protocol_id: nd_protocol_id,
+            reference_genome: reference_genome,
             feature_id: feature_id,
             start: start,
-            end: end
+            end: end,
+            limit: 50
         },
         dataType: 'json',
         success: function(data) {
@@ -1140,16 +1142,29 @@ function displayMarkers(key) {
     if ( typeof marker_info === 'string' ) {
         container.html(marker_info);
     }
-    else if ( Array.isArray(marker_info) ) {
-        let html = [];
-        for ( let i = 0; i < marker_info.length; i++ ) {
-            let name = marker_info[i].marker_name;
-            let protocol = marker_info[i].nd_protocol_name;
-            if ( name !== '.' ) {
-                html.push("<a href='/markerGeno/" + name + "/details'><strong>" + name + "</strong> (" + protocol + ")</a>");
+    else if ( typeof marker_info === 'object' ) {
+        let html = "";
+        let total = marker_info.count;
+        let markers = marker_info.markers;
+        if ( total > 0 ) {
+            let m = total === 1 ? "marker" : "markers";
+            html += "<strong>" + total + " " + m + " found:</strong>";
+            html += "<div class='sequence_metadata_marker_search_markers_list'>";
+            for ( let i = 0; i < markers.length; i++ ) {
+                let name = markers[i].marker_name;
+                let protocol = markers[i].nd_protocol_name;
+                html += "<a href='/markerGeno/" + name + "/details'><strong>" + name + "</strong> (" + protocol + ")</a><br />";
             }
+            if ( markers.length < total ) {
+                let diff = total - markers.length;
+                html += "<em>..." + diff + " more not displayed...</em>";
+            }
+            html += "</div>";
         }
-        container.html(html.join("<br />"));
+        else {
+            html += "<em>No markers found</em>";
+        }
+        container.html(html);
     }
 }
 
@@ -1165,8 +1180,19 @@ function displayMarkers(key) {
  * @returns {String} The text/html to display in the table
  */
 function renderMarkersColumn(row, type) {
-    let data = "data-feature-id='" + row.feature_id + "' data-start='" + row.start + "' data-end='" + row.end + "' data-nd-protocol-id='" + row.nd_protocol_id + "'";
-    let key = [row.feature_id, row.start, row.end].join("-");
+    let reference_genome = "";
+    for ( let ref in protocols ) {
+        if ( protocols.hasOwnProperty(ref) ) {
+            let ps = protocols[ref];
+            for ( let i = 0; i < ps.length; i++ ) {
+                if ( ps[i].nd_protocol_id === row.nd_protocol_id ) {
+                    reference_genome = ref;
+                }
+            }
+        }
+    }
+    let data = "data-feature-id='" + row.feature_id + "' data-start='" + row.start + "' data-end='" + row.end + "' data-reference-genome='" + reference_genome + "'";
+    let key = [reference_genome, row.feature_id, row.start, row.end].join("-");
     
     let html = "<div class='sequence_metadata_marker_search'>";
     html += "<div class='sequence_metadata_marker_search_markers sequence_metadata_marker_search_markers_" + key + "' " + data + "></div>";
@@ -1264,5 +1290,9 @@ function download(url, name) {
     #sequence_metadata_filter_type_protocol_url_selection_names {
         margin: 0;
         padding-top: 7px;
+    }
+    .sequence_metadata_marker_search_markers_list {
+        max-height: 250px;
+        overflow-y: auto;
     }
 </style>

@@ -737,10 +737,11 @@ sub sequence_metadata_query_GET : Args(0) {
 # Get the markers that are located on the feature between the specified start and end positions
 # PATH: GET /ajax/sequence_metadata/markers
 # PARAMS:
+#   - reference_genome = name of the reference genome
 #   - feature_id = id of the associated feature (chromosome)
-#   - nd_protocol_id = id of the sequence metadata protocol
 #   - start = start position of the query range
 #   - end = end position of the query range
+#   - limit = (optional, default=100) limit the number of markers returned
 #
 sub sequence_metadata_markers : Path('/ajax/sequence_metadata/markers') : ActionClass('REST') { }
 sub sequence_metadata_markers_GET : Args(0) {
@@ -750,18 +751,19 @@ sub sequence_metadata_markers_GET : Args(0) {
     my $dbh = $schema->storage->dbh();
 
     my $feature_id = $c->req->param('feature_id');
-    my $nd_protocol_id = $c->req->param('nd_protocol_id');
+    my $reference_genome = $c->req->param('reference_genome');
     my $start = $c->req->param('start');
     my $end = $c->req->param('end');
+    my $limit = $c->req->param('limit') ? $c->req->param('limit') : 100;
 
 
     # Check required parameters
-    if ( !defined $feature_id || $feature_id eq '' ) {
-        $c->stash->{rest} = {error => 'Feature id must be provided!'};
+    if ( !defined $reference_genome || $reference_genome eq '' ) {
+        $c->stash->{rest} = {error => 'Reference genome must be provided!'};
         $c->detach();
     }
-    if ( !defined $nd_protocol_id || $nd_protocol_id eq '' ) {
-        $c->stash->{rest} = {error => 'Sequence Metadata protocol id must be provided!'};
+    if ( !defined $feature_id || $feature_id eq '' ) {
+        $c->stash->{rest} = {error => 'Feature id must be provided!'};
         $c->detach();
     }
     if ( !defined $start || $start eq '' ) {
@@ -786,19 +788,15 @@ sub sequence_metadata_markers_GET : Args(0) {
         $c->detach();
     }
 
-    # Get reference genome from the smd protocol
-    my $smd_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol_properties', 'protocol_property')->cvterm_id();
-    my $protocol_props = decode_json $schema->resultset('NaturalDiversity::NdProtocolprop')->search({nd_protocol_id=>$nd_protocol_id, type_id=>$smd_protocol_prop_cvterm_id})->first->value;
-    my $reference_genome = $protocol_props->{reference_genome};
-
     # Perform JSON marker search
     my $msearch = CXGN::Marker::SearchMatView->new(bcs_schema => $schema);
     my %args = (
+        species_name => $species,
+        reference_genome_name => $reference_genome,
         chrom => $feature_name,
         start => $start,
         end => $end,
-        species_name => $species,
-        reference_genome_name => $reference_genome
+        limit => $limit
     );
     my $results = $msearch->query(\%args);
 
