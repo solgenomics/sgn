@@ -185,7 +185,6 @@ sub search {
     	$h->execute($_->{stock_id}, $cross_type_cvterm_id);
     	my ($cross_type) = $h->fetchrow_array();
 
-
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'},
@@ -1024,13 +1023,19 @@ sub _simple_search {
             }
         }
 
+        my $cross_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross_type', 'nd_experiment_property')->cvterm_id();
+    	my $q = "SELECT value FROM nd_experimentprop JOIN nd_experiment_stock ON nd_experimentprop.nd_experiment_id=nd_experiment_stock.nd_experiment_id WHERE stock_id = ? AND nd_experimentprop.type_id = ?;";
+    	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    	$h->execute($_->{stock_id}, $cross_type_cvterm_id);
+    	my ($cross_type) = $h->fetchrow_array();
+
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'},
             additionalInfo=>undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
-            breedingMethodDbId=>$_->{common_name},
+            breedingMethodDbId=>$cross_type,
             collection=>undef,
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
