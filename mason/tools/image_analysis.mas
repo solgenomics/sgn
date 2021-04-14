@@ -3,7 +3,7 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery', 'jquery.cookie', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.cookie', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
 <style>
 td.details-control {
@@ -284,6 +284,9 @@ jQuery(document).ready(function(){
             return false;
         }
 
+        // var existing_data = jQuery('#image_analysis_result_table').DataTable();
+        // existing_data.clear();
+
         var results = [];
         var progress_modal = jQuery('#progress_modal');
         var progress_bar = jQuery('#progress_bar');
@@ -364,6 +367,10 @@ jQuery(document).ready(function(){
 
                         var table = jQuery('#image_analysis_result_table').DataTable( {
                             "data": response.results,
+                            "dom": 'Bfrtip',
+                            "buttons":  [
+                                'copy', 'excel', 'csv', 'pdf'
+                            ],
                             "columns": [
                                 {
                                     "className":      'details-control',
