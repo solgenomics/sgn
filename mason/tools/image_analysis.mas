@@ -284,9 +284,6 @@ jQuery(document).ready(function(){
             return false;
         }
 
-        // var existing_data = jQuery('#image_analysis_result_table').DataTable();
-        // existing_data.clear();
-
         var results = [];
         var progress_modal = jQuery('#progress_modal');
         var progress_bar = jQuery('#progress_bar');
@@ -366,6 +363,7 @@ jQuery(document).ready(function(){
                         jQuery('#image_analysis_result').show();
 
                         var table = jQuery('#image_analysis_result_table').DataTable( {
+                            "destroy" : true,
                             "data": response.results,
                             "dom": 'Bfrtip',
                             "buttons":  [
