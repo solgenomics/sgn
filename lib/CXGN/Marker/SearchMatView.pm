@@ -14,11 +14,11 @@ To perform a marker search, first create a marker search object with a bio chado
 Then call the query function with the desired filter parameters
 example: filter markers based on position:
     my $results = $msearch->query(
+        species_name => 'Triticum aestivum',
+        reference_genome_name => 'RefSeq_v1',
         chrom => '1A',
         start => '1000',
-        end => '2000',
-        species_name => 'Triticum aestivum',
-        reference_genome_name => 'RefSeq_v1'
+        end => '2000'
     );
 example: filter markers based on name:
     my $results = $msearch->query(
@@ -62,26 +62,29 @@ sub BUILD {
 #
 # Search the unified marker materialized view for markers matching the provided search criteria
 #
-# Arguments:
+# Arguments (as a hash with the following keys):
+#   - species_name = (required if chrom, start, or end are provided) species name
+#   - reference_genome_name (required if chrom, start, or end are provided) reference genome name
 #   - chrom = (required if start or end are provided) chromosome name
 #   - start = (optional) start position of query range
 #   - end = (optional) end position of query range
-#   - species_name = (required if chrom, start, or end are provided) species name
-#   - reference_genome_name (required if chrom, start, or end are provided) reference genome name
 #   - name = (optional) marker name or alias
 #   - name_substring = (optional) part of marker name or alias
 #   - nd_protocol_ids = (optional) array ref of genotype protocol ids
+#   - limit = (optional) max number of markers to return
 #
-# Returns an array of hashes containing the marker info with the following keys"
-#   - nd_protocol_id = genotype protocol id
-#   - species_name = species name
-#   - reference_genome_name = reference genome name
-#   - marker_name = marker name (from genotype protocol)
-#   - alias = marker alias (uniformly generated marker name)
-#   - chrom = chromosome name
-#   - pos = chromosome position
-#   - ref = reference allele
-#   - alt = alternate allele
+# Returns a hash with the following keys:
+#   - markers = an array of hashes containing the marker info with the following keys:
+#       - nd_protocol_id = genotype protocol id
+#       - species_name = species name
+#       - reference_genome_name = reference genome name
+#       - marker_name = marker name (from genotype protocol)
+#       - alias = marker alias (uniformly generated marker name)
+#       - chrom = chromosome name
+#       - pos = chromosome position
+#       - ref = reference allele
+#       - alt = alternate allele
+#   - count = total number of markers found
 #
 sub query {
     my $self = shift;
@@ -94,14 +97,16 @@ sub query {
     my $name = $args->{name};
     my $name_substring = $args->{name_substring};
     my $nd_protocol_ids = $args->{nd_protocol_ids};
+    my $limit = $args->{limit};
 
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh();
 
     # Build query
-    my $query = "SELECT markers_all.nd_protocol_id, nd_protocol.name AS nd_protocol_name, species_name, reference_genome_name, marker_name, alias, chrom, pos, ref, alt";
-    $query .= " FROM sgn.markers_all";
-    $query .= " LEFT JOIN nd_protocol USING (nd_protocol_id)";
+    my $q_select = "SELECT markers_all.nd_protocol_id, nd_protocol.name AS nd_protocol_name, species_name, reference_genome_name, marker_name, alias, chrom, pos, ref, alt";
+    my $q_count = "SELECT COUNT(*) AS count";
+    my $q = " FROM sgn.markers_all";
+    $q .= " LEFT JOIN nd_protocol USING (nd_protocol_id)";
 
     # Add filter parameters
     my @where = ();
@@ -140,27 +145,41 @@ sub query {
         push(@where, $pw);
         push(@args, @$nd_protocol_ids);
     }
+    push(@where, "marker_name <> '.'");
     if ( @where ) {
-        $query .= " WHERE " . join(' AND ', @where);
+        $q .= " WHERE " . join(' AND ', @where);
     }
 
-    # Sort by Marker Name
+    # Get the total count of markers
+    my $query_count = $q_count . $q;
+    my $h_count = $dbh->prepare($query_count);
+    $h_count->execute(@args);
+    my ($count) = $h_count->fetchrow_array();
+
+    # Get the marker info
+    my $query = $q_select . $q;
     $query .= " ORDER BY marker_name";
+    if ( defined $limit ) {
+        $query .= " LIMIT ?";
+        push(@args, $limit);
+    }
 
     # print STDERR "QUERY:\n";
     # print STDERR "$query\n";
     # use Data::Dumper;
     # print STDERR "ARGS:\n";
     # print STDERR Dumper \@args;
+    # print STDERR "TOTAL MARKERS:\n";
+    # print STDERR "$count\n";
 
     # Perform the Query
     my $h = $dbh->prepare($query);
     $h->execute(@args);
 
     # Parse the results
-    my @results = ();
+    my @markers = ();
     while (my ($nd_protocol_id, $nd_protocol_name, $species_name, $reference_genome_name, $marker_name, $alias, $chrom, $pos, $ref, $alt) = $h->fetchrow_array()) {
-        my %result = (
+        my %marker = (
             nd_protocol_id => $nd_protocol_id,
             nd_protocol_name => $nd_protocol_name, 
             species_name => $species_name,
@@ -172,13 +191,14 @@ sub query {
             ref => $ref,
             alt => $alt
         );
-        push(@results, \%result);
+        push(@markers, \%marker);
     }
 
-    # print STDERR "RESULTS: " . scalar(@results) . " markers\n";
-
     # Return the results
-    return(\@results);
+    return({
+        markers => \@markers,
+        count => $count
+    });
 }
 
 
