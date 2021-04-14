@@ -197,7 +197,7 @@ sub get_contact_person_orders :Path('/ajax/order/contact_person_orders') Args(0)
     if ($session_id){
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to view your current orders!'};
+            $c->stash->{rest} = {error=>'You must be logged in to view your orders!'};
             $c->detach();
         }
         $user_id = $user_info[0];
@@ -206,7 +206,7 @@ sub get_contact_person_orders :Path('/ajax/order/contact_person_orders') Args(0)
         $user_name = $p->get_username;
     } else {
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to view your current orders!'};
+            $c->stash->{rest} = {error=>'You must be logged in to view your orders!'};
             $c->detach();
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -221,5 +221,50 @@ sub get_contact_person_orders :Path('/ajax/order/contact_person_orders') Args(0)
 
 }
 
+
+sub update_order :Path('/ajax/order/update') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh;
+    my $order_id = $c->req->param('order_id');
+    my $new_status = $c->req->param('new_status');
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to update the order!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to update the orders!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $order = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status});
+    my $order_id = $order->store();
+    print STDERR "UPDATED ORDER ID =".Dumper($order_id)."\n";
+    if (!$order_id){
+        $c->stash->{rest} = {error_string => "Error updating the order",};
+        return;
+    }
+
+    $c->stash->{rest} = {success => "1",};
+
+
+}
 
 1;

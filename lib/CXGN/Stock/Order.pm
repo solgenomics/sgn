@@ -29,13 +29,14 @@ has 'batches' => ( isa => 'Ref', is => 'rw', default => sub { return []; } );
 sub BUILD {
     my $self = shift;
     my $args = shift;
+    my $people_schema = $self->people_schema();
 
     if (! $args->{sp_order_id}) {
 	print STDERR "Creating empty object...\n";
 	return $self;
     }
 
-    my $row = $args->people_schema->resultset('SpOrder')->find( { sp_order_id => $args->{sp_order_id} } );
+    my $row = $people_schema->resultset('SpOrder')->find( { sp_order_id => $args->{sp_order_id} } );
 
     if (!$row) {
 	die "The database has no order entry with id $args->{sp_order_id}";
@@ -43,19 +44,19 @@ sub BUILD {
 
     $self->order_from_id($row->order_from_id);
     $self->order_to_id($row->order_to_id);
-    $self->order_status($row->order_status);
-    $self->comments($row->comments);
+#    $self->order_status($row->order_status);
+#    $self->comments($row->comments);
 
-    my $rs = $args->people_schema->resultset('SpOrderprop')->search( { sp_order_id => $args->{sp_order_id} });
+#    my $rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $args->{sp_order_id} });
 
-    my @batches = ();
-    while (my $r = $rs->next()) {
-	my $batch = CXGN::Stock::OrderBatch->new( { people_schema => $args->{people_schema}, sp_orderprop_id => $row->sp_orderprop_id() });
+#    my @batches = ();
+#    while (my $r = $rs->next()) {
+#	my $batch = CXGN::Stock::OrderBatch->new( { people_schema => $people_schema, sp_orderprop_id => $row->sp_orderprop_id() });
 
-	push @batches, $batch;
-    }
+#	push @batches, $batch;
+#    }
 
-    $self->batches(\@batches);
+#    $self->batches(\@batches);
 }
 
 
@@ -101,7 +102,6 @@ sub get_orders_by_person_id {
 #
 sub store {
     my $self = shift;
-
     my %data = (
 	order_status => $self->order_status(),
 	order_from_id => $self->order_from_id(),
@@ -109,6 +109,7 @@ sub store {
 #	comments => $self->comments(),
     create_date => $self->create_date(),
 	);
+    print STDERR "NEW ORDER STATUS =".Dumper($self->order_status())."\n";
 
     if ($self->sp_order_id()) { $data{sp_order_id} = $self->sp_order_id(); }
 
@@ -156,7 +157,7 @@ sub get_orders_from_person_id {
 
         push @orders, [$order_id, $order_to_name, $create_date, $item_list, $order_status];
     }
-    print STDERR "ORDERS =".Dumper(\@orders)."\n";
+#    print STDERR "ORDERS =".Dumper(\@orders)."\n";
     return \@orders;
 }
 
@@ -200,7 +201,7 @@ sub get_orders_to_person_id {
             order_status => $order_status
         }
     }
-    print STDERR "ORDERS =".Dumper(\@orders)."\n";
+#    print STDERR "ORDERS =".Dumper(\@orders)."\n";
     return \@orders;
 }
 
