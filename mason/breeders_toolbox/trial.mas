@@ -96,6 +96,9 @@ $trial_owner => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary Statistics</h4>", info_section_subtitle => 'View and download uploaded phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Trial Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", has_expression_atlas => $has_expression_atlas, trial_name => $trial_name, expression_atlas_url => $expression_atlas_url, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
 
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>R Analyses</h4>", info_section_subtitle => 'View and run custom R analyses.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_run_r_analysis'>Run R analysis</button>", icon_class => "glyphicon glyphicon-heart", info_section_id => "trial_r_analyses", trial_name => $trial_name, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
+
+
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Compute New Phenotypes</h4>", info_section_subtitle => 'Compute derived traits or compute plot phenotypes from plant phenotypes.', icon_class => "glyphicon glyphicon-floppy-save", info_section_id => "compute_derived_traits" &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Upload Data Files</h4>", info_section_subtitle => 'Phenotypic data collection using Excel or Android Fieldbook. Also upload any additional files for this trial.', icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "trial_upload_files", trial_stock_type => $trial_stock_type &>
@@ -344,6 +347,23 @@ jQuery(document).ready(function () {
     jQuery('#gps_field_map_link').click(function () {
         var  id = <% $trial_id %>;
         window.open('/tools/fieldmap?trial_id=' + id ,'_blank');
+    });
+
+    jQuery('#trial_run_r_analysis').click( function () {
+        var  id = <% $trial_id %>;
+        jQuery('#working_modal').modal("show");
+        jQuery.ajax( {
+                "url": '/analyze/phenotypes/r',
+                "method": "POST",
+                "data": { "trial_id": id },
+                success: function(response){
+                    console.log("success!")
+                },
+                error: function(response){
+                    alert('Error running the custom analysis');
+                }
+        });
+
     });
 
 });
