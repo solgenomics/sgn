@@ -199,19 +199,19 @@ jQuery(document).ready(function () {
             .nodeAlign(d3.sankeyCenter);
           let graph = sankey(data);
 
-          // links = svg
-          //   .append("g")
-          //   .classed("links", true)
-          //   .selectAll("path")
-          //   .data(graph.links)
-          //   .enter()
-          //   .append("path")
-          //   .classed("link", true)
-          //   .attr("d", d3.sankeyLinkHorizontal())
-          //   .attr("fill", "none")
-          //   .attr("stroke", "#606060")
-          //   .attr("stroke-width", d => d.width)
-          //   .attr("stoke-opacity", 0.5);
+          links = svg
+            .append("g")
+            .classed("links", true)
+            .selectAll("path")
+            .data(graph.links)
+            .enter()
+            .append("path")
+            .classed("link", true)
+            .attr("d", d3.sankeyLinkHorizontal())
+            .attr("fill", "none")
+            .attr("stroke", "#606060")
+            .attr("stroke-width", d => d.width)
+            .attr("stoke-opacity", 0.5);
 
           nodes = svg
             .append("g")
