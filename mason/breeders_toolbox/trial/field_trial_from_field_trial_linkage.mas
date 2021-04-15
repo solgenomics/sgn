@@ -4,7 +4,7 @@ $trial_id
 $trial_type
 </%args>
 
-<& /util/import_javascript.mas, legacy => [ "d3/d3-pedigree-tree.js", "d3/d3Min.js", "d3/d3-sankey/dist/d3-sankey.js", "d3/d3-sankey/src/sankey.js", "d3/d3-array/dist/d3-array.js", "d3/d3-path/dist/d3-path.js" ], classes => [ 'd3.d3v4Min', 'd3.d3-pedigree-tree', 'brapi.BrAPI', 'brapi.PedigreeViewer' ]  &>
+<& /util/import_javascript.mas, legacy => [ "d3/d3-pedigree-tree.js", "d3/d3Min.js", "d3/d3-sankey/dist/d3-sankey.js", "d3/d3-sankey/src/sankey.js", "d3/d3-array/dist/d3-array.js", "d3/d3-path/dist/d3-path.js" ]  &>
 
 
 <div id="field_trial_to_field_trial_html">
