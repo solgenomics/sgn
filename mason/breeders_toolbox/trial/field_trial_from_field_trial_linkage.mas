@@ -42,116 +42,6 @@ jQuery(document).ready(function () {
     //     });
     // });
 
-    // jQuery('#field_trial_from_field_trial_section_onswitch').one("click",  function() {
-    //   jQuery.ajax({
-    //     url : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_from_field_trial',
-    //     beforeSend: function() {
-    //                  jQuery("#working_modal").modal("show");
-    //     },
-    //     success: function(r){
-    //       jQuery("#working_modal").modal("hide");
-    //       var nodesArray = [{"name":"This Trial", "type": "<% $trial_type %>", "x":100, "y":50 }];
-    //       var linksArray = [];
-    //
-    //       //Build data from response: will be an object with two arrays, one of nodes and one of links
-    //       var yinc = 20;
-    //       for (var i = 0; i < r.source_field_trials.length; i++){
-    //         nodesArray.push({"name":r.source_field_trials[i][1], "type":"Unknown", "x":0, "y":yinc});
-    //         linksArray.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
-    //         yinc = yinc + 20;
-    //       }
-    //       yinc = 20;
-    //       for (var i = 0; i < r.field_trials_sourced.length; i++){
-    //         nodesArray.push({"name":r.field_trials_sourced[i][1], "type":"Unknown", "x":200, "y":yinc});
-    //         linksArray.push({"source":r.field_trials_sourced[i][1], "target": "This Trial", "value":1});
-    //         yinc = yinc + 20;
-    //       }
-    //
-    //       var nodeMap = {
-    //         "nodes": nodesArray,
-    //         "links": linksArray
-    //       };
-    //
-    //       console.log(nodeMap);
-    //
-    //       //Set margins and set up svg area
-    //       var margin = {top: 10, right: 10, bottom: 10, left: 10};
-    //       var width = document.querySelector('#field_trial_to_field_trial_html').offsetWidth*0.90;
-    //       var height = 400;//document.querySelector('#field_trial_to_field_trial_html').offsetHeight*0.90;
-    //
-    //       var svg = d3.select("#field_trial_to_field_trial_html").append("svg")
-    //       .attr("width", width + margin.left + margin.right)
-    //       .attr("height", height + margin.top + margin.bottom)
-    //       .append("g")
-    //       .attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")");
-    //
-    //       svg.append("rect").attr("width", width).attr("height", height).attr("fill", "#e6e6e6").attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")");
-    //
-    //       //Draw trial type boxes
-    //       var headerBoxWidth = width/3;
-    //       var pyt = svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "orange").attr("stroke", "#e67300").attr("x", margin.left).attr("y", 0);
-    //       svg.append("text").attr("x", headerBoxWidth/2 + margin.left).attr("y", 13).attr("text-anchor", "middle").attr("style", "font-size:5").text("Preliminary Yield Trial").attr("stroke", "dark-grey");
-    //       var ayt = svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "yellow").attr("stroke", "#cc9900").attr("x", headerBoxWidth + margin.left).attr("y", 0);
-    //       svg.append("text").attr("x", 3*headerBoxWidth/2 + margin.left).attr("y", 13).attr("text-anchor", "middle").attr("style", "font-size:5").text("Advanced Yield Trial").attr("stroke", "dark-grey");
-    //       var uyt = svg.append("rect").attr("width", headerBoxWidth).attr("height", 15).attr("fill", "#00cc00").attr("stroke", "green").attr("x", headerBoxWidth*2 + margin.left).attr("y", 0);
-    //       svg.append("text").attr("x", 5*headerBoxWidth/2 + margin.left).attr("y", 13).attr("text-anchor", "middle").attr("style", "font-size:5").text("Uniform Yield Trial").attr("stroke", "dark-grey");
-    //
-    //       svg.append("path").attr("fill", "none").attr("stroke", "grey").attr("stroke-width", "1").attr("d", "M"+(margin.left + headerBoxWidth)+",0 V"+(height)+" ");
-    //       svg.append("path").attr("fill", "none").attr("stroke", "grey").attr("stroke-width", "1").attr("d", "M"+(margin.left + 2*headerBoxWidth)+",0 V"+(height)+" ");
-    //
-    //       //Create sankey generator
-    //       var sankey = d3.sankey()
-    //       .nodeWidth(15)
-    //       .nodePadding(60);
-    //
-    //       sankey.nodes(nodesArray)
-    //       .links(linksArray);
-    //       //.layout(1);
-    //
-    //       //Render links
-    //       var link = svg.append("g")
-    //       .selectAll(".link")
-    //       .data(linksArray)
-    //       .enter()
-    //       .append("path")
-    //       .attr("class", "link")
-    //       .attr("d", sankey.links() )
-    //       .style("stroke-width", "4" );
-    //       //.sort(function(a, b) { return b.dy - a.dy; });
-    //
-    //       //Render nodes
-    //       var node = svg.append("g")
-    //       .selectAll(".node")
-    //       .data(sankey.nodes())
-    //       .enter().append("g")
-    //       .attr("class", "node")
-    //       .attr("transform", "translate("+(function(d){return d.x;})+","+(function(d){return d.y;})+")");
-    //
-    //       //Create rectangles for nodes
-    //       node.append("circle")
-    //       .attr("r", "7")
-    //       .style("fill", "light-blue" )
-    //       .style("stroke", "blue" );
-    //
-    //       //Titles for nodes
-    //       node.append("text")
-    //       .attr("x", -6)
-    //       .attr("y", function(d) { return d.y / 2; })
-    //       .attr("dy", ".35em")
-    //       .attr("text-anchor", "end")
-    //       .attr("transform", null)
-    //       .text(function(d) { return d.name; })
-    //       .filter(function(d) { return d.x < width / 2; })
-    //       .attr("x", 6 + sankey.nodeWidth())
-    //       .attr("text-anchor", "start");
-    //
-    //     },
-    //     error: function(r){
-    //       jQuery("#working_modal").modal("hide");
-    //       alert("Error retrieving field trial to field trial linkage.");
-    //     }
-    //   });
-    // });
 
     jQuery('#field_trial_from_field_trial_section_onswitch').one("click",  function() {
       var trial_id = <% $trial_id %>;
@@ -168,11 +58,11 @@ jQuery(document).ready(function () {
 
           //Build data from response: will be an object with two arrays, one of nodes and one of links
           for (var i = 0; i < r.source_field_trials.length; i++){
-            nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][1], "value":1});
+            nodes.push({"name":'<a href="/breeders/trial/'+response.source_field_trials[i][0]+'">'+response.source_field_trials[i][1]+'</a>', "id":r.source_field_trials[i][1], "value":1});
             links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
           }
           for (var i = 0; i < r.field_trials_sourced.length; i++){
-            nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][1], "value":1});
+            nodes.push({"name":'<a href="/breeders/trial/'+response.field_trials_sourced[i][0]+'">'+response.field_trials_sourced[i][1]+'</a>', "id":r.field_trials_sourced[i][1], "value":1});
             links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1});
           }
 
@@ -239,7 +129,7 @@ jQuery(document).ready(function () {
             .attr("text-anchor", "center")
             .attr("x", d => d.x0)
             .attr("y", d => (d.y1 + d.y0)/2)
-            .text(d => d.id);
+            .text(d => d.name);
 
 
 
