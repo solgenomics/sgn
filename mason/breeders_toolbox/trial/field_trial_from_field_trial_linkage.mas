@@ -223,8 +223,8 @@ jQuery(document).ready(function () {
             .classed("node", true)
             .attr("x", d => d.x0)
             .attr("y", d => d.y0)
-            .attr("width", d => d.x1 - d.x0)
-            .attr("height", d => d.y1 - d.y0)
+            .attr("width", 15)//d => d.x1 - d.x0)
+            .attr("height", 15)//d => d.y1 - d.y0)
             .attr("fill", "blue")
             .attr("opacity", 0.8);
 
