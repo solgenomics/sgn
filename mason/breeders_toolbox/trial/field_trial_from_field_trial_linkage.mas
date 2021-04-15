@@ -222,7 +222,7 @@ jQuery(document).ready(function () {
             .append("rect")
             .classed("node", true)
             .attr("x", d => d.x0)
-            .attr("y", d => (d.y1 - d.y0)/2)//d => d.y0)
+            .attr("y", d => (d.y1 + d.y0)/2)//d => d.y0)
             .attr("width", 15)//d => d.x1 - d.x0)
             .attr("height", 15)//d => d.y1 - d.y0)
             .attr("fill", "blue")
