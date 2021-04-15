@@ -190,6 +190,44 @@ jQuery(document).ready(function () {
           .append("g")
           .attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")");
 
+          const sankey = d3
+            .sankey()
+            .size([width, height])
+            .nodeId(d => d.id)
+            .nodeWidth(20)
+            .nodePadding(10)
+            .nodeAlign(d3.sankeyCenter);
+          let graph = sankey(data);
+
+          let links = svg
+            .append("g")
+            .classed("links", true)
+            .selectAll("path")
+            .data(graph.links)
+            .enter()
+            .append("path")
+            .classed("link", true)
+            .attr("d", d3.sankeyLinkHorizontal())
+            .attr("fill", "none")
+            .attr("stroke", "#606060")
+            .attr("stroke-width", d => d.width)
+            .attr("stoke-opacity", 0.5);
+
+          let nodes = svg
+            .append("g")
+            .classed("nodes", true)
+            .selectAll("rect")
+            .data(graph.nodes)
+            .enter()
+            .append("rect")
+            .classed("node", true)
+            .attr("x", d => d.x0)
+            .attr("y", d => d.y0)
+            .attr("width", d => d.x1 - d.x0)
+            .attr("height", d => d.y1 - d.y0)
+            .attr("fill", "blue")
+            .attr("opacity", 0.8);
+
 
         },
         error: function(r){
