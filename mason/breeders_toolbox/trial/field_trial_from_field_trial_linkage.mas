@@ -228,6 +228,20 @@ jQuery(document).ready(function () {
             .attr("fill", "blue")
             .attr("opacity", 0.8);
 
+          labels = svg
+            .append("g")
+            .classed("nodes", true)
+            .selectAll("text")
+            .data(graph.nodes)
+            .enter()
+            .append("text")
+            .classed("node", true)
+            .attr("text-anchor", "end")
+            .attr("x", d => d.x0)
+            .attr("y", d => (d.y1 + d.y0)/2)
+            .text(d => d.id);
+
+
 
         },
         error: function(r){
