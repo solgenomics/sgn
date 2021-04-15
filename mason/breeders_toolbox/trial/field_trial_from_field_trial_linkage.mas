@@ -236,7 +236,7 @@ jQuery(document).ready(function () {
             .enter()
             .append("text")
             .classed("node", true)
-            .attr("text-anchor", "start")
+            .attr("text-anchor", "center")
             .attr("x", d => d.x0)
             .attr("y", d => (d.y1 + d.y0)/2)
             .text(d => d.id);
