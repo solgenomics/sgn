@@ -53,16 +53,28 @@ jQuery(document).ready(function () {
         success: function(r){
           jQuery('#working_modal').modal("hide");
 
+          var html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Source Field Trial(s) For This Field Trial</th></tr></thead><tbody>';
+          var html2 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) Sourced From This Field Trial</th></tr></thead><tbody>';
+          for (var i=0; i<r.source_field_trials.length; i++){
+              html1 = html1 + '<tr><td><a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a></td></tr>';
+          }
+          for (var i=0; i<r.field_trials_sourced.length; i++){
+              html2 = html2 + '<tr><td><a href="/breeders/trial/'+r.field_trials_sourced[i][0]+'">'+r.field_trials_sourced[i][1]+'</a></td></tr>';
+          }
+          html1 = html1 + '</tbody></table>';
+          html2 = html2 + '</tbody></table>';
+          jQuery('#field_trial_to_field_trial_html').html(html1+html2);
+
           var nodes = [{"name":"This Trial", "id":"This Trial" }];
           var links = [];
 
           //Build data from response: will be an object with two arrays, one of nodes and one of links
           for (var i = 0; i < r.source_field_trials.length; i++){
-            nodes.push({"name":'<a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a>', "id":r.source_field_trials[i][1], "value":1});
+            nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][1], "value":1});
             links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
           }
           for (var i = 0; i < r.field_trials_sourced.length; i++){
-            nodes.push({"name":'<a href="/breeders/trial/'+r.field_trials_sourced[i][0]+'">'+r.field_trials_sourced[i][1]+'</a>', "id":r.field_trials_sourced[i][1], "value":1});
+            nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][1], "value":1});
             links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1});
           }
 
@@ -70,7 +82,7 @@ jQuery(document).ready(function () {
           console.log(data);
 
           //Set margins and set up svg area
-          var margin = {top: 50, right: 50, bottom: 50, left: 50};
+          var margin = {top: 80, right: 80, bottom: 80, left: 80};
           var width = document.querySelector('#field_trial_to_field_trial_html').offsetWidth*0.90;
           var height = 400;//document.querySelector('#field_trial_to_field_trial_html').offsetHeight*0.90;
 
