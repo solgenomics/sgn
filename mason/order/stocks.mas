@@ -37,10 +37,10 @@ $role => "stock_orderer"
                         <thead>
                             <tr>
                                 <th>Order Number</th>
-                                <th>Send Order To</th>
                                 <th>Submitted Date</th>
                                 <th>Items</th>
                                 <th>Status</th>
+                                <th>Send Order To</th>
                             </tr>
                         </thead>
                     </table>

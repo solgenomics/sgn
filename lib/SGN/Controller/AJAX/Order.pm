@@ -175,9 +175,15 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     }
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
-    my $current_orders = $orders->get_current_orders_from_person_id();
-#        print STDERR "AJAX CURRENT ORDER =".Dumper($current_orders)."\n";
-    $c->stash->{rest} = {data => $current_orders};
+    my $all_orders_ref = $orders->get_orders_from_person_id();
+    my @current_orders;
+    my @all_orders = @$all_orders_ref;
+    foreach my $order (@all_orders) {
+        if (($order->[3]) ne 'completed') {
+            push @current_orders, [$order->[0], $order->[1], $order->[2], $order->[3], $order->[5]]
+        }
+    }
+    $c->stash->{rest} = {data => \@current_orders};
 
 }
 
@@ -214,9 +220,17 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     }
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
-    my $completed_orders = $orders->get_completed_orders_from_person_id();
-#        print STDERR "AJAX CURRENT ORDER =".Dumper($current_orders)."\n";
-    $c->stash->{rest} = {data => $completed_orders};
+    my $all_orders_ref = $orders->get_orders_from_person_id();
+    my @completed_orders;
+    my @all_orders = @$all_orders_ref;
+    foreach my $order (@all_orders) {
+        if (($order->[3]) eq 'completed') {
+            push @completed_orders, [$order->[0], $order->[1], $order->[2], $order->[3], $order->[4], $order->[5]]
+        }
+    }
+
+    $c->stash->{rest} = {data => \@completed_orders};
+
 }
 
 
@@ -301,9 +315,9 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
         $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status});
     }
 
-    my $order_id = $order_obj->store();
-    print STDERR "UPDATED ORDER ID =".Dumper($order_id)."\n";
-    if (!$order_id){
+    my $updated_order = $order_obj->store();
+    print STDERR "UPDATED ORDER ID =".Dumper($updated_order)."\n";
+    if (!$updated_order){
         $c->stash->{rest} = {error_string => "Error updating the order",};
         return;
     }
