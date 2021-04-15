@@ -199,7 +199,7 @@ jQuery(document).ready(function () {
             .nodeAlign(d3.sankeyCenter);
           let graph = sankey(data);
 
-          let links = svg
+          links = svg
             .append("g")
             .classed("links", true)
             .selectAll("path")
@@ -213,7 +213,7 @@ jQuery(document).ready(function () {
             .attr("stroke-width", d => d.width)
             .attr("stoke-opacity", 0.5);
 
-          let nodes = svg
+          nodes = svg
             .append("g")
             .classed("nodes", true)
             .selectAll("rect")
