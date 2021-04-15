@@ -199,20 +199,6 @@ jQuery(document).ready(function () {
             .nodeAlign(d3.sankeyCenter);
           let graph = sankey(data);
 
-          links = svg
-            .append("g")
-            .classed("links", true)
-            .selectAll("path")
-            .data(graph.links)
-            .enter()
-            .append("path")
-            .classed("link", true)
-            .attr("d", d3.sankeyLinkHorizontal())
-            .attr("fill", "none")
-            .attr("stroke", "#606060")
-            .attr("stroke-width", 4)//d => d.width)
-            .attr("stoke-opacity", 0.5);
-
           nodes = svg
             .append("g")
             .classed("nodes", true)
@@ -227,6 +213,20 @@ jQuery(document).ready(function () {
             .attr("height", 15)//d => d.y1 - d.y0)
             .attr("fill", "blue")
             .attr("opacity", 0.8);
+
+          links = svg
+            .append("g")
+            .classed("links", true)
+            .selectAll("path")
+            .data(graph.links)
+            .enter()
+            .append("path")
+            .classed("link", true)
+            .attr("d", d3.sankeyLinkHorizontal())
+            .attr("fill", "none")
+            .attr("stroke", "#606060")
+            .attr("stroke-width", 4)//d => d.width)
+            .attr("stoke-opacity", 0.5);
 
           labels = svg
             .append("g")
