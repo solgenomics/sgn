@@ -55,19 +55,17 @@ $role => "stock_orderer"
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <div style="overflow:scroll">
-                    <table id = "completed_clone_orders" class="table table-hover table-striped">
-                    <thead>
-                        <tr>
-                            <th>Order Number</th>
-                            <th>Ordered By</th>
-                            <th>Submitted Date</th>
-                            <th>Items</th>
-                            <th>Send Order To</th>
-                            <th>Completed Date</th>
-                            <th>Processed By</th>
-                        </tr>
-                    </thead>
-
+                    <table id = "user_completed_orders" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Order Number</th>
+                                <th>Submitted Date</th>
+                                <th>Items</th>
+                                <th>Status</th>
+                                <th>Completed Date</th>
+                                <th>Processed By</th>
+                            </tr>
+                        </thead>
                     </table>
                 </div>
             </div>
@@ -219,6 +217,11 @@ $(window).ready( function() {
     jQuery('#user_current_orders').DataTable( {
         'autoWidth': false,
         'ajax': '/ajax/order/current',
+    });
+
+    jQuery('#user_completed_orders').DataTable( {
+        'autoWidth': false,
+        'ajax': '/ajax/order/completed',
     });
 
     jQuery('#contact_person_orders').DataTable( {

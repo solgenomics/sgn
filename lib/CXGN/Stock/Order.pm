@@ -130,7 +130,7 @@ sub store {
 }
 
 
-sub get_orders_from_person_id {
+sub get_current_orders_from_person_id {
     my $self = shift;
     my $people_schema = $self->people_schema();
     my $person_id = $self->order_from_id();
@@ -148,20 +148,62 @@ sub get_orders_from_person_id {
         my $person= CXGN::People::Person->new($dbh, $order_to_id);
         my $order_to_name=$person->get_first_name()." ".$person->get_last_name();
 
-        my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
-        while (my $item_result = $orderprop_rs->next()){
-            my $item_json = $item_result->value();
-            my $item_hash = JSON::Any->jsonToObj($item_json);
-            my $item_list_string = $item_hash->{'clone_list'};
-            my $item_list_ref = decode_json $item_list_string;
-            my %list_hash = %{$item_list_ref};
-            my @list = keys %list_hash;
-            my @sort_list = sort @list;
-            $item_list = join("<br>", @sort_list);
+        if ($order_status ne 'completed') {
+            my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
+            while (my $item_result = $orderprop_rs->next()){
+                my $item_json = $item_result->value();
+                my $item_hash = JSON::Any->jsonToObj($item_json);
+                my $item_list_string = $item_hash->{'clone_list'};
+                my $item_list_ref = decode_json $item_list_string;
+                my %list_hash = %{$item_list_ref};
+                my @list = keys %list_hash;
+                my @sort_list = sort @list;
+                $item_list = join("<br>", @sort_list);
 #            print STDERR "ITEM =".Dumper($item)."\n";
-        }
+            }
 
-        push @orders, [$order_id, $order_to_name, $create_date, $item_list, $order_status];
+            push @orders, [$order_id, $order_to_name, $create_date, $item_list, $order_status];
+        }
+    }
+#    print STDERR "ORDERS =".Dumper(\@orders)."\n";
+    return \@orders;
+}
+
+sub get_completed_orders_from_person_id {
+    my $self = shift;
+    my $people_schema = $self->people_schema();
+    my $person_id = $self->order_from_id();
+    my $dbh = $self->dbh();
+
+    my $order_rs = $people_schema->resultset('SpOrder')->search( { order_from_id => $person_id } );
+    my @orders;
+    while (my $result = $order_rs->next()){
+        my $item_list;
+        my $order_id = $result->sp_order_id();
+#        my $order_from_id = $result->order_from_id();
+        my $order_to_id = $result->order_to_id();
+        my $order_status = $result->order_status();
+        my $create_date = $result->create_date();
+        my $completion_date = $result->completion_date();
+        my $person= CXGN::People::Person->new($dbh, $order_to_id);
+        my $order_to_name=$person->get_first_name()." ".$person->get_last_name();
+
+        if ($order_status eq 'completed') {
+            my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
+            while (my $item_result = $orderprop_rs->next()){
+                my $item_json = $item_result->value();
+                my $item_hash = JSON::Any->jsonToObj($item_json);
+                my $item_list_string = $item_hash->{'clone_list'};
+                my $item_list_ref = decode_json $item_list_string;
+                my %list_hash = %{$item_list_ref};
+                my @list = keys %list_hash;
+                my @sort_list = sort @list;
+                $item_list = join("<br>", @sort_list);
+#            print STDERR "ITEM =".Dumper($item)."\n";
+            }
+
+            push @orders, [$order_id, $create_date, $item_list, $order_status, $completion_date, $order_to_name ];
+        }
     }
 #    print STDERR "ORDERS =".Dumper(\@orders)."\n";
     return \@orders;
