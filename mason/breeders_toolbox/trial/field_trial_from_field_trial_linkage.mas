@@ -113,7 +113,7 @@ jQuery(document).ready(function () {
             .attr("y", d => d.y0)
             .attr("width", d => d.x1 - d.x0)
             .attr("height", d => d.y1 - d.y0)
-            .attr("fill", "blue")
+            .attr("fill", "light-blue")
             .attr("opacity", 0.8);
 
           links = svg
@@ -126,7 +126,7 @@ jQuery(document).ready(function () {
             .classed("link", true)
             .attr("d", d3.sankeyLinkHorizontal())
             .attr("fill", "none")
-            .attr("stroke", "#606060")
+            .attr("stroke", "light-grey")
             .attr("stroke-width", d => d.width)
             .attr("marker-end", "url(#triangle)")
             .attr("stoke-opacity", 0.3);
