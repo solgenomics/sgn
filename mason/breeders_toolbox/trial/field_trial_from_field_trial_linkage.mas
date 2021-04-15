@@ -58,11 +58,11 @@ jQuery(document).ready(function () {
 
           //Build data from response: will be an object with two arrays, one of nodes and one of links
           for (var i = 0; i < r.source_field_trials.length; i++){
-            nodes.push({"name":'<a href="/breeders/trial/'+response.source_field_trials[i][0]+'">'+response.source_field_trials[i][1]+'</a>', "id":r.source_field_trials[i][1], "value":1});
+            nodes.push({"name":'<a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a>', "id":r.source_field_trials[i][1], "value":1});
             links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
           }
           for (var i = 0; i < r.field_trials_sourced.length; i++){
-            nodes.push({"name":'<a href="/breeders/trial/'+response.field_trials_sourced[i][0]+'">'+response.field_trials_sourced[i][1]+'</a>', "id":r.field_trials_sourced[i][1], "value":1});
+            nodes.push({"name":'<a href="/breeders/trial/'+r.field_trials_sourced[i][0]+'">'+r.field_trials_sourced[i][1]+'</a>', "id":r.field_trials_sourced[i][1], "value":1});
             links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1});
           }
 
