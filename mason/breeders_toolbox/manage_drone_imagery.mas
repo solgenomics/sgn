@@ -4191,7 +4191,7 @@ jQuery(document).ready(function() {
         if (manage_drone_imagery_download_phenotypes_field_trial_id == '') {
             alert('Please select a field trial first!');
         } else {
-            get_select_box('traits', 'drone_imagery_download_phenotypes_trait_select_div', { 'name' : 'drone_imagery_download_phenotypes_trait_id_select', 'id' : 'drone_imagery_download_phenotypes_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_download_phenotypes_field_trial_id, 'stock_type':'plot' });
+            get_select_box('traits', 'drone_imagery_download_phenotypes_trait_select_div', { 'name' : 'drone_imagery_download_phenotypes_trait_id_select', 'id' : 'drone_imagery_download_phenotypes_trait_id_select', 'empty':0, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_download_phenotypes_field_trial_id, 'stock_type':'plot' });
 
             Workflow.complete("#drone_imagery_download_phenotypes_field_trial_select_step");
             Workflow.focus('#drone_imagery_download_phenotypes_workflow', 1);
