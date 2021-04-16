@@ -436,16 +436,16 @@ function get_reference_genomes(callback) {
     jQuery.ajax({
         type: 'GET',
         dataType: 'json',
-        url: '/ajax/sequence_metadata/reference_genomes',
+        url: '/ajax/markergeno/reference_genomes',
         success: function(data) {
             if ( data && data.reference_genomes ) {
                 reference_genomes = data.reference_genomes;
                 let options = "";
                 for ( let i = 0; i < reference_genomes.length; i++ ) {
-                    let reference = reference_genomes[i].reference_genome;
+                    let reference = reference_genomes[i].reference_genome_name;
                     let species = reference_genomes[i].species_name;
                     let label = reference + " (" + species + ")";
-                    let selected = selected_reference_genome && reference_genomes[i].reference_genome === selected_reference_genome ? 'selected' : '';
+                    let selected = selected_reference_genome && reference_genomes[i].reference_genome_name === selected_reference_genome ? 'selected' : '';
                     options += "<option value='" + reference + "' data-species='" + species + "' " + selected + ">" + label + "</option>";
                 }
                 jQuery('#sequence_metadata_filter_reference_genome').html(options);

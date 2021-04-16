@@ -59,6 +59,44 @@ sub BUILD {
     my $self = shift;
 }
 
+#
+# Get the unique pairs of reference genome and species from the 
+# genotype protocol props (type=vcf_map_details)
+#
+# Returns an array of hashes with the following keys:
+#   - species_name = name of species
+#   - reference_genome_name = name of reference genome
+#
+sub reference_genomes {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $dbh = $schema->storage->dbh();
+
+    # Build query to get unique pairs of reference and species
+    my $q = "SELECT value->>'species_name' AS species, value->>'reference_genome_name' AS reference_genome
+                FROM nd_protocolprop
+                WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'vcf_map_details')
+                GROUP BY species, reference_genome
+                ORDER BY species;";
+
+    # Perform query
+    my $h = $dbh->prepare($q);
+    $h->execute();
+
+    # Parse results
+    my @results = ();
+    while ( my ($species, $reference_genome) = $h->fetchrow_array() ) {
+        my %result = (
+            species_name => $species,
+            reference_genome_name => $reference_genome
+        );
+        push(@results, \%result);
+    }
+
+    # Return the results
+    return(\@results);
+}
+
 
 #
 # Search the unified marker materialized view for markers matching the provided search criteria

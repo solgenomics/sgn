@@ -21,47 +21,6 @@ __PACKAGE__->config(
 );
 
 
-
-#
-# Get a list of reference genomes from loaded genotype protocols
-# PATH: GET /ajax/sequence_metadata/reference_genomes
-# RETURNS:
-#   - reference_genomes: an array of reference genomes
-#       - reference_genome: name of reference genome
-#       - species_name: name of species associated with reference genome
-#
-sub get_reference_genomes : Path('/ajax/sequence_metadata/reference_genomes') :Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $dbh = $schema->storage->dbh();
-
-    # Get unique sets of genotype protocol species and reference genomes
-    my $q = "SELECT value->>'species_name' AS species, value->>'reference_genome_name' AS reference_genome
-            FROM nd_protocolprop
-            WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'vcf_map_details')
-            GROUP BY species, reference_genome
-            ORDER BY species;";
-    my $h = $dbh->prepare($q);
-    $h->execute();
-    
-    # Parse the results
-    my @results = ();
-    while ( my ($species, $reference_genome) = $h->fetchrow_array() ) {
-        my %result = (
-            species_name => $species,
-            reference_genome => $reference_genome
-        );
-        push(@results, \%result);
-    }
-
-    # Return the results
-    $c->stash->{rest} = {
-        reference_genomes => \@results
-    };
-}
-
-
 #
 # Get all of the features associated with sequence metadata
 # PATH: GET /ajax/sequence_metadata/features
