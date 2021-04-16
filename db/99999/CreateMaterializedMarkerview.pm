@@ -88,7 +88,7 @@ AS \$function\$
 			GROUP BY species, reference_genome
 		)
 		LOOP
-			querystr := 'SELECT nd_protocolprop.nd_protocol_id, ''' || maprow.species || ''' AS species_name, ''' || maprow.reference_genome || ''' AS reference_genome_name, s.value->>''name'' AS marker_name, s.value->>''chrom'' AS chrom, s.value->>''pos'' AS pos, s.value->>''ref'' AS ref, s.value->>''alt'' AS alt, concat(''' || maprow.species_abbreviation || ''', ''' || maprow.reference_genome_cleaned || ''', ''_'', s.value->>''chrom'', ''_'', s.value->>''pos'') AS variant_name FROM nd_protocolprop, LATERAL jsonb_each(nd_protocolprop.value) s(key, value) WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = ''vcf_map_details_markers'') AND nd_protocol_id IN (SELECT nd_protocol_id FROM nd_protocolprop WHERE value->>''species_name'' = ''' || maprow.species || ''' AND type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = ''vcf_map_details''))';
+			querystr := 'SELECT nd_protocolprop.nd_protocol_id, ''' || maprow.species || ''' AS species_name, ''' || maprow.reference_genome || ''' AS reference_genome_name, s.value->>''name'' AS marker_name, s.value->>''chrom'' AS chrom, (s.value->>''pos'')::int AS pos, s.value->>''ref'' AS ref, s.value->>''alt'' AS alt, concat(''' || maprow.species_abbreviation || ''', ''' || maprow.reference_genome_cleaned || ''', ''_'', s.value->>''chrom'', ''_'', s.value->>''pos'') AS variant_name FROM nd_protocolprop, LATERAL jsonb_each(nd_protocolprop.value) s(key, value) WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = ''vcf_map_details_markers'') AND nd_protocol_id IN (SELECT nd_protocol_id FROM nd_protocolprop WHERE value->>''species_name'' = ''' || maprow.species || ''' AND type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = ''vcf_map_details''))';
 			queries := array_append(queries, querystr);
 		END LOOP;
 		matviewquery := array_to_string(queries, ' UNION ');
@@ -105,6 +105,7 @@ AS \$function\$
 		IF \$1 THEN
 			REFRESH MATERIALIZED VIEW public.materialized_markerview;
 		END IF;
+		GRANT SELECT ON public.materialized_markerview TO web_usr;
 		RETURN \$1;
 	END
 \$function\$;
