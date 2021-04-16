@@ -1149,7 +1149,7 @@ function displayMarkers(key) {
     else if ( typeof marker_info === 'object' ) {
         console.log(marker_info);
         let html = "";
-        let marker_count = marker_info.marker_count;
+        let marker_count = marker_info.counts.markers;
         let variants = marker_info.variants;
         let markers_displayed = 0;
         if ( marker_count > 0 ) {

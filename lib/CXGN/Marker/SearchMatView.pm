@@ -102,7 +102,7 @@ sub reference_genomes {
 }
 
 #
-# Find markers that are related to those of the specified variant
+# Find variants (and their markers) that are related to those of the specified variant
 #
 # This query will get all of the marker names of the specified variant 
 # and lookup markers that have the same name but are on a different variant
@@ -113,7 +113,7 @@ sub reference_genomes {
 #
 # Returns a hash of variants containing the related/matching markers
 #
-sub related_markers {
+sub related_variants {
     my $self = shift;
     my $variant_name = shift;
     my $schema = $self->bcs_schema;
@@ -211,7 +211,7 @@ sub query {
 
     # Build query
     my $select_info = "SELECT materialized_markerview.nd_protocol_id, nd_protocol.name AS nd_protocol_name, species_name, reference_genome_name, marker_name, variant_name, chrom, pos, ref, alt";
-    my $select_count = "SELECT COUNT(*) AS count";
+    my $select_count = "SELECT COUNT(*) AS marker_count, COUNT(DISTINCT(variant_name)) AS variant_count";
     my $q = " FROM public.materialized_markerview";
     $q .= " LEFT JOIN nd_protocol USING (nd_protocol_id)";
 
@@ -275,7 +275,7 @@ sub query {
     my $query_count = $select_count . $q;
     my $h_count = $dbh->prepare($query_count);
     $h_count->execute(@args);
-    my ($marker_count) = $h_count->fetchrow_array();
+    my ($marker_count, $variant_count) = $h_count->fetchrow_array();
 
     # Get the marker info
     my $query = $select_info . $q;
@@ -326,8 +326,10 @@ sub query {
     # Return the results
     return({
         variants => \%variants,
-        variant_count => scalar(keys(%variants)),
-        marker_count => $marker_count
+        counts => {
+            variants => $variant_count,
+            markers => $marker_count
+        }
     });
 }
 
