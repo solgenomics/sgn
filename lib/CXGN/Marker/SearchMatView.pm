@@ -13,28 +13,32 @@ To perform a marker search, first create a marker search object with a bio chado
 
 Then call the query function with the desired filter parameters
 example: filter markers based on position:
-    my $results = $msearch->query(
+    my $results = $msearch->query({
         species_name => 'Triticum aestivum',
         reference_genome_name => 'RefSeq_v1',
         chrom => '1A',
         start => '1000',
         end => '2000'
-    );
+    });
 example: filter markers based on name:
-    my $results = $msearch->query(
+    my $results = $msearch->query({
         name => '1WA10'
-    );
+    });
 example: filter markers based on a substring of the name:
-    my $results = $msearch->query(
+    my $results = $msearch->query({
         name => 'IWA',
         name_match => 'contains'
-    );
+    });
 example: filter markers based on name for a particular set of genotype protocols:
     my @genotype_protocols = (37, 38);
-    my $results = $msearch->query(
+    my $results = $msearch->query({
         name => 'IWA10',
         nd_protocol_ids => \@genotype_protocols
-    );
+    });
+example: get markers for a specific variant:
+    my $results = $msearch->query({
+        variant => 'TaRefSeqv1_1A_1176337'
+    });
 
 =head1 AUTHORS
 
@@ -97,6 +101,65 @@ sub reference_genomes {
     return(\@results);
 }
 
+#
+# Find markers that are related to those of the specified variant
+#
+# This query will get all of the marker names of the specified variant 
+# and lookup markers that have the same name but are on a different variant
+# (example: a marker that uses the same name but is on a different reference/species)
+#
+# Arguments:
+#   - variant_name = name of the variant of which to find related markers
+#
+# Returns a hash of variants containing the related/matching markers
+#
+sub related_markers {
+    my $self = shift;
+    my $variant_name = shift;
+    my $schema = $self->bcs_schema;
+    my $dbh = $schema->storage->dbh();
+
+    # Build query
+    my $q = "SELECT materialized_markerview.nd_protocol_id, nd_protocol.name AS nd_protocol_name, species_name, reference_genome_name, marker_name, variant_name, chrom, pos, ref, alt 
+            FROM materialized_markerview
+            LEFT JOIN nd_protocol USING (nd_protocol_id)
+            WHERE marker_name IN (
+                SELECT DISTINCT(marker_name)
+                FROM materialized_markerview
+                WHERE UPPER(variant_name) = UPPER(?)
+                    AND marker_name <> '.'
+            )
+            AND UPPER(variant_name) <> UPPER(?);";
+    
+    # Execute Query
+    my $h = $dbh->prepare($q);
+    $h->execute($variant_name, $variant_name);
+
+    # Parse Results
+    my %variants;
+    while (my ($nd_protocol_id, $nd_protocol_name, $species_name, $reference_genome_name, $marker_name, $variant_name, $chrom, $pos, $ref, $alt) = $h->fetchrow_array()) {
+        my %marker = (
+            nd_protocol_id => $nd_protocol_id,
+            nd_protocol_name => $nd_protocol_name, 
+            species_name => $species_name,
+            reference_genome_name => $reference_genome_name,
+            marker_name => $marker_name,
+            variant_name => $variant_name,
+            chrom => $chrom,
+            pos => $pos,
+            ref => $ref,
+            alt => $alt
+        );
+        if ( !exists $variants{$variant_name} ) {
+            $variants{$variant_name} = ();
+        }
+        push(@{$variants{$variant_name}}, \%marker);
+    }
+
+    # Return the Results
+    return(\%variants);
+}
+
 
 #
 # Search the unified marker materialized view for markers matching the provided search criteria
@@ -126,7 +189,6 @@ sub reference_genomes {
 #       - pos = chromosome position
 #       - ref = reference allele
 #       - alt = alternate allele
-#   - variant_count = total number of variants found
 #   - marker_count = total number of markers found
 #
 sub query {
@@ -204,7 +266,7 @@ sub query {
         push(@where, $pw);
         push(@args, @$nd_protocol_ids);
     }
-    push(@where, "marker_name <> '.'");
+    # push(@where, "marker_name <> '.'");
     if ( @where ) {
         $q .= " WHERE " . join(' AND ', @where);
     }
@@ -217,7 +279,7 @@ sub query {
 
     # Get the marker info
     my $query = $select_info . $q;
-    $query .= " ORDER BY marker_name";
+    $query .= " ORDER BY variant_name, marker_name";
     if ( defined $limit ) {
         $query .= " LIMIT ?";
         push(@args, $limit);

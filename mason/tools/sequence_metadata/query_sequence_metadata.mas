@@ -1071,16 +1071,17 @@ function updateMarkers() {
     let containers = jQuery('.sequence_metadata_marker_search_markers');
     for ( let i = 0; i < containers.length; i++ ) {
         let container = jQuery(containers[i]);
+        let species = container.data("species");
         let reference_genome = container.data("reference-genome");
-        let feature_id = container.data("feature-id");
+        let feature_name = container.data("feature-name");
         let start = container.data("start");
         let end = container.data("end");
-        let key = [reference_genome, feature_id, start, end].join("-");
+        let key = [species, reference_genome, feature_name, start, end].join("-").replaceAll(' ', '');
         if ( markers && markers[key] ) {
             displayMarkers(key);
         }
         else {
-            getMarkers(reference_genome, feature_id, start, end);
+            getMarkers(species, reference_genome, feature_name, start, end);
         }
     }
 
@@ -1090,13 +1091,14 @@ function updateMarkers() {
  * Get markers matching the specified sequence metadata
  * - Query the DB for matching markers
  * - Update the display of the markers
- * @param {int} reference_genome Name of the reference genome
- * @param {int} feature_id ID of the sequence metadata's associated feature
+ * @param {string} species Name of the species
+ * @param {string} reference_genome Name of the reference genome
+ * @param {string} feature_name Name of the sequence metadata's associated feature
  * @param {int} start Start position of the sequence metadata
  * @praam {int} end End position of the sequence metadata
  */
-function getMarkers(reference_genome, feature_id, start, end) {
-    let key = [reference_genome, feature_id, start, end].join("-");
+function getMarkers(species, reference_genome, feature_name, start, end) {
+    let key = [species, reference_genome, feature_name, start, end].join("-").replaceAll(' ', '');
 
     // Display searching
     if ( !markers ) markers = {};
@@ -1106,10 +1108,11 @@ function getMarkers(reference_genome, feature_id, start, end) {
     // Query the Database for Markers
     jQuery.ajax({
         type: 'GET',
-        url: '/ajax/sequence_metadata/markers',
+        url: '/ajax/variants/query',
         data: {
+            species: species,
             reference_genome: reference_genome,
-            feature_id: feature_id,
+            chrom: feature_name,
             start: start,
             end: end,
             limit: 50
@@ -1139,24 +1142,33 @@ function getMarkers(reference_genome, feature_id, start, end) {
 function displayMarkers(key) {
     let marker_info = markers[key];
     let container = jQuery('.sequence_metadata_marker_search_markers_' + key);
+    console.log(container);
     if ( typeof marker_info === 'string' ) {
         container.html(marker_info);
     }
     else if ( typeof marker_info === 'object' ) {
+        console.log(marker_info);
         let html = "";
-        let total = marker_info.count;
-        let markers = marker_info.markers;
-        if ( total > 0 ) {
-            let m = total === 1 ? "marker" : "markers";
-            html += "<strong>" + total + " " + m + " found:</strong>";
+        let marker_count = marker_info.marker_count;
+        let variants = marker_info.variants;
+        let markers_displayed = 0;
+        if ( marker_count > 0 ) {
+            let m = marker_count === 1 ? "marker" : "markers";
+            html += "<strong>" + marker_count + " " + m + " found:</strong>";
             html += "<div class='sequence_metadata_marker_search_markers_list'>";
-            for ( let i = 0; i < markers.length; i++ ) {
-                let name = markers[i].marker_name;
-                let protocol = markers[i].nd_protocol_name;
-                html += "<a href='/markerGeno/" + name + "/details'><strong>" + name + "</strong> (" + protocol + ")</a><br />";
+            for ( let variant_name in variants ) {
+                if ( variants.hasOwnProperty(variant_name) ) {
+                    html += "<a href='/variant/" + variant_name + "/details'><strong>" + variant_name + "</strong></a><br />";
+                    html += "<ul>";
+                    for ( let i = 0; i < variants[variant_name].length; i++ ) {
+                        markers_displayed++;
+                        html += "<li><strong>" + variants[variant_name][i].marker_name + "</strong> (" + variants[variant_name][i].nd_protocol_name + ")</li>";
+                    }
+                    html += "</ul>";
+                }        
             }
-            if ( markers.length < total ) {
-                let diff = total - markers.length;
+            if ( markers_displayed < marker_count ) {
+                let diff = marker_count - markers_displayed;
                 html += "<em>..." + diff + " more not displayed...</em>";
             }
             html += "</div>";
@@ -1164,6 +1176,7 @@ function displayMarkers(key) {
         else {
             html += "<em>No markers found</em>";
         }
+        console.log(html);
         container.html(html);
     }
 }
@@ -1180,6 +1193,8 @@ function displayMarkers(key) {
  * @returns {String} The text/html to display in the table
  */
 function renderMarkersColumn(row, type) {
+    
+    // Get reference genome by protocol
     let reference_genome = "";
     for ( let ref in protocols ) {
         if ( protocols.hasOwnProperty(ref) ) {
@@ -1191,8 +1206,23 @@ function renderMarkersColumn(row, type) {
             }
         }
     }
-    let data = "data-feature-id='" + row.feature_id + "' data-start='" + row.start + "' data-end='" + row.end + "' data-reference-genome='" + reference_genome + "'";
-    let key = [reference_genome, row.feature_id, row.start, row.end].join("-");
+
+    // Get species by feature
+    let species = "";
+    for ( let sp in features ) {
+        if ( features.hasOwnProperty(sp) ) {
+            let fs = features[sp];
+            for ( let i = 0; i < fs.length; i++ ) {
+                if ( fs[i].feature_id === row.feature_id ) {
+                    species = sp;
+                }
+            }
+        }
+    }
+
+    // Set data properties for marker search
+    let data = "data-reference-genome='" + reference_genome + "' data-species='" + species + "' data-feature-name='" + row.feature_name + "' data-start='" + row.start + "' data-end='" + row.end + "'";
+    let key = [species, reference_genome, row.feature_name, row.start, row.end].join("-").replaceAll(' ', '');
     
     let html = "<div class='sequence_metadata_marker_search'>";
     html += "<div class='sequence_metadata_marker_search_markers sequence_metadata_marker_search_markers_" + key + "' " + data + "></div>";

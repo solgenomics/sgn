@@ -35,27 +35,25 @@ my %params = (
 <!-- Results Table(s) -->
 % foreach my $id (keys %$params) {
     <br />
-    <div class="well">
-        <table class="table quick-query-table">
-            <thead><tr>
-                <th>Reference Genome</th>
-                <th>Species</th>
-                <th>Feature</th>
-                <th>Start</th>
-                <th>End</th>
-                <th></th>
-            </tr></thead>
-            <tr>
-                <td><% $params->{$id}->{'reference_genome'} %></td>
-                <td><% $params->{$id}->{'species'} %></td>
-                <td><% $params->{$id}->{'feature'} %></td>
-                <td><% $params->{$id}->{'start'} %></td>
-                <td><% $params->{$id}->{'end'} %></td>
-                <td><a href="/search/sequence_metadata?reference_genome=<% $params->{$id}->{'reference_genome'} %>&feature=<% $params->{$id}->{'feature'} %>&start=<% $params->{$id}->{'start'} %>&end=<% $params->{$id}->{'end'} %>">Modify&nbsp;Query</a></td>
-            </tr>
-        </table>
-        <table id="<% $id %>" class="display"></table>
-    </div>
+    <table class="table quick-query-table">
+        <thead><tr>
+            <th>Reference Genome</th>
+            <th>Species</th>
+            <th>Feature</th>
+            <th>Start</th>
+            <th>End</th>
+            <th></th>
+        </tr></thead>
+        <tr>
+            <td><% $params->{$id}->{'reference_genome'} %></td>
+            <td><% $params->{$id}->{'species'} %></td>
+            <td><% $params->{$id}->{'feature'} %></td>
+            <td><% $params->{$id}->{'start'} %></td>
+            <td><% $params->{$id}->{'end'} %></td>
+            <td><a href="/search/sequence_metadata?reference_genome=<% $params->{$id}->{'reference_genome'} %>&feature=<% $params->{$id}->{'feature'} %>&start=<% $params->{$id}->{'start'} %>&end=<% $params->{$id}->{'end'} %>">Modify&nbsp;Query</a></td>
+        </tr>
+    </table>
+    <table id="<% $id %>" class="display"></table>
     <br />
 % }
 
@@ -107,6 +105,9 @@ function quick_query(id, species, reference, feature, start, end) {
  * @param {Object} data Query Results
  */
 function display_results(id, data) {
+    console.log("SMD RESULTS");
+    console.log(data);
+
     let dt = jQuery('#' + id).DataTable();
     dt.clear();
     if ( data && data.error ) {
