@@ -2,8 +2,8 @@ package CXGN::Marker::SearchMatView;
 
 =head1 NAME
 
-CXGN::Marker::SearchMatView - class to search for markers based on name or 
-position using the unified marker materialized view
+CXGN::Marker::SearchMatView - class to search for markers based on name, position, or other filter 
+criteria using the unified marker materialized view (public.materialized_markerview)
 
 =head1 USAGE
 
@@ -26,7 +26,8 @@ example: filter markers based on name:
     );
 example: filter markers based on a substring of the name:
     my $results = $msearch->query(
-        name_substring => 'IWA'
+        name => 'IWA',
+        name_match => 'contains'
     );
 example: filter markers based on name for a particular set of genotype protocols:
     my @genotype_protocols = (37, 38);
@@ -68,23 +69,27 @@ sub BUILD {
 #   - chrom = (required if start or end are provided) chromosome name
 #   - start = (optional) start position of query range
 #   - end = (optional) end position of query range
-#   - name = (optional) marker name or alias
-#   - name_substring = (optional) part of marker name or alias
+#   - variant = (optional) variant name (exact, case-insensitive match)
+#   - name = (optional) marker name or variant name
+#   - name_match = (optional, default=exact) how to match (case-insensitively) the marker name (exact, contains, starts_with, ends_with)
 #   - nd_protocol_ids = (optional) array ref of genotype protocol ids
-#   - limit = (optional) max number of markers to return
+#   - limit = (optional, default=500) max number of markers to return
+#   - page = (optional, default=1) return a different set of $limit number of results, if more than $limit are found
 #
 # Returns a hash with the following keys:
-#   - markers = an array of hashes containing the marker info with the following keys:
+#   - variants = a hash with the key as the variant name and the value an array of hashes for each marker with the following keys:
 #       - nd_protocol_id = genotype protocol id
+#       - nd_protocol_name = genotype protocol name
 #       - species_name = species name
 #       - reference_genome_name = reference genome name
 #       - marker_name = marker name (from genotype protocol)
-#       - alias = marker alias (uniformly generated marker name)
+#       - variant_name = variant name (uniformly generated marker name)
 #       - chrom = chromosome name
 #       - pos = chromosome position
 #       - ref = reference allele
 #       - alt = alternate allele
-#   - count = total number of markers found
+#   - variant_count = total number of variants found
+#   - marker_count = total number of markers found
 #
 sub query {
     my $self = shift;
@@ -94,18 +99,20 @@ sub query {
     my $end = $args->{end};
     my $species = $args->{species_name};
     my $reference_genome = $args->{reference_genome_name};
+    my $variant = $args->{variant};
     my $name = $args->{name};
-    my $name_substring = $args->{name_substring};
+    my $name_match = $args->{name_match} ? $args->{name_match} : 'exact';
     my $nd_protocol_ids = $args->{nd_protocol_ids};
-    my $limit = $args->{limit};
+    my $limit = $args->{limit} ? $args->{limit} : 500;
+    my $page = $args->{page} ? $args->{page} : 1;
 
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh();
 
     # Build query
-    my $q_select = "SELECT markers_all.nd_protocol_id, nd_protocol.name AS nd_protocol_name, species_name, reference_genome_name, marker_name, alias, chrom, pos, ref, alt";
-    my $q_count = "SELECT COUNT(*) AS count";
-    my $q = " FROM sgn.markers_all";
+    my $select_info = "SELECT materialized_markerview.nd_protocol_id, nd_protocol.name AS nd_protocol_name, species_name, reference_genome_name, marker_name, variant_name, chrom, pos, ref, alt";
+    my $select_count = "SELECT COUNT(*) AS count";
+    my $q = " FROM public.materialized_markerview";
     $q .= " LEFT JOIN nd_protocol USING (nd_protocol_id)";
 
     # Add filter parameters
@@ -132,13 +139,27 @@ sub query {
         }
         push(@where, $pw);
     }
-    if ( defined $name ) {
-        push(@where, "(marker_name = ? OR alias = ?)");
-        push(@args, $name, $name);
+    if ( defined $variant ) {
+        push(@where, "UPPER(variant_name) = UPPER(?)");
+        push(@args, $variant);
     }
-    if ( defined $name_substring ) {
-        push(@where, "(marker_name LIKE ? OR alias LIKE ?)");
-        push(@args, '%' . $name_substring . '%', '%' . $name_substring . '%');
+    if ( defined $name ) {
+        if ( $name_match eq 'contains' ) {
+            push(@where, "(UPPER(marker_name) LIKE UPPER(?) OR UPPER(variant_name) LIKE UPPER(?))");
+            push(@args, '%'.$name.'%', '%'.$name.'%');
+        }
+        elsif ( $name_match eq 'starts_with' ) {
+            push(@where, "(UPPER(marker_name) LIKE UPPER(?) OR UPPER(variant_name) LIKE UPPER(?))");
+            push(@args, $name.'%', $name.'%');
+        }
+        elsif ( $name_match eq 'ends_with' ) {
+            push(@where, "(UPPER(marker_name) LIKE UPPER(?) OR UPPER(variant_name) LIKE UPPER(?))");
+            push(@args, '%'.$name, '%'.$name);
+        }
+        else {
+            push(@where, "(UPPER(marker_name) = UPPER(?) OR UPPER(variant_name) = UPPER(?))");
+            push(@args, $name, $name);
+        }
     }
     if ( defined $nd_protocol_ids && @$nd_protocol_ids ) {
         my $pw = "nd_protocol_id IN (@{[join',', ('?') x @$nd_protocol_ids]})";
@@ -151,53 +172,62 @@ sub query {
     }
 
     # Get the total count of markers
-    my $query_count = $q_count . $q;
+    my $query_count = $select_count . $q;
     my $h_count = $dbh->prepare($query_count);
     $h_count->execute(@args);
-    my ($count) = $h_count->fetchrow_array();
+    my ($marker_count) = $h_count->fetchrow_array();
 
     # Get the marker info
-    my $query = $q_select . $q;
+    my $query = $select_info . $q;
     $query .= " ORDER BY marker_name";
     if ( defined $limit ) {
         $query .= " LIMIT ?";
         push(@args, $limit);
     }
+    if ( defined $page && defined $limit ) {
+        my $offset = ($page-1)*$limit;
+        $query .= " OFFSET ?";
+        push(@args, $offset);
+    }
 
-    # print STDERR "QUERY:\n";
-    # print STDERR "$query\n";
-    # use Data::Dumper;
-    # print STDERR "ARGS:\n";
-    # print STDERR Dumper \@args;
-    # print STDERR "TOTAL MARKERS:\n";
-    # print STDERR "$count\n";
+    print STDERR "QUERY:\n";
+    print STDERR "$query\n";
+    use Data::Dumper;
+    print STDERR "ARGS:\n";
+    print STDERR Dumper \@args;
+    print STDERR "TOTAL MARKERS:\n";
+    print STDERR "$marker_count\n";
 
     # Perform the Query
     my $h = $dbh->prepare($query);
     $h->execute(@args);
 
     # Parse the results
-    my @markers = ();
-    while (my ($nd_protocol_id, $nd_protocol_name, $species_name, $reference_genome_name, $marker_name, $alias, $chrom, $pos, $ref, $alt) = $h->fetchrow_array()) {
+    my %variants;
+    while (my ($nd_protocol_id, $nd_protocol_name, $species_name, $reference_genome_name, $marker_name, $variant_name, $chrom, $pos, $ref, $alt) = $h->fetchrow_array()) {
         my %marker = (
             nd_protocol_id => $nd_protocol_id,
             nd_protocol_name => $nd_protocol_name, 
             species_name => $species_name,
             reference_genome_name => $reference_genome_name,
             marker_name => $marker_name,
-            alias => $alias,
+            variant_name => $variant_name,
             chrom => $chrom,
             pos => $pos,
             ref => $ref,
             alt => $alt
         );
-        push(@markers, \%marker);
+        if ( !exists $variants{$variant_name} ) {
+            $variants{$variant_name} = ();
+        }
+        push(@{$variants{$variant_name}}, \%marker);
     }
 
     # Return the results
     return({
-        markers => \@markers,
-        count => $count
+        variants => \%variants,
+        variant_count => scalar(keys(%variants)),
+        marker_count => $marker_count
     });
 }
 
