@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-SGN::Controller::AJAX::Search::MarkerGeno
+SGN::Controller::AJAX::Search::Variants
 
 =head1 DESCRIPTION
 
@@ -18,7 +18,7 @@ David Waring <djw64@cornell.edu>
 
 use strict;
 
-package SGN::Controller::AJAX::Search::MarkerGeno;
+package SGN::Controller::AJAX::Search::Variants;
 
 use Moose;
 use JSON;
@@ -41,7 +41,7 @@ __PACKAGE__->config(
 #       - reference_genome_name: name of reference genome
 #       - species_name: name of species associated with reference genome
 #
-sub get_reference_genomes : Path('/ajax/markergeno/reference_genomes') :Args(0) {
+sub get_reference_genomes : Path('/ajax/variants/reference_genomes') :Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");

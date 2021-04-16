@@ -436,7 +436,7 @@ function get_reference_genomes(callback) {
     jQuery.ajax({
         type: 'GET',
         dataType: 'json',
-        url: '/ajax/markergeno/reference_genomes',
+        url: '/ajax/variants/reference_genomes',
         success: function(data) {
             if ( data && data.reference_genomes ) {
                 reference_genomes = data.reference_genomes;
