@@ -1,0 +1,126 @@
+<%args>
+    $variant_name => undef
+    $markers => undef
+    $related_markers => {}
+</%args>
+
+<%init>
+    if ( !$variant_name ) {
+        print "<p class='args-error'><strong>ERROR: </strong>Missing variant name!</p>";
+    }
+    if ( !$markers ) {
+        print "<p class='args-error'><strong>ERROR: </strong>Missing variant markers!</p>";
+    }
+    my %smd_params = (
+        "sequence_metadata_results" => {
+            "feature" => ${$markers}[0]->{'chrom'},
+            "species" => ${$markers}[0]->{'species_name'},
+            "reference_genome" => ${$markers}[0]->{'reference_genome_name'},
+            "start" => ${$markers}[0]->{'pos'},
+            "end" => ${$markers}[0]->{'pos'}
+        }
+    );
+
+    use Data::Dumper;
+</%init>
+
+
+<& /page/page_title.mas, title=> "Variant $variant_name" &>
+
+
+
+<!-- VARIANT DETAILS TABLE -->
+<&| /page/info_section.mas, title=>'Genotype locations', collapsible=>1, collapsed=>0 &>
+  
+  <table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Marker</th>
+            <th>Protocol</th>
+            <th>Species</th>
+            <th>Reference</th>
+            <th>Chromosome</th>
+            <th>Position</th>
+            <th>Ref</th>
+            <th>Alt</th>
+        </tr>
+    </thead>
+    <tbody>
+% foreach my $marker (@$markers) {
+        <tr>
+            <td><% $marker->{'marker_name'} %></td>
+            <td>
+                <a href="/breeders_toolbox/protocol/<% $marker->{'nd_protocol_id'} %>">
+                    <% $marker->{'nd_protocol_name'} %>
+                </a>
+            </td>
+            <td><% $marker->{'species_name'} %></td>
+            <td><% $marker->{'reference_genome_name'} %></td>
+            <td><% $marker->{'chrom'} %></td>
+            <td><% $marker->{'pos'} %></td>
+            <td><% $marker->{'ref'} %></td>
+            <td><% $marker->{'alt'} %></td>
+        </tr>    
+% }
+    </tbody>
+  </table>
+</&>
+
+
+
+
+<!-- RELATED VARIANTS LINKS -->
+<&| /page/info_section.mas, title=>'Related Variants', collapsible=>1, collapsed=>0 &>
+
+
+% if ( %{$related_markers} ) {
+
+    <p>These variants have one or more markers that share a marker name but are on a different reference genome, species, or position.</p>
+
+
+% foreach my $variant (keys %{ $related_markers }) {
+    <a href="/variant/<% $variant %>/details">
+        <strong><% $related_markers->{$variant}[0]->{'reference_genome_name'} %></strong> 
+        (<% $related_markers->{$variant}[0]->{'species_name'} %>)
+    </a>
+
+    <ul class="related-marker-list">
+% foreach my $marker (@{$related_markers->{$variant}}) {
+    <li><% $marker->{'marker_name'} %> (<% $marker->{'nd_protocol_name'} %>)</li>
+% }
+    </ul>
+
+% }
+
+% } else {
+
+    <p><em>No related variants found</em></p>
+
+% }
+
+</&>
+
+
+
+<!-- SEQUENCE METADATA RESULTS -->
+<&| /page/info_section.mas, title=>'Sequence Metadata', collapsible=>1, collapsed=>0 &>
+  <& /tools/sequence_metadata/quick_query_sequence_metadata.mas, 
+    params=>\%smd_params
+  &>
+</&>
+
+
+
+
+
+
+<style>
+    .args-error {
+        width: 100%;
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid;
+    }
+</style>
