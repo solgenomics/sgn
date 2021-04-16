@@ -165,7 +165,7 @@ $trial_stock_type => undef
                 <h4>
                   Background:
                 </h4>
-                  <center><p>Field map is a tool that enable users to view the physical layout of plots in a trial. Maps can be generated on the fly while adding a trial or uploading a trial. Field map coordinates can also be uploaded independently after trials have been added or uploaded. It's a very intuitive, flexible and user friendly tool for manipulation/making changes to field trial layouts before phenotypes are uploaded. </p></center>
+                  <center><p>Field map is a tool that enable users to view the physical layout of plots in a trial. Maps can be generated on the fly while adding a trial or uploading a trial. Field map coordinates can also be uploaded independently after trials have been added or uploaded. It is a very intuitive, flexible and user friendly tool for manipulation/making changes to field trial layouts before phenotypes are uploaded. </p></center>
 
                 <h4>
                   Editing Options:
