@@ -277,6 +277,7 @@
                                     <th>GeoJSON Filename</th>
                                     <th>Image Filenames</th>
                                     <th>Coordinate System</th>
+                                    <th>Rotation Angle</th>
                                     <th>Base Date</th>
                                     <th>Camera Rig</th>
                                 </tr>
@@ -295,6 +296,7 @@
                             <li><b>GeoJSON Filename</b>: (required) The name of the GeoJSON plot-polygon file that corresponds to this imaging event. This filename must exist in the uploaded GeoJSON zipfile. The same GeoJSON file can be used for multiple imaging events.</li>
                             <li><b>Image Filenames</b>: (required) Comma-separated list of image filenames that corresponds to this imaging event (e.g. Field1Ortho01012020__nir.tiff,Field1Ortho01012020__rgb.tiff,Field1Ortho01012020__bw.tiff). The image filenames must exist in the uploaded images zipfile. The same image file can be used for multiple imaging events.</li>
                             <li><b>Coordinate System</b>: (required) The coordinate system for the supplied images and GeoJSON files of this imaging event. Must be either "UTM", "WGS84", or "Pixels". If either "UTM" or "WGS84" are used, then the uploaded orthophoto images must be GeoTIFFs containing the coordinate system AND the GeoJSON files must be of the same coordinate system. If "Pixels" is used, then the uploaded orthophoto images must be simple raster images (.tiff, .png., .jpeg) and not GeoTIFFs, AND the GeoJSON files must describe the pixel positions of the plot-polygons relative to the provided images.</li>
+                            <li><b>Rotation Angle</b>: (optional) The clock-wise angle of rotation to apply to the uploaded imagery in degrees (0-360). Default is a 0 degree rotation.</li>
                             <li><b>Base Date</b>: (optional) The date and time to reference the imaging event in YYYY/MM/DD hh:mm:ss format (e.g. 2021/03/02 12:00:00). This is useful when separate, fixed, camera rigs are capturing different sections of the field experiment, and they are not capturing images at precisely the same time.</li>
                             <li><b>Camera Rig</b>: (optional) Free-text description of the camera rig. This is useful when separate, fixed, camera rigs are capturing different sections of the field experiment.</li>
                         </ul>

@@ -2120,9 +2120,10 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         $worksheet->get_cell(0,8)->value() ne 'GeoJSON Filename' ||
         $worksheet->get_cell(0,9)->value() ne 'Image Filenames' ||
         $worksheet->get_cell(0,10)->value() ne 'Coordinate System' ||
-        $worksheet->get_cell(0,11)->value() ne 'Base Date' ||
-        $worksheet->get_cell(0,12)->value() ne 'Camera Rig') {
-            $c->stash->{rest} = {error => "The header row in the CSV spreadsheet must be 'Imaging Event Name,Type,Description,Date,Vehicle Name,Vehicle Battery Set,Sensor,Field Trial Name,GeoJSON Filename,Image Filenames,Coordinate System,Base Date,Camera Rig'." };
+        $worksheet->get_cell(0,11)->value() ne 'Rotation Angle' ||
+        $worksheet->get_cell(0,12)->value() ne 'Base Date' ||
+        $worksheet->get_cell(0,13)->value() ne 'Camera Rig') {
+            $c->stash->{rest} = {error => "The header row in the CSV spreadsheet must be 'Imaging Event Name,Type,Description,Date,Vehicle Name,Vehicle Battery Set,Sensor,Field Trial Name,GeoJSON Filename,Image Filenames,Coordinate System,Rotation Angle,Base Date,Camera Rig'." };
             $c->detach;
     }
 
@@ -2172,13 +2173,17 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         if ($worksheet->get_cell($row,10)) {
             $coordinate_system = $worksheet->get_cell($row,10)->value();
         }
-        my $base_date;
+        my $rotation_angle;
         if ($worksheet->get_cell($row,11)) {
-            $base_date = $worksheet->get_cell($row,11)->value();
+            $rotation_angle = $worksheet->get_cell($row,11)->value();
+        }
+        my $base_date;
+        if ($worksheet->get_cell($row,12)) {
+            $base_date = $worksheet->get_cell($row,12)->value();
         }
         my $rig_desc;
-        if ($worksheet->get_cell($row,12)) {
-            $rig_desc = $worksheet->get_cell($row,12)->value();
+        if ($worksheet->get_cell($row,13)) {
+            $rig_desc = $worksheet->get_cell($row,13)->value();
         }
 
         if (!$imaging_event_name){
@@ -2201,6 +2206,9 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         }
         if (!$field_trial_name){
             push @parse_csv_errors, "Please give a field trial name!";
+        }
+        if (defined($rotation_angle) && ($rotation_angle < 0 || $rotation_angle > 360) ) {
+            push @parse_csv_errors, "Rotation angle $rotation_angle not valid! Must be clock-wise between 0 and 360!";
         }
 
         if ($coordinate_system ne 'UTM' && $coordinate_system ne 'WGS84' && $coordinate_system ne 'Pixels') {
@@ -2321,8 +2329,9 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         my $geojson_filename = $worksheet->get_cell($row,8)->value();
         my $image_filenames = $worksheet->get_cell($row,9)->value();
         my $coordinate_system = $worksheet->get_cell($row,10)->value();
-        my $base_date = $worksheet->get_cell($row,11) ? $worksheet->get_cell($row,11)->value() : '';
-        my $rig_desc = $worksheet->get_cell($row,12) ? $worksheet->get_cell($row,12)->value() : '';
+        my $rotation_angle = $worksheet->get_cell($row,11) ? $worksheet->get_cell($row,11)->value() : 0;
+        my $base_date = $worksheet->get_cell($row,12) ? $worksheet->get_cell($row,12)->value() : '';
+        my $rig_desc = $worksheet->get_cell($row,13) ? $worksheet->get_cell($row,13)->value() : '';
 
         my $new_drone_run_vehicle_id = $vehicle_name_lookup{$vehicle_name};
         my $selected_trial_id = $field_trial_name_lookup{$field_trial_name};
@@ -2543,7 +2552,8 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
             time_cvterm_id => $day_cvterm_id,
             field_trial_id => $selected_trial_id,
             coordinate_system => $coordinate_system,
-            drone_run_band_geoparams_coordinates => \@drone_run_band_geoparams_coordinates
+            drone_run_band_geoparams_coordinates => \@drone_run_band_geoparams_coordinates,
+            rotation_angle => $rotation_angle
         };
 
         $drone_run_project_info{$selected_drone_run_id} = {
@@ -2563,6 +2573,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         my $field_trial_id = $_->{field_trial_id};
         my $coordinate_system = $_->{coordinate_system};
         my $drone_run_band_geoparams_coordinates = $_->{drone_run_band_geoparams_coordinates};
+        my $rotate_value = 0;
 
         my $drone_run_process_in_progress = $schema->resultset('Project::Projectprop')->update_or_create({
             type_id=>$process_indicator_cvterm_id,
@@ -2599,7 +2610,6 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
             $vegetative_indices_hash{$_}++;
         }
 
-        my $rotate_value = 0;
         my $geojson_value;
 
         open(my $fh_geojson, '<', $geojson_filename) or die "Could not open file '$geojson_filename' $!";
