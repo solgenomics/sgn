@@ -5,7 +5,7 @@ $role => "stock_orderer"
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
 
-<&| /page/page_title.mas, title => "Order Clones" &>
+<&| /page/page_title.mas, title => "Your Orders" &>
 
 </&>
 <td>

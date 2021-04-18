@@ -173,12 +173,13 @@ jQuery(document).ready( function() {
         if (!item_quantity) {
             item_quantity = '1';
         }
-        var item_comment = jQuery('#item_comment').val();
+        var item_comments = jQuery('#item_comments').val();
 
-//        var item_obj = {'Item Name':item_name, 'Quantity':item_quantity};
-//        var itemJSON = JSON.stringify(item_obj);
-
-    var item_string = item_name.concat("  ","Quantity:",item_quantity);
+        if (!item_comments) {
+            var item_string = item_name.concat(" ","Quantity:"," ",item_quantity);
+        } else {
+            var item_string = item_name.concat(" ","Quantity:"," ",item_quantity,","," ", "Comments:"," ",item_comments);
+        }
 
         var lo = new CXGN.List();
 
@@ -248,10 +249,11 @@ function addToCart(item_name, description){
     var html = '';
     html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div><br><br>';
     html = html + '<label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div><br><br>';
-    html = html + '<label class="col-sm-3 control-label">Comment: </label><div class="col-sm-9" ><input class="form-control" id="item_comment" name="item_comment" </div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="Optional"</div><br><br>';
 
     jQuery('#add_item_detail_div').html(html);
     jQuery('#add_item_detail_dialog').modal('show');
+
 }
 
 
