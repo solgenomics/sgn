@@ -145,6 +145,7 @@ sub get_orders_from_person_id {
         my $order_status = $result->order_status();
         my $create_date = $result->create_date();
         my $completion_date = $result->completion_date();
+        my $comments = $result->comments();
         my $person= CXGN::People::Person->new($dbh, $order_to_id);
         my $order_to_name=$person->get_first_name()." ".$person->get_last_name();
 
@@ -161,7 +162,7 @@ sub get_orders_from_person_id {
 #            print STDERR "ITEM =".Dumper($item)."\n";
             }
 
-            push @orders, [$order_id, $create_date, $item_list, $order_status, $completion_date, $order_to_name ];
+            push @orders, [$order_id, $create_date, $item_list, $order_status, $completion_date, $order_to_name, $comments ];
     }
 
     return \@orders;
@@ -183,6 +184,7 @@ sub get_orders_to_person_id {
 #        my $order_to_id = $result->order_to_id();
         my $order_status = $result->order_status();
         my $create_date = $result->create_date();
+        my $comments = $result->comments();
         my $person= CXGN::People::Person->new($dbh, $order_from_id);
         my $order_from_name=$person->get_first_name()." ".$person->get_last_name();
 
@@ -204,7 +206,8 @@ sub get_orders_to_person_id {
             order_from_name => $order_from_name,
             create_date => $create_date,
             item_list => $item_list,
-            order_status => $order_status
+            order_status => $order_status,
+            contact_person_comments => $comments
         }
     }
 #    print STDERR "ORDERS =".Dumper(\@orders)."\n";

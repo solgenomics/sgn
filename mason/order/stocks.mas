@@ -40,7 +40,8 @@ $role => "stock_orderer"
                                 <th>Submitted Date</th>
                                 <th>Items</th>
                                 <th>Status</th>
-                                <th>Send Order To</th>
+                                <th>Send Order to</th>
+                                <th>Comments from Supplier</th>
                             </tr>
                         </thead>
                     </table>
@@ -63,7 +64,8 @@ $role => "stock_orderer"
                                 <th>Items</th>
                                 <th>Status</th>
                                 <th>Completed Date</th>
-                                <th>Processed By</th>
+                                <th>Processed by</th>
+                                <th>Comments from Supplier</th>
                             </tr>
                         </thead>
                     </table>
@@ -233,6 +235,7 @@ $(window).ready( function() {
             { title: "Submitted Date", "data": "create_date" },
             { title: "Items", "data": "item_list" },
             { title: "Status", "data": "order_status" },
+            { title: "Comments", "data": "contact_person_comments" },
             { title: "Update", "data": "null", "render": function ( data, type, row ) { return "<a onclick='updateOrder(\""+row.order_id+"\", \""+row.order_from_name+"\")' >Update</a>"; } },
         ]
     });
