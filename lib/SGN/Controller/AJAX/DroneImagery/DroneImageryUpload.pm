@@ -1470,7 +1470,7 @@ sub upload_drone_imagery_bulk_POST : Args(0) {
         my $band = $image_spectra[1];
 
         if (!exists($spectral_lookup{$band})) {
-            $c->stash->{rest} = {error => "The spectral band $band is not allowed in the provided orthophoto $filename_only. Make sure the orthophotos are saved as a concatenation of the imaging event name and the spectral band, with a pipe (|) as the separator (e.g. Ortho1_01012020|blue.tiff) and the allowed spectral bands are blue,green,red,rededge,nir,mir,fir,thir,rgb,bw." };
+            $c->stash->{rest} = {error => "The spectral band $band is not allowed in the provided orthophoto $filename_only. Make sure the orthophotos are saved as a concatenation of the imaging event name and the spectral band, with a double-underscore (__) as the separator (e.g. Ortho1_01012020__blue.tiff) and the allowed spectral bands are blue,green,red,rededge,nir,mir,fir,thir,rgb,bw." };
             $c->detach;
         }
         my $spectral_band = $spectral_lookup{$band};
@@ -1481,7 +1481,7 @@ sub upload_drone_imagery_bulk_POST : Args(0) {
             band_short => $band
         };
         if (exists($filename_imaging_event_band_check{$imaging_event_name}->{$spectral_band})) {
-            $c->stash->{rest} = {error => "Do not upload duplicate spectral types for the same imaging event. There is already a $band image for $imaging_event_name in the zipfile! Make sure the orthophotos are saved as a concatenation of the imaging event name and the spectral band, with a pipe (|) as the separator (e.g. Ortho1_01012020|blue.tiff)" };
+            $c->stash->{rest} = {error => "Do not upload duplicate spectral types for the same imaging event. There is already a $band image for $imaging_event_name in the zipfile! Make sure the orthophotos are saved as a concatenation of the imaging event name and the spectral band, with a double-underscore (__) as the separator (e.g. Ortho1_01012020__blue.tiff)" };
             $c->detach;
         } else {
             $filename_imaging_event_band_check{$imaging_event_name} = $spectral_band;
@@ -1604,7 +1604,7 @@ sub upload_drone_imagery_bulk_POST : Args(0) {
             push @parse_csv_errors, "The given coordinate system $coordinate_system is not one of: UTM, WGS84, or Pixels!";
         }
         if ($coordinate_system ne 'Pixels') {
-            $c->stash->{rest} = {error => "Only the Pixels coordinate system is currently supported. In the future GeoTIFFs will be supported, but for now please only upload simple raster images (.png, .tiff, .jpg)." };
+            $c->stash->{rest} = {error => "Only the Pixels coordinate system is currently supported for this upload. In the future GeoTIFFs will be supported, but for now please only upload simple raster images (.png, .tiff, .jpg)." };
             $c->detach;
         }
 
@@ -1991,7 +1991,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
         my $band = $image_spectra[1];
 
         if (!exists($spectral_lookup{$band})) {
-            $c->stash->{rest} = {error => "The spectral band $band is not allowed in the provided orthophoto $filename. Make sure the orthophotos are saved as a concatenation with the spectral band, with a double-underscore (__) as the separator (e.g. Ortho1_01012020|blue.tiff) and the allowed spectral bands are blue,green,red,rededge,nir,mir,fir,thir,rgb,bw." };
+            $c->stash->{rest} = {error => "The spectral band $band is not allowed in the provided orthophoto $filename. Make sure the orthophotos are saved as a concatenation with the spectral band, with a double-underscore (__) as the separator (e.g. Ortho1_01012020__blue.tiff) and the allowed spectral bands are blue,green,red,rededge,nir,mir,fir,thir,rgb,bw." };
             $c->detach;
         }
         my $spectral_band = $spectral_lookup{$band};
@@ -2002,7 +2002,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
             band_short => $band
         };
         if (exists($filename_imaging_event_band_check{$imaging_event_name}->{$spectral_band})) {
-            $c->stash->{rest} = {error => "Do not upload duplicate spectral types for the same imaging event. There is already a $band image for $imaging_event_name in the zipfile! Make sure the orthophotos are saved as a concatenation of the imaging event name and the spectral band, with a pipe (|) as the separator (e.g. Ortho1_01012020|blue.tiff)" };
+            $c->stash->{rest} = {error => "Do not upload duplicate spectral types for the same imaging event. There is already a $band image for $imaging_event_name in the zipfile! Make sure the orthophotos are saved as a concatenation of the imaging event name and the spectral band, with a double-underscore (__) as the separator (e.g. Ortho1_01012020__blue.tiff)" };
             $c->detach;
         } else {
             $filename_imaging_event_band_check{$imaging_event_name}->{$spectral_band}++;
@@ -2078,7 +2078,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
                     $c->detach;
                 }
                 if (scalar(@{$_->{geometry}->{coordinates}->[0]}) != 5) {
-                    $c->stash->{rest} = {error => 'The GeoJSON file '.$filename.' \'coordinates\' first object has less than 4 objects in it. The polygons must be rectangular Make sure the GeoJSON is formatted correctly.</br></br>'};
+                    $c->stash->{rest} = {error => 'The GeoJSON file '.$filename.' \'coordinates\' first object does not have 5 objects in it. The polygons must be rectangular Make sure the GeoJSON is formatted correctly.</br></br>'};
                     $c->detach;
                 }
             }

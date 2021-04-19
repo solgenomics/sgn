@@ -246,7 +246,7 @@
       <div class="modal-body">
         <div class="container-fluid">
 
-            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_bulk_previous_form" name="upload_drone_imagery_bulk_previous_form">
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_bulk_previous_form" name="upload_drone_imagery_bulk_previous_form" action="/drone_imagery/upload_drone_imagery_bulk_previous">
 
                 <&| /util/workflow.mas, id=> "drone_imagery_upload_bulk_previous_workflow" &>
                     <&| /util/workflow.mas:step, title=> "Intro" &>
@@ -322,7 +322,6 @@
                         <h4>The images must be named as a concatenation with the spectral type of the image, with a double-underscore (__) in between (e.g. Field1Ortho01012020__blue).</h4>
 
                         <p>The allowed spectral types are: blue, green, red, rededge, nir, mir, fir, thir, rgb, and bw, corresponding to Blue (450-520nm), Green (515-600nm), Red (600-690nm), Red Edge (690-750nm), NIR (780-3000nm), MIR (3000-50000nm), FIR (50000-1000000nm), Thermal IR (9000-14000nm), RGB Color Image, and Black and White Image, respectively.</p>
-                        <p>The zipfile should be no larger than 2GB and should contain all of the orthophoto images for the defined imaging events.</p>
                         <p>For an imaging event using a MicaSense 5-channel camera, the 5 separate orthophotos should be included in the zipfile and should be named as a concatenation with the spectral type (e.g. Field1Ortho01012020__blue, Field1Ortho01012020__green, Field1Ortho01012020__red, Field1Ortho01012020__rededge, and Field1Ortho01012020__nir).</p>
                         <p>Digital surface map (DSM) raster images can be uploaded as black and white images (e.g. Field1Ortho01012020__bw.png)</p>
                         <p>Do not upload duplicate spectral types for the same imaging event.</p>
@@ -333,7 +332,7 @@
                         <br/>
                         <div class="well well-sm">
                             <div class="form-group">
-                                <label class="col-sm-6 control-label">Orthophoto Images ZipFile (.zip) (2GB maximum size): </label>
+                                <label class="col-sm-6 control-label">Orthophoto Images ZipFile (.zip): </label>
                                 <div class="col-sm-6" >
                                     <input type="file" id="upload_drone_imagery_bulk_images_zipfile_previous" name="upload_drone_imagery_bulk_images_zipfile_previous" encoding="multipart/form-data" />
                                 </div>
@@ -351,7 +350,6 @@
 
                         <p>The spreadsheets should be named in accordance with the "GeoJSON Filenames" defined in the previous step.</p>
                         <p>The coordinate system (e.g. WGS84, UTM) of the orthophotos should be the same as the coordinate system defining the GeoJSON files. If the coordinate system is "Pixels", then the GeoJSON files should define the pixel positions of the plot-polygons relative to the uploaded images.</p>
-                        <p>The zipfile should be no larger than 2GB.</p>
                         <p>The same GeoJSON file can be used for several imaging events.</p>
 
                         <p>The GeoJSON should be the following format:
@@ -389,7 +387,7 @@
                         <br/>
                         <div class="well well-sm">
                             <div class="form-group">
-                                <label class="col-sm-6 control-label">Plot-polygon GeoJSON ZipFile (.zip) (2GB maximum size): </label>
+                                <label class="col-sm-6 control-label">Plot-polygon GeoJSON ZipFile (.zip): </label>
                                 <div class="col-sm-6" >
                                     <input type="file" id="upload_drone_imagery_bulk_geojson_zipfile_previous" name="upload_drone_imagery_bulk_geojson_zipfile_previous" encoding="multipart/form-data" />
                                 </div>
@@ -407,7 +405,7 @@
                         <div id="upload_drone_imagery_bulk_previous_verify_status"></div>
 
                         <center>
-                        <button type="button" class="btn btn-info" name="upload_drone_imagery_bulk_previous_submit" id="upload_drone_imagery_bulk_previous_submit">Submit</button>
+                        <button type="submit" class="btn btn-info" name="upload_drone_imagery_bulk_previous_submit" id="upload_drone_imagery_bulk_previous_submit">Submit. Click Once and Be Patient As This Can Take A Long Time.</button>
                         </center>
                     </&>
 
@@ -432,14 +430,14 @@
       <div class="modal-body">
         <div class="container-fluid">
 
-            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_bulk_form" name="upload_drone_imagery_bulk_form">
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_bulk_form" name="upload_drone_imagery_bulk_form" action="/drone_imagery/upload_drone_imagery_bulk">
 
                 <&| /util/workflow.mas, id=> "drone_imagery_upload_bulk_workflow" &>
                     <&| /util/workflow.mas:step, title=> "Intro" &>
                         <& /page/page_title.mas, title=>"This workflow will guide you through uploading aerial images to the database" &>
                         <p>Your field trial(s) must already be in the database before you can upload images for it. Please go to <a href="/breeders/trials">Manage->Field Trials</a> if it is not. Make sure the planting date is also set!</p>
                         <p>In this process first upload a spreadsheet detailing the individual imaging events, then upload a zipfile containing the orthophotomosaic images for the imaging events.</p>
-                        <p>This workflow is only for uploading orthophotomosaic raster images, not for uploading raw captures to be stitched.</p>
+                        <p>This workflow is only for uploading orthophotomosaic raster images, not for uploading raw captures to be stitched in orthophotomosaics.</p>
                         <br/>
                         <center>
                         <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to next step</button>
@@ -505,7 +503,6 @@
                         <h4>The images must be named as a concatenation with the spectral type of the image, with a double-underscore (__) in between (e.g. Field1Ortho01012020__blue).</h4>
 
                         <p>The allowed spectral types are: blue, green, red, rededge, nir, mir, fir, thir, rgb, and bw, corresponding to Blue (450-520nm), Green (515-600nm), Red (600-690nm), Red Edge (690-750nm), NIR (780-3000nm), MIR (3000-50000nm), FIR (50000-1000000nm), Thermal IR (9000-14000nm), RGB Color Image, and Black and White Image, respectively.</p>
-                        <p>The zipfile should be no larger than 2GB and should contain all of the orthophoto images for the defined imaging events.</p>
                         <p>For an imaging event using a MicaSense 5-channel camera, the 5 separate orthophotos should be included in the zipfile and should be named as a concatenation with the spectral type (e.g. Field1Ortho01012020__blue, Field1Ortho01012020__green, Field1Ortho01012020__red, Field1Ortho01012020__rededge, and Field1Ortho01012020__nir).</p>
                         <p>Digital surface map (DSM) raster images can be uploaded as black and white images (e.g. Field1Ortho01012020__bw.png)</p>
                         <p>Do not upload duplicate spectral types for the same imaging event.</p>
@@ -516,7 +513,7 @@
                         <br/>
                         <div class="well well-sm">
                             <div class="form-group">
-                                <label class="col-sm-6 control-label">Orthophoto Images ZipFile (.zip) (2GB maximum size): </label>
+                                <label class="col-sm-6 control-label">Orthophoto Images ZipFile (.zip): </label>
                                 <div class="col-sm-6" >
                                     <input type="file" id="upload_drone_imagery_bulk_images_zipfile" name="upload_drone_imagery_bulk_images_zipfile" encoding="multipart/form-data" />
                                 </div>
@@ -533,7 +530,7 @@
                         <div id="upload_drone_imagery_bulk_verify_status"></div>
 
                         <center>
-                        <button type="button" class="btn btn-primary" name="upload_drone_imagery_bulk_submit" id="upload_drone_imagery_bulk_submit">Submit</button>
+                        <button type="submit" class="btn btn-primary" name="upload_drone_imagery_bulk_submit" id="upload_drone_imagery_bulk_submit">Submit. Click Once and Be Patient As This Can Take A Long Time.</button>
                         </center>
                     </&>
 
@@ -1025,69 +1022,71 @@ jQuery(document).ready(function() {
     });
 
     // Bulk Upload //
+    // Now handled non-AJAX to get around 2GB file limit
 
-    jQuery('#upload_drone_imagery_bulk_submit').click(function(){
-        jQuery('#upload_drone_imagery_bulk_form').attr("action", "/api/drone_imagery/upload_drone_imagery_bulk");
-        jQuery("#upload_drone_imagery_bulk_form").submit();
-    });
-
-    jQuery('#upload_drone_imagery_bulk_form').iframePostForm({
-        json: true,
-        post: function () {
-            jQuery('#working_modal').modal("show");
-        },
-        complete: function (response) {
-            console.log(response);
-            jQuery('#working_msg').html("");
-
-            jQuery('#working_modal').modal("hide");
-            if (response.error) {
-                alert(response.error);
-                return;
-            }
-            else if (response.error_string) {
-                jQuery('#upload_drone_imagery_bulk_verify_status').html(response.error_string);
-                return;
-            }
-            else {
-                alert('Successfully uploaded!');
-                location.reload();
-            }
-        }
-    });
+    // jQuery('#upload_drone_imagery_bulk_submit').click(function(){
+    //    jQuery('#upload_drone_imagery_bulk_form').attr("action", "/api/drone_imagery/upload_drone_imagery_bulk");
+    //    jQuery("#upload_drone_imagery_bulk_form").submit();
+    // });
+    //
+    // jQuery('#upload_drone_imagery_bulk_form').iframePostForm({
+    //    json: true,
+    //    post: function () {
+    //        jQuery('#working_modal').modal("show");
+    //    },
+    //    complete: function (response) {
+    //        console.log(response);
+    //        jQuery('#working_msg').html("");
+    //
+    //        jQuery('#working_modal').modal("hide");
+    //        if (response.error) {
+    //            alert(response.error);
+    //            return;
+    //        }
+    //        else if (response.error_string) {
+    //            jQuery('#upload_drone_imagery_bulk_verify_status').html(response.error_string);
+    //            return;
+    //        }
+    //        else {
+    //            alert('Successfully uploaded!');
+    //            location.reload();
+    //        }
+    //    }
+    // });
 
     // Bulk Upload Previous Plot Polygons //
+    // Now handled non-AJAX to get around 2GB file limit
 
-    jQuery('#upload_drone_imagery_bulk_previous_submit').click(function(){
-        jQuery('#upload_drone_imagery_bulk_previous_form').attr("action", "/api/drone_imagery/upload_drone_imagery_bulk_previous");
-        jQuery("#upload_drone_imagery_bulk_previous_form").submit();
-    });
-
-    jQuery('#upload_drone_imagery_bulk_previous_form').iframePostForm({
-        json: true,
-        post: function () {
-            jQuery('#working_modal').modal("show");
-            jQuery('#working_msg').html("It can take time for this process to complete; however, once your files have been transfered to the server you can refresh this page and come back later.");
-        },
-        complete: function (response) {
-            console.log(response);
-            jQuery('#working_msg').html("");
-
-            jQuery('#working_modal').modal("hide");
-            if (response.error) {
-                alert(response.error);
-                return;
-            }
-            else if (response.error_string) {
-                jQuery('#upload_drone_imagery_bulk_previous_verify_status').html(response.error_string);
-                return;
-            }
-            else {
-                alert('Successfully uploaded!');
-                location.reload();
-            }
-        }
-    });
+    // jQuery('#upload_drone_imagery_bulk_previous_submit').click(function(){
+    //    jQuery('#upload_drone_imagery_bulk_previous_form').attr("action", "/api/drone_imagery/upload_drone_imagery_bulk_previous");
+    //    jQuery("#upload_drone_imagery_bulk_previous_form").submit();
+    // });
+    //
+    // jQuery('#upload_drone_imagery_bulk_previous_form').iframePostForm({
+    //    json: true,
+    //    post: function () {
+    //        jQuery('#working_modal').modal("show");
+    //        jQuery('#working_msg').html("It can take time for this process to complete; however, once your files have been transfered to the server you can refresh this page and come back later.");
+    //    },
+    //    complete: function (response) {
+    //        console.log(response);
+    //        jQuery('#working_msg').html("");
+    //
+    //        jQuery('#working_modal').modal("hide");
+    //        if (response.error) {
+    //            alert(response.error);
+    //            return;
+    //        }
+    //        else if (response.error_string) {
+    //            jQuery('#upload_drone_imagery_bulk_previous_verify_status').html(response.error_string);
+    //            return;
+    //        }
+    //        else {
+    //            alert('Successfully uploaded!');
+    //            location.reload();
+    //        }
+    //    }
+    // });
 
 });
 
