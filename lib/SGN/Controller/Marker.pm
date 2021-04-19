@@ -79,36 +79,6 @@ sub get_marker: Chained('/') PathPart('marker') :CaptureArgs(1) {
     }
 }
 
-=head2 marker_details_name
-
-Public path: /marker/IWA10/details
-
-Show the HTML detail page for this marker.
-
-=cut
-
-sub marker_details_name: Chained('get_marker_json') PathPart('details') :Args(0) {
-  my ( $self, $c ) = @_;
-
-  $c->stash(
-      template  => '/markers/indexGenotype.mas',
-      dbh       => $c->dbc->dbh,
-     );
-}
-
-=head2 get_marker_json
-
-Public path: /marker/IWA10
-
-Chaining base for fetching the marker indicated by the given marker name
-
-=cut
-
-sub get_marker_json: Chained('/') PathPart('markerGeno') :CaptureArgs(1) {
-    my ( $self, $c, $marker ) = @_;
-    $c->stash->{marker_name} = $marker;
-}
-
 =head2 view_by_name 
 
 Public Path: /marker/view_by_name/$name

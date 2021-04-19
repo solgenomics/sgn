@@ -12,6 +12,7 @@ genotype protocols) and info related to the markers and genotype protocols.
 =head1 AUTHOR
 
 David Waring <djw64@cornell.edu>
+Clay Birkett <clb343@cornell.edu>
 
 =cut
 
