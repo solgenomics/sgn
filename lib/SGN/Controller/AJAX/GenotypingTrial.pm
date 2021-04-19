@@ -355,6 +355,7 @@ sub store_genotype_trial_POST : Args(0) {
         my $ct = CXGN::Trial::TrialCreate->new( {
             chado_schema => $schema,
             dbh => $c->dbc->dbh(),
+            owner_id => $user_id,
             user_name => $user_name, #not implemented,
             operator => $user_name,
             trial_year => $plate_info->{year},
@@ -437,21 +438,21 @@ sub store_genotype_trial_POST : Args(0) {
     };
 }
 
-sub get_genotypingserver_credentials : Path('/ajax/breeders/genotyping_credentials') Args(0) { 
+sub get_genotypingserver_credentials : Path('/ajax/breeders/genotyping_credentials') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if ($c->user && ($c->user->check_roles("submitter") || $c->user->check_roles("curator"))) { 
-        $c->stash->{rest} = { 
+    if ($c->user && ($c->user->check_roles("submitter") || $c->user->check_roles("curator"))) {
+        $c->stash->{rest} = {
             host => $c->config->{genotyping_server_host},
             username => $c->config->{genotyping_server_username},
             password => $c->config->{genotyping_server_password},
             token => $c->config->{genotyping_server_token},
         };
     }
-    else { 
-        $c->stash->{rest} = { 
-            error => "Insufficient privileges for this operation." 
+    else {
+        $c->stash->{rest} = {
+            error => "Insufficient privileges for this operation."
         };
     }
 }
@@ -539,7 +540,7 @@ sub create_plate_order : Path('/ajax/breeders/createplateorder') ActionClass('RE
 sub create_plate_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-        
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $plate_info = decode_json $c->req->param("order_info");
 
@@ -579,7 +580,7 @@ sub store_plate_order : Path('/ajax/breeders/storeplateorder') ActionClass('REST
 sub store_plate_order_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-        
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $order_info = decode_json $c->req->param("order");
 
