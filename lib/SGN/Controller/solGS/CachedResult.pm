@@ -14,7 +14,7 @@ package SGN::Controller::solGS::CachedResult;
 use Moose;
 use namespace::autoclean;
 use JSON;
-
+#use Scalar::Util qw /weaken reftype/;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -45,7 +45,12 @@ sub _check_cached_output {
     my ($self, $c, $req_page, $args) = @_;
 
     $c->stash->{training_traits_ids}    = $args->{training_traits_ids} || $args->{trait_id};
-    $c->stash->{training_pop_id}        = $args->{training_pop_id}[0];
+    my $training_pop_id = $args->{training_pop_id};
+
+    $c->stash->{training_pop_id} = ref($training_pop_id) eq 'ARRAY'
+                                                        ? $training_pop_id->[0]
+                                                        : $training_pop_id;
+
     $c->stash->{genotyping_protocol_id} = $args->{genotyping_protocol_id};
 
     $c->stash->{rest}{cached} = undef;
@@ -124,12 +129,26 @@ sub _check_cached_output {
 	my $trait_id     = $args->{trait_id};
 	my $data_str = $args->{data_structure};
 
-	if ($data_str =~ /dataset|list/)
+	if ($data_str =~ /dataset|list/ && $kinship_pop_id !~ /dataset|list/)
 	{
 	    $kinship_pop_id = $data_str . '_' . $kinship_pop_id;
 	}
 
 	$self->_check_kinship_output($c, $kinship_pop_id, $protocol_id, $trait_id);
+    }
+    elsif ($req_page = ~ /pca\/analysis/) {
+	my $pca_pop_id  = $args->{pca_pop_id};
+	my $protocol_id = $args->{genotyping_protocol_id};
+	my $trait_id     = $args->{trait_id};
+	my $data_str = $args->{data_structure};
+
+	if ($data_str =~ /dataset|list/ && $pca_pop_id !~ /dataset|list/)
+	{
+	    $pca_pop_id = $data_str . '_' . $pca_pop_id;
+	}
+
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+	$self->_check_pca_output($c, $file_id);
     }
 
 }
@@ -315,6 +334,12 @@ sub _check_kinship_output {
     $c->stash->{rest}{cached} = $self->check_kinship_output($c, $kinship_pop_id, $protocol_id, $trait_id);
 }
 
+sub _check_pca_output {
+    my ($self, $c, $file_id) = @_;
+
+    $c->stash->{rest}{cached} = $self->check_pca_output($c, $file_id);
+}
+
 
 sub check_single_trial_training_data {
     my ($self, $c, $pop_id, $protocol_id) = @_;
@@ -479,6 +504,26 @@ sub check_kinship_output {
     my $cached =  -s $files->{'json_file_adj'} && -s $files->{'matrix_file_adj'} ? 1 : 0;
 
     return $cached;
+
+}
+
+sub check_pca_output {
+    my ($self, $c, $file_id) = @_;
+
+    if ($file_id)
+    {
+	$self->pca_scores_file($c);
+	my $pca_scores_file = $c->stash->{pca_scores_file};
+
+	if (-s $pca_scores_file)
+	{
+	    return 1;
+	}
+	else
+	{
+	    return 0;
+	}
+    }
 
 }
 
