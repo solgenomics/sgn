@@ -373,11 +373,11 @@ sub format_log_entry {
 
     my $traits_args = $json->decode($args);
     my $traits_ids = $traits_args->{training_traits_ids} || $traits_args->{trait_id};
-
+    my @traits_ids = ref($traits_ids) eq 'ARRAY' ? @$traits_ids : ($traits_ids);
     my $multi_traits_page;
-
     my $analysis_page;
-    if (scalar(@$traits_ids) > 1)
+
+    if (@traits_ids > 1)
     {
         $multi_traits_page = $c->req->referer;
         my $base = $c->req->base;
@@ -403,7 +403,7 @@ sub format_log_entry {
 	$entry .= "\n";
 
 	# if ($profile->{analysis_page} =~ /solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)
-    if (scalar(@$traits_ids) > 1)
+    if (@traits_ids > 1)
 	{
 		my $traits_entries = $self->create_itemized_prediction_log_entries($c, $profile);
 		$entry .= $traits_entries;
@@ -597,9 +597,18 @@ sub parse_arguments {
 		      $c->stash->{data_structure} =  $arguments->{$k};
 		  }
 
+          if ($k eq 'data_type')
+		  {
+		      $c->stash->{data_type} =  $arguments->{$k};
+		  }
+
 		  if ($k eq 'kinship_pop_id')
 		  {
 		      $c->stash->{kinship_pop_id} =  $arguments->{$k};
+		  }
+          if ($k eq 'pca_pop_id')
+		  {
+		      $c->stash->{pca_pop_id} =  $arguments->{$k};
 		  }
 
 		  if ($k eq 'genotyping_protocol_id')
@@ -649,6 +658,10 @@ sub structure_output_details {
 	elsif ( $analysis_page =~ m/kinship\/analysis/ )
 	{
 		$output_details = $self->structure_kinship_analysis_output($c);
+	}
+    elsif ( $analysis_page =~ m/pca\/analysis/ )
+	{
+		$output_details = $self->structure_pca_analysis_output($c);
 	}
 
 	$self->analysis_log_file($c);
@@ -704,6 +717,40 @@ sub structure_kinship_analysis_output {
 	};
 
    return \%output_details;
+}
+
+
+sub structure_pca_analysis_output {
+	my ($self, $c) = @_;
+
+	my $analysis_data =  $c->stash->{analysis_profile};
+	my $analysis_page = $analysis_data->{analysis_page};
+
+	my $pop_id = $c->stash->{pca_pop_id};
+
+	my $base = $c->req->base;
+	$base =~ s/:\d+//;
+
+	my $pca_page = $base . $analysis_page;
+	$analysis_data->{analysis_page} = $pca_page;
+
+	my %output_details = ();
+	# $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
+     my $geno_file = $c->stash->{genotype_file_name};
+
+    $c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
+    $c->controller('solGS::pca')->pca_scores_file($c);
+	my $scores_file = $c->stash->{pca_scores_file};
+
+	$output_details{'pca_' . $pop_id} = {
+		'output_page'    => $pca_page,
+		'pca_pop_id' => $pop_id,
+		'genotype_file'  => $geno_file,
+		'scores_file'    => $scores_file,
+	};
+
+   return \%output_details;
+   
 }
 
 
@@ -1128,6 +1175,10 @@ sub run_analysis {
 		{
 		    $self->run_kinship_analysis($c);
 		}
+        elsif ($analysis_page =~ /pca\/analysis/)
+		{
+		    $self->run_pca_analysis($c);
+		}
 		else
 		{
 		    $c->stash->{status} = 'Error';
@@ -1258,6 +1309,19 @@ sub run_kinship_analysis {
 }
 
 
+sub run_pca_analysis {
+	my ($self, $c) = @_;
+
+	my $analysis_page = $c->stash->{analysis_page};
+
+	if ($analysis_page = ~/pca\/analysis/)
+	{
+		$c->controller('solGS::pca')->run_pca($c);
+	}
+
+}
+
+
 sub update_analysis_progress {
 	my ($self, $c) = @_;
 
@@ -1356,6 +1420,10 @@ sub get_confirm_msg {
 	elsif ($referer =~ /kinship\/analysis/)
 	{
 		$job_type = 'Your kinship analysis is running.';
+	}
+    elsif ($referer =~ /pca\/analysis/)
+	{
+		$job_type = 'Your PCA is running.';
 	}
 	else
 	{
