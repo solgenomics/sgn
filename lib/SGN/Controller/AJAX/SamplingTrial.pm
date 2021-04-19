@@ -325,7 +325,6 @@ sub store_sampling_trial_POST : Args(0) {
             chado_schema => $schema,
             dbh => $c->dbc->dbh(),
             owner_id => $user_id,
-            user_name => $user_name, #not implemented,
             operator => $user_name,
             trial_year => $sampling_data->{year},
             trial_location => $location->description(),

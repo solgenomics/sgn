@@ -451,7 +451,7 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
     {
 	dbh => $f->dbh(),
 	chado_schema => $f->bcs_schema(),
-	user_name => 'janedoe', #not implemented
+    owner_id => 41,
 	program => 'test',
 	trial_year => 2014,
 	trial_description => 'another test trial...',

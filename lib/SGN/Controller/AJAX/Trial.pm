@@ -575,7 +575,7 @@ sub save_experimental_design_POST : Args(0) {
         my %trial_info_hash = (
             chado_schema => $chado_schema,
             dbh => $dbh,
-            user_name => $user_name, #not implemented
+            owner_id => $user_id,
             design => $trial_location_design,
             program => $breeding_program,
             trial_year => $c->req->param('year'),
@@ -604,7 +604,6 @@ sub save_experimental_design_POST : Args(0) {
         if ($plot_length){
             $trial_info_hash{plot_length} = $plot_length;
         }
-	$trial_info_hash{owner_id} = $user_id;
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
 
         if ($trial_create->trial_name_already_exists()) {
@@ -968,12 +967,12 @@ sub upload_trial_file_POST : Args(0) {
         my %trial_info_hash = (
             chado_schema => $chado_schema,
             dbh => $dbh,
+            owner_id => $user_id,
             trial_year => $trial_year,
             trial_description => $trial_description,
             trial_location => $trial_location,
             trial_type => $trial_type,
             trial_name => $trial_name,
-            user_name => $user_name, #not implemented
             design_type => $trial_design_method,
             design => $parsed_data,
             program => $program,
@@ -998,7 +997,6 @@ sub upload_trial_file_POST : Args(0) {
         if ($plot_length){
             $trial_info_hash{plot_length} = $plot_length;
         }
-	$trial_info_hash{owner_id} = $user_id;
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
         $save = $trial_create->save_trial();
 
@@ -1157,7 +1155,6 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             trial_description => $trial_design->{'description'},
             trial_location => $trial_design->{'location'},
             trial_name => $trial_name,
-            user_name => $user_name, #not implemented
             design_type => $trial_design->{'design_type'},
             design => $trial_design->{'design_details'},
             program => $trial_design->{'breeding_program'},
