@@ -281,6 +281,7 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
     my $dbh = $c->dbc->dbh;
     my $order_id = $c->req->param('order_id');
     my $new_status = $c->req->param('new_status');
+    my $contact_person_comments = $c->req->param('contact_person_comments');
     my $time = DateTime->now();
     my $timestamp = $time->ymd();
     my $user_role;
@@ -310,9 +311,9 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
 
     my $order_obj;
     if ($new_status eq 'completed') {
-        $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, completion_date => $timestamp});
+        $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, completion_date => $timestamp, comments => $contact_person_comments});
     } else {
-        $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status});
+        $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, comments => $contact_person_comments});
     }
 
     my $updated_order = $order_obj->store();

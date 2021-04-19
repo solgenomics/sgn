@@ -110,7 +110,7 @@ sub store {
 	order_status => $self->order_status(),
 	order_from_id => $self->order_from_id(),
 	order_to_id => $self->order_to_id(),
-#	comments => $self->comments(),
+	comments => $self->comments(),
     create_date => $self->create_date(),
     completion_date => $self->completion_date(),
 	);

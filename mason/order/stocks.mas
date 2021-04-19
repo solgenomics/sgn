@@ -245,12 +245,14 @@ $(window).ready( function() {
             alert ("Please select a status");
             return;
         }
+        var contact_person_comments = jQuery('#contact_person_comments').val();
 
         jQuery.ajax({
             url: '/ajax/order/update',
             data : {
                 'order_id' : order_id,
                 'new_status': new_order_status,
+                'contact_person_comments': contact_person_comments
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -270,8 +272,6 @@ $(window).ready( function() {
                 alert('An error occurred updating the order');
             }
         });
-
-
     });
 
     jQuery("#dismiss_update_saved_dialog").click(function(){
@@ -283,14 +283,15 @@ $(window).ready( function() {
 
 function updateOrder(order_id, order_from_name){
     var html = '';
-    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Order Number: </label><div class="col-sm-9" ><input class="form-control" id="update_order_id" name="update_order_id" value="'+order_id+'" disabled></div><br><br>';
-    html = html + '<label class="col-sm-3 control-label">Ordered by: </label><div class="col-sm-9" ><input class="form-control" id="ordered_by_name" name="ordered_by_name" value="'+order_from_name+'" disabled></div><br><br>';
-    html = html + '<label class="col-sm-3 control-label">Status: </label><div class="col-sm-9" ><select class="form-control" id="update_order_status" name="update_order_status"><option disabled value="" selected hidden>Select a status</option>';
-    html = html + '<option value='+"being_processed"+'>'+"being_processed"+'</option>';
-    html = html + '<option value='+"shipped"+'>'+"shipped"+'</option>';
-    html = html + '<option value='+"completed"+'>'+"completed"+'</option>';
-    html = html + '<option value='+"cancelled"+'>'+"cancelled"+'</option>';
-
+    html += '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Order Number: </label><div class="col-sm-9" ><input class="form-control" id="update_order_id" name="update_order_id" value="'+order_id+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Ordered by: </label><div class="col-sm-9" ><input class="form-control" id="ordered_by_name" name="ordered_by_name" value="'+order_from_name+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Status: </label><div class="col-sm-9" ><select class="form-control" id="update_order_status" name="update_order_status"><option disabled value="" selected hidden>Select a status</option>';
+    html += '<option value='+"being_processed"+'>'+"being_processed"+'</option>';
+    html += '<option value='+"shipped"+'>'+"shipped"+'</option>';
+    html += '<option value='+"completed"+'>'+"completed"+'</option>';
+    html += '<option value='+"cancelled"+'>'+"cancelled"+'</option>';
+    html += '</select></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="contact_person_comments" placeholder="Optional"></div></div></form>'
 
     jQuery('#update_order_div').html(html);
     jQuery('#update_order_dialog').modal('show');

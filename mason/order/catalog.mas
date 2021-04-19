@@ -245,11 +245,11 @@ jQuery(document).ready( function() {
 
 });
 
-function addToCart(item_name, description){
+function addToCart(item_name){
     var html = '';
-    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div><br><br>';
-    html = html + '<label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div><br><br>';
-    html = html + '<label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="Optional"</div><br><br>';
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="Optional"</div></div></form>';
 
     jQuery('#add_item_detail_div').html(html);
     jQuery('#add_item_detail_dialog').modal('show');
