@@ -54,7 +54,7 @@ sub get_reference_genomes : Path('/ajax/variants/reference_genomes') :Args(0) {
     $c->stash->{rest} = {
         reference_genomes => $results
     };
-
+}
 
 
 #
@@ -69,8 +69,8 @@ sub get_reference_genomes : Path('/ajax/variants/reference_genomes') :Args(0) {
 #   - limit = (optional, required if page provided) limit the number of markers returned
 #   - page = (optional) the offset of markers returned, when more than limit markers found
 #
-sub query_markers : Path('/ajax/variants/query') : ActionClass('REST') { }
-sub query_markers_GET : Args(0) {
+sub query_variants : Path('/ajax/variants/query') : ActionClass('REST') { }
+sub query_variants_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -129,6 +129,51 @@ sub query_markers_GET : Args(0) {
         results => $results
     };
 
-}}
+}
+
+
+#
+# Get the markerprops of the specified marker(s)
+# PATH: GET /ajax/variants/props
+# PARAMS:
+#   - marker_names = a comma separated list of marker names
+# RETURNS:
+#   An array of external link objects with the following keys:
+#       - type_name
+#       - xref_name
+#       - url
+#       - marker_name
+#
+sub get_markerprops : Path('/ajax/variants/props') : ActionClass('REST') { }
+sub get_markerprops_GET {
+    my ($self, $c) = @_;
+    my @marker_names = split(/, ?/, $c->req->param("marker_names"));
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh();
+    
+    my @row;
+    my @propinfo = ();
+    my $data;
+
+    my $q = "select cvterm_id from public.cvterm where name = 'vcf_snp_dbxref'";
+    my $h = $dbh->prepare($q);
+    $h->execute();
+    my ($type_id) = $h->fetchrow_array(); 
+
+    $q = "select value from nd_protocolprop where type_id = ?";
+    $h = $dbh->prepare($q);
+    $h->execute($type_id);
+    while (@row = $h->fetchrow_array()) {
+        $data = decode_json($row[0]);
+	    foreach (@{$data->{markers}}) {
+            my $n = $_->{marker_name};
+	        if ( grep( /^$n$/, @marker_names) ) {
+	            push @propinfo, { url => $data->{url}, type_name => $data->{dbxref}, marker_name => "$_->{marker_name}", xref_name => "$_->{xref_name}"};
+            }
+        }
+    }
+
+    $c->stash->{rest} = \@propinfo;
+}
 
 1;

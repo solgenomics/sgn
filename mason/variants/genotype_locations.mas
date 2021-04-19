@@ -1,0 +1,42 @@
+<%args>
+    $markers => undef
+</%args>
+
+<%init>
+    if ( !$markers ) {
+        print "<p><strong>ERROR: </strong>Missing variant markers!</p>";
+    }
+</%init>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Marker</th>
+            <th>Protocol</th>
+            <th>Species</th>
+            <th>Reference</th>
+            <th>Chromosome</th>
+            <th>Position</th>
+            <th>Ref</th>
+            <th>Alt</th>
+        </tr>
+    </thead>
+    <tbody>
+% foreach my $marker (@$markers) {
+        <tr>
+            <td><% $marker->{'marker_name'} %></td>
+            <td>
+                <a href="/breeders_toolbox/protocol/<% $marker->{'nd_protocol_id'} %>">
+                    <% $marker->{'nd_protocol_name'} %>
+                </a>
+            </td>
+            <td><% $marker->{'species_name'} %></td>
+            <td><% $marker->{'reference_genome_name'} %></td>
+            <td><% $marker->{'chrom'} %></td>
+            <td><% $marker->{'pos'} %></td>
+            <td><% $marker->{'ref'} %></td>
+            <td><% $marker->{'alt'} %></td>
+        </tr>    
+% }
+    </tbody>
+  </table>

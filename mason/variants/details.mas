@@ -1,3 +1,33 @@
+<%doc>
+=head1 NAME
+
+Variant Detail Page
+
+=head1 DESCRIPTION
+
+A detail page for variants / markers stored in the genotype protocol props, 
+and summarized in the materialized_markerview materialized view
+
+=head1 ARGUMENTS
+
+=over 5
+
+=item variant_name
+
+The name of the variant, as used in the variant_name column of the materialized_markerview table
+
+=item markers
+
+An arrayref containing a hash for each marker for the variant.  The marker hash has the following 
+keys: chrom, species_name, reference_genome_name, pos, alt, ref
+
+=item related_variants 
+
+A hashref containing the variants and the markers related to one or more of the markers in the current variant
+
+=back
+</%doc>
+
 <%args>
     $variant_name => undef
     $markers => undef
@@ -6,11 +36,22 @@
 
 <%init>
     if ( !$variant_name ) {
-        print "<p class='args-error'><strong>ERROR: </strong>Missing variant name!</p>";
+        print "<p><strong>ERROR: </strong>Missing variant name!</p>";
     }
     if ( !$markers ) {
-        print "<p class='args-error'><strong>ERROR: </strong>Missing variant markers!</p>";
+        print "<p><strong>ERROR: </strong>Missing variant markers!</p>";
     }
+
+    # Get unique list of marker names at this variant
+    my @marker_names = ();
+    foreach my $marker (@$markers) {
+        my $n = $marker->{'marker_name'};
+        if ( !grep( /^$n$/, @marker_names) ) {
+            push(@marker_names, $marker->{'marker_name'});
+        } 
+    }
+
+    # Set query parameters for the sequence metadata table
     my %smd_params = (
         "sequence_metadata_results" => {
             "feature" => ${$markers}[0]->{'chrom'},
@@ -20,9 +61,8 @@
             "end" => ${$markers}[0]->{'pos'}
         }
     );
-
-    use Data::Dumper;
 </%init>
+
 
 
 <& /page/page_title.mas, title=> "Variant $variant_name" &>
@@ -31,74 +71,30 @@
 
 <!-- VARIANT DETAILS TABLE -->
 <&| /page/info_section.mas, title=>'Genotype locations', collapsible=>1, collapsed=>0 &>
-  
-  <table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Marker</th>
-            <th>Protocol</th>
-            <th>Species</th>
-            <th>Reference</th>
-            <th>Chromosome</th>
-            <th>Position</th>
-            <th>Ref</th>
-            <th>Alt</th>
-        </tr>
-    </thead>
-    <tbody>
-% foreach my $marker (@$markers) {
-        <tr>
-            <td><% $marker->{'marker_name'} %></td>
-            <td>
-                <a href="/breeders_toolbox/protocol/<% $marker->{'nd_protocol_id'} %>">
-                    <% $marker->{'nd_protocol_name'} %>
-                </a>
-            </td>
-            <td><% $marker->{'species_name'} %></td>
-            <td><% $marker->{'reference_genome_name'} %></td>
-            <td><% $marker->{'chrom'} %></td>
-            <td><% $marker->{'pos'} %></td>
-            <td><% $marker->{'ref'} %></td>
-            <td><% $marker->{'alt'} %></td>
-        </tr>    
-% }
-    </tbody>
-  </table>
+    <& /variants/genotype_locations.mas, markers => $markers &>
 </&>
-
 
 
 
 <!-- RELATED VARIANTS LINKS -->
 <&| /page/info_section.mas, title=>'Related Variants', collapsible=>1, collapsed=>0 &>
-
-
-% if ( %{$related_variants} ) {
-
-    <p>These variants have one or more markers that share a marker name but are on a different reference genome, species, or position.</p>
-
-
-% foreach my $variant (keys %{ $related_variants }) {
-    <a href="/variant/<% $variant %>/details">
-        <strong><% $related_variants->{$variant}[0]->{'reference_genome_name'} %></strong> 
-        (<% $related_variants->{$variant}[0]->{'species_name'} %>)
-    </a>
-
-    <ul class="related-marker-list">
-% foreach my $marker (@{$related_variants->{$variant}}) {
-    <li><% $marker->{'marker_name'} %> (<% $marker->{'nd_protocol_name'} %>)</li>
-% }
-    </ul>
-
-% }
-
-% } else {
-
-    <p><em>No related variants found</em></p>
-
-% }
-
+    <& /variants/related_variants.mas, related_variants => $related_variants &>
 </&>
+
+
+
+<!-- EXTERNAL LINKS -->
+<&| /page/info_section.mas, title=>'External Links', collapsible=>1, collapsed=>0 &>
+    <& /variants/external_links.mas, marker_names => \@marker_names &>
+</&>
+
+
+
+<!-- JBROWSE LINKS -->
+<&| /page/info_section.mas, title => "Marker Locations", collapsible=>1 &>
+    <p>Put JBrowse Links Here</p>
+</&>
+
 
 
 
@@ -110,17 +106,3 @@
 </&>
 
 
-
-
-
-
-<style>
-    .args-error {
-        width: 100%;
-        background-color: #f8d7da;
-        color: #721c24;
-        padding: 15px;
-        border-radius: 5px;
-        border: 1px solid;
-    }
-</style>

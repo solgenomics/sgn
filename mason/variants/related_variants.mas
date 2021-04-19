@@ -1,0 +1,34 @@
+<%args>
+    $related_variants => undef
+</%args>
+
+<%init>
+    if ( !$related_variants ) {
+        print "<p><strong>ERROR: </strong>Missing variant markers!</p>";
+    }
+</%init>
+
+% if ( %{$related_variants} ) {
+
+    <p>These variants have one or more markers that share a marker name but are on a different reference genome, species, or position.</p>
+
+
+% foreach my $variant (keys %{ $related_variants }) {
+    <a href="/variant/<% $variant %>/details">
+        <strong><% $related_variants->{$variant}[0]->{'reference_genome_name'} %></strong> 
+        (<% $related_variants->{$variant}[0]->{'species_name'} %>)
+    </a>
+
+    <ul class="related-marker-list">
+% foreach my $marker (@{$related_variants->{$variant}}) {
+    <li><% $marker->{'marker_name'} %> (<% $marker->{'nd_protocol_name'} %>)</li>
+% }
+    </ul>
+
+% }
+
+% } else {
+
+    <p><em>No related variants found</em></p>
+
+% }
