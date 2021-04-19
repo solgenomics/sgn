@@ -240,11 +240,11 @@ sub generate_experimental_design_POST : Args(0) {
     my @design_array;
     my @design_layout_view_html_array;
     my $json = JSON::XS->new();
-    
+
     foreach my $location (@locations) {
         my $trial_name = $c->req->param('project_name');
         my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
-	
+
         $geolocation_lookup->set_location_name($location);
         if (!$geolocation_lookup->get_geolocation()){
             $c->stash->{rest} = { error => "Trial location not found" };
@@ -832,10 +832,10 @@ sub upload_trial_file_POST : Args(0) {
 
     select(STDERR);
     $| = 1;
-    
+
     print STDERR "Check 1: ".localtime()."\n";
 
-    
+
     #print STDERR Dumper $c->req->params();
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -1152,6 +1152,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         my %trial_info_hash = (
             chado_schema => $chado_schema,
             dbh => $dbh,
+            owner_id => $user_id,
             trial_year => $trial_design->{'year'},
             trial_description => $trial_design->{'description'},
             trial_location => $trial_design->{'location'},
