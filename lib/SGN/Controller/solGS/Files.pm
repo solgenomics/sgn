@@ -764,7 +764,7 @@ sub create_file_id {
     }
 
 
-    $file_id = $data_type ? $file_id . '-' . $data_type : $file_id;
+    $file_id = $data_type ? $file_id . '-' . lc($data_type) : $file_id;
     $file_id = $k_number  ? $file_id . '-k-' . $k_number : $file_id;
     $file_id = $protocol_id && $data_type =~ /genotype/i ? $file_id . '-gp-' . $protocol_id : $file_id;
 
