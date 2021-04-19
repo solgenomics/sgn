@@ -95,6 +95,10 @@ sub check_success {
     {
 	$output_details = $self->check_kinship_analysis($output_details);
     }
+    elsif ( $analysis_profile->{analysis_type} =~ /pca/ )
+    {
+	$output_details = $self->check_pca_analysis($output_details);
+    }
 
     return $output_details;
 }
@@ -520,6 +524,54 @@ sub check_kinship_analysis {
 }
 
 
+sub check_pca_analysis {
+    my ($self, $output_details) = @_;
+
+    foreach my $k (keys %{$output_details})
+    {
+	if ($k =~ /pca/)
+	{
+
+	    my $scores_file = $output_details->{$k}->{scores_file};
+	    if ($scores_file)
+	    {
+		while (1)
+		{
+		    sleep 30;
+		    if (-s $scores_file)
+		    {
+			$output_details->{$k}->{success} = 1;
+			$output_details->{status} = 'Done';
+			last;
+		    }
+		    else
+		    {
+			my $end_process = $self->end_status_check();
+			if ($end_process)
+			{
+			    if (!-s $output_details->{$k}->{genotype_file})
+			    {
+				$output_details->{$k}->{failure_reason} = 'No genotype data was found for this kinship analysis.';
+			    }
+			    else
+			    {
+				$output_details->{$k}->{failure_reason} = 'The pca analysis failed.';
+			    }
+
+			    $output_details->{$k}->{success} = 0;
+			    $output_details->{status} = 'Failed';
+			    last;
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+    return $output_details;
+}
+
+
 sub get_file {
     my ($self, $dir, $exp) = @_;
 
@@ -573,9 +625,13 @@ sub report_status {
     {
     	$analysis_result = $self->selection_prediction_message($output_details);
     }
-      elsif ($analysis_type =~ /kinship/  )
+    elsif ($analysis_type =~ /kinship/  )
     {
     	$analysis_result = $self->kinship_analysis_message($output_details);
+    }
+    elsif ($analysis_type =~ /pca/  )
+    {
+    	$analysis_result = $self->pca_analysis_message($output_details);
     }
 
     my $closing = "If you have any remarks, please contact us:\n"
@@ -874,6 +930,39 @@ sub kinship_analysis_message {
 	    {
 		$output_page = $output_details->{$k}->{output_page};
 		$message = 'Your kinship analysis is done. You can access the result here:'
+		    . "\n\n$output_page\n\n";
+	    }
+	    else
+	    {
+		no warnings 'uninitialized';
+		my $fail_message  = $output_details->{$k}->{failure_reason};
+
+		$message  = "The kinship analysis failed.\n";
+		$message .= "\nPossible causes are:\n$fail_message\n";
+		$message .= 'Refering page: ' . $output_page . "\n\n";
+		$message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";
+	    }
+	}
+    }
+
+    return  $message;
+}
+
+sub pca_analysis_message {
+    my ($self, $output_details) = @_;
+
+    my $message;
+
+    foreach my $k (keys %{$output_details})
+    {
+	if ($k =~ /pca/) {
+
+	    my $output_page;
+
+	    if ($output_details->{$k}->{success})
+	    {
+		$output_page = $output_details->{$k}->{output_page};
+		$message = 'Your PCA is done. You can access the result here:'
 		    . "\n\n$output_page\n\n";
 	    }
 	    else
