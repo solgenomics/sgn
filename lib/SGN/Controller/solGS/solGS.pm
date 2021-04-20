@@ -14,7 +14,7 @@ use File::Basename;
 use Cache::File;
 use Try::Tiny;
 use List::MoreUtils qw /uniq/;
-use Scalar::Util qw /weaken reftype/;
+#use Scalar::Util qw /weaken reftype/;
 use Statistics::Descriptive;
 use Math::Round::Var;
 use Algorithm::Combinatorics qw /combinations/;
@@ -441,8 +441,7 @@ sub trait :Path('/solgs/trait') Args() {
    	  	};
 
    	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
-
-	    my $training_pop_page = qq | <a href="$training_pop_page">$training_pop_name</a> |;
+	    $training_pop_page = qq | <a href="$training_pop_page">$training_pop_name</a> |;
 
 	    $c->stash->{message} = "Cached output for this model does not exist anymore.\n" .
 	     " Please go to $training_pop_page and run the analysis.";
