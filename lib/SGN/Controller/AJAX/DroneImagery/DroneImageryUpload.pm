@@ -2690,7 +2690,7 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
             my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
             $archive_rotate_temp_image .= '.png';
 
-            my $rotate_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_image_rotate($c, $schema, $metadata_schema, $drone_run_band_project_id, $image_id, $rotate_value, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0);
+            my $rotate_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_image_rotate($c, $schema, $metadata_schema, $drone_run_band_project_id, $image_id, $rotate_value, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0, 0);
             my $rotated_image_id = $rotate_return->{rotated_image_id};
 
             $dir = $c->tempfiles_subdir('/drone_imagery_cropped_image');
@@ -2714,7 +2714,8 @@ sub upload_drone_imagery_bulk_previous_POST : Args(0) {
                 drone_run_band_type => $drone_run_band_type,
                 drone_run_project_id => $drone_run_project_id_in,
                 drone_run_project_name => $drone_run_project_info{$drone_run_project_id_in}->{name},
-                plot_polygons_value => $plot_polygons_value
+                plot_polygons_value => $plot_polygons_value,
+                check_resize => 0
             };
 
             my @denoised_plot_polygon_type = @{$term_map->{$drone_run_band_type}->{observation_unit_plot_polygon_types}->{base}};
