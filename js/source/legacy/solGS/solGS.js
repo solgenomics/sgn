@@ -28,7 +28,8 @@ solGS.submitJob = {
 			+ '|solgs/combined/model/\\d+|\\w+_\\d+/selection/'
 		    + '|solgs/models/combined/trials/'
 	     	+ '|solgs/traits/all/population/'
-	    	+ '|kinship/analysis/';
+            + '|pca/analysis/'
+            + '|kinship/analysis/';
 
 		if (page.match(matchItems)) {
 
@@ -274,7 +275,8 @@ solGS.submitJob = {
 	    + '|solgs/traits/all/population/'
 	    + '|solgs/models/combined/trials/'
 	    + '|solgs/model/combined/trials/'
-	    + '|kinship/analysis';
+	    + '|pca/analysis'
+        + '|kinship/analysis/';
 
 	if (page.match(matchItems)) {
 	    window.location = page;
@@ -874,14 +876,16 @@ solGS.getPopulationDetails = function() {
         dataSetType = 'single population';
     }
 
+    var protocolId   = jQuery("#genotyping_protocol_id").val();
     return {
 	'training_pop_id'   : trainingPopId,
-        'population_name'   : trainingPopName,
+    'population_name'   : trainingPopName,
 	'training_pop_name' : trainingPopName,
 	'selection_pop_id'  : selectionPopId,
 	'selection_pop_name': selectionPopName,
 	'combo_pops_id'     : comboPopsId,
-	'data_set_type'     : dataSetType
+	'data_set_type'     : dataSetType,
+    'genotyping_protocol_id': protocolId
     };
 }
 
