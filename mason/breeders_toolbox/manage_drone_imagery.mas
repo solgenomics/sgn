@@ -2126,7 +2126,7 @@ my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='uploa
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_drone_imagery_additional_raw_images_form" name="upload_drone_imagery_additional_raw_images_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Drone Images ZipFile (.zip) (2GB Maximum): </label>
+                            <label class="col-sm-3 control-label">Drone Images ZipFile (.zip): </label>
                             <div class="col-sm-9" >
                                 <input type="file" id="upload_drone_imagery_additional_raw_images_zipfile" name="upload_drone_imagery_additional_raw_images_zipfile" encoding="multipart/form-data" />
                             </div>

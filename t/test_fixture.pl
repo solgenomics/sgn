@@ -246,6 +246,10 @@ if (!$nocleanup) {
     my $archive_path = $config->{archive_path};
     system("rm -rf $archive_path");
 
+    print STDERR "# Deleting test images...\n";
+    my $image_path = $config->{image_path};
+    system("rm -rf $image_path");
+
     print STDERR "# Removing test database ($dbname)... ";
     system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
     print STDERR "Done.\n";
