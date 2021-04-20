@@ -4,7 +4,7 @@ use Moose;
 use namespace::autoclean;
 
 use File::Slurp qw /write_file read_file/;
-
+use JSON;
 
 sub convert_arrayref_to_hashref {
     my ($self, $array_ref) = @_;
@@ -243,6 +243,18 @@ sub save_metadata {
 	write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
     }
 
+}
+
+
+sub stash_json_args {
+    my ($self, $c, $args_json) = @_;
+
+    my $json = JSON->new();
+    my $args_hash = $json->decode($args_json);
+
+    foreach my $key (keys %{$args_hash}) {
+        $c->stash->{$key} = $args_hash->{$key};
+    }
 }
 
 
