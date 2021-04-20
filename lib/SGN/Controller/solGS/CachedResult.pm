@@ -33,6 +33,8 @@ sub check_cached_result :Path('/solgs/check/cached/result') Args(0) {
     my $req_page = $c->req->param('page');
     my $args     = $c->req->param('args');
 
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
+
     my $json     = JSON->new();
     $args        = $json->decode($args);
 
@@ -51,104 +53,103 @@ sub _check_cached_output {
                                                         ? $training_pop_id->[0]
                                                         : $training_pop_id;
 
-    $c->stash->{genotyping_protocol_id} = $args->{genotyping_protocol_id};
 
     $c->stash->{rest}{cached} = undef;
+
     if ($req_page =~ /solgs\/population\//)
     {
-	my $pop_id = $args->{training_pop_id}[0];
-	$self->_check_single_trial_training_data($c, $pop_id);
+    	my $pop_id = $args->{training_pop_id}[0];
+    	$self->_check_single_trial_training_data($c, $pop_id);
     }
     elsif ($req_page =~ /solgs\/populations\/combined\//)
     {
-	my $pop_id = $args->{training_pops_id}[0] || $args->{combo_pops_id}[0];
-	$c->stash->{data_set_type} = $args->{data_set_type};
+    	my $pop_id = $args->{training_pops_id}[0] || $args->{combo_pops_id}[0];
+    	$c->stash->{data_set_type} = $args->{data_set_type};
 
-	$self->_check_combined_trials_data($c, $pop_id);
+    	$self->_check_combined_trials_data($c, $pop_id);
     }
     elsif ($req_page =~ /solgs\/trait\//)
     {
-	my $pop_id   = $args->{training_pop_id}[0];
-	my $trait_id = $args->{trait_id}[0];
+    	my $pop_id   = $args->{training_pop_id}[0];
+    	my $trait_id = $args->{trait_id}[0];
 
-	$self->_check_single_trial_model_output($c, $pop_id, $trait_id);
+    	$self->_check_single_trial_model_output($c, $pop_id, $trait_id);
     }
     elsif ($req_page =~ /solgs\/model\/combined\/trials\//)
     {
-	my $pop_id   = $args->{training_pop_id}[0];
-	my $trait_id = $args->{trait_id}[0];
+    	my $pop_id   = $args->{training_pop_id}[0];
+    	my $trait_id = $args->{trait_id}[0];
 
-	$c->stash->{data_set_type} = $args->{data_set_type};
+    	$c->stash->{data_set_type} = $args->{data_set_type};
 
-	$self->_check_combined_trials_model_output($c, $pop_id, $trait_id);
+    	$self->_check_combined_trials_model_output($c, $pop_id, $trait_id);
     }
     elsif ($req_page =~ /solgs\/selection\/(\d+|\w+_\d+)\/model\//)
     {
-	my $tr_pop_id  = $args->{training_pop_id}[0];
-	my $sel_pop_id = $args->{selection_pop_id}[0];
-	my $trait_id   = $args->{trait_id}[0];
+    	my $tr_pop_id  = $args->{training_pop_id}[0];
+    	my $sel_pop_id = $args->{selection_pop_id}[0];
+    	my $trait_id   = $args->{trait_id}[0];
 
-	$c->stash->{data_set_type} = $args->{data_set_type};
+    	$c->stash->{data_set_type} = $args->{data_set_type};
 
-	my $referer = $c->req->referer;
+    	my $referer = $c->req->referer;
 
-	if ($referer =~ /solgs\/traits\/all\//)
-	{
-	    $self->_check_selection_pop_all_traits_output($c, $tr_pop_id, $sel_pop_id);
-	}
-	elsif ($referer =~ /solgs\/models\/combined\/trials\//)
-	{
-	  $self->_check_selection_pop_all_traits_output($c, $tr_pop_id, $sel_pop_id);
-	}
-	else
-	{
-	    $self->_check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id);
-	}
+    	if ($referer =~ /solgs\/traits\/all\//)
+    	{
+    	    $self->_check_selection_pop_all_traits_output($c, $tr_pop_id, $sel_pop_id);
+    	}
+    	elsif ($referer =~ /solgs\/models\/combined\/trials\//)
+    	{
+    	  $self->_check_selection_pop_all_traits_output($c, $tr_pop_id, $sel_pop_id);
+    	}
+    	else
+    	{
+    	    $self->_check_selection_pop_output($c, $tr_pop_id, $sel_pop_id, $trait_id);
+    	}
     }
     elsif ($req_page =~ /solgs\/traits\/all\/population\//)
     {
-	my $tr_pop_id  = $args->{training_pop_id}[0];
-	my $sel_pop_id = $args->{selection_pop_id}[0];
-	my $traits_ids = $args->{training_traits_ids};
+    	my $tr_pop_id  = $args->{training_pop_id}[0];
+    	my $sel_pop_id = $args->{selection_pop_id}[0];
+    	my $traits_ids = $args->{training_traits_ids};
 
-	$self->_check_single_trial_model_all_traits_output($c, $tr_pop_id, $traits_ids);
+    	$self->_check_single_trial_model_all_traits_output($c, $tr_pop_id, $traits_ids);
     }
     elsif ($req_page =~ /solgs\/models\/combined\/trials\//)
     {
-	my $tr_pop_id  = $args->{training_pop_id}[0];
-	my $sel_pop_id = $args->{selection_pop_id}[0];
-	my $traits     = $args->{training_traits_ids};
+    	my $tr_pop_id  = $args->{training_pop_id}[0];
+    	my $sel_pop_id = $args->{selection_pop_id}[0];
+    	my $traits     = $args->{training_traits_ids};
 
-	$c->stash->{data_set_type} = $args->{data_set_type};
-
-	$self->_check_combined_trials_model_all_traits_output($c, $tr_pop_id, $traits);
+    	$self->_check_combined_trials_model_all_traits_output($c, $tr_pop_id, $traits);
     }
-    elsif ($req_page = ~ /kinship\/analysis/) {
-	my $kinship_pop_id  = $args->{kinship_pop_id};
-	my $protocol_id = $args->{genotyping_protocol_id};
-	my $trait_id     = $args->{trait_id};
-	my $data_str = $args->{data_structure};
+    elsif ($req_page =~ /kinship\/analysis/) {
+    	my $kinship_pop_id  = $args->{kinship_pop_id};
+    	my $protocol_id = $args->{genotyping_protocol_id};
+    	my $trait_id     = $args->{trait_id};
+    	my $data_str = $args->{data_structure};
 
-	if ($data_str =~ /dataset|list/ && $kinship_pop_id !~ /dataset|list/)
-	{
-	    $kinship_pop_id = $data_str . '_' . $kinship_pop_id;
-	}
+    	if ($data_str =~ /dataset|list/ && $kinship_pop_id !~ /dataset|list/)
+    	{
+    	    $kinship_pop_id = $data_str . '_' . $kinship_pop_id;
+    	}
 
-	$self->_check_kinship_output($c, $kinship_pop_id, $protocol_id, $trait_id);
+    	$self->_check_kinship_output($c, $kinship_pop_id, $protocol_id, $trait_id);
     }
-    elsif ($req_page = ~ /pca\/analysis/) {
-	my $pca_pop_id  = $args->{pca_pop_id};
-	my $protocol_id = $args->{genotyping_protocol_id};
-	my $trait_id     = $args->{trait_id};
-	my $data_str = $args->{data_structure};
+    elsif ($req_page =~ /pca\/analysis/)
+    {
+    	my $pca_pop_id  = $args->{pca_pop_id};
+    	my $protocol_id = $args->{genotyping_protocol_id};
+    	my $trait_id     = $args->{trait_id};
+    	my $data_str = $args->{data_structure};
 
-	if ($data_str =~ /dataset|list/ && $pca_pop_id !~ /dataset|list/)
-	{
-	    $pca_pop_id = $data_str . '_' . $pca_pop_id;
-	}
+    	if ($data_str =~ /dataset|list/ && $pca_pop_id !~ /dataset|list/)
+    	{
+    	    $pca_pop_id = $data_str . '_' . $pca_pop_id;
+    	}
 
-    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
-	$self->_check_pca_output($c, $file_id);
+        my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+    	$self->_check_pca_output($c, $file_id);
     }
 
 }
@@ -419,7 +420,6 @@ sub check_combined_trials_model_all_traits_output {
 sub check_selection_pop_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id, $trait_id) = @_;
 
-    # my $identifier = $tr_pop_id . '_' . $sel_pop_id;
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $tr_pop_id, $sel_pop_id, $trait_id);
     my $cached_gebv = -s $c->stash->{rrblup_selection_gebvs_file};
 
@@ -512,17 +512,18 @@ sub check_pca_output {
 
     if ($file_id)
     {
-	$self->pca_scores_file($c);
-	my $pca_scores_file = $c->stash->{pca_scores_file};
+        $c->stash->{file_id} = $file_id;
+	    $c->controller('solGS::pca')->pca_scores_file($c);
+	    my $scores_file = $c->stash->{pca_scores_file};
 
-	if (-s $pca_scores_file)
-	{
-	    return 1;
-	}
-	else
-	{
-	    return 0;
-	}
+    	if (-s $scores_file)
+    	{
+    	    return 1;
+    	}
+    	else
+    	{
+    	    return 0;
+    	}
     }
 
 }
