@@ -5514,7 +5514,7 @@ print STDERR Dumper $response;
 is($response->{recordsTotal}, 6);
 is($response->{data}[0][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a>');
 is($response->{data}[1][4], 'Stock (plot): <a href=\'/stock/38857/view\' >test_trial21</a>');
-is($response->{data}[2][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): test_trial');
+is($response->{data}[2][4], 'Stock (plot): <a href=\'/stock/38858/view\' >test_trial22</a><br/>Project (phenotype_spreadsheet_associated_images): <a href=\'/breeders/trial/137\' >test_trial</a>');
 
 my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 	search_type=>'MaterializedViewTable',
@@ -5541,7 +5541,7 @@ my $stored_image_ids = [2429,2430];
 # print STDERR Dumper $response;
 # is(scalar(@{$response->{results}}), 1);
 # is(scalar(@{$response->{results}->[0]->{details}}), 1);
-# 
+#
 # my $stored_image_ids_string = encode_json $stored_image_ids;
 # $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit?service=whitefly_count&selected_image_ids='.$stored_image_ids_string.'&sgn_session_id='.$sgn_session_id);
 # $response = decode_json $mech->content;

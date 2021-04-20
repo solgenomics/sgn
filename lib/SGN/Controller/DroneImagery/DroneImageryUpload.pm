@@ -1967,6 +1967,7 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
         my $coordinate_system = $_->{coordinate_system};
         my $drone_run_band_geoparams_coordinates = $_->{drone_run_band_geoparams_coordinates};
         my $rotate_value = $_->{rotation_angle}*-1;
+        # my $rotate_value = 0;
 
         my $drone_run_process_in_progress = $schema->resultset('Project::Projectprop')->update_or_create({
             type_id=>$process_indicator_cvterm_id,
@@ -2030,6 +2031,32 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
         my $drone_run_band_counter = 0;
         foreach my $apply_drone_run_band_project_id (@$apply_drone_run_band_project_ids) {
 
+            my $h2 = $schema->storage->dbh()->prepare($q2);
+            $h2->execute($apply_drone_run_band_project_id);
+            my ($image_id, $drone_run_band_type, $drone_run_band_project_id) = $h2->fetchrow_array();
+            $selected_drone_run_band_types{$drone_run_band_type} = $drone_run_band_project_id;
+
+            my $apply_image_width_ratio = 1;
+            my $apply_image_height_ratio = 1;
+
+            my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
+            my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
+            $archive_rotate_temp_image .= '.png';
+
+            my $rotate_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_image_rotate($c, $schema, $metadata_schema, $drone_run_band_project_id, $image_id, $rotate_value, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0, 1, 1);
+            my $rotated_image_id = $rotate_return->{rotated_image_id};
+
+            my $image = SGN::Image->new( $schema->storage->dbh, $rotated_image_id, $c );
+            my $image_fullpath = $image->get_filename('original_converted', 'full');
+
+            my @size = imgsize($image_fullpath);
+            my $width = $size[0];
+            my $length = $size[1];
+            my $x_center = $width/2;
+            my $y_center = $length/2;
+
+            my $cropping_value = encode_json [[{x=>0, y=>0}, {x=>$width, y=>0}, {x=>$width, y=>$length}, {x=>0, y=>$length}]];
+
             my $plot_polygons_value;
             foreach (@{$geojson_value->{features}}) {
                 my $plot_number = $_->{properties}->{ID};
@@ -2045,6 +2072,7 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
                     }
                     else {
                         my $geocoords = $drone_run_band_geoparams_coordinates->[$drone_run_band_counter];
+
                         my $xOrigin = $geocoords->[0];
                         my $yOrigin = $geocoords->[3];
                         my $pixelWidth = $geocoords->[1];
@@ -2052,8 +2080,8 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
                         my $x_pos = ($crd->[0] - $xOrigin) / $pixelWidth;
                         my $y_pos = ($yOrigin - $crd->[1] ) / $pixelHeight;
 
-                        my $x_pos_rotated = $x_pos*cos($rad_conversion*$rotate_value*-1) - $y_pos*sin($rad_conversion*$rotate_value*-1);
-                        my $y_pos_rotated = $y_pos*cos($rad_conversion*$rotate_value*-1) + $x_pos*sin($rad_conversion*$rotate_value*-1);
+                        my $x_pos_rotated = ($x_pos - $x_center)*cos($rad_conversion*$rotate_value*-1) - ($y_pos - $y_center)*sin($rad_conversion*$rotate_value*-1) + $x_center;
+                        my $y_pos_rotated = ($y_pos - $y_center)*cos($rad_conversion*$rotate_value*-1) + ($x_pos - $x_center)*sin($rad_conversion*$rotate_value*-1) + $y_center;
 
                         push @coords, {
                             x => round($x_pos_rotated),
@@ -2065,30 +2093,6 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
                 $plot_polygons_value->{$stock_name} = \@coords;
             }
             $plot_polygons_value = encode_json $plot_polygons_value;
-
-            my $h2 = $schema->storage->dbh()->prepare($q2);
-            $h2->execute($apply_drone_run_band_project_id);
-            my ($image_id, $drone_run_band_type, $drone_run_band_project_id) = $h2->fetchrow_array();
-            $selected_drone_run_band_types{$drone_run_band_type} = $drone_run_band_project_id;
-
-            my $apply_image_width_ratio = 1;
-            my $apply_image_height_ratio = 1;
-
-            my $dir = $c->tempfiles_subdir('/drone_imagery_rotate');
-            my $archive_rotate_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_rotate/imageXXXX');
-            $archive_rotate_temp_image .= '.png';
-
-            my $rotate_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_image_rotate($c, $schema, $metadata_schema, $drone_run_band_project_id, $image_id, $rotate_value, 0, $user_id, $user_name, $user_role, $archive_rotate_temp_image, 0, 0, 0);
-            my $rotated_image_id = $rotate_return->{rotated_image_id};
-
-            my $image = SGN::Image->new( $schema->storage->dbh, $rotated_image_id, $c );
-            my $image_fullpath = $image->get_filename('original_converted', 'full');
-
-            my @size = imgsize($image_fullpath);
-            my $width = $size[0];
-            my $length = $size[1];
-
-            my $cropping_value = encode_json [[{x=>0, y=>0}, {x=>$width, y=>0}, {x=>$width, y=>$length}, {x=>0, y=>$length}]];
 
             $dir = $c->tempfiles_subdir('/drone_imagery_cropped_image');
             my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'drone_imagery_cropped_image/imageXXXX');
@@ -2112,15 +2116,23 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
                 drone_run_project_id => $drone_run_project_id_in,
                 drone_run_project_name => $drone_run_project_info{$drone_run_project_id_in}->{name},
                 plot_polygons_value => $plot_polygons_value,
-                check_resize => 0
+                check_resize => 1,
+                keep_original_size_rotate => 1
             };
 
             my @denoised_plot_polygon_type = @{$term_map->{$drone_run_band_type}->{observation_unit_plot_polygon_types}->{base}};
             my @denoised_background_threshold_removed_imagery_types = @{$term_map->{$drone_run_band_type}->{imagery_types}->{threshold_background}};
             my @denoised_background_threshold_removed_plot_polygon_types = @{$term_map->{$drone_run_band_type}->{observation_unit_plot_polygon_types}->{threshold_background}};
 
+            my $polygon_type = '';
+            if ($rotate_value != 0) {
+                $polygon_type = 'rectangular_square';
+            } else {
+                $polygon_type = 'rectangular_polygon';
+            }
+
             foreach (@denoised_plot_polygon_type) {
-                my $plot_polygon_original_denoised_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_plot_polygon_assign($c, $schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, $_, $user_id, $user_name, $user_role, 0, 0, $apply_image_width_ratio, $apply_image_height_ratio, 'rectangular_polygon');
+                my $plot_polygon_original_denoised_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_plot_polygon_assign($c, $schema, $metadata_schema, $denoised_image_id, $drone_run_band_project_id, $plot_polygons_value, $_, $user_id, $user_name, $user_role, 0, 0, $apply_image_width_ratio, $apply_image_height_ratio, $polygon_type);
             }
 
             for my $iterator (0..(scalar(@denoised_background_threshold_removed_imagery_types)-1)) {
@@ -2130,7 +2142,7 @@ sub upload_drone_imagery_bulk_previous : Path("/drone_imagery/upload_drone_image
 
                 my $background_removed_threshold_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_image_background_remove_threshold_percentage($c, $schema, $denoised_image_id, $drone_run_band_project_id, $denoised_background_threshold_removed_imagery_types[$iterator], '25', '25', $user_id, $user_name, $user_role, $archive_remove_background_temp_image);
 
-                my $plot_polygon_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_plot_polygon_assign($c, $schema, $metadata_schema, $background_removed_threshold_return->{removed_background_image_id}, $drone_run_band_project_id, $plot_polygons_value, $denoised_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0, 0, $apply_image_width_ratio, $apply_image_height_ratio, 'rectangular_polygon');
+                my $plot_polygon_return = SGN::Controller::AJAX::DroneImagery::DroneImagery::_perform_plot_polygon_assign($c, $schema, $metadata_schema, $background_removed_threshold_return->{removed_background_image_id}, $drone_run_band_project_id, $plot_polygons_value, $denoised_background_threshold_removed_plot_polygon_types[$iterator], $user_id, $user_name, $user_role, 0, 0, $apply_image_width_ratio, $apply_image_height_ratio, $polygon_type);
             }
 
             $drone_run_band_counter++;
