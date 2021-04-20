@@ -525,6 +525,7 @@ ok($message_hash_remove_image->{status});
 my $bulk_loading_csv = $f->config->{basepath}."/t/data/imagebreed/bulk_loading/BTI_rig_images.xls";
 my $bulk_loading_image_zip = $f->config->{basepath}."/t/data/imagebreed/bulk_loading/BTI_rig_images.zip";
 $ua = LWP::UserAgent->new;
+$ua->timeout(3600);
 my $response_raster = $ua->post(
         'http://localhost:3010/drone_imagery/upload_drone_imagery_bulk',
         Content_Type => 'form-data',
@@ -545,6 +546,7 @@ my $file_previous_geojson_zip = "/home/production/public/static_content/imagebre
 my $file_previous_imaging_events = "/home/production/public/static_content/imagebreed/RiceExampleRGBandDSMGeoJSONImagingEvent.xls";
 
 $ua = LWP::UserAgent->new;
+$ua->timeout(3600);
 my $response_raster = $ua->post(
         'http://localhost:3010/drone_imagery/upload_drone_imagery_bulk_previous',
         Content_Type => 'form-data',
@@ -567,6 +569,7 @@ my $rasterred= $f->config->{basepath}."/t/data/imagebreed/RasterRed.png";
 my $rasternir = $f->config->{basepath}."/t/data/imagebreed/RasterNIR.png";
 my $rasterrededge = $f->config->{basepath}."/t/data/imagebreed/RasterRedEdge.png";
 $ua = LWP::UserAgent->new;
+$ua->timeout(3600);
 my $response_raster = $ua->post(
         'http://localhost:3010/drone_imagery/upload_drone_imagery',
         Content_Type => 'form-data',
@@ -582,26 +585,26 @@ my $response_raster = $ua->post(
             "drone_run_imaging_vehicle_battery_name"=>"blue",
             "drone_image_upload_drone_run_band_stitching"=>"no",
             "drone_run_band_number"=>5,
-            "drone_run_band_name_0"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Blue",
-            "drone_run_band_description_0"=>"raster blue",
-            "drone_run_band_type_0"=>"Blue (450-520nm)",
-            drone_run_band_stitched_ortho_image_0 => [ $rasterblue, basename($rasterblue) ],
-            "drone_run_band_name_1"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Green",
-            "drone_run_band_description_1"=>"raster green",
-            "drone_run_band_type_1"=>"Green (515-600nm)",
-            drone_run_band_stitched_ortho_image_1 => [ $rastergreen, basename($rastergreen) ],
-            "drone_run_band_name_2"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Red",
-            "drone_run_band_description_2"=>"raster red",
-            "drone_run_band_type_2"=>"Red (600-690nm)",
-            drone_run_band_stitched_ortho_image_2 => [ $rasterred, basename($rasterred) ],
-            "drone_run_band_name_3"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_NIR",
-            "drone_run_band_description_3"=>"raster NIR",
-            "drone_run_band_type_3"=>"NIR (780-3000nm)",
-            drone_run_band_stitched_ortho_image_3 => [ $rasternir, basename($rasternir) ],
-            "drone_run_band_name_4"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_RedEdge",
-            "drone_run_band_description_4"=>"raster rededge",
-            "drone_run_band_type_4"=>"Red Edge (690-750nm)",
-            drone_run_band_stitched_ortho_image_4 => [ $rasterrededge, basename($rasterrededge) ],
+            "drone_run_band_name_1"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Blue",
+            "drone_run_band_description_1"=>"raster blue",
+            "drone_run_band_type_1"=>"Blue (450-520nm)",
+            drone_run_band_stitched_ortho_image_1 => [ $rasterblue, basename($rasterblue) ],
+            "drone_run_band_name_2"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Green",
+            "drone_run_band_description_2"=>"raster green",
+            "drone_run_band_type_2"=>"Green (515-600nm)",
+            drone_run_band_stitched_ortho_image_2 => [ $rastergreen, basename($rastergreen) ],
+            "drone_run_band_name_3"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Red",
+            "drone_run_band_description_3"=>"raster red",
+            "drone_run_band_type_3"=>"Red (600-690nm)",
+            drone_run_band_stitched_ortho_image_3 => [ $rasterred, basename($rasterred) ],
+            "drone_run_band_name_4"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_NIR",
+            "drone_run_band_description_4"=>"raster NIR",
+            "drone_run_band_type_4"=>"NIR (780-3000nm)",
+            drone_run_band_stitched_ortho_image_4 => [ $rasternir, basename($rasternir) ],
+            "drone_run_band_name_5"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_RedEdge",
+            "drone_run_band_description_5"=>"raster rededge",
+            "drone_run_band_type_5"=>"Red Edge (690-750nm)",
+            drone_run_band_stitched_ortho_image_5 => [ $rasterrededge, basename($rasterrededge) ],
         ]
     );
 
