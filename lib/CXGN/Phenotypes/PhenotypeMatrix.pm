@@ -225,7 +225,7 @@ sub get_phenotype_matrix {
             }
 
             my $observations = $obs_unit->{observations};
-            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
+#            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
             my $include_timestamp = $self->include_timestamp;
             my %trait_observations;
             foreach (@$observations){
@@ -244,7 +244,7 @@ sub get_phenotype_matrix {
         }
     } else {
         $data = $phenotypes_search->search();
-        print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
+#        print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
 
         my %obsunit_data;
         my %traits;
