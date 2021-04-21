@@ -5084,6 +5084,12 @@ sub save_results {
 
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper($search_type);
+    
+    #set default value to 100000 to get as much as possible records when page size is not a parameter
+    if(!$search_params->{pageSize}) {
+    	$brapi_module->{page_size} = 100000;
+	}
+    
     my $search_result = $brapi_module->search($search_params,$c);
 
     my $dir = $c->tempfiles_subdir('/brapi_searches');
