@@ -2877,7 +2877,7 @@ is_a: TIME:0000005 ! time of year
 [Term]
 id: TIME:0000477
 name: Event relations
-def: "Terms that can be linked with other time terms to specify their relation to breeding events" []
+def: "Terms that can be linked with other terms to specify their relation to breeding events" []
 is_a: TIME:0000000 ! Time
 
 [Term]
