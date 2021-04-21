@@ -80,7 +80,7 @@ foreach my $trial_location (@multi_location) {
     ok(my $trial_create = CXGN::Trial::TrialCreate->new({
         chado_schema => $chado_schema,
         dbh => $dbh,
-        user_name => "johndoe", #not implemented
+        owner_id => 41,
         design => $multi_design[$design_index],
         program => "test",
         trial_year => "2016",
