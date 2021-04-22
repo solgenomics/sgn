@@ -114,7 +114,13 @@ jQuery(document).ready(function () {
             .attr("width", d => d.x1 - d.x0)
             .attr("height", d => d.y1 - d.y0)
             .attr("fill", "#add8e6")
-            .attr("opacity", 0.8);
+            .attr("opacity", 0.8)
+            .on("mouseover", function(){
+              d3.select(this).attr("fill", "steel-blue")
+            })
+            .on("mouseout", function(){
+              d3.select(this).attr("fill", "#add8e6")
+            });
 
           links = svg
             .append("g")
@@ -132,11 +138,9 @@ jQuery(document).ready(function () {
             .attr("stoke-opacity", 0.3)
             .on("mouseover", function(){
               d3.select(this).attr("stroke", "#808080");
-              console.log("Mouse in");
             })
             .on("mouseout", function(){
               d3.select(this).attr("stroke", "#D3D3D3");
-              console.log("Mouse Out");
             });
 
           labels = svg
