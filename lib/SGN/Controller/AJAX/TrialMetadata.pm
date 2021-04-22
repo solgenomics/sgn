@@ -1961,6 +1961,7 @@ sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Ar
 sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $tissue_sample_owner = $c->user->get_object->get_sp_person_id;
     my $tissues_per_plant = $c->req->param("tissue_samples_per_plant") || 3;
     my $tissue_names = decode_json $c->req->param("tissue_samples_names");
     my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
@@ -1991,7 +1992,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
 
     my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments)) {
+    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $tissue_sample_owner)) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});

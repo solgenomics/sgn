@@ -3242,6 +3242,7 @@ sub create_tissue_samples {
     my $self = shift;
     my $tissue_names = shift;
     my $inherits_plot_treatments = shift;
+    my $tissue_sample_owner = shift;
 
     my $create_tissue_sample_entries_txn = sub {
         my $chado_schema = $self->bcs_schema();
@@ -3334,6 +3335,12 @@ sub create_tissue_samples {
                         uniquename => $tissue_name,
                         type_id => $tissue_sample_cvterm,
                     });
+
+                    if ($tissue_sample_owner) {
+                        my $q = "INSERT INTO phenome.stock_owner(stock_id, sp_person_id) values(?,?)";
+                        my $h = $chado_schema->storage->dbh->prepare($q);
+                        $h->execute($tissue->stock_id, $tissue_sample_owner);
+                    }
 
                     my $tissueprop = $chado_schema->resultset("Stock::Stockprop")->create( {
                         stock_id => $tissue->stock_id(),
