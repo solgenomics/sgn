@@ -155,7 +155,7 @@ jQuery(document).ready(function () {
             .attr("x", d => d.x0)
             .attr("y", d => (d.y1 + d.y0)/2)
             .text(d => d.name)
-            .attr("transform", "rotate(270, "+(d => d.x0)+" , "+(d => (d.y1 + d.y0)/2)+")");
+            .attr("transform", "rotate(270, "+(function(d){return d.x0;})+" , "+(function(d){return (d.y1 + d.y0)/2;})+")");
 
 
 
