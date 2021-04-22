@@ -253,7 +253,15 @@ sub stash_json_args {
     my $args_hash = $json->decode($args_json);
 
     foreach my $key (keys %{$args_hash}) {
-        $c->stash->{$key} = $args_hash->{$key};
+        my $val = $args_hash->{$key};
+        if (ref($val) eq 'ARRAY' && scalar(@$val) < 2)
+        {
+            $c->stash->{$key} = $val->[0];
+        }
+        else
+        {
+            $c->stash->{$key} = $val;
+        }
     }
 }
 
