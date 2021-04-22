@@ -17,51 +17,65 @@ solGS.pca = {
      if (page == '/pca/analysis/') {
          page = '/pca/analysis';
      }
+
      var urlArgs = page.replace("/pca/analysis", "")
 
+     var pcaPopId;
+     var traitId;
+     var protocolId;
+
      if (urlArgs) {
-         var args = urlArgs.split(/\/+/);
-         var selectId = args[1];
-         var protocolId = args[3];
+          var args = urlArgs.split(/\/+/);
+         if (urlArgs.match(/trait/)) {
+             pcaPopId = args[1];
+             traitId = args[3];
+             protocolId = args[5];
+         } else {
+             pcaPopId = args[1];
+             protocolId = args[3];
+        }
+
          var dataType;
-console.log('protocolId ' + protocolId)
          if (protocolId) {
              dataType = 'genotype';
          } else {
              dataType = 'phenotype';
          }
-console.log('dataType ' + dataType)
+
          var dataStr;
-         var reg = /\d+/;
-         var popId = selectId.match(reg)[0];
          var listId;
          var datasetId;
 
-         console.log('popId ' + popId)
          if (selectId.match(/dataset/)) {
-         dataStr = 'dataset';
-         datasetId = popId;
-         } else if (selectId.match(/list/)) {
-         dataStr = 'list';
-         listId = popId;
+             dataStr = 'dataset';
+             datasetId = pcaPopId;
+        } else if (pcaPopId.match(/list/)) {
+            dataStr = 'list';
+            listId = pcaPopId;
          }
 
          var args = {
-         'pca_pop_id': popId,
+         'pca_pop_id': pcaPopId,
          'list_id': listId,
+         'trait_id': traitId,
          'dataset_id': datasetId,
          'data_structure': dataStr,
          'data_type': dataType,
          'genotyping_protocol_id': protocolId,
          };
 
+         var reg = /\d+-+\d+/;
+         if (pcaPopId.match(reg)) {
+             var ids = pcaPopd.split('-');
+             args['training_pop_id'] = ids[0];
+             args['selection_pop_id'] = ids[1];
+         }
          return args;
-     } else {
+        } else {
          return {};
-     }
+        }
 
     },
-
 
     loadPcaPops: function(selectId, selectName, dataStructure) {
 
@@ -75,7 +89,7 @@ console.log('dataType ' + dataType)
                 pcaTable = this.createTable();
 		jQuery("#pca_pops_section").append(pcaTable).show();
             }
-	    var onClickVal =  '<a href="#" onclick="solGS.pca.pcaRun('
+	    var onClickVal =  '<a href="/pca/analysis#" onclick="solGS.pca.pcaRun('
 		+ selectId + ",'" + selectName + "'" +  ",'" + dataStructure
 		+ "'" + ');return false;">';
 
@@ -84,8 +98,8 @@ console.log('dataType ' + dataType)
 
 	    var addRow = '<tr  name="' + dataStructure + '"' + ' id="' + selectId +  '">'
                 + '<td>' + selectName + '</td>'
-		+ '<td>' + dataStructure + '</td>'
-		+ '<td>' + dataTypeOpts + '</td>'
+		        + '<td>' + dataStructure + '</td>'
+		        + '<td>' + dataTypeOpts + '</td>'
                 + '<td id="list_pca_page_' + selectId +  '">' + onClickVal + '[ Run PCA ]' + '</a></td>'
                 + '<tr>';
 
@@ -110,23 +124,22 @@ console.log('dataType ' + dataType)
 	}
 
 	var protocolId = jQuery('#genotyping_protocol_id').val();
-	console.log('pcaRun protocol id: ' + protocolId)
-
 	var traitId = jQuery('#trait_id').val();
 	var popDetails = solGS.getPopulationDetails();
 
 	var listId;
 	var datasetId;
 	var datasetName;
-
+    var pcaPopId;
 	if (dataStructure == 'list') {
 	    listId = selectId;
-	    popDetails['training_pop_id'] = 'list_' + selectId;
+	    pcaPopId = 'list_' + selectId;
 	} else if (dataStructure == 'dataset') {
-	    popDetails['training_pop_id'] = 'dataset_' + selectId;
+	    pcaPopId = 'dataset_' + selectId;
 	    datasetId = selectId;
 	    datasetName = selectName;
 	}
+
 
 	var validateArgs =  {
 	    'data_id': selectId,
@@ -144,22 +157,119 @@ console.log('dataType ' + dataType)
 		.show().fadeOut(9400);
 
 	} else {
+        if (!pcaPopId) {
+            pcaPopId = popDetails.training_pop_id || popDetails.combo_pops_id;
+            if (popDetails.selection_pop_id) {
+                pcaPopId = pcaPopId + '-' + popDetails.selection_pop_id;
+            }
+        }
 
 	    var pcaArgs = {
-		'training_pop_id': popDetails.training_pop_id,
-		'selection_pop_id': popDetails.selection_pop_id,
-		'combo_pops_id': popDetails.combo_pops_id,
+		'training_pop_id': [popDetails.training_pop_id],
+		'selection_pop_id': [popDetails.selection_pop_id],
+	    'combo_pops_id': [popDetails.combo_pops_id],
+        'pca_pop_id': pcaPopId,
 		'list_id': listId,
 		'data_type': dataType,
 		'data_structure': dataStructure,
 		'dataset_id': datasetId,
 		'dataset_name': datasetName,
-		'trait_id': traitId,
-		'genotyping_protocol_id': protocolId
+		'trait_id':[traitId],
+		'genotyping_protocol_id': protocolId,
+        'analysis_type': 'pca analysis'
 	    };
 
-	    this.runPcaAnalysis(pcaArgs);
+        var solgsPages = 'solgs/population/'
+		    + '|solgs/populations/combined/'
+		    + '|solgs/trait/'
+		    + '|solgs/model/combined/trials/'
+		    + '|solgs/selection/\\d+|\\w+_\\d+\/model/'
+			+ '|solgs/combined/model/\\d+|\\w+_\\d+/selection/'
+		    + '|solgs/models/combined/trials/'
+	     	+ '|solgs/traits/all/population/';
+
+        var page =  '/pca/analysis/' + pcaPopId;
+        if (document.URL.match(solgsPages)) {
+            page = page + '/trait/' + traitId;
+        }
+
+    	if (dataType.match(/genotype/i)) {
+    	    page = page + '/gp/' + protocolId;
+    	}
+
+        this.checkCachedPca(page, pcaArgs);
+	    //this.runPcaAnalysis(pcaArgs);
     }
+
+    },
+
+    checkCachedPca: function(page, args) {
+
+	args = JSON.stringify(args);
+	jQuery.ajax({
+	    type    : 'POST',
+	    dataType: 'json',
+	    data    : {'page': page, 'args': args },
+	    url     : '/solgs/check/cached/result/',
+	    success : function(res) {
+		args = JSON.parse(args);
+		if (res.cached) {
+		    // solGS.submitJob.goToPage(page, args);
+		    solGS.pca.runPcaAnalysis(args);
+		} else {
+		    solGS.pca.selectAnalysisOption(page, args);
+		}
+	    },
+	    error: function() {
+		alert('Error occured checking for cached output.')
+	    }
+	});
+    },
+
+    selectAnalysisOption: function(page, args) {
+
+	var t = '<p>This analysis may take a long time. '
+	    + 'Do you want to submit the analysis and get an email when it completes?</p>';
+
+	jQuery('<div />')
+	    .html(t)
+	    .dialog({
+		height : 200,
+		width  : 400,
+		modal  : true,
+		title  : "pca job submission",
+ 		buttons: {
+		    OK: {
+			text: 'Yes',
+			class: 'btn btn-success',
+                        id   : 'queue_job',
+			click: function() {
+			    jQuery(this).dialog("close");
+                solGS.submitJob.checkUserLogin(page, args);
+			},
+		    },
+
+		    No: {
+		    	text: 'No, I will wait till it completes.',
+		    	class: 'btn btn-warning',
+                        id   : 'no_queue',
+		    	click: function() {
+		    	    jQuery(this).dialog("close");
+
+		    	    solGS.pca.runPcaAnalysis(args);
+		    	},
+		    },
+
+		    Cancel: {
+			text: 'Cancel',
+			class: 'btn btn-info',
+                        id   : 'cancel_queue_info',
+			click: function() {
+			    jQuery(this).dialog("close");
+			},
+		    },
+		}
+	    });
 
     },
 
@@ -171,10 +281,11 @@ console.log('dataType ' + dataType)
 	jQuery("#pca_message").html("Running PCA... please wait...it may take minutes.");
 	jQuery("#run_pca").hide();
 
+    pcaArgs = JSON.stringify(pcaArgs);
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: pcaArgs,
+            data: {'arguments': pcaArgs},
             url: '/pca/run',
             success: function(res) {
 
@@ -207,15 +318,15 @@ console.log('dataType ' + dataType)
 		    jQuery("#run_pca").show();
 
 		} else {
-                    jQuery("#pca_canvas .multi-spinner-container").hide();
+            jQuery("#pca_canvas .multi-spinner-container").hide();
 		    jQuery("#pca_message").html(res.status);
 		    jQuery("#run_pca").show();
 		}
 	    },
             error: function(response) {
                 jQuery("#pca_canvas .multi-spinner-container").hide();
-		jQuery("#pca_message").html('Error occured running the PCA.');
-		jQuery("#run_pca").show();
+		        jQuery("#pca_message").html('Error occured running the PCA.');
+		        jQuery("#run_pca").show();
 
             }
 	});
@@ -673,10 +784,11 @@ jQuery(document).ready( function() {
     	    jQuery("#pca_pops_list_select").append(dMenu);
 
             var pcaArgs = solGS.pca.getPcaArgsFromUrl();
+            var pcaPopId = pcaArgs.pca_pop_id;
+        	if (pcaPopId) {
 
-        	if (pcaArgs.pca_pop_id) {
                 if (pcaArgs.data_structure) {
-        		        pcaArgs['pca_pop_id'] = pcaArgs.data_structure + '_' + pcaArgs.pca_pop_id;
+        		    pcaArgs['pca_pop_id'] = pcaArgs.data_structure + '_' + pcaPopId;
          	    }
         	    solGS.pca.runPcaAnalysis(pcaArgs);
         	}
