@@ -153,7 +153,7 @@ jQuery(document).ready(function () {
             .classed("node", true)
             .attr("text-anchor", "middle")
             .attr("x", d => d.x0)
-            .attr("y", d => (d.y1 + d.y0)/2 + 5)
+            .attr("y", d => (d.y1 + d.y0)/2 - 5)
             .text(d => d.name)
             .attr("transform", function(d){
               return "rotate(270, "+ (d.x0 + 14) +", "+ (d.y1 + d.y0)/2 +")";
