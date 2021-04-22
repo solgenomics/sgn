@@ -189,11 +189,11 @@ my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $c->bcs_schema(),
 	   dbh => $c->dbh(),
+	   owner_id => 41,
 	   trial_year => "2016",
 	   trial_description => "Trial Upload Test",
 	   trial_location => "test_location",
 	   trial_name => "Trial_upload_test",
-	   user_name => "janedoe", #not implemented
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",
@@ -394,9 +394,9 @@ is_deeply($design, $igd_design_check, "check igd design");
 my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	chado_schema => $c->bcs_schema,
-     	dbh => $c->dbh(),
-     	user_name => 'janedoe', #not implemented
-     	trial_year => '2016',
+ 	dbh => $c->dbh(),
+	owner_id => 41,
+ 	trial_year => '2016',
 	trial_location => 'test_location',
 	program => 'test',
 	trial_description => "Test Genotyping Plate Upload",
@@ -635,11 +635,11 @@ my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $c->bcs_schema(),
 	   dbh => $c->dbh(),
+	   owner_id => 41,
 	   trial_year => "2016",
 	   trial_description => "Trial Upload Test",
 	   trial_location => "test_location",
 	   trial_name => "Trial_upload_with_seedlot_test",
-	   user_name => "janedoe", #not implemented
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",

@@ -63,8 +63,6 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 	return;
     }
 
-    $c->stash->{user_can_modify} = ($user->check_roles("submitter") || $user->check_roles("curator")) ;
-
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial = $c->stash->{trial};
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
@@ -76,7 +74,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     }
 
     $c->stash->{trial_name} = $trial->get_name();
-
+    $c->stash->{trial_owner} = $trial->get_owner_link();
+        
     my $trial_type_data = $trial->get_project_type();
     my $trial_type_name = $trial_type_data ? $trial_type_data->[1] : '';
     $c->stash->{trial_type} = $trial_type_name;
@@ -103,6 +102,10 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{breeding_program_id} = $breeding_program_data->[0]->[0];
     $c->stash->{breeding_program_name} = $breeding_program_data->[0]->[1];
 
+    $c->stash->{user_can_modify} = ($user->check_roles("submitter") && $user->check_roles($c->stash->{breeding_program_name})) || $user->check_roles("curator") ;
+
+
+    
     $c->stash->{year} = $trial->get_year();
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
@@ -139,6 +142,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{genotyping_facility_submitted} = $trial->get_genotyping_facility_submitted;
         $c->stash->{genotyping_facility_status} = $trial->get_genotyping_facility_status;
         $c->stash->{genotyping_vendor_order_id} = $trial->get_genotyping_vendor_order_id;
+        $c->stash->{genotyping_vendor_submission_id} = $trial->get_genotyping_vendor_submission_id;
         $c->stash->{genotyping_plate_sample_type} = $trial->get_genotyping_plate_sample_type;
         if ($trial->get_genotyping_plate_format){
             $c->stash->{genotyping_plate_format} = $trial->get_genotyping_plate_format;

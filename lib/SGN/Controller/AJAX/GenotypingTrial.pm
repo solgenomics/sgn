@@ -355,7 +355,7 @@ sub store_genotype_trial_POST : Args(0) {
         my $ct = CXGN::Trial::TrialCreate->new( {
             chado_schema => $schema,
             dbh => $c->dbc->dbh(),
-            user_name => $user_name, #not implemented,
+            owner_id => $user_id,
             operator => $user_name,
             trial_year => $plate_info->{year},
             trial_location => $location->description(),
@@ -584,7 +584,8 @@ sub store_plate_order_POST : Args(0) {
     my $order_info = decode_json $c->req->param("order");
 
     my $plate_id = $c->req->param("plate_id");
-    my $order_id = $order_info->{orderId};
+    my $order_id = $order_info->{orderId} || undef;
+    my $submission_id = $order_info->{submissionId} || undef;
     my $shipment = $order_info->{shipmentForms};
 
     my $genotyping_trial;
@@ -592,7 +593,11 @@ sub store_plate_order_POST : Args(0) {
     if ($plate_id && $order_id) {
         $genotyping_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $plate_id });
         $genotyping_trial->set_genotyping_vendor_order_id(encode_json $order_info);
-        $message = "Successfully order stored.";
+        $message = "Successfully stored.";
+    } elsif ($plate_id && $submission_id) {
+        $genotyping_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $plate_id });
+        $genotyping_trial->set_genotyping_vendor_submission_id(encode_json $order_info);
+        $message = "Successfully stored.";
     } else {
         my $error = "There was an error trying to store submission order";
         $c->stash->{rest} = {

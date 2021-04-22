@@ -1,6 +1,6 @@
 <%doc>
 
-=head1 NAME 
+=head1 NAME
 
 /solgs/selection/combined/selection_trait.mas - displays trait GEBV prediction output for selection population using combined trials model.
 
@@ -17,11 +17,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 
 $combo_pops_id
+$training_pop_id
 $trait_abbr
 $trait_name
-$project_name
-$training_pop_name => ''
-$project_desc
+$training_pop_name =>''
+$training_pop_desc =>''
 $stocks_no => ''
 $markers_no => ''
 $traits_no => ''
@@ -49,29 +49,29 @@ $model_link
 </%perl>
 
   <& /util/import_javascript.mas, classes => ["solGS.solGS",
-                                              "flot.flot", "flot.categories", 
-                                              "flot.tooltip", "flot.selection", "flot.navigate", 
+                                              "flot.flot", "flot.categories",
+                                              "flot.tooltip", "flot.selection", "flot.navigate",
                                               "flot.axisLabels", "d3.d3Min",
-                                             ] 
+                                             ]
   &>
 
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
-<& /page/page_title.mas, 
+<& /page/page_title.mas,
    title => "GEBVs for $trait_name ($trait_abbr) in $selection_pop_name"
 &>
 
-<&| /page/info_section.mas, 
-  collapsible => 1, 
-  collapsed   => 0, 
+<&| /page/info_section.mas,
+  collapsible => 1,
+  collapsed   => 0,
   title       => "Selection population summary",
   &>
 
  <& /solgs/population/summary.mas,
-    project_id   => $selection_pop_id,
-    project_name => $selection_pop_name,
-    project_desc => $selection_pop_desc,
+    selection_pop_id   => $selection_pop_id,
+    selection_pop_name => $selection_pop_name,
+    selection_pop_desc => $selection_pop_desc,
     model_link   => $model_link,
     stocks_no    => $selection_stocks_cnt,
     markers_no   => $selection_markers_cnt,
@@ -85,14 +85,14 @@ $model_link
 </&>
 
 <& /solgs/pca/analysis.mas &>
- 
 
-<& /solgs/model/gebvs.mas, 
+
+<& /solgs/model/gebvs.mas,
    top_blups         => $top_blups,
   blups_download_url => $blups_download_url,
-  
+
 &>
-  
+
 <& /solgs/genetic_gain/genetic_gain.mas,
    trait_id         => $trait_id,
    training_pop_id  => $combo_pops_id,
@@ -104,7 +104,7 @@ $model_link
   <input type="hidden" id="model_id" value="<% $combo_pops_id %>" />
   <input type="hidden" id="training_pop_id" value="<% $combo_pops_id %>" />
   <input type="hidden" id="training_pop_name" value="<% $training_pop_name %>" />
-  <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
+  <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" />
   <input type="hidden" id="trait_id" value="<% $trait_id %>" />
   <input type="hidden" id="selection_pop_id" value="<% $selection_pop_id %>" />
   <input type="hidden" id="selection_pop_name" value="<% $selection_pop_name %>" />

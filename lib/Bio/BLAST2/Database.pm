@@ -543,7 +543,7 @@ Bio::BLAST2::Database - work with formatted BLAST databases, updated for new NCB
   use Bio::BLAST2::Database;
 
   # open an existing bdb for reading
-  my $fs = Bio::BLAST::Database->open(
+  my $fs = Bio::BLAST2::Database->open(
                full_file_basename => '/path/to/my_bdb',
              );
   # will read from /path/to/my_bdb.nin, /path/to/my_bdb.nsq, etc
@@ -609,7 +609,7 @@ at the existing files and sets this
 
 =head2 open
 
-  Usage: my $fs = Bio::BLAST::Database->open({
+  Usage: my $fs = Bio::BLAST2::Database->open({
                       full_file_basename => $ffbn,
                       write => 1,
                       create_dirs => 1,
@@ -622,7 +622,7 @@ at the existing files and sets this
             create_dirs => default false, set true to create any necessary directories
                            if formatted
          }
-  Ret  : Bio::BLAST::Database object
+  Ret  : Bio::BLAST2::Database object
   Side Effects: none if no files are present at the given ffbn.  overwise,
                 dies if files are present and write is not specified,
                 or if dir does not exist and create_dirs was not specified

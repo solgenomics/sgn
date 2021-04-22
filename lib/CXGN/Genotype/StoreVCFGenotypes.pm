@@ -1085,7 +1085,7 @@ sub store_identifiers {
 
                     my $chrom_genotypeprop = $genotypeprop_json->{$chromosome};
 
-                    if (!$genotypeprop_id) {
+                    if ( (!$genotypeprop_id && $self->marker_by_marker_storage) || !$self->marker_by_marker_storage ) {
 
                         $chrom_genotypeprop->{CHROM} = $chromosome;
 

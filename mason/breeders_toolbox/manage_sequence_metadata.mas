@@ -1,0 +1,17 @@
+
+<%args>
+</%args>
+
+<& /page/page_title.mas, title=>"Manage Sequence Metadata" &>
+
+<div>
+
+<%perl>
+    my $buttons_html = "<button class='btn btn-primary' style='margin:3px' id='upload_smd'>Upload Sequence Metadata</button>";
+</%perl>
+
+<& /tools/sequence_metadata/upload_sequence_metadata_workflow.mas &>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Sequence Metadata</h4>", info_section_subtitle => 'Upload and query sequence metadata.', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_sequence_metadata" &>
+
+</div>

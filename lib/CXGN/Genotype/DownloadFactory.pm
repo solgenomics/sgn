@@ -29,7 +29,8 @@ my $geno = CXGN::Genotype::DownloadFactory->instantiate(
         offset=>$offset,
         compute_from_parents=>0, #If you want to compute the genotype for accessions given from parents in the pedigree. Useful for hybrids where parents are genotyped.
         forbid_cache=>0, #If you want to get a guaranteed fresh result not from the file cache
-        prevent_transpose=>0 #Prevent transpose of DosageMatrix
+        prevent_transpose=>0, #Prevent transpose of DosageMatrix
+        return_only_first_genotypeprop_for_stock=>1
     }
 );
 my $status = $geno->download();

@@ -1348,6 +1348,9 @@ sub get_cached_file_dosage_matrix {
                 $genotype_string .= "\n";
             }
             my $genotype_id = $geno->{germplasmName};
+            if (!$self->return_only_first_genotypeprop_for_stock) {
+                $genotype_id = $geno->{germplasmName}."|".$geno->{markerProfileDbId};
+            }
             my $genotype_data_string = "";
             foreach my $m (@all_marker_objects) {
                 my $current_genotype = $geno->{selected_genotype_hash}->{$m->{name}}->{DS};
@@ -1529,7 +1532,12 @@ sub get_cached_file_dosage_matrix_compute_from_parents {
             my $progeny_genotype = $geno->get_hybrid_genotype();
             my $genotype_string_scores = join "\t", @$progeny_genotype;
 
-            $genotype_string .= $accession_stock_id."\t".$genotype_string_scores."\n";
+            my $genotype_id = $accession_stock_id;
+            if (!$self->return_only_first_genotypeprop_for_stock) {
+                $genotype_id = $accession_stock_id."|".$geno->{markerProfileDbId};
+            }
+
+            $genotype_string .= $genotype_id."\t".$genotype_string_scores."\n";
             write_file($tempfile, {append => 1}, $genotype_string);
             $counter++;
         }
@@ -1723,6 +1731,9 @@ sub get_cached_file_VCF {
                 $genotype_string .= "\n";
             }
             my $genotype_id = $geno->{germplasmName};
+            if (!$self->return_only_first_genotypeprop_for_stock) {
+                $genotype_id = $geno->{germplasmName}."|".$geno->{markerProfileDbId};
+            }
             my $genotype_data_string = "";
             foreach my $m (@all_marker_objects) {
                 my @current_geno = ();
@@ -1996,6 +2007,9 @@ sub get_cached_file_VCF_compute_from_parents {
                     $genotype_string .= "\n";
                 }
                 my $genotype_id = $geno->{germplasmName};
+                if (!$self->return_only_first_genotypeprop_for_stock) {
+                    $genotype_id = $geno->{germplasmName}."|".$geno->{markerProfileDbId};
+                }
 
                 my $geno_h = CXGN::Genotype::ComputeHybridGenotype->new({
                     parental_genotypes=>$genotypes,

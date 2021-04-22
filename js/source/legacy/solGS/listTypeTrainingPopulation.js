@@ -176,7 +176,7 @@ function createTrainingReqArgs (listId) {
     var args = {
 	'list_name'       : listName,
 	'list_id'         : listId,
-	'analysis_type'   : 'population download',
+	'analysis_type'   : 'training dataset',
 	'data_set_type'   : 'single population',
         'training_pop_id' : popId,
 	'population_type' : popType,

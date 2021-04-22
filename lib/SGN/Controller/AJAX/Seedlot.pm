@@ -490,6 +490,13 @@ sub upload_seedlots_POST : Args(0) {
     eval {
         while (my ($key, $val) = each(%$parsed_data)){
             my $sl;
+
+            # Check for accession stock id or cross stock id
+            if ( !defined $val->{accession_stock_id} && !defined $val->{cross_stock_id} ) {
+                print STDERR "--> ERROR: Acc/Cross Stock ID not defined!";
+                die "ERROR: Could not store/update seedlot $key (The specified accession or cross does not exist).";
+            }
+
             if (defined($val->{seedlot_id})){
                 $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$val->{seedlot_id}); #this allows update of existing seedlot
             } else {
@@ -508,6 +515,11 @@ sub upload_seedlots_POST : Args(0) {
 	    $sl->quality($val->{quality});
             $sl->check_name_exists(0); #already validated
             my $return = $sl->store();
+            if ( defined $return->{error} ) {
+                print STDERR "SEEDLOT STORE ERROR:\n";
+                print STDERR Dumper $return->{error};
+                die "ERROR: Could not store/update seedlot $key (" . $return->{error} . ")";
+            }
             my $seedlot_id = $return->{seedlot_id};
 
             my $from_stock_id;
@@ -522,16 +534,16 @@ sub upload_seedlots_POST : Args(0) {
             }
 
             if (!$from_stock_id || !$from_stock_name){
-                die "An accession or cross must be given to make a seedlot transaction.\n";
+                die "ERROR: Could not store/update seedlot $key (An accession or cross must be given to make a seedlot transaction).";
             }
 
-	    # if an alternate source is given, use that, but only if there is an accession present, and
-	    # there is no cross.
-	    #
-	    if ($val->{source_id} && $val->{accession_stock_id} && !$val->{cross_stock_id}) {
-		$from_stock_id = $val->{source_id};
-		$from_stock_name = $val->{source_name};
-	    }
+            # if an alternate source is given, use that, but only if there is an accession present, and
+            # there is no cross.
+            #
+            if ($val->{source_id} && $val->{accession_stock_id} && !$val->{cross_stock_id}) {
+                $from_stock_id = $val->{source_id};
+                $from_stock_name = $val->{source_name};
+            }
 
             my $transaction_amount;
             my $transaction_weight;

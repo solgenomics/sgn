@@ -190,3 +190,8 @@ is_a: SGNSTAT:0000000
 id: SGNSTAT:0000037
 name: Phenotypic BLUEs using LMER R
 is_a: SGNSTAT:0000000
+
+[Term]
+id: SGNSTAT:0000038
+name: GEBVs using GBLUP from rrblup R package
+is_a: SGNSTAT:0000000

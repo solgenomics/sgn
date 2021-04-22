@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME
- 
+
 /solgs/population/multiple_traits_output.mas - displays multiple traits GS analysis output and links to traits' GS detailed output pages
 
 =AUTHOR
@@ -17,13 +17,16 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $trait_pages
 $analyzed_traits
 $analyzed_traits_ids => undef
-$pop_id
-$project_name
+$training_pop_id
+$training_pop_name
+$training_pop_desc
+$training_pop_url
+
 $model_data
 $selection_prediction_download => undef
-$prediction_pop_id => undef
+$selection_pop_id => undef
+$selection_pop_name => undef
 $list_of_prediction_pops => undef
-$prediction_pop_name => undef
 $prediction_pop_analyzed_traits => undef
 $prediction_pop_analyzed_traits_ids => undef
 $acronym
@@ -47,32 +50,42 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
 
 <& /util/import_javascript.mas, classes => ["solGS.listTypeSelectionPopulation"] &>
 
-<& /page/page_title.mas, 
-   title => "Prediction models from $project_name"
+<& /page/page_title.mas,
+   title => "Prediction models from $training_pop_name"
 &>
 
 
-<& /solgs/model/model_summary.mas, 
+<& /solgs/model/model_summary.mas,
      model_data => $model_data
   &>
-  
+
+  <& /solgs/population/hidden_input.mas,
+    training_pop_id       => $training_pop_id,
+    training_pop_name      => $training_pop_name,
+    training_pop_desc      => $training_pop_desc,
+    genotyping_protocol_id => $genotyping_protocol_id,
+    training_traits_ids    => $training_traits_ids,
+    selection_traits_ids   => $selection_traits_ids,
+   &>
+
 <& selection_populations.mas,
    selection_prediction_download  => $selection_prediction_download,
    analyzed_traits                => $analyzed_traits,
-   pop_id                         => $pop_id,
-   project_name                   => $project_name,
-   prediction_pop_id              => $prediction_pop_id,
+   training_pop_id               => $training_pop_id,
+   training_pop_name                   => $training_pop_name,
+   selection_pop_id              => $selection_pop_id,
+    selection_pop_name            => $selection_pop_name,
    list_of_prediction_pops        => $list_of_prediction_pops,
-   prediction_pop_name            => $prediction_pop_name,
+
    prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
 &>
 
 <& genetic_correlation.mas,
      analyzed_traits                => $analyzed_traits,
-     pop_id                         => $pop_id,
-     project_name                   => $project_name,
-     prediction_pop_id              => $prediction_pop_id,
-     prediction_pop_name            => $prediction_pop_name,
+     training_pop_id                         => $training_pop_id,
+     training_pop_name                   => $training_pop_name,
+     selection_pop_id              => $selection_pop_id,
+     selection_pop_name            => $selection_pop_name,
      prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
 &>
 
@@ -80,35 +93,29 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
 <& /solgs/genetic_gain/genetic_gain.mas,
      analyzed_traits                => $analyzed_traits,
      analyzed_traits_ids            => $analyzed_traits_ids,
-     pop_id                         => $pop_id,
-     project_name                   => $project_name,
-     prediction_pop_id              => $prediction_pop_id,
-     prediction_pop_name            => $prediction_pop_name,
+     training_pop_id                         => $training_pop_id,
+     project_name                   => $training_pop_name,
+     selection_pop_id              => $selection_pop_id,
+     selection_pop_name            => $selection_pop_name,
      prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
 &>
 
-   
+
 <& /solgs/selection_index/selection_index.mas,
      analyzed_traits                => $analyzed_traits,
-     pop_id                         => $pop_id,
-     project_name                   => $project_name,
-     prediction_pop_id              => $prediction_pop_id,
-     prediction_pop_name            => $prediction_pop_name,
+     training_pop_id               => $training_pop_id,
+     training_pop_name          => $training_pop_name,
+     selection_pop_id              => $selection_pop_id,
+     selection_pop_name        => $selection_pop_name,
      prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
   &>
 
-  
+
 <& /solgs/cluster/analysis.mas &>
-    
+
   <& /solgs/kinship/analysis.mas,
-     pop_id => $pop_id &>
-    
+     pop_id => $training_pop_id &>
+
 <& acronym.mas,
    acronym => $acronym,
 &>
-
-  
-  <input type="hidden" id="training_traits_ids" value= "<% $training_traits_ids %>" />
-  <input type="hidden" id="training_pop_name" value= "<% $project_name %>" />
- <input type="hidden" id="selection_traits_ids" value="<% $selection_traits_ids %>" />
- <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />
