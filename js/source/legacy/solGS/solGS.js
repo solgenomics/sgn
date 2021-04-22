@@ -123,7 +123,7 @@ solGS.submitJob = {
 
     askUser: function(page, args) {
 
-	var t = '<p>This analysis takes long time. '
+	var t = '<p>This analysis may take a long time. '
 	    + 'Do you want to submit the analysis and get an email when it completes?</p>';
 
 
