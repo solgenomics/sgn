@@ -151,10 +151,10 @@ jQuery(document).ready(function () {
             .enter()
             .append("text")
             .classed("node", true)
-            //.attr("text-anchor", "middle")
+            .attr("text-anchor", "middle")
             .attr("x", d => d.x0)
             .attr("y", d => (d.y1 + d.y0)/2)
-            .attr("transform", "rotate(90,"+(d.x0)+","+((d.y1 + d.y0)/2)+")")
+            //.attr("transform", "rotate(90,"+(d.x0)+","+((d.y1 + d.y0)/2)+")")
             .text(d => d.name);
 
 
