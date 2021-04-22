@@ -1,12 +1,30 @@
 
-# R CMD BATCH --no-save --no-restore '--args phenotype_file="blabla.txt" output_file="blalba.png" ' analyze_phenotype.r output.txt
+# R CMD BATCH --no-save --no-restore '--args phenotype_file="blabla.txt" output_file="blalba.png" ' analyze_phenotype.r
 library(dplyr)
+#install.packages("reshape")
 library(reshape)
 library(ggplot2)
 
-#phenodata = read.csv(phenotype_file,fill=TRUE, sep=",", header = TRUE, stringsAsFactors = T, na.strings="NA");
+args=(commandArgs(TRUE))
 
-phenodata = read.csv("/home/bryan/Desktop/phenotype7dfK.csv",skip =3,fill=TRUE, sep=",", header = TRUE, stringsAsFactors = T, na.strings="NA");
+if(length(args)==0){
+   print("No arguments supplied.")
+   ##supply default values
+   phenotype_file = 'phenotypes.txt'
+   output_file = paste0(phenotype_file, ".png", sep="")
+} else {
+   for(i in 1:length(args)){
+      eval(parse(text=args[[i]]))
+   }
+}
+errorfile = paste(phenotype_file, ".err", sep="");
+print(paste("args: ", args))
+print(paste("phenotype file: ", phenotype_file))
+print(paste("output_file: ", output_file))
+
+phenodata = read.csv(phenotype_file, skip =3, fill=TRUE, sep=",", header = TRUE, stringsAsFactors = T, na.strings="NA");
+
+#phenodata = read.csv("/home/bryan/Desktop/phenotype7dfK.csv",skip =3,fill=TRUE, sep=",", header = TRUE, stringsAsFactors = T, na.strings="NA");
 
 # barplot from report
 
@@ -73,6 +91,8 @@ plot = ggplot( data.barplot.melt, aes(x = germplasmName, y = value, fill = varia
    labs(y = "Yield (50lb Bushel/acre)" , x = "Clone",
         title = phenodata$studyName)
 
-plot(plot)
+# plot(plot)
 
+png(output_file)
+print(plot)
 dev.off()

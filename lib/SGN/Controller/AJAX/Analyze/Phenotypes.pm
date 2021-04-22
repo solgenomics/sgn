@@ -12,6 +12,11 @@ use CXGN::Trial::TrialLayout;
 use CXGN::Trial::Download;
 use CXGN::BreederSearch;
 use POSIX qw(strftime);
+use Moose;
+use File::Slurp qw| slurp |;
+use File::Basename;
+use CXGN::Tools::Run;
+use CXGN::Phenotypes::File;
 
 BEGIN { extends 'Catalyst::Controller::REST'; };
 
@@ -20,6 +25,77 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON'  },
     );
+
+sub run: Path('/analyze/phenotypes/r') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $params = $c->req()->params();
+    my $trial_id = $params->{trial_id};
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh() });
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = "phenotype" . "XXXX";
+
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".csv";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+
+    print STDERR "TEMPFILE : $tempfile\n";
+    my @trial_ids;
+    push @trial_ids, $trial_id;
+
+    #List arguments should be arrayrefs of integer ids
+    my $download = CXGN::Trial::Download->new({
+        bcs_schema => $schema,
+        trial_list => \@trial_ids,
+        filename => $tempfile,
+        format => "TrialPhenotypeCSV",
+        data_level => "plot"
+    });
+
+    my $error = $download->download();
+
+    print STDERR "path to temp file that R will analyze is: $tempfile\n";
+
+    # my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+    my $dir = $c->tempfiles_subdir('analyze'); # make sure analyze dir exists
+    my $file_name = "output_". "XXXX";
+    my $relative_path = $c->tempfile( TEMPLATE => "analyze/$file_name");
+    my $output_path = $c->config->{basepath}.$relative_path;
+
+    print STDERR "path to R output is: $output_path \n";
+
+    my $backend = $c->config->{backend} || 'Slurm';
+    my $cluster_host = $c->config->{cluster_host} || "localhost";
+
+    my $cmd = "R CMD BATCH  '--args phenotype_file=\"".$tempfile."\" output_file=\"".$output_path."\" ' R/ncsu_yield_trial_report.r";
+    print STDERR "running R command $cmd...\n";
+
+    my $ctr = CXGN::Tools::Run->new( { backend => $backend, working_dir => dirname($output_path), backend => $backend, submit_host => $cluster_host } );
+
+    $ctr->run_cluster($cmd);
+
+    while ($ctr->alive()) {
+        sleep(1);
+    }
+
+    if ( -e $output_path) {
+        print STDERR "Success! Analysis results stored at $output_path\n";
+    }
+
+    # my $file_name = "phenotype.$format";
+    # $c->res->content_type('Application/'.$format);
+    # $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+    # my $output = read_file($tempfile);  ## works for xls format
+    #
+    # $c->res->body($output);
+
+    $c->stash->{rest} = { output_file => $relative_path };
+}
+
+
 
 sub analyze_trial_phenotypes : Path('/analyze/phenotypes/trials') Args(0) {
   my $self = shift;

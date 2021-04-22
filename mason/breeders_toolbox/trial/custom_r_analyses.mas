@@ -1,0 +1,42 @@
+<%args>
+$trial_id
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.iframe-post-form' ] &>
+
+    <div class="row" id="custom_r_analysis_results">
+    </div>
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#run_custom_r_analysis').click( function () {
+        var  id = <% $trial_id %>;
+        jQuery('#working_modal').modal("show");
+        jQuery.ajax( {
+                "url": '/analyze/phenotypes/r',
+                "method": "POST",
+                "data": { "trial_id": id },
+                success: function(response){
+                    console.log("success!")
+                    jQuery('#working_modal').modal("hide");
+                    var elem = document.createElement("img");
+                    elem.setAttribute("src", response.output_file);
+                    document.getElementById("custom_r_analysis_results").append(elem);
+                    // console.log("Child is: "+JSON.stringify(child));
+                    // child.innerHTML(elem);
+                },
+                error: function(response){
+                    jQuery('#working_modal').modal("hide");
+                    alert('Error running the custom analysis');
+                }
+        });
+
+    });
+
+});
+
+</script>

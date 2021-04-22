@@ -157,6 +157,9 @@ $sampling_facilities => ()
                                 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 
 % } #End trial_detail_traits_assayed
+% if ($info_section_id eq 'custom_r_analyses'){
+                                <& /breeders_toolbox/trial/custom_r_analyses.mas, trial_id => $trial_id &>
+% } #End custom r analyses
 % if ($info_section_id eq 'compute_derived_traits'){
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
 % } #End compute_derived_traits
