@@ -56,51 +56,58 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
 sub pca_run :Path('/pca/run/') Args() {
     my ($self, $c) = @_;
 
-    my $training_pop_id  = $c->req->param('training_pop_id') || $c->req->param('pca_pop_id');;
-    my $selection_pop_id = $c->req->param('selection_pop_id');
-    my $combo_pops_id    = $c->req->param('combo_pops_id');
-    my $protocol_id      = $c->req->param('genotyping_protocol_id');
-    my $list_id      = $c->req->param('list_id');
-    my $dataset_id   = $c->req->param('dataset_id');
-    my $dataset_name = $c->req->param('dataset_name');
-    my $trait_id      = $c->req->param('trait_id');
+    # my $training_pop_id  = $c->req->param('training_pop_id') || $c->req->param('pca_pop_id');;
+    # my $selection_pop_id = $c->req->param('selection_pop_id');
+    # my $combo_pops_id    = $c->req->param('combo_pops_id');
+    # my $protocol_id      = $c->req->param('genotyping_protocol_id');
+    # my $list_id      = $c->req->param('list_id');
+    # my $dataset_id   = $c->req->param('dataset_id');
+    # my $dataset_name = $c->req->param('dataset_name');
+    # my $trait_id      = $c->req->param('trait_id');
+    #
+    # my $data_structure =  $c->req->param('data_structure');
+    # my $data_type      =  $c->req->param('data_type');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    my $data_structure =  $c->req->param('data_structure');
-    my $data_type      =  $c->req->param('data_type');
-    $data_type         = 'genotype' if !$data_type;
-    $data_type         = lc($data_type);
 
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    $c->stash->{training_pop_id}  = $training_pop_id;
-    $c->stash->{selection_pop_id} = $selection_pop_id;
-    $c->stash->{data_structure}   = $data_structure;
-    $c->stash->{list_id}          = $list_id;
-    $c->stash->{dataset_id}       = $dataset_id;
-    $c->stash->{dataset_name}     = $dataset_name;
-    $c->stash->{combo_pops_id}    = $combo_pops_id;
-    $c->stash->{data_type}        = $data_type;
-    $c->stash->{trait_id}         = $trait_id;
+    $c->stash->{data_type} = 'genotype' if !$c->stash->{data_type};
+    # $data_type         = lc($data_type);
+
+    # $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    # $c->stash->{training_pop_id}  = $training_pop_id;
+    # $c->stash->{selection_pop_id} = $selection_pop_id;
+    # $c->stash->{data_structure}   = $data_structure;
+    # $c->stash->{list_id}          = $list_id;
+    # $c->stash->{dataset_id}       = $dataset_id;
+    # $c->stash->{dataset_name}     = $dataset_name;
+    # $c->stash->{combo_pops_id}    = $combo_pops_id;
+    # $c->stash->{data_type}        = $data_type;
+    # $c->stash->{trait_id}         = $trait_id;
 
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
     $c->stash->{file_id} = $file_id;
 
+    my $list_id = $c->stash->{list_id};
     if ($list_id)
     {
-	$c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
-	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-	$c->stash->{list_type} =  $list->type;
-	$c->stash->{list_name} =  $list->name;
+    	$c->controller('solGS::List')->create_list_population_metadata_file($c, $file_id);
+    	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    	$c->stash->{list_type} =  $list->type;
+    	$c->stash->{list_name} =  $list->name;
     }
 
+    my $combo_pops_id = $c->stash->{combo_pops_id};
     if ($combo_pops_id)
     {
-	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
-	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
+    	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+    	$c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
     }
 
-    if (!$self->check_pca_output($c))
+    my $cached = $c->controller('solGS::CachedResult')->check_pca_output($c, $file_id);
+    if (!$cached)
     {
-	$self->run_pca($c);
+	    $self->run_pca($c);
     }
 
     $self->format_pca_output($c);
@@ -208,7 +215,7 @@ sub pca_genotypes_list :Path('/pca/genotypes/list') Args(0) {
 #     {
 #         $ret->{status} = 'success';
 #     }
-# 
+#
 #     $ret = to_json($ret);
 #
 #     $c->res->content_type('application/json');
@@ -217,27 +224,27 @@ sub pca_genotypes_list :Path('/pca/genotypes/list') Args(0) {
 # }
 
 
-sub check_pca_output {
-    my ($self, $c) = @_;
-
-    my $file_id = $c->stash->{file_id};
-
-    if ($file_id)
-    {
-	$self->pca_scores_file($c);
-	my $pca_scores_file = $c->stash->{pca_scores_file};
-
-	if (-s $pca_scores_file)
-	{
-	    return 1;
-	}
-	else
-	{
-	    return 0;
-	}
-    }
-
-}
+# sub check_pca_output {
+#     my ($self, $c) = @_;
+#
+#     my $file_id = $c->stash->{file_id};
+#
+#     if ($file_id)
+#     {
+# 	$self->pca_scores_file($c);
+# 	my $pca_scores_file = $c->stash->{pca_scores_file};
+#
+# 	if (-s $pca_scores_file)
+# 	{
+# 	    return 1;
+# 	}
+# 	else
+# 	{
+# 	    return 0;
+# 	}
+#     }
+#
+# }
 
 
 sub format_pca_output {
@@ -266,22 +273,20 @@ sub format_pca_output {
 	    my $output_link =  '/pca/analysis/' . $file_id;
 	    my $trials_names;
 
-	    my $referer = $c->req->referer;
-
-	    if ($referer =~ /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//)
+        my $tr_pop_id = $c->stash->{training_pop_id};
+        my $sel_pop_id =  $c->stash->{selection_pop_id};
+        if ($tr_pop_id && $sel_pop_id)
 	    {
-		my $tr_pop = $c->stash->{training_pop_id};
-		my $sel_pop =  $c->stash->{selection_pop_id};
-
-		$trials_names = {
-		    $tr_pop => 'Training population',
-		    $sel_pop => 'Selection population'
-		};
+    		$trials_names = {
+    		    $tr_pop_id => 'Training population',
+    		    $sel_pop_id => 'Selection population'
+    		};
 	    }
 	    else
 	    {
-		$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
-		$trials_names = $c->stash->{trials_names};
+            # $c->stash->{trials_ids} = [$c->stash->{training_pop_id}, $c->stash->{selection_pop_id}];
+    		$c->controller('solGS::combinedTrials')->process_trials_list_details($c);
+    		$trials_names = $c->stash->{trials_names};
 	    }
 
 	    if ($scores)
