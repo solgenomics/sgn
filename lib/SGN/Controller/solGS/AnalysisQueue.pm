@@ -750,7 +750,7 @@ sub structure_pca_analysis_output {
 	};
 
    return \%output_details;
-   
+
 }
 
 
@@ -1467,7 +1467,7 @@ sub solgs_analysis_status_log {
 			}
 			elsif ($analysis_status =~ /Submitted/i)
 			{
-				$result_page = 'In process...'
+				$result_page = 'In progress...'
 			}
 			else
 			{
