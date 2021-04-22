@@ -1924,6 +1924,7 @@ sub substitute_stock : Chained('trial') PathPart('substitute_stock') Args(0) {
 sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $plant_owner = $c->user->get_object->get_sp_person_id;
     my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
     my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
     my $plants_with_treatments;
@@ -1943,7 +1944,7 @@ sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Ar
 
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments)) {
+    if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments, $plant_owner)) {
 
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
