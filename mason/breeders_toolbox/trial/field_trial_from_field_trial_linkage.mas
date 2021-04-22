@@ -131,7 +131,7 @@ jQuery(document).ready(function () {
             .attr("marker-end", "url(#triangle)")
             .attr("stoke-opacity", 0.3)
             .on("mouseover", function(){
-              d3.select(this).attr("stroke", "#808080");
+              d3.select(this).attr("stroke", "#808080")
             })
             .on("mouseover", function(){
               d3.select(this).attr("stroke", "#D3D3D3");
