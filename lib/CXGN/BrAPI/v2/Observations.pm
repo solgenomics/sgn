@@ -21,10 +21,7 @@ sub search {
     my $page = $self->page;
     my $status = $self->status;
 
-    print "#######################3\n";
-    print Dumper(\$params);
-
-    my $observation_db_id = $params->{observationDbId} || ($params->{observationDbIds} || ()); 
+    my $observation_db_id = $params->{observationDbId} || ($params->{observationDbIds} || ());
     my @observation_variable_db_ids = $params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}} : ();
     my @observation_variable_names = $params->{observationVariableNames} ? @{$params->{observationVariableNames}} : ();
     # externalReferenceID
@@ -53,41 +50,6 @@ sub search {
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
 
-    # my ($data, $unique_traits)  = _search_observation_id(
-    #         $self->bcs_schema,
-    #         $observation_level,
-    #         $trial_ids,
-    #         $trial_ids_arrayref,
-    #         1,
-    #         $season_arrayref,
-    #         $location_ids_arrayref,
-    #         $accession_ids_arrayref,
-    #         $program_ids_arrayref,
-    #         \@observation_variable_db_ids,
-    #         $observation_db_id,
-    #         $observation_unit_db_id, #plot_list
-    #         $limit,
-    #         $offset,
-    # );
-
-    # my $schema = shift;
-    # my $data_level = shift;
-    # my $trial_list = shift;
-    # my $folder_list = shift;
-    # my $include_timestamp = shift;
-    # my $year_list = shift;
-    # my $location_list = shift;
-    # my $accession_list = shift;
-    # my $program_list = shift;
-    # my $observation_variable_list = shift;
-    # my $observations_list = shift;
-    # my $plot_list = shift;
-    # my $limit = shift;
-    # my $offset = shift;
-
-    print "*********************************\n";
-    print Dumper(\@observation_variable_db_ids);
-
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
         {
@@ -109,7 +71,6 @@ sub search {
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
-
 
     my @data_window;
     my $counter = 0;
