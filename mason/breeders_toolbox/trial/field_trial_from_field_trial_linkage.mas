@@ -154,6 +154,7 @@ jQuery(document).ready(function () {
             .attr("text-anchor", "middle")
             .attr("x", d => d.x0)
             .attr("y", d => (d.y1 + d.y0)/2)
+            .attr("transform", "rotate(180)")
             .text(d => d.name);
 
 
