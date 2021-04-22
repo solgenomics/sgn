@@ -686,9 +686,9 @@ sub create_file_id {
     $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my $traits_ids = $c->stash->{training_traits_ids};
-    my @traits_ids =  @{$traits_ids} if $traits_ids->[0];
+    my @traits_ids =   ref($traits_ids) eq 'ARRAY' ? @{$traits_ids} : $c->stash->{trait_id};
 
-    my $trait_id =  $c->stash->{trait_id} if !@{$traits_ids};
+    my $trait_id; #=  $c->stash->{trait_id} if !@{$traits_ids};
     my $traits_selection_id;
     if (scalar(@traits_ids > 1))
     {
@@ -717,23 +717,27 @@ sub create_file_id {
     }
     elsif ($referer =~ /$selection_pages/)
     {
-	if ($selection_pop_id)
-	{
-	    $file_id =  $selection_pop_id  && $selection_pop_id != $training_pop_id ?
-		$training_pop_id . '-' . $selection_pop_id :
-		$training_pop_id;
-	}
-	else
-	{
-	    $file_id =  $cluster_pop_id && $cluster_pop_id != $training_pop_id ?
-		$training_pop_id . '-' . $cluster_pop_id :
-		$training_pop_id;
-	}
+    	if ($selection_pop_id)
+    	{
+    	    $file_id =  $selection_pop_id  && $selection_pop_id != $training_pop_id ?
+    		$training_pop_id . '-' . $selection_pop_id :
+    		$training_pop_id;
+    	}
+    	else
+    	{
+    	    $file_id =  $cluster_pop_id && $cluster_pop_id != $training_pop_id ?
+    		$training_pop_id . '-' . $cluster_pop_id :
+    		$training_pop_id;
+    	}
 
+    }
+    elsif ($c->stash->{pca_pop_id})
+    {
+        $file_id = $c->stash->{pca_pop_id};
     }
     else
     {
-	$file_id = $training_pop_id;
+	       $file_id = $training_pop_id;
     }
 
     if ($data_structure =~ /list/)
