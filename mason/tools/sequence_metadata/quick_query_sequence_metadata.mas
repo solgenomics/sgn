@@ -35,24 +35,26 @@ my %params = (
 <!-- Results Table(s) -->
 % foreach my $id (keys %$params) {
     <br />
-    <table class="table quick-query-table">
-        <thead><tr>
-            <th>Reference Genome</th>
-            <th>Species</th>
-            <th>Feature</th>
-            <th>Start</th>
-            <th>End</th>
-            <th></th>
-        </tr></thead>
-        <tr>
-            <td><% $params->{$id}->{'reference_genome'} %></td>
-            <td><% $params->{$id}->{'species'} %></td>
-            <td><% $params->{$id}->{'feature'} %></td>
-            <td><% $params->{$id}->{'start'} %></td>
-            <td><% $params->{$id}->{'end'} %></td>
-            <td><a href="/search/sequence_metadata?reference_genome=<% $params->{$id}->{'reference_genome'} %>&feature=<% $params->{$id}->{'feature'} %>&start=<% $params->{$id}->{'start'} %>&end=<% $params->{$id}->{'end'} %>">Modify&nbsp;Query</a></td>
-        </tr>
-    </table>
+    <div class="quick-query-table-container">
+        <table class="table quick-query-table">
+            <thead><tr>
+                <th>Reference Genome</th>
+                <th>Species</th>
+                <th>Feature</th>
+                <th>Start</th>
+                <th>End</th>
+                <th></th>
+            </tr></thead>
+            <tr>
+                <td><% $params->{$id}->{'reference_genome'} %></td>
+                <td><% $params->{$id}->{'species'} %></td>
+                <td><% $params->{$id}->{'feature'} %></td>
+                <td><% $params->{$id}->{'start'} %></td>
+                <td><% $params->{$id}->{'end'} %></td>
+                <td><a href="/search/sequence_metadata?reference_genome=<% $params->{$id}->{'reference_genome'} %>&feature=<% $params->{$id}->{'feature'} %>&start=<% $params->{$id}->{'start'} %>&end=<% $params->{$id}->{'end'} %>">Modify&nbsp;Query</a></td>
+            </tr>
+        </table>
+    </div>
     <table id="<% $id %>" class="display"></table>
     <br />
 % }
@@ -105,9 +107,6 @@ function quick_query(id, species, reference, feature, start, end) {
  * @param {Object} data Query Results
  */
 function display_results(id, data) {
-    console.log("SMD RESULTS");
-    console.log(data);
-
     let dt = jQuery('#' + id).DataTable();
     dt.clear();
     if ( data && data.error ) {
@@ -199,5 +198,14 @@ function renderAttributesColumn(data, type, row) {
         padding: 15px;
         border-radius: 5px;
         border: 1px solid;
+    }
+    .quick-query-table-container {
+        background: #f1f1f1;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .quick-query-table {
+        margin: 0;
     }
 </style>

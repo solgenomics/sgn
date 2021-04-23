@@ -1,0 +1,437 @@
+<%doc>
+
+=head1 NAME
+
+/search/variants.mas - Unified Marker / Variants search page
+
+=head1 DESCRIPTION
+
+This page will display the results of the unified marker / variant 
+search results
+
+=head1 AUTHOR
+
+David Waring <djw64@cornell.edu>
+
+=cut
+
+</%doc>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title=>"Marker Search Results" &>
+
+
+<button id="btn-modify-search" class="btn btn-info">
+    <span class="glyphicon glyphicon-chevron-left"></span>&nbsp;Modify Marker Search
+</button>
+
+<br /><br /><br />
+
+<div id="genotyped-markers" style="display: none">
+    <&| /page/info_section.mas, title=>'Markers From Genotype Projects', collapsible=>1, collapsed=>0 &>
+        <div id="genotyped-marker-results" class="well">
+            <table id="genotyped-marker-results-table" class="display"></table>
+            <br />
+            <div id="genotyped-marker-results-status">
+                <span style="float: left">
+                    <span id="genotyped-marker-results-displayed"></span><br />
+                    <span id="genotyped-marker-results-pages"></span>
+                </span>
+                <div class="btn-group" style="float: right">
+                    <button id="genotyped-marker-page-prev" type="button" class="btn btn-default" disabled><span class="glyphicon glyphicon-chevron-left"></span>&nbsp;Prev</button>
+                    <button id="genotyped-marker-page-next" type="button" class="btn btn-default" disabled>Next&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
+                </div>
+            </div>
+            <br /><br />
+        </div>
+    </&>
+</div>
+
+
+
+<div id="mapped-markers" style="display: none">
+    <&| /page/info_section.mas, title=>'Markers from Maps', collapsible=>1, collapsed=>0 &>
+        <div id="mapped-marker-results" class="well">
+            <table id="mapped-marker-results-table" class="display"></table>
+            <br />
+            <div id="mapped-marker-results-status">
+                <span style="float: left">
+                    <span id="mapped-marker-results-displayed"></span><br />
+                    <span id="mapped-marker-results-pages"></span>
+                </span>
+                <div class="btn-group" style="float: right">
+                    <button id="mapped-marker-page-prev" type="button" class="btn btn-default" disabled><span class="glyphicon glyphicon-chevron-left"></span>&nbsp;Prev</button>
+                    <button id="mapped-marker-page-next" type="button" class="btn btn-default" disabled>Next&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
+                </div>
+            </div>
+            <br /><br />
+        </div>
+    </&>
+</div>
+
+
+
+<script type="text/javascript">
+
+// QUERY PARAMS SENT AS SEARCH ARGUMENTS
+let TYPE;
+let MARKER_NAME, MARKER_NAME_MATCH;
+let REFMAP, SPECIES, CHROM, START, END;
+let PROTOCOL;
+
+let GENOTYPED_MARKERS_PAGE = 1;         // Current page of genotyped marker results
+const GENOTYPED_MARKERS_LIMIT = 50;     // Limit of markers for the genotyped marker search
+let MAPPED_MARKERS_PAGE = 1;            // Current page of mapped marker results
+const MAPPED_MARKERS_LIMIT = 50;        // Limit of markers for the mapped marker search
+
+
+jQuery(document).ready(function() {
+
+    // Init Genotyped DataTable
+    jQuery('#genotyped-marker-results-table').DataTable({
+        dom: 'frt',
+        autoWidth: false,
+        pageLength: GENOTYPED_MARKERS_LIMIT,
+        language: {
+            zeroRecords: "No markers found",
+        },
+        data: [],
+        columns: [
+            { 
+                title: "Variant", 
+                data: "variant_name", 
+                render: function(data) {
+                    return data && data !== "" ? "<a href='/variant/" + data + "/details'>" + data + "</a>" : "";
+                }
+            },
+            { title: "Marker", data: "marker_name" },
+            { 
+                title: "Protocol", 
+                data: "nd_protocol_name",
+                render: function(data, type, row) {
+                    return data && data !== "" ? "<a href='/breeders_toolbox/protocol/" + row.nd_protocol_id + "'>" + data + "</a>" : "";
+                } 
+            },
+            { title: "Species", data: "species_name" },
+            { title: "Reference Genome", data: "reference_genome_name" },
+            { title: "Chromosome", data: "chrom" },
+            { title: "Position", data: "pos" }
+        ],
+        order: [[ 1, "asc" ]]
+    });
+
+    // Init Mapped DataTable
+    jQuery('#mapped-marker-results-table').DataTable({
+        dom: 'frt',
+        autoWidth: false,
+        pageLength: GENOTYPED_MARKERS_LIMIT,
+        language: {
+            zeroRecords: "No markers found",
+        },
+        data: [],
+        columns: [
+            { 
+                title: "Marker", 
+                data: "marker_name", 
+                render: function(data, type, row) {
+                    return data && data !== "" ? "<a href='/search/markers/markerinfo.pl?marker_id=" + row.marker_id + "'>" + data + "</a>" : "";
+                }
+            },
+            { title: "Protocol", data: "protocol" },
+            { title: "Species", data: "species_name" },
+            { title: "Map", data: "map_name" },
+            { title: "Chromosome", data: "lg_name" },
+            { title: "Position", data: "position" },
+            { title: "Map Units", data: "map_units" },
+        ],
+        order: [[ 0, "asc" ]]
+    });
+
+    // Click Listeners
+    jQuery("#genotyped-marker-page-prev").click(searchGenotypedMarkersPrev);
+    jQuery("#genotyped-marker-page-next").click(searchGenotypedMarkersNext);
+    jQuery("#mapped-marker-page-prev").click(searchMappedMarkersPrev);
+    jQuery("#mapped-marker-page-next").click(searchMappedMarkersNext);
+    jQuery("#btn-modify-search").click(backToSearch);
+
+    // Start the Marker Search
+    parseArgs();
+    startSearch()
+
+    // Toggle the marker type display
+    jQuery("#genotyped-markers").css("display", !TYPE || TYPE==='genotyped' ? 'block' : 'none');
+    jQuery("#mapped-markers").css("display", !TYPE || TYPE==='mapped' ? 'block' : 'none');
+
+});
+
+
+/**
+ * Parse the query params and set the search argument values
+ */
+function parseArgs() {
+    const params = new URLSearchParams(window.location.search);
+    TYPE = _getValue("type");
+    MARKER_NAME = _getValue("marker_name");
+    MARKER_NAME_MATCH = _getValue("marker_name_match", "exactly");
+    REFMAP = _getValue("refmap");
+    SPECIES = _getValue("species");
+    CHROM = _getValue("chrom");
+    START = _getValue("start");
+    END = _getValue("end");
+    PROTOCOL = _getValue("protocol");
+
+    function _getValue(key, def) {
+        return params.has(key) ? params.get(key) : def;
+    }
+}
+
+
+/**
+ * Start the initial search
+ * - start the genotyped marker search
+ * - start the mapped marker search
+ */
+function startSearch() {
+    searchGenotypedMarkers();
+    searchMappedMarkers();
+}
+
+
+/**
+ * Go to the marker search page with the same search parameters
+ */
+function backToSearch() {
+    const params = new URLSearchParams(window.location.search);
+    window.location = "/search/variants?" + params.toString();
+}
+
+
+
+
+
+//
+// GENOTYPED MARKER SEARCH
+//
+
+
+/**
+ * Start the search for genotyped markers
+ * - Parse the query params to form the genotyped marker search
+ * - use GENOTYPED_MARKERS_PAGE and GENOTYPED_MARKERS_LIMIT for pagination
+ * - call displayGenotypedMarkers() when complete
+ */
+function searchGenotypedMarkers() {
+    if ( TYPE && TYPE !== 'genotyped' ) return;
+
+    // Update status
+    let dt = jQuery('#genotyped-marker-results-table').DataTable();
+    dt.clear();
+    dt.draw();
+    jQuery("#genotyped-marker-results-table .dataTables_empty").html("Searching...");
+    jQuery("#genotyped-marker-page-prev").attr('disabled', true);
+    jQuery("#genotyped-marker-page-next").attr('disabled', true);
+
+    // Query genotyped markers
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/genotyped/query',   
+        data: {
+            name: MARKER_NAME,
+            name_match: MARKER_NAME_MATCH,
+            species: SPECIES,
+            reference_genome: REFMAP,
+            chrom: CHROM,
+            start: START,
+            end: END,
+            nd_protocol_id: PROTOCOL,
+            page: GENOTYPED_MARKERS_PAGE,
+            limit: GENOTYPED_MARKERS_LIMIT
+        },
+        dataType: 'json',
+        success: function(data) {
+            displayGenotypedMarkers(dt, data);
+        },
+        error: function() {
+            alert("ERROR: Could not perform genotyped marker search");
+        }
+    });
+
+}
+
+/**
+ * Start the search of genotyped markers for the previous page
+ * - Decrement GENOTYPED_MARKERS_PAGE
+ * - call searchGenotypedMarkers()
+ */
+function searchGenotypedMarkersPrev() {
+    if ( GENOTYPED_MARKERS_PAGE > 1 ) {
+        GENOTYPED_MARKERS_PAGE--;
+        searchGenotypedMarkers();
+    }
+}
+
+/**
+ * Start the search of genotyped markers for the next page
+ * - Increment GENOTYPED_MARKERS_PAGE
+ * - call searchGenotypedMarkers()
+ */
+function searchGenotypedMarkersNext() {
+    GENOTYPED_MARKERS_PAGE++;
+    searchGenotypedMarkers();
+}
+
+/**
+ * Display the results of the genotyped marker search
+ * @param {DataTable} dt The DataTable to put the results in
+ * @param {Object} data The response from the marker search request
+ */
+function displayGenotypedMarkers(dt, data) {
+
+    // Get Markers from response
+    let markers = [];
+    let total = "";
+    if ( data && data.results && data.results.counts && data.results.counts.markers && data.results.counts.markers > 0 ) {
+        let variants = data.results.variants;
+        total = data.results.counts.markers;
+        for ( let variant in variants ) {
+            if ( variants.hasOwnProperty(variant) ) {
+                let m = variants[variant];
+                for ( let i = 0; i < m.length; i++ ) {
+                    markers.push(m[i]);
+                }
+            }
+        }
+    }
+
+    // Update Table with Markers
+    dt.clear();
+    dt.rows.add(markers);
+    dt.draw();
+
+    // Update Status Info
+    let end = GENOTYPED_MARKERS_PAGE*GENOTYPED_MARKERS_LIMIT;
+    let start = (end-GENOTYPED_MARKERS_LIMIT)+1;
+    end = end > total ? total : end;
+    let displayed = start + " - " + end + " / " + total;
+    let max_page = Math.ceil(total/GENOTYPED_MARKERS_LIMIT);
+    let page = GENOTYPED_MARKERS_PAGE + " / " + max_page;
+    jQuery("#genotyped-marker-results-displayed").html("<strong>MARKERS:</strong> " + displayed);
+    jQuery("#genotyped-marker-results-pages").html("<strong>PAGE:</strong> " + page);
+    jQuery("#genotyped-marker-page-prev").attr('disabled', GENOTYPED_MARKERS_PAGE === 1);
+    jQuery("#genotyped-marker-page-next").attr('disabled', GENOTYPED_MARKERS_PAGE === max_page || max_page === 0);
+    
+}
+
+
+
+//
+// MAPPED MARKER SEARCH
+//
+
+
+/**
+ * Start the search for mapped markers
+ * - Parse the query params to form the mapped marker search
+ * - use MAPPED_MARKERS_PAGE and MAPPED_MARKERS_LIMIT for pagination
+ * - call displayMappedMarkers() when complete
+ */
+function searchMappedMarkers() {
+    if ( TYPE && TYPE !== 'mapped' ) return;
+
+    // Update status
+    let dt = jQuery('#mapped-marker-results-table').DataTable();
+    dt.clear();
+    dt.draw();
+    jQuery("#mapped-marker-results-table .dataTables_empty").html("Searching...");
+    jQuery("#mapped-marker-page-prev").attr('disabled', true);
+    jQuery("#mapped-marker-page-next").attr('disabled', true);
+
+    // Query mapped markers
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/mapped/query',   
+        data: {
+            name: MARKER_NAME,
+            name_match: MARKER_NAME_MATCH,
+            species: SPECIES,
+            map_id: REFMAP,
+            chrom: CHROM,
+            start: START,
+            end: END,
+            page: MAPPED_MARKERS_PAGE,
+            limit: MAPPED_MARKERS_LIMIT
+        },
+        dataType: 'json',
+        success: function(data) {
+            displayMappedMarkers(dt, data);
+        },
+        error: function() {
+            alert("ERROR: Could not perform mapped marker search");
+        }
+    });
+
+}
+
+/**
+ * Start the search of mapped markers for the previous page
+ * - Decrement MAPPED_MARKERS_PAGE
+ * - call searchMappedMarkers()
+ */
+function searchMappedMarkersPrev() {
+    if ( MAPPED_MARKERS_PAGE > 1 ) {
+        MAPPED_MARKERS_PAGE--;
+        searchMappedMarkers();
+    }
+}
+
+/**
+ * Start the search of mapped markers for the next page
+ * - Increment MAPPED_MARKERS_PAGE
+ * - call searchMappedMarkers()
+ */
+function searchMappedMarkersNext() {
+    MAPPED_MARKERS_PAGE++;
+    searchMappedMarkers();
+}
+
+/**
+ * Display the results of the mapped marker search
+ * @param {DataTable} dt The DataTable to put the results in
+ * @param {Object} data The response from the marker search request
+ */
+function displayMappedMarkers(dt, data) {
+
+    // Get Markers from response
+    let markers = [];
+    let total = 0;
+    if ( data && data.results && data.results.markers && data.results.markers.length > 0 ) {
+        markers = data.results.markers;
+        total = data.results.marker_count;
+    }
+
+    // Update Table with Markers
+    dt.clear();
+    dt.rows.add(markers);
+    dt.draw();
+
+    // Update Status Info
+    let end = MAPPED_MARKERS_PAGE*MAPPED_MARKERS_LIMIT;
+    let start = (end-MAPPED_MARKERS_LIMIT)+1;
+    end = end > total ? total : end;
+    let displayed = start + " - " + end + " / " + total;
+    let max_page = Math.ceil(total/MAPPED_MARKERS_LIMIT);
+    let page = MAPPED_MARKERS_PAGE + " / " + max_page;
+    jQuery("#mapped-marker-results-displayed").html("<strong>MARKERS:</strong> " + displayed);
+    jQuery("#mapped-marker-results-pages").html("<strong>PAGE:</strong> " + page);
+    jQuery("#mapped-marker-page-prev").attr('disabled', MAPPED_MARKERS_PAGE === 1);
+    jQuery("#mapped-marker-page-next").attr('disabled', MAPPED_MARKERS_PAGE === max_page || max_page === 0);
+
+}
+</script>
+
+
+
+
+<style>
+</style>

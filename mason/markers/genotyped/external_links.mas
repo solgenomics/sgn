@@ -37,7 +37,7 @@
     function getProps() {
         jQuery.ajax({
             type: 'GET',
-            url: '/ajax/variants/props',
+            url: '/ajax/markers/genotyped/props',
             data: { marker_names: "<% join(',', @$marker_names) %>" },
             success: function(response) {
                 let props = [];

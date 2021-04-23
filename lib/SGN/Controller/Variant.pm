@@ -40,7 +40,7 @@ sub get_variant_details: Chained('get_variant') PathPart('details') :Args(0) {
 
     $c->stash->{markers} = $markers;
     $c->stash->{related_variants} = $related_variants;
-    $c->stash->{template} = '/variants/details.mas';
+    $c->stash->{template} = '/markers/genotyped/variant_details.mas';
 }
 
 

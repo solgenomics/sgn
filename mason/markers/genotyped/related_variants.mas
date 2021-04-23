@@ -15,9 +15,9 @@
 
 % foreach my $variant (keys %{ $related_variants }) {
     <a href="/variant/<% $variant %>/details">
-        <strong><% $related_variants->{$variant}[0]->{'reference_genome_name'} %></strong> 
-        (<% $related_variants->{$variant}[0]->{'species_name'} %>)
+        <strong><% $variant %></strong> 
     </a>
+    (<% $related_variants->{$variant}[0]->{'species_name'} %> / <% $related_variants->{$variant}[0]->{'reference_genome_name'} %>)
 
     <ul class="related-marker-list">
 % foreach my $marker (@{$related_variants->{$variant}}) {

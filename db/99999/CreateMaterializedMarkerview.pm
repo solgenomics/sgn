@@ -93,15 +93,15 @@ AS \$function\$
 		END LOOP;
 		matviewquery := array_to_string(queries, ' UNION ');
 		EXECUTE 'CREATE MATERIALIZED VIEW public.materialized_markerview AS (' || matviewquery || ') WITH NO DATA';
-		CREATE INDEX markers_all_test_idx1 ON public.materialized_markerview(nd_protocol_id);
-		CREATE INDEX markers_all_test_idx2 ON public.materialized_markerview(species_name);
-		CREATE INDEX markers_all_test_idx3 ON public.materialized_markerview(reference_genome_name);
-		CREATE INDEX markers_all_test_idx4 ON public.materialized_markerview(marker_name);
-		CREATE INDEX markers_all_test_idx5 ON public.materialized_markerview(UPPER(marker_name));
-		CREATE INDEX markers_all_test_idx6 ON public.materialized_markerview(chrom);
-		CREATE INDEX markers_all_test_idx7 ON public.materialized_markerview(pos);
-		CREATE INDEX markers_all_test_idx8 ON public.materialized_markerview(variant_name);
-		CREATE INDEX markers_all_test_idx9 ON public.materialized_markerview(UPPER(variant_name));
+		CREATE INDEX materialized_markerview_idx1 ON public.materialized_markerview(nd_protocol_id);
+		CREATE INDEX materialized_markerview_idx2 ON public.materialized_markerview(species_name);
+		CREATE INDEX materialized_markerview_idx3 ON public.materialized_markerview(reference_genome_name);
+		CREATE INDEX materialized_markerview_idx4 ON public.materialized_markerview(marker_name);
+		CREATE INDEX materialized_markerview_idx5 ON public.materialized_markerview(UPPER(marker_name));
+		CREATE INDEX materialized_markerview_idx6 ON public.materialized_markerview(chrom);
+		CREATE INDEX materialized_markerview_idx7 ON public.materialized_markerview(pos);
+		CREATE INDEX materialized_markerview_idx8 ON public.materialized_markerview(variant_name);
+		CREATE INDEX materialized_markerview_idx9 ON public.materialized_markerview(UPPER(variant_name));
 		IF \$1 THEN
 			REFRESH MATERIALIZED VIEW public.materialized_markerview;
 		END IF;

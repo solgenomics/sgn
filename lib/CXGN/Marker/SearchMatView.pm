@@ -101,6 +101,93 @@ sub reference_genomes {
     return(\@results);
 }
 
+
+#
+# Get a list of chromosomes for each species / reference genome
+# This cleans up some variations in the same chromosome name:
+#   - removes prepended 'chr'
+#   - removes Unxxx, where xxx is a number
+#   - transformed to all uppercase to remove case-sensitive duplicates
+#
+# Returns: a hash with the species name as the key
+#   - {species_name}: a hash with the reference genome name as the key
+#       - {reference_genome_name}: an array with the chromosome names
+#
+sub chromosomes {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $dbh = $schema->storage->dbh();
+
+    # Build the query to get the unique set of chromosomes for each reference genome and species
+    my $q = "SELECT species_name, reference_genome_name, UPPER(REGEXP_REPLACE(chrom, '^chr', '')) AS chrom_mod
+                FROM materialized_markerview
+                WHERE chrom !~* '[Uu][Nn]\\d'
+                GROUP BY species_name, reference_genome_name, chrom_mod
+                ORDER BY species_name, reference_genome_name, chrom_mod;";
+    
+    # Perform the query
+    my $h = $dbh->prepare($q);
+    $h->execute();
+    
+    # Parse the response
+    my %results = ();
+    while (my ($species, $reference, $chrom) = $h->fetchrow_array()) {
+        if ( !exists($results{$species}) ) {
+            $results{$species} = {};
+        }
+        if ( !exists($results{$species}{$reference}) ) {
+            $results{$species}{$reference} = ();
+        }
+        push(@{$results{$species}{$reference}}, $chrom);
+    }
+
+    # Return the results
+    return(\%results);
+}
+
+
+#
+# Get a list of genotype protocols along with their species and reference info
+#
+# Returns: an array of protocol hashes with the following keys:
+#   - nd_protocol_id = id of genotype protocol
+#   - nd_protocol_name = name of genotype protocol
+#   - species_name = name of species
+#   - reference_genome_name = name of reference genome
+#
+sub protocols {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $dbh = $schema->storage->dbh();
+
+    # Build the query to get the unique set of genotype protocols
+    my $q = "SELECT mm.nd_protocol_id, np.name AS nd_protocol_name, mm.species_name, mm.reference_genome_name
+                FROM materialized_markerview AS mm
+                LEFT JOIN nd_protocol AS np USING (nd_protocol_id)
+                GROUP BY mm.nd_protocol_id, np.name, mm.species_name, mm.reference_genome_name
+                ORDER BY mm.species_name, mm.reference_genome_name, np.name;";
+    
+    # Perform the query
+    my $h = $dbh->prepare($q);
+    $h->execute();
+
+    # Parse the response
+    my @results = ();
+    while (my ($nd_protocol_id, $nd_protocol_name, $species, $reference) = $h->fetchrow_array()) {
+        my %protocol = (
+            nd_protocol_id => $nd_protocol_id,
+            nd_protocol_name => $nd_protocol_name,
+            species_name => $species,
+            reference_genome_name => $reference
+        );
+        push(@results, \%protocol);
+    }
+
+    # Return the results
+    return(\@results);
+}
+
+
 #
 # Find variants (and their markers) that are related to those of the specified variant
 #
@@ -211,7 +298,7 @@ sub query {
 
     # Build query
     my $select_info = "SELECT materialized_markerview.nd_protocol_id, nd_protocol.name AS nd_protocol_name, species_name, reference_genome_name, marker_name, variant_name, chrom, pos, ref, alt";
-    my $select_count = "SELECT COUNT(*) AS marker_count, COUNT(DISTINCT(variant_name)) AS variant_count";
+    my $select_count = "SELECT COUNT(*) AS marker_count";
     my $q = " FROM public.materialized_markerview";
     $q .= " LEFT JOIN nd_protocol USING (nd_protocol_id)";
 
@@ -227,8 +314,9 @@ sub query {
         push(@args, $reference_genome);
     }
     if ( defined $chrom && defined $species && defined $reference_genome ) {
-        my $pw = "chrom = ?";
-        push(@args, $chrom);
+        my $pw = "chrom ~* ?";
+        $chrom =~ s/^chr//i;
+        push(@args, '^(chr)?'.$chrom.'_?[0-9]*$');
         if ( defined $start ) {
             $pw .= " AND pos >= ?";
             push(@args, $start);
@@ -243,7 +331,7 @@ sub query {
         push(@where, "UPPER(variant_name) = UPPER(?)");
         push(@args, $variant);
     }
-    if ( defined $name ) {
+    if ( defined $name && $name ne '' ) {
         if ( $name_match eq 'contains' ) {
             push(@where, "(UPPER(marker_name) LIKE UPPER(?) OR UPPER(variant_name) LIKE UPPER(?))");
             push(@args, '%'.$name.'%', '%'.$name.'%');
@@ -272,14 +360,17 @@ sub query {
     }
 
     # Get the total count of markers
+    # my $subq_count = $select_count . $q . " GROUP BY variant_name";
+    # my $query_count = "SELECT SUM(c.marker_count)::int AS marker_count, COUNT(*) AS variant_count FROM ($subq_count) AS c;";
+    # ^getting variant counts adds too much time to the query
     my $query_count = $select_count . $q;
     my $h_count = $dbh->prepare($query_count);
     $h_count->execute(@args);
-    my ($marker_count, $variant_count) = $h_count->fetchrow_array();
+    my ($marker_count) = $h_count->fetchrow_array();
 
     # Get the marker info
     my $query = $select_info . $q;
-    $query .= " ORDER BY variant_name, marker_name";
+    $query .= " ORDER BY marker_name";
     if ( defined $limit ) {
         $query .= " LIMIT ?";
         push(@args, $limit);
@@ -327,7 +418,6 @@ sub query {
     return({
         variants => \%variants,
         counts => {
-            variants => $variant_count,
             markers => $marker_count
         }
     });

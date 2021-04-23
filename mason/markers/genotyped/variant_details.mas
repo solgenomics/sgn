@@ -71,21 +71,21 @@ A hashref containing the variants and the markers related to one or more of the 
 
 <!-- VARIANT DETAILS TABLE -->
 <&| /page/info_section.mas, title=>'Genotype locations', collapsible=>1, collapsed=>0 &>
-    <& /variants/genotype_locations.mas, markers => $markers &>
+    <& /markers/genotyped/genotype_locations.mas, markers => $markers &>
 </&>
 
 
 
 <!-- RELATED VARIANTS LINKS -->
 <&| /page/info_section.mas, title=>'Related Variants', collapsible=>1, collapsed=>0 &>
-    <& /variants/related_variants.mas, related_variants => $related_variants &>
+    <& /markers/genotyped/related_variants.mas, related_variants => $related_variants &>
 </&>
 
 
 
 <!-- EXTERNAL LINKS -->
 <&| /page/info_section.mas, title=>'External Links', collapsible=>1, collapsed=>0 &>
-    <& /variants/external_links.mas, marker_names => \@marker_names &>
+    <& /markers/genotyped/external_links.mas, marker_names => \@marker_names &>
 </&>
 
 
@@ -100,9 +100,7 @@ A hashref containing the variants and the markers related to one or more of the 
 
 <!-- SEQUENCE METADATA RESULTS -->
 <&| /page/info_section.mas, title=>'Sequence Metadata', collapsible=>1, collapsed=>0 &>
-  <& /tools/sequence_metadata/quick_query_sequence_metadata.mas, 
-    params=>\%smd_params
-  &>
+  <& /tools/sequence_metadata/quick_query_sequence_metadata.mas, params=>\%smd_params &>
 </&>
 
 

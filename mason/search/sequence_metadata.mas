@@ -2,14 +2,6 @@
 
     <& /page/page_title.mas, title=>'Search Sequence Metadata' &>
 
-    <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
-        <div class="well">
-            <div class="sequence_metadata_search_panel panel panel-default">
-                <div class="panel-body">
-                    <& /tools/sequence_metadata/query_sequence_metadata.mas &>
-                </div>
-            </div>
-        </div>
-    </&>
+    <& /tools/sequence_metadata/query_sequence_metadata.mas &>
 
 </div>

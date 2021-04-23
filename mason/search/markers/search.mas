@@ -1,0 +1,707 @@
+<%doc>
+
+=head1 NAME
+
+/search/variants/index.mas - Unified Marker / Variants search page
+
+=head1 DESCRIPTION
+
+This page allows the user to search for mapped and genotyped markers using various 
+filter criteria, such as the marker name and/or position.
+
+=head1 AUTHOR
+
+David Waring <djw64@cornell.edu>
+
+=cut
+
+</%doc>
+
+<& /page/page_title.mas, title=>"Marker Search" &>
+
+
+
+
+<!-- FILTER BY NAME -->
+<&| /page/info_section.mas, title=>'Filter By Name', collapsible=>1, collapsed=>0 &>
+    <div class="well">
+
+        <!-- Marker Name -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Marker Name: </label>
+            <div class="col-sm-4">
+                <select id="marker-name-match" class="form-control">
+                    <option value="exactly">Exactly</option>
+                    <option value="contains">Contains</option>
+                    <option value="starts_with">Starts With</option>
+                    <option value="ends_with">Ends With</option>
+                </select>
+            </div>
+            <div class="col-sm-5">
+                <input id="marker-name" class="form-control" type="text" placeholder="Any Name" />
+            </div>
+        </div>
+
+        <br /><br />
+
+    </div>
+</&>
+
+
+
+<!-- FILTER BY POSITION -->
+<&| /page/info_section.mas, title=>'Filter By Position', collapsible=>1, collapsed=>0 &>
+    <div class="well">
+
+        <!-- Reference Genome / Map -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Reference Genome / Map: </label>
+            <div class="col-sm-9">
+                <select id="marker-refmap" class="form-control" disabled>
+                    <option>Loading...</option>
+                </select>
+            </div>
+        </div>
+
+        <br /><br />
+
+        <!-- Chromosome -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Chromosome: </label>
+            <div class="col-sm-9">
+                <select id="marker-chromosome" class="form-control" disabled>
+                    <option>Loading...</option>
+                </select>
+            </div>
+        </div>
+
+        <br /><br />
+
+        <!-- Start / End Position -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Start: </label>
+            <div class="col-sm-4">
+                <div class="input-group">
+                    <input id="marker-position-start" class="form-control" type="text" disabled />
+                    <span class="input-group-addon marker-position-units"></span>
+                </div>
+            </div>
+            <label class="col-sm-1 control-label">End: </label>
+            <div class="col-sm-4">
+                <div class="input-group">
+                    <input id="marker-position-end" class="form-control" type="text" disabled />
+                    <span class="input-group-addon marker-position-units"></span>
+                </div>
+            </div>
+        </div>
+
+        <br /><br />
+    
+    </div>
+</&>
+
+
+
+<!-- ADDITIONAL FILTERS -->
+<&| /page/info_section.mas, title=>'Additional Filters', collapsible=>1, collapsed=>0 &>
+    <div class="well">
+
+        <!-- Species -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Species: </label>
+            <div class="col-sm-9">
+                <select id="marker-species" class="form-control" disabled>
+                    <option value=''>Loading...</option>
+                </select>
+            </div>
+        </div>
+
+        <br /><br />
+
+        <!-- Protocol -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Protocol: </label>
+            <div class="col-sm-9">
+                <select id="marker-protocol" class="form-control" disabled>
+                    <option value=''>Loading...</option>
+                </select>
+            </div>
+        </div>
+
+        <br /><br />
+    
+    </div>
+</&>
+
+
+<button class="btn btn-primary btn-block marker-search-button">Search</button>
+
+
+
+<script type="text/javascript">
+
+// Pre-selected values from query params
+let SEL_MARKER_NAME, SEL_MARKER_NAME_MATCH;
+let SEL_REFMAP, SEL_CHROM, SEL_START, SEL_END;
+let SEL_SPECIES, SEL_PROTOCOL;
+
+let REFMAPS = undefined;                // References and maps retrieved from the database, grouped by marker type
+let CHROMOSOMES = undefined;            // Chromosomes retrieved from the database, grouped by marker type
+let SPECIES = undefined;                // List of supported species, based on the refmaps
+let PROTOCOLS = undefined;              // Protocols retrieved from the database, grouped by marker type
+
+
+jQuery(document).ready(function() {
+
+    // Search Setup Functions
+    parseArgs();
+    getRefMaps();
+    getChromosomes();
+    getProtocols();
+
+    // Click / Change Listeners
+    jQuery('#marker-refmap').change(updateChromosomes).change(updatePositions).change(updateSpecies).change(updateProtocols);
+    jQuery('#marker-chromosome').change(updatePositions);
+    jQuery('#marker-species').change(updateRefMaps).change(updateProtocols);
+    jQuery('#marker-protocol').change(updateSpecies).change(updateRefMaps);
+    jQuery('.marker-search-button').click(search);
+
+});
+
+
+/**
+ * Parse query arguments for initial search values
+ */
+function parseArgs() {
+    const params = new URLSearchParams(window.location.search);
+    SEL_MARKER_NAME = _getValue("marker_name");
+    SEL_MARKER_NAME_MATCH = _getValue("marker_name_match");
+    SEL_REFMAP = _getValue("refmap");
+    SEL_SPECIES = _getValue("species");
+    SEL_CHROM = _getValue("chrom");
+    SEL_START = _getValue("start");
+    SEL_END = _getValue("end");
+    SEL_PROTOCOL = _getValue("protocol");
+
+    // Set the initial value of items that do need to be fetched from the DB
+    if ( SEL_MARKER_NAME ) jQuery("#marker-name").val(SEL_MARKER_NAME);
+    if ( SEL_MARKER_NAME_MATCH ) jQuery("#marker-name-match").val(SEL_MARKER_NAME_MATCH);
+    if ( SEL_REFMAP && SEL_CHROM && SEL_START ) jQuery("#marker-position-start").val(SEL_START);
+    if ( SEL_REFMAP && SEL_CHROM && SEL_END ) jQuery("#marker-position-end").val(SEL_END);
+
+    function _getValue(key, def) {
+        return params.has(key) ? params.get(key) : def;
+    }
+}
+
+
+//
+// DATABASE QUERY FUNCTIONS
+//
+
+/**
+ * Get the genotyped marker reference genomes and the mapped 
+ * marker maps to display as options for the position filter
+ * - call getReferences()
+ * - call getMaps()
+ * - call updateRefMaps()
+ */
+function getRefMaps() {
+    let references = undefined;
+    let maps = undefined;
+
+    getReferences(function(_references) {
+        references = _references;
+        _finish();
+    });
+    getMaps(function(_maps) {
+        maps = _maps;
+        _finish();
+    });
+
+    function _finish() {
+        if ( references && maps ) {
+            REFMAPS = {
+                genotyped: references,
+                mapped: maps
+            };
+            updateRefMaps();
+        }
+    }
+}
+
+
+/**
+ * Get the reference genomes and species of the genotyped markers
+ * @param {function} callback Callback function(references)
+ */
+function getReferences(callback) {
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/genotyped/reference_genomes',   
+        dataType: 'json',
+        success: function(data) {
+            return callback(data && data.reference_genomes ? data.reference_genomes : []);
+        },
+        error: function() {
+            alert("ERROR: Could not get reference genomes");
+        }
+    });
+}
+
+/**
+ * Get the maps of the mapped markers
+ * @param {function} callback Callback function(maps)
+ */
+function getMaps(callback) {
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/mapped/maps',   
+        dataType: 'json',
+        success: function(data) {
+            return callback(data && data.maps ? data.maps : []);
+        },
+        error: function() {
+            alert("ERROR: Could not get maps");
+        }
+    });
+}
+
+
+/**
+ * Get the chromosome names associated with genotyped and mapped markers
+ * - Call getGenotypedChromosomes()
+ * - Call getMappedChromosomes()
+ * - Set the CHROMOSOMES objects
+ * - Call updateChromosomes()
+ */
+function getChromosomes() {
+    let genotyped = undefined;
+    let mapped = undefined;
+
+    getGenotypedChromosomes(function(_genotyped) {
+        genotyped = _genotyped;
+        _finish();
+    });
+    getMappedChromosomes(function(_mapped) {
+        mapped = _mapped;
+        _finish();
+    });
+
+    function _finish() {
+        if ( genotyped && mapped ) {
+            CHROMOSOMES = {
+                genotyped: genotyped,
+                mapped: mapped
+            }
+            updateChromosomes();
+        }
+    }
+}
+
+
+/**
+ * Get the chromosome names associated with genotyped markers
+ * @param {function} callback Callback function(chromosomes)
+ */
+function getGenotypedChromosomes(callback) {
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/genotyped/chromosomes',   
+        dataType: 'json',
+        success: function(data) {
+            return callback(data && data.chromosomes ? data.chromosomes : []);
+        },
+        error: function() {
+            alert("ERROR: Could not get genotyped chromosomes");
+        }
+    });
+}
+
+
+/**
+ * Get the chromosomes names associated with mapped markers
+ * @param {function} callback Callback function(chromosomes)
+ */
+function getMappedChromosomes(callback) {
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/mapped/chromosomes',   
+        dataType: 'json',
+        success: function(data) {
+            return callback(data && data.chromosomes ? data.chromosomes : []);
+        },
+        error: function() {
+            alert("ERROR: Could not get mapped chromosomes");
+        }
+    });
+}
+
+
+/**
+ * Get the protocols associated with genotyped and mapped markers
+ * - Call getGenotypedProtocols()
+ * - Call getMappedProtocols()
+ * - Set the PROTOCOLS objects
+ * - Call updateProtocols()
+ */
+function getProtocols() {
+    let genotyped = undefined;
+    let mapped = undefined;
+
+    getGenotypedProtocols(function(_genotyped) {
+        genotyped = _genotyped;
+        _finish();
+    });
+    getMappedProtocols(function(_mapped) {
+        mapped = _mapped;
+        _finish();
+    });
+
+    function _finish() {
+        if ( genotyped && mapped ) {
+            PROTOCOLS = {
+                genotyped: genotyped,
+                mapped: mapped
+            }
+            updateProtocols();
+        }
+    }
+}
+
+
+/**
+ * Get the protocols associated with genotyped markers
+ * @param {function} callback Callback function(protocols)
+ */
+function getGenotypedProtocols(callback) {
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/genotyped/protocols',   
+        dataType: 'json',
+        success: function(data) {
+            return callback(data && data.protocols ? data.protocols : []);
+        },
+        error: function() {
+            alert("ERROR: Could not get genotyped protocols");
+        }
+    });
+}
+
+
+/**
+ * Get the protocols associated with mapped markers
+ * @param {function} callback Callback function(protocols)
+ */
+function getMappedProtocols(callback) {
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/mapped/protocols',   
+        dataType: 'json',
+        success: function(data) {
+            return callback(data && data.protocols ? data.protocols : []);
+        },
+        error: function() {
+            alert("ERROR: Could not get mapped protocols");
+        }
+    });
+}
+
+
+
+//
+// DISPLAY FUNCTIONS
+//
+
+/**
+ * Display the reference genomes and maps in the position filter
+ * - Build the list of species used by the species select box
+ * - call updateChromosomes() and updateSpecies() when done
+ */
+function updateRefMaps() {
+    let refmap = jQuery("#marker-refmap").val();
+    let protocol_refmap = jQuery("#marker-protocol option:selected").data("refmap");
+    let protocol_type = jQuery("#marker-protocol option:selected").data("type");
+    let species = jQuery("#marker-species").val();
+
+    if ( !REFMAPS || !REFMAPS.genotyped || !REFMAPS.mapped ) return;
+    let references = REFMAPS.genotyped;
+    let maps = REFMAPS.mapped;
+    SPECIES = [];
+
+    let ad = protocol_refmap && !Array.isArray(protocol_refmap) || (Array.isArray(protocol_refmap) && protocol_refmap.length === 1) ? 'disabled' : '';
+    let html = "<option value='' " + ad + ">Any Reference Genome / Map</option>";
+
+    // Add Genotype Reference Genomes
+    html += "<optgroup label='Reference Genomes of Genotyped Markers'>";
+    let gd = (protocol_type && protocol_type !== 'genotyped') || protocol_refmap ? 'disabled' : '';
+    html += "<option value='' data-type='genotyped' " + gd + ">Any Reference Genome</option>";
+    for ( let i = 0; i < references.length; i++ ) {
+        let d = (protocol_refmap && protocol_refmap !== references[i].reference_genome_name) 
+            || (protocol_type && protocol_type !== 'genotyped') 
+            || (species && references[i].species_name !== species) 
+            ? 'disabled' : '';
+
+        let s = d !== 'disabled' && refmap === references[i].reference_genome_name ? 'selected' : '';
+        html += "<option value='" + references[i].reference_genome_name + "' ";
+        html += "data-type='genotyped' data-units='bp' data-species='" + references[i].species_name + "' ";
+        html += d + " " + s + ">";
+        html += references[i].reference_genome_name + " (" + references[i].species_name + ")";
+        html += "</option>";
+
+        if ( !SPECIES.includes(references[i].species_name) ) SPECIES.push(references[i].species_name);
+    }
+    html += "</optgroup>";
+
+    // Add Maps
+    html += "<optgroup label='Maps of Mapped Markers'>";
+    let md = (protocol_type && protocol_type !== 'mapped') || protocol_refmap ? 'disabled' : '';
+    html += "<option value='' data-type='mapped' " + md + ">Any Map</option>";
+    for ( let i = 0; i < maps.length; i++ ) {
+        let d = (protocol_type === 'mapped' && protocol_refmap && !protocol_refmap.includes(maps[i].map_id+'')) 
+            || (protocol_type && protocol_type !== 'mapped') 
+            || (species && maps[i].species_name !== species) 
+            ? 'disabled' : '';
+        let s = d !== 'disabled' && refmap === maps[i].map_id+'' ? 'selected' : '';
+        html += "<option value='" + maps[i].map_id + "' "
+        html += "data-type='mapped' data-units='" + maps[i].map_units + "' data-species='" + maps[i].species_name + "' data-map='" + maps[i].map_name + "' ";
+        html += d + " " + s + ">";
+        html += maps[i].map_name + " (" + maps[i].species_name + ")";
+        html += "</option>";
+
+        if ( !SPECIES.includes(maps[i].species_name) ) SPECIES.push(maps[i].species_name);
+    }
+    html += "</optgroup>";
+
+    jQuery("#marker-refmap").html(html);
+    jQuery("#marker-refmap").attr('disabled', false);
+
+    // Set intial value, if not already set
+    if ( SEL_REFMAP ) {
+        jQuery("#marker-refmap").val(SEL_REFMAP);
+        SEL_REFMAP = undefined;
+    }
+
+    updateChromosomes();
+    updateSpecies();
+}
+
+
+/**
+ * Update the list of chromosomes based on the selected ref / map
+ */
+function updateChromosomes() {
+    let chrom = jQuery("#marker-chromosome").val();
+    let refmap = jQuery("#marker-refmap").val();
+    let type = jQuery("#marker-refmap option:selected").data("type");
+    let species = jQuery("#marker-refmap option:selected").data("species");
+    let map = jQuery("#marker-refmap option:selected").data("map");
+
+    if ( CHROMOSOMES ) {
+        let html = "";
+        let chroms = [];
+        if ( refmap ) {
+            if ( type === 'genotyped' ) {
+                chroms = CHROMOSOMES.genotyped[species][refmap];
+            }
+            else if ( type === 'mapped' ) {
+                chroms = CHROMOSOMES.mapped[map];
+            }
+        }
+        html += "<option value=''>Any Chromosome</option>";
+        for ( let i = 0; i < chroms.length; i++ ) {
+            let s = chrom && chroms[i] === chrom ? 'selected' : '';
+            html += "<option value='" + chroms[i] + "' " + s + ">" + chroms[i] + "</option>";
+        }
+
+        jQuery("#marker-chromosome").html(html);
+        jQuery("#marker-chromosome").attr("disabled", false);
+
+        // Set intial value, if not already set
+        if ( SEL_CHROM ) {
+            jQuery("#marker-chromosome").val(SEL_CHROM);
+            SEL_CHROM = undefined;
+            updatePositions();
+        }
+    }
+}
+
+
+/**
+ * Update the start/end postions based on the selected ref/map and chrom
+ * - update position units
+ * - enable fields only when ref/map and chrom have been selected
+ */
+function updatePositions() {
+    let refmap = jQuery("#marker-refmap").val();
+    let chrom = jQuery("#marker-chromosome").val();
+    let units = jQuery("#marker-refmap option:selected").data("units");
+
+    jQuery(".marker-position-units").html(units ? units : '&nbsp;&nbsp;');
+    jQuery("#marker-position-start").attr("disabled", refmap === '' || chrom === null || ['', 'Loading...'].includes(chrom));
+    jQuery("#marker-position-end").attr("disabled", refmap === '' || chrom === null || ['', 'Loading...'].includes(chrom));
+}
+
+
+/**
+ * Update the list of species
+ */
+function updateSpecies() {
+    let refmap_species = jQuery("#marker-refmap option:selected").data("species");
+    let protocol_species = jQuery("#marker-protocol option:selected").data("species");
+    let species = jQuery("#marker-species").val();
+
+    if ( SPECIES ) {
+        let ad = refmap_species 
+            || (protocol_species && !Array.isArray(protocol_species)) 
+            || (protocol_species && Array.isArray(protocol_species) && protocol_species.length === 1) 
+            ? 'disabled' : '';
+        let html = "<option value='' " + ad + ">Any Species</option>";
+        for ( let i = 0; i < SPECIES.length; i++ ) {
+            let d = (refmap_species && refmap_species !== SPECIES[i]) 
+                || (protocol_species && !Array.isArray(protocol_species) && protocol_species !== SPECIES[i])
+                || (protocol_species && Array.isArray(protocol_species) && !protocol_species.includes(SPECIES[i])) 
+                ? 'disabled' : '';
+            let s = d !== 'disabled' && SPECIES[i] === species ? 'selected' : '';
+            html += "<option value='" + SPECIES[i] + "' " + d + " " + s + ">";
+            html += SPECIES[i];
+            html += "</option>";
+        }
+
+        jQuery("#marker-species").html(html);
+        jQuery("#marker-species").attr("disabled", false);
+    }
+}
+
+
+/**
+ * Update the list of protocols
+ */
+function updateProtocols() {
+    let protocol = jQuery("#marker-protocol").val();
+    let refmap = jQuery("#marker-refmap").val();
+    let type = jQuery("#marker-refmap option:selected").data("type");
+    let species = jQuery("#marker-species").val();
+
+    if ( PROTOCOLS ) {
+        let html = "";
+        html += "<option value=''>Any Protocol</option>";        
+        
+        html += "<optgroup label='Protocols of Genotyped Markers'>";
+        for ( let i = 0; i < PROTOCOLS.genotyped.length; i++ ) {
+            let pi = PROTOCOLS.genotyped[i].nd_protocol_id;
+            let pn = PROTOCOLS.genotyped[i].nd_protocol_name;
+            let sn = PROTOCOLS.genotyped[i].species_name;
+            let rn = PROTOCOLS.genotyped[i].reference_genome_name;
+
+            let d = (type && type !== 'genotyped') || (refmap && refmap !== rn) || (species && sn !== species) ? 'disabled' : ''
+            let s = d !== 'disabled' && protocol && pn === protocol ? 'selected' : '';
+            html += "<option value='" + pi + "' data-type='genotyped' data-species='" + sn + "' data-refmap='" + rn + "' " + d + " " + s + ">";
+            html += pn + " (" + sn + " / " + rn + ")";
+            html += "</option>";
+        }
+
+        html += "<optgroup label='Protocols of Mapped Markers'>";
+        for ( let i = 0; i < PROTOCOLS.mapped.length; i++ ) {
+            let pn = PROTOCOLS.mapped[i].protocol;
+            let ss = PROTOCOLS.mapped[i].species;
+            let ss_str = JSON.stringify(ss);
+            let ms = PROTOCOLS.mapped[i].maps;
+            let mns = [];
+            let mis = [];
+            for ( let j = 0; j < ms.length; j++ ) {
+                mns.push(ms[j].map_name);
+                mis.push(ms[j].map_id+'');
+            }
+            let mis_str = JSON.stringify(mis);
+
+            let d = (type && type !== 'mapped') || (refmap && !mis.includes(refmap)) || (species && !ss.includes(species)) ? 'disabled' : '';
+            let s = d !== 'disabled' && protocol && protocol === pn ? 'selected' : '';
+            html += "<option value='" + pn + "' data-type='mapped' data-species='" + ss_str + "' data-refmap='" + mis_str + "' " + d + " " + s + ">";
+            html += pn + " (" + ss.join('; ') + " / " + mns.join('; ') + ")";
+            html += "</option>";
+        }
+
+        jQuery("#marker-protocol").html(html);
+        jQuery("#marker-protocol").attr("disabled", false);
+
+        // Set intial value, if not already set
+        if ( SEL_PROTOCOL ) {
+            jQuery("#marker-protocol").val(SEL_PROTOCOL);
+            SEL_PROTOCOL = undefined;
+        }
+    }
+}
+
+
+
+//
+// SEARCH FUNCTIONS
+//
+
+
+/**
+ * Perform the marker search with the user input
+ *  - Build results URL
+ *  - Go to the marker search results page
+ */
+function search() {
+
+    // Get user inputs
+    let marker_name = jQuery('#marker-name').val();
+    let marker_name_match = jQuery('#marker-name-match').val();
+    let refmap = jQuery("#marker-refmap").val();
+    let refmap_type = jQuery("#marker-refmap option:selected").data("type");
+    let refmap_species = jQuery("#marker-refmap option:selected").data("species");
+    let chrom = jQuery("#marker-chromosome").val();
+    let start = jQuery("#marker-position-start").val();
+    let end = jQuery("#marker-position-end").val();
+    let species = jQuery("#marker-species").val();
+    let protocol = jQuery("#marker-protocol").val();
+    let protocol_type = jQuery("#marker-protocol option:selected").data("type");
+
+    // Check for required params
+    if ( (start && !end) || (end && !start) ) {
+        alert("Both the start and end position are required when filtering by position");
+        return;
+    }
+
+    // Set search params
+    let params = {};
+    if ( marker_name ) params.marker_name = marker_name;
+    if ( marker_name_match ) params.marker_name_match = marker_name_match;
+    if ( refmap_type || protocol_type ) params.type = refmap_type || protocol_type;
+    if ( refmap ) params.refmap = refmap;
+    if ( refmap_species || species ) params.species = refmap_species || species;
+    if ( chrom && chrom !== 'Loading...' ) params.chrom = chrom;
+    if ( start ) params.start = start;
+    if ( end ) params.end = end;
+    if ( protocol ) params.protocol = protocol;
+
+    // Go to results page to perform search
+    let q = new URLSearchParams(params);
+    let url = "/search/variants/results?" + q.toString();
+    window.location = url;
+
+}
+</script>
+
+
+
+
+<style>
+    h2.marker-search-header {
+        color: #000;
+        font-size: 14px;
+        border-bottom: 1px solid #ccc;
+        margin-bottom: 25px;
+    }
+    button.marker-search-button {
+        max-width: 400px;
+        margin: 25px auto;
+    }
+    label {
+        text-align: right;
+        margin-top: 7px;
+    }
+</style>
