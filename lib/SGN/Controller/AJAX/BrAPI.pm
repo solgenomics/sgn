@@ -3864,21 +3864,6 @@ sub observations_detail_PUT {
 
 sub observation_search_save : Chained('brapi') PathPart('search/observations') Args(0) : ActionClass('REST') { }
 
-# make this immediate rather than saved search
-# sub observation_search_POST {
-# 	my $self = shift;
-# 	my $c = shift;
-# 	my $auth = _authenticate_user($c);
-# 	my $clean_inputs = $c->stash->{clean_inputs};
-# 	my $brapi = $self->brapi_module;
-# 	my $brapi_module = $brapi->brapi_wrapper('Observations');
-# 	print Dumper($clean_inputs);
-# 	my $brapi_package_result = $brapi_module->search(
-# 		$clean_inputs
-# 	);
-# 	_standard_response_construction($c, $brapi_package_result);
-# }
-
 sub observation_search_save_POST {
    my $self = shift;
    my $c = shift;
