@@ -154,6 +154,7 @@ sub detail {
     my $limit = $page_size*($page+1)-1;
     my $offset = $page_size*$page;
 
+    # TODO: change to use search factory if we want to stick with that
     my ($data, $unique_traits)  = _search_observation_id(
             $self->bcs_schema,
             $observation_level,
@@ -174,12 +175,9 @@ sub detail {
 
     my @data_window;
 
-    print Dumper(\@$data);
-
     foreach my $obs_unit (@$data){
         my @brapi_observations;
         my $observations = $obs_unit->{observations};
-        print Dumper($observations);
         foreach (@$observations){
             my @season = {
                 year => $obs_unit->{year},       
@@ -621,7 +619,6 @@ sub _search_observation_id {
         };
     }
 
-    print Dumper(\@result);
     print STDERR "Search End:".localtime."\n";
     return (\@result, \%unique_traits);
 }
