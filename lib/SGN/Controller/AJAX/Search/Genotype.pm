@@ -136,7 +136,7 @@ sub pcr_genotyping_data_search_GET : Args(0) {
         protocol_id_list=>$protocol_id,
     });
     my $result = $genotypes_search->get_pcr_genotype_info();
-
+    print STDERR "PCR RESULTS =".Dumper($result)."\n";
     my $protocol_marker_names = $result->{'marker_names'};
     my $protocol_genotype_data = $result->{'protocol_genotype_data'};
 
@@ -181,5 +181,41 @@ sub pcr_genotyping_data_search_GET : Args(0) {
     $c->stash->{rest} = { data => \@results};
 }
 
+
+sub pcr_genotyping_data_summary_search : Path('/ajax/pcr_genotyping_data_summary/search') : ActionClass('REST') { }
+
+sub pcr_genotyping_data_summary_search_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $clean_inputs = _clean_inputs($c->req->params);
+    my $protocol_id = $clean_inputs->{protocol_id_list};
+
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$bcs_schema,
+        people_schema=>$people_schema,
+        protocol_id_list=>$protocol_id,
+    });
+    my $result = $genotypes_search->get_pcr_genotype_info();
+    print STDERR "PCR RESULTS =".Dumper($result)."\n";
+    my $protocol_marker_names = $result->{'marker_names'};
+    my $protocol_genotype_data = $result->{'protocol_genotype_data'};
+
+    my $protocol_marker_names_ref = decode_json $protocol_marker_names;
+    my @marker_name_arrays = @$protocol_marker_names_ref;
+    my $number_of_markers = scalar @marker_name_arrays;
+
+    my @protocol_genotype_data_array = @$protocol_genotype_data;
+    my @results;
+    foreach my $genotype_data (@protocol_genotype_data_array) {
+        push @results, {
+            stock_id => $genotype_data->[0],
+            stock_name => $genotype_data->[1],
+            number_of_markers => $number_of_markers,
+        };
+    }
+    $c->stash->{rest} = { data => \@results};
+}
 
 1;

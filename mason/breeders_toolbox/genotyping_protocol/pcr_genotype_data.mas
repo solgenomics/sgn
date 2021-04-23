@@ -4,6 +4,9 @@ $marker_names => []
 
 </%args>
 
+
+<!--
+
 <div style="overflow:scroll">
     <table id="pcr_protocol_genotype_data" width="100%" class="table table-hover table-striped">
         <thead>
@@ -17,6 +20,14 @@ $marker_names => []
     </table>
 </div>
 
+-->
+
+<div style="overflow:scroll">
+    <table id="pcr_protocol_genotype_data_summary" width="100%" class="table table-hover table-striped">
+    </table>
+</div>
+
+
 <script>
 
 jQuery(document).ready(function () {
@@ -26,6 +37,14 @@ jQuery(document).ready(function () {
 
     });
 
+    var pcr_genotypes_data_table_summary = jQuery('#pcr_protocol_genotype_data_summary').DataTable({
+        'ajax': '/ajax/pcr_genotyping_data_summary/search?protocol_id_list=<% $protocol_id %>',
+        columns: [
+            { title: "Sample Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.stock_name+"</a>"; } },
+            { title: "Number of Markers", "data": "number_of_markers" },
+
+        ]
+    });
 
 });
 
