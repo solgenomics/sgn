@@ -184,6 +184,9 @@ sub search {
     	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     	$h->execute($_->{stock_id}, $cross_type_cvterm_id);
     	my ($cross_type) = $h->fetchrow_array();
+        if ( ! defined $cross_type) {
+            $cross_type = "unknown";
+        }
 
         push @data, {
             accessionNumber=>$_->{'accession number'},
@@ -1028,6 +1031,9 @@ sub _simple_search {
     	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     	$h->execute($_->{stock_id}, $cross_type_cvterm_id);
     	my ($cross_type) = $h->fetchrow_array();
+        if ( ! defined $cross_type) {
+            $cross_type = "unknown";
+        }
 
         push @data, {
             accessionNumber=>$_->{'accession number'},
