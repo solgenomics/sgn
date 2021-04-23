@@ -725,7 +725,7 @@ sub germplasm_search_old_GET {
 sub germplasm_search_old_POST {
     my $self = shift;
     my $c = shift;
-    my ($auth) = _authenticate_user($c);
+    # my ($auth) = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
@@ -1537,7 +1537,7 @@ sub allelematrix_GET {
 sub allelematrix_search_process {
     my $self = shift;
     my $c = shift;
-    my ($auth) = _authenticate_user($c);
+    # my ($auth) = _authenticate_user($c);
 
     my $clean_inputs = $c->stash->{clean_inputs};
     my $format = $clean_inputs->{format}->[0];
@@ -1899,7 +1899,7 @@ sub studies_search  : Chained('brapi') PathPart('studies-search') Args(0) : Acti
 sub studies_search_POST {
     my $self = shift;
     my $c = shift;
-    my ($auth) = _authenticate_user($c);
+    # my ($auth) = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Studies');
@@ -2497,7 +2497,7 @@ sub phenotypes_search : Chained('brapi') PathPart('phenotypes-search') Args(0) :
 sub phenotypes_search_POST {
     my $self = shift;
     my $c = shift;
-    my ($auth) = _authenticate_user($c);
+    # my ($auth) = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
@@ -2652,7 +2652,7 @@ sub phenotypes_search_table_GET {
 sub process_phenotypes_search_table {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	# my ($auth) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationTables');
@@ -2692,7 +2692,7 @@ sub phenotypes_search_csv_GET {
 sub process_phenotypes_search_csv {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	# my ($auth) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $dir = $c->tempfiles_subdir('download');
 	my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
@@ -2735,7 +2735,7 @@ sub phenotypes_search_tsv_GET {
 sub process_phenotypes_search_tsv {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	# my ($auth) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $dir = $c->tempfiles_subdir('download');
 	my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
@@ -3238,7 +3238,7 @@ sub observationvariable_search_GET {
 sub _observationvariable_search_process {
 	my $self = shift;
 	my $c = shift;
-    my ($auth) = _authenticate_user($c);
+    # my ($auth) = _authenticate_user($c);
 
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
@@ -3327,7 +3327,7 @@ sub samples_list_GET {
 sub _sample_search_process {
     my $self = shift;
     my $c = shift;
-    my ($auth) = _authenticate_user($c);
+    # my ($auth) = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Samples');
@@ -4009,7 +4009,7 @@ sub observations_search_GET {
 sub observations_search_process {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	# my ($auth) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
@@ -5084,6 +5084,12 @@ sub save_results {
 
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper($search_type);
+    
+    #set default value to 100000 to get as much as possible records when page size is not a parameter
+    if(!$search_params->{pageSize}) {
+    	$brapi_module->{page_size} = 100000;
+	}
+    
     my $search_result = $brapi_module->search($search_params,$c);
 
     my $dir = $c->tempfiles_subdir('/brapi_searches');
