@@ -44,8 +44,9 @@ sub search {
         $trial_ids = ($study_ids_arrayref, $trial_ids_arrayref); 
     }
 
-    my $limit = undef; #$page_size*($page+1)-1;
-    my $offset = undef; #$page_size*$page;
+    # can't really limit in query because need to look at observations array
+    my $limit = undef;
+    my $offset = undef;
 
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
@@ -76,10 +77,8 @@ sub search {
     my $counter = 0;
 
     foreach my $obs_unit (@$data){
-        #print Dumper($obs_unit);
         my @brapi_observations;
         my $observations = $obs_unit->{observations};
-        #print Dumper($observations);
         foreach (@$observations){
             my $observation_id = "$_->{phenotype_id}";
             # if ( ! $observation_db_id || grep{/^$observation_id$/} @{$observation_db_id} ){
