@@ -31,7 +31,6 @@ A hashref containing the variants and the markers related to one or more of the 
 <%args>
     $variant_name => undef
     $markers => undef
-    $related_variants => {}
 </%args>
 
 <%init>
@@ -40,15 +39,6 @@ A hashref containing the variants and the markers related to one or more of the 
     }
     if ( !$markers ) {
         print "<p><strong>ERROR: </strong>Missing variant markers!</p>";
-    }
-
-    # Get unique list of marker names at this variant
-    my @marker_names = ();
-    foreach my $marker (@$markers) {
-        my $n = $marker->{'marker_name'};
-        if ( !grep( /^$n$/, @marker_names) ) {
-            push(@marker_names, $marker->{'marker_name'});
-        } 
     }
 
     # Set query parameters for the sequence metadata table
@@ -77,15 +67,15 @@ A hashref containing the variants and the markers related to one or more of the 
 
 
 <!-- RELATED VARIANTS LINKS -->
-<&| /page/info_section.mas, title=>'Related Variants', collapsible=>1, collapsed=>0 &>
-    <& /markers/genotyped/related_variants.mas, related_variants => $related_variants &>
+<&| /page/info_section.mas, title=>'Related Markers', collapsible=>1, collapsed=>0 &>
+    <& /markers/genotyped/related_markers.mas, variant_name => $variant_name &>
 </&>
 
 
 
 <!-- EXTERNAL LINKS -->
 <&| /page/info_section.mas, title=>'External Links', collapsible=>1, collapsed=>0 &>
-    <& /markers/genotyped/external_links.mas, marker_names => \@marker_names &>
+    <& /markers/genotyped/external_links.mas, markers => $markers &>
 </&>
 
 

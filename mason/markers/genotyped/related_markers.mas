@@ -1,0 +1,90 @@
+<%args>
+    $variant_name => undef
+</%args>
+
+<%init>
+    if ( !$variant_name ) {
+        print "<p><strong>ERROR: </strong>Missing variant name!</p>";
+    }
+</%init>
+
+<p><strong>Related Variants:</strong> These variants have one or more markers with the same name as a marker at this variant</p>
+<div id="related-variants">
+    <em>Loading...</em>
+</div>
+
+<br />
+
+<p><strong>Related Mapped Markers:</strong> These mapped markers have the same name as a marker at this variant</p>
+<div id="related-mapped-markers">
+    <em>Loading...</em>
+</div>
+
+
+<script type="text/javascript">
+jQuery(document).ready(function() {
+
+    getRelatedVariants();
+    getRelatedMappedMarkers();
+
+});
+
+
+function getRelatedVariants() {
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/genotyped/related_variants',
+        data: { variant_name: "<% $variant_name %>" },
+        success: function(response) {
+            console.log(response);
+            let html = "";
+            if ( response && response.related_variants ) {
+                for ( let variant_name in response.related_variants ) {
+                    if ( response.related_variants.hasOwnProperty(variant_name) ) {
+                        html += "<strong><a href='/variant/" + variant_name + "/details'>" + variant_name + "</a></strong>";
+                        html += " (" + response.related_variants[variant_name][0].species_name + " / " + response.related_variants[variant_name][0].reference_genome_name + ")";
+                        let ms = response.related_variants[variant_name];
+                        html += "<ul>";
+                        for ( let i = 0; i < ms.length; i++ ) {
+                            html += "<li>" + ms[i].marker_name + " (" + ms[i].nd_protocol_name + ")</li>";
+                        }
+                        html += "</ul>";
+                    }
+                }
+            }
+            else {
+                html += "<em>No related variants found</em>";
+            }
+            jQuery("#related-variants").html(html);
+        },
+        error: function(response) {
+            console.log("Could not get related variants");
+        }
+    });
+}
+
+function getRelatedMappedMarkers() {
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/genotyped/related_mapped_markers',
+        data: { variant_name: "<% $variant_name %>" },
+        success: function(response) {
+            console.log(response);
+            let html = "";
+            if ( response && response.related_mapped_markers && response.related_mapped_markers.length > 0 ) {
+                let ms = response.related_mapped_markers;
+                for ( let i = 0; i < ms.length; i++ ) {
+                    html += "<strong><a href='/search/markers/markerinfo.pl?marker_id=" + ms[i].marker_id + "'>" + ms[i].marker_name + "</a></strong> (" + ms[i].map_name + ")<br />";
+                }
+            }
+            else {
+                html += "<em>No related mapped markers found</em>";
+            }
+            jQuery("#related-mapped-markers").html(html);
+        },
+        error: function(response) {
+            console.log("Could not get related mapped markers");
+        }
+    });
+}
+</script>

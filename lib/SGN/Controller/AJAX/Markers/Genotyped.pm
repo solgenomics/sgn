@@ -144,7 +144,6 @@ sub query_variants_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $dbh = $schema->storage->dbh();
 
     my $name = $c->req->param('name');
     my $name_match = $c->req->param('name_match');
@@ -189,17 +188,59 @@ sub query_variants_GET : Args(0) {
         limit => $limit,
         page => $page
     );
-
-    print STDERR "START GENOTYPED MARKER SEARCH:\n";
-    use Data::Dumper;
-    print STDERR Dumper \%args;
-
     my $results = $msearch->query(\%args);
 
     # Return the results as JSON
-    $c->stash->{rest} = {
-        results => $results
-    };
+    $c->stash->{rest} = { results => $results };
+}
+
+
+#
+# Get related variants: variants that have a marker with the same name as one 
+# of the markers in the specified variant
+#
+# PATH: GET /ajax/markers/genotyped/related_variants
+# PARAMS:
+#   - variant_name = name of the variant
+# RETURNS:
+#   - related_variants: an array of objects containing the variants and their related/matching markers
+# 
+sub get_related_variants : Path('/ajax/markers/genotyped/related_variants') : ActionClass('REST') { }
+sub get_related_variants_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $variant_name = $c->req->param('variant_name');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $msearch = CXGN::Marker::SearchMatView->new(bcs_schema => $schema);
+    my $related_variants = $msearch->related_variants($variant_name);
+
+    $c->stash->{rest} = { related_variants => $related_variants };
+}
+
+#
+# Get related mapped markers: mapped markers that share the name of one of the 
+# markers in the specified variant
+#
+# PATH: GET /ajax/markers/genotyped/related_variants
+# PARAMS:
+#   - variant_name = name of the variant
+# RETURNS:
+#   - related_mapped_markers: an array of related mapped markers, with the following keys:
+#       - marker_id = id of mapped marker
+#       - marker_name = name of mapped marker
+#       - map_id = id of map
+#       - map_name = name of map
+# 
+sub get_related_mapped_markers : Path('/ajax/markers/genotyped/related_mapped_markers') : ActionClass('REST') { }
+sub get_related_mapped_markers_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $variant_name = $c->req->param('variant_name');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $msearch = CXGN::Marker::SearchMatView->new(bcs_schema => $schema);
+    my $related_mapped_markers = $msearch->related_mapped_markers($variant_name);
+
+    $c->stash->{rest} = { related_mapped_markers => $related_mapped_markers };
 }
 
 

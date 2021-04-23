@@ -34,12 +34,8 @@ sub get_variant_details: Chained('get_variant') PathPart('details') :Args(0) {
     my $msearch = CXGN::Marker::SearchMatView->new(bcs_schema => $schema);
     my $variant_details = $msearch->query({ variant => $variant_name });
     my $markers = $variant_details->{'variants'}->{$variant_name};
-    
-    # Get related variants
-    my $related_variants = $msearch->related_variants($variant_name);
 
     $c->stash->{markers} = $markers;
-    $c->stash->{related_variants} = $related_variants;
     $c->stash->{template} = '/markers/genotyped/variant_details.mas';
 }
 

@@ -249,6 +249,66 @@ sub related_variants {
 
 
 #
+# Find mapped markers that are related to those of the specified variant
+#
+# This query will get all of the markers (id, name, map_id and map_name) of markers 
+# that share the same name as a marker in the specified variant
+#
+# Arguments:
+#   - variant_name = name of the variant of which to find related markers
+#
+# Returns an array of marker hashes with the following keys:
+#   - marker_id = id of mapped marker
+#   - marker_name = name of mapped marker
+#   - map_id = id of map
+#   - map_name = name of map
+#
+sub related_mapped_markers {
+    my $self = shift;
+    my $variant_name = shift;
+    my $schema = $self->bcs_schema;
+    my $dbh = $schema->storage->dbh();
+
+    # Build query
+    my $q = "SELECT m.marker_name, m.species_name AS ori_species_name, marker_alias.marker_id, marker_alias.alias, map.map_id, map.short_name, 
+                CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), '')) AS species_name 
+                FROM (
+                    SELECT marker_name, species_name 
+                    FROM materialized_markerview 
+                    WHERE variant_name = ?
+                    GROUP BY marker_name, species_name
+                ) AS m
+                LEFT JOIN sgn.marker_alias ON (UPPER(m.marker_name) = UPPER(marker_alias.alias))
+                LEFT JOIN sgn.marker_to_map AS m2m ON (marker_alias.marker_id = m2m.marker_id)
+                LEFT JOIN sgn.map ON (m2m.map_id = map.map_id)
+                LEFT JOIN public.stock ON (stock.stock_id = map.parent1_stock_id)
+                LEFT JOIN public.organism ON (stock.organism_id = organism.organism_id)
+                WHERE marker_alias.alias <> '';";
+    
+    # Execute Query
+    my $h = $dbh->prepare($q);
+    $h->execute($variant_name);
+
+    # Parse Results
+    my @markers;
+    while (my ($ori_marker_name, $ori_species_name, $marker_id, $marker_name, $map_id, $map_name, $species_name) = $h->fetchrow_array()) {
+        if ( $ori_species_name eq $species_name ) {
+            my %marker = (
+                marker_id => $marker_id,
+                marker_name => $marker_name,
+                map_id => $map_id,
+                map_name => $map_name
+            );
+            push(@markers, \%marker);
+        }
+    }
+
+    # Return the Results
+    return(\@markers);
+}
+
+
+#
 # Search the unified marker materialized view for markers matching the provided search criteria
 #
 # Arguments (as a hash with the following keys):
