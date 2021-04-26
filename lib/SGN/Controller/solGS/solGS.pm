@@ -400,7 +400,7 @@ sub build_single_trait_model {
 sub trait :Path('/solgs/trait') Args() {
     my ($self, $c, $trait_id, $key, $pop_id, $gp, $protocol_id) = @_;
 
-
+print STDERR "\n$trait_id, $key, $pop_id, $gp, $protocol_id\n ";
     if ($pop_id =~ /dataset/)
     {
 	$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
@@ -452,8 +452,9 @@ sub trait :Path('/solgs/trait') Args() {
 	{
 	    $self->get_trait_details($c, $trait_id);
 	    $self->gs_modeling_files($c);
-
+print STDERR "\n calling cross val stat: trait_id: $trait_id -- pop_id: $pop_id\n";
 	    $c->controller('solGS::modelAccuracy')->cross_validation_stat($c, $pop_id, $c->stash->{trait_abbr});
+        print STDERR "\n DONE calling cross val stat: trait_id: $trait_id -- pop_id: $pop_id\n";
 	    $c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
 	    my $acronym_file = $c->stash->{traits_acronym_file};
 
@@ -535,7 +536,7 @@ sub input_files {
 	$c->controller('solGS::Files')->formatted_phenotype_file($c);
 	my $formatted_phenotype_file  = $c->stash->{formatted_phenotype_file};
 
-	my $selection_pop_id = $c->stash->{prediction_pop_id} ||$c->stash->{selection_pop_id} ;
+	my $selection_pop_id = $c->stash->{selection_pop_id} ;
 	my ($selection_population_file, $filtered_pred_geno_file);
 
 	if ($selection_pop_id)
@@ -584,7 +585,7 @@ sub output_files {
     $c->controller('solGS::Files')->average_kinship_file($c);
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
 
-    my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
 
 
     no warnings 'uninitialized';
@@ -712,17 +713,15 @@ sub predict_selection_pop_single_pop_model {
 
     my $trait_id          = $c->stash->{trait_id};
     my $training_pop_id   = $c->stash->{training_pop_id};
-    my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
     my $protocol_id       = $c->stash->{genotyping_protocol_id};
 
     $self->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
-    # my $identifier = $training_pop_id . '_' . $prediction_pop_id;
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
 
     my $rrblup_selection_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
-    $c->stash->{selection_pop_id} = $selection_pop_id;
 
     if (!-s $rrblup_selection_gebvs_file)
     {
@@ -755,7 +754,6 @@ sub selection_prediction :Path('/solgs/model') Args() {
     $c->stash->{training_pop_id}   = $training_pop_id;
     $c->stash->{model_id}          = $training_pop_id;
     $c->stash->{pop_id}            = $training_pop_id;
-    $c->stash->{prediction_pop_id} = $selection_pop_id;
     $c->stash->{selection_pop_id}  = $selection_pop_id;
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 
@@ -1475,7 +1473,6 @@ sub gebv_graph :Path('/solgs/trait/gebv/graph') Args(0) {
 
     $c->stash->{pop_id} = $training_pop_id;
     $c->stash->{training_pop_id} = $training_pop_id;
-    $c->stash->{prediction_pop_id} = $selection_pop_id;
     $c->stash->{selectiion_pop_id} = $selection_pop_id;
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $self->get_trait_details($c, $trait_id);
@@ -2161,7 +2158,7 @@ sub get_rrblup_output {
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my $data_set_type = $c->stash->{data_set_type};
-    my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
 
     my ($traits_file, @traits, @trait_pages);
 
@@ -2257,7 +2254,7 @@ sub run_rrblup_trait {
     $self->get_trait_details($c, $trait_id);
 
     my $training_pop_id = $c->stash->{training_pop_id} || $c->stash->{pop_id};
-    my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
 
     $self->input_files($c);
     $self->output_files($c);
@@ -2374,7 +2371,7 @@ sub get_gs_r_temp_file {
 
     my $data_set_type = $c->stash->{data_set_type};
 
-    my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
     $c->stash->{selection_pop_id} = $selection_pop_id;
 
     $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
@@ -2396,7 +2393,7 @@ sub get_gs_r_temp_file {
 sub get_selection_pop_query_args {
     my ($self, $c) = @_;
 
-    my $selection_pop_id = $c->stash->{selection_pop_id} || $c->stash->{prediction_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $selection_pop_geno_file;
     my $pop_type;
@@ -2452,7 +2449,7 @@ sub get_selection_pop_query_args {
 sub get_cluster_query_job_args {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{selection_pop_id} || $c->stash->{prediction_pop_id};
+    my $pop_id = $c->stash->{selection_pop_id};
     my $protocol_id =  $c->stash->{genotyping_protocol_id};
 
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);

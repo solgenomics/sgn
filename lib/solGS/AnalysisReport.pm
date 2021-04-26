@@ -785,27 +785,27 @@ sub selection_prediction_message {
 	    {
 		my $trait_name          = uc($output_details->{$k}->{trait_name});
 		my $training_pop_page   = $output_details->{$k}->{training_pop_page};
-		my $prediction_pop_page = $output_details->{$k}->{prediction_pop_page};
-		my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
-		$prediction_pop_name =~ s/^\s+|\s+$//g;
+		my $selection_pop_page = $output_details->{$k}->{selection_pop_page};
+		my $selection_pop_name = $output_details->{$k}->{selection_pop_name};
+		$selection_pop_name =~ s/^\s+|\s+$//g;
 
 		if ($output_details->{$k}->{success})
 		{
 		    $cnt++;
 		    if($cnt == 1)
 		    {
-			$message .= "The prediction of selection population $prediction_pop_name is done."
+			$message .= "The prediction of selection population $selection_pop_name is done."
 			    . "\nYou can view the prediction output here:\n\n"
 		    }
 
-		    $message .= "$prediction_pop_page\n\n";
+		    $message .= "$selection_pop_page\n\n";
 		}
 		else
 		{
 		    my $failure_reason = $output_details->{$k}->{failure_reason};
 		    $message = "The analysis for $trait_name failed. Possible reason is:\n\n";
 		    $message .= "$failure_reason\n\n";
-		    $message .= "Refering page: $prediction_pop_page\n\n";
+		    $message .= "Refering page: $selection_pop_page\n\n";
 		    $message .= "We will troubleshoot the cause and contact you when we find out more.\n\n";
 		}
 	    }

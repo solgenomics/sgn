@@ -113,7 +113,7 @@ sub get_dataset_genotypes_list {
    	my $genotypes  = $c->controller('solGS::List')->transform_uniqueids_genotypes($c, $genotypes_ids);
     $c->stash->{genotypes_list} = $genotypes;
     $c->stash->{genotypes_ids}  = $genotypes_ids;
-	
+
 }
 
 sub submit_dataset_training_data_query {
@@ -318,7 +318,7 @@ sub dataset_population_summary {
 
 	    $c->stash(project_id          => $file_id,
 		      project_name        => $dataset_name,
-		      prediction_pop_name => $dataset_name,
+		      selection_pop_name => $dataset_name,
 		      project_desc        => $desc,
 		      owner               => $user_name,
 		      protocol            => $protocol,

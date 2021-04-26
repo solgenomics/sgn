@@ -127,7 +127,7 @@ sub filtered_training_genotype_file {
 sub filtered_selection_genotype_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
+    my $pop_id = $c->stash->{selection_pop_id};
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $file_id = "${pop_id}-GP-${protocol_id}";
@@ -587,21 +587,20 @@ sub first_stock_genotype_file {
 
 
 sub selection_population_file {
-    my ($self, $c, $pred_pop_id) = @_;
+    my ($self, $c, $selection_pop_id) = @_;
 
     my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
 
-    my $file = "selection_population_file_${pred_pop_id}";
+    my $file = "selection_population_file_${selection_pop_id}";
     my $tempfile = $self->create_tempfile($tmp_dir, $file);
 
-    $c->stash->{prediction_pop_id} = $pred_pop_id;
-    $c->stash->{selection_pop_id}  = $pred_pop_id;
+    $c->stash->{selection_pop_id}  = $selection_pop_id;
     $self->filtered_selection_genotype_file($c);
     my $filtered_geno_file = $c->stash->{filtered_selection_genotype_file};
 
     my $geno_files = $filtered_geno_file;
 
-    $self->genotype_file_name($c, $pred_pop_id);
+    $self->genotype_file_name($c, $selection_pop_id);
     $geno_files .= "\t" . $c->stash->{genotype_file_name};
 
     write_file($tempfile, {binmode => ':utf8'}, $geno_files);

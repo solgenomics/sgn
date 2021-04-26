@@ -419,11 +419,9 @@ sub predict_list_selection_pop_combined_pops_model {
     my $selection_pop_id  = $c->stash->{selection_pop_id};
     my $trait_id          = $c->stash->{trait_id};
 
-    $c->stash->{prediction_pop_id} = $c->stash->{selection_pop_id};
     $c->stash->{pop_id} = $training_pop_id;
     $c->stash->{list_prediction} = 1;
 
-    # my $identifier = $training_pop_id . '_' . $selection_pop_id;
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
     my $rrblup_selection_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
 
