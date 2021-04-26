@@ -39,18 +39,21 @@ sub transform {
 
     if (ref($list) eq "ARRAY" ) {
 	foreach my $item (@$list) { 
-	    my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => { ilike => $item }, type_id => $type_id } );
+	    my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => { '~*' => '^'.$item.'$' }, type_id => $type_id } );
 
-	    if ($rs->count() == 0) {
+	    my $count = $rs->count();
+	    if ($count == 0) {
+		print STDERR "Missing item: $item\n";
 		push @missing, $item;
 	    }
 	    
-	    if ($rs->count() == 1) {
+	    if ($count == 1) {
 		my $row = $rs->next();
 		if ($item eq $row->uniquename()) {
+		    print STDERR "Found match  match: $item\n";
 		    push @found_ids, $item;
 		}
-		else {
+		else { 
 		    print STDERR "Converting case from '$item' to '".$row->uniquename()."'\n";
 		    push @found_ids, $row->uniquename();
 		    $mapping{$item} = $row->uniquename();
@@ -59,7 +62,7 @@ sub transform {
 
 	    my %duplicates;
 	    
-	    if ($rs->count() > 1) {
+	    if ($count > 1) {
 		while (my $row = $rs->next()) {
 		    push @{$duplicates{$item}}, $row->uniquename();
 		}
