@@ -22,6 +22,7 @@ package SGN::Controller::AJAX::Markers::Mapped;
 use Moose;
 use JSON;
 use CXGN::Marker::Search;
+use CXGN::Marker::SearchMatView;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -182,6 +183,71 @@ sub get_protocols_GET : Args(0) {
 
     # Return the results
     $c->stash->{rest} = { protocols => \@response };
+}
+
+
+#
+# Get genotyped markers that are related to the specified mapped marker
+# PATH: GET /ajax/markers/mapped/related_variants
+# PARAMS:
+#   - marker_id = id of mapped marker
+# RETURNS:
+#   - related_variants: genotyped variants and their matching markers, grouped by variant name
+#
+sub get_related_variants_of_mapped_marker : Path('/ajax/markers/mapped/related_variants') : ActionClass('REST') { }
+sub get_related_variants_of_mapped_marker_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $marker_id = $c->req->param('marker_id');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh();
+
+    # Check for required parameters
+    if ( !defined $marker_id || $marker_id eq '' ) {
+        $c->stash->{rest} = {error => 'marker_id must be provided!'};
+        $c->detach();
+    }
+
+    # Get marker names and species
+    my $query = "SELECT marker_alias.alias, CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), '')) AS species_name
+                FROM sgn.marker_alias
+                LEFT JOIN sgn.marker_to_map AS m2m ON (marker_alias.marker_id = m2m.marker_id)
+                LEFT JOIN sgn.map ON (m2m.map_id = map.map_id)
+                LEFT JOIN public.stock ON (map.parent1_stock_id = stock.stock_id)
+                LEFT JOIN public.organism ON (stock.organism_id = organism.organism_id)
+                WHERE marker_alias.marker_id = ?;";
+    my $h = $dbh->prepare($query);
+    $h->execute($marker_id);
+    
+    # Parse each name / species
+    my %variants = ();
+    my $msearch = CXGN::Marker::SearchMatView->new(bcs_schema => $schema);
+    while (my ($marker_name, $species_name) = $h->fetchrow_array()) {
+        
+        # Perform genotype marker search on mapped marker name / species
+        my %args = (
+            species_name => $species_name,
+            name => $marker_name
+        );
+        my $results = $msearch->query(\%args);
+        my $variants = $results->{variants};
+
+        # Parse the matching variants / markers
+        foreach my $variant (keys %$variants) {
+            my $markers = $variants->{$variant};
+            if ( !exists $variants{$variant} ) {
+                $variants{$variant} = ();
+            }
+            foreach my $marker (@$markers) {
+                push(@{$variants{$variant}}, $marker);
+            }
+        }
+    }
+
+    # Return the results as JSON
+    $c->stash->{rest} = {
+        related_variants => \%variants
+    };
 }
 
 

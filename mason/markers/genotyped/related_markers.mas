@@ -23,20 +23,19 @@
 
 <script type="text/javascript">
 jQuery(document).ready(function() {
-
     getRelatedVariants();
     getRelatedMappedMarkers();
-
 });
 
-
+/**
+ * Get the variants / genotyped markers related to the current variant
+ */
 function getRelatedVariants() {
     jQuery.ajax({
         type: 'GET',
         url: '/ajax/markers/genotyped/related_variants',
         data: { variant_name: "<% $variant_name %>" },
         success: function(response) {
-            console.log(response);
             let html = "";
             if ( response && response.related_variants ) {
                 for ( let variant_name in response.related_variants ) {
@@ -63,6 +62,9 @@ function getRelatedVariants() {
     });
 }
 
+/**
+ * Get the mapped markers related to the current variant
+ */
 function getRelatedMappedMarkers() {
     jQuery.ajax({
         type: 'GET',
