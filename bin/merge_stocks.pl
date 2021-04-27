@@ -69,16 +69,22 @@ eval {
 	chomp;
 	my ($merge_stock_name, $good_stock_name) = split /\t/;
 	print STDERR "bad name: $merge_stock_name, good name: $good_stock_name\n";
-	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => $good_stock_name } );
+
+	# for now, only allow accessions to be merged!
+	my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+	print STDERR "Working with accession type id of $accession_type_id...\n";
+	
+	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => $good_stock_name, type_id=>$accession_type_id } );
 	if (!$stock_row) {
-	    print STDERR "Stock $good_stock_name not found. Skipping...\n";
+	    print STDERR "Stock $good_stock_name (of type accession) not found. Skipping...\n";
 
 	    next();
 	}
 
-	my $merge_row = $schema->resultset("Stock::Stock")->find( { uniquename => $merge_stock_name } );
+	my $merge_row = $schema->resultset("Stock::Stock")->find( { uniquename => $merge_stock_name, type_id => $accession_type_id  } );
 	if (!$merge_row) {
-	    print STDERR "Stock $merge_stock_name not available for merging. Skipping\n";
+	    print STDERR "Stock $merge_stock_name (of type accession) not available for merging. Skipping\n";
 	    next();
 	}
 
