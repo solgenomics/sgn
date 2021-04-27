@@ -2154,20 +2154,22 @@ sub get_pcr_genotype_info {
     $h1->execute($protocol_id, $pcr_protocolprop_cvterm_id);
     my $marker_names = $h1->fetchrow_array();
 
-    my $q = "SELECT stock.stock_id, stock.uniquename, genotypeprop.value
+    my $q = "SELECT stock.stock_id, stock.uniquename,cvterm.name, genotype.description, genotypeprop.value
         FROM nd_experiment_protocol
         JOIN nd_experiment_genotype ON (nd_experiment_protocol.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
-        JOIN genotypeprop ON (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.type_id = ?
+        JOIN genotype ON (nd_experiment_genotype.genotype_id = genotype.genotype_id)
+        JOIN genotypeprop ON (genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.type_id = ?
         JOIN nd_experiment_stock ON (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
+        JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
         WHERE nd_experiment_protocol.nd_protocol_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($pcr_genotyping_cvterm_id, $protocol_id);
 
     my @pcr_genotype_data = ();
-    while (my ($stock_id, $stock_name, $genotype_data) = $h->fetchrow_array()){
-        push @pcr_genotype_data, [$stock_id, $stock_name, $genotype_data]
+    while (my ($stock_id, $stock_name, $stock_type, $genotype_description, $genotype_data) = $h->fetchrow_array()){
+        push @pcr_genotype_data, [$stock_id, $stock_name, $stock_type, $genotype_description, $genotype_data]
     }
 
     my %protocol_genotype_data = (

@@ -41,7 +41,9 @@ jQuery(document).ready(function () {
         'ajax': '/ajax/pcr_genotyping_data_summary/search?protocol_id_list=<% $protocol_id %>',
         columns: [
             { title: "Sample Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.stock_name+"</a>"; } },
+            { title: "Sample Type", "data": "stock_type" },
             { title: "Number of Markers", "data": "number_of_markers" },
+            { title: "Description", "data": "genotype_description" },
 
         ]
     });

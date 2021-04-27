@@ -212,6 +212,8 @@ sub pcr_genotyping_data_summary_search_GET : Args(0) {
         push @results, {
             stock_id => $genotype_data->[0],
             stock_name => $genotype_data->[1],
+            stock_type => $genotype_data->[2],
+            genotype_description => $genotype_data->[3],
             number_of_markers => $number_of_markers,
         };
     }
