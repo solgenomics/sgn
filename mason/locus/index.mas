@@ -145,6 +145,16 @@ foreach ( @{ $dbxrefs{'TAIR locus'} } ) {
   }
 }
 
+my $phylogenes;
+foreach ( @{ $dbxrefs{'PhyloGenes'} } ) {
+  if ( $_->[1] eq '0' ) {
+    my $url       = $_->[0]->get_urlprefix() . $_->[0]->get_url();
+    my $accession = $_->[0]->get_accession();
+    $phylogenes .=
+      qq|<br>$locus_name is on <a href="$url$accession" target="blank">PhyloGenes</a><br />|;
+  }
+}
+
 my $pub_subtitle = $curator || $submitter || $sequencer  ?
   qq|<a href="/chado/add_publication.pl?type=locus&amp;type_id=$locus_id&amp;refering_page=$this_page&amp;action=new"> [Associate publication] </a>| :
   qq|<span class=\"ghosted\">[Associate publication]</span>|;
@@ -217,6 +227,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 <tr><td>
 <% $tgrc %>
 <% $tair %>
+<% $phylogenes %>
 </td></tr>
 <tr><td>
 <& /phenome/display_owners.mas,
