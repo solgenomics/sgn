@@ -71,7 +71,7 @@ sub genotyping_data_search_GET : Args(0) {
         while (my $gt_line = <$fh>) {
             if ($counter >= $start_index && $counter < $end_index) {
                 my $g = decode_json $gt_line;
-                # print STDERR Dumper $g;
+                 print STDERR "PROTOCOL GENOTYPING DATA =".Dumper($g)."\n";
                 my $synonym_string = scalar(@{$g->{synonyms}})>0 ? join ',', @{$g->{synonyms}} : '';
                 push @result, [
                     "<a href=\"/breeders_toolbox/protocol/$g->{analysisMethodDbId}\">$g->{analysisMethod}</a>",
@@ -151,7 +151,7 @@ sub pcr_genotyping_data_search_GET : Args(0) {
         my $stock_name = $genotype_data->[1];
         push @each_genotype, qq{<a href="/stock/$stock_id/view">$stock_name</a>} ;
 
-        my $marker_genotype_json = $genotype_data->[2];
+        my $marker_genotype_json = $genotype_data->[5];
         my $marker_genotype_ref = decode_json $marker_genotype_json;
         my %marker_genotype_hash = %$marker_genotype_ref;
         foreach my $marker (@marker_name_arrays) {
@@ -208,16 +208,38 @@ sub pcr_genotyping_data_summary_search_GET : Args(0) {
 
     my @protocol_genotype_data_array = @$protocol_genotype_data;
     my @results;
-    foreach my $genotype_data (@protocol_genotype_data_array) {
+    foreach my $genotype_info (@protocol_genotype_data_array) {
         push @results, {
-            stock_id => $genotype_data->[0],
-            stock_name => $genotype_data->[1],
-            stock_type => $genotype_data->[2],
-            genotype_description => $genotype_data->[3],
+            stock_id => $genotype_info->[0],
+            stock_name => $genotype_info->[1],
+            stock_type => $genotype_info->[2],
+            genotype_description => $genotype_info->[3],
+            genotype_id => $genotype_info->[4],
             number_of_markers => $number_of_markers,
         };
     }
+#    print STDERR "RESULTS =".Dumper(\@results)."\n";
     $c->stash->{rest} = { data => \@results};
+}
+
+
+sub pcr_genotyping_data_download : Path('/ajax/pcr_genotyping_data/download') : ActionClass('REST') { }
+
+sub pcr_genotyping_data_download_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $clean_inputs = _clean_inputs($c->req->params);
+    my $genotype_id_list = $clean_inputs->{genotype_id_list};
+
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$bcs_schema,
+        people_schema=>$people_schema,
+        markerprofile_id_list=>$genotype_id_list,
+    });
+    my $result = $genotypes_search->get_pcr_genotype_info();
+    print STDERR "PCR DOWNLOAD RESULTS =".Dumper($result)."\n";
 }
 
 1;

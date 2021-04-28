@@ -44,10 +44,35 @@ jQuery(document).ready(function () {
             { title: "Sample Type", "data": "stock_type" },
             { title: "Number of Markers", "data": "number_of_markers" },
             { title: "Description", "data": "genotype_description" },
+            { title: "Download", "data": "null", "render": function ( data, type, row ) { return "<a onclick='downloadSSRData(\""+row.stock_id+"\", \""+row.genotype_id+"\")' >Download</a>"; } },
 
         ]
     });
 
 });
+
+function downloadSSRData(stock_id, genotype_id) {
+    alert(stock_id);
+    alert(genotype_id)
+    jQuery.ajax({
+        url: '/ajax/pcr_genotyping_data/download',
+        dataType: "json",
+        type: 'POST',
+        data:{
+            'genotype_id_list': genotype_id,
+        },
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error) {
+                alert(response.error);
+            } else {
+                jQuery("download_success_message").modal("show");
+            }
+        },
+    });
+}
 
 </script>
