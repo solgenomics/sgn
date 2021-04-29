@@ -124,7 +124,7 @@ jQuery(document).ready(function () {
             .attr("opacity", 0.8)
             .on("mouseover", function(d){
               d3.select(this).attr("fill", "#6699cc");
-              var pathString = "M "+(  d.x0  )+" "+( d.y0 )+" l 10 -10 h 50 c 5 0 5 0 5 -5 v -50 c 0 -5 0 -5 -5 -5 h -110 c -5 0 -5 0 -5 5 v 50 c 0 5 0 5 5 5 h 50 l 10 10 z";
+              var pathString = "M "+(  d.x0  )+" "+( d.y0 )+" l 10 -10 h 50 c 5 0 5 0 5 -5 v -50 c 0 -5 0 -5 -5 -5 h -120 c -5 0 -5 0 -5 5 v 50 c 0 5 0 5 5 5 h 50 l 10 10 z";
               tooltip.attr("d", pathString);
             })
             .on("mouseout", function(d){
