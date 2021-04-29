@@ -82,7 +82,7 @@ jQuery(document).ready(function () {
           console.log(data);
 
           //Set margins and set up svg area
-          var margin = {top: 80, right: 80, bottom: 80, left: 80};
+          var margin = {top: 100, right: 100, bottom: 100, left: 100};
           var width = document.querySelector('#field_trial_to_field_trial_html').offsetWidth*0.90;
           var height = 300;//document.querySelector('#field_trial_to_field_trial_html').offsetHeight*0.90;
 
