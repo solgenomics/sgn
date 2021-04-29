@@ -126,10 +126,12 @@ jQuery(document).ready(function () {
               d3.select(this).attr("fill", "#6699cc");
               var pathString = "M "+(  d.x0  )+" "+( d.y0 )+" l 10 -10 h 50 c 5 0 5 0 5 -5 v -50 c 0 -5 0 -5 -5 -5 h -120 c -5 0 -5 0 -5 5 v 50 c 0 5 0 5 5 5 h 50 l 10 10 z";
               tooltip.attr("d", pathString);
+              d3.select(tooltip).moveToFront();
             })
             .on("mouseout", function(d){
               d3.select(this).attr("fill", "#add8e6");
               tooltip.attr("d", null);
+              d3.select(tooltip).moveToFront();
             });
 
           links = svg
