@@ -106,6 +106,12 @@ jQuery(document).ready(function () {
             .attr('stroke', 'black')
             .attr('stroke-width', '1.5');
 
+          d3.selection.prototype.moveToFront = function() {
+            return this.each(function(){
+              this.parentNode.appendChild(this);
+            });
+          };
+
           //var tooltip_text;
 
           nodes = svg
