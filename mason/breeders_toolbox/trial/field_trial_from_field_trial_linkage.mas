@@ -128,7 +128,8 @@ jQuery(document).ready(function () {
               tooltip.attr("d", pathString);
             })
             .on("mouseout", function(){
-              d3.select(this).attr("fill", "#add8e6")
+              d3.select(this).attr("fill", "#add8e6");
+              tooltip.attr("d", null);
             });
 
           links = svg
