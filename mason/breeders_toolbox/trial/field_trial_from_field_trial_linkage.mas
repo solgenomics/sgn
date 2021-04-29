@@ -101,17 +101,6 @@ jQuery(document).ready(function () {
             .nodeAlign(d3.sankeyCenter);
           let graph = sankey(data);
 
-          var tooltip = svg.append("path")
-            .attr('fill', 'white')
-            .attr('stroke', 'black')
-            .attr('stroke-width', '1.5');
-
-          d3.selection.prototype.moveToFront = function() {
-            return this.each(function(){
-              this.parentNode.appendChild(this);
-            });
-          };
-
           //var tooltip_text;
 
           nodes = svg
@@ -130,6 +119,10 @@ jQuery(document).ready(function () {
             .attr("opacity", 0.8)
             .on("mouseover", function(d){
               d3.select(this).attr("fill", "#6699cc");
+              tooltip = d3.select(this).append("path")
+                .attr('fill', 'white')
+                .attr('stroke', 'black')
+                .attr('stroke-width', '1.5');
               var pathString = "M "+(  d.x0  )+" "+( d.y0 )+" l 10 -10 h 50 c 5 0 5 0 5 -5 v -50 c 0 -5 0 -5 -5 -5 h -120 c -5 0 -5 0 -5 5 v 50 c 0 5 0 5 5 5 h 50 l 10 10 z";
               tooltip.attr("d", pathString);
               d3.select(tooltip).moveToFront();
