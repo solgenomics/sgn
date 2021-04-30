@@ -2146,8 +2146,8 @@ sub get_pcr_genotype_info {
     my $genotype_id_list = $self->markerprofile_id_list;
     my $protocol_id = $protocol_id_list->[0];
     my @where_clause = ();
-    print STDERR "GENOTYPE ID =".Dumper($genotype_id_list)."\n";
-    print STDERR "PROTOCOL ID =".Dumper($protocol_id_list)."\n";
+#    print STDERR "GENOTYPE ID =".Dumper($genotype_id_list)."\n";
+#    print STDERR "PROTOCOL ID =".Dumper($protocol_id_list)."\n";
 
     if ($protocol_id_list && scalar(@$protocol_id_list)>0) {
         my $query = join ("," , @$protocol_id_list);
@@ -2158,7 +2158,7 @@ sub get_pcr_genotype_info {
         my $query = join ("," , @$genotype_id_list);
         push @where_clause, "genotype.genotype_id in ($query)";
     }
-    print STDERR "WHERE CLAUSE =".Dumper(\@where_clause)."\n";
+#    print STDERR "WHERE CLAUSE =".Dumper(\@where_clause)."\n";
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $pcr_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();

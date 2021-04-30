@@ -52,8 +52,6 @@ jQuery(document).ready(function () {
 });
 
 function downloadSSRData(stock_id, genotype_id) {
-    alert(stock_id);
-    alert(genotype_id)
     jQuery.ajax({
         url: '/ajax/pcr_genotyping_data/download',
         dataType: "json",
