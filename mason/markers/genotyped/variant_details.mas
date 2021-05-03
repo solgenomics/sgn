@@ -51,6 +51,10 @@ A hashref containing the variants and the markers related to one or more of the 
             "end" => ${$markers}[0]->{'pos'}
         }
     );
+
+    # Set parameters for jbrowse
+    my $location = ${$markers}[0]->{'chrom'} . ':' . ${$markers}[0]->{'pos'};
+    my $ref = ${$markers}[0]->{'reference_genome_name'};
 </%init>
 
 
@@ -81,8 +85,8 @@ A hashref containing the variants and the markers related to one or more of the 
 
 
 <!-- JBROWSE LINKS -->
-<&| /page/info_section.mas, title => "Marker Locations", collapsible=>1 &>
-    <p>Put JBrowse Links Here</p>
+<&| /page/info_section.mas, title=>'Genome Browser', collapsible=>1 &>
+    <& /feature/jbrowse_exact_match.mas, feature=> $location, src_feature=> $ref &>
 </&>
 
 

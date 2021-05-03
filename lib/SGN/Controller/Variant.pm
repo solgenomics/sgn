@@ -23,6 +23,7 @@ BEGIN { extends 'Catalyst::Controller' }
 #
 # PATH: /variant/{variant_name}/details
 #   - Get variant details
+#   - Stash the variant's marker information
 #   - Display variant detail page
 #
 sub get_variant_details: Chained('get_variant') PathPart('details') :Args(0) {

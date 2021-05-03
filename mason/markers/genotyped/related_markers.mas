@@ -37,7 +37,7 @@ function getRelatedVariants() {
         data: { variant_name: "<% $variant_name %>" },
         success: function(response) {
             let html = "";
-            if ( response && response.related_variants ) {
+            if ( response && response.related_variants && !jQuery.isEmptyObject(response.related_variants) ) {
                 for ( let variant_name in response.related_variants ) {
                     if ( response.related_variants.hasOwnProperty(variant_name) ) {
                         html += "<strong><a href='/variant/" + variant_name + "/details'>" + variant_name + "</a></strong>";
@@ -71,7 +71,6 @@ function getRelatedMappedMarkers() {
         url: '/ajax/markers/genotyped/related_mapped_markers',
         data: { variant_name: "<% $variant_name %>" },
         success: function(response) {
-            console.log(response);
             let html = "";
             if ( response && response.related_mapped_markers && response.related_mapped_markers.length > 0 ) {
                 let ms = response.related_mapped_markers;
