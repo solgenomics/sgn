@@ -203,7 +203,7 @@ $trial_search = CXGN::Trial::Search->new({
     program_list=>['test'],
 });
 ($result, $total_count) = $trial_search->search();
-print STDERR "SELECTED TRIAL =".Dumper($result)."\n";
+# print STDERR "SELECTED TRIAL =".Dumper($result)."\n";
 is_deeply($result, [
           {
             'genotyping_facility_status' => undef,
@@ -425,7 +425,7 @@ my $initial_stock_count = $stock_count_rs->count();
 
 my $number_of_reps = 3;
 my $stock_list = [ 'test_accession1', 'test_accession2', 'test_accession3' ];
-print STDERR "\n\n Before creating trial design\n\n";
+# print STDERR "\n\n Before creating trial design\n\n";
 my $td = CXGN::Trial::TrialDesign->new(
     {
 	schema => $f->bcs_schema(),
@@ -437,16 +437,16 @@ my $td = CXGN::Trial::TrialDesign->new(
 	number_of_blocks => 3,
     });
 
-print STDERR "\n\n After creating trial design\n\n";
+# print STDERR "\n\n After creating trial design\n\n";
 
 my $number_of_plots = $number_of_reps * scalar(@$stock_list);
-print STDERR "\n\n before calculating design! \n\n";
+# print STDERR "\n\n before calculating design! \n\n";
   
 $td->calculate_design();
-print STDERR "\n\nGot passed calculating design! \n\n";
+# print STDERR "\n\nGot passed calculating design! \n\n";
 
 my $trial_design = $td->get_design();
-print STDERR "\n\nTrial Design  :".Dumper($trial_design)."\n\n";
+# print STDERR "\n\nTrial Design  :".Dumper($trial_design)."\n\n";
 
 
 my $breeding_program_row = $f->bcs_schema->resultset("Project::Project")->find( { name => 'test' });
