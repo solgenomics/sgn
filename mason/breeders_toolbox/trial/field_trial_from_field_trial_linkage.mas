@@ -152,8 +152,9 @@ jQuery(document).ready(function () {
             })
             .on("mouseout", function(d){
               d3.select(this).attr("fill", "#add8e6");
-              tooltip.attr("d", null);
-              tooltip_text.text("");
+              d3.select(tooltip_region).selectAll("*").remove();
+              // tooltip.attr("d", null);
+              // tooltip_text.text("");
             });
 
           links = svg
