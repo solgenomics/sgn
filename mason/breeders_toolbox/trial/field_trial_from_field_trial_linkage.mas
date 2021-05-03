@@ -145,7 +145,7 @@ jQuery(document).ready(function () {
                 .attr('fill', 'white')
                 .attr('stroke', 'black')
                 .attr('stroke-width', '1.5');
-              var pathString = "M "+(  105  )+" "+( 55 )+" l 10 -10 h 80 c 10 0 10 0 10 -10 v -30 c 0 -10 0 -10 -10 -10 h -180 c -10 0 -10 0 -10 10 v 30 c 0 10 0 10 10 10 h 80 l 10 10 z";
+              var pathString = "M "+(  105  )+" "+( 55 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -40 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 40 c 0 10 0 10 10 10 h 90 l 10 10 z";
               tooltip.attr("d", pathString);
               tooltip_text = tooltip_region.append("text");
               tooltip_text.text("Trial Type: "+d.type);
