@@ -144,7 +144,8 @@ jQuery(document).ready(function () {
             .on("mouseover", function(d){
               d3.select(this).attr("fill", "#6699cc");
               tooltip_region.attr("transform", "translate("+ (d.x0-65) +", "+ (d.y0 - 70) +")" );
-              tooltip = tooltip_region.append("path")
+              tooltip = tooltip_region.raise()
+                .append("path")
                 .attr('fill', 'white')
                 .attr('stroke', 'black')
                 .attr('stroke-width', '1.5');
