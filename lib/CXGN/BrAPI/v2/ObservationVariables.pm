@@ -154,13 +154,20 @@ sub search {
         my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
         my $categories = $trait->categories;
         my @brapi_categories = split '/', $categories;
+
+        my @references;
+        push @references, {
+                referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession,
+                referenceSource => "Crop Ontology"
+            };
+
         push @data, {
             additionalInfo => {},
             commonCropName => $supported_crop,
             contextOfUse => undef,
             defaultValue => $trait->default_value,
             documentationURL => $trait->uri,
-            externalReferences => $db_name.":".$accession,
+            externalReferences => \@references,
             growthStage => undef,
             institution  => undef,
             language => 'eng',
@@ -191,7 +198,7 @@ sub search {
                 additionalInfo => {},
                 datatype => $trait->format,
                 decimalPlaces => undef,
-                externalReferences => '',
+                externalReferences => [],
                 ontologyReference => {},
                 #         documentationLinks
                 #         ontologyDbId
@@ -215,7 +222,7 @@ sub search {
                 alternativeAbbreviations => undef,
                 attribute => $cvterm_name,
                 entity => undef,
-                externalReferences => $db_name.":".$accession,
+                externalReferences => [],
                 mainAbbreviation => undef,
                 ontologyReference => {
                         documentationLinks => $trait->uri ? $trait->uri : undef,
@@ -279,13 +286,20 @@ sub detail {
         my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
         my $categories = $trait->categories;
         my @brapi_categories = split '/', $categories;
+
+        my @references;
+        push @references, {
+                referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession,
+                referenceSource => "Crop Ontology"
+            };
+
         %result = (
             additionalInfo => undef,
             commonCropName => $supported_crop,
             contextOfUse => undef,
             defaultValue => $trait->default_value,
             documentationURL => $trait->uri,
-            externalReferences => $db_name.":".$accession,
+            externalReferences => \@references,
             growthStage => undef,
             institution  => undef,
             language => 'eng',
@@ -316,7 +330,7 @@ sub detail {
             scale => {
                 datatype => $trait->format,
                 decimalPlaces => undef,
-                externalReferences => '',
+                externalReferences => [],
                 ontologyReference => {
                 #         documentationLinks
                 #         ontologyDbId
@@ -340,7 +354,7 @@ sub detail {
                 alternativeAbbreviations => undef,
                 attribute => $cvterm_name,
                 entity => undef,
-                externalReferences => $db_name.":".$accession,
+                externalReferences => [],
                 mainAbbreviation => undef,
                 ontologyReference => {
                         documentationLinks => $trait->uri ? $trait->uri : undef,
