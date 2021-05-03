@@ -147,10 +147,14 @@ jQuery(document).ready(function () {
                 .attr('stroke-width', '1.5');
               var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -60 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 60 c 0 10 0 10 10 10 h 90 l 10 10 z";
               tooltip.attr("d", pathString);
-              tooltip_text = tooltip_region.append("text")
+              tooltip_text1 = tooltip_region.append("text")
               .attr("text-anchor", "middle")
               .attr("transform", "translate(110,0)");
-              tooltip_text.text("Trial Type: "+d.type);
+              tooltip_text1.text("Trial: "+d.name);
+              tooltip_text2 = tooltip_region.append("text")
+              .attr("text-anchor", "middle")
+              .attr("transform", "translate(110,20)");
+              tooltip_text2.text("Trial Type: "+d.type);
             })
             .on("mouseout", function(d){
               d3.select(this).attr("fill", "#add8e6");
@@ -178,25 +182,26 @@ jQuery(document).ready(function () {
               d3.select(this).attr("stroke", "#D3D3D3");
             });
 
-          labels = svg
-            .append("g")
-            .classed("text", true)
-            .selectAll("text")
-            .data(graph.nodes)
-            .enter()
-            .append("text")
-            .classed("node", true)
-            .attr("text-anchor", "middle")
-            .attr("x", d => d.x0)
-            .attr("y", d => (d.y1 + d.y0)/2 - 5)
-            .text(d => d.name)
-            .attr("transform", function(d){
-              return "rotate(270, "+ (d.x0 + 14) +", "+ ((d.y1 + d.y0)/2 - 5) +")";
-            });
+          // labels = svg
+          //   .append("g")
+          //   .classed("text", true)
+          //   .selectAll("text")
+          //   .data(graph.nodes)
+          //   .enter()
+          //   .append("text")
+          //   .classed("node", true)
+          //   .attr("text-anchor", "middle")
+          //   .attr("x", d => d.x0)
+          //   .attr("y", d => (d.y1 + d.y0)/2 - 5)
+          //   .text(d => d.name)
+          //   .attr("transform", function(d){
+          //     return "rotate(270, "+ (d.x0 + 14) +", "+ ((d.y1 + d.y0)/2 - 5) +")";
+          //   });
 
             var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
             var tooltip;
-            var tooltip_text;
+            var tooltip_text1;
+            var tooltip_text2;
 
 
 
