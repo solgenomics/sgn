@@ -72,16 +72,25 @@ sub create_hyperlink {
 
 
 sub page_type {
-	my ($self, $c) = @_;
+	my ($self, $c, $url) = @_;
 
-	my $path = $c->req->path;
+	# my $path = $c->req->path;
 	my $type;
 
-	if ($path =~ /solgs\/trait\/|solgs\/model\/combined\/trials\//)
+    print STDERR "\nurl: $url\n";
+    my $model_pages = '/solgs/trait'
+    . '|solgs/traits/all/'
+    . '|solgs/model/combined/trials/'
+    . '|solgs/models/combined/trials/';
+
+    my $selection_pop_pages = '/solgs/selection'
+    . '|solgs/combined/model/';
+
+	if ($url =~ $model_pages)
 	{
 		$type = 'training model';
 	}
-	else
+	elsif ($url =~ $selection_pop_pages)
 	{
 		$type = 'selection population';
 	}
