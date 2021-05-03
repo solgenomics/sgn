@@ -70,11 +70,33 @@ jQuery(document).ready(function () {
 
           //Build data from response: will be an object with two arrays, one of nodes and one of links
           for (var i = 0; i < r.source_field_trials.length; i++){
-            nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][1]});
+            var trial_type;
+            jQuery.ajax({
+              url: 'ajax/breeders/trial/type/'+r.source_field_trials[i][0],
+              success: function(r){
+                trial_type = r.type;
+              },
+              error: function(r){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving field trial to field trial linkage.");
+              }
+            });
+            nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][1], "type":trial_type});
             links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1/r.source_field_trials.length});
           }
           for (var i = 0; i < r.field_trials_sourced.length; i++){
-            nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][1]});
+            var trial_type;
+            jQuery.ajax({
+              url: 'ajax/breeders/trial/type/'+r.source_field_trials[i][0],
+              success: function(r){
+                trial_type = r.type;
+              },
+              error: function(r){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving field trial to field trial linkage.");
+              }
+            });
+            nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][1], "type":trial_type});
             links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1/r.field_trials_sourced.length});
           }
 
