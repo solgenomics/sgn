@@ -114,6 +114,8 @@ jQuery(document).ready(function () {
           .append("g")
           .attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")");
 
+          var tooltip_region = svg.append("g");
+
           const sankey = d3
             .sankey()
             .size([width, height])
@@ -141,7 +143,8 @@ jQuery(document).ready(function () {
             .attr("opacity", 0.8)
             .on("mouseover", function(d){
               d3.select(this).attr("fill", "#6699cc");
-              tooltip = svg.append("path")
+              tooltip_region.attr("transform", "translate("+ (d.x0-65) +", "+ (d.y0 - 70) +")" );
+              tooltip = tooltip_region.append("path")
                 .attr('fill', 'white')
                 .attr('stroke', 'black')
                 .attr('stroke-width', '1.5');
