@@ -76,7 +76,7 @@
                 let type_name = prop.type_name;
                 let marker_name = prop.marker_name;
                 let xref_name = prop.xref_name;
-                html += "<tr><td><a href='" + url + xref_name + "' target='_new'>" + xref_name + "</a><td>" + type_name;
+                html += "<tr><td>" + marker_name + "</td><td><a href='" + url + xref_name + "' target='_new'>" + xref_name + "</a><td>" + type_name;
             }
             html += "</table>";
             
