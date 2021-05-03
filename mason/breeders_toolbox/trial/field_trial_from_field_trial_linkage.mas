@@ -149,11 +149,11 @@ jQuery(document).ready(function () {
               tooltip.attr("d", pathString);
               tooltip_text1 = tooltip_region.append("text")
               .attr("text-anchor", "middle")
-              .attr("transform", "translate(110,0)");
+              .attr("transform", "translate(110,20)");
               tooltip_text1.text("Trial: "+d.name);
               tooltip_text2 = tooltip_region.append("text")
               .attr("text-anchor", "middle")
-              .attr("transform", "translate(110,20)");
+              .attr("transform", "translate(110,40)");
               tooltip_text2.text("Trial Type: "+d.type);
             })
             .on("mouseout", function(d){
