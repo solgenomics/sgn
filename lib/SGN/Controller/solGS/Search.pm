@@ -239,9 +239,8 @@ sub check_genotype_data_population :Path('/solgs/check/genotype/data/population/
     my ($self, $c, $pop_id) = @_;
 
     $c->stash->{pop_id} = $pop_id;
-    $self->check_population_has_genotype($c);
+     my $ret->{has_genotype} = $self->check_population_has_genotype($c);
 
-    my $ret->{has_genotype} = $c->stash->{population_has_genotype};
     $ret = to_json($ret);
 
     $c->res->content_type('application/json');
@@ -254,9 +253,8 @@ sub check_phenotype_data_population :Path('/solgs/check/phenotype/data/populatio
     my ($self, $c, $pop_id) = @_;
 
     $c->stash->{pop_id} = $pop_id;
-    $self->check_population_has_phenotype($c);
+    my $ret->{has_phenotype} = $self->check_population_has_phenotype($c);
 
-    my $ret->{has_phenotype} = $c->stash->{population_has_phenotype};
     $ret = to_json($ret);
 
     $c->res->content_type('application/json');
@@ -291,6 +289,7 @@ sub check_training_population :Path('/solgs/check/training/population/') Args() 
     my ($self, $c, $pop_id, $gp, $protocol_id) = @_;
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    $protocol_id = $c->stash->{genotyping_protocol_id};
 
     $c->stash->{pop_id} = $pop_id;
     $c->stash->{training_pop_id} = $pop_id;
@@ -373,8 +372,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 	{
 	    $c->stash->{pop_id} = $selection_pop_id;
 	    $c->stash->{selection_pop_id} = $selection_pop_id;
-	    $self->check_population_has_genotype($c);
-	    $has_genotype = $c->stash->{population_has_genotype};
+	    $has_genotype = $self->check_population_has_genotype($c);
 	}
 
 	my $similarity;
@@ -448,8 +446,7 @@ sub projects_links {
 		my $dummy_name = $pr_name =~ /test\w*/ig;
 		#my $dummy_desc = $pr_desc =~ /test\w*/ig;
 
-		$self->check_population_has_genotype($c);
-		my $has_genotype = $c->stash->{population_has_genotype};
+		my $has_genotype = $self->check_population_has_genotype($c);
 
 		no warnings 'uninitialized';
 
@@ -548,8 +545,7 @@ sub format_trait_gs_projects {
 	   if ($pr_location !~ /computation/i)
 	  {
 	       $c->stash->{pop_id} = $pr_id;
-	       $self->check_population_has_genotype($c);
-	       my $has_genotype = $c->stash->{population_has_genotype};
+	       my $has_genotype = $self->check_population_has_genotype($c);
 
 	       if ($has_genotype)
 	       {
@@ -730,7 +726,8 @@ sub list_of_prediction_pops {
 sub check_population_is_training_population {
     my ($self, $c, $pop_id, $protocol_id) = @_;
 
-    $pop_id = $c->stash->{training_pop_id} if !$pop_id;
+    $pop_id = $c->stash->{pop_id} if !$pop_id;
+    $c->stash->{pop_id} = $pop_id;
     $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
 
     my $is_gs = $c->model("solGS::solGS")->get_project_type($pop_id);
@@ -740,14 +737,13 @@ sub check_population_is_training_population {
 
     if ($is_gs !~ /genomic selection/)
     {
-	$self->check_population_has_phenotype($c);
-	$has_phenotype = $c->stash->{population_has_phenotype};
 
-	if ($has_phenotype)
-	{
-	    $self->check_population_has_genotype($c);
-	    $has_genotype = $c->stash->{population_has_genotype};
-	}
+        $has_phenotype = $self->check_population_has_phenotype($c);
+
+    	if ($has_phenotype)
+    	{
+    	    $has_genotype = $self->check_population_has_genotype($c);
+    	}
     }
 
     if ($is_gs || ($has_phenotype && $has_genotype))
@@ -771,20 +767,21 @@ sub check_population_has_phenotype {
 
     if ($is_gs !~ /genomic selection/)
     {
-	$c->controller('solGS::Files')->phenotype_file_name($c, $pr_id);
-	my $pheno_file = $c->stash->{phenotype_file_name};
+    	$c->controller('solGS::Files')->phenotype_file_name($c, $pr_id);
+    	my $pheno_file = $c->stash->{phenotype_file_name};
 
-	if (!-s $pheno_file)
-	{
-	    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
-	}
-	else
-	{
-	    $has_phenotype = 1;
-	}
+    	if (!-s $pheno_file)
+    	{
+    	    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+    	}
+        else
+    	{
+    	    $has_phenotype = 1;
+    	}
     }
 
-    $c->stash->{population_has_phenotype} = $has_phenotype;
+    return $has_phenotype;
+    # $c->stash->{population_has_phenotype} = $has_phenotype;
 
 }
 
@@ -811,13 +808,12 @@ sub check_population_has_genotype {
 
 	$has_genotype = 1 if -s $first_stock_file;
     }
-
     if (!$has_genotype)
     {
 		$has_genotype = $c->model('solGS::solGS')->has_genotype($pop_id, $protocol_id);
     }
-
-    $c->stash->{population_has_genotype} = $has_genotype;
+    
+    return $has_genotype;
 
 }
 
@@ -878,41 +874,41 @@ sub get_project_owners {
 
 
 sub format_selection_pops {
-    my ($self, $c, $pred_pops_ids) = @_;
+    my ($self, $c, $selection_pops_ids) = @_;
 
     my $training_pop_id = $c->stash->{training_pop_id};
 
-    my @pred_pops_ids = @{$pred_pops_ids};
+    my @selection_pops_ids = @{$selection_pops_ids};
     my @data;
 
-    if (@pred_pops_ids) {
+    if (@selection_pops_ids) {
 
-        foreach my $prediction_pop_id (@pred_pops_ids)
+        foreach my $selection_pop_id (@selection_pops_ids)
         {
-          my $pred_pop_rs = $c->model('solGS::solGS')->project_details($prediction_pop_id);
-          my $pred_pop_link;
+          my $selection_pop_rs = $c->model('solGS::solGS')->project_details($selection_pop_id);
+          my $selection_pop_link;
 
-          while (my $row = $pred_pop_rs->next)
+          while (my $row = $selection_pop_rs->next)
           {
               my $name = $row->name;
               my $desc = $row->description;
 
              # unless ($name =~ /test/ || $desc =~ /test/)
              # {
-                  my $id_pop_name->{id}    = $prediction_pop_id;
+                  my $id_pop_name->{id}    = $selection_pop_id;
                   $id_pop_name->{name}     = $name;
                   $id_pop_name->{pop_type} = 'selection';
                   $id_pop_name             = to_json($id_pop_name);
 
-                  # $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$prediction_pop_id"
+                  # $pred_pop_link = qq | <a href="/solgs/model/$training_pop_id/prediction/$selection_pop_id"
                   #                    onclick="solGS.waitPage(this.href); return false;"><input type="hidden" value=\'$id_pop_name\'>$name</data>
                   #                    </a>
 		  # 		      |;
 
-	      $pred_pop_link = qq | <data><input type="hidden" value=\'$id_pop_name\'>$name</data>|;
+	      $selection_pop_link = qq | <data><input type="hidden" value=\'$id_pop_name\'>$name</data>|;
 
 
-	      my $pr_yr_rs = $c->model('solGS::solGS')->project_year($prediction_pop_id);
+	      my $pr_yr_rs = $c->model('solGS::solGS')->project_year($selection_pop_id);
 	      my $project_yr;
 
 	      while ( my $yr_r = $pr_yr_rs->next )
@@ -920,10 +916,10 @@ sub format_selection_pops {
 		  $project_yr = $yr_r->value;
 	      }
 
-	      $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $prediction_pop_id);
-	      my $download_prediction = $c->stash->{selection_prediction_download};
+	      $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $selection_pop_id);
+	      my $download_selection = $c->stash->{selection_prediction_download};
 
-	      push @data,  [$pred_pop_link, $desc, $project_yr, $download_prediction];
+	      push @data,  [$selection_pop_link, $desc, $project_yr, $download_selection];
           }
         }
     }
