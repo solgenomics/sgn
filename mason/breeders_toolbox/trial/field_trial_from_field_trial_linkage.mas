@@ -139,7 +139,7 @@ jQuery(document).ready(function () {
             .attr("opacity", 0.8)
             .on("mouseover", function(d){
               d3.select(this).attr("fill", "#6699cc");
-              tooltip_region.attr("transform", "translate("+ (d.x1 - 5 - 110) +", "+ (d.y0 - 5 - 70) +")" );
+              tooltip_region.attr("transform", "translate("+ ((d.x1+d.x0)/2 - 5 - 110) +", "+ (d.y0 - 5 - 70) +")" );
               tooltip = tooltip_region
                 .append("path")
                 .attr('fill', 'white')
