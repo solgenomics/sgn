@@ -376,7 +376,7 @@ sub has_phenotype {
 sub has_genotype {
     my ($self, $pr_id, $protocol_id) = @_;
 
-    my $protocol_detail = $self->protocol_detail();
+    my $protocol_detail = $self->protocol_detail($protocol_id);
     my $protocol_name = $protocol_detail->{name};
 
     my $q = "SELECT genotyping_protocol_name, genotyping_protocol_id
