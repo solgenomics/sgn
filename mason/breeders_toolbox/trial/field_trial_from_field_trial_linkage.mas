@@ -145,10 +145,10 @@ jQuery(document).ready(function () {
                 .attr('fill', 'white')
                 .attr('stroke', 'black')
                 .attr('stroke-width', '1.5');
-              var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -40 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 40 c 0 10 0 10 10 10 h 90 l 10 10 z";
+              var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -60 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 60 c 0 10 0 10 10 10 h 90 l 10 10 z";
               tooltip.attr("d", pathString);
               tooltip_text = tooltip_region.append("text");
-              tooltip_text.text("      Trial Type: "+d.type);
+              tooltip_text.text("&nbsp Trial Type: "+d.type);
             })
             .on("mouseout", function(d){
               d3.select(this).attr("fill", "#add8e6");
