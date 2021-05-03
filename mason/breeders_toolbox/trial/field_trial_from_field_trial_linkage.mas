@@ -147,7 +147,7 @@ jQuery(document).ready(function () {
                 .attr('fill', 'white')
                 .attr('stroke', 'black')
                 .attr('stroke-width', '1.5');
-              var pathString = "M "+(  70  )+" "+( 75 )+" l 10 -10 h 50 c 5 0 5 0 5 -5 v -50 c 0 -5 0 -5 -5 -5 h -120 c -5 0 -5 0 -5 5 v 50 c 0 5 0 5 5 5 h 50 l 10 10 z";
+              var pathString = "M "+(  70  )+" "+( 75 )+" l 10 -10 h 50 c 10 0 10 0 10 -10 v -50 c 0 -10 0 -10 -10 -10 h -120 c -10 0 -10 0 -10 10 v 50 c 0 10 0 10 10 10 h 50 l 10 10 z";
               tooltip.attr("d", pathString);
             })
             .on("mouseout", function(d){
