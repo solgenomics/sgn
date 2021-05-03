@@ -904,7 +904,7 @@ sub cache_combined_pops_data {
     if ($trait_abbr)
     {
 		$c->stash->{data_set_type} = 'combined populations';
-		$c->stash->{pop_id} =  $combo_pops_id;
+		$c->stash->{training_pop_id} =  $combo_pops_id;
 		$c->controller('solGS::Files')->model_phenodata_file($c);
 		$c->stash->{trait_combined_pheno_file} = $c->stash->{model_phenodata_file};
     }
