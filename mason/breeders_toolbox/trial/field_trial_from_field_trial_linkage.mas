@@ -147,7 +147,8 @@ jQuery(document).ready(function () {
                 .attr('stroke-width', '1.5');
               var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -60 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 60 c 0 10 0 10 10 10 h 90 l 10 10 z";
               tooltip.attr("d", pathString);
-              tooltip_text = tooltip_region.append("text");
+              tooltip_text = tooltip_region.append("text")
+              .attr("text-anchor", "middle");
               tooltip_text.text("Trial Type: "+d.type);
             })
             .on("mouseout", function(d){
