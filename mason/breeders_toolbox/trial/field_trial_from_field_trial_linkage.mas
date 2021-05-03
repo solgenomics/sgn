@@ -149,7 +149,8 @@ jQuery(document).ready(function () {
               tooltip.attr("d", pathString);
               tooltip_text = tooltip_region.append("text")
               .attr("text-anchor", "middle");
-              tooltip_text.text("Trial Type: "+d.type);
+              tooltip_text.text("Trial Type: "+d.type)
+              .attr("transform", "translate(100,0)");
             })
             .on("mouseout", function(d){
               d3.select(this).attr("fill", "#add8e6");
