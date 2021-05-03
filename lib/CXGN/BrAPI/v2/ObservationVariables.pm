@@ -157,7 +157,7 @@ sub search {
 
         my @references;
         push @references, {
-                referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession,
+                referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession . "/",
                 referenceSource => "Crop Ontology"
             };
 
@@ -289,7 +289,7 @@ sub detail {
 
         my @references;
         push @references, {
-                referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession,
+                referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession . "/",
                 referenceSource => "Crop Ontology"
             };
 
