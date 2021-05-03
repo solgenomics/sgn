@@ -491,7 +491,7 @@ sub gs_modeling_files {
 sub save_model_info_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{combo_pops_id};
+    my $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id};
     my $trait_id = $c->stash->{trait_id};
     my $trait_abbr = $c->stash->{trait_abbr};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
@@ -1005,7 +1005,7 @@ sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1
 
     if (-s $pred_pops_file)
     {
-	$self->list_of_prediction_pops($c, $tr_pop_id);
+	$c->controller('solGS::Search')->list_of_prediction_pops($c, $tr_pop_id);
 	my $selection_pops_ids = $c->stash->{selection_pops_ids};
 	my $formatted_selection_pops = $c->stash->{list_of_prediction_pops};
 
@@ -1311,7 +1311,7 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 
     $self->get_trait_details($c, $trait_id);
 
-    $c->stash->{pop_id}        = $pop_id;
+    $c->stash->{training_pop_id}        = $pop_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
     $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
@@ -2366,7 +2366,7 @@ sub run_async {
 sub get_gs_r_temp_file {
     my ($self, $c) = @_;
 
-    my $pop_id   = $c->stash->{pop_id};
+    my $pop_id   = $c->stash->{training_pop_id};
     my $trait_id = $c->stash->{trait_id};
 
     my $data_set_type = $c->stash->{data_set_type};
