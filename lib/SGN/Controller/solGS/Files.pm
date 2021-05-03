@@ -66,7 +66,7 @@ sub variance_components_file {
 sub model_phenodata_file {
     my ($self, $c) = @_;
 
-    my $pop_id        = $c->stash->{pop_id} || $c->stash->{combo_pops_id} ;
+    my $pop_id        = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} ;
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
@@ -89,7 +89,7 @@ sub model_phenodata_file {
 sub model_info_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{combo_pops_id};
+    my $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id};
     my $trait_id = $c->stash->{trait_id};
     my $trait_abbr = $c->stash->{trait_abbr};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
