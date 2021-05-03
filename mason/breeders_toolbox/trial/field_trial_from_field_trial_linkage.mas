@@ -104,7 +104,7 @@ jQuery(document).ready(function () {
           console.log(data);
 
           //Set margins and set up svg area
-          var margin = {top: 100, right: 100, bottom: 100, left: 100};
+          var margin = {top: 100, right: 200, bottom: 100, left: 200};
           var width = document.querySelector('#field_trial_to_field_trial_html').offsetWidth*0.90;
           var height = 300;//document.querySelector('#field_trial_to_field_trial_html').offsetHeight*0.90;
 
@@ -148,9 +148,9 @@ jQuery(document).ready(function () {
               var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -60 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 60 c 0 10 0 10 10 10 h 90 l 10 10 z";
               tooltip.attr("d", pathString);
               tooltip_text = tooltip_region.append("text")
-              .attr("text-anchor", "middle");
-              tooltip_text.text("Trial Type: "+d.type)
+              .attr("text-anchor", "middle")
               .attr("transform", "translate(100,0)");
+              tooltip_text.text("Trial Type: "+d.type);
             })
             .on("mouseout", function(d){
               d3.select(this).attr("fill", "#add8e6");
