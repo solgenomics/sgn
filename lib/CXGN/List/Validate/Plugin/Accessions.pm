@@ -23,10 +23,11 @@ sub validate {
 
     my @missing;
     my @wrong_case;
-
+    my @multiple_wrong_case;
+    
     foreach my $item (@$list) {
 	my $rs = $schema->resultset("Stock::Stock")->search(
-	    { uniquename => { ilike => $item },
+	    { uniquename => { '~*' => $item },
 	      'me.type_id' => $accession_type_id,
 	      is_obsolete => 'F' },
 	    { join => 'stockprops',
@@ -44,12 +45,20 @@ sub validate {
 		push @wrong_case, [ $item, $row->uniquename() ];
 	    }
 	}
+
+	elsif ($rs->count() > 1) {
+	    while(my $row = $rs->next()) { 
+		push @multiple_wrong_case, [ $item, $row->uniquename() ];
+	    }
+	}
+	    
     }
 
 
     return {
 	missing => \@missing,
 	wrong_case => \@wrong_case,
+	multiple_wrong_case => \@multiple_wrong_case,
     };
 }
 

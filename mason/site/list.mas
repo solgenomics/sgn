@@ -81,7 +81,11 @@
                     </table>
 
 		      <div id="adjust_case_div"><br /><br /><br /></div>
-		    <button class="btn btn-default" id="adjust_case_action_button" disabled>Adjust Case</button>
+
+		      <button class="btn btn-default" id="adjust_case_action_button" disabled>Adjust Case</button>
+
+		      <div id="multiple_case_match_div"><br /><br /></div>
+
                     </div>
                 </div>
             </div>

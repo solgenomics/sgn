@@ -760,6 +760,7 @@ CXGN.List.prototype = {
     validate: function(list_id, type, non_interactive) {
         var missing = new Array();
 	var wrong_case = new Array();
+	var multiple_wrong_case = new Array();
         var error = 0;
         jQuery.ajax( {
             url: '/list/validate/'+list_id+'/'+type,
@@ -769,8 +770,10 @@ CXGN.List.prototype = {
                 if (response.error) {
                     alert(response.error);
                 } else {
+		    alert(JSON.stringify(response));
                     missing = response.missing;
 		    wrong_case = response.wrong_case;
+		    multiple_wrong_case = response.multiple_wrong_case;
                 }
             },
             error: function(response) {
@@ -781,6 +784,7 @@ CXGN.List.prototype = {
 
         if (error === 1 ) { return; }
 
+
         if (missing.length==0 && wrong_case.length==0) {
             if (!non_interactive) { alert("This list passed validation."); }
             return 1;
@@ -790,7 +794,6 @@ CXGN.List.prototype = {
                     jQuery("#validate_accession_error_display tbody").html('');
 
                     var missing_accessions_html = "<div class='well well-sm'><h3>List of Accessions Not Valid!</h3><div id='validate_stock_missing_accessions' style='display:none'></div></div><div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div><button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br/><br/><div class='well well-sm'><h3>Optional: Add Missing Accessions to A List</h3><div id='validate_stock_add_missing_accessions_for_list_div'></div><div id='stocks_with_wrong_case'></div></div>";
-
 
                     jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
 
@@ -820,7 +823,12 @@ CXGN.List.prototype = {
 		    wrong_case_accessions_table += '</table>';
 		    wrong_case_accessions_table += '<br /><div><ul><li>It is recommended to adjust the case of the items in the list to the case in the database.</li><li>To adjust the case, click the Adjust Case button below.</li></ul></div>';
 
-
+		    var multiple_wrong_case_accessions_table= '<table>';
+		    for(var i=0; i<multiple_wrong_case.length; i++) {
+			multiple_wrong_case_accessions_table += '<tr><td>'+multiple_wrong_case[i][0]+'</td><td>'+multiple_wrong_case[i][1]+'</td></tr>';
+			wrong_case_accessions_for_list += multiple_wrong_case[i] + '\n';
+		    }
+		    multiple_wrong_case_accessions_table += '</table>';
 
 		    if (wrong_case.length > 0) { 
 			jQuery('#adjust_case_div').html('<h3>Mismatched case</h3>'+wrong_case_accessions_table);
@@ -828,6 +836,9 @@ CXGN.List.prototype = {
 			jQuery('#adjust_case_action_button').prop('disabled', false);
 		    }
 
+		    if (multiple_wrong_case.length > 0) {
+			jQuery('#multiple_case_match_div').html('<h3>Items with multiple mismatching case</h3>'+multiple_wrong_case_accessions_table + '<br />These cases need to be fixed manually.');
+		    }
 
 		     jQuery('#adjust_case_action_button').click( function() {
 		    	 jQuery.ajax( {
@@ -835,28 +846,24 @@ CXGN.List.prototype = {
 			     data: { 'list_id' : list_id },
 		    	     error: function() { alert('An error occurred'); },
 		    	     success: function(r) {
+
 				 if (r.error) { alert(r.error); }
 
 				 else {
 				     alert('Converted the following ids: '+JSON.stringify(r.mapping));
 				     var lo = new CXGN.List();
 				     lo.renderItems('list_item_dialog', list_id);
-				     jQuery('#adjust_case_div').html("<br /><br /><h3>Mismatched case</h3><b>The case has been successfully adjusted.</b>");
-				     jQuery('#adjust_case_action_button').prop('disabled', true);
 
+				     jQuery('#adjust_case_div').html("<br /><br /><h3>Mismatched case</h3><b>The case has been successfully adjusted.</b>");
+				     jQuery('#adjust_case_action_button').prop('disabled', true);    
 				 }
 			     }
 		    	 });
-			
 		     });
-
-
+		    
                     jQuery('#validate_accession_error_display').modal("show");
-
-
-
-                   //alert("List validation failed. Elements not found: "+ missing.join(","));
-                   //return 0;
+                    //alert("List validation failed. Elements not found: "+ missing.join(","));
+                    //return 0;
                 } else {
                     alert('List did not pass validation because of these items: '+missing.join(", "));
                 }

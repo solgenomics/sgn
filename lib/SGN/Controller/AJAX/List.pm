@@ -1090,8 +1090,8 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
 	transform => $data->{transform},
 	error => $error_message,
 	replace_count => $replace_count,
-	missing => $data->{missing},
-	duplicated => $data->{duplicated},
+	missing => $data->{missing} || [],
+	duplicated => $data->{duplicated} || [],
 	mapping => $data->{mapping},
     }
 	

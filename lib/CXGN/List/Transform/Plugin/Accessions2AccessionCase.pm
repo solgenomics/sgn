@@ -42,6 +42,7 @@ sub transform {
 	    my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => { '~*' => '^'.$item.'$' }, type_id => $type_id } );
 
 	    my $count = $rs->count();
+	    
 	    if ($count == 0) {
 		print STDERR "Missing item: $item\n";
 		push @missing, $item;
@@ -54,7 +55,7 @@ sub transform {
 		    push @found_ids, $item;
 		}
 		else { 
-		    print STDERR "Converting case from '$item' to '".$row->uniquename()."'\n";
+		    print STDERR "Item '$item' needs to be converted to '".$row->uniquename()."'\n";
 		    push @found_ids, $row->uniquename();
 		    $mapping{$item} = $row->uniquename();
 		}
@@ -63,7 +64,9 @@ sub transform {
 	    my %duplicates;
 	    
 	    if ($count > 1) {
+		print STDERR "DUPLICATE DETECTED!\n";
 		while (my $row = $rs->next()) {
+		    print STDERR "DUPLICATED: $item, ".$row->uniquename()."\n";
 		    push @{$duplicates{$item}}, $row->uniquename();
 		}
 		push @duplicated, \%duplicates;
