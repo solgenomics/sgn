@@ -179,10 +179,12 @@ sub search {
             }
         }
 
-        my $cross_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross_type', 'nd_experiment_property')->cvterm_id();
-    	my $q = "SELECT value FROM nd_experimentprop JOIN nd_experiment_stock ON nd_experimentprop.nd_experiment_id=nd_experiment_stock.nd_experiment_id WHERE stock_id = ? AND nd_experimentprop.type_id = ?;";
+#        my $cross_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross_type', 'nd_experiment_property')->cvterm_id();
+#    	my $q = "SELECT value FROM nd_experimentprop JOIN nd_experiment_stock ON nd_experimentprop.nd_experiment_id=nd_experiment_stock.nd_experiment_id WHERE stock_id = ? AND nd_experimentprop.type_id = ?;";
+        my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
+        my $q = "SELECT value FROM stock_relationship WHERE subject_id = ? AND type_id = ?;";
     	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-    	$h->execute($_->{stock_id}, $cross_type_cvterm_id);
+    	$h->execute($_->{stock_id}, $female_parent_cvterm_id);
     	my ($cross_type) = $h->fetchrow_array();
         if ( ! defined $cross_type) {
             $cross_type = "unknown";
@@ -1026,10 +1028,12 @@ sub _simple_search {
             }
         }
 
-        my $cross_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross_type', 'nd_experiment_property')->cvterm_id();
-    	my $q = "SELECT value FROM nd_experimentprop JOIN nd_experiment_stock ON nd_experimentprop.nd_experiment_id=nd_experiment_stock.nd_experiment_id WHERE stock_id = ? AND nd_experimentprop.type_id = ?;";
+#        my $cross_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross_type', 'nd_experiment_property')->cvterm_id();
+#    	my $q = "SELECT value FROM nd_experimentprop JOIN nd_experiment_stock ON nd_experimentprop.nd_experiment_id=nd_experiment_stock.nd_experiment_id WHERE stock_id = ? AND nd_experimentprop.type_id = ?;";
+        my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
+        my $q = "SELECT value FROM stock_relationship WHERE subject_id = ? AND type_id = ?;";
     	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-    	$h->execute($_->{stock_id}, $cross_type_cvterm_id);
+    	$h->execute($_->{stock_id}, $female_parent_cvterm_id);
     	my ($cross_type) = $h->fetchrow_array();
         if ( ! defined $cross_type) {
             $cross_type = "unknown";
