@@ -193,7 +193,7 @@ jQuery(document).ready(function () {
               return "rotate(270, "+ (d.x0 + 14) +", "+ ((d.y1 + d.y0)/2 - 5) +")";
             });
 
-            var tooltip_region = svg.append("g
+            var tooltip_region = svg.append("g");
             var tooltip;
             var tooltip_text;
 
