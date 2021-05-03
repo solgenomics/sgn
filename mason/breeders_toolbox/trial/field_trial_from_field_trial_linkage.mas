@@ -139,13 +139,13 @@ jQuery(document).ready(function () {
             .attr("opacity", 0.8)
             .on("mouseover", function(d){
               d3.select(this).attr("fill", "#6699cc");
-              tooltip_region.attr("transform", "translate("+ (d.x0-100) +", "+ (d.y0 - 95) +")" );
+              tooltip_region.attr("transform", "translate("+ (d.x0-100) +", "+ (d.y0 - 115) +")" );
               tooltip = tooltip_region
                 .append("path")
                 .attr('fill', 'white')
                 .attr('stroke', 'black')
                 .attr('stroke-width', '1.5');
-              var pathString = "M "+(  105  )+" "+( 115 )+" l 10 -10 h 80 c 10 0 10 0 10 -10 v -80 c 0 -10 0 -10 -10 -10 h -180 c -10 0 -10 0 -10 10 v 80 c 0 10 0 10 10 10 h 80 l 10 10 z";
+              var pathString = "M "+(  105  )+" "+( 115 )+" l 10 -10 h 80 c 10 0 10 0 10 -10 v -100 c 0 -10 0 -10 -10 -10 h -180 c -10 0 -10 0 -10 10 v 100 c 0 10 0 10 10 10 h 80 l 10 10 z";
               tooltip.attr("d", pathString);
               tooltip_text = tooltip_region.append("text");
               tooltip_text.text("Trial Type: "+d.type);
