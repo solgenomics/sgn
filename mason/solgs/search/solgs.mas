@@ -29,10 +29,13 @@ $gs_traits_index => undef
   "solGS.searchTrials", "jquery.dataTables", "solGS.Dataset", "solGS.combineTrials",
   "solGS.ajaxAutocomplete"] &>
 
+
 <div id="solgs_search_page" class="container">
     <& /page/page_title.mas,
 	  title => "solGS: Genomic Prediction Modeling"
 	 &>
+
+      <& /solgs/genotyping_protocol.mas &>
 
 	   <& /solgs/search/trial_search_form.mas &>
 
