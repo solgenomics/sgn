@@ -74,6 +74,8 @@ jQuery(document).ready(function () {
             jQuery.ajax({
               url: 'http://breedbase.org/brapi/v2/studies/'+r.source_field_trials[i][0],
               success: function(r){
+                console.log("Success!");
+                console.log(r);
                 trial_type = r.type;
               },
               error: function(r){
@@ -88,6 +90,8 @@ jQuery(document).ready(function () {
             jQuery.ajax({
               url: 'http://breedbase.org/brapi/v2/studies/'+r.field_trials_sourced[i][0],
               success: function(r){
+                console.log("Success!");
+                console.log(r);
                 trial_type = r.type;
               },
               error: function(r){
