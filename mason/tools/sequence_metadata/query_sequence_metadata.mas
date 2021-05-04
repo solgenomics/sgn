@@ -1112,10 +1112,10 @@ function updateMarkers() {
         let end = container.data("end");
         let key = [species, reference_genome, feature_name, start, end].join("-").replaceAll(' ', '');
         if ( markers && markers[key] ) {
-            displayMarkers(key);
+            displayMarkers(key, species, reference_genome, feature_name, start, end);
         }
         else {
-            getMarkers(species, reference_genome, feature_name, start, end);
+            getMarkers(key, species, reference_genome, feature_name, start, end);
         }
     }
 
@@ -1125,14 +1125,14 @@ function updateMarkers() {
  * Get markers matching the specified sequence metadata
  * - Query the DB for matching markers
  * - Update the display of the markers
+ * @param {string} key Sequence Metadata results key (species-reference_genome-feature_name-start-end)
  * @param {string} species Name of the species
  * @param {string} reference_genome Name of the reference genome
  * @param {string} feature_name Name of the sequence metadata's associated feature
  * @param {int} start Start position of the sequence metadata
- * @praam {int} end End position of the sequence metadata
+ * @param {int} end End position of the sequence metadata
  */
-function getMarkers(species, reference_genome, feature_name, start, end) {
-    let key = [species, reference_genome, feature_name, start, end].join("-").replaceAll(' ', '');
+function getMarkers(key, species, reference_genome, feature_name, start, end) {
 
     // Display searching
     if ( !markers ) markers = {};
@@ -1158,7 +1158,7 @@ function getMarkers(species, reference_genome, feature_name, start, end) {
             if ( data && data.results ) {
                 if ( !markers ) markers = {};
                 markers[key] = data.results;
-                displayMarkers(key);
+                displayMarkers(key, species, reference_genome, feature_name, start, end);
             }
 
         },
@@ -1171,9 +1171,14 @@ function getMarkers(species, reference_genome, feature_name, start, end) {
 
 /**
  * Display the marker info for the specified sequence metadata row
- * @param {string} key Sequence Metadata results key (feature_id-start-end)
+ * @param {string} key Sequence Metadata results key (species-reference_genome-feature_name-start-end)
+ * @param {string} species Species name
+ * @param {string} reference_genome Reference genome name
+ * @param {string} feature_name Feature / chromosome name
+ * @param {int} start Start position
+ * @param {int} end End position
  */
-function displayMarkers(key) {
+function displayMarkers(key, species, reference_genome, feature_name, start, end) {
     let marker_info = markers[key];
     let container = jQuery('.sequence_metadata_marker_search_markers_' + key);
     if ( typeof marker_info === 'string' ) {
@@ -1191,7 +1196,7 @@ function displayMarkers(key) {
             for ( let variant_name in variants ) {
                 if ( variants.hasOwnProperty(variant_name) ) {
                     let url = "/variant/" + variant_name + "/details";
-                    html += "<a href='" + url + "'>" + variant_name + "</a>";
+                    html += "<a href='" + url + "' target='_blank'>" + variant_name + "</a>";
                     html += "<ul style='padding-left: 25px'>";
                     for ( let i = 0; i < variants[variant_name].length; i++ ) {
                         let m = variants[variant_name][i];
@@ -1203,7 +1208,11 @@ function displayMarkers(key) {
             }
             if ( markers_displayed < marker_count ) {
                 let diff = marker_count - markers_displayed;
-                html += "<em>..." + diff + " more not displayed...</em>";
+                html += "<em>" + diff + " more not displayed...</em>";
+                if ( species && reference_genome && feature_name ) {
+                    let url = "/search/variants/results?type=genotyped&refmap=" + reference_genome + "&species=" + species + "&chrom=" + feature_name + "&start=" + start + "&end=" + end;
+                    html += "<br /><a href='" + url + "' target='_blank'>View All Markers</a>";
+                }
             }
             html += "</div>";
         }
