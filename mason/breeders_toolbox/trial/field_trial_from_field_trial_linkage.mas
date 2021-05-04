@@ -72,7 +72,7 @@ jQuery(document).ready(function () {
           for (var i = 0; i < r.source_field_trials.length; i++){
             var trial_type;
             jQuery.ajax({
-              url: '/ajax/breeders/trial/type/'+r.source_field_trials[i][0],
+              url: 'http://breedbase.org/brapi/v2/studies/'+r.source_field_trials[i][0],
               success: function(r){
                 trial_type = r.type;
               },
@@ -86,7 +86,7 @@ jQuery(document).ready(function () {
           for (var i = 0; i < r.field_trials_sourced.length; i++){
             var trial_type;
             jQuery.ajax({
-              url: '/ajax/breeders/trial/type/'+r.field_trials_sourced[i][0],
+              url: 'http://breedbase.org/brapi/v2/studies/'+r.field_trials_sourced[i][0],
               success: function(r){
                 trial_type = r.type;
               },
