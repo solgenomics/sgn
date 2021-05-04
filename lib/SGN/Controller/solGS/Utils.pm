@@ -251,18 +251,44 @@ sub stash_json_args {
 
     my $json = JSON->new();
     my $args_hash = $json->decode($args_json);
+    my $data_set_type = $args_hash->{'data_set_type'};
+
+    my $protocol_id =  $args_hash->{'genotyping_protocol_id'};
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 
     foreach my $key (keys %{$args_hash}) {
         my $val = $args_hash->{$key};
+
         if (ref($val) eq 'ARRAY' && scalar(@$val) < 2)
         {
-            $c->stash->{$key} = $val->[0];
+            if ($key =~ /training_pop_id|model_id|combo_pops_list|combo_pops_id/)
+    		{
+    		    $c->stash->{pop_id} = $val->[0];
+                $c->stash->{model_id} = $val->[0];
+                $c->stash->{training_pop_id} = $val->[0];
+                $c->stash->{$key} = $val->[0];
+
+                if ($data_set_type =~ /combined populations/)
+               {
+                   $c->stash->{combo_pops_id} = $val->[0];
+               }
+            }
+            elsif ($key =~ /trait_id|training_traits_ids/)
+            {
+                $c->stash->{training_traits_ids} = $val;
+                $c->stash->{trait_id} = $val->[0];
+            }
+            else
+            {
+                $c->stash->{$key} = $val->[0];
+            }
         }
         else
         {
             $c->stash->{$key} = $val;
         }
     }
+
 }
 
 
