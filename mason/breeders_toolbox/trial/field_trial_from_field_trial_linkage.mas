@@ -74,9 +74,9 @@ jQuery(document).ready(function () {
             jQuery.ajax({
               'Access-Control-Allow-Origin': 'http://breedbase.org',
               url: '/brapi/v2/studies/'+r.source_field_trials[i][0],
-              success: function(r){
+              success: function(re){
                 console.log("Success!");
-                nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][1], "trialType":r.result.studyType});
+                nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][1], "trialType":re.result.studyType});
                 links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1/r.source_field_trials.length});
               },
               error: function(r){
@@ -89,10 +89,10 @@ jQuery(document).ready(function () {
             var trial_type;
             jQuery.ajax({
               url: '/brapi/v2/studies/'+r.field_trials_sourced[i][0],
-              success: function(r){
+              success: function(re){
                 console.log("Success!");
-                console.log(r.result.studyType);
-                nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][1], "trialType":r.result.studyType});
+                console.log(re.result.studyType);
+                nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][1], "trialType":re.result.studyType});
                 links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1/r.field_trials_sourced.length});
               },
               error: function(r){
