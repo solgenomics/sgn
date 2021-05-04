@@ -82,7 +82,7 @@ jQuery(document).ready(function () {
                 console.log("Failed to retrieve trial type");
               }
             });
-            when(tempAjax).done(function(){
+            jQuery.when(tempAjax).done(function(){
               nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][1], "trialType":trialType});
               links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1/r.source_field_trials.length});
             });
@@ -100,7 +100,7 @@ jQuery(document).ready(function () {
                 console.log("Failed to retrieve trial type");
               }
             });
-            when(tempAjax).done(function(){
+            jQuery.when(tempAjax).done(function(){
               nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][1], "trialType":trialType});
               links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1/r.field_trials_sourced.length});
             });
