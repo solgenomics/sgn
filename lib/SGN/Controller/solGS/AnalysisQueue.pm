@@ -374,22 +374,24 @@ sub format_log_entry {
     my $traits_args = $json->decode($args);
     my $traits_ids = $traits_args->{training_traits_ids} || $traits_args->{trait_id};
     my @traits_ids = ref($traits_ids) eq 'ARRAY' ? @$traits_ids : ($traits_ids);
-    my $multi_traits_page;
-    my $analysis_page;
+    # my $multi_traits_page;
+    my $analysis_page = $profile->{analysis_page};
 
-    if (@traits_ids > 1)
-    {
-        $multi_traits_page = $c->req->referer;
-        my $base = $c->req->base;
-        $multi_traits_page =~ s/$base//;
-        $analysis_page = '/' . $multi_traits_page;
-        $traits_args->{analysis_page} = $analysis_page;
-        $args = $json->encode($traits_args);
-    }
-    else
-    {
-        $analysis_page = $profile->{analysis_page};
-    }
+    # if (@traits_ids > 1)
+    # {
+    #     # $multi_traits_page = $c->req->referer;
+    #     # my $base = $c->req->base;
+    #     # $multi_traits_page =~ s/$base//;
+    #     # $analysis_page = '/' . $multi_traits_page;
+    #
+    #     # $traits_args->{analysis_page} = $analysis_page;
+    #     $traits_args->{analysis_page} = $profile->{analysis_page};
+    #     $args = $json->encode($traits_args);
+    # }
+    # else
+    # {
+    #     $analysis_page = $profile->{analysis_page};
+    # }
 
     my $entry   = join("\t", (
 			$profile->{user_name},
@@ -495,129 +497,8 @@ sub parse_arguments {
 
   if ($arguments)
   {
-      my $json = JSON->new;
-      $arguments = $json->decode($arguments);
-
-      foreach my $k ( keys %{$arguments} )
-      {
-		  if ($k eq 'combo_pops_id')
-		  {
-		      $c->stash->{combo_pops_id}   = @{$arguments->{$k}}[0];
-		      $c->stash->{training_pop_id} = @{$arguments->{$k}}[0];
-		  }
-
-		  if ($k eq 'training_pop_id' || $k eq 'model_id')
-		  {
-		      $c->stash->{pop_id}          = @{$arguments->{$k}}[0];
-		      $c->stash->{training_pop_id} = @{$arguments->{$k}}[0];
-		      $c->stash->{model_id}        = @{$arguments->{$k}}[0];
-
-		      if ($data_set_type =~ /combined populations/)
-		      {
-			  $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];;
-		      }
-		  }
-
-		  if ($k eq 'selection_pop_id')
-		  {
-		      $c->stash->{selection_pop_id}  = @{ $arguments->{$k} }[0];
-		      $c->stash->{prediction_pop_id} = @{ $arguments->{$k} }[0];
-		  }
-
-		  if ($k eq 'combo_pops_list')
-		  {
-		      my @pop_ids = @{ $arguments->{$k} };
-		      $c->stash->{combo_pops_list} = \@pop_ids;
-
-		      if (scalar(@pop_ids) == 1)
-		      {
-			  $c->stash->{pop_id}  = $pop_ids[0];
-		      }
-		  }
-
-		  if ($k eq 'trait_id')
-		  {
-		  	if ($arguments->{$k}->[0])
-		  	{
-			    if (scalar(@{$arguments->{$k}}) == 1)
-			    {
-					$c->stash->{trait_id} = $arguments->{$k}->[0];
-					$c->stash->{training_traits_ids} = [$arguments->{$k}->[0]];
-			    }
-		  	}
-		  }
-
-		  if ($k eq 'training_traits_ids')
-		  {
-		      $c->stash->{training_traits_ids} = $arguments->{$k};
-
-		      if (scalar(@{$arguments->{$k}}) == 1)
-		      {
-			    $c->stash->{trait_id} = $arguments->{$k}->[0];
-		      }
-		  }
-
-		  if ($k eq 'list')
-		  {
-		      $c->stash->{list} = $arguments->{$k};
-		  }
-
-		  if ($k eq 'list_name')
-		  {
-		      $c->stash->{list_name} = $arguments->{$k};
-		  }
-
-		  if ($k eq 'list_id')
-		  {
-		      $c->stash->{list_id} = $arguments->{$k};
-		  }
-
-		  if ($k eq 'dataset_name')
-		  {
-		      $c->stash->{dataset_name} = $arguments->{$k};
-		  }
-
-		  if ($k eq 'dataset_id')
-		  {
-		      $c->stash->{dataset_id} = $arguments->{$k};
-		  }
-
-		  if ($k eq 'analysis_type')
-		  {
-		      $c->stash->{analysis_type} = $arguments->{$k};
-		  }
-
-		  if ($k eq 'data_set_type')
-		  {
-		      $c->stash->{data_set_type} =  $arguments->{$k};
-		  }
-
-		  if ($k eq 'data_structure')
-		  {
-		      $c->stash->{data_structure} =  $arguments->{$k};
-		  }
-
-          if ($k eq 'data_type')
-		  {
-		      $c->stash->{data_type} =  $arguments->{$k};
-		  }
-
-		  if ($k eq 'kinship_pop_id')
-		  {
-		      $c->stash->{kinship_pop_id} =  $arguments->{$k};
-		  }
-          if ($k eq 'pca_pop_id')
-		  {
-		      $c->stash->{pca_pop_id} =  $arguments->{$k};
-		  }
-
-		  if ($k eq 'genotyping_protocol_id')
-		  {
-		      my $protocol_id =  $arguments->{$k};
-		      $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-		  }
-      	}
-  	}
+      $c->controller('solGS::Utils')->stash_json_args($c, $arguments);
+  }
 
 }
 
@@ -1094,7 +975,7 @@ sub structure_selection_prediction_output {
 		    $c->stash->{dataset_id} = $sel_pop_id =~ s/\w+_//r;
 		    $c->controller('solGS::Dataset')->create_dataset_population_metadata_file($c);
 		    $c->controller('solGS::Dataset')->dataset_population_summary($c);
-		    $sel_pop_name = $c->stash->{prediction_pop_name};
+		    $sel_pop_name = $c->stash->{selection_pop_name};
 		}
 		else
 		{
@@ -1114,8 +995,8 @@ sub structure_selection_prediction_output {
 		    'training_pop_page'   => $tr_pop_page,
 		    'training_pop_id'     => $tr_pop_id,
 		    'training_pop_name'   => $tr_pop_name,
-		    'prediction_pop_name' => $sel_pop_name,
-		    'prediction_pop_page' => $sel_pop_page,
+		    'selection_pop_name' => $sel_pop_name,
+		    'selection_pop_page' => $sel_pop_page,
 		    'trait_name'          => $trait_name,
 		    'trait_id'            => $trait_id,
 		    'model_page'          => $model_page,
@@ -1270,6 +1151,7 @@ sub predict_selection_traits {
 	my $training_pop_id   = $c->stash->{training_pop_id};
 	my $selection_pop_id  = $c->stash->{selection_pop_id};
 
+print STDERR "\npredict_selection_trait tr pop id: $training_pop_id -- sel pop id: $selection_pop_id\n";
 	if ($selection_pop_id =~ /list/)
 	{
 		$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
