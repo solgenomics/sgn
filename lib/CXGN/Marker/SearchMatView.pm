@@ -393,15 +393,15 @@ sub query {
     }
     if ( defined $name && $name ne '' ) {
         if ( $name_match eq 'contains' ) {
-            push(@where, "(UPPER(marker_name) LIKE UPPER(?) OR UPPER(variant_name) LIKE UPPER(?))");
+            push(@where, "(marker_name ILIKE ? OR variant_name ILIKE ?)");
             push(@args, '%'.$name.'%', '%'.$name.'%');
         }
         elsif ( $name_match eq 'starts_with' ) {
-            push(@where, "(UPPER(marker_name) LIKE UPPER(?) OR UPPER(variant_name) LIKE UPPER(?))");
+            push(@where, "(marker_name ILIKE ? OR variant_name ILIKE ?)");
             push(@args, $name.'%', $name.'%');
         }
         elsif ( $name_match eq 'ends_with' ) {
-            push(@where, "(UPPER(marker_name) LIKE UPPER(?) OR UPPER(variant_name) LIKE UPPER(?))");
+            push(@where, "(marker_name ILIKE ? OR variant_name ILIKE ?)");
             push(@args, '%'.$name, '%'.$name);
         }
         else {
