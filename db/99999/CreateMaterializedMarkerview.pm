@@ -64,6 +64,7 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 
 -- Create the function to build the materialized markerview
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE OR REPLACE FUNCTION public.create_materialized_markerview(refresh boolean)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -102,6 +103,8 @@ AS \$function\$
 		CREATE INDEX materialized_markerview_idx7 ON public.materialized_markerview(pos);
 		CREATE INDEX materialized_markerview_idx8 ON public.materialized_markerview(variant_name);
 		CREATE INDEX materialized_markerview_idx9 ON public.materialized_markerview(UPPER(variant_name));
+		CREATE INDEX materialized_markerview_idx10 ON public.materialized_markerview USING GIN(marker_name gin_trgm_ops);
+		CREATE INDEX materialized_markerview_idx11 ON public.materialized_markerview USING GIN(variant_name gin_trgm_ops);
 		IF \$1 THEN
 			REFRESH MATERIALIZED VIEW public.materialized_markerview;
 		END IF;
