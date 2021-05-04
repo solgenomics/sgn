@@ -77,8 +77,7 @@ jQuery(document).ready(function () {
                 trial_type = r.type;
               },
               error: function(r){
-                jQuery("#working_modal").modal("hide");
-                alert("Error retrieving field trial to field trial linkage.");
+                console.log("Failed to retrieve trial type");
               }
             });
             nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][1], "type":trial_type});
@@ -92,8 +91,7 @@ jQuery(document).ready(function () {
                 trial_type = r.type;
               },
               error: function(r){
-                jQuery("#working_modal").modal("hide");
-                alert("Error retrieving field trial to field trial linkage.");
+                console.log("Failed to retrieve trial type");
               }
             });
             nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][1], "type":trial_type});
@@ -198,10 +196,12 @@ jQuery(document).ready(function () {
           //     return "rotate(270, "+ (d.x0 + 14) +", "+ ((d.y1 + d.y0)/2 - 5) +")";
           //   });
 
-            var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
-            var tooltip;
-            var tooltip_text1;
-            var tooltip_text2;
+
+          //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
+          var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
+          var tooltip;
+          var tooltip_text1;
+          var tooltip_text2;
 
 
 
