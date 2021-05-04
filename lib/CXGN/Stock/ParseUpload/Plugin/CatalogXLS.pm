@@ -82,9 +82,6 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell(0,7)) {
         $contact_person_header  = $worksheet->get_cell(0,7)->value();
     }
-    if ($worksheet->get_cell(0,8)) {
-        $comment_header  = $worksheet->get_cell(0,8)->value();
-    }
 
     if (!$name_header || $name_header ne 'name' ) {
         push @error_messages, "Cell A1: name is missing from the header";
@@ -109,11 +106,6 @@ sub _validate_with_plugin {
     }
     if (!$contact_person_header || $contact_person_header ne 'contact_person_name') {
         push @error_messages, "Cell H1: contact_person_name is missing from the header";
-    }
-    if ($comment_header) {
-        if ($comment_header ne 'comment') {
-            push @error_messages, "Cell I1: comment is missing from the header";
-        }
     }
 
     my %seen_stock_names;
@@ -257,7 +249,7 @@ sub _parse_with_plugin {
         my $material_source;
         my $breeding_program;
         my $availability;
-        my $comment;
+        my $contact_person_name;
 
         if ($worksheet->get_cell($row,0)) {
             $item_name = $worksheet->get_cell($row,0)->value();
@@ -283,9 +275,6 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,7)) {
             $contact_person_name =  $worksheet->get_cell($row,7)->value();
         }
-        if ($worksheet->get_cell($row,8)) {
-            $comment =  $worksheet->get_cell($row,8)->value();
-        }
 
         my $contact_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_name);
 
@@ -298,7 +287,6 @@ sub _parse_with_plugin {
             'breeding_program' => $breeding_program,
             'availability' => $availability,
             'contact_person_id' => $contact_person_id,
-            'comments' => $comment
         }
     }
     print STDERR "PLUGIN PARSED RESULT =".Dumper(\%parsed_result)."\n";

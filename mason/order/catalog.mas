@@ -146,7 +146,6 @@ jQuery(document).ready( function() {
             { title: "Material Source", "data": "material_source" },
             { title: "Breeding Program", "data": "breeding_program" },
             { title: "Availability", "data": "availability" },
-            { title: "Comment", "data": "comment" },
             { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+row.description+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
         ],
     });

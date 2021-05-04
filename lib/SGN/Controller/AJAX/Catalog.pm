@@ -30,7 +30,6 @@ sub add_catalog_item_POST : Args(0) {
     my $item_material_source = $c->req->param('item_material_source');
     my $item_breeding_program = $c->req->param('item_breeding_program');
     my $item_availability = $c->req->param('item_availability');
-    my $item_comment = $c->req->param('item_comment');
     my $contact_person = $c->req->param('contact_person');
     my $item_stock_id;
 
@@ -65,7 +64,6 @@ sub add_catalog_item_POST : Args(0) {
         material_source => $item_material_source,
         breeding_program => $program_name,
         availability => $item_availability,
-        comment => $item_comment,
         contact_person_id => $sp_person_id,
         parent_id => $item_stock_id
     });
@@ -233,7 +231,6 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
             material_source => $item_details[3],
             breeding_program => $item_details[4],
             availability => $item_details[5],
-            comment => $item_details[6]
         };
     }
 

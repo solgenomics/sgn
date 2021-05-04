@@ -30,9 +30,6 @@ has 'breeding_program' => ( isa => 'Str', is => 'rw');
 #
 has 'category' => ( isa => 'Str', is => 'rw' );
 
-# additional info
-has 'comment' => ( isa => 'Str', is => 'rw') ;
-
 has 'contact_person_id' => ( isa => 'Int', is => 'rw') ;
 
 
