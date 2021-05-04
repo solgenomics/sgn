@@ -92,7 +92,7 @@ jQuery(document).ready(function () {
               url: '/brapi/v2/studies/'+r.field_trials_sourced[i][0],
               success: function(r){
                 console.log("Success!");
-                console.log(r);
+                console.log(r.result.studyType);
                 trial_type = r.result.studyType;
               },
               error: function(r){
