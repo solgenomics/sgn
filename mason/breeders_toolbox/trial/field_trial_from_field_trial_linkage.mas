@@ -77,7 +77,7 @@ jQuery(document).ready(function () {
               success: function(r){
                 console.log("Success!");
                 console.log(r);
-                trial_type = r.studyType;
+                trial_type = r.result.studyType;
               },
               error: function(r){
                 console.log("Failed to retrieve trial type");
@@ -93,7 +93,7 @@ jQuery(document).ready(function () {
               success: function(r){
                 console.log("Success!");
                 console.log(r);
-                trial_type = r.studyType;
+                trial_type = r.result.studyType;
               },
               error: function(r){
                 console.log("Failed to retrieve trial type");
