@@ -370,28 +370,7 @@ sub format_log_entry {
 
 	my $json = JSON->new;
 	my $time = $json->decode($args)->{analysis_time};
-
-    my $traits_args = $json->decode($args);
-    my $traits_ids = $traits_args->{training_traits_ids} || $traits_args->{trait_id};
-    my @traits_ids = ref($traits_ids) eq 'ARRAY' ? @$traits_ids : ($traits_ids);
-    # my $multi_traits_page;
     my $analysis_page = $profile->{analysis_page};
-
-    # if (@traits_ids > 1)
-    # {
-    #     # $multi_traits_page = $c->req->referer;
-    #     # my $base = $c->req->base;
-    #     # $multi_traits_page =~ s/$base//;
-    #     # $analysis_page = '/' . $multi_traits_page;
-    #
-    #     # $traits_args->{analysis_page} = $analysis_page;
-    #     $traits_args->{analysis_page} = $profile->{analysis_page};
-    #     $args = $json->encode($traits_args);
-    # }
-    # else
-    # {
-    #     $analysis_page = $profile->{analysis_page};
-    # }
 
     my $entry   = join("\t", (
 			$profile->{user_name},
@@ -404,7 +383,10 @@ sub format_log_entry {
 
 	$entry .= "\n";
 
-	# if ($profile->{analysis_page} =~ /solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)
+    my $traits_args = $json->decode($args);
+    my $traits_ids = $traits_args->{training_traits_ids} || $traits_args->{trait_id};
+    my @traits_ids = ref($traits_ids) eq 'ARRAY' ? @$traits_ids : ($traits_ids);
+
     if (@traits_ids > 1)
 	{
 		my $traits_entries = $self->create_itemized_prediction_log_entries($c, $profile);
