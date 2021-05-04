@@ -65,7 +65,7 @@ jQuery(document).ready(function () {
           html2 = html2 + '</tbody></table>';
           jQuery('#field_trial_to_field_trial_html').html(html1+html2);
 
-          var nodes = [{"name":"This Trial", "id":"This Trial" , "type":'<% $trial_type %>'}];
+          var nodes = [{"name":"This Trial", "id":"This Trial" , "trialType":'<% $trial_type %>'}];
           var links = [];
 
           //Build data from response: will be an object with two arrays, one of nodes and one of links
@@ -76,7 +76,7 @@ jQuery(document).ready(function () {
               url: '/brapi/v2/studies/'+r.source_field_trials[i][0],
               success: function(r){
                 console.log("Success!");
-                nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][1], "type":r.result.studyType});
+                nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][1], "trialType":r.result.studyType});
                 links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1/r.source_field_trials.length});
               },
               error: function(r){
@@ -92,7 +92,7 @@ jQuery(document).ready(function () {
               success: function(r){
                 console.log("Success!");
                 console.log(r.result.studyType);
-                nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][1], "type":r.result.studyType});
+                nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][1], "trialType":r.result.studyType});
                 links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1/r.field_trials_sourced.length});
               },
               error: function(r){
@@ -157,7 +157,7 @@ jQuery(document).ready(function () {
               tooltip_text2 = tooltip_region.append("text")
               .attr("text-anchor", "middle")
               .attr("transform", "translate(110,40)");
-              tooltip_text2.text("Trial Type: "+d.type);
+              tooltip_text2.text("Trial Type: "+d.trialType);
             })
             .on("mouseout", function(d){
               d3.select(this).attr("fill", "#add8e6");
