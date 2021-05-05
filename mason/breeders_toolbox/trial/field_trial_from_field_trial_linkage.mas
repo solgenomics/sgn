@@ -136,7 +136,7 @@ jQuery(document).ready(function () {
                 d3.select(this).attr("fill", "#add8e6");
                 tooltip_region.selectAll("*").remove();
               })
-              .on("doubleclick", function(d){
+              .dblclick(function(d){
                 console.log("Doubleclick");
                 window.open("/breeders/trial/"+d.name);
               });
