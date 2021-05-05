@@ -52,7 +52,7 @@ jQuery(document).ready(function () {
                 console.log("Failed to retrieve trial type");
               }
             }) );
-            nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][1], "trialType":null});
+            nodes.push({"name":r.source_field_trials[i][1], "id":r.source_field_trials[i][0], "trialType":null});
             links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1/r.source_field_trials.length});
           }
           for (var i = 0; i < r.field_trials_sourced.length; i++){
@@ -65,7 +65,7 @@ jQuery(document).ready(function () {
                 console.log("Failed to retrieve trial type");
               }
             }) );
-            nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][1], "trialType":null});
+            nodes.push({"name":r.field_trials_sourced[i][1], "id":r.field_trials_sourced[i][0], "trialType":null});
             links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1/r.field_trials_sourced.length});
           }
 
@@ -135,6 +135,9 @@ jQuery(document).ready(function () {
               .on("mouseout", function(d){
                 d3.select(this).attr("fill", "#add8e6");
                 tooltip_region.selectAll("*").remove();
+              })
+              .on("doubleclick", function(d){
+                window.open("/breeders/trial/"+d.id);
               });
 
             links = svg
