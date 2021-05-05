@@ -137,6 +137,7 @@ jQuery(document).ready(function () {
                 tooltip_region.selectAll("*").remove();
               })
               .on("doubleclick", function(d){
+                console.log("Doubleclick");
                 window.open("/breeders/trial/"+d.name);
               });
 
