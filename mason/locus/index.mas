@@ -224,11 +224,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 <& /locus/synonym.mas ,  locus_id=>"$locus_id" , synonyms=>\@synonyms &>
 </td></tr>
-<tr><td>
-<% $tgrc %>
-<% $tair %>
-<% $phylogenes %>
-</td></tr>
+
 <tr><td>
 <& /phenome/display_owners.mas,
 	 object_id => $locus_id,
@@ -262,6 +258,21 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 
 % if($locus_id) {
+
+
+<&| /page/info_section.mas,
+    title     => "Links to external databases",
+    subtitle  => "",
+    id        => "locus_dbxrefs",
+    collapsible => 1,
+    is_subsection => 1,
+  &>
+
+<% $tgrc %>
+<% $tair %>
+<% $phylogenes %>
+
+</&>
 
 <&| /page/info_section.mas,
     title       => "Registry name: $registry",
