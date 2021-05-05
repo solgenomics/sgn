@@ -126,7 +126,7 @@ jQuery(document).ready(function () {
                 tooltip_text1 = tooltip_region.append("text")
                 .attr("text-anchor", "middle")
                 .attr("transform", "translate(110,20)");
-                tooltip_text1.text("Trial: "+d.name);
+                tooltip_text1.text("Trial: "+d.id);
                 tooltip_text2 = tooltip_region.append("text")
                 .attr("text-anchor", "middle")
                 .attr("transform", "translate(110,40)");
@@ -137,8 +137,11 @@ jQuery(document).ready(function () {
                 tooltip_region.selectAll("*").remove();
               })
               .on("dblclick",function(d){
-                console.log("Doubleclick");
-                window.open("/breeders/trial/"+d.name);
+                if (d.name == "This Trial"){
+
+                } else {
+                  window.open("/breeders/trial/"+d.name);
+                }
               });
 
             links = svg
