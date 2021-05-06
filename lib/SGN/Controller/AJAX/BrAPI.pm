@@ -11,7 +11,6 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Stock;
 use CXGN::Login;
-use CXGN::Trial::TrialCreate;
 use CXGN::Trial::Search;
 use CXGN::Location::LocationLookup;
 use JSON;

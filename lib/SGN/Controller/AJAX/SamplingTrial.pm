@@ -337,6 +337,7 @@ sub store_sampling_trial_POST : Args(0) {
             sampling_trial_facility => $sampling_data->{sampling_facility},
             sampling_trial_sample_type => $sampling_data->{sample_type},
             sampling_trial_from_field_trial => \@field_trial_ids,
+	    owner_id => $user_id,
         });
 
         $message = $ct->save_trial();

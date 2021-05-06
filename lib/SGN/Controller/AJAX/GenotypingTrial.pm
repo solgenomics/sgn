@@ -5,6 +5,7 @@ use Moose;
 use JSON;
 use Data::Dumper;
 use CXGN::Trial::TrialDesign;
+use CXGN::Trial::TrialCreate;
 use Try::Tiny;
 use List::MoreUtils qw /any /;
 use CXGN::People::Person;
@@ -372,6 +373,7 @@ sub store_genotype_trial_POST : Args(0) {
             genotyping_plate_format => $plate_info->{plate_format},
             genotyping_plate_sample_type => $plate_info->{sample_type},
             genotyping_trial_from_field_trial => \@field_trial_ids,
+	    owner_id => $user_id,
         });
 
         $message = $ct->save_trial();

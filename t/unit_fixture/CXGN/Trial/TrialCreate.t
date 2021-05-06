@@ -102,7 +102,8 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_name => "new_test_trial_name",
     trial_type=>$ayt_cvterm_id,
     design_type => "RCBD",
-    operator => "janedoe"
+    operator => "janedoe",
+    owner_id => 41,
 						    }), "create trial object");
 
 my $save = $trial_create->save_trial();
@@ -154,7 +155,8 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_location => "test_location_for_trial",
     trial_name => "new_test_trial_name_single",
     design_type => "RCBD",
-    operator => "janedoe"
+    operator => "janedoe",
+    owner_id => 41,
 						    }), "create trial object");
 
 my $save = $trial_create->save_trial();
@@ -332,6 +334,7 @@ ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     genotyping_facility => $plate_info->{genotyping_facility},
     genotyping_plate_format => $plate_info->{plate_format},
     genotyping_plate_sample_type => $plate_info->{sample_type},
+    owner_id => 41,
 }), "create genotyping plate");
 
 my $save = $genotyping_trial_create->save_trial();
@@ -402,7 +405,8 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_name => "new_test_trial_name_westcott",
     trial_type=>$ayt_cvterm_id,
     design_type => "Westcott",
-    operator => "janedoe"
+    operator => "janedoe",
+    owner_id => 41,
 						    }), "create trial object");
 
 $save = $trial_create->save_trial();
@@ -477,7 +481,8 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     design_type => "splitplot",
     trial_has_subplot_entries => 2,
     trial_has_plant_entries => 4,
-    operator => "janedoe"
+    operator => "janedoe",
+    owner_id => 41,
 						    }), "create trial object");
 
 $save = $trial_create->save_trial();

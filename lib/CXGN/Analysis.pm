@@ -435,6 +435,7 @@ sub create_and_store_analysis_design {
         trial_type => $analysis_experiment_type_id,
         is_analysis => 1,
         analysis_model_protocol_id => $saved_model_protocol_id,
+	owner_id => $self->user_id(),
     });
 
 #    my $validate_error = $trial_create->validate_design();

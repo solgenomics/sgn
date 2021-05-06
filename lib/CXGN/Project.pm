@@ -40,6 +40,9 @@ use CXGN::Calendar;
 use JSON;
 use File::Basename qw | basename dirname|;
 use Scalar::Util qw | looks_like_number |;
+use CXGN::Phenome::Schema;
+use CXGN::Phenome::Schema::StockOwner;
+use CXGN::Phenome::Schema::ProjectOwner;
 
 =head2 accessor bcs_schema()
 
@@ -2274,7 +2277,7 @@ sub _delete_field_layout_experiment {
     }
 
     my $phenome_schema = CXGN::Phenome::Schema->connect( sub { 
-            $self->bcs_schema->storage->dbh() 
+            $self->bcs_schema->storage->dbh()->clone(); 
         },
         {
             on_connect_do => ['SET search_path TO public,phenome;']
@@ -2385,7 +2388,7 @@ sub delete_project_entry {
     }
 
     my $project_owner_schema = CXGN::Phenome::Schema->connect( sub { 
-            $self->bcs_schema->storage->dbh() 
+	$self->bcs_schema->storage->dbh()
         },
         {
             on_connect_do => ['SET search_path TO public,phenome;']

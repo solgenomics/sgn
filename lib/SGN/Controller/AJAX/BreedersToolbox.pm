@@ -11,7 +11,6 @@ use CXGN::List;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::BreedersToolbox::Delete;
 use CXGN::Trial::TrialDesign;
-use CXGN::Trial::TrialCreate;
 use CXGN::Stock::StockLookup;
 use CXGN::Location;
 use Try::Tiny;
