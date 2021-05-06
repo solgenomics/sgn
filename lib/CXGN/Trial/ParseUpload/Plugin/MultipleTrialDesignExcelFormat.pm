@@ -645,9 +645,15 @@ sub _parse_with_plugin {
 
     if ($current_trial_name && $current_trial_name ne $trial_name) {
 
-      if ($current_trial_name ne $worksheet->get_cell(1,0)->value()) {
+      if ($trial_name) {
         ## Save old single trial hash in all trials hash; reinitialize temp hashes
-        my %final_design_details = %design_details;
+        my %final_design_details = ();
+        my $previous_design_data = $all_designs{$trial_name}{'design_details'};
+        if ($previous_design_data) {
+            %final_design_details = (%design_details, %{$all_designs{$trial_name}{'design_details'}});
+        } else {
+            %final_design_details = %design_details;
+        }
         %design_details = ();
         $single_design{'design_details'} = \%final_design_details;
         my %final_single_design = %single_design;
@@ -790,7 +796,14 @@ sub _parse_with_plugin {
   }
 
   # add last trial design to all_designs and save parsed data, then return
-  $single_design{'design_details'} = \%design_details;
+  my %final_design_details = ();
+  my $previous_design_data = $all_designs{$trial_name}{'design_details'};
+  if ($previous_design_data) {
+      %final_design_details = (%design_details, %{$all_designs{$trial_name}{'design_details'}});
+  } else {
+      %final_design_details = %design_details;
+  }
+  $single_design{'design_details'} = \%final_design_details;
   $all_designs{$trial_name} = \%single_design;
 
   $self->_set_parsed_data(\%all_designs);

@@ -203,7 +203,7 @@ $trial_search = CXGN::Trial::Search->new({
     program_list=>['test'],
 });
 ($result, $total_count) = $trial_search->search();
-print STDERR "SELECTED TRIAL =".Dumper($result)."\n";
+# print STDERR "SELECTED TRIAL =".Dumper($result)."\n";
 is_deeply($result, [
           {
             'genotyping_facility_status' => undef,
@@ -425,7 +425,7 @@ my $initial_stock_count = $stock_count_rs->count();
 
 my $number_of_reps = 3;
 my $stock_list = [ 'test_accession1', 'test_accession2', 'test_accession3' ];
-
+# print STDERR "\n\n Before creating trial design\n\n";
 my $td = CXGN::Trial::TrialDesign->new(
     {
 	schema => $f->bcs_schema(),
@@ -437,31 +437,37 @@ my $td = CXGN::Trial::TrialDesign->new(
 	number_of_blocks => 3,
     });
 
-my $number_of_plots = $number_of_reps * scalar(@$stock_list);
+# print STDERR "\n\n After creating trial design\n\n";
 
+my $number_of_plots = $number_of_reps * scalar(@$stock_list);
+# print STDERR "\n\n before calculating design! \n\n";
+  
 $td->calculate_design();
+# print STDERR "\n\nGot passed calculating design! \n\n";
 
 my $trial_design = $td->get_design();
-#print STDERR Dumper $trial_design;
+# print STDERR "\n\nTrial Design  :".Dumper($trial_design)."\n\n";
+
 
 my $breeding_program_row = $f->bcs_schema->resultset("Project::Project")->find( { name => 'test' });
 my $trial_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
 
 my $new_trial = CXGN::Trial::TrialCreate->new(
-    {
-	dbh => $f->dbh(),
-	chado_schema => $f->bcs_schema(),
-	user_name => 'janedoe', #not implemented
-	program => 'test',
-	trial_year => 2014,
-	trial_description => 'another test trial...',
-	design_type => 'RCBD',
+  {
+    dbh => $f->dbh(),
+    chado_schema => $f->bcs_schema(),
+    user_name => 'janedoe', #not implemented
+    program => 'test',
+    trial_year => 2014,
+    trial_description => 'another test trial...',
+    design_type => 'RCBD',
     trial_type => $trial_type_cvterm_id,
-	trial_location => 'test_location',
-	trial_name => "anothertrial",
-	design => $trial_design,
+    trial_location => 'test_location',
+    trial_name => "anothertrial",
+    design => $trial_design,
+    owner_id => 41,
     operator => 'janedoe'
-    });
+  });
 
 my $save = $new_trial->save_trial();
 
@@ -492,7 +498,7 @@ foreach (@$breeding_programs){
 #print STDERR Dumper \@breeding_program_names;
 is_deeply(\@breeding_program_names, ['test'], "check breeding_program_names");
 
-my $plot_name = $trial_design->{1}->{plot_name};
+my $plot_name = $trial_design->{11}->{plot_name};
 my $rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { name => $plot_name });
 is($rs->count(), 1, "check that a single plot was saved for a single name.");
 is($rs->first->name(), $plot_name, 'check that plot name was saved correctly');
@@ -509,14 +515,13 @@ else {
 my $phenotype_count_before_store = $trial->phenotype_count();
 
 ok($trial->phenotype_count() == 0, "trial has no phenotype data");
-
-my $plotlist_ref = [ $trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name} ];
+my $plotlist_ref = [ $trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name} ];
 
 my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014' ];
 
-my %plot_trait_value = ( $trial_design->{1}->{plot_name} => { 'root number|CO_334:0000011'  => [0,''], 'dry yield|CO_334:0000014' => [30,''] },
-			   $trial_design->{2}->{plot_name} => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''] },
-			   $trial_design->{3}->{plot_name} => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''] },
+my %plot_trait_value = ( $trial_design->{11}->{plot_name} => { 'root number|CO_334:0000011'  => [0,''], 'dry yield|CO_334:0000014' => [30,''] },
+			   $trial_design->{12}->{plot_name} => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''] },
+			   $trial_design->{13}->{plot_name} => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''] },
     );
 
 
@@ -549,7 +554,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 #print STDERR "Total phentoypes: $total_phenotypes\n";
 #print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3529, "total phenotype data");
+is($total_phenotypes, 3508, "total phenotype data");
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -580,7 +585,7 @@ foreach (@$plot_pheno_for_trait) {
 }
 @phenotyped_stocks = sort @phenotyped_stocks;
 @phenotyped_stocks_values = sort @phenotyped_stocks_values;
-my @expected_sorted_stocks = sort ($trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name});
+my @expected_sorted_stocks = sort ($trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name});
 print STDERR Dumper \@phenotyped_stocks;
 #print STDERR Dumper \@expected_sorted_stocks;
 is_deeply(\@phenotyped_stocks, \@expected_sorted_stocks, "check phenotyped stocks");
@@ -658,7 +663,7 @@ foreach (@$trial_plots){
 @trial_plot_names = sort @trial_plot_names;
 print STDERR "Num plots: ".scalar(@trial_plot_names)."\n";
 is(scalar(@trial_plot_names), 9, 'check number of plots');
-my @expected_sorted_plots = sort ($trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name}, $trial_design->{4}->{plot_name}, $trial_design->{5}->{plot_name}, $trial_design->{6}->{plot_name}, $trial_design->{7}->{plot_name}, $trial_design->{8}->{plot_name}, $trial_design->{9}->{plot_name});
+my @expected_sorted_plots = sort ($trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name}, $trial_design->{21}->{plot_name}, $trial_design->{22}->{plot_name}, $trial_design->{23}->{plot_name}, $trial_design->{31}->{plot_name}, $trial_design->{32}->{plot_name}, $trial_design->{33}->{plot_name});
 print STDERR Dumper \@trial_plot_names;
 print STDERR Dumper \@expected_sorted_plots;
 is_deeply(\@trial_plot_names, \@expected_sorted_plots, 'Check get_plots');
@@ -678,13 +683,13 @@ my $plants = $trial->get_plants();
 #print STDERR Dumper $plants;
 is(scalar(@$plants), $number_of_plots*3, "check if the right number of plants was created");
 
-my $plantlist_ref = [ $trial_design->{1}->{plot_name}.'_plant_2', $trial_design->{2}->{plot_name}.'_plant_2', $trial_design->{3}->{plot_name}.'_plant_1' ];
+my $plantlist_ref = [ $trial_design->{11}->{plot_name}.'_plant_2', $trial_design->{12}->{plot_name}.'_plant_2', $trial_design->{13}->{plot_name}.'_plant_1' ];
 
 my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014', 'harvest index|CO_334:0000015' ];
 
-my %plant_trait_value = ( $trial_design->{1}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [12,''], 'dry yield|CO_334:0000014' => [30,''], 'harvest index|CO_334:0000015' => [2,''] },
-    $trial_design->{2}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''], 'harvest index|CO_334:0000015' => [3,''] },
-    $trial_design->{3}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
+my %plant_trait_value = ( $trial_design->{11}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [12,''], 'dry yield|CO_334:0000014' => [30,''], 'harvest index|CO_334:0000015' => [2,''] },
+    $trial_design->{12}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''], 'harvest index|CO_334:0000015' => [3,''] },
+    $trial_design->{13}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
 );
 
 my %metadata = ( operator => 'johndoe', date => '20141225' );
@@ -715,7 +720,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 print STDERR "Total phentoypes: $total_phenotypes\n";
 print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3538, "total phenotype data");
+is($total_phenotypes, 3517, "total phenotype data");
 is($trial_phenotype_count, 15, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),

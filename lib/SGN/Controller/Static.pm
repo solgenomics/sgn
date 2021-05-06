@@ -51,7 +51,7 @@ sub list_all_uploads :Path('/breeders/list_all_uploads') Args(0) {
     $c->stash->{template} = '/breeders_toolbox/complete_upload_list.mas';
 }
 
-sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) { 
+sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) {
     my $self = shift;
     my $c = shift;
     #This mason component is in cassbase git repo.
@@ -70,25 +70,31 @@ sub tomato100_project_page :Path('/projects/tomato100/') Args(0) {
     $c->stash->{template} = '/projects/tomato100.mas';
 }
 
-sub solcode_project_page :Path('/projects/solcode/') Args(0) { 
+sub tomatodisease_project_page :Path('/projects/tomatodisease/') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/projects/tomatodisease.mas';
+}
+
+sub solcode_project_page :Path('/projects/solcode/') Args(0) {
     my $self = shift;
     my $c = shift;
     $c->stash->{template} = '/projects/solcode.mas';
 }
 
-sub varitome_project_page :Path('/projects/varitome/') Args(0) { 
+sub varitome_project_page :Path('/projects/varitome/') Args(0) {
     my $self = shift;
     my $c = shift;
     $c->stash->{template} = '/projects/varitome/index.mas';
 }
 
-sub test_authentication :Path('/test_authentication/') :Args(0) { 
+sub test_authentication :Path('/test_authentication/') :Args(0) {
     my $self = shift;
     my $c = shift;
     $c->stash->{template} = '/test/test_authenticate.mas';
 }
 
-sub solanaceae_project_afri :Path('/solanaceae-project/afri-sol/') { 
+sub solanaceae_project_afri :Path('/solanaceae-project/afri-sol/') {
     my ($self, $c) = @_;
     $c->stash->{template} = '/links/afri_sol.mas';
 }
@@ -100,30 +106,30 @@ sub sgn_events :Path('/sgn-events/') {
 }
 
 
-sub phenotype_select : Path('/phenome/select') { 
+sub phenotype_select : Path('/phenome/select') {
     my ($self, $c) = @_;
-    
+
     $c->stash->{template} = '/phenome/select.mas';
 
 
 }
 
-sub list_test : Path('/list/test') { 
+sub list_test : Path('/list/test') {
     my ($self, $c) = @_;
-    
+
     $c->stash->{template}= '/list/index.mas';
     $c->stash->{user_id} = $c->user();
 }
 
-sub usage_policy : Path('/usage_policy') { 
+sub usage_policy : Path('/usage_policy') {
     my ($self, $c) = @_;
     $c->stash->{template} = '/usage_policy.mas';
 }
 
-sub ted : Path('/ted') Args(0) { 
+sub ted : Path('/ted') Args(0) {
     my ($self, $c) = @_;
     my $uri = $c->request->uri->as_string();
-    
+
     my ($protocol, $empty, $server, $ted, @rest) = split "/", $uri;
 
     $c->stash->{page_title} = "Tomato Expression Database";
