@@ -41,6 +41,10 @@ A hashref containing the variants and the markers related to one or more of the 
         print "<p><strong>ERROR: </strong>Missing variant markers!</p>";
     }
 
+    # Set title
+    my $title = ${$markers}[0]->{'species_name'} . " Markers";
+    my $subtitle = "Chromosome " . ${$markers}[0]->{'chrom'} . " @ " . ${$markers}[0]->{'pos'};
+
     # Set query parameters for the sequence metadata table
     my %smd_params = (
         "sequence_metadata_results" => {
@@ -59,8 +63,10 @@ A hashref containing the variants and the markers related to one or more of the 
 
 
 
-<& /page/page_title.mas, title=> "Variant $variant_name" &>
+<& /page/page_title.mas, title=> $title &>
+<& /page/page_title.mas, title=> $subtitle &>
 
+<br /><br />
 
 
 <!-- VARIANT DETAILS TABLE -->

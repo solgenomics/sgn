@@ -117,7 +117,7 @@ jQuery(document).ready(function() {
             { title: "Chromosome", data: "chrom" },
             { title: "Position", data: "pos" }
         ],
-        order: [[ 1, "asc" ]]
+        order: [[ 0, "asc" ]]
     });
 
     // Init Mapped DataTable

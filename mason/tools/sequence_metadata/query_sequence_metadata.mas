@@ -65,9 +65,9 @@
                     <!-- Data Type -->
                     <div class="form-group">
                         <div class="col-sm-2" style="text-align: right">
-                            <label class="control-label">Protocol: </label><br /><br />
+                            <label class="control-label">Protocol: </label><br /><br /><br />
                             <a id="sequence_metadata_filter_type_info_btn" href="#"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;Data Type Info</a>
-                            <br />
+                            <br /><br />
                             <a id="sequence_metadata_filter_protocol_info_btn" href="#"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;Protocol Info</a>
                         </div>
                         <div class="col-sm-10">
@@ -326,6 +326,13 @@ jQuery(document).ready(function() {
 
     // Return to Query
     jQuery('#sequence_metadata_filter_return').click(toggle_sections);
+
+    // Toggle Sections on history/state change
+    if (window.history && window.history.pushState) {
+        jQuery(window).on('popstate', function() {
+            toggle_sections();
+        });
+    }
 
 
     //
@@ -607,19 +614,20 @@ function get_protocols(callback) {
                     props += "<strong>Reference Genome:</strong>&nbsp;" + data.protocols[i].nd_protocol_properties.reference_genome + "<br />";
                     props += "<strong>Score:</strong>&nbsp;" + data.protocols[i].nd_protocol_properties.score_description + "<br />";
                     props += "<strong>Attributes:</strong><br />";
-                    let attributes = [];
+                    
                     var keys = Object.keys(data.protocols[i].nd_protocol_properties.attribute_descriptions);
                     keys.sort();
                     let t = "<table class='table' style='background: transparent !important'>";
+                    t += "<thead><tr><th>Key</th><th>Definition</th></tr></thead>";
+                    t += "<tbody>";
                     for ( let j = 0; j < keys.length; j++ ) {
                         let key = keys[j];
                         let description = data.protocols[i].nd_protocol_properties.attribute_descriptions[key];
                         t += "<tr><td class='col-md-4'><strong>" + key + "</strong></td><td class='col-md-8'>" + description + "</td></tr>";
-                        attributes.push("&nbsp;&nbsp;<strong>" + key + ":</strong>&nbsp;" + description);
                     }
+                    t += "</tbody>";
                     t += "</table>";
                     props += t;
-                    // props += attributes.join('<br />');
 
                     info += "<tr>";
                     info += "<td class='col-md-2'>" + data.protocols[i].nd_protocol_name + "</td>";
@@ -699,7 +707,6 @@ function set_protocols() {
         options += "<optgroup label='" + sorted_types[i] + "'>";
         for ( let j = 0; j < grouped[sorted_types[i]].length; j++ ) {
             let prot = grouped[sorted_types[i]][j];
-            console.log(prot);
             options += "<option value='" + prot.id + "' " + prot.selected + ">" + prot.name + "</option>";
         }
         options += "</optgroup>";
@@ -922,6 +929,11 @@ function handle_query_results(response) {
     jQuery('#sequence_metadata_filter_query').html('Search');
     jQuery('#sequence_metadata_filter_query').attr('disabled', false);
 
+    // Add to history state
+    if (window.history && window.history.pushState) {
+        window.history.pushState('results', null, null);
+    }
+
 }
 
 
@@ -1116,10 +1128,14 @@ function displayMarkers(key, species, reference_genome, feature_name, start, end
             let m = marker_count === 1 ? "marker" : "markers";
             html += "<strong>" + marker_count + " " + m + " found:</strong>";
             html += "<div class='sequence_metadata_marker_search_markers_list'>";
-            for ( let variant_name in variants ) {
+            let sorted_variants = Object.keys(variants).sort();
+            for ( let i = 0; i < sorted_variants.length; i++ ) {
+                let variant_name = sorted_variants[i];
                 if ( variants.hasOwnProperty(variant_name) ) {
+                    let m = variants[variant_name][0];
                     let url = "/variant/" + variant_name + "/details";
-                    html += "<a href='" + url + "' target='_blank'>" + variant_name + "</a>";
+                    let label = m.chrom + " @ " + m.pos;
+                    html += "<a href='" + url + "' target='_blank'>" + label + "</a>";
                     html += "<ul style='padding-left: 25px'>";
                     for ( let i = 0; i < variants[variant_name].length; i++ ) {
                         let m = variants[variant_name][i];

@@ -10,12 +10,12 @@
 
 <p><strong>Related Genotyped Markers:</strong> These genotyped markers share the same name as one or more markers at this variant</p>
 <div id="related-variants">
-    <em>Loading...</em>
+    <em>Loading...</em><br /><br />
 </div>
 
 <p><strong>Related Mapped Markers:</strong> These mapped markers have the same name as a marker at this variant</p>
 <div id="related-mapped-markers">
-    <em>Loading...</em>
+    <em>Loading...</em><br />
 </div>
 
 
@@ -56,7 +56,7 @@ function getRelatedVariants() {
                 html += "</table>";
             }
             else {
-                html += "<em>No related variants found</em>";
+                html += "<em>No related genotyed markers found</em><br /><br />";
             }
             jQuery("#related-variants").html(html);
         },
@@ -91,7 +91,7 @@ function getRelatedMappedMarkers() {
                 }
             }
             else {
-                html += "<em>No related mapped markers found</em>";
+                html += "<em>No related mapped markers found</em><br />";
             }
             jQuery("#related-mapped-markers").html(html);
         },
