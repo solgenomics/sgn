@@ -46,12 +46,12 @@ solGS.pca = {
          var listId;
          var datasetId;
 
-         if (selectId.match(/dataset/)) {
+         if (pcaPopId.match(/dataset/)) {
              dataStr = 'dataset';
-             datasetId = pcaPopId;
+             datasetId = pcaPopId.replace(/dataset_/, '');
         } else if (pcaPopId.match(/list/)) {
             dataStr = 'list';
-            listId = pcaPopId;
+            listId = pcaPopId.replace(/list_/, '');
          }
 
          var args = {
@@ -769,8 +769,6 @@ jQuery(document).ready( function() {
     var url = document.URL;
 
     if (url.match(/pca\/analysis/)) {
-
-
 
         var list = new CXGN.List();
         var listMenu = list.listSelect("pca_pops", ['accessions', 'plots', 'trials'], undefined, undefined, undefined);
