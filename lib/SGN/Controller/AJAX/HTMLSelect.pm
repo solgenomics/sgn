@@ -759,26 +759,10 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
 
     my $html = '<table class="table table-bordered table-hover" id="html-select-sdmprotocol-table-' . $data_type_cvterm_id . '">';
     my $select_th = defined $checkbox_name ? "<th>Select</th>" : "";
-    $html .= '<thead><tr>' . $select_th . '<th>Protocol Name</th><th>Description</th><th>Properties</th><th>Features</th></tr></thead>';
+    $html .= '<thead><tr>' . $select_th . '<th>Protocol Name</th><th>Description</th><th>Properties</th></tr></thead>';
     $html .= '<tbody>';
 
     while (my ($nd_protocol_id, $name, $description, $props_json) = $h->fetchrow_array()) {
-
-        # get features used by the protocol and the count of sequence metadata features
-        my $qq = "SELECT uniquename, SUM(jsonb_array_length(json))
-                    FROM featureprop_json
-                    JOIN feature USING (feature_id)
-                    WHERE nd_protocol_id = $nd_protocol_id
-                    GROUP BY uniquename
-                    ORDER BY uniquename;";
-        my $hh = $schema->storage->dbh()->prepare($qq);
-        $hh->execute();
-
-        # build list of features and smd feature counts
-        my $features = "";
-        while ( my ($feature_name, $smd_count) = $hh->fetchrow_array()) {
-            $features .= "<strong>" . $feature_name . ":</strong>&nbsp;" . $smd_count . "&nbsp;features<br />";
-        }
 
         # Decode the json props
         my $props = decode_json $props_json;
@@ -791,18 +775,22 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
         # Build the row of the table
         my $select_td = defined $checkbox_name ? '<td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td>' : '';
         $html .= '<tr>' . $select_td . '<td>'.$name.'</td><td>'.$description.'</td><td>';
-        while (my($k,$v) = each %$props) {
-            if (ref $v eq ref {}) {
-                $html .= "$k:<br />";
-                while (my($k2,$v2) = each %$v) {
-                    $html .= "&nbsp;&nbsp;$k2: $v2<br />";
-                }
-            }
-            else {
-                $html .= "$k: $v<br />";
-            }
+
+        my $type = $props->{'sequence_metadata_type'};
+        $type =~ s/ /&nbsp;/;
+        $html .= "<strong>Data&nbsp;Type:</strong>&nbsp;" . $type . "&nbsp;(" . $props->{'sequence_metadata_type_id'} . ")<br />";
+        $html .= "<strong>Reference&nbsp;Genome:</strong>&nbsp;" . $props->{'reference_genome'} . "<br />";
+        $html .= "<strong>Score:</strong>&nbsp;" . $props->{'score_description'} . "<br />";
+        $html .= "<strong>Attributes:</strong><br />";
+
+        my $attributes = $props->{'attribute_descriptions'};
+        $html .= "<table class='table table-striped' style='min-width: 300px'>";
+        $html .= "<thead><tr><th>Key</th><th>Description</th></tr></thead>";
+        while (my($k,$v) = each %$attributes) {
+            $html .= "<tr><td>$k</td><td>$v</td></tr>";
         }
-        $html .= '</td><td>'.$features.'</td></tr>';
+        $html .= "</table>";
+        $html .= '</td></tr>';
 
     }
     $html .= "</tbody></table>";
