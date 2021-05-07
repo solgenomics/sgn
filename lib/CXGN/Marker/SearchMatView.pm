@@ -119,19 +119,36 @@ sub chromosomes {
     my $dbh = $schema->storage->dbh();
 
     # Build the query to get the unique set of chromosomes for each reference genome and species
-    my $q = "SELECT species_name, reference_genome_name, UPPER(REGEXP_REPLACE(chrom, '^chr', '')) AS chrom_mod
+    my $q = "SELECT species_name, reference_genome_name, UPPER(chrom)
                 FROM materialized_markerview
-                WHERE chrom !~* '[Uu][Nn]\\d'
-                GROUP BY species_name, reference_genome_name, chrom_mod
-                ORDER BY species_name, reference_genome_name, chrom_mod;";
+                GROUP BY species_name, reference_genome_name, chrom
+                ORDER BY species_name, reference_genome_name, chrom;";
     
     # Perform the query
     my $h = $dbh->prepare($q);
     $h->execute();
     
-    # Parse the response
-    my %results = ();
+    # Parse the response (remove chr prefix and unknown suffixes)
+    my %keys = ();
     while (my ($species, $reference, $chrom) = $h->fetchrow_array()) {
+        $chrom =~ s/^CHR//;
+        $chrom =~ s/UN[0-9]*$/Un/;
+        if ( $chrom ) {
+            my $key = $species . $reference . $chrom;
+            $keys{$key} = {
+                species => $species,
+                reference => $reference,
+                chrom => $chrom
+            };
+        }
+    }
+
+    # Build the results
+    my %results = ();
+    foreach my $key (keys %keys) {
+        my $species = $keys{$key}{'species'};
+        my $reference = $keys{$key}{'reference'};
+        my $chrom = $keys{$key}{'chrom'};
         if ( !exists($results{$species}) ) {
             $results{$species} = {};
         }
@@ -141,7 +158,14 @@ sub chromosomes {
         push(@{$results{$species}{$reference}}, $chrom);
     }
 
-    # Return the results
+    # Return sorted chromosomes
+    foreach my $sp (keys %results) {
+        foreach my $ref (keys %{$results{$sp}}) {
+            my @chroms = @{$results{$sp}{$ref}};
+            @chroms = sort(@chroms);
+            $results{$sp}{$ref} = \@chroms;
+        }
+    }
     return(\%results);
 }
 
