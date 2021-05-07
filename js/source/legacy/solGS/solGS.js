@@ -29,7 +29,8 @@ solGS.submitJob = {
 		    + '|solgs/models/combined/trials/'
 	     	+ '|solgs/traits/all/population/'
             + '|pca/analysis/'
-            + '|kinship/analysis/';
+            + '|kinship/analysis/'
+            + '|cluster/analysis/';
 
 		if (page.match(matchItems)) {
 
@@ -270,13 +271,14 @@ solGS.submitJob = {
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
 	jQuery.blockUI({message: 'Please wait..'});
 
-	var matchItems = 'solgs/confirm/request'
+	var matchItems = 'solgs/submission/feedback'
 	    + '|solgs/trait/'
 	    + '|solgs/traits/all/population/'
 	    + '|solgs/models/combined/trials/'
 	    + '|solgs/model/combined/trials/'
 	    + '|pca/analysis'
-        + '|kinship/analysis/';
+        + '|kinship/analysis/'
+        + '|cluster/analysis/';
 
 	if (page.match(matchItems)) {
 	    window.location = page;
@@ -660,18 +662,19 @@ solGS.submitJob = {
 	    type    : 'POST',
  	    data    : profile,
 	    url     : '/solgs/run/saved/analysis/',
-	    success : function(response) {
-		if (response.result.match(/Submitted/)) {
-		    solGS.submitJob.confirmRequest();
+	    success : function(res) {
+		if (res.result.match(/Submitted/)) {
+
+		    solGS.submitJob.submissionFeedback(res.arguments);
 		} else {
 		    var message = 'Error occured submitting the job. Please contact the developers.'
-			+ "\n\nHint: " + response.result;
+			+ "\n\nHint: " + res.result;
 		    solGS.alertMessage(message);
 		}
 	    },
 	    error: function (response) {
 		var message = 'Error occured submitting the job. Please contact the developers.'
-		    + "\n\nHint: " + response.result;
+		    + "\n\nHint: " + res.result;
 		solGS.alertMessage(message);
 	    }
 	});
@@ -679,10 +682,13 @@ solGS.submitJob = {
     },
 
 
-    confirmRequest: function() {
+    submissionFeedback: function(args) {
 
-	solGS.submitJob.goToPage('/solgs/confirm/request');
+        args = JSON.parse(args);
+        var analysisType = args.analysis_type;
+        analysisType = analysisType.replace(/\s+|-/g, '_');
 
+       solGS.submitJob.goToPage( '/solgs/submission/feedback/?job=' + analysisType);
     },
 
 
