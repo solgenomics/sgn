@@ -158,7 +158,7 @@ sub parse {
 
     for my $index (0..$#file_lines) {
         my $line = $file_lines[$index];
-        my $line_number = $index + 1;
+        my $line_number = $index + 2;
         my $status  = $csv->parse($line);
         my @row = $csv->fields();
         my $plot_id = $row[0];
