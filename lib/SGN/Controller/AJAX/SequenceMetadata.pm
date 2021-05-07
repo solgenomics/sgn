@@ -133,7 +133,8 @@ FROM public.nd_protocol
 LEFT JOIN public.nd_protocolprop ON (nd_protocolprop.nd_protocol_id = nd_protocol.nd_protocol_id)
 LEFT JOIN public.cvterm ON (nd_protocolprop.type_id = cvterm.cvterm_id)
 WHERE nd_protocol.type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'sequence_metadata_protocol' AND cv_id = (SELECT cv_id FROM public.cv WHERE name = 'protocol_type'))
-AND cvterm.name = 'sequence_metadata_protocol_properties';";
+AND cvterm.name = 'sequence_metadata_protocol_properties'
+ORDER BY name;";
     my $h = $dbh->prepare($q);
     $h->execute();
 

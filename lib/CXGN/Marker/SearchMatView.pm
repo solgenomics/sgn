@@ -284,8 +284,13 @@ sub related_variants {
 # Returns an array of marker hashes with the following keys:
 #   - marker_id = id of mapped marker
 #   - marker_name = name of mapped marker
+#   - lg_name = marker linkage group / chromosome
+#   - position = marker position
 #   - map_id = id of map
 #   - map_name = name of map
+#   - map_units = units of map positions
+#   - species_name = name of species
+#   - protocol = name of protocol
 #
 sub related_mapped_markers {
     my $self = shift;
@@ -295,7 +300,8 @@ sub related_mapped_markers {
 
     # Build query
     my $q = "SELECT m.marker_name, m.species_name AS ori_species_name, marker_alias.marker_id, marker_alias.alias, map.map_id, map.short_name, 
-                CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), '')) AS species_name 
+                CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), '')) AS species_name, 
+                m2m.protocol, m2m.lg_name, m2m.position, map.units
                 FROM (
                     SELECT marker_name, species_name 
                     FROM materialized_markerview 
@@ -315,13 +321,18 @@ sub related_mapped_markers {
 
     # Parse Results
     my @markers;
-    while (my ($ori_marker_name, $ori_species_name, $marker_id, $marker_name, $map_id, $map_name, $species_name) = $h->fetchrow_array()) {
+    while (my ($ori_marker_name, $ori_species_name, $marker_id, $marker_name, $map_id, $map_name, $species_name, $protocol, $lg_name, $position, $map_units) = $h->fetchrow_array()) {
         if ( $ori_species_name eq $species_name ) {
             my %marker = (
                 marker_id => $marker_id,
                 marker_name => $marker_name,
+                lg_name => $lg_name,
+                position => $position,
                 map_id => $map_id,
-                map_name => $map_name
+                map_name => $map_name,
+                map_units => $map_units,
+                species_name => $species_name,
+                protocol => $protocol
             );
             push(@markers, \%marker);
         }
@@ -465,13 +476,13 @@ sub query {
         push(@args, $offset);
     }
 
-    print STDERR "QUERY:\n";
-    print STDERR "$query\n";
-    use Data::Dumper;
-    print STDERR "ARGS:\n";
-    print STDERR Dumper \@args;
-    print STDERR "TOTAL MARKERS:\n";
-    print STDERR "$marker_count\n";
+    # print STDERR "QUERY:\n";
+    # print STDERR "$query\n";
+    # use Data::Dumper;
+    # print STDERR "ARGS:\n";
+    # print STDERR Dumper \@args;
+    # print STDERR "TOTAL MARKERS:\n";
+    # print STDERR "$marker_count\n";
 
     # Perform the Query
     my $h = $dbh->prepare($query);

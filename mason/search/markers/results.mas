@@ -99,13 +99,12 @@ jQuery(document).ready(function() {
         data: [],
         columns: [
             { 
-                title: "Variant", 
-                data: "variant_name", 
-                render: function(data) {
-                    return data && data !== "" ? "<a href='/variant/" + data + "/details'>" + data + "</a>" : "";
+                title: "Marker", 
+                data: "marker_name",
+                render: function(data, type, row) {
+                    return data && data !== "" ? "<a href='/variant/" + row.variant_name + "/details'>" + data + "</a>" : "";
                 }
             },
-            { title: "Marker", data: "marker_name" },
             { 
                 title: "Protocol", 
                 data: "nd_protocol_name",

@@ -8,12 +8,10 @@
     }
 </%init>
 
-<p><strong>Related Variants:</strong> These variants have one or more markers with the same name as a marker at this variant</p>
+<p><strong>Related Genotyped Markers:</strong> These genotyped markers share the same name as one or more markers at this variant</p>
 <div id="related-variants">
     <em>Loading...</em>
 </div>
-
-<br />
 
 <p><strong>Related Mapped Markers:</strong> These mapped markers have the same name as a marker at this variant</p>
 <div id="related-mapped-markers">
@@ -38,18 +36,24 @@ function getRelatedVariants() {
         success: function(response) {
             let html = "";
             if ( response && response.related_variants && !jQuery.isEmptyObject(response.related_variants) ) {
+                html += "<table class='table table-striped'>";
+                html += "<thead><tr><th>Marker</th><th>Protocol</th><th>Species</th><th>Reference</th><th>Chromosome</th><th>Position</th></tr></thead>";
+                html += "<tbody>";
                 for ( let variant_name in response.related_variants ) {
                     if ( response.related_variants.hasOwnProperty(variant_name) ) {
-                        html += "<strong><a href='/variant/" + variant_name + "/details'>" + variant_name + "</a></strong>";
-                        html += " (" + response.related_variants[variant_name][0].species_name + " / " + response.related_variants[variant_name][0].reference_genome_name + ")";
                         let ms = response.related_variants[variant_name];
-                        html += "<ul>";
                         for ( let i = 0; i < ms.length; i++ ) {
-                            html += "<li>" + ms[i].marker_name + " (" + ms[i].nd_protocol_name + ")</li>";
+                            html += "<tr>";
+                            html += "<td><strong><a href='/variant/" + variant_name + "/details'>" + ms[i].marker_name + "</a></strong></td>";
+                            html += "<td><a href='/breeders_toolbox/protocol/" + ms[i].nd_protocol_id + "'>" + ms[i].nd_protocol_name + "</a></td>";
+                            html += "<td>" + ms[i].species_name + "</td><td>" + ms[i].reference_genome_name + "</td>";
+                            html += "<td>" + ms[i].chrom + "</td><td>" + ms[i].pos + "</td>";
+                            html += "</tr>";
                         }
-                        html += "</ul>";
                     }
                 }
+                html += "</tbody>";
+                html += "</table>";
             }
             else {
                 html += "<em>No related variants found</em>";
@@ -73,9 +77,17 @@ function getRelatedMappedMarkers() {
         success: function(response) {
             let html = "";
             if ( response && response.related_mapped_markers && response.related_mapped_markers.length > 0 ) {
+                html += "<table class='table table-striped'>";
+                html += "<thead><tr><th>Marker</th><th>Protocol</th><th>Species</th><th>Map</th><th>Chromosome</th><th>Position</th></tr></thead>";
+                html += "<tbody>";
                 let ms = response.related_mapped_markers;
                 for ( let i = 0; i < ms.length; i++ ) {
-                    html += "<strong><a href='/search/markers/markerinfo.pl?marker_id=" + ms[i].marker_id + "'>" + ms[i].marker_name + "</a></strong> (" + ms[i].map_name + ")<br />";
+                    console.log(ms[i]);
+                    html += "<tr>";
+                    html += "<td><strong><a href='/search/markers/markerinfo.pl?marker_id=" + ms[i].marker_id + "'>" + ms[i].marker_name + "</a></strong></td>";
+                    html += "<td>" + ms[i].protocol + "</td><td>" + ms[i].species_name + "</td><td>" + ms[i].map_name + "</td>";
+                    html += "<td>" + ms[i].lg_name + "</td><td>" + ms[i].position + " " + ms[i].map_units + "</td>";
+                    html += "</tr>";
                 }
             }
             else {
