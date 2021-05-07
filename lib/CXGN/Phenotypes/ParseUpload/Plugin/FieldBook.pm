@@ -155,10 +155,10 @@ sub parse {
         return \%parse_result;
     }
 
-    foreach my $line (sort @file_lines) {
 
-    while (my ($index, $line) = each(sort @file_lines)) {
-        $line_number = $index + 1;
+    for my $index (0..$#file_lines) {
+        my $line = $file_lines[$index];
+        my $line_number = $index + 1;
         my $status  = $csv->parse($line);
         my @row = $csv->fields();
         my $plot_id = $row[0];
