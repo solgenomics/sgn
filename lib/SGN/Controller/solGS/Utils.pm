@@ -258,7 +258,8 @@ sub stash_json_args {
 
     foreach my $key (keys %{$args_hash}) {
         my $val = $args_hash->{$key};
-
+        $val = $val =~ /null/ ? undef : $val;
+        
         if (ref($val) eq 'ARRAY' && scalar(@$val) < 2)
         {
             if ($key =~ /training_pop_id|model_id|combo_pops_list|combo_pops_id/)
