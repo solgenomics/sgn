@@ -76,7 +76,7 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 	$self->run_analysis($c);
 
 	my $ret->{result} = $c->stash->{status};
-	$ret->{analysis_profile} = $analysis_profile;
+	$ret->{arguments} = $analysis_profile->{arguments};
 
 	$ret = to_json($ret);
 
@@ -102,10 +102,13 @@ sub check_analysis_name :Path('/solgs/check/analysis/name') Args() {
 }
 
 
-sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
+sub submission_feedback :Path('/solgs/submission/feedback/') Args() {
 	my ($self, $c) = @_;
 
-	my $job_type = $self->get_confirm_msg($c);
+    my $job = $c->req->param('job');
+    # $c->controller('solGS::Utils')->stash_json_args($c, $args);
+
+	my $job_type = $self->get_confirm_msg($c, $job);
 	my $user_id = $c->user()->get_object()->get_sp_person_id();
 	my $referer = $c->req->referer;
 
@@ -282,7 +285,6 @@ sub create_selection_pop_page {
 sub create_itemized_prediction_log_entries {
 	my ($self, $c, $analysis_log) = @_;
 
-    # my $args = $analysis_log->{arguments};
     $analysis_log = $self->log_analysis_time($analysis_log);
 
     my $json = JSON->new;
@@ -290,8 +292,6 @@ sub create_itemized_prediction_log_entries {
 
 	my $trait_ids = $args->{training_traits_ids};
 
-	# my $training_pop_id = $args->{training_pop_id}->[0];
-	# my $gp_id = $args->{genotyping_protocol_id};
     my $analysis_type = $args->{analysis_type};
 
     my $url_args = {
@@ -526,11 +526,16 @@ sub structure_output_details {
 	{
 		$output_details = $self->structure_pca_analysis_output($c);
 	}
+    elsif ( $analysis_page =~ m/cluster\/analysis/ )
+	{
+		$output_details = $self->structure_cluster_analysis_output($c);
+	}
+
 
 	$self->analysis_log_file($c);
 	my $log_file = $c->stash->{analysis_log_file};
 
-	my $mail_list = $c->config->{cluster_job_email};
+	my $mail_list = $self->mailing_list($c);
 
 	$output_details->{analysis_profile}  = $analysis_data;
 	$output_details->{contact_page}      = $base . 'contact/form';
@@ -538,12 +543,24 @@ sub structure_output_details {
 	$output_details->{analysis_log_file} = $log_file;
 	$output_details->{host}              = qq | $base |;
 	$output_details->{referer}           = qq | $referer |;
-	$output_details->{cluster_job_email} = $mail_list;
+	$output_details->{mailing_list} = $mail_list;
 
 	$c->stash->{bg_job_output_details} = $output_details;
 
 }
 
+sub mailing_list {
+    my ($self, $c) = @_;
+
+    my $mail_list = $c->config->{cluster_job_email};
+
+    if (!$mail_list)
+    {
+        $mail_list = 'cluster-jobs@solgenomics.net';
+    }
+
+    return $mail_list;
+}
 
 sub structure_kinship_analysis_output {
 	my ($self, $c) = @_;
@@ -610,6 +627,40 @@ sub structure_pca_analysis_output {
 		'pca_pop_id' => $pop_id,
 		'genotype_file'  => $geno_file,
 		'scores_file'    => $scores_file,
+	};
+
+   return \%output_details;
+
+}
+
+
+sub structure_cluster_analysis_output {
+	my ($self, $c) = @_;
+
+	my $analysis_data =  $c->stash->{analysis_profile};
+	my $analysis_page = $analysis_data->{analysis_page};
+
+	my $pop_id = $c->stash->{cluster_pop_id};
+
+	my $base = $c->req->base;
+	$base =~ s/:\d+//;
+
+	my $cluster_page = $base . $analysis_page;
+	$analysis_data->{analysis_page} = $cluster_page;
+
+	my %output_details = ();
+	# $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
+    # my $geno_file = $c->stash->{genotype_file_name};
+    my $input_file;
+    $c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
+    $c->controller('solGS::Cluster')->kcluster_result_file($c);
+	my $result_file = $c->stash->{'k-means_result_file'};
+
+	$output_details{'cluster_' . $pop_id} = {
+		'output_page'    => $cluster_page,
+		'cluster_pop_id' => $pop_id,
+		'input_file'  => $input_file,
+		'result_file'    => $result_file,
 	};
 
    return \%output_details;
@@ -965,11 +1016,9 @@ sub structure_selection_prediction_output {
 		    $sel_pop_name = $c->stash->{project_name};
 		}
 
-		#my $identifier = $tr_pop_id . '_' . $sel_pop_id;
 		$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $tr_pop_id, $sel_pop_id, $trait_id);
 		my $gebv_file = $c->stash->{rrblup_selection_gebvs_file};
 
-		print STDERR "\nsel gebv file: $gebv_file\n";
 		$c->controller('solGS::Files')->genotype_file_name($c, $sel_pop_id, $protocol_id);
 		my $selection_geno_file = $c->stash->{genotype_file_name};
 
@@ -1042,10 +1091,14 @@ sub run_analysis {
 		{
 		    $self->run_pca_analysis($c);
 		}
+        elsif ($analysis_page =~ /cluster\/analysis/)
+        {
+          $self->run_cluster_analysis($c);
+        }
 		else
 		{
-		    $c->stash->{status} = 'Error';
-		    print STDERR "\n I don't know what to analyze.\n";
+		    $c->stash->{status} = 'Error: Unknown job';
+		    print STDERR "\n Uknown job.\n";
 		}
     };
 
@@ -1058,9 +1111,10 @@ sub run_analysis {
     else
     {
 		$c->stash->{status} = 'Submitted';
+        $self->update_analysis_progress($c);
     }
 
-    $self->update_analysis_progress($c);
+
 
 }
 
@@ -1133,7 +1187,6 @@ sub predict_selection_traits {
 	my $training_pop_id   = $c->stash->{training_pop_id};
 	my $selection_pop_id  = $c->stash->{selection_pop_id};
 
-print STDERR "\npredict_selection_trait tr pop id: $training_pop_id -- sel pop id: $selection_pop_id\n";
 	if ($selection_pop_id =~ /list/)
 	{
 		$c->stash->{list_id} = $selection_pop_id =~ s/\w+_//r;
@@ -1185,6 +1238,18 @@ sub run_pca_analysis {
 
 }
 
+
+sub run_cluster_analysis {
+	my ($self, $c) = @_;
+
+	my $analysis_page = $c->stash->{analysis_page};
+
+	if ($analysis_page = ~/cluster\/analysis/)
+	{
+		$c->controller('solGS::Cluster')->run_cluster($c);
+	}
+
+}
 
 sub update_analysis_progress {
 	my ($self, $c) = @_;
@@ -1264,37 +1329,45 @@ sub analysis_log_file {
 
 
 sub get_confirm_msg {
-	my ($self, $c) = @_;
+	my ($self, $c, $job) = @_;
 
-	my $referer = $c->req->referer;
-	my $job_type;
+    $job =~ s/[_|-]/ /g;
+    $job = lc($job);
 
-	if ($referer =~ /solgs\/search/)
-	{
-		$job_type = 'Your training dataset is being created.';
-	}
-	elsif ($referer =~ /solgs\/population\/|solgs\/populations\/combined\//)
-	{
-		$job_type = 'Your model(s) training is running. ';
-	}
-	elsif ($referer =~ /solgs\/trait\/|solgs\/traits\/all\/|solgs\/model\/combined\/populations\//)
-	{
-		$job_type = 'Your GEBVs prediction is running.';
-	}
-	elsif ($referer =~ /kinship\/analysis/)
-	{
-		$job_type = 'Your kinship analysis is running.';
-	}
-    elsif ($referer =~ /pca\/analysis/)
-	{
-		$job_type = 'Your PCA is running.';
-	}
-	else
-	{
-		$job_type = 'Your job submission is being processed.';
-	}
+    my $msg = "Your $job job is submitted.";
+   #  my $referer = $c->req->referer;
+	# my $job_type;
+   #
+	# if ($referer =~ /solgs\/search/)
+	# {
+	# 	$job_type = 'Your training dataset is being created.';
+	# }
+	# elsif ($referer =~ /solgs\/population\/|solgs\/populations\/combined\//)
+	# {
+	# 	$job_type = 'Your model(s) training is running. ';
+	# }
+	# elsif ($referer =~ /solgs\/trait\/|solgs\/traits\/all\/|solgs\/model\/combined\/populations\//)
+	# {
+	# 	$job_type = 'Your GEBVs prediction is running.';
+	# }
+	# elsif ($referer =~ /kinship\/analysis/)
+	# {
+	# 	$job_type = 'Your kinship analysis is running.';
+	# }
+   #  elsif ($referer =~ /pca\/analysis/)
+	# {
+	# 	$job_type = 'Your PCA is running.';
+	# }
+   #  elsif ($referer =~ /cluster\/analysis/)
+   # {
+   #     $job_type = 'Your cluster analysis is running.';
+   # }
+	# else
+	# {
+	# 	$job_type = 'Your job submission is being processed.';
+	# }
 
-	return $job_type;
+	return $msg;
 
 }
 
@@ -1307,6 +1380,8 @@ sub solgs_analysis_status_log {
 
 	my $ret = {};
 	my @panel_data;
+
+    no warnings 'uninitialized';
 
 	if ($log_file)
 	{
