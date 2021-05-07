@@ -248,40 +248,6 @@ sub index_log_file_headers {
 }
 
 
-sub create_selection_pop_page {
-    my ($self, $c) = @_;
-
-    $self->parse_arguments($c);
-
-    my $tr_pop_id     = $c->stash->{training_pop_id};
-    my $sel_pop_id    = $c->stash->{selection_pop_id};
-    my $trait_id      = $c->stash->{trait_id};
-    my $data_set_type = $c->stash->{data_set_type};
-    my $protocol_id   = $c->stash->{genotyping_protocol_id};
-
-    my $sel_pop_page;
-    my $multi_traits_ids = $c->stash->{training_traits_ids};
-
-    if ($multi_traits_ids->[0] && scalar(@$multi_traits_ids) > 1)
-    {
-		$sel_pop_page = $c->req->referer;
-    }
-    else
-    {
-		if ($data_set_type =~ /combined populations/)
-		{
-		    $sel_pop_page  = "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
-		}
-		else
-		{
-		    $sel_pop_page = "/solgs/selection/$sel_pop_id/model/$tr_pop_id/trait/$trait_id/gp/$protocol_id";
-		}
-    }
-
-    $c->stash->{selection_pop_page} = $sel_pop_page;
-}
-
-
 sub create_itemized_prediction_log_entries {
 	my ($self, $c, $analysis_log) = @_;
 
@@ -1335,38 +1301,6 @@ sub get_confirm_msg {
     $job = lc($job);
 
     my $msg = "Your $job job is submitted.";
-   #  my $referer = $c->req->referer;
-	# my $job_type;
-   #
-	# if ($referer =~ /solgs\/search/)
-	# {
-	# 	$job_type = 'Your training dataset is being created.';
-	# }
-	# elsif ($referer =~ /solgs\/population\/|solgs\/populations\/combined\//)
-	# {
-	# 	$job_type = 'Your model(s) training is running. ';
-	# }
-	# elsif ($referer =~ /solgs\/trait\/|solgs\/traits\/all\/|solgs\/model\/combined\/populations\//)
-	# {
-	# 	$job_type = 'Your GEBVs prediction is running.';
-	# }
-	# elsif ($referer =~ /kinship\/analysis/)
-	# {
-	# 	$job_type = 'Your kinship analysis is running.';
-	# }
-   #  elsif ($referer =~ /pca\/analysis/)
-	# {
-	# 	$job_type = 'Your PCA is running.';
-	# }
-   #  elsif ($referer =~ /cluster\/analysis/)
-   # {
-   #     $job_type = 'Your cluster analysis is running.';
-   # }
-	# else
-	# {
-	# 	$job_type = 'Your job submission is being processed.';
-	# }
-
 	return $msg;
 
 }
