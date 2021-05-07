@@ -67,36 +67,6 @@ sub projects_forward :Path('/projects') Args(1) {
     $c->stash->{template} = '/projects/'.$page.".mas";
 }
 
-# sub tomato13_project_page :Path('/projects/tomato13/') Args(0) {
-#     my $self = shift;
-#     my $c = shift;
-#     $c->stash->{template} = '/projects/tomato13.mas';
-# }
-#
-# sub tomato100_project_page :Path('/projects/tomato100/') Args(0) {
-#     my $self = shift;
-#     my $c = shift;
-#     $c->stash->{template} = '/projects/tomato100.mas';
-# }
-#
-# sub tomatodisease_project_page :Path('/projects/tomatodisease/') Args(0) {
-#     my $self = shift;
-#     my $c = shift;
-#     $c->stash->{template} = '/projects/tomatodisease.mas';
-# }
-#
-# sub solcode_project_page :Path('/projects/solcode/') Args(0) {
-#     my $self = shift;
-#     my $c = shift;
-#     $c->stash->{template} = '/projects/solcode.mas';
-# }
-#
-sub varitome_project_page :Path('/projects/varitome/') Args(0) {
-     my $self = shift;
-     my $c = shift;
-     $c->stash->{template} = '/projects/varitome/index.mas';
-}
-
 sub test_authentication :Path('/test_authentication/') :Args(0) {
     my $self = shift;
     my $c = shift;
