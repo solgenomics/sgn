@@ -106,7 +106,7 @@
                                 <td>material_source</td>
                                 <td>breeding_program</td>
                                 <td>availability</td>
-                                <td>comment</tr>
+                                <td>contact_person</td>
                             </tr>
                         </tbody>
                     </table>
@@ -119,10 +119,7 @@
                         <li><b>material_source:</b>......</li>
                         <li><b>breeding_program:</b>......</li>
                         <li><b>availability:</b>......</li>
-                    </ul>
-                    <b>Optional column:</b>
-                    <ul>
-                        <li><b>comment:</b>......</li>
+                        <li><b>contact_person:</b>......</li>
                     </ul>
                 </div>
             </div>
