@@ -55,7 +55,6 @@ jQuery(document).ready(function () {
 
             nodes.push({"name":r.source_field_trials[i][0], "id":r.source_field_trials[i][1], "trialType":null});
             links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
-            links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
           }
 
           for (var i = 0; i < r.field_trials_sourced.length; i++){
@@ -71,16 +70,17 @@ jQuery(document).ready(function () {
 
             nodes.push({"name":r.field_trials_sourced[i][0], "id":r.field_trials_sourced[i][1], "trialType":null});
             links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1});
-            links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1});
           }
 
           Promise.all(ajaxCalls).then((values) => {
+            console.log("Here are the ajax return values: ");
             console.log(values);
             for (var i = 1; i < nodes.length; i++){
               nodes[i].trialType = values[i-1].result.studyType;
             }
 
             let data={nodes, links};
+            console.log("Here is the sankey data: ");
             console.log(data);
 
             //Set margins and set up svg area
