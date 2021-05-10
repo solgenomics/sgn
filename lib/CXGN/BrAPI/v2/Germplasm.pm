@@ -532,7 +532,7 @@ sub store {
     my $c = shift;
 
     if (!$user_id){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'), 401);
     }
 
     my $page_size = $self->page_size;
@@ -580,7 +580,7 @@ sub store {
     }
 
     if (length($existing_accessions) >0){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Existing germplasm in the database: %s', $existing_accessions));
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Existing germplasm in the database: %s', $existing_accessions), 409);
     }
 
     # Check if pedigree parents don't exist
@@ -614,7 +614,7 @@ sub store {
         }
     }
     if (length($missing_organisms) >0){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Organisms were not found on the database: %s', $missing_organisms));
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Organisms were not found on the database: %s', $missing_organisms), 404);
     }
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -622,9 +622,9 @@ sub store {
     my @added_stocks;
     my $coderef_bcs = sub {
         foreach my $params (@$data){
-            my $species = $params->{species} || undef;
-            my $name = $params->{defaultDisplayName} || undef;
+            my $species = $params->{species} || $default_species;
             my $uniquename = $params->{germplasmName} || undef;
+            my $name = $params->{defaultDisplayName} || $uniquename;
             my $accessionNumber = $params->{accessionNumber} || undef;
             my $germplasmPUI = $params->{germplasmPUI} || undef;
             my $germplasmSeedSource = $params->{seedSource} || undef;
