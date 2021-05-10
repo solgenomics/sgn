@@ -148,30 +148,15 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
-    my $user_role;
     my $user_id;
-    my $user_name;
-    my $owner_name;
-    my $session_id = $c->req->param("sgn_session_id");
 
-    if ($session_id){
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to view your current orders!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else {
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to view your current orders!'};
-            $c->detach();
-        }
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to view your current orders!'};
+        $c->detach();
+    }
+
+    if ($c->user){
         $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
     }
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
@@ -193,30 +178,15 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
-    my $user_role;
     my $user_id;
-    my $user_name;
-    my $owner_name;
-    my $session_id = $c->req->param("sgn_session_id");
 
-    if ($session_id){
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to view your completed orders!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else {
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to view your completed orders!'};
-            $c->detach();
-        }
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to view your completed orders!'};
+        $c->detach();
+    }
+
+    if ($c->user){
         $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
     }
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
@@ -234,42 +204,68 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
 }
 
 
-sub get_contact_person_orders :Path('/ajax/order/contact_person_orders') Args(0) {
+sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
-    my $user_role;
     my $user_id;
-    my $user_name;
-    my $owner_name;
-    my $session_id = $c->req->param("sgn_session_id");
 
-    if ($session_id){
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to view your orders!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else {
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to view your orders!'};
-            $c->detach();
-        }
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to view your orders!'};
+        $c->detach();
+    }
+
+    if ($c->user){
         $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
     }
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
-    my $contact_person_current_orders = $orders->get_orders_to_person_id();
-#        print STDERR "AJAX CONTACT PERSON ORDERS =".Dumper($contact_person_current_orders)."\n";
-    $c->stash->{rest} = {data => $contact_person_current_orders};
+    my $vendor_orders_ref = $orders->get_orders_to_person_id();
+
+    my @vendor_current_orders;
+    my @all_vendor_orders = @$vendor_orders_ref;
+        foreach my $vendor_order (@all_vendor_orders) {
+            if (($vendor_order->{'order_status'}) ne 'completed') {
+                push @vendor_current_orders, $vendor_order
+            }
+        }
+
+    $c->stash->{rest} = {data => \@vendor_current_orders};
+
+}
+
+
+sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh;
+    my $user_id;
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to view your orders!'};
+        $c->detach();
+    }
+
+    if ($c->user) {
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+    }
+
+    my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
+    my $vendor_orders_ref = $orders->get_orders_to_person_id();
+
+    my @vendor_completed_orders;
+    my @all_vendor_orders = @$vendor_orders_ref;
+    foreach my $vendor_order (@all_vendor_orders) {
+        if (($vendor_order->{'order_status'}) eq 'completed') {
+            push @vendor_completed_orders, $vendor_order
+        }
+    }
+
+    $c->stash->{rest} = {data => \@vendor_completed_orders};
 
 }
 

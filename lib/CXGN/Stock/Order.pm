@@ -198,7 +198,6 @@ sub get_orders_to_person_id {
             my @list = keys %list_hash;
             my @sort_list = sort @list;
             $item_list = join("<br>", @sort_list);
-#            print STDERR "ITEM =".Dumper($item)."\n";
         }
 
         push @orders, {
