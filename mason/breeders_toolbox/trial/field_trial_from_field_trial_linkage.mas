@@ -37,16 +37,26 @@ jQuery(document).ready(function () {
           html2 = html2 + '</tbody></table>';
           jQuery('#field_trial_to_field_trial_html').html(html1+html2);
 
-          var nodes = [{"name":"This Trial", "id":"This Trial" , "trialType":'<% $trial_type %>'}];
+          var nodes = [{"name":"This Trial", "id":"This Trial" , "trialType":null}];
           var links = [];
           var ajaxCalls = [];
+
+          ajaxCalls.push( jQuery.ajax({
+            url:'/brapi/v2/search/studies?StudyDbId='+<% $trial_id %>,
+            success: function(re){
+              console.log(re);
+            },
+            error: function(re){
+              console.log("Failed to retrieve trial.");
+            }
+          }) );
 
           //Build data from response: will be an object with two arrays, one of nodes and one of links
           for (var i = 0; i < r.source_field_trials.length; i++){
             ajaxCalls.push( jQuery.ajax({
-              url: '/brapi/v2/studies/'+r.source_field_trials[i][0],
+              url: '/brapi/v2/search/studies?studyDbId='+r.source_field_trials[i][0],
               success: function(re){
-                return re.result.studyType;
+                console.log(re);
               },
               error: function(r){
                 console.log("Failed to retrieve trial type");
@@ -59,9 +69,9 @@ jQuery(document).ready(function () {
 
           for (var i = 0; i < r.field_trials_sourced.length; i++){
             ajaxCalls.push( jQuery.ajax({
-              url: '/brapi/v2/studies/'+r.field_trials_sourced[i][0],
+              url: '/brapi/v2/search/studies?studyDbId='+r.field_trials_sourced[i][0],
               success: function(re){
-                return re.result.studyType;
+                console.log(re);
               },
               error: function(r){
                 console.log("Failed to retrieve trial type");
@@ -75,8 +85,8 @@ jQuery(document).ready(function () {
           Promise.all(ajaxCalls).then((values) => {
             console.log("Here are the ajax return values: ");
             console.log(values);
-            for (var i = 1; i < nodes.length; i++){
-              nodes[i].trialType = values[i-1].result.studyType;
+            for (var i = 0; i < nodes.length; i++){
+              nodes[i].trialType = values[i].result.studyType;
             }
 
             let data={nodes, links};
