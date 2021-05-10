@@ -11,6 +11,7 @@ use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use CXGN::Cross;
 use Try::Tiny;
+use JSON;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -645,10 +646,22 @@ sub store {
             my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
             my $description = $params->{additionalInfo}->{description} || undef;
             my $stock_id = $params->{additionalInfo}->{stock_id} || undef;
+            # Get misc additionalInfo and remove specific codes above
+            my %specific_keys = map { $_ => 1 } ("organizationName", "transgenic", "notes", "state", "variety", "locationCode", "description", "stock_id");
+            my $raw_additional_info = $params->{additionalInfo} || undef;
+            my %additional_info;
+            if (defined $raw_additional_info) {
+                foreach my $key (keys %$raw_additional_info) {
+                    if (!exists($specific_keys{$key})) {
+                        $additional_info{$key} = $raw_additional_info->{$key};
+                    }
+                }
+            }
+            print Dumper(\%additional_info);
             my $pedigree = $params->{pedigree} || undef;
             my $pedigree_array = _process_pedigree_string($pedigree);
-            my $mother = scalar(@$pedigree_array) > 0 ? @$pedigree_array[0] : undef;
-            my $father = scalar(@$pedigree_array) > 1 ? @$pedigree_array[1] : undef;
+            my $mother = defined $pedigree_array && scalar(@$pedigree_array) > 0 ? @$pedigree_array[0] : undef;
+            my $father = defined $pedigree_array && scalar(@$pedigree_array) > 1 ? @$pedigree_array[1] : undef;
             #not supported
             # speciesAuthority
             # genus
@@ -663,7 +676,6 @@ sub store {
             # taxonIds
             # subtaxa
             # subtaxaAuthority
-            # general additional info
 
             if (exists($allowed_organisms{$species})){
                 my $stock = CXGN::Stock::Accession->new({
@@ -688,7 +700,7 @@ sub store {
                     countryOfOriginCode             => $countryOfOriginCode,
                     typeOfGermplasmStorageCode      => $typeOfGermplasmStorageCode,
                     donors                          => $donors,
-                    acquisitionDate                 => $acquisitionDate,
+                    acquisitionDate                 => $acquisitionDate eq '' ? undef : $acquisitionDate,
                     transgenic                      => $transgenic,
                     notes                           => $notes,
                     state                           => $state,
@@ -699,6 +711,7 @@ sub store {
                     modification_note               => 'Bulk load of accession information',
                     mother_accession                => $mother,
                     father_accession                => $father,
+                    additional_info                 => \%additional_info
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
@@ -917,13 +930,26 @@ sub _simple_search {
         uniquename_list=>$germplasm_names_arrayref,
         stock_id_list=>$germplasm_ids_arrayref,
         stock_type_id=>$accession_type_cvterm_id,
-        stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
+        stockprop_columns_view=>{
+            'accession number'=>1,
+            'PUI'=>1,
+            'seed source'=>1,
+            'institute code'=>1,
+            'institute name'=>1,
+            'biological status of accession code'=>1,
+            'country of origin'=>1,
+            'type of germplasm storage code'=>1,
+            'acquisition date'=>1,
+            'ncbi_taxonomy_id'=>1,
+            'stock_additional_info'=>1
+        },
         display_pedigree=>1
     });
     my ($result, $total_count) = $stock_search->search();
 
     my @data;
     foreach (@$result){
+        print Dumper($_);
         # my @type_of_germplasm_storage_codes = $_->{'type of germplasm storage code'} ? split ',', $_->{'type of germplasm storage code'} : ();
         my @type_of_germplasm_storage_codes;
         if($_->{'type of germplasm storage code'}){
@@ -960,11 +986,11 @@ sub _simple_search {
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'},
-            additionalInfo=>undef,
+            additionalInfo=>defined $_->{'stock_additional_info'} ? decode_json $_->{'stock_additional_info'} : undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
             breedingMethodDbId=>undef,
-            collection=>undef,
+            collection=>$_->{population_name},
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{stock_name},

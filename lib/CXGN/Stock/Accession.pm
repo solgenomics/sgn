@@ -22,6 +22,7 @@ Code structure copied from CXGN::Stock::Seedlot, with inheritance from CXGN::Sto
 package CXGN::Stock::Accession;
 
 use Moose;
+use JSON;
 
 extends 'CXGN::Stock';
 
@@ -68,6 +69,11 @@ has 'mother_accession' => (
 has 'father_accession' => (
     isa => 'Maybe[Str]',
     is  => 'rw',
+);
+
+has 'additional_info' => (
+    isa => 'Maybe[HashRef]',
+    is => 'rw'
 );
 
 has 'germplasmSeedSource' => (
@@ -451,6 +457,9 @@ sub store {
     if ($self->father_accession) {
         my $return = $self->_store_parent_relationship('male_parent', $self->father_accession, 'biparental');
         # TODO: delete accession if error and return error
+    }
+    if ($self->additional_info) {
+        $self->_store_stockprop('stock_additional_info', encode_json $self->additional_info);
     }
 
     if($self->pedigree){
