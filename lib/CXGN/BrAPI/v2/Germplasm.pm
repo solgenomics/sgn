@@ -657,7 +657,6 @@ sub store {
                     }
                 }
             }
-            print Dumper(\%additional_info);
             my $pedigree = $params->{pedigree} || undef;
             my $pedigree_array = _process_pedigree_string($pedigree);
             my $mother = defined $pedigree_array && scalar(@$pedigree_array) > 0 ? @$pedigree_array[0] : undef;
@@ -949,7 +948,6 @@ sub _simple_search {
 
     my @data;
     foreach (@$result){
-        print Dumper($_);
         # my @type_of_germplasm_storage_codes = $_->{'type of germplasm storage code'} ? split ',', $_->{'type of germplasm storage code'} : ();
         my @type_of_germplasm_storage_codes;
         if($_->{'type of germplasm storage code'}){
