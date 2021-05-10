@@ -126,11 +126,11 @@ sub submission_feedback :Path('/solgs/submission/feedback/') Args() {
 sub display_analysis_status :Path('/solgs/display/analysis/status') Args(0) {
 	my ($self, $c) = @_;
 
-	my @panel_data = $self->solgs_analysis_status_log($c);
+	my $panel_data = $self->get_user_solgs_analyses($c);
 
-	my $ret->{data} = \@panel_data;
-
-	$ret = to_json($ret);
+	my $ret->{data} = $panel_data;
+    my $json = JSON->new();
+	$ret = $json->encode($ret);
 
 	$c->res->content_type('application/json');
 	$c->res->body($ret);
@@ -496,7 +496,6 @@ sub structure_output_details {
 	{
 		$output_details = $self->structure_cluster_analysis_output($c);
 	}
-
 
 	$self->analysis_log_file($c);
 	my $log_file = $c->stash->{analysis_log_file};
@@ -1306,7 +1305,7 @@ sub get_confirm_msg {
 }
 
 
-sub solgs_analysis_status_log {
+sub get_user_solgs_analyses {
 	my ($self, $c) = @_;
 
 	$self->analysis_log_file($c);
@@ -1325,10 +1324,14 @@ sub solgs_analysis_status_log {
 		$self->index_log_file_headers($c);
 		my $header_index = $c->stash->{header_index};
 
+        my $json = JSON->new();
 		foreach my $row (@user_analyses)
 		{
 			my @analysis = split(/\t/, $row);
 
+            my $arguments = $analysis[5];
+            $arguments = $json->decode($arguments);
+            my $analysis_type = $arguments->{analysis_type};
 			my $analysis_name   = $analysis[$header_index->{'Analysis_name'}];
 			my $result_page     = $analysis[$header_index->{'Analysis_page'}];
 			my $analysis_status = $analysis[$header_index->{'Status'}];
@@ -1344,10 +1347,11 @@ sub solgs_analysis_status_log {
 			}
 			else
 			{
-				$result_page = qq | <a href=$result_page>[ View ]</a> |;
+				$result_page = qq |<a href=$result_page>[ View ]</a>|;
 			}
 
-			push @panel_data, [$analysis_name, $submitted_on, $analysis_status, $result_page];
+            my $row = [$analysis_name, $analysis_type, $submitted_on, $analysis_status, $result_page];
+			push @panel_data, $row;
 		}
 	}
 
