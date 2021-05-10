@@ -395,7 +395,8 @@ sub related_mapped_markers {
 #       - pos = chromosome position
 #       - ref = reference allele
 #       - alt = alternate allele
-#   - marker_count = total number of markers found
+#   - counts = a hash of counts
+#       - markers = count of matching markers
 #
 sub query {
     my $self = shift;

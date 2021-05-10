@@ -36,6 +36,13 @@ sub get_variant_details: Chained('get_variant') PathPart('details') :Args(0) {
     my $variant_details = $msearch->query({ variant => $variant_name });
     my $markers = $variant_details->{'variants'}->{$variant_name};
 
+    # No markers found
+    if ( !$markers ) {
+        $c->stash->{template} = "generic_message.mas";
+	    $c->stash->{message} = "<strong>No Markers Found</strong> for variant $variant_name<br />You can view and search for markers from the <a href='/search/variants'>Marker Search Page</a>";
+        $c->detach();
+    }
+
     $c->stash->{markers} = $markers;
     $c->stash->{template} = '/markers/genotyped/variant_details.mas';
 }

@@ -398,10 +398,10 @@ sub query_mapped_markers_GET : Args(0) {
         push(@$places, $offset);
     }
 
-    print STDERR "MAPPED MARKER QUERY:\n";
-    print STDERR "$query\n";
-    use Data::Dumper;
-    print STDERR Dumper $places;
+    # print STDERR "MAPPED MARKER QUERY:\n";
+    # print STDERR "$query\n";
+    # use Data::Dumper;
+    # print STDERR Dumper $places;
 
     # Perform query
     my $h = $dbh->prepare($query);

@@ -8,7 +8,7 @@ package SGN::Controller::Marker;
 use Moose;
 use namespace::autoclean;
 use CXGN::Marker::Search;
-use CXGN::Marker::SearchJson;
+use CXGN::Marker::SearchMatView;
 use strict;
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -121,55 +121,96 @@ sub rflp_image_link {
 
 sub search_marker : Private {
     my ( $self, $c, $marker_query ) = @_;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema');
     my $dbh = $c->dbc->dbh();
     
+    # Get mapped markers
     my $msearch = CXGN::Marker::Search->new($dbh);
-    my $msearchJ = CXGN::Marker::SearchJson->new($dbh);
     $msearch->name_like($marker_query);
     $msearch->perform_search();
-    my @marker_ids = $msearch->fetch_id_list();
-    my @marker_entries = $msearchJ->search_marker_json($marker_query);
+    my @mapped_marker_ids = $msearch->fetch_id_list();
+    my @filtered_mapped_marker_ids = _uniq(@mapped_marker_ids);
+    my $mapped_count = scalar @filtered_mapped_marker_ids;
+    
+    # Get genotyped markers using matview
+    my $mvsearch = CXGN::Marker::SearchMatView->new(bcs_schema => $bcs_schema);
+    my $genotyped_marker_results = $mvsearch->query({
+        name => $marker_query
+    });
+    my $genotyped_variants = $genotyped_marker_results->{'variants'};
+    my $genotyped_count = scalar keys(%$genotyped_variants);
 
-    my @filtered_marker_ids = _uniq(@marker_ids);
-    my $countm = scalar @filtered_marker_ids;
-    my @filtered_marker_entries = _uniq(@marker_entries);
-    my $countp = scalar @filtered_marker_entries;
 
     # NO MATCH FOUND
-    if ( ($countm == 0) && ($countp == 0) ) {
-	$c->stash->{template} = "generic_message.mas";
-	$c->stash->{message} = "<strong>No Matching Marker Found</strong> ($marker_query)<br />You can view and search for markers from the <a href='/search/markers'>Marker Search Page</a>";
+    if ( ($mapped_count == 0) && ($genotyped_count == 0) ) {
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>No Matching Marker Found</strong> ($marker_query)<br />You can view and search for markers from the <a href='/search/variants'>Marker Search Page</a>";
+    }
 
     # MULTIPLE MATCHES FOUND
-    } elsif ( ($countm > 1) || ($countp > 1) ) {
-	my @marker_objs = $msearch->fetch_full_markers();
+    elsif ( ($mapped_count > 1) || ($genotyped_count > 1) || ($mapped_count == 1 && $genotyped_count == 1) ) {
         my $list = "<table style=\"border-spacing: 10px; border-collapse: separate;\">";
-	foreach (@marker_objs) {
-	    my $marker_id = $_->marker_id();
-            my $marker_name = $_->name_that_marker();
-            my $url = "/search/markers/markerinfo.pl?marker_id=$marker_id";
-            $list .= "<tr><td><a href='$url'>$marker_name</a><td>marker is present on maps</li>";
-	}
-        foreach (@marker_entries) {
-	    my $link = split(/<td>/, $_);
-	    my $url = "/search/markers/markerinfojson.pl?protocol_id=";
-            $list .= "<tr><td>$_<td>marker is from genotype protocols";
+        
+        # Display mapped markers
+        if ( $mapped_count > 0 ) {
+            $list .= "<tr><td colspan='2'><strong>Mapped Markers:</strong></td></tr>";
+            foreach my $marker_id (@filtered_mapped_marker_ids) {
+                my $marker = CXGN::Marker->new($dbh, $marker_id);
+                my $marker_name = $marker->name_that_marker();
+
+                # Get map name from marker experiments
+                my $experiments = $marker->current_mapping_experiments();
+                my $map_name = "";
+                if ($experiments && @{$experiments} && grep { $_->{location} } @{$experiments} ) {
+                    for my $experiment ( @{$experiments} ) {
+                        if ( my $loc = $experiment->{location} ) {
+                            my $map_version_id = $loc->map_version_id();
+                            if ($map_version_id) {
+                                my $map_factory = CXGN::Cview::MapFactory->new($dbh);
+                                my $map = $map_factory->create({ map_version_id => $map_version_id } );
+                                $map_name = $map->get_short_name();
+                            }
+                        }
+                    }
+                }
+
+                my $url = "/search/markers/markerinfo.pl?marker_id=$marker_id";
+                $list .= "<tr><td><a href='$url'>$marker_name</a></td><td>$map_name</td></tr>";
+            }
         }
+
+        # Display genotyped markers
+        if ( $genotyped_count > 0 ) {
+            $list .= "<tr><td colspan='2'><strong>Genotyped Markers:</strong></td></tr>";
+            foreach my $variant_name (keys %$genotyped_variants) {
+                my $markers = $genotyped_variants->{$variant_name};
+                foreach my $marker (@$markers) {
+                    my $url = "/variant/$variant_name/details";
+                    $list .= "<tr><td><a href='$url'>" . $marker->{'marker_name'} . "</a></td>";
+                    $list .= "<td>" . $marker->{'species_name'} . " (" . $marker->{'nd_protocol_name'} . ")</td></tr>";
+                }
+            }
+        }
+
         $list .= "</table>";
-	$c->stash->{template} = "generic_message.mas";
-	$c->stash->{message} = "<strong>Markers Results</strong><br />" . $list;
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "<strong>Markers Results</strong><br />" . $list;
+    } 
+    
     # 1 MATCH FOUND - FORWARD TO VIEW MARKER
-    } else {
-	if ($countm > 0) {
-	    my $marker_id = $filtered_marker_ids[0];
+    else {
+        if ($mapped_count > 0) {
+            my $marker_id = $filtered_mapped_marker_ids[0];
             $c->res->redirect('/search/markers/markerinfo.pl?marker_id=' . $marker_id, 301);
-        } elsif ($countp > 0) {
-            $c->res->redirect('/search/markers/markerinfo.pl?marker_name=' . $marker_query, 301);
-	} else {
-	    $c->stash->{template} = "generic_message.mas";
-            $c->stash->{message} = "<strong>No Matching Marker Found</strong> ($marker_query)<br />You can view and search for markers from the <a href='/search/markers'>Marker Search Page</a>";
-	}
-	$c->detach();
+        } 
+        elsif ($genotyped_count > 0) {
+            my $variant_name = (keys %$genotyped_variants)[0];
+            $c->res->redirect('/variant/' . $variant_name . '/details', 301);
+        } 
+        else {
+            $c->stash->{template} = "generic_message.mas";
+            $c->stash->{message} = "<strong>No Matching Marker Found</strong> ($marker_query)<br />You can view and search for markers from the <a href='/search/variants'>Marker Search Page</a>";
+        }
     }
 }
 

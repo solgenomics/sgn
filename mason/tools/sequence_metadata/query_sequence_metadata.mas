@@ -1134,7 +1134,7 @@ function displayMarkers(key, species, reference_genome, feature_name, start, end
                 if ( variants.hasOwnProperty(variant_name) ) {
                     let m = variants[variant_name][0];
                     let url = "/variant/" + variant_name + "/details";
-                    let label = m.chrom + " @ " + m.pos;
+                    let label = m.chrom + " @ " + m.pos + " (" + m.ref + "/" + m.alt + ")";
                     html += "<a href='" + url + "' target='_blank'>" + label + "</a>";
                     html += "<ul style='padding-left: 25px'>";
                     for ( let i = 0; i < variants[variant_name].length; i++ ) {
