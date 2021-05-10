@@ -1741,6 +1741,7 @@ sub get_cached_file_VCF {
                 my $name = $m->{name};
                 my $format = $m->{format};
                 my @format;
+		my $gt;
 
                 #In case of old genotyping protocols where there was no protocolprop marker info
                 if (!$format) {
@@ -1755,7 +1756,11 @@ sub get_cached_file_VCF {
                 }
 
                 foreach my $format_key (@format) {
-                    push @current_geno, $geno->{selected_genotype_hash}->{$m->{name}}->{$format_key};
+	 	    $gt = $geno->{selected_genotype_hash}->{$m->{name}}->{$format_key};
+		    if ($gt eq '') {
+			$gt = './.';
+		    }
+                    push @current_geno, $gt;
                 }
                 my $current_g = join ':', @current_geno;
                 $genotype_data_string .= $current_g."\t";
