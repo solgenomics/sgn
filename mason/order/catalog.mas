@@ -1,5 +1,7 @@
 <%args>
 
+$check_vendor_role
+
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
@@ -7,16 +9,18 @@
 
 <& /page/page_title.mas, title => "Catalog" &>
 
-<&| /page/info_section.mas, title => 'Manage Catalog', collapsible=>1, collapsed=>0 &>
-    <div class = "well well-sm">
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-            <button id="upload_catalog_items_button" class="btn btn-primary">Upload Catalog Items</button>
-            <button id="add_catalog_item_button" class="btn btn-primary">Add a Catalog Item</button>
+% if ($check_vendor_role == 1) {
+    <&| /page/info_section.mas, title => 'Manage Catalog', collapsible=>1, collapsed=>0 &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <button id="upload_catalog_items_button" class="btn btn-primary">Upload Catalog Items</button>
+                    <button id="add_catalog_item_button" class="btn btn-primary">Add a Catalog Item</button>
+                </div>
             </div>
         </div>
-    </div>
-</&>
+    </&>
+% }
 
 <&| /page/info_section.mas, title => 'Catalog Items', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">

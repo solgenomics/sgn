@@ -1,6 +1,7 @@
 
 <%args>
 $role => "stock_orderer"
+$check_vendor_role
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
@@ -12,68 +13,70 @@ $role => "stock_orderer"
     <a href="/catalog/view"><p>Go to Catalog Page</p></a>
 </td>
 
-<br />
-<br />
-
-<&| /page/info_section.mas, title => 'Manage Orders', collapsible=>1, collapsed=>0 &>
-    <div class = "well well-sm">
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-                <div style="overflow:scroll">
-                    <table id = "contact_person_orders" class="table table-hover table-striped">
-                    </table>
+<br/>
+% if ($check_vendor_role == 1) {
+    <&| /page/info_section.mas, title => 'Manage Orders', collapsible=>1, collapsed=>0 &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <div style="overflow:scroll">
+                        <table id = "contact_person_orders" class="table table-hover table-striped">
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</&>
+    </&>
+% }
 
-<&| /page/info_section.mas, title => 'Your Current Orders', collapsible=>1, collapsed=>0 &>
-    <div class = "well well-sm">
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-                <div style="overflow:scroll">
-                    <table id = "user_current_orders" class="table table-hover table-striped">
-                        <thead>
-                            <tr>
-                                <th>Order Number</th>
-                                <th>Submitted Date</th>
-                                <th>Items</th>
-                                <th>Status</th>
-                                <th>Send Order to</th>
-                                <th>Comments from Supplier</th>
-                            </tr>
-                        </thead>
-                    </table>
+% if ($check_vendor_role != 1) {
+    <&| /page/info_section.mas, title => 'Your Current Orders', collapsible=>1, collapsed=>0 &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <div style="overflow:scroll">
+                        <table id = "user_current_orders" class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Order Number</th>
+                                    <th>Submitted Date</th>
+                                    <th>Items</th>
+                                    <th>Status</th>
+                                    <th>Send Order to</th>
+                                    <th>Comments from Supplier</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</&>
+    </&>
 
-<&| /page/info_section.mas, title => 'Your Completed Orders', collapsible=>1, collapsed=>0 &>
-    <div class = "well well-sm">
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-                <div style="overflow:scroll">
-                    <table id = "user_completed_orders" class="table table-hover table-striped">
-                        <thead>
-                            <tr>
-                                <th>Order Number</th>
-                                <th>Submitted Date</th>
-                                <th>Items</th>
-                                <th>Status</th>
-                                <th>Completed Date</th>
-                                <th>Processed by</th>
-                                <th>Comments from Supplier</th>
-                            </tr>
-                        </thead>
-                    </table>
+    <&| /page/info_section.mas, title => 'Your Completed Orders', collapsible=>1, collapsed=>0 &>
+        <div class = "well well-sm">
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <div style="overflow:scroll">
+                        <table id = "user_completed_orders" class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Order Number</th>
+                                    <th>Submitted Date</th>
+                                    <th>Items</th>
+                                    <th>Status</th>
+                                    <th>Completed Date</th>
+                                    <th>Processed by</th>
+                                    <th>Comments from Supplier</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</&>
+    </&>
+% }
 
 <div class="modal fade" id="stock_order_dialog" name="stock_order_dialog" tabindex="-1" role="dialog" aria-labelledby="stock_order_dialog" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-lg" role="document">

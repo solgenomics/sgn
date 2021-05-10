@@ -17,6 +17,11 @@ sub order_stocks :Path('/order/stocks/view') :Args(0) {
         return;
     }
 
+    if ($c->user) {
+        my $check_vendor_role = $c->user->check_roles('vendor');
+        $c->stash->{check_vendor_role} = $check_vendor_role;
+    }
+
     $c->stash->{template} = '/order/stocks.mas';
 
 }
