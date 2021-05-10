@@ -60,6 +60,16 @@ has 'pedigree' => (
     is => 'rw',
 );
 
+has 'mother_accession' => (
+    isa => 'Maybe[Str]',
+    is  => 'rw',
+);
+
+has 'father_accession' => (
+    isa => 'Maybe[Str]',
+    is  => 'rw',
+);
+
 has 'germplasmSeedSource' => (
     isa => 'Maybe[Str]',
     is => 'rw',
@@ -434,6 +444,15 @@ sub store {
             $self->_store_stockprop('donor PUI', $_->{germplasmPUI});
         }
     }
+    if ($self->mother_accession) {
+        my $return = $self->_store_parent_relationship('female_parent', $self->mother_accession, 'biparental');
+        # TODO: delete accession if error and return error
+    }
+    if ($self->father_accession) {
+        my $return = $self->_store_parent_relationship('male_parent', $self->father_accession, 'biparental');
+        # TODO: delete accession if error and return error
+    }
+
     if($self->pedigree){
         print STDERR "CXGN::Stock::Accession->store does not store pedigree info yet!\n";
     }

@@ -1468,6 +1468,49 @@ sub _retrieve_populations {
         $self->population_name($pop_string);
     }
 }
+
+sub _store_parent_relationship {
+    my $self = shift;
+    my $relationship_type = shift;
+    my $parent_accession = shift;
+    my $cross_type = shift;
+    my $schema = $self->schema;
+    my $parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $relationship_type,'stock_relationship')->cvterm_id();
+    my %return;
+
+    print STDERR "***STOCK.PM : Storing parent relationship $parent_cvterm_id \n\n";
+    my $parent = $schema->resultset("Stock::Stock")->find({
+        uniquename => $parent_accession
+    });
+
+    # TODO: Check the cross type
+
+    if (defined $parent) {
+        # Object is the child, subject is the mother
+        $self->stock->find_or_create_related('stock_relationship_subjects', {
+            type_id    => $parent_cvterm_id,
+            object_id  => $self->stock_id(),
+            subject_id => $parent->stock_id(),
+            value      => $cross_type
+        });
+    } else {
+        return $return{error} = "Parent accession not found: ".$parent_accession;
+    }
+}
+
+sub _update_parent_relationship {
+    my $self = shift;
+    my $relationship_type = shift;
+    my $parent_accession = shift;
+    my $cross_type = shift;
+    print STDERR "***STOCK.PM Updating parent relationship\n\n";
+    my $parent_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->schema, $relationship_type,'stock_relationship')->cvterm_id();
+    my $pop_rs = $self->stock->search_related('stock_relationship_subjects', {'type_id'=>$parent_cvterm_id});
+    while (my $r=$pop_rs->next){
+        $r->delete();
+    }
+    $self->_store_population_relationship($relationship_type, $parent_accession, $cross_type);
+}
 ###
 
 =head2 _new_metadata_id()
