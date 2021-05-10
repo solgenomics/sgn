@@ -459,7 +459,7 @@ sub store {
         # TODO: delete accession if error and return error
     }
     if ($self->additional_info) {
-        $self->_store_stockprop('stock_additional_info', encode_json $self->additional_info);
+        $self->_store_stockprop_raw('stock_additional_info', encode_json $self->additional_info);
     }
 
     if($self->pedigree){

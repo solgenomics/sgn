@@ -1306,6 +1306,28 @@ sub _update_stockprop {
     $self->_store_stockprop($type,$value);
 }
 
+# Doesn't split the value like the _store_stockprop method
+sub _store_stockprop_raw {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    # print STDERR Dumper $type;
+    my $stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->name();
+    my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $value});
+}
+
+sub _update_stockprop_raw {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $stockprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->stock->search_related('stockprops', {'type_id'=>$stockprop_cvterm_id});
+    while(my $r=$rs->next){
+        $r->delete();
+    }
+    $self->_store_stockprop_raw($type,$value);
+}
+
 =head2 _retrieve_stockprop
 
  Usage:
