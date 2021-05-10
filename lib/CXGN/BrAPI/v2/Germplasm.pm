@@ -145,7 +145,7 @@ sub search {
         }
         push @data, {
             accessionNumber=>$_->{'accession number'},
-            acquisitionDate=>$_->{'acquisition date'},
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'accession number'},
             additionalInfo=>undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
@@ -985,7 +985,7 @@ sub _simple_search {
         }
         push @data, {
             accessionNumber=>$_->{'accession number'},
-            acquisitionDate=>$_->{'acquisition date'},
+            acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'accession number'},
             additionalInfo=>defined $_->{'stock_additional_info'} ? decode_json $_->{'stock_additional_info'} : undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
