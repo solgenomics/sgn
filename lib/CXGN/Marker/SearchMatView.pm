@@ -217,7 +217,9 @@ sub protocols {
 #
 # This query will get all of the marker names of the specified variant 
 # and lookup markers that have the same name but are on a different variant
-# (example: a marker that uses the same name but is on a different reference/species)
+# (example: a marker that uses the same name but is on a different reference/species) 
+# AND get variants (and their markers) that are at the same position but have 
+# different allele values.
 #
 # Arguments:
 #   - variant_name = name of the variant of which to find related markers
@@ -230,21 +232,43 @@ sub related_variants {
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh();
 
-    # Build query
-    my $q = "SELECT materialized_markerview.nd_protocol_id, nd_protocol.name AS nd_protocol_name, species_name, reference_genome_name, marker_name, variant_name, chrom, pos, ref, alt 
-            FROM materialized_markerview
-            LEFT JOIN nd_protocol USING (nd_protocol_id)
-            WHERE marker_name IN (
-                SELECT DISTINCT(marker_name)
-                FROM materialized_markerview
-                WHERE UPPER(variant_name) = UPPER(?)
-                    AND marker_name <> '.'
-            )
-            AND UPPER(variant_name) <> UPPER(?);";
+    # Get variant properties
+    my $q_props = "SELECT species_name, reference_genome_name, REGEXP_REPLACE(chrom, '^chr', '', 'i') AS chrom, pos
+                    FROM materialized_markerview 
+                    WHERE UPPER(variant_name) = UPPER(?)
+                    GROUP BY species_name, reference_genome_name, chrom, pos;";
+    my $h_props = $dbh->prepare($q_props);
+    $h_props->execute($variant_name);
+    my ($species_name, $reference_genome_name, $chrom, $pos) = $h_props->fetchrow_array();
+
+    # Build marker name query
+    my $q_name = "SELECT materialized_markerview.nd_protocol_id, nd_protocol.name AS nd_protocol_name, species_name, reference_genome_name, marker_name, variant_name, chrom, pos, ref, alt 
+                    FROM materialized_markerview
+                    LEFT JOIN nd_protocol USING (nd_protocol_id)
+                    WHERE marker_name IN (
+                        SELECT DISTINCT(marker_name)
+                        FROM materialized_markerview
+                        WHERE UPPER(variant_name) = UPPER(?)
+                            AND marker_name <> '.'
+                    )
+                    AND UPPER(variant_name) <> UPPER(?)";
+
+    # Build marker position query
+    my $q_pos = "SELECT materialized_markerview.nd_protocol_id, nd_protocol.name AS nd_protocol_name, species_name, reference_genome_name, marker_name, variant_name, chrom, pos, ref, alt 
+                    FROM materialized_markerview
+                    LEFT JOIN nd_protocol USING (nd_protocol_id)
+                    WHERE species_name = ?
+                    AND reference_genome_name = ?
+                    AND chrom ~* ?
+                    AND pos = ?
+                    AND UPPER(variant_name) <> UPPER(?)";
+    
+    # Build full query
+    my $q = $q_name . " UNION " . $q_pos . " ORDER BY marker_name;";
     
     # Execute Query
     my $h = $dbh->prepare($q);
-    $h->execute($variant_name, $variant_name);
+    $h->execute($variant_name, $variant_name, $species_name, $reference_genome_name, '^(chr)?'.$chrom, $pos, $variant_name);
 
     # Parse Results
     my %variants;

@@ -102,7 +102,7 @@ jQuery(document).ready(function() {
                 title: "Marker", 
                 data: "marker_name",
                 render: function(data, type, row) {
-                    return data && data !== "" ? "<a href='/variant/" + row.variant_name + "/details'>" + data + "</a>" : "";
+                    return data && data !== "" ? "<strong><a href='/variant/" + row.variant_name + "/details'>" + data + "</a></strong>" : "";
                 }
             },
             { 
@@ -115,7 +115,9 @@ jQuery(document).ready(function() {
             { title: "Species", data: "species_name" },
             { title: "Reference Genome", data: "reference_genome_name" },
             { title: "Chromosome", data: "chrom" },
-            { title: "Position", data: "pos" }
+            { title: "Position", data: "pos" },
+            { title: "Ref", data: "ref" },
+            { title: "Alt", data: "alt" }
         ],
         order: [[ 0, "asc" ]]
     });
@@ -134,7 +136,7 @@ jQuery(document).ready(function() {
                 title: "Marker", 
                 data: "marker_name", 
                 render: function(data, type, row) {
-                    return data && data !== "" ? "<a href='/search/markers/markerinfo.pl?marker_id=" + row.marker_id + "'>" + data + "</a>" : "";
+                    return data && data !== "" ? "<strong><a href='/search/markers/markerinfo.pl?marker_id=" + row.marker_id + "'>" + data + "</a></strong>" : "";
                 }
             },
             { title: "Protocol", data: "protocol" },

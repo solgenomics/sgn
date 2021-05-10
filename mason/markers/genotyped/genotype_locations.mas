@@ -24,7 +24,7 @@
     <tbody>
 % foreach my $marker (@$markers) {
         <tr>
-            <td><% $marker->{'marker_name'} %></td>
+            <td><strong><% $marker->{'marker_name'} %></strong></td>
             <td>
                 <a href="/breeders_toolbox/protocol/<% $marker->{'nd_protocol_id'} %>">
                     <% $marker->{'nd_protocol_name'} %>

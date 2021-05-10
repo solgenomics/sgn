@@ -197,7 +197,8 @@ sub query_variants_GET : Args(0) {
 
 #
 # Get related variants: variants that have a marker with the same name as one 
-# of the markers in the specified variant
+# of the markers in the specified variant OR variants that are at the same 
+# position as the specified variant but have different ref/alt alleles.
 #
 # PATH: GET /ajax/markers/genotyped/related_variants
 # PARAMS:

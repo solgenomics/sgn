@@ -8,7 +8,8 @@
     }
 </%init>
 
-<p><strong>Related Genotyped Markers:</strong> These genotyped markers share the same name as one or more markers at this variant</p>
+<p><strong>Related Genotyped Markers:</strong> These genotyped markers share either the same <em>name</em> as one or more markers at this variant or 
+are located at the same <em>position</em> but have different allele values</p>
 <div id="related-variants">
     <em>Loading...</em><br /><br />
 </div>
@@ -37,7 +38,7 @@ function getRelatedVariants() {
             let html = "";
             if ( response && response.related_variants && !jQuery.isEmptyObject(response.related_variants) ) {
                 html += "<table class='table table-striped'>";
-                html += "<thead><tr><th>Marker</th><th>Protocol</th><th>Species</th><th>Reference</th><th>Chromosome</th><th>Position</th></tr></thead>";
+                html += "<thead><tr><th>Marker</th><th>Protocol</th><th>Species</th><th>Reference</th><th>Chromosome</th><th>Position</th><th>Ref</th><th>Alt</th></tr></thead>";
                 html += "<tbody>";
                 for ( let variant_name in response.related_variants ) {
                     if ( response.related_variants.hasOwnProperty(variant_name) ) {
@@ -47,7 +48,7 @@ function getRelatedVariants() {
                             html += "<td><strong><a href='/variant/" + variant_name + "/details'>" + ms[i].marker_name + "</a></strong></td>";
                             html += "<td><a href='/breeders_toolbox/protocol/" + ms[i].nd_protocol_id + "'>" + ms[i].nd_protocol_name + "</a></td>";
                             html += "<td>" + ms[i].species_name + "</td><td>" + ms[i].reference_genome_name + "</td>";
-                            html += "<td>" + ms[i].chrom + "</td><td>" + ms[i].pos + "</td>";
+                            html += "<td>" + ms[i].chrom + "</td><td>" + ms[i].pos + "</td><td>" + ms[i].ref + "</td><td>" + ms[i].alt + "</td>";
                             html += "</tr>";
                         }
                     }
