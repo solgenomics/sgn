@@ -206,6 +206,16 @@ sub _authenticate_user {
 		$server_permission{$wildcard} = 1;
 	}
 
+	# Check if there is a config for default brapi user. This will be overwritten if a token is passed.
+	# Will still throw error if auth is required
+	if ($c->config->{brapi_default_user} && $c->config->{brapi_require_login} == 0) {
+		$user_id = CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
+		if (! defined $user_id) {
+			my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'Default brapi user was not found');
+			_standard_response_construction($c, $brapi_package_result, 500);
+		}
+	}
+
 	# If our brapi config is set to authenticate or the controller calling this asks for forcing of
 	# authentication or serverinfo call method request auth, we authenticate.
     if ($c->config->{brapi_require_login} == 1 || $force_authenticate || !exists($server_permission{$wildcard})){
