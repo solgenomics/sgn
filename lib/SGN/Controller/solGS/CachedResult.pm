@@ -139,8 +139,8 @@ sub _check_cached_output {
     elsif ($req_page =~ /pca\/analysis/)
     {
     	my $pca_pop_id  = $args->{pca_pop_id};
-    	my $protocol_id = $args->{genotyping_protocol_id};
-    	my $trait_id     = $args->{trait_id};
+    	# my $protocol_id = $args->{genotyping_protocol_id};
+    	# my $trait_id     = $args->{trait_id};
     	my $data_str = $args->{data_structure};
 
     	if ($data_str =~ /dataset|list/ && $pca_pop_id !~ /dataset|list/)
@@ -150,6 +150,22 @@ sub _check_cached_output {
 
         my $file_id = $c->controller('solGS::Files')->create_file_id($c);
     	$self->_check_pca_output($c, $file_id);
+    }
+    elsif ($req_page =~ /cluster\/analysis/)
+    {
+    	my $cluster_pop_id  = $args->{cluster_pop_id};
+    	my $protocol_id = $args->{genotyping_protocol_id};
+        # my
+    	# my $trait_id     = $args->{trait_id};
+    	my $data_str = $args->{data_structure};
+
+    	if ($data_str =~ /dataset|list/ && $cluster_pop_id !~ /dataset|list/)
+    	{
+    	    $cluster_pop_id = $data_str . '_' . $cluster_pop_id;
+    	}
+
+        my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+    	$self->_check_cluster_output($c, $file_id);
     }
 
 }
@@ -342,6 +358,13 @@ sub _check_pca_output {
 }
 
 
+sub _check_cluster_output {
+    my ($self, $c, $file_id) = @_;
+
+    $c->stash->{rest}{cached} = $self->check_cluster_output($c, $file_id);
+}
+
+
 sub check_single_trial_training_data {
     my ($self, $c, $pop_id, $protocol_id) = @_;
 
@@ -517,6 +540,38 @@ sub check_pca_output {
 	    my $scores_file = $c->stash->{pca_scores_file};
 
     	if (-s $scores_file)
+    	{
+    	    return 1;
+    	}
+    	else
+    	{
+    	    return 0;
+    	}
+    }
+
+}
+
+sub check_cluster_output {
+    my ($self, $c, $file_id) = @_;
+
+    if ($file_id)
+    {
+        $c->stash->{file_id} = $file_id;
+
+        my $cluster_type = $c->stash->{cluster_type};
+        my $result_file;
+        if ($cluster_type =~/k-means/i)
+        {
+            $c->controller('solGS::Cluster')->kcluster_result_file($c);
+            $result_file = $c->stash->{'k-means_result_file'};
+        }
+        else
+        {
+            $self->hierarchical_result_file($c);
+            $result_file = $c->stash->{hierarchical_result_file};
+        }
+
+    	if (-s $result_file)
     	{
     	    return 1;
     	}
