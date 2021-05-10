@@ -47,7 +47,7 @@ jQuery(document).ready(function () {
               console.log(re);
             },
             error: function(re){
-              console.log("Failed to retrieve trial."+r.responseText);
+              console.log("Failed to retrieve trial.");
             }
           }) );
 
@@ -59,7 +59,7 @@ jQuery(document).ready(function () {
                 console.log(re);
               },
               error: function(r){
-                console.log("Failed to retrieve trial type"+r.responseText);
+                console.log("Failed to retrieve trial type");
               }
             }) );
 
@@ -74,7 +74,7 @@ jQuery(document).ready(function () {
                 console.log(re);
               },
               error: function(r){
-                console.log("Failed to retrieve trial type"+r.responseText);
+                console.log("Failed to retrieve trial type");
               }
             }) );
 
