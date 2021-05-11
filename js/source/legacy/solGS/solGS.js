@@ -852,6 +852,21 @@ solGS.getTraitDetails = function(traitId) {
 
 }
 
+solGS.getTrainingTraitsIds  = function() {
+
+    var trainingTraitsIds = jQuery('#training_traits_ids').val();
+	var traitId   = jQuery("#trait_id").val();
+
+	if (trainingTraitsIds) {
+	    trainingTraitsIds = trainingTraitsIds.split(',');
+	} else {
+	    trainingTraitsIds = [traitId];
+	}
+
+    return trainingTraitsIds;
+
+}
+
 
 solGS.getPopulationDetails = function() {
 
