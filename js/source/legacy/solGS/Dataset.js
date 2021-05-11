@@ -207,11 +207,13 @@ solGS.dataset = {
 	var dataset = new CXGN.Dataset();
 	var d = dataset.getDataset(datasetId);
 
-	var protocolId = d.categories['genotyping_protocols'][0];
+    var protocolId;
 
-	if (!protocolId) {
-	    protocolId  = jQuery('#genotyping_protocol_id').val();
-	}
+    if (d.categories['genotyping_protocols']) {
+    	protocolId = d.categories['genotyping_protocols'][0];
+    } else {
+    	    protocolId  = jQuery('#genotyping_protocol_id').val();
+    }
 
 	var args = {
 	    'dataset_id'       : datasetId,
@@ -229,44 +231,45 @@ solGS.dataset = {
 
     checkPredictedDatasetSelection: function (datasetId, datasetName) {
 
-	var args =  this.createDatasetSelectionArgs(datasetId, datasetName);
+    	var args =  this.createDatasetSelectionArgs(datasetId, datasetName);
 
-	var trainingPopGenoPro = jQuery('#genotyping_protocol_id').val();
-	var selectionPopGenoPro = args.genotyping_protocol_id;
+    	var trainingPopGenoPro = jQuery('#genotyping_protocol_id').val();
+    	var selectionPopGenoPro = args.genotyping_protocol_id;
 
-	if (selectionPopGenoPro !== null &&
-	    !trainingPopGenoPro.match(selectionPopGenoPro)) {
+    	if (trainingPopGenoPro != selectionPopGenoPro)) {
 
-	    solGS.alertMessage('This dataset of selection candidates has a ' +
-			       'different genotyping version from the training ' +
-			       'population. Please use a dataset with ' +
-			       'a matching genotyping version.');
-	} else {
-	    args = JSON.stringify(args);
+            var msg = 'This dataset of selection candidates has a ' +
+    			       'different genotyping protocol from the training ' +
+    			       'population. Please use a dataset with ' +
+    			       'a matching genotyping protocol.';
 
-	    jQuery.ajax({
-		type: 'POST',
-		dataType: 'json',
-		data: {'arguments': args},
-		url: '/solgs/check/predicted/dataset/selection',
-		success: function (response) {
-		    args = JSON.parse(args);
+    	    solGS.alertMessage(msg);
+    	} else {
+    	    args = JSON.stringify(args);
 
-		    if (response.output) {
-			solGS.dataset.displayPredictedDatasetTypeSelectionPops(args, response.output);
+    	    jQuery.ajax({
+    		type: 'POST',
+    		dataType: 'json',
+    		data: {'arguments': args},
+    		url: '/solgs/check/predicted/dataset/selection',
+    		success: function (response) {
+    		    args = JSON.parse(args);
 
-			if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-			    solGS.sIndex.listSelectionIndexPopulations();
-			    solGS.correlation.listGenCorPopulations();
-			    solGS.geneticGain.ggSelectionPopulations();
-			    solGS.cluster.listClusterPopulations();
-			}
-		    } else {
-			solGS.dataset.queueDatasetSelectionPredictionJob(datasetId);
-		    }
-		}
-	    });
-	}
+    		    if (response.output) {
+    			solGS.dataset.displayPredictedDatasetTypeSelectionPops(args, response.output);
+
+    			if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
+    			    solGS.sIndex.listSelectionIndexPopulations();
+    			    solGS.correlation.listGenCorPopulations();
+    			    solGS.geneticGain.ggSelectionPopulations();
+    			    solGS.cluster.listClusterPopulations();
+    			}
+    		    } else {
+    			solGS.dataset.queueDatasetSelectionPredictionJob(datasetId);
+    		    }
+    		}
+    	    });
+    	}
 
     },
 
