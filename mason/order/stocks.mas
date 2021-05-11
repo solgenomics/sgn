@@ -265,6 +265,7 @@ $(window).ready( function() {
             { title: "Submitted Date", "data": "create_date" },
             { title: "Items", "data": "item_list" },
             { title: "Status", "data": "order_status" },
+            { title: "Completion Date", "data": "completion_date" },
             { title: "Comments", "data": "contact_person_comments" },
         ]
     });

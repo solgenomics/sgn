@@ -184,6 +184,7 @@ sub get_orders_to_person_id {
 #        my $order_to_id = $result->order_to_id();
         my $order_status = $result->order_status();
         my $create_date = $result->create_date();
+        my $completion_date = $result->completion_date();
         my $comments = $result->comments();
         my $person= CXGN::People::Person->new($dbh, $order_from_id);
         my $order_from_name=$person->get_first_name()." ".$person->get_last_name();
@@ -206,6 +207,7 @@ sub get_orders_to_person_id {
             create_date => $create_date,
             item_list => $item_list,
             order_status => $order_status,
+            completion_date => $completion_date,
             contact_person_comments => $comments
         }
     }
