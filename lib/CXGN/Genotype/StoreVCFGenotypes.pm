@@ -262,6 +262,7 @@ use JSON;
 use CXGN::Trial;
 use Text::CSV;
 use Hash::Case::Preserve;
+use CXGN::Tools::Run;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -940,6 +941,10 @@ sub store_metadata {
     });
     $self->md_file_id($file_row->file_id());
     print STDERR "md_file_id is ".$self->md_file_id()."\n";
+
+    # Rebuild and refresh the materialized_markerview table
+    my $async_refresh = CXGN::Tools::Run->new();
+    $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
 }
 
 sub store_identifiers {
