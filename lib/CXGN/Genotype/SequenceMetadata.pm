@@ -449,6 +449,10 @@ sub query {
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh();
 
+    print STDERR "DBH Parameters:\n";
+    use Data::Dumper;
+    print STDERR $dbh->{Name} . "\n";
+
     my %results = (
         results => ()
     );

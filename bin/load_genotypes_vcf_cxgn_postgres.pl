@@ -335,6 +335,11 @@ if (scalar(keys %$genotype_info) > 0) {
     my $result = $store_genotypes->store_identifiers();
     $protocol_id = $result->{nd_protocol_id};
     $project_id = $result->{project_id};
+
+    # Rebuild and refresh the materialized_markerview table
+    my $basepath = dirname(__FILE__);
+    my $async_refresh = CXGN::Tools::Run->new();
+    $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $opt_H -D $opt_d -U $opt_U -P $pw");
 }
 
 print STDERR "Done loading first sample, moving on...\n";    
