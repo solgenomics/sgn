@@ -203,9 +203,6 @@ jQuery(document).ready(function () {
             // var tooltip_text1;
             // var tooltip_text2;
 
-          }).catch (e => {
-            console.log("Error with Promise.all");
-            console.log(e);
           });
 
 
