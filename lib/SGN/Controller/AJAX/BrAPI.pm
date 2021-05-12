@@ -3252,6 +3252,7 @@ sub _observationvariable_search_process {
 		observationvariable_names => $clean_inputs->{name},
 		observationvariable_datatypes => $clean_inputs->{datatype},
 		observationvariable_classes => $clean_inputs->{traitClass},
+		studyDbIds => $clean_inputs->{studyDbId},
 	}, $c);
 	_standard_response_construction($c, $brapi_package_result);
 }
