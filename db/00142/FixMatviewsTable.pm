@@ -171,20 +171,15 @@ INSERT INTO public.matviews (mv_name) VALUES
 ;    
 EOSQL
     
-    if ($self->trial) {
-	print "Trial mode! Rolling back transaction\n\n";
-	$schema->txn_rollback;
-	return 0;
-    } 
     return 1;
-  };
+    };
 
-  try {
-     $schema->txn_do($coderef);
-  } catch {
-     die "Load failed! " . $_ .  "\n" ;
-  };
-  print "You're done!\n";
+try {
+    $schema->txn_do($coderef);
+} catch {
+    die "Load failed! " . $_ .  "\n" ;
+};
+print "You're done!\n";
 }
 
 
