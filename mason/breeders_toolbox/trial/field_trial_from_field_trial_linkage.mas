@@ -39,9 +39,10 @@ jQuery(document).ready(function () {
 
           var nodes = [{"name":"This Trial", "id":"This Trial" , "trialType":null}];
           var links = [];
-          var ajaxCalls = {};
+          var ajaxCalls = [];
+          var ajaxCallsIds = [];
 
-          ajaxCalls[<% $trial_id %>] = jQuery.ajax({
+          ajaxCalls.push( jQuery.ajax({
             url:'/brapi/v2/germplasm?studyDbId='+<% $trial_id %>,
             success: function(re){
               console.log(re);
@@ -49,11 +50,12 @@ jQuery(document).ready(function () {
             error: function(re){
               console.log("Failed to retrieve trial.");
             }
-          });
+          }) );
+          ajaxCallsIds.push( <% $trial_id %> );
 
 
           for (var i = 0; i < r.source_field_trials.length; i++){
-            ajaxCalls[ r.source_field_trials[i][0] ] =  jQuery.ajax({
+            ajaxCalls.push( jQuery.ajax({
               url: '/brapi/v2/germplasm?studyDbId='+r.source_field_trials[i][0],
               success: function(re){
                 console.log(re);
@@ -61,14 +63,15 @@ jQuery(document).ready(function () {
               error: function(re){
                 console.log("Failed to retrieve trial.");
               }
-            });
+            }) );
+            ajaxCallsIds.push( r.source_field_trials[i][0] );
 
             nodes.push({"name":r.source_field_trials[i][0], "id":r.source_field_trials[i][1], "trialType":null});
-            links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
+            //links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
           }
 
           for (var i = 0; i < r.field_trials_sourced.length; i++){
-            ajaxCalls[ r.field_trials_sourced[i][0] ] = jQuery.ajax({
+            ajaxCalls.push( jQuery.ajax({
               url: '/brapi/v2/germplasm?studyDbId='+r.field_trials_sourced[i][0],
               success: function(re){
                 console.log(re);
@@ -76,15 +79,17 @@ jQuery(document).ready(function () {
               error: function(re){
                 console.log("Failed to retrieve trial.");
               }
-            });
+            }) );
+            ajaxCallsIds.push( r.field_trials_sourced[i][0] );
 
             nodes.push({"name":r.field_trials_sourced[i][0], "id":r.field_trials_sourced[i][1], "trialType":null});
-            links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1});
+            //links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1});
           }
 
-          jQuery.when(ajaxCalls).done((values) => {
+          Promise.all(ajaxCalls).then((values) => {
             console.log("Here are the ajax return values: ");
             console.log(values);
+            console.log(ajaxCallsIds);
             // for (var i = 0; i < nodes.length; i++){
             //   nodes[i].trialType = values[i].result.studyType;
             // }
