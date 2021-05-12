@@ -17,45 +17,6 @@ __PACKAGE__->config(
    );
 
 
-sub order :Chained('/') PathPart('ajax/orders/') Args(1) {
-    my $self = shift;
-    my $c = shift;
-
-    my $person_id = shift;
-
-    my $orders = CXGN::Stock::StockOrder::get_orders_by_person_id( $c->dbic_schema(), $person_id);
-
-    $c->stash->{order_from_person_id} = $person_id;
-    $c->stash->{orders} = { data => $orders };
-}
-
-sub new_orders :Chained('order') PathPart('view') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    $c->stash->{rest} = { data => $c->stash->{orders} };
-}
-
-
-#sub new_order: Chained('order') PathPart('new') Args(0) {
-#    my $self = shift;
-#    my $c = shift;
-
-#    my $order_from_person_id =  $c->stash->{order_from_person_id};
-#    my $order_to_person_id = $c->req->param('order_to_person_id');
-    #my $order_status = $c->req->param('order_status');
-#    my $comment = $c->req->param('comments');
-
-#    my $so = CXGN::Stock::StockOrder->new( { bcs_schema => $c->dbic_schema() });
-
-    #$so->order_from_person_id($order_from_person_id);
-#    $so->order_to_person_id($order_to_person_id);
-#    $so->order_status("submitted");
-#    $so->comment($comment);
-
-#    $so->store();
-#}
-
 sub submit_order : Path('/ajax/order/submit') : ActionClass('REST'){ }
 
 sub submit_order_POST : Args(0) {
@@ -68,7 +29,6 @@ sub submit_order_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd();
 #    print STDERR "LIST ID =".Dumper($list_id)."\n";
-#    print STDERR "TIME =".Dumper($timestamp)."\n";
 
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
@@ -98,12 +58,7 @@ sub submit_order_POST : Args(0) {
         my $item_info_hash = decode_json $item_info_string;
         $contact_person_id = $item_info_hash->{'contact_person_id'};
         my $item_type = $item_info_hash->{'item_type'};
-#        print STDERR "CONTACT PERSON ID =".Dumper($contact_person_id)."\n";
-#        print STDERR "ITEM TYPE =".Dumper($item_type)."\n";
-#        $group_by_contact_id{$contact_person_id}{$item_name} = $item_type;
         $group_by_contact_id{$contact_person_id}{$ordered_item} = $item_type;
-
-#        print STDERR "GROUP BY CONTACT ID =".Dumper(\%group_by_contact_id)."\n";
     }
 
     foreach my $contact_id (keys %group_by_contact_id) {
@@ -283,29 +238,15 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
     my $contact_person_comments = $c->req->param('contact_person_comments');
     my $time = DateTime->now();
     my $timestamp = $time->ymd();
-    my $user_role;
     my $user_id;
-    my $user_name;
-    my $session_id = $c->req->param("sgn_session_id");
 
-    if ($session_id){
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to update the order!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else {
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to update the orders!'};
-            $c->detach();
-        }
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to update the orders!'};
+        $c->detach();
+    }
+
+    if ($c->user) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
     }
 
     my $order_obj;

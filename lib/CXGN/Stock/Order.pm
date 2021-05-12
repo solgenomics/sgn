@@ -48,19 +48,6 @@ sub BUILD {
     $self->order_to_id($row->order_to_id);
     $self->create_date($row->create_date);
 
-#    $self->order_status($row->order_status);
-#    $self->comments($row->comments);
-
-#    my $rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $args->{sp_order_id} });
-
-#    my @batches = ();
-#    while (my $r = $rs->next()) {
-#	my $batch = CXGN::Stock::OrderBatch->new( { people_schema => $people_schema, sp_orderprop_id => $row->sp_orderprop_id() });
-
-#	push @batches, $batch;
-#    }
-
-#    $self->batches(\@batches);
 }
 
 
@@ -84,26 +71,7 @@ sub get_orders_by_person_id {
     return @orders;
 }
 
-#sub get_orders_from_person_id {
-#    my $class = shift;
-#    my $people_schema = shift;
-#    my $person_id = shift;
 
-#    my $rs = $people_schema->resultset('SpOrder')->search( { order_to_person_id => $person_id } );
-
-#    my @orders;
-
-#    while (my $row = $rs->next()) {
-
-#	my $o = CXGN::Stock::Order->new( { sp_order_id => $row->sp_order_id() } );
-#	push @orders, $o;
-#    }
-
-#    return @orders;
-#}
-
-# member functions
-#
 sub store {
     my $self = shift;
     my %data = (
@@ -114,18 +82,15 @@ sub store {
     create_date => $self->create_date(),
     completion_date => $self->completion_date(),
 	);
-    print STDERR "NEW ORDER STATUS =".Dumper($self->order_status())."\n";
-    print STDERR "COMPLETION DATE =".Dumper($self->completion_date())."\n";
+#    print STDERR "NEW ORDER STATUS =".Dumper($self->order_status())."\n";
+#    print STDERR "COMPLETION DATE =".Dumper($self->completion_date())."\n";
 
     if ($self->sp_order_id()) { $data{sp_order_id} = $self->sp_order_id(); }
 
     my $rs = $self->people_schema()->resultset('SpOrder');
 
     my $row = $rs->update_or_create( \%data );
-#    print STDERR "sp_order_id = ".$row->sp_order_id()."\n";
-#    foreach my $b (@{$self->batches}) {
-#	$b->store();
-#    }
+
     return $row->sp_order_id();
 }
 
@@ -149,20 +114,19 @@ sub get_orders_from_person_id {
         my $person= CXGN::People::Person->new($dbh, $order_to_id);
         my $order_to_name=$person->get_first_name()." ".$person->get_last_name();
 
-            my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
-            while (my $item_result = $orderprop_rs->next()){
-                my $item_json = $item_result->value();
-                my $item_hash = JSON::Any->jsonToObj($item_json);
-                my $item_list_string = $item_hash->{'clone_list'};
-                my $item_list_ref = decode_json $item_list_string;
-                my %list_hash = %{$item_list_ref};
-                my @list = keys %list_hash;
-                my @sort_list = sort @list;
-                $item_list = join("<br>", @sort_list);
-#            print STDERR "ITEM =".Dumper($item)."\n";
-            }
+        my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
+        while (my $item_result = $orderprop_rs->next()){
+            my $item_json = $item_result->value();
+            my $item_hash = JSON::Any->jsonToObj($item_json);
+            my $item_list_string = $item_hash->{'clone_list'};
+            my $item_list_ref = decode_json $item_list_string;
+            my %list_hash = %{$item_list_ref};
+            my @list = keys %list_hash;
+            my @sort_list = sort @list;
+            $item_list = join("<br>", @sort_list);
+        }
 
-            push @orders, [$order_id, $create_date, $item_list, $order_status, $completion_date, $order_to_name, $comments ];
+        push @orders, [$order_id, $create_date, $item_list, $order_status, $completion_date, $order_to_name, $comments ];
     }
 
     return \@orders;
