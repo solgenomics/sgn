@@ -82,7 +82,7 @@ jQuery(document).ready(function () {
             links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1});
           }
 
-          jQuery.when(ajaxCalls).then((values) => {
+          jQuery.when(ajaxCalls).done((values) => {
             console.log("Here are the ajax return values: ");
             console.log(values);
             // for (var i = 0; i < nodes.length; i++){
