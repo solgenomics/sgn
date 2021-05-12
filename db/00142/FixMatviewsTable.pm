@@ -58,7 +58,8 @@ sub patch {
 	
  --do your SQL here
 DELETE FROM public.matviews WHERE mv_dependents IS NULL;
-    
+
+ALTER TABLE public.matviews DROP CONSTRAINT IF EXISTS mv_name_c1;
 ALTER TABLE public.matviews ADD CONSTRAINT mv_name_c1 UNIQUE (mv_name);
 
 INSERT INTO public.matviews (mv_name) VALUES 
