@@ -107,27 +107,30 @@ sub submit_order_POST : Args(0) {
     }
 
     foreach my $contact_id (keys %group_by_contact_id) {
+        my @history = ();
+        my $history_info = {};
         my $item_ref = $group_by_contact_id{$contact_id};
-#        my %items = %{$item_ref};
         my $order_list = encode_json $item_ref;
-        print STDERR "ORDER LIST =".Dumper($order_list)."\n";
-#        my @item_array = keys %items;
-#        print STDERR "ITEM ARRAY =".Dumper(\@item_array)."\n";
+#        print STDERR "ORDER LIST =".Dumper($order_list)."\n";
         my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema, dbh => $dbh});
         $new_order->order_from_id($user_id);
         $new_order->order_to_id($contact_id);
         $new_order->order_status("submitted");
         $new_order->create_date($timestamp);
         my $order_id = $new_order->store();
-        print STDERR "ORDER ID =".($order_id)."\n";
+#        print STDERR "ORDER ID =".($order_id)."\n";
         if (!$order_id){
             $c->stash->{rest} = {error_string => "Error saving your order",};
             return;
         }
 
+        $history_info ->{'submitted'} = $timestamp;
+        push @history, $history_info;
+
         my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
         $order_prop->clone_list($order_list);
         $order_prop->parent_id($order_id);
+        $order_prop->history(\@history);
     	my $order_prop_id = $order_prop->store_sp_orderprop();
         print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
 
@@ -313,15 +316,33 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
     }
 
     my $updated_order = $order_obj->store();
-    print STDERR "UPDATED ORDER ID =".Dumper($updated_order)."\n";
+#    print STDERR "UPDATED ORDER ID =".Dumper($updated_order)."\n";
     if (!$updated_order){
         $c->stash->{rest} = {error_string => "Error updating the order",};
         return;
     }
 
+    my $orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_id } );
+    my $orderprop_id = $orderprop_rs->sp_orderprop_id();
+    my $details_json = $orderprop_rs->value();
+#    print STDERR "ORDER DETAILS =".Dumper($details_json)."\n";
+    my $detail_hash = JSON::Any->jsonToObj($details_json);
+
+    my $order_history_ref = $detail_hash->{'history'};
+    my @order_history = @$order_history_ref;
+    my $new_status_record = {};
+    $new_status_record->{$new_status} = $timestamp;
+    push @order_history, $new_status_record;
+    $detail_hash->{'history'} = \@order_history;
+
+    my $new_order_details = encode_json $detail_hash;
+#    print STDERR "NEW ORDER DETAILS =".Dumper($new_order_details)."\n";
+    $orderprop_rs->value($new_order_details);
+	$orderprop_rs->update();
+
     $c->stash->{rest} = {success => "1",};
 
-
 }
+
 
 1;

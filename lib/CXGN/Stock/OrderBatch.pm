@@ -28,12 +28,14 @@ sub BUILD {
     $self->prop_type('order_batch_json');
     $self->cv_name('sp_order_property');
 #    $self->allowed_fields( [ qw | order_from_person_id order_to_person_id order_status comments | ] );
-    $self->allowed_fields( [ qw | clone_list | ] );
+    $self->allowed_fields( [ qw | clone_list history | ] );
     $self->parent_table('sp_order');
     $self->parent_primary_key('sp_order_id');
 
     $self->load();
 }
+
+
 
 
 # class functions

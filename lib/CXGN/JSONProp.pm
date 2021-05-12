@@ -335,13 +335,12 @@ sub store_sp_orderprop {
 
     my $rs = $self->people_schema()->resultset($self->prop_namespace())->search( { $self->parent_primary_key() => $self->parent_id(), type_id => $self->_prop_type_id() });
 
-    my $rank;
-    if ($rs->count() > 0) {
-        $rank = $rs->get_column("rank")->max();
-    }
-    $rank++;
-
-	my $row = $self->people_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id(), rank => $rank});
+    my $rank = 1;
+#    if ($rs->count() > 0) {
+#        $rank = $rs->get_column("rank")->max();
+#    }
+#    $rank++;
+    my $row = $self->people_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id(), rank => $rank});
 	my $prop_primary_key = $self->prop_primary_key();
 	$self->prop_id($row->$prop_primary_key);
 
