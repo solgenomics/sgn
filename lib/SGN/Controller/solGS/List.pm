@@ -654,28 +654,13 @@ sub genotypes_list_genotype_query_job {
     my ($self, $c) = @_;
 
     my $list_id = $c->stash->{list_id};
-    my $dataset_id = $c->stash->{dataset_id};
-   # my $selection_pop_id = $c->stash->{selection_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    my $pop_id;## = $c->stash->{pop_id} || $c->stash->{model_id} || $c->stash->{training_pop_id};
-    my $data_dir;
-    my $pop_type;
+    my $pop_id = 'list_' . $list_id;;
+    my $data_dir = $c->stash->{solgs_lists_dir};
+    my $pop_type = "list";
 
-    if ($list_id)
-    {
-	$self->get_genotypes_list_details($c);
-	$data_dir =  $c->stash->{solgs_lists_dir};
-	$pop_id = 'list_' . $list_id;
-	$pop_type = 'list';
-    }
-    elsif ($dataset_id)
-    {
-	$pop_id = 'dataset_' . $dataset_id;
-	$data_dir =  $c->stash->{solgs_datasets_dir};
-	$pop_type = 'dataset';
-    }
-
+    $self->get_genotypes_list_details($c);
     my $genotypes_ids = $c->stash->{genotypes_ids};
 
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
