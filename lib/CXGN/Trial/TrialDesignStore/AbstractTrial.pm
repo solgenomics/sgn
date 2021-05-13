@@ -11,6 +11,7 @@ use Moose;
 use MooseX::FollowPBP;
 use Try::Tiny;
 use Data::Dumper;
+use CXGN::Stock;
 
 =head1 ACCESSORS
 
@@ -163,6 +164,14 @@ An name for an operator performing the action.
 =cut
 
 has 'operator' => (isa => 'Str', is => 'rw', required => 1);
+
+=head2 set_owner_id(), get_owner_id()
+
+An owner id
+
+=cut
+
+has 'owner_id' => (isa => 'Int', is => 'rw', required => 0);
 
 =head2 set_source_stock_types(), get_source_stock_types()
 
@@ -758,6 +767,12 @@ sub store {
                 });
                 $new_plot_id = $plot->stock_id();
                 $new_stock_ids_hash{$plot_name} = $new_plot_id;
+
+                my %design = $self->get_design;
+                my $sp_person_id = $self->get_owner_id;
+                my $username = $self->get_operator;
+                my $stock = CXGN::Stock->new({schema=>$chado_schema,stock_id=>$new_plot_id});
+                $stock->associate_owner($sp_person_id,$sp_person_id,$username,"");
 
                 if ($seedlot_stock_id && $seedlot_name){
                     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
