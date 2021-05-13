@@ -208,18 +208,18 @@ jQuery(document).ready(function () {
                   d3.select(this).attr("fill", "#6699cc");
                   tooltip_region.selectAll("*").remove();
                   tooltip_region.attr("transform", "translate("+ ((d.x1+d.x0)/2 - 5 - 110) +", "+ (d.y0 - 5 - 70) +")" );
-                  tooltip = tooltip_region
+                  var tooltip = tooltip_region
                     .append("path")
                     .attr('fill', 'white')
                     .attr('stroke', 'black')
                     .attr('stroke-width', '1.5');
                   var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -40 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 40 c 0 10 0 10 10 10 h 90 l 10 10 z";
                   tooltip.attr("d", pathString);
-                  tooltip_text1 = tooltip_region.append("text")
+                  var tooltip_text1 = tooltip_region.append("text")
                   .attr("text-anchor", "middle")
                   .attr("transform", "translate(110,20)");
                   tooltip_text1.text("Trial: "+d.id);
-                  tooltip_text2 = tooltip_region.append("text")
+                  var tooltip_text2 = tooltip_region.append("text")
                   .attr("text-anchor", "middle")
                   .attr("transform", "translate(110,40)");
                   tooltip_text2.text("Trial Type: "+d.trialType);
@@ -253,9 +253,9 @@ jQuery(document).ready(function () {
                 .on("mouseover", function(d){
                   d3.select(this).attr("stroke", "#808080");
                   tooltip_region.selectAll("*").remove();
-                  tooltip_text3 = tooltip_region.append("text")
+                  var tooltip_text1 = tooltip_region.append("text")
                   .attr("transform", "translate("+ (  d.source.x1 + 5  ) +","+ (  d.y0 + 5 ) +")");
-                  tooltip_text3.text("Germplasm: "+d.name);
+                  tooltip_text1.text("Germplasm: "+d.name);
                 })
                 .on("mouseout", function(d){
                   d3.select(this).attr("stroke", "#D3D3D3");
@@ -281,10 +281,9 @@ jQuery(document).ready(function () {
 
               //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
               var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
-              var tooltip;
-              var tooltip_text1;
-              var tooltip_text2;
-              var tooltip_text3;
+              // var tooltip;
+              // var tooltip_text1;
+              // var tooltip_text2;
             });
 
 
