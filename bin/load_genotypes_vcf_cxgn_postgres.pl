@@ -339,7 +339,7 @@ if (scalar(keys %$genotype_info) > 0) {
     # Rebuild and refresh the materialized_markerview table
     my $basepath = dirname(__FILE__);
     my $async_refresh = CXGN::Tools::Run->new();
-    $async_refresh->run_async("perl $basepath/refresh_materialized_markerview.pl -H $opt_H -D $opt_d -U $opt_U -P $pw");
+    $async_refresh->run_async("perl $basepath/refresh_materialized_markerview.pl -H $opt_H -D $opt_D -U $opt_U -P $pw");
 }
 
 print STDERR "Done loading first sample, moving on...\n";    
