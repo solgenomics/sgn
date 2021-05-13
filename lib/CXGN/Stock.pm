@@ -1306,6 +1306,28 @@ sub _update_stockprop {
     $self->_store_stockprop($type,$value);
 }
 
+# Doesn't split the value like the _store_stockprop method
+sub _store_stockprop_raw {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    # print STDERR Dumper $type;
+    my $stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->name();
+    my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $value});
+}
+
+sub _update_stockprop_raw {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $stockprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->stock->search_related('stockprops', {'type_id'=>$stockprop_cvterm_id});
+    while(my $r=$rs->next){
+        $r->delete();
+    }
+    $self->_store_stockprop_raw($type,$value);
+}
+
 =head2 _retrieve_stockprop
 
  Usage:
@@ -1467,6 +1489,49 @@ sub _retrieve_populations {
         $self->populations(\@population_names);
         $self->population_name($pop_string);
     }
+}
+
+sub _store_parent_relationship {
+    my $self = shift;
+    my $relationship_type = shift;
+    my $parent_accession = shift;
+    my $cross_type = shift;
+    my $schema = $self->schema;
+    my $parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $relationship_type,'stock_relationship')->cvterm_id();
+    my %return;
+
+    print STDERR "***STOCK.PM : Storing parent relationship $parent_cvterm_id \n\n";
+    my $parent = $schema->resultset("Stock::Stock")->find({
+        uniquename => $parent_accession
+    });
+
+    # TODO: Check the cross type
+
+    if (defined $parent) {
+        # Object is the child, subject is the mother
+        $self->stock->find_or_create_related('stock_relationship_subjects', {
+            type_id    => $parent_cvterm_id,
+            object_id  => $self->stock_id(),
+            subject_id => $parent->stock_id(),
+            value      => $cross_type
+        });
+    } else {
+        return $return{error} = "Parent accession not found: ".$parent_accession;
+    }
+}
+
+sub _update_parent_relationship {
+    my $self = shift;
+    my $relationship_type = shift;
+    my $parent_accession = shift;
+    my $cross_type = shift;
+    print STDERR "***STOCK.PM Updating parent relationship\n\n";
+    my $parent_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->schema, $relationship_type,'stock_relationship')->cvterm_id();
+    my $pop_rs = $self->stock->search_related('stock_relationship_subjects', {'type_id'=>$parent_cvterm_id});
+    while (my $r=$pop_rs->next){
+        $r->delete();
+    }
+    $self->_store_population_relationship($relationship_type, $parent_accession, $cross_type);
 }
 ###
 

@@ -22,6 +22,7 @@ Code structure copied from CXGN::Stock::Seedlot, with inheritance from CXGN::Sto
 package CXGN::Stock::Accession;
 
 use Moose;
+use JSON;
 
 extends 'CXGN::Stock';
 
@@ -58,6 +59,21 @@ has 'germplasmPUI' => (
 has 'pedigree' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+);
+
+has 'mother_accession' => (
+    isa => 'Maybe[Str]',
+    is  => 'rw',
+);
+
+has 'father_accession' => (
+    isa => 'Maybe[Str]',
+    is  => 'rw',
+);
+
+has 'additional_info' => (
+    isa => 'Maybe[HashRef]',
+    is => 'rw'
 );
 
 has 'germplasmSeedSource' => (
@@ -434,6 +450,18 @@ sub store {
             $self->_store_stockprop('donor PUI', $_->{germplasmPUI});
         }
     }
+    if ($self->mother_accession) {
+        my $return = $self->_store_parent_relationship('female_parent', $self->mother_accession, 'biparental');
+        # TODO: delete accession if error and return error
+    }
+    if ($self->father_accession) {
+        my $return = $self->_store_parent_relationship('male_parent', $self->father_accession, 'biparental');
+        # TODO: delete accession if error and return error
+    }
+    if ($self->additional_info) {
+        $self->_store_stockprop_raw('stock_additional_info', encode_json $self->additional_info);
+    }
+
     if($self->pedigree){
         print STDERR "CXGN::Stock::Accession->store does not store pedigree info yet!\n";
     }
