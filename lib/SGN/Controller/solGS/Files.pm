@@ -303,13 +303,21 @@ sub relationship_matrix_adjusted_file {
     my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
     my $data_set_type = $c->stash->{data_set_type};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
-    my $trait_abbr = $c->stash->{trait_abbr} || $pop_id;
-
-    my $file_id = $pop_id ."_${trait_abbr}_GP_${protocol_id}";
+    my $trait_abbr = $c->stash->{trait_abbr};
+    
+    my $file_id;
+    if ($trait_abbr)
+    {
+        $file_id = "${pop_id}_${trait_abbr}_GP_${protocol_id}";
+    }
+    else
+    {
+        $file_id = "${pop_id}_GP_${protocol_id}";
+    }
 
     no warnings 'uninitialized';
 
-    my $cache_data = {key    => 'relationship_matrix_table_' . $file_id ,
+    my $cache_data = {key    => 'relationship_matrix_adjusted_table_' . $file_id ,
 		      file      => 'relationship_matrix_adjusted_table_' . $file_id . '.txt',
 		      stash_key => 'relationship_matrix_adjusted_table_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}
@@ -317,7 +325,7 @@ sub relationship_matrix_adjusted_file {
 
     $self->cache_file($c, $cache_data);
 
-    my $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
+    my $cache_data = {key    => 'relationship_matrix_adjusted_json_' . $file_id ,
 		      file      => 'relationship_matrix_adjusted_json_' . $file_id . '.txt',
 		      stash_key => 'relationship_matrix_adjusted_json_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}
