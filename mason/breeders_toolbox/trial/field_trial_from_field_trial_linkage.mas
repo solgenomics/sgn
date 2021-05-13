@@ -89,7 +89,7 @@ jQuery(document).ready(function () {
             }) );
 
             nodes.push({"name":r.source_field_trials[i][0], "id":r.source_field_trials[i][1], "trialType":null});
-            primitiveSourceLinks.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
+            primitiveSourceLinks.push({"source":nodes[nodes.length - 1], "target": nodes[0], "value":1});
           }
 
           //Send ajax calls for studies that are sourced from this trial
@@ -115,7 +115,7 @@ jQuery(document).ready(function () {
             }) );
 
             nodes.push({"name":r.field_trials_sourced[i][0], "id":r.field_trials_sourced[i][1], "trialType":null});
-            primitiveSinkLinks.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1});
+            primitiveSinkLinks.push({"source":nodes[0], "target": nodes[nodes.length-1], "value":1});
           }
 
           //Wait for all study JSONs to be collected, then construct the nodes with them.
@@ -253,22 +253,10 @@ jQuery(document).ready(function () {
                 .on("mouseover", function(d){
                   d3.select(this).attr("stroke", "#808080");
                   tooltip_region.selectAll("*").remove();
-                  tooltip_region.attr("transform", "translate("+ (100) +", "+ (100) +")" );
-                  tooltip = tooltip_region
-                    .append("path")
-                    .attr('fill', 'white')
-                    .attr('stroke', 'black')
-                    .attr('stroke-width', '1.5');
-                  var pathString = "M "+(  215  )+" "+( 175 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -40 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 40 c 0 10 0 10 10 10 h 90 l 10 10 z";
-                  tooltip.attr("d", pathString);
                   tooltip_text1 = tooltip_region.append("text")
                   .attr("text-anchor", "middle")
-                  .attr("transform", "translate(110,20)");
+                  .attr("transform", "translate("+ (  (d.source.x1 + d.target.x0) / 2   ) +","+ (  (d.y0 + d.y1) / 2) +")");
                   tooltip_text1.text("Germplasm: "+d.name);
-                  // tooltip_text2 = tooltip_region.append("text")
-                  // .attr("text-anchor", "middle")
-                  // .attr("transform", "translate(110,40)");
-                  // tooltip_text2.text("Trial Type: "+d.trialType);
                 })
                 .on("mouseout", function(d){
                   d3.select(this).attr("stroke", "#D3D3D3");
