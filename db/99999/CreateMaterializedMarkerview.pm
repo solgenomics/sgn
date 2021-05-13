@@ -94,6 +94,7 @@ AS \$function\$
 		END LOOP;
 		matviewquery := array_to_string(queries, ' UNION ');
 		EXECUTE 'CREATE MATERIALIZED VIEW public.materialized_markerview AS (' || matviewquery || ') WITH NO DATA';
+		ALTER MATERIALIZED VIEW public.materialized_markerview OWNER TO web_usr;
 		CREATE INDEX materialized_markerview_idx1 ON public.materialized_markerview(nd_protocol_id);
 		CREATE INDEX materialized_markerview_idx2 ON public.materialized_markerview(species_name);
 		CREATE INDEX materialized_markerview_idx3 ON public.materialized_markerview(reference_genome_name);
@@ -108,7 +109,6 @@ AS \$function\$
 		IF \$1 THEN
 			REFRESH MATERIALIZED VIEW public.materialized_markerview;
 		END IF;
-		GRANT SELECT ON public.materialized_markerview TO web_usr;
 		RETURN \$1;
 	END
 \$function\$;
