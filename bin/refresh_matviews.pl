@@ -67,7 +67,7 @@ try {
     
     if ($mode eq 'fullview') {
 	@mv_names = keys ( %matviews );
-	push (@mv_names, "materialized_stockprop", "materialized_phenotype_jsonb_table");
+
 	print STDERR "*Setting currently_refreshing = TRUE\n";
 	my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
 	$cur_refreshing_h->execute($state);
@@ -110,16 +110,23 @@ sub refresh_mvs {
     my $dbh = shift;
     my $mv_names_ref = shift;
     $concurrent = shift;
-    
+    my $start_q = "UPDATE matviews SET last_refresh = now() where mv_name = ?";
+    my $end_q =   "UPDATE matviews SET  refresh_start = now() where mv_name = ? ";
     my $refresh_q = "REFRESH MATERIALIZED VIEW ";
     if ($concurrent) { $refresh_q .= " CONCURRENTLY "; } 
     my $status;
    
     foreach my $name ( @$mv_names_ref ) {
-	print STDERR "**Refreshing view $name\n";
+	next() if $name eq 'traits';
+	print STDERR "**Refreshing view $name ". localtime() . " \n";
+	my $start_h = $dbh->prepare($start_q);
+	$start_h->execute($name);
 	print STDERR "**QUERY = " . $refresh_q . $name . "\n";
 	my $refresh_h = $dbh->prepare($refresh_q . $name) ;
 	$status = $refresh_h->execute();
+
+	my $end_h = $dbh->prepare($end_q);
+	$end_h->execute($name);
 	
 	print STDERR "Materialized view $name refreshed! Status: $status " . localtime() . "\n\n";
     }
