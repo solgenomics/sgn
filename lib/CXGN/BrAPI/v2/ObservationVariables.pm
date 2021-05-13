@@ -144,7 +144,7 @@ sub search {
         if ($trait_ids_sql){
             push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
         } else {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Variables not found for the searched studyDbId'), 401);
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Variables not found for the searched studyDbId'), 400);
         }
     }
 
