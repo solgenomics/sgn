@@ -110,8 +110,8 @@ sub refresh_mvs {
     my $dbh = shift;
     my $mv_names_ref = shift;
     $concurrent = shift;
-    my $start_q = "UPDATE matviews SET last_refresh = now() where mv_name = ?";
-    my $end_q =   "UPDATE matviews SET  refresh_start = now() where mv_name = ? ";
+    my $start_q = "UPDATE matviews SET refresh_start = now() where mv_name = ?";
+    my $end_q =   "UPDATE matviews SET  last_refresh = now() where mv_name = ? ";
     my $refresh_q = "REFRESH MATERIALIZED VIEW ";
     if ($concurrent) { $refresh_q .= " CONCURRENTLY "; } 
     my $status;
