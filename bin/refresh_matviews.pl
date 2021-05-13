@@ -110,14 +110,13 @@ sub refresh_mvs {
     my $dbh = shift;
     my $mv_names_ref = shift;
     $concurrent = shift;
-    my $start_q = "UPDATE matviews SET refresh_start = now() where mv_name = ?";
-    my $end_q =   "UPDATE matviews SET  last_refresh = now() where mv_name = ? ";
+    my $start_q = "UPDATE matviews SET refresh_start = statement_timestamp() where mv_name = ?";
+    my $end_q =   "UPDATE matviews SET  last_refresh = statement_timestamp() where mv_name = ? ";
     my $refresh_q = "REFRESH MATERIALIZED VIEW ";
     if ($concurrent) { $refresh_q .= " CONCURRENTLY "; } 
     my $status;
    
     foreach my $name ( @$mv_names_ref ) {
-	next() if $name eq 'traits';
 	print STDERR "**Refreshing view $name ". localtime() . " \n";
 	my $start_h = $dbh->prepare($start_q);
 	$start_h->execute($name);
@@ -125,10 +124,11 @@ sub refresh_mvs {
 	my $refresh_h = $dbh->prepare($refresh_q . $name) ;
 	$status = $refresh_h->execute();
 
+	print STDERR "Materialized view $name refreshed! Status: $status " . localtime() . "\n\n";
+	
 	my $end_h = $dbh->prepare($end_q);
 	$end_h->execute($name);
 	
-	print STDERR "Materialized view $name refreshed! Status: $status " . localtime() . "\n\n";
     }
     return $status;
 }
