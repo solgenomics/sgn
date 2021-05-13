@@ -173,7 +173,7 @@ jQuery(document).ready(function () {
               //Set margins and set up svg area
               var margin = {top: 100, right: 100, bottom: 100, left: 100};
               var width = 800//document.querySelector('#field_trial_to_field_trial_html').offsetWidth*0.90;
-              var height = 300;//document.querySelector('#field_trial_to_field_trial_html').offsetHeight*0.90;
+              var height = 400;//document.querySelector('#field_trial_to_field_trial_html').offsetHeight*0.90;
 
               var svg = d3.select("#field_trial_to_field_trial_html").append("svg")
               .attr("width", width + margin.left + margin.right)
