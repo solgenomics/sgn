@@ -272,7 +272,7 @@ jQuery(document).ready(function () {
                 })
                 .on("mouseout", function(){
                   d3.select(this).attr("stroke", "#D3D3D3");
-                  tooltip_region.selectAll("*").remove();
+                  //tooltip_region.selectAll("*").remove();
                 });
 
               // labels = svg
