@@ -136,13 +136,34 @@ jQuery(document).ready(function () {
               //Make links from the source trials
               for (var i = 0; i < primitiveSourceLinks.length; i++){
 
+                for (var j = 0; j < linkAjaxCallsMap[primitiveSourceLinks[i].source].responseJSON.result.data.length; j++){
+
+                  for (var k = 0; k < linkAjaxCallsMap[<% $trial_id %>].responseJSON.result.data.length; k++){
+                    if (linkAjaxCallsMap[<% $trial_id %>].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSourceLinks[i].source].responseJSON.result.data[j].germplasmName){
+                      links.push({"source": primitiveSourceLinks[i].source, "target":primitiveSourceLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSourceLinks[i].source].responseJSON.result.data[j].germplasmName});
+                    }
+                  }
+                }
+              }
+
+              //Make links to sourced trials
+              for (var i = 0; i < primitiveSinkLinks.length; i++){
+
+                for (var j = 0; j < linkAjaxCallsMap[primitiveSinkLinks[i].target].responseJSON.result.data.length; j++){
+
+                  for (var k = 0; k < linkAjaxCallsMap[<% $trial_id %>].responseJSON.result.data.length; k++){
+                    if (linkAjaxCallsMap[<% $trial_id %>].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSinkLinks[i].source].responseJSON.result.data[j].germplasmName){
+                      links.push({"source": primitiveSinkLinks[i].source, "target":primitiveSinkLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSinkLinks[i].source].responseJSON.result.data[j].germplasmName});
+                    }
+                  }
+                }
               }
             });
-            //
-            // let data={nodes, links};
-            // console.log("Here is the sankey data: ");
-            // console.log(data);
-            //
+
+            let data={nodes, links};
+            console.log("Here is the sankey data: ");
+            console.log(data);
+
             // //Set margins and set up svg area
             // var margin = {top: 100, right: 100, bottom: 100, left: 100};
             // var width = 800//document.querySelector('#field_trial_to_field_trial_html').offsetWidth*0.90;
