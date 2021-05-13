@@ -246,19 +246,19 @@ jQuery(document).ready(function () {
                 .classed("link", true)
                 .attr("d", d3.sankeyLinkHorizontal())
                 .attr("fill", "none")
-                .attr("stroke", "#D3D3D3")
+                //.attr("stroke", "#D3D3D3")
                 .attr("stroke-width", d => d.width)
                 .attr("marker-end", "url(#triangle)")
-                .attr("stoke-opacity", 0.0)
+                .attr("stoke-opacity", 0.3)
                 .on("mouseover", function(d){
-                  d3.select(this).attr("stroke", "#808080");
+                  //d3.select(this).attr("stroke", "#808080");
                   tooltip_region.selectAll("*").remove();
                   var linkLabel = d3.select(this).append("text")
                   .attr("transform", "translate("+ (  d.source.x1 + 5  ) +","+ (  d.y0 + 5 ) +")");
                   linkLabel.text("Germplasm: "+d.name);
                 })
                 .on("mouseout", function(d){
-                  d3.select(this).attr("stroke", "#D3D3D3");
+                  //d3.select(this).attr("stroke", "#D3D3D3");
                   tooltip_region.selectAll("*").remove();
                 });
 
