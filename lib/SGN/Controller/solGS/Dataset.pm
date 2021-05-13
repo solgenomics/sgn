@@ -8,6 +8,7 @@ use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
 use POSIX qw(strftime);
 use Scalar::Util qw /weaken reftype/;
+use Storable qw/ nstore retrieve /;
 #BEGIN { extends 'Catalyst::Controller' }
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -107,9 +108,7 @@ sub get_dataset_genotypes_list {
 
     $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
 	my $model = $self->get_model();
-
 	my $genotypes_ids = $model->get_genotypes_from_dataset($dataset_id);
-
    	my $genotypes  = $c->controller('solGS::List')->transform_uniqueids_genotypes($c, $genotypes_ids);
     $c->stash->{genotypes_list} = $genotypes;
     $c->stash->{genotypes_ids}  = $genotypes_ids;
@@ -218,20 +217,80 @@ sub create_dataset_geno_data_query_jobs {
 
     if ($data->{categories}->{accessions}->[0])
     {
-	$self->get_dataset_genotypes_list($c);
-
-	$c->controller('solGS::List')->genotypes_list_genotype_query_job($c);
-	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{genotypes_list_genotype_query_job};
+	       $self->dataset_genotype_query_jobs($c);
     }
     elsif ($data->{categories}->{trials}->[0])
     {
-	my $trials_ids = $data->{categories}->{trials};
-	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
-	$c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
+    	my $trials_ids = $data->{categories}->{trials};
+    	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
+    	$c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
 
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids, $geno_protocol);
-	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
+    	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids, $geno_protocol);
+    	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
+}
+
+
+sub dataset_genotype_query_jobs {
+    my ($self, $c) = @_;
+
+    my $dataset_id = $c->stash->{dataset_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+
+	my $pop_id = 'dataset_' . $dataset_id;
+	my $data_dir =  $c->stash->{solgs_datasets_dir};
+	my $pop_type = 'dataset';
+
+    $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
+    my $geno_file = $c->stash->{genotype_file_name};
+
+    my $args = {
+    'dataset_id'=>$dataset_id,
+	'data_dir'  => $data_dir,
+	'genotype_file'  => $geno_file,
+	'genotyping_protocol_id'=> $protocol_id,
+	'r_temp_file'    => "genotypes-list-genotype-data-query-${pop_id}",
+    };
+
+    $c->stash->{r_temp_file} = $args->{r_temp_file};
+    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+    my $out_temp_file = $c->stash->{out_file_temp};
+    my $err_temp_file = $c->stash->{err_file_temp};
+
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $background_job = $c->stash->{background_job};
+
+    my $report_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-query-report-args-${pop_id}");
+    $c->stash->{report_file} = $report_file;
+
+     my $config_args = {
+	'temp_dir' => $temp_dir,
+	'out_file' => $out_temp_file,
+	'err_file' => $err_temp_file,
+	'cluster_host' => 'localhost'
+     };
+
+    my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+
+    my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-query-job-args-file-${pop_id}");
+
+    nstore $args, $args_file
+		or croak "data query script: $! serializing genotype lists genotype query details to $args_file ";
+
+    my $cmd = 'mx-run solGS::queryJobs '
+    	. ' --data_type genotype '
+    	. ' --population_type ' . $pop_type
+    	. ' --args_file ' . $args_file;
+
+    my $job_args = {
+	'cmd' => $cmd,
+	'config' => $config,
+	'background_job'=> $background_job,
+	'temp_dir' => $temp_dir,
+    };
+
+    $c->stash->{dataset_geno_data_query_jobs} = $job_args;
+
 }
 
 
