@@ -254,7 +254,7 @@ jQuery(document).ready(function () {
                   d3.select(this).attr("stroke", "#808080");
                   tooltip_region.selectAll("*").remove();
                   tooltip_text3 = tooltip_region.append("text")
-                  .attr("transform", "translate("+ (  d.source.x1 + 5  ) +","+ (  d.y0 - 5 ) +")");
+                  .attr("transform", "translate("+ (  d.source.x1 + 5  ) +","+ (  d.y0 + 5 ) +")");
                   tooltip_text3.text("Germplasm: "+d.name);
                 })
                 .on("mouseout", function(d){
