@@ -55,7 +55,7 @@ jQuery(document).ready(function () {
               console.log("Failed to retrieve trial germplasm.");
             }
           }) );
-          linkAjaxCallsMap[<% $trial_id %>] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+          linkAjaxCallsMap["This Trial"] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
           nodeAjaxCalls.push( jQuery.ajax({
             url: '/brapi/v2/studies/'+<% $trial_id %>,
             success: function(re){
@@ -77,7 +77,7 @@ jQuery(document).ready(function () {
                 console.log("Failed to retrieve trial germplasm.");
               }
             }) );
-            linkAjaxCallsMap[r.source_field_trials[i][0]] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+            linkAjaxCallsMap[ r.source_field_trials[i][1] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
             nodeAjaxCalls.push( jQuery.ajax({
               url: '/brapi/v2/studies/'+r.source_field_trials[i][0],
               success: function(re){
@@ -103,7 +103,7 @@ jQuery(document).ready(function () {
                 console.log("Failed to retrieve trial germplasm.");
               }
             }) );
-            linkAjaxCallsMap[r.field_trials_sourced[i][0]] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+            linkAjaxCallsMap[ r.field_trials_sourced[i][1] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
             nodeAjaxCalls.push( jQuery.ajax({
               url: '/brapi/v2/studies/'+r.field_trials_sourced[i][0],
               success: function(re){
