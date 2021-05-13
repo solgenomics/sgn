@@ -253,7 +253,7 @@ jQuery(document).ready(function () {
                 .on("mouseover", function(d){
                   d3.select(this).attr("stroke", "#808080");
                   tooltip_region.selectAll("*").remove();
-                  var tooltip_text1 = tooltip_region.append("text")
+                  var linkLabel = d3.select(this).append("text")
                   .attr("transform", "translate("+ (  d.source.x1 + 5  ) +","+ (  d.y0 + 5 ) +")");
                   tooltip_text1.text("Germplasm: "+d.name);
                 })
