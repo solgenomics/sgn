@@ -68,26 +68,28 @@ try {
     if ($mode eq 'fullview') {
 	@mv_names = keys ( %matviews );
 
-	print STDERR "*Setting currently_refreshing = TRUE\n";
-	my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
-	$cur_refreshing_h->execute($state);
+
     } 
     if ($mode eq 'stockprop'){
+	$cur_refreshing_q .= " WHERE mv_name = 'materialized_stockprop'";
 	@mv_names = ('materialized_stockprop');
     }
     if ($mode eq 'phenotypes') {
-	@mv_names = ("materialized_phenotype_jsonb_table")
+	$cur_refreshing_q .= " WHERE mv_name = 'materialized_phenotype_jsonb_table'";
+	@mv_names = ("materialized_phenotype_jsonb_table");
     }    
 
+    print STDERR "*Setting currently_refreshing = TRUE\n";
+    my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
+    $cur_refreshing_h->execute($state);
+    
     my $status = refresh_mvs($dbh, \@mv_names, $concurrent); 
 
     $state = 'FALSE';
 
-    if ($mode eq 'fullview') {
-	my $done_h = $dbh->prepare($cur_refreshing_q);
-	print STDERR "*Setting currently_refreshing = FALSE \n";
-	$done_h->execute($state);
-    }
+    my $done_h = $dbh->prepare($cur_refreshing_q);
+    print STDERR "*Setting currently_refreshing = FALSE \n";
+    $done_h->execute($state);
     
     if ($test) { die ; } 
 }
