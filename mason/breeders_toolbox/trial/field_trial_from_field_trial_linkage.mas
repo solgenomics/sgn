@@ -253,7 +253,13 @@ jQuery(document).ready(function () {
                 .on("mouseover", function(d){
                   d3.select(this).attr("stroke", "#808080");
                   tooltip_region.selectAll("*").remove();
-                  tooltip_region.attr("transform", "translate("+ ((d.x1+d.x0)/2 - 5 - 110) +", "+ (d.y0 - 5 - 70) +")" );
+                  var mouse_x;
+                  var mouse_y;
+                  window.addEventListener('mousemove', function(e){
+                    mouse_x = e.x;
+                    mouse_y = e.y;
+                  });
+                  tooltip_region.attr("transform", "translate("+ (mouse_x) +", "+ (mouse_y) +")" );
                   tooltip = tooltip_region
                     .append("path")
                     .attr('fill', 'white')
