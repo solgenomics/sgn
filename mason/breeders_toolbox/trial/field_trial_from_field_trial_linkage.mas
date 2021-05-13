@@ -37,62 +37,106 @@ jQuery(document).ready(function () {
           html2 = html2 + '</tbody></table>';
           jQuery('#field_trial_to_field_trial_html').html(html1+html2);
 
-          var nodes = [{"name":"This Trial", "id":"This Trial" , "trialType":null}];
-          var links = [];
-          var ajaxCalls = [];
-          var ajaxCallsIds = [];
+          var nodes = [{"name":"This Trial", "id":"This Trial" , "trialType":null}]; //Initialize nodes list with this node.
+          var primitiveSourceLinks = []; //List of connections flowing into this trial
+          var primitiveSinkLinks = []; //List of connections flowing out of this trial
+          var links = []; //List to be used for all connections at the accession level
+          var linkAjaxCalls = []; //List of ajax calls for germplasm (used for accessions)
+          var linkAjaxCallsMap = {};
+          var nodeAjaxCalls = []; //List of ajax calls for study data (used for trial types)
 
-          ajaxCalls.push( jQuery.ajax({
+          //Start by initializing the ajax lists with the calls for this trial
+          linkAjaxCalls.push( jQuery.ajax({
             url:'/brapi/v2/germplasm?studyDbId='+<% $trial_id %>,
             success: function(re){
               console.log(re);
             },
             error: function(re){
-              console.log("Failed to retrieve trial.");
+              console.log("Failed to retrieve trial germplasm.");
             }
           }) );
-          ajaxCallsIds.push( <% $trial_id %> );
+          linkAjaxCallsMap[<% $trial_id %>] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+          nodeAjaxCalls.push( jQuery.ajax({
+            url: '/brapi/v2/studies/'+<% $trial_id %>,
+            success: function(re){
+              console.log(re);
+            },
+            error: function(re){
+              console.log("Failed to retrieve study.");
+            }
+          }) );
 
-
+          //Send ajax calls for studies that are the source of this study
           for (var i = 0; i < r.source_field_trials.length; i++){
-            ajaxCalls.push( jQuery.ajax({
+            linkAjaxCalls.push( jQuery.ajax({
               url: '/brapi/v2/germplasm?studyDbId='+r.source_field_trials[i][0],
               success: function(re){
                 console.log(re);
               },
               error: function(re){
-                console.log("Failed to retrieve trial.");
+                console.log("Failed to retrieve trial germplasm.");
               }
             }) );
-            ajaxCallsIds.push( r.source_field_trials[i][0] );
+            linkAjaxCallsMap[r.source_field_trials[i][0]] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+            nodeAjaxCalls.push( jQuery.ajax({
+              url: '/brapi/v2/studies/'+r.source_field_trials[i][0],
+              success: function(re){
+                console.log(re);
+              },
+              error: function(re){
+                console.log("Failed to retrieve study.");
+              }
+            }) );
 
             nodes.push({"name":r.source_field_trials[i][0], "id":r.source_field_trials[i][1], "trialType":null});
-            //links.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
+            primitiveSourceLinks.push({"source":r.source_field_trials[i][1], "target": "This Trial", "value":1});
           }
 
+          //Send ajax calls for studies that are sourced from this trial
           for (var i = 0; i < r.field_trials_sourced.length; i++){
-            ajaxCalls.push( jQuery.ajax({
+            linkAjaxCalls.push( jQuery.ajax({
               url: '/brapi/v2/germplasm?studyDbId='+r.field_trials_sourced[i][0],
               success: function(re){
                 console.log(re);
               },
               error: function(re){
-                console.log("Failed to retrieve trial.");
+                console.log("Failed to retrieve trial germplasm.");
               }
             }) );
-            ajaxCallsIds.push( r.field_trials_sourced[i][0] );
+            linkAjaxCallsMap[r.field_trials_sourced[i][0]] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+            nodeAjaxCalls.push( jQuery.ajax({
+              url: '/brapi/v2/studies/'+r.field_trials_sourced[i][0],
+              success: function(re){
+                console.log(re);
+              },
+              error: function(re){
+                console.log("Failed to retrieve study.");
+              }
+            }) );
 
             nodes.push({"name":r.field_trials_sourced[i][0], "id":r.field_trials_sourced[i][1], "trialType":null});
-            //links.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1});
+            primitiveSinkLinks.push({"source":"This Trial", "target": r.field_trials_sourced[i][1], "value":1});
           }
 
-          Promise.all(ajaxCalls).then((values) => {
-            console.log("Here are the ajax return values: ");
-            console.log(values);
-            console.log(ajaxCallsIds);
-            // for (var i = 0; i < nodes.length; i++){
-            //   nodes[i].trialType = values[i].result.studyType;
-            // }
+          //Wait for all study JSONs to be collected, then construct the nodes with them.
+          Promise.all(nodeAjaxCalls).then((values1) => {
+            console.log("Here are the node values: ");
+            console.log(values1);
+
+            for (var i = 0; i < nodes.length; i++){
+              nodes[i].trialType = values1[i].result.studyType;
+            }
+
+            //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
+            Promise.all(linkAjaxCalls).then((values2) => {
+              console.log("Here are the link values: ");
+              console.log(values2);
+
+              //Make links from the source trials
+              // for (var i = 0; i < primitiveSourceLinks.length; i++){
+              //
+              // }
+            });
             //
             // let data={nodes, links};
             // console.log("Here is the sankey data: ");
