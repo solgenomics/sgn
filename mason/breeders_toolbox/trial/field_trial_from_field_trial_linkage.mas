@@ -158,11 +158,13 @@ jQuery(document).ready(function () {
                   }
                 }
               }
+
+              let data={nodes, links};
+              console.log("Here is the sankey data: ");
+              console.log(data);
             });
 
-            let data={nodes, links};
-            console.log("Here is the sankey data: ");
-            console.log(data);
+
 
             // //Set margins and set up svg area
             // var margin = {top: 100, right: 100, bottom: 100, left: 100};
