@@ -249,7 +249,7 @@ jQuery(document).ready(function () {
                 .attr("stroke", "#D3D3D3")
                 .attr("stroke-width", d => d.width)
                 .attr("marker-end", "url(#triangle)")
-                .attr("stoke-opacity", 0.3)
+                .attr("stoke-opacity", 0.0)
                 .on("mouseover", function(d){
                   d3.select(this).attr("stroke", "#808080");
                   tooltip_region.selectAll("*").remove();
