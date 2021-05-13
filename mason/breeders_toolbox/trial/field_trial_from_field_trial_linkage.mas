@@ -131,11 +131,12 @@ jQuery(document).ready(function () {
             Promise.all(linkAjaxCalls).then((values2) => {
               console.log("Here are the link values: ");
               console.log(values2);
+              console.log(linkAjaxCallsMap);
 
               //Make links from the source trials
-              // for (var i = 0; i < primitiveSourceLinks.length; i++){
-              //
-              // }
+              for (var i = 0; i < primitiveSourceLinks.length; i++){
+
+              }
             });
             //
             // let data={nodes, links};
