@@ -116,8 +116,8 @@ AS \$function\$
 -- Build an empty materialized view (will need to be manually refreshed)
 SELECT public.create_materialized_markerview(true);
 
--- Grant access to the web_usr
-GRANT SELECT ON public.materialized_markerview TO web_usr;
+-- Change ownership of matview to web_usr (so it can be rebuilt when needed)
+ALTER MATERIALIZED VIEW public.materialized_markerview OWNER TO web_usr;
 
 
 EOSQL
