@@ -133,6 +133,12 @@ jQuery(document).ready(function () {
               console.log(values2);
               console.log(linkAjaxCallsMap);
 
+              console.log("Primitive Sink Links: ");
+              console.log(primitiveSinkLinks);
+
+              console.log("Primitive Source Links: ");
+              console.log(primitiveSourceLinks);
+
               //Make links from the source trials
               for (var i = 0; i < primitiveSourceLinks.length; i++){
 
