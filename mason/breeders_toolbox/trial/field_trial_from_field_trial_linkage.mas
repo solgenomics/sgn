@@ -144,8 +144,8 @@ jQuery(document).ready(function () {
 
                 for (var j = 0; j < linkAjaxCallsMap[primitiveSourceLinks[i].source].responseJSON.result.data.length; j++){
 
-                  for (var k = 0; k < linkAjaxCallsMap[<% $trial_id %>].responseJSON.result.data.length; k++){
-                    if (linkAjaxCallsMap[<% $trial_id %>].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSourceLinks[i].source].responseJSON.result.data[j].germplasmName){
+                  for (var k = 0; k < linkAjaxCallsMap["This Trial"].responseJSON.result.data.length; k++){
+                    if (linkAjaxCallsMap["This Trial"].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSourceLinks[i].source].responseJSON.result.data[j].germplasmName){
                       links.push({"source": primitiveSourceLinks[i].source, "target":primitiveSourceLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSourceLinks[i].source].responseJSON.result.data[j].germplasmName});
                     }
                   }
@@ -157,8 +157,8 @@ jQuery(document).ready(function () {
 
                 for (var j = 0; j < linkAjaxCallsMap[primitiveSinkLinks[i].target].responseJSON.result.data.length; j++){
 
-                  for (var k = 0; k < linkAjaxCallsMap[<% $trial_id %>].responseJSON.result.data.length; k++){
-                    if (linkAjaxCallsMap[<% $trial_id %>].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSinkLinks[i].source].responseJSON.result.data[j].germplasmName){
+                  for (var k = 0; k < linkAjaxCallsMap["This Trial"].responseJSON.result.data.length; k++){
+                    if (linkAjaxCallsMap["This Trial"].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSinkLinks[i].source].responseJSON.result.data[j].germplasmName){
                       links.push({"source": primitiveSinkLinks[i].source, "target":primitiveSinkLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSinkLinks[i].source].responseJSON.result.data[j].germplasmName});
                     }
                   }
