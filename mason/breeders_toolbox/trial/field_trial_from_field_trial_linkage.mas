@@ -252,31 +252,27 @@ jQuery(document).ready(function () {
                 .attr("stoke-opacity", 0.3)
                 .on("mouseover", function(d){
                   d3.select(this).attr("stroke", "#808080");
-                  tooltip_region.selectAll("*").remove();
-                  var linkLabel = d3.select(this).append("g").append("text")
-                  .attr("transform", "translate("+ (  d.source.x1 + 5  ) +","+ (  d.y0 + 5 ) +")");
-                  linkLabel.text("Germplasm: "+d.name);
+                  // tooltip_region.selectAll("*").remove();
+                  // var linkLabel = d3.select(this).append("g").append("text")
+                  // .attr("transform", "translate("+ (  d.source.x1 + 5  ) +","+ (  d.y0 + 5 ) +")");
+                  // linkLabel.text("Germplasm: "+d.name);
                 })
                 .on("mouseout", function(d){
                   d3.select(this).attr("stroke", "#D3D3D3");
                   //d3.select(this).selectAll("*").remove();
                 });
 
-              // labels = svg
-              //   .append("g")
-              //   .classed("text", true)
-              //   .selectAll("text")
-              //   .data(graph.nodes)
-              //   .enter()
-              //   .append("text")
-              //   .classed("node", true)
-              //   .attr("text-anchor", "middle")
-              //   .attr("x", d => d.x0)
-              //   .attr("y", d => (d.y1 + d.y0)/2 - 5)
-              //   .text(d => d.name)
-              //   .attr("transform", function(d){
-              //     return "rotate(270, "+ (d.x0 + 14) +", "+ ((d.y1 + d.y0)/2 - 5) +")";
-              //   });
+              labels = svg
+                .append("g")
+                .classed("text", true)
+                .selectAll("text")
+                .data(graph.links)
+                .enter()
+                .append("text")
+                .classed("link", true)
+                .attr("x", d => d.source.x1 + 5)
+                .attr("y", d => d.y0 + 5)
+                .text(d => "Germplasm: "+d.name);
 
 
               //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
