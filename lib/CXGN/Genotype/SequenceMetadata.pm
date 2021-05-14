@@ -10,10 +10,31 @@ To preprocess and verify a gff file for the featureprop_json table:
 my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema);
 my $verification_results = $smd->verify($original_filepath, $processed_filepath, 'Triticum aestivum');
 
-To store a gff file to the featureprop_json table:
-(bcs_schema, type_id and nd_protocol_id are required)
+
+To create a new sequence metadata protocol and store a gff file to the featureprop_json table:
+(bcs_schema and type_id are required)
+my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $cvterm_id);
+
+1) create a new sequence metadata protocol
+(protocol name, protocol description, and reference genome are required)
+my %protocol_args = (
+    protocol_name => $protocol_name,
+    protocol_description => $protocol_description,
+    reference_genome => $protocol_reference_genome,
+    score_description => $protocol_score_description,
+    attributes => \%attributes
+);
+my $protocol_results = $smd->create_protocol(\%protocol_args);
+
+2) store the preprocessed gff file
+my $store_results = $smd->store($processed_filepath, 'Triticum aestivum');
+
+
+To use an existing sequence metadata protocol and store a gff file to the featureprop_json table:
+(bcs_schema, type_id, and nd_protocol_id are required)
 my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $cvterm_id, nd_protocol_id => $nd_protocol_id);
 my $store_results = $smd->store($processed_filepath, 'Triticum aestivum');
+
 
 To query the stored sequence metadata:
 (bcs_schema and feature_id are required, all other filters are optional)
@@ -58,6 +79,7 @@ use Moose;
 use JSON;
 
 use SGN::Context;
+use SGN::Model::Cvterm
 
 
 has 'shell_script_dir' => (
@@ -216,6 +238,100 @@ sub verify {
     }
 
     return(\%results);
+}
+
+
+#
+# Create a new Sequence Metadata Protocol with the specified properties
+#
+# Arguments:
+# - args: A hashref with the following keys:
+#       - protocol_name = the name of the sequence metadata protocol
+#       - protocol_description = the description of the sequence metadata protocol
+#       - reference_genome = the name of the reference genome used by the sequence metadata positions
+#       - score_description = (optional) the description of the store value
+#       - attributes = (optional) a hashref of attributes (keys) and their descriptions (values)
+# 
+# Returns a hash with the following keys:
+# - error: error message
+# - created: 0 if creation failed, 1 if it succeeds
+# - nd_protocol_id: the id of the new protocol
+#
+sub create_protocol {
+    my $self = shift;
+    my $args = shift;
+    my $protocol_name = $args->{'protocol_name'};
+    my $protocol_description = $args->{'protocol_description'};
+    my $reference_genome = $args->{'reference_genome'};
+    my $score_description = $args->{'score_description'};
+    my $attributes = $args->{'attributes'};
+
+    # Protocol Results
+    my %results = (
+        created => 0,
+        nd_protocol_id => 0
+    );
+
+    # Make sure SMD type_id is set
+    if ( !defined $self->type_id || $self->type_id eq '' ) {
+        $results{'error'} = "Sequence Metadata type_id not set!";
+        return(\%results);
+    }
+
+    # Check required arguments
+    if ( !$protocol_name || $protocol_name eq '' ) {
+        $results{'error'} = "Protocol name not set!";
+        return(\%results);
+    }
+    if ( !$protocol_description || $protocol_description eq '' ) {
+        $results{'error'} = "Protocol description not set!";
+        return(\%results);
+    }
+    if ( !$reference_genome || $reference_genome eq '' ) {
+        $results{'error'} = "Reference genome not set!";
+        return(\%results);
+    }
+
+    # Get type name from type_id
+    my $sequence_metadata_type = $self->bcs_schema->resultset("Cv::Cvterm")->find({ cvterm_id=>$self->type_id })->name();
+    
+    # Set the protocol props
+    my %sequence_metadata_protocol_props = (
+        sequence_metadata_type_id => $self->type_id,
+        sequence_metadata_type => $sequence_metadata_type,
+        reference_genome => $reference_genome
+    );
+    if ( defined $score_description && $score_description ne '' ) {
+        $sequence_metadata_protocol_props{'score_description'} = $score_description;
+    }
+    if ( defined $attributes ) {
+        $sequence_metadata_protocol_props{'attribute_descriptions'} = $attributes;
+    }
+    
+    # Create Protocol with props
+    my $sequence_metadata_protocol_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'sequence_metadata_protocol', 'protocol_type')->cvterm_id();
+    my $sequence_metadata_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'sequence_metadata_protocol_properties', 'protocol_property')->cvterm_id();
+    my $protocol = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->create({
+        name => $protocol_name,
+        type_id => $sequence_metadata_protocol_type_id,
+        nd_protocolprops => [{type_id => $sequence_metadata_protocol_prop_cvterm_id, value => encode_json \%sequence_metadata_protocol_props}]
+    });
+    my $protocol_id = $protocol->nd_protocol_id();
+    
+    # Update protocol description
+    my $dbh = $self->bcs_schema->storage->dbh();
+    my $sql = "UPDATE nd_protocol SET description=? WHERE nd_protocol_id=?;";
+    my $sth = $dbh->prepare($sql);
+    $sth->execute($protocol_description, $protocol_id);
+
+    # Set the protocol id
+    $self->nd_protocol_id($protocol_id);
+
+    # Return Results
+    $results{'created'} = 1;
+    $results{'nd_protocol_id'} = $protocol_id;
+    return(\%results);
+
 }
 
 

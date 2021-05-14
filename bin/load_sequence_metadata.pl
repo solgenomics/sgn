@@ -16,8 +16,7 @@ in the featureprop_json table.
 
 IMPORTANT:  A sequence metadata protocol must already exist in the nd_protocol table and must have an nd_protocolprop 
 of type 'sequence_metadata_protocol_properties' that include the sequence metadata type and attributes described by 
-the protocol.
-
+the protocol.  If the protocol does not yet exist, you can use the load_sequence_metadata_protocol.pl script to create one.
 
 =head1 COMMAND-LINE OPTIONS
   ARGUMENTS
@@ -30,8 +29,10 @@ the protocol.
  -o output/processed gff file (optional, default=$input.processed)
  -s species name (required)
  -w flag to skip verification warnings about missing/undefined attributes (optional, default=prompt user on warnings)
+
 =head1 AUTHOR
     David Waring <djw64@cornell.edu>
+
 =cut
 
 use strict;

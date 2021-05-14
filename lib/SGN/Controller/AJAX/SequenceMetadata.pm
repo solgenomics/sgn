@@ -359,6 +359,9 @@ sub sequence_metadata_store_POST : Args(0) {
         $c->stash->{rest} = {error => 'The path to the previously processed and verified file must be defined!'};
         $c->detach();
     }
+
+    # SMD Object for creating new protocol and storing data
+    my $smd;
     
     # Create new protocol, if requested
     if ( $c->req->param('use_existing_protocol') eq 'false' ) {
@@ -390,20 +393,14 @@ sub sequence_metadata_store_POST : Args(0) {
             $c->detach();
         }
 
+        # Check validity of sequence metadata type id (exists as cvterm)
         my $sequence_metadata_type_cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $protocol_sequence_metadata_type_id });
         if ( !defined $sequence_metadata_type_cvterm ) {
             $c->stash->{rest} = {error => 'Could not find matching CVTerm for sequence metadata type!'};
             $c->detach();
         }
 
-        my %sequence_metadata_protocol_props = (
-            sequence_metadata_type_id => $protocol_sequence_metadata_type_id,
-            sequence_metadata_type => $sequence_metadata_type_cvterm->name(),
-            reference_genome => $protocol_reference_genome
-        );
-        if ( defined $protocol_score_description && $protocol_score_description ne '' ) {
-            $sequence_metadata_protocol_props{'score_description'} = $protocol_score_description;
-        }
+        # Parse attributes
         my %attributes = ();
         if ( defined $protocol_attribute_count && $protocol_attribute_count ne '' ) {
             for ( my $i = 1; $i <= $protocol_attribute_count; $i++ ){
@@ -414,20 +411,21 @@ sub sequence_metadata_store_POST : Args(0) {
                 }
             }
         }
-        $sequence_metadata_protocol_props{'attribute_descriptions'} = \%attributes;
-        
-        my $sequence_metadata_protocol_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol', 'protocol_type')->cvterm_id();
-        my $sequence_metadata_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol_properties', 'protocol_property')->cvterm_id();
-        my $protocol = $schema->resultset('NaturalDiversity::NdProtocol')->create({
-            name => $protocol_name,
-            type_id => $sequence_metadata_protocol_type_id,
-            nd_protocolprops => [{type_id => $sequence_metadata_protocol_prop_cvterm_id, value => encode_json \%sequence_metadata_protocol_props}]
-        });
-        $protocol_id = $protocol->nd_protocol_id();
-        
-        my $sql = "UPDATE nd_protocol SET description=? WHERE nd_protocol_id=?;";
-        my $sth = $dbh->prepare($sql);
-        $sth->execute($protocol_description, $protocol_id);
+
+        # Create the Sequence Metadata protocol
+        $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $protocol_sequence_metadata_type_id);
+        my %protocol_args = (
+            protocol_name => $protocol_name,
+            protocol_description => $protocol_description,
+            reference_genome => $protocol_reference_genome,
+            score_description => $protocol_score_description,
+            attributes => \%attributes
+        );
+        my $protocol_results = $smd->create_protocol(\%protocol_args);
+        if ( $protocol_results->{'error'} ) {
+            $c->stash->{rest} = {error => 'Could not create sequence metadata protocol: ' . $protocol_results->{'error'}};
+            $c->detach();
+        }
 
         $type_id = $protocol_sequence_metadata_type_id;
         $species = $protocol_species;
@@ -447,6 +445,9 @@ sub sequence_metadata_store_POST : Args(0) {
             $c->detach();
         }
 
+        # Create SMD with existing protocol id
+        $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $type_id, nd_protocol_id => $protocol_id);
+
         # Get species from the features of the protocol
         my $q = "SELECT DISTINCT(CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), ''))) AS species
                 FROM public.feature 
@@ -461,7 +462,6 @@ sub sequence_metadata_store_POST : Args(0) {
 
 
     # Run the store script
-    my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $type_id, nd_protocol_id => $protocol_id);
     my $store_results = $smd->store($processed_filepath, $species);
     
 
