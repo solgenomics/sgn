@@ -395,6 +395,7 @@ jQuery(document).ready(function() {
             { title: "End", data: "end" },
             { title: "Score", data: "score" },
             { title: "Attributes", data: "attributes", render: renderAttributesColumn },
+            { title: "External&nbsp;Links", data: "links", render: renderLinksColumn },
             { title: "Markers", data: renderMarkersColumn }
         ],
         order: [[ 2, "asc" ]],
@@ -1227,7 +1228,7 @@ function renderAttributesColumn(data, type, row) {
         keys.sort();
         for ( var i=0; i<keys.length; ++i ) {
             let key = keys[i];
-            let value = data[keys[i]];
+            let value = data[key];
             if ( type === 'export' ) {
                 rtn.push(key + '=' + value);
             }
@@ -1239,6 +1240,32 @@ function renderAttributesColumn(data, type, row) {
     return rtn.join(sep);
 } 
 
+/**
+ * Render the Links column
+ * @param data The column's data for the current row
+ * @param {String} type The display type
+ * @param {Object} row The current row's data
+ * @returns {String} The text/html to display in the table
+ */
+function renderLinksColumn(data, type, row) {
+    let rtn = [];
+    let sep = type === 'export' ? ';' : '<br /><br />';
+    if ( data ) {
+        var titles = Object.keys(data);
+        titles.sort();
+        for ( var i=0; i<titles.length; i++ ) {
+            let title = titles[i];
+            let url = data[title];
+            if ( type === 'export' ) {
+                rtn.push(title + '=' + url);
+            }
+            else {
+                rtn.push("<a href='" + url + "' target='_blank'>" + title + "</a>");
+            }
+        }
+    }
+    return rtn.join(sep);
+}
 
 
 //

@@ -21,6 +21,9 @@ metadata protocol props in the nd_protocolprop table.
  -s score description (optional)
  -a attribute names and descriptions (optional)
     Example: "ID=marker name,Locus=gene name,pvalue=p value"
+ -l external link definitions (optional)
+    Example: "JBrowse=https://wheat.pw.usda.gov/jb/?data=/ggds/whe-iwgsc2018&loc={{Locus}},Knetminer=https://knetminer.rothamsted.ac.uk/wheatknet/genepage?keyword={{Trait}}&list={{Locus}}"
+
 =head1 AUTHOR
     David Waring <djw64@cornell.edu>
 
@@ -36,8 +39,8 @@ use CXGN::Genotype::SequenceMetadata;
 
 
 # Read CLI Options
-our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_t, $opt_n, $opt_d, $opt_r, $opt_s, $opt_a);
-getopts('H:D:U:P:t:n:d:r:s:a:');
+our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_t, $opt_n, $opt_d, $opt_r, $opt_s, $opt_a, $opt_l);
+getopts('H:D:U:P:t:n:d:r:s:a:l:');
 
 
 # Check for required arguments
@@ -83,6 +86,18 @@ if ( defined $opt_a && $opt_a ne '' ) {
     }
 }
 
+# Parse links
+my %links = ();
+if ( defined $opt_l && $opt_l ne '' ) {
+    my @ls = split(',', $opt_l);
+    foreach my $l (@ls) {
+        my @vs = split('=', $l);
+        my $t = $vs[0];
+        my $u = $vs[1];
+        $links{$t} = $u;
+    }
+}
+
 # Create Protocol
 my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $opt_t);
 my %args = (
@@ -90,7 +105,8 @@ my %args = (
     protocol_description => $opt_d,
     reference_genome => $opt_r,
     score_description => $opt_s,
-    attributes => \%attributes
+    attributes => \%attributes,
+    links => \%links
 );
 my $results = $smd->create_protocol(\%args);
 

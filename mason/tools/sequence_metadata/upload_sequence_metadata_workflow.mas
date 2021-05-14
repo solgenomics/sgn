@@ -130,6 +130,8 @@
                       </div>
                     </div>
 
+                    <br /><br />
+
                     <!-- Attribute Descriptions -->
                     <h3>Attribute Descriptions</h3>
 
@@ -168,6 +170,46 @@
                         <tr>
                           <th>Key</th>
                           <th>Description</th>
+                          <th></th>
+                        </tr>
+                      </table>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- External Link Templates -->
+                    <h3>External Links</h3>
+
+                    <p><strong>Add templates for generating external links displayed with the sequence metadata results.</strong></p>
+                    <p>External links are defined using templates that can include the feature/chrom name, start and/or end position, and/or any attribute value 
+                    as a variable in the URL.  The variable will be replaced with the value for each sequence metadata result and displayed in the query results table.  The variable in the URL takes the form of: <code>{{variable}}</code> where <code>variable</code> can be: <code>feature</code>, <code>start</code>,
+                    <code>end</code> or the key of any attribute defined by the sequence metadata protocol.</p>
+                    <p>Example: <code>https://wheat.pw.usda.gov/jb/?data=/ggds/whe-iwgsc2018&loc={{Locus}}&highlight={{feature}}:{{start}}..{{end}}</code></p>
+
+                    <div class="form-group">
+                      <label class="col-sm-3 control-label">Link Title: </label>
+                      <div class="col-sm-9">
+                        <input class="form-control" id="sequence_metadata_upload_new_link_title" type="text" placeholder="Enter external link title">
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="col-sm-3 control-label">Link URL Template: </label>
+                      <div class="col-sm-9">
+                        <input class="form-control" id="sequence_metadata_upload_new_link_url" type="text" placeholder="Enter external link URL template">
+                      </div>
+                    </div>
+
+                    <div class="form-group center">
+                      <button class="btn btn-info" id="sequence_metadata_upload_new_link_submit">Save Link</button>
+                    </div>
+
+                    <div>
+                      <p><strong>Saved Links:</strong></p>
+                      <table id="sequence_metadata_upload_new_links_table" class="table table-striped table-hover">
+                        <tr>
+                          <th>Title</th>
+                          <th>URL</th>
                           <th></th>
                         </tr>
                       </table>
@@ -247,6 +289,7 @@
 var sequence_metadata_data_types = [];                // List of sequence metadata type properties (pulled from the database)
 var sequence_metadata_upload_type_id = undefined;     // Selected sequence metadata type id
 var new_attribute_count = 0;                          // Count of (max) number of attribute keys/descriptions added
+var new_link_count = 0;                               // Count of (max) number of external links added
 var use_existing_protocol = undefined;                // Flag set to true if user has selected an existing protocol
 var new_protocol_name = undefined;                    // Name of new protocol
 var new_protocol_description = undefined;             // Description of new protocol
@@ -270,6 +313,9 @@ jQuery(document).ready(function() {
 
     // Save a new attribute description
     jQuery('#sequence_metadata_upload_new_attribute_submit').click(save_attribute_description);
+
+    // Save a new external link definition
+    jQuery('#sequence_metadata_upload_new_link_submit').click(save_link_definition);
 
     // Upload and Verify File
     jQuery('#sequence_metadata_upload_verify').click(upload_and_verify); 
@@ -590,6 +636,11 @@ function store() {
       formData.append('new_protocol_attribute_key_' + i, jQuery('#sequence_metadata_upload_attribute_key_' + i).val());
       formData.append('new_protocol_attribute_description_' + i, jQuery('#sequence_metadata_upload_attribute_description_' + i).val());
     }
+    formData.append('new_protocol_link_count', new_link_count);
+    for ( let i = 1; i <= new_link_count; i++ ) {
+      formData.append('new_protocol_link_title_' + i, jQuery('#sequence_metadata_upload_link_title_' + i).val());
+      formData.append('new_protocol_link_url_' + i, jQuery('#sequence_metadata_upload_link_url_' + i).val());
+    }
   }
 
   // Make the POST request
@@ -685,6 +736,42 @@ function save_attribute_description() {
   jQuery('#sequence_metadata_upload_new_attributes_table_remove_' + new_attribute_count).click(function() {
     let row = jQuery(this).attr('data-row');
     jQuery('#sequence_metadata_upload_new_attributes_table_row_' + row).remove();
+  });
+
+  return false;
+}
+
+/**
+ * Save external link title and url definition
+ * - Get user inputs
+ * - Add title and url to table (along with hidden inputs used by the form)
+ */
+function save_link_definition() {
+  new_link_count++;
+
+  let title = jQuery('#sequence_metadata_upload_new_link_title').val();
+  let url = jQuery('#sequence_metadata_upload_new_link_url').val();
+  if ( !title || title === "" ) {
+    alert("A link title is required!");
+    return false;
+  }
+  if ( !url || url === "" ) {
+    alert("A link url is required!");
+    return false;
+  }
+
+  let html = "<tr id='sequence_metadata_upload_new_links_table_row_" + new_link_count + "'>";
+  html += "<td>" + title + "<input type='hidden' name='sequence_metadata_upload_link_title" + new_link_count + "' id='sequence_metadata_upload_link_title_" + new_link_count + "' value='" + title + "'></td>";
+  html += "<td>" + url + "<input type='hidden' name='sequence_metadata_upload_link_url_" + new_link_count + "' id='sequence_metadata_upload_link_url_" + new_link_count + "' value='" + url + "'</td>";
+  html += "<td style='text-align: right'><button id='sequence_metadata_upload_new_links_table_remove_" + new_link_count + "' data-row='" + new_link_count + "' class='btn btn-danger btn-xs'><span class='glyphicon glyphicon-remove'></span></button></td>";
+  html += "</tr>";
+
+  jQuery('#sequence_metadata_upload_new_link_title').val("");
+  jQuery('#sequence_metadata_upload_new_link_url').val("");
+  jQuery('#sequence_metadata_upload_new_links_table').append(html);
+  jQuery('#sequence_metadata_upload_new_links_table_remove_' + new_link_count).click(function() {
+    let row = jQuery(this).attr('data-row');
+    jQuery('#sequence_metadata_upload_new_links_table_row_' + row).remove();
   });
 
   return false;

@@ -322,6 +322,9 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
 #   - new_protocol_attribute_count = max number of attributes to read (some may be missing if an attribute was removed)
 #   - new_protocol_attribute_key_{n} = key name of nth attribute
 #   - new_protocol_attribute_description_{n} = description of nth attribute
+#   - new_protocol_link_count = max number of links to read (some may be missing if a link was removed)
+#   - new_protocol_link_title_{n} = title of nth external link
+#   - new_protocol_link_url_{n} = URL template of nth external link
 # RETURNS:
 #   - error: error message
 #   - results: store results
@@ -372,6 +375,7 @@ sub sequence_metadata_store_POST : Args(0) {
         my $protocol_species = $c->req->param('new_protocol_species');
         my $protocol_score_description = $c->req->param('new_protocol_score_description');
         my $protocol_attribute_count = $c->req->param('new_protocol_attribute_count');
+        my $protocol_link_count = $c->req->param('new_protocol_link_count');
         if ( !defined $protocol_name || $protocol_name eq '' ) {
             $c->stash->{rest} = {error => 'The new protocol name must be defined!'};
             $c->detach();
@@ -412,6 +416,19 @@ sub sequence_metadata_store_POST : Args(0) {
             }
         }
 
+        # Parse links
+        my %links = ();
+        if ( defined $protocol_link_count && $protocol_link_count ne '' ) {
+            for ( my $i = 1; $i <= $protocol_link_count; $i++ ) {
+                my $link_title = $c->req->param('new_protocol_link_title_' . $i);
+                my $link_url = $c->req->param('new_protocol_link_url_' . $i);
+                if ( defined $link_title && $link_title ne '' && $link_title ne 'undefined' && 
+                        defined $link_url && $link_url ne '' && $link_url ne 'undefined' ) {
+                    $links{$link_title} = $link_url;
+                }
+            }
+        }
+
         # Create the Sequence Metadata protocol
         $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema, type_id => $protocol_sequence_metadata_type_id);
         my %protocol_args = (
@@ -419,7 +436,8 @@ sub sequence_metadata_store_POST : Args(0) {
             protocol_description => $protocol_description,
             reference_genome => $protocol_reference_genome,
             score_description => $protocol_score_description,
-            attributes => \%attributes
+            attributes => \%attributes,
+            links => \%links
         );
         my $protocol_results = $smd->create_protocol(\%protocol_args);
         if ( $protocol_results->{'error'} ) {
@@ -507,6 +525,7 @@ sub sequence_metadata_store_POST : Args(0) {
 #   - end = end position of sequence metadata
 #   - score = primary score value of sequence metadata
 #   - attributes = hash of secondary key/value attributes
+#   - links = hash of external link titles and URLs
 #
 sub sequence_metadata_query : Path('/ajax/sequence_metadata/query') : ActionClass('REST') { }
 sub sequence_metadata_query_GET : Args(0) {

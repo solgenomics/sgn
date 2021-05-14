@@ -244,13 +244,13 @@ sub verify {
 #
 # Create a new Sequence Metadata Protocol with the specified properties
 #
-# Arguments:
-# - args: A hashref with the following keys:
-#       - protocol_name = the name of the sequence metadata protocol
-#       - protocol_description = the description of the sequence metadata protocol
-#       - reference_genome = the name of the reference genome used by the sequence metadata positions
-#       - score_description = (optional) the description of the store value
-#       - attributes = (optional) a hashref of attributes (keys) and their descriptions (values)
+# Arguments: as a hash with the following keys:
+# - protocol_name = the name of the sequence metadata protocol
+# - protocol_description = the description of the sequence metadata protocol
+# - reference_genome = the name of the reference genome used by the sequence metadata positions
+# - score_description = (optional) the description of the store value
+# - attributes = (optional) a hashref of attributes (keys) and their descriptions (values)
+# - links = (optional) a hashref of external links (keys = title, values = URL template)
 # 
 # Returns a hash with the following keys:
 # - error: error message
@@ -265,6 +265,7 @@ sub create_protocol {
     my $reference_genome = $args->{'reference_genome'};
     my $score_description = $args->{'score_description'};
     my $attributes = $args->{'attributes'};
+    my $links = $args->{'links'};
 
     # Protocol Results
     my %results = (
@@ -306,6 +307,9 @@ sub create_protocol {
     }
     if ( defined $attributes ) {
         $sequence_metadata_protocol_props{'attribute_descriptions'} = $attributes;
+    }
+    if ( defined $links ) {
+        $sequence_metadata_protocol_props{'links'} = $links;
     }
     
     # Create Protocol with props
@@ -548,6 +552,7 @@ sub _write_chunk() {
 #       - end = end position of sequence metadata
 #       - score = primary score value of sequence metadata
 #       - attributes = hash of secondary key/value attributes
+#       - links = hash of external link titles and URLs
 #
 sub query {
     my ($self, $args) = @_;
@@ -564,10 +569,6 @@ sub query {
 
     my $schema = $self->bcs_schema;
     my $dbh = $schema->storage->dbh();
-
-    print STDERR "DBH Parameters:\n";
-    use Data::Dumper;
-    print STDERR $dbh->{Name} . "\n";
 
     my %results = (
         results => ()
@@ -620,7 +621,10 @@ sub query {
     }
 
     # Check if nd_protocol_id exists and is valid type
+    my %external_links = ();
     foreach my $nd_protocol_id (@$nd_protocol_ids) {
+        
+        # Get for existing sequence metadata protocol
         my $protocol_cv_rs = $schema->resultset('Cv::Cv')->find({ name => "protocol_type" });
         my $protocol_cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ name => "sequence_metadata_protocol", cv_id => $protocol_cv_rs->cv_id() });
         my $protocol_rs = $schema->resultset("NaturalDiversity::NdProtocol")->find({ nd_protocol_id => $nd_protocol_id, type_id => $protocol_cvterm_rs->cvterm_id() });
@@ -628,6 +632,13 @@ sub query {
             $results{'error'} = "Could not find matching nd_protocol [$nd_protocol_id]!";
             return(\%results);
         }
+
+        # Get protocol-defined external links
+        my $protocol_type_cv_rs = $schema->resultset('Cv::Cv')->find({ name => "protocol_property" });
+        my $protocol_type_cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ name => "sequence_metadata_protocol_properties", cv_id => $protocol_type_cv_rs->cv_id() });
+        my $protocol_props = decode_json $schema->resultset('NaturalDiversity::NdProtocolprop')->search({ nd_protocol_id => $nd_protocol_id, type_id => $protocol_type_cvterm_rs->cvterm_id() })->first->value;
+        my $links = $protocol_props->{links};
+        $external_links{$nd_protocol_id} = $links;
     }
 
     # Build the base query conditions
@@ -746,6 +757,51 @@ OR ((s->>'start')::int < ? AND (s->>'end')::int > ?)
         delete $attributes->{start};
         delete $attributes->{end};
 
+        # Build Links, if provided and variables are defined
+        my %links = ();
+        my $defs = $external_links{$nd_protocol_id};
+        if ( defined $defs ) {
+            foreach my $title (keys %$defs) {
+                my $template = $defs->{$title};
+                my @variables = $template =~ /{{([^}]*)}}/g;
+
+                # Get values for replacement
+                my $skip = 0;       # flag to skip link if one or more variables are undefined for this match
+                my %values = ();    # hash of variables and values to replace in the link
+                foreach my $variable (@variables) {
+                    if ( $variable eq 'feature' ) {
+                        $values{'feature'} = $feature_name;
+                    }
+                    elsif ( $variable eq 'start' ) {
+                        $values{'start'} = $start;
+                    }
+                    elsif ( $variable eq 'end' ) {
+                        $values{'end'} = $end;
+                    }
+                    else {
+                        my $value = $attributes->{$variable};
+                        if ( defined $value && $value ne '' ) {
+                            $values{$variable} = $value;
+                        }
+                        else {
+                            $skip = 1;
+                        }
+                    }
+                }
+
+                # Build link, replace variables with values
+                if ( !$skip ) {
+                    my $link = $template;
+                    foreach my $k (keys %values) {
+                        my $v = $values{$k};
+                        my $f = "{{$k}}";
+                        $link =~ s/$f/$v/g;
+                    }
+                    $links{$title} = $link;
+                }
+            }
+        }
+
         my %match = (
             featureprop_json_id => $featureprop_json_id,
             feature_id => $feature_id,
@@ -757,7 +813,8 @@ OR ((s->>'start')::int < ? AND (s->>'end')::int > ?)
             score => $score ne '' ? $score += 0 : '',
             start => $start += 0,
             end => $end += 0,
-            attributes => $attributes
+            attributes => $attributes,
+            links => \%links
         );
         push(@matches, \%match);
     }
