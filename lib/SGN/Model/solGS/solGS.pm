@@ -61,9 +61,10 @@ sub ACCEPT_CONTEXT {
 sub search_trait {
     my ($self, $trait) = @_;
 
-    my $q = "SELECT name FROM all_gs_traits
-                    WHERE name ilike ?
-                    ORDER BY name";
+    my $q = "SELECT distinct(cvterm.name) FROM materialized_phenoview me
+                    JOIN cvterm ON cvterm.cvterm_id = me.trait_id
+                    WHERE cvterm.name ilike ?
+                    ORDER BY cvterm.name";
 
     my $sth = $self->context->dbc->dbh->prepare($q);
 
@@ -71,14 +72,38 @@ sub search_trait {
 
     my @traits;
 
-    while ( my $trait  = $sth->fetchrow_array())
+    while ( my $tr = $sth->fetchrow_array())
     {
-	push @traits, $trait;
+        print STDERR "\ntrait: $trait - tr: $tr\n";
+	push @traits, $tr;
     }
 
     return \@traits;
 
 }
+
+
+# sub search_trait {
+#     my ($self, $trait) = @_;
+#
+#     my $q = "SELECT name FROM all_gs_traits
+#                     WHERE name ilike ?
+#                     ORDER BY name";
+#
+#     my $sth = $self->context->dbc->dbh->prepare($q);
+#
+#     $sth->execute("%$trait%");
+#
+#     my @traits;
+#
+#     while ( my $trait  = $sth->fetchrow_array())
+#     {
+# 	push @traits, $trait;
+#     }
+#
+#     return \@traits;
+#
+# }
 
 
 sub trait_details {
@@ -100,9 +125,12 @@ sub trait_details {
 sub all_gs_traits {
     my $self = shift;
 
-    my $q = "SELECT cvterm_id, name
-                    FROM all_gs_traits
-                    ORDER BY name";
+    # my $q = "SELECT cvterm_id, name
+    #                 FROM all_gs_traits
+    #                 ORDER BY name";
+    my $q = "SELECT distinct(cvterm.name), cvterm_id FROM materialized_phenoview me
+                                    JOIN cvterm ON cvterm_id = me.trait_id
+                                    ORDER BY cvterm.name";
 
     my $sth = $self->context->dbc->dbh->prepare($q);
 
@@ -110,9 +138,9 @@ sub all_gs_traits {
 
     my @traits;
 
-    while ( my ($cvterm_id, $cvterm) = $sth->fetchrow_array())
+    while ( my ($cvterm, $cvterm_id) = $sth->fetchrow_array())
     {
-	push @traits, $cvterm;
+	    push @traits, $cvterm;
     }
 
     return \@traits;
@@ -195,7 +223,7 @@ sub search_trait_trials {
     my $protocol = $protocol_detail->{name};
 
     my $q = "SELECT distinct(trial_id)
-                 FROM traitsXtrials
+                 FROM materialized_phenoview
                  JOIN genotyping_protocolsXtrials USING (trial_id)
                  JOIN genotyping_protocols USING (genotyping_protocol_id)
 		 WHERE genotyping_protocols.genotyping_protocol_name ILIKE ?
@@ -226,7 +254,7 @@ sub search_populations {
         ->search_related('nd_experiment')
         ->search_related('nd_experiment_stocks')
         ->search_related('stock')
-	->search_related('nd_experiment_stocks')
+	    ->search_related('nd_experiment_stocks')
         ->search_related('nd_experiment')
         ->search_related('nd_experiment_projects')
         ->search_related('project',
@@ -355,18 +383,22 @@ sub has_phenotype {
     my ($self, $pr_id) = @_;
 
     my $has_phenotype;
+
     if ($pr_id)
     {
-	my $q = "SELECT trait_id
-                 FROM traitsXtrials
-                 WHERE trial_id = ?";
+    	my $q = "SELECT distinct(trait_id)
+                     FROM materialized_phenoview
+                     WHERE trial_id = ?
+                     AND trait_id IS NOT NULL";
 
-	my $sth = $self->context->dbc->dbh->prepare($q);
+    	my $sth = $self->context->dbc->dbh->prepare($q);
+    	$sth->execute($pr_id);
 
-	$sth->execute($pr_id);
-
-	$has_phenotype  = $sth->fetchrow_array();
-    }
+	   while ($has_phenotype  = $sth->fetchrow_array())
+       {
+          last if $has_phenotype;
+       }
+   }
 
     return $has_phenotype;
 
@@ -386,7 +418,6 @@ sub has_genotype {
                  AND genotyping_protocols.genotyping_protocol_name ILIKE ?";
 
     my $sth = $self->context->dbc->dbh->prepare($q);
-
     $sth->execute($pr_id, $protocol_name);
 
     ($protocol_name, $protocol_id)  = $sth->fetchrow_array();

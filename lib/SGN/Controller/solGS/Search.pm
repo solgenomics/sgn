@@ -64,7 +64,7 @@ sub solgs_login_message :Path('/solgs/login/message') Args(0) {
 sub search : Path('/solgs/search') Args() {
     my ($self, $c) = @_;
 
-    $self->gs_traits_index($c);
+    # $self->gs_traits_index($c);
     # my $gs_traits_index = $c->stash->{gs_traits_index};
 
     $c->stash(template => $c->controller('solGS::Files')->template('/search/solgs.mas'),
@@ -191,7 +191,7 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
     $self->hyperlink_traits($c, $trait);
     my $trait_url = $c->stash->{traits_urls};
 
-    $self->get_trait_details($c, $trait);
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait);
     push @traits_list, [$trait_url, $c->stash->{trait_def}];
     }
 
@@ -339,7 +339,6 @@ sub search_selection_pops :Path('/solgs/search/selection/populations/') {
 sub check_selection_population_relevance :Path('/solgs/check/selection/population/relevance') Args() {
     my ($self, $c) = @_;
 
-    #my $data_set_type      = $c->req->param('data_set_type');
     my $training_pop_id    = $c->req->param('training_pop_id');
     my $selection_pop_name = $c->req->param('selection_pop_name');
     my $trait_id           = $c->req->param('trait_id');
@@ -364,53 +363,50 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     }
 
     my $ret = {};
-
+    my $similarity = 0;
     if ($selection_pop_id !~ /$training_pop_id/)
     {
-	my $has_genotype;
-	if ($selection_pop_id)
-	{
-	    $c->stash->{pop_id} = $selection_pop_id;
-	    $c->stash->{selection_pop_id} = $selection_pop_id;
-	    $has_genotype = $self->check_population_has_genotype($c);
-	}
+	    my $has_genotype;
+    	if ($selection_pop_id)
+    	{
+    	    $has_genotype = $self->check_population_has_genotype($c, $selection_pop_id, $protocol_id);
+    	}
 
-	my $similarity;
-	if ($has_genotype)
-	{
-	    $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
-	    my $selection_geno_file = $c->stash->{genotype_file_name};
-
-	    if (!-s $selection_geno_file)
-	    {
-			$c->controller('solGS::solGS')->first_stock_genotype_data($c, $selection_pop_id, $protocol_id);
-
-			$c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $protocol_id);
-			$selection_geno_file = $c->stash->{first_stock_genotype_file};
-	    }
+    	if ($has_genotype)
+    	{
+	    # $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
+	    # my $selection_geno_file = $c->stash->{genotype_file_name};
+        #
+	    # if (!-s $selection_geno_file)
+	    # {
+		# 	# $c->controller('solGS::solGS')->first_stock_genotype_data($c, $selection_pop_id, $protocol_id);
+        #
+		# 	$c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $protocol_id);
+		# 	$selection_geno_file = $c->stash->{first_stock_genotype_file};
+	    # }
 
 	    # $c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $protocol_id);
 	    # my $selection_geno_file = $c->stash->{first_stock_genotype_file};
 
-	    $c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
-	    my $training_geno_file = $c->stash->{genotype_file_name};
+	    # $c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
+	    # my $training_geno_file = $c->stash->{genotype_file_name};
 
-	    $similarity = $self->compare_marker_set_similarity([$selection_geno_file, $training_geno_file]);
-	}
+	    $similarity = 1;  #$self->compare_marker_set_similarity([$selection_geno_file, $training_geno_file]);
+	   }
 
-	my $selection_pop_data;
-	unless ($similarity < 0.5 )
-	{
-	    $c->stash->{training_pop_id} = $training_pop_id;
-	    $self->format_selection_pops($c, [$selection_pop_id]);
-	    $selection_pop_data = $c->stash->{selection_pops_list};
-	    $self->save_selection_pops($c, [$selection_pop_id]);
-	}
+    	my $selection_pop_data;
+    	unless ($similarity < 0.5 )
+    	{
+    	    $c->stash->{training_pop_id} = $training_pop_id;
+    	    $self->format_selection_pops($c, [$selection_pop_id]);
+    	    $selection_pop_data = $c->stash->{selection_pops_list};
+    	    $self->save_selection_pops($c, [$selection_pop_id]);
+    	}
 
-	$ret->{selection_pop_data} = $selection_pop_data;
-	$ret->{similarity}         = $similarity;
-	$ret->{has_genotype}       = $has_genotype;
-	$ret->{selection_pop_id}   = $selection_pop_id;
+    	$ret->{selection_pop_data} = $selection_pop_data;
+    	$ret->{similarity}         = $similarity;
+    	$ret->{has_genotype}       = $has_genotype;
+    	$ret->{selection_pop_id}   = $selection_pop_id;
     }
     else
     {
@@ -730,23 +726,16 @@ sub check_population_is_training_population {
     $c->stash->{pop_id} = $pop_id;
     $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
 
-    my $is_gs = $c->model("solGS::solGS")->get_project_type($pop_id);
+    my $is_gs;
+    my $has_phenotype = $self->check_population_has_phenotype($c);
 
-    my $has_phenotype;
-    my $has_genotype;
+	if ($has_phenotype)
+	{
+	    my $has_genotype = $self->check_population_has_genotype($c);
+        $is_gs = 1 if $has_genotype;
+	}
 
-    if ($is_gs !~ /genomic selection/)
-    {
-
-        $has_phenotype = $self->check_population_has_phenotype($c);
-
-    	if ($has_phenotype)
-    	{
-    	    $has_genotype = $self->check_population_has_genotype($c);
-    	}
-    }
-
-    if ($is_gs || ($has_phenotype && $has_genotype))
+    if ($is_gs )
     {
 	return 1;
     }
@@ -759,60 +748,51 @@ sub check_population_is_training_population {
 
 
 sub check_population_has_phenotype {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id) = @_;
 
-    my $pr_id = $c->stash->{pop_id};
-    my $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
-    my $has_phenotype = 1 if $is_gs;
+    my $pop_id = $c->stash->{pop_id} if !$pop_id;
 
-    if ($is_gs !~ /genomic selection/)
-    {
-    	$c->controller('solGS::Files')->phenotype_file_name($c, $pr_id);
-    	my $pheno_file = $c->stash->{phenotype_file_name};
+	$c->controller('solGS::Files')->phenotype_file_name($c, $pop_id);
+	my $pheno_file = $c->stash->{phenotype_file_name};
 
-    	if (!-s $pheno_file)
-    	{
-    	    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
-    	}
-        else
-    	{
-    	    $has_phenotype = 1;
-    	}
-    }
+    my $has_phenotype;
+	if (-s $pheno_file)
+	{
+        $has_phenotype = 1;
+	}
+    else
+	{
+        $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pop_id);
+	}
 
     return $has_phenotype;
-    # $c->stash->{population_has_phenotype} = $has_phenotype;
 
 }
 
 
 sub check_population_has_genotype {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id, $protocol_id) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
-    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    $pop_id = $c->stash->{pop_id} if !$pop_id;
+    $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
 
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
     my $geno_file = $c->stash->{genotype_file_name};
 
+    $c->controller('solGS::Files')->first_stock_genotype_file($c, $pop_id, $protocol_id);
+	my $first_stock_file = $c->stash->{first_stock_genotype_file};
+
     my $has_genotype;
 
-    if (-s $geno_file)
+    if (-s $geno_file || -s $first_stock_file)
     {
-	$has_genotype = 1;
+	       $has_genotype = 1;
     }
     else
     {
-	$c->controller('solGS::Files')->first_stock_genotype_file($c, $pop_id, $protocol_id);
-	my $first_stock_file = $c->stash->{first_stock_genotype_file};
-
-	$has_genotype = 1 if -s $first_stock_file;
-    }
-    if (!$has_genotype)
-    {
 		$has_genotype = $c->model('solGS::solGS')->has_genotype($pop_id, $protocol_id);
     }
-    
+
     return $has_genotype;
 
 }
@@ -1141,47 +1121,48 @@ sub traits_starting_with {
 sub all_gs_traits_list {
     my ($self, $c) = @_;
 
-    $self->trial_compatibility_file($c);
-    my $file = $c->stash->{trial_compatibility_file};
+    # $self->trial_compatibility_file($c);
+    # my $file = $c->stash->{trial_compatibility_file};
 
-    my $traits;
-    my $mv_name = 'all_gs_traits';
+    # my $traits;
+    # my $mv_name = 'all_gs_traits';
+    #
+    # my $matview = $c->model('solGS::solGS')->check_matview_exists($mv_name);
+    #
+    # if (!$matview)
+    # {
+    # $c->model('solGS::solGS')->materialized_view_all_gs_traits();
+	# $c->model('solGS::solGS')->insert_matview_public($mv_name);
+    # }
+    # else
+    # {
+	# if (!-s $file)
+	# {
+    # $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
+    # $c->model('solGS::solGS')->update_matview_public($mv_name);
+	# }
+    # }
 
-    my $matview = $c->model('solGS::solGS')->check_matview_exists($mv_name);
-
-    if (!$matview)
-    {
-    $c->model('solGS::solGS')->materialized_view_all_gs_traits();
-	$c->model('solGS::solGS')->insert_matview_public($mv_name);
-    }
-    else
-    {
-	if (!-s $file)
-	{
-    $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
-    $c->model('solGS::solGS')->update_matview_public($mv_name);
-	}
-    }
-
-    try
-    {
-        $traits = $c->model('solGS::solGS')->all_gs_traits();
-    }
-    catch
-    {
-
-	if ($_ =~ /materialized view \"all_gs_traits\" has not been populated/)
-        {
-            try
-            {
-                $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
-                $c->model('solGS::solGS')->update_matview_public($mv_name);
-                $traits = $c->model('solGS::solGS')->all_gs_traits();
-            };
-        }
-    };
+    # try
+    # {
+        my $traits = $c->model('solGS::solGS')->all_gs_traits();
+    # }
+    # catch
+    # {
+    #
+	# if ($_ =~ /materialized view \"all_gs_traits\" has not been populated/)
+    #     {
+    #         try
+    #         {
+    #             $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
+    #             $c->model('solGS::solGS')->update_matview_public($mv_name);
+    #             $traits = $c->model('solGS::solGS')->all_gs_traits();
+    #         };
+    #     }
+    # };
 
     $c->stash->{all_gs_traits} = $traits;
+    return $traits;
 
 }
 
