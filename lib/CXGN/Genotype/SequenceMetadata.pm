@@ -621,10 +621,9 @@ sub query {
     }
 
     # Check if nd_protocol_id exists and is valid type
-    my %external_links = ();
     foreach my $nd_protocol_id (@$nd_protocol_ids) {
         
-        # Get for existing sequence metadata protocol
+        # Check for existing sequence metadata protocol
         my $protocol_cv_rs = $schema->resultset('Cv::Cv')->find({ name => "protocol_type" });
         my $protocol_cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ name => "sequence_metadata_protocol", cv_id => $protocol_cv_rs->cv_id() });
         my $protocol_rs = $schema->resultset("NaturalDiversity::NdProtocol")->find({ nd_protocol_id => $nd_protocol_id, type_id => $protocol_cvterm_rs->cvterm_id() });
@@ -633,11 +632,17 @@ sub query {
             return(\%results);
         }
 
-        # Get protocol-defined external links
-        my $protocol_type_cv_rs = $schema->resultset('Cv::Cv')->find({ name => "protocol_property" });
-        my $protocol_type_cvterm_rs = $schema->resultset('Cv::Cvterm')->find({ name => "sequence_metadata_protocol_properties", cv_id => $protocol_type_cv_rs->cv_id() });
-        my $protocol_props = decode_json $schema->resultset('NaturalDiversity::NdProtocolprop')->search({ nd_protocol_id => $nd_protocol_id, type_id => $protocol_type_cvterm_rs->cvterm_id() })->first->value;
-        my $links = $protocol_props->{links};
+    }
+
+    # Get protocol external link definitions
+    my %external_links = ();
+    my $link_query = "SELECT nd_protocol_id, value->>'links' AS links
+                FROM nd_protocolprop
+                WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'sequence_metadata_protocol_properties');";
+    my $lh = $dbh->prepare($link_query);
+    $lh->execute();
+    while (my ($nd_protocol_id, $link_json) = $lh->fetchrow_array()) {
+        my $links = defined $link_json ? decode_json $link_json : decode_json '{}';
         $external_links{$nd_protocol_id} = $links;
     }
 
@@ -794,7 +799,7 @@ OR ((s->>'start')::int < ? AND (s->>'end')::int > ?)
                     my $link = $template;
                     foreach my $k (keys %values) {
                         my $v = $values{$k};
-                        my $f = "{{$k}}";
+                        my $f = "\\{\\{$k\\}\\}";
                         $link =~ s/$f/$v/g;
                     }
                     $links{$title} = $link;

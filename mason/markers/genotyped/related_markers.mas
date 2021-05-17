@@ -83,7 +83,6 @@ function getRelatedMappedMarkers() {
                 html += "<tbody>";
                 let ms = response.related_mapped_markers;
                 for ( let i = 0; i < ms.length; i++ ) {
-                    console.log(ms[i]);
                     html += "<tr>";
                     html += "<td><strong><a href='/search/markers/markerinfo.pl?marker_id=" + ms[i].marker_id + "'>" + ms[i].marker_name + "</a></strong></td>";
                     html += "<td>" + ms[i].protocol + "</td><td>" + ms[i].species_name + "</td><td>" + ms[i].map_name + "</td>";

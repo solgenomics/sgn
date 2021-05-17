@@ -137,7 +137,7 @@ function renderAttributesColumn(data, type, row) {
         keys.sort();
         for ( var i=0; i<keys.length; ++i ) {
             let key = keys[i];
-            let value = data[keys[i]];
+            let value = data[key];
             if ( type === 'export' ) {
                 rtn.push(key + '=' + value);
             }
@@ -148,6 +148,28 @@ function renderAttributesColumn(data, type, row) {
     }
     return rtn.join(sep);
 }
+
+function renderLinksColumn(data, type, row) {
+    let rtn = [];
+    let sep = type === 'export' ? ';' : '<br /><br />';
+    if ( data ) {
+        var titles = Object.keys(data);
+        titles.sort();
+        for ( var i=0; i<titles.length; i++ ){
+            let title = titles[i];
+            let url = data[title];
+            if ( type === 'export' ) {
+                rtn.push(title + '=' + url);
+            }
+            else {
+                rtn.push("<a href='" + url + "'>" + title + "</a>");
+            }
+        }
+    }
+    return rtn.join(sep);
+}
+
+
 
 </script>
 
@@ -170,6 +192,7 @@ function renderAttributesColumn(data, type, row) {
                     { title: "End", data: "end" },
                     { title: "Score", data: "score" },
                     { title: "Attributes", data: "attributes", render: renderAttributesColumn },
+                    { title: "Links", data: "links", render: renderLinksColumn }
                 ],
                 order: [[ 2, "asc" ]]
             });
