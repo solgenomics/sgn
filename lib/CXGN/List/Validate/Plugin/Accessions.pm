@@ -30,10 +30,10 @@ sub validate {
 	    { uniquename => { '~*' => $item },
 	      'me.type_id' => $accession_type_id,
 	      is_obsolete => 'F' },
-	    { join => 'stockprops',
-	      '+select' => [ 'stockprops.value', 'stockprops.type_id' ] ,
-	      '+as' => [ 'stockprop_value', 'stockprop_type_id' ]
-	    });
+	    #{ join => 'stockprops',
+	    #  '+select' => [ 'stockprops.value', 'stockprops.type_id' ] ,
+	    #  '+as' => [ 'stockprop_value', 'stockprop_type_id' ]
+	    );
 
 	if ($rs->count() == 0) {
 	    push @missing, $item;
