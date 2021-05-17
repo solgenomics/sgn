@@ -12,6 +12,8 @@ Options:
 
  -H the database host
  -D the database name
+ -U username
+ -P password
  -c flag; if present, run concurrent refresh
  -m materialized view select. can be either 'fullview' or 'stockprop' or 'phenotypes'
  -t test mode 
@@ -50,6 +52,21 @@ print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$dbname.";host=".$dbhost.";port=5432";
 my $dbh = DBI->connect($dsn, $username, $password, { RaiseError => 1, AutoCommit=>0 });
 
+my $cur_refreshing_q =  "UPDATE public.matviews SET currently_refreshing=?";
+if ($mode eq 'stockprop'){
+    $cur_refreshing_q .= " WHERE mv_name = 'materialized_stockprop'";
+}
+if ($mode eq 'phenotypes') {
+    $cur_refreshing_q .= " WHERE mv_name = 'materialized_phenotype_jsonb_table'";
+}
+
+#set TRUE before the transaction begins
+my $state = 'TRUE';
+print STDERR "*Setting currently_refreshing = TRUE\n";
+my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
+$cur_refreshing_h->execute($state);
+$dbh->commit();
+
 try {
     print STDERR "Refreshing materialized views . . ." . localtime() . "\n";
     my %matviews; 
@@ -59,10 +76,7 @@ try {
     while (my ($mv_name, $mv_dependents) = $matviews_h->fetchrow_array() ) {
 	$matviews{$mv_name} = $mv_dependents ;
     }
-    
-    my $cur_refreshing_q =  "UPDATE public.matviews SET currently_refreshing=?";
-    my $state = 'TRUE';
-    
+        
     my @mv_names = ();
     
     if ($mode eq 'fullview') {
@@ -71,26 +85,15 @@ try {
 
     } 
     if ($mode eq 'stockprop'){
-	$cur_refreshing_q .= " WHERE mv_name = 'materialized_stockprop'";
 	@mv_names = ('materialized_stockprop');
     }
     if ($mode eq 'phenotypes') {
-	$cur_refreshing_q .= " WHERE mv_name = 'materialized_phenotype_jsonb_table'";
 	@mv_names = ("materialized_phenotype_jsonb_table");
     }    
-
-    print STDERR "*Setting currently_refreshing = TRUE\n";
-    my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
-    $cur_refreshing_h->execute($state);
     
-    my $status = refresh_mvs($dbh, \@mv_names, $concurrent); 
+    my $status = refresh_mvs($dbh, \@mv_names, $concurrent);   
 
-    $state = 'FALSE';
-
-    my $done_h = $dbh->prepare($cur_refreshing_q);
-    print STDERR "*Setting currently_refreshing = FALSE \n";
-    $done_h->execute($state);
-    
+    #rollback if running in test mode
     if ($test) { die ; } 
 }
 
@@ -106,6 +109,12 @@ catch
 	print STDERR "COMMITTING\n";
 	$dbh->commit();
     }
+    #always set the refreshing status to FALSE at the end
+    $state = 'FALSE';
+    my $done_h = $dbh->prepare($cur_refreshing_q);
+    print STDERR "*Setting currently_refreshing = FALSE \n";
+    $done_h->execute($state);
+    $dbh->commit();
 };
 
 sub refresh_mvs {
