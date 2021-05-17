@@ -790,6 +790,18 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
             $html .= "<tr><td>$k</td><td>$v</td></tr>";
         }
         $html .= "</table>";
+
+        my $links = $props->{'links'};
+        if ( defined $links ) {
+            $html .= "<strong>Links:</strong><br />";
+            $html .= "<table class='table table-striped' style='min-width: 300px'>";
+            $html .= "<thead><tr><th>Title</th><th>URL&nbsp;Template</th></tr></thead>";
+            while (my($k,$v) = each %$links) {
+                $html .= "<tr><td>$k</td><td>$v</td></tr>";
+            }
+        }
+        $html .= "</table>";
+
         $html .= '</td></tr>';
 
     }

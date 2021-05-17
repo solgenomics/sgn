@@ -630,6 +630,24 @@ function get_protocols(callback) {
                     t += "</table>";
                     props += t;
 
+                    var links = data.protocols[i].nd_protocol_properties.links;
+                    if ( links ) {
+                        props += "<strong>Links:</strong><br />";
+                        var titles = Object.keys(links);
+                        titles.sort();
+                        let t = "<table class='table' style='background: transparent !important'>";
+                        t += "<thead><tr><th>Title</th><th>URL&nbsp;Template</th></tr></thead>";
+                        t += "<tbody>";
+                        for ( let j = 0; j < titles.length; j++ ) {
+                            let title = titles[j];
+                            let url = data.protocols[i].nd_protocol_properties.links[title];
+                            t += "<tr><td class='col-md-4'><strong>" + title + "</strong></td><td class='col-md-8'>" + url + "</td></tr>";
+                        }
+                        t += "</tbody>";
+                        t += "</table>";
+                        props += t;
+                    }
+
                     info += "<tr>";
                     info += "<td class='col-md-2'>" + data.protocols[i].nd_protocol_name + "</td>";
                     info += "<td class='col-md-5'>" + data.protocols[i].nd_protocol_description + "</td>";

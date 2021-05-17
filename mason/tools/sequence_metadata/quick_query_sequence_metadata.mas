@@ -149,6 +149,13 @@ function renderAttributesColumn(data, type, row) {
     return rtn.join(sep);
 }
 
+/**
+ * Render the Links column
+ * @param data The column's data for the current row
+ * @param {String} type The display type
+ * @param {Object} row The current row's data
+ * @returns {String} The text/html to display in the table
+ */
 function renderLinksColumn(data, type, row) {
     let rtn = [];
     let sep = type === 'export' ? ';' : '<br /><br />';
@@ -168,8 +175,6 @@ function renderLinksColumn(data, type, row) {
     }
     return rtn.join(sep);
 }
-
-
 
 </script>
 
