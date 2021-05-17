@@ -3,6 +3,7 @@ package SGN::Controller::Catalog;
 use Moose;
 use URI::FromHash 'uri';
 use SGN::Model::Cvterm;
+use CXGN::People::Person;
 use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -47,7 +48,6 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     my $organism_id = $stock_catalog_item->organism_id();
     my $organism = $schema->resultset("Organism::Organism")->find({organism_id => $organism_id});
     my $species = $organism->species();
-    my $identifier_prefix = 'SGN';
 
     my $item_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema, parent_id => $item_id});
     my $details_ref = $item_obj->get_item_details();
@@ -58,7 +58,12 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     my $material_source = $item_details[3];
     my $breeding_program = $item_details[4];
     my $availability = $item_details[5];
-    my $comment = $item_details[6];
+    my $contact_person_id = $item_details[6];
+
+    my $dbh = $c->dbc->dbh;
+    my $person = CXGN::People::Person->new($dbh, $contact_person_id);
+    my $contact_person_username = $person->get_username;
+#    print STDERR "CONTACT PERSON NAME=".Dumper($contact_person_username)."\n";
 
     $c->stash->{item_id} = $item_id;
     $c->stash->{item_name} = $item_name;
@@ -69,6 +74,7 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     $c->stash->{material_source} = $material_source;
     $c->stash->{breeding_program} = $breeding_program;
     $c->stash->{availability} = $availability;
+    $c->stash->{contact_person_username} = $contact_person_username;
 
     $c->stash->{template} = '/order/catalog_item_details.mas';
 }
