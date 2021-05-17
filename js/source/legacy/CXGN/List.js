@@ -770,7 +770,7 @@ CXGN.List.prototype = {
                 if (response.error) {
                     alert(response.error);
                 } else {
-		    alert(JSON.stringify(response));
+		    //alert(JSON.stringify(response));
                     missing = response.missing;
 		    wrong_case = response.wrong_case;
 		    multiple_wrong_case = response.multiple_wrong_case;
