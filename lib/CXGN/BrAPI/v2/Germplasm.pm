@@ -782,9 +782,9 @@ sub update {
     my $person = CXGN::People::Person->new($dbh, $user_id);
     my $user_name = $person->get_username;
 
-    my $verify_id = $schema->resultset('Stock::Stock')->find({stock_id=>$germplasm_id});
-    if (!$verify_id) {
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database');
+    my $stock_exists = $schema->resultset('Stock::Stock')->find({stock_id=>$germplasm_id});
+    if (!$stock_exists) {
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database',400);
     }
 
     my $main_production_site_url = $c->config->{main_production_site_url};
@@ -899,6 +899,14 @@ sub update {
                     modification_note => 'Bulk load of accession information'
                 });
                 my $added_stock_id = $stock->store();
+                
+                my $previous_name = $stock_exists->uniquename();
+
+                if($previous_name ne $uniquename){
+                    $stock_exists->uniquename($uniquename);
+                    $stock_exists->update();
+                }
+
                 push @added_stocks, $added_stock_id;
 
                 my $references = CXGN::BrAPI::v2::ExternalReferences->new({
@@ -918,6 +926,7 @@ sub update {
 
     try {
        $schema->txn_do($coderef_bcs);
+
     }
     catch {
         $transaction_error = $_;
