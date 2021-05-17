@@ -8,7 +8,6 @@ $description
 $material_source
 $breeding_program
 $availability
-$identifier_prefix
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
@@ -34,10 +33,12 @@ $identifier_prefix
                 </div>
                 <div class="col-sm-6">
                     <br/><br/>
-                    <& /util/barcode.mas, identifier => "$identifier_prefix"."$item_id", text=> "$identifier_prefix stock $item_id ($item_name)", format=>"stock_qrcode"  &>
+
                     <br/><br/>
                 </div>
             </div>
         </div>
     </div>
 </&>
+
+<& /order/edit_catalog_details_dialog.mas, item_name => $item_name, item_id => $item_id, species => $species, item_type => $item_type, category => $category, description => $description, material_source => $material_source, breeding_program => $breeding_program, availability => $availability  &>

@@ -69,8 +69,6 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     $c->stash->{material_source} = $material_source;
     $c->stash->{breeding_program} = $breeding_program;
     $c->stash->{availability} = $availability;
-    $c->stash->{comment} = $comment;
-    $c->stash->{identifier_prefix} = $identifier_prefix;
 
     $c->stash->{template} = '/order/catalog_item_details.mas';
 }
