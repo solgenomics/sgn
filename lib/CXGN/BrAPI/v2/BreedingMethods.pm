@@ -21,11 +21,11 @@ sub search {
 	my @data_files;
 	my $total_count = 1;
 
-	my $cross_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross_type', 'nd_experiment_property')->cvterm_id();
+	my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
 
-	my $q = "SELECT distinct(value) FROM nd_experimentprop where type_id = ?;";
+	my $q = "SELECT distinct(value) FROM stock_relationship where type_id = ?;";
 	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-	$h->execute($cross_type_cvterm_id);
+	$h->execute($female_parent_cvterm_id);
 
 	while (my ($cross_type) = $h->fetchrow_array()) {
 		push @crosstypes, $cross_type;
