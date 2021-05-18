@@ -1259,6 +1259,9 @@ jQuery(document).ready( function() {
                 if (bottom_border_selection == "yes") {
                     if (left_border_selection == "yes") {
                         lowest_col -= 1;
+                        if (right_border_selection == "no" && top_border_selection == "no") {
+                            highest_col += 1;
+                        }
                     }
                     if (right_border_selection == "yes") {
                         highest_col += 1;
