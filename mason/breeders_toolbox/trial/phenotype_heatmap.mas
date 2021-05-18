@@ -434,14 +434,36 @@ my $image_ids =  $stockref->{image_ids} || [] ;
             <div class="modal-body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="add_border_form" name="add_border_form">
-                        <div class="dropdown">
-                            <label for="border_selection" class="col-sm-4 control-label">Add Border: </label>
-                            <select name="border_selection" id="border_selection">
-                                <option value="default">Select a Side: </option>
-                                <option value="top">Top</option>
-                                <option value="left">Left</option>
-                                <option value="right">Right</option>
-                                <option value="bottom">Bottom</option>
+                        <div class="form-group">
+                            <label for="top_border_selection" class="col-sm-4 control-label">Top Border: </label>
+                            <select name="top_border_selection" id="top_border_selection">
+                                <option value="default"></option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="left_border_selection" class="col-sm-4 control-label">Left Border: </label>
+                            <select name="left_border_selection" id="left_border_selection">
+                                <option value="default"></option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="right_border_selection" class="col-sm-4 control-label">Right Border: </label>
+                            <select name="right_border_selection" id="right_border_selection">
+                                <option value="default"></option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="bottom_border_selection" class="col-sm-4 control-label">Bottom Border: </label>
+                            <select name="bottom_border_selection" id="bottom_border_selection">
+                                <option value="default"></option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
                             </select>
                         </div> 
                     </form>
@@ -449,7 +471,7 @@ my $image_ids =  $stockref->{image_ids} || [] ;
             </div>
             <div class="modal-footer">
                 <button id="view_border_selection_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button id="submit_border_selection" type="button" class="btn btn-primary">Add Border</button>
+                <button id="submit_border_selection" type="button" class="btn btn-primary">Add Border(s)</button>
             </div>
         </div>
     </div>
@@ -462,10 +484,10 @@ var selected;
 var trialStudyDesign;
 var phenotypes_id = [];
 var ctrlFuncDataset;
-var top_border = false;
-var left_border = false;
-var right_border = false;
-var bottom_border = false;
+var top_border_selection;
+var left_border_selection;
+var right_border_selection;
+var bottom_border_selection;
 
 jQuery(document).ready( function() {
 
@@ -872,8 +894,8 @@ jQuery(document).ready( function() {
                 var design;
                 var plotImageDbIds = [];
                 var plant_names = [];
-                var lowest_row = 0;
-                var lowest_col = 0;
+                var lowest_row = 1000;
+                var lowest_col = 1000;
                 var highest_row = 0;
                 var highest_col = 0;
 
@@ -1008,8 +1030,8 @@ jQuery(document).ready( function() {
                 }
                 else if (design == 'splitplot'){
                     var s = replicates[i];
-                    psudo_rows.push(s);
                 }
+                    psudo_rows.push(s);
             }
         }
 
@@ -1137,8 +1159,8 @@ jQuery(document).ready( function() {
             jQuery("#trait_heatmap").css("display", "none");
 
             var margin = { top: 50, right: 0, bottom: 100, left: 30 },
-                width = 50 * (col_max + 2) + 30 - margin.left - margin.right,
-                height = 50 * (row_max + 2) + 100 - margin.top - margin.bottom,
+                width = 50 * (col_max + 3) + 30 - margin.left - margin.right,
+                height = 50 * (row_max + 3) + 100 - margin.top - margin.bottom,
                 gridSize = 50,
                 legendElementWidth = gridSize*2,
                 buckets = 9,
@@ -1181,28 +1203,72 @@ jQuery(document).ready( function() {
                     d.blkn = +d.blkn;   
                 });
 
-                if (top_border) {
+                lowest_col = parseInt(lowest_col);
+                highest_col = parseInt(highest_col);
+                lowest_row = parseInt(lowest_row);
+                highest_row = parseInt(highest_row);
+
+                if (top_border_selection == "yes") {
                     datasets.forEach(function(d) { 
-                        d.row += 1;
-                    })
+                        if (d.stock != "border_accession") {
+                            d.row += 1;
+                        }
+                    });
+                    if (left_border_selection == "yes") {
+                        highest_col += 1;
+                    }
                     for (let i = lowest_col; i <= highest_col; i++) {
                         datasets.push({plotname:plot_names[i] + "_top_border", plot_id:plot_ids[i] + plot_ids[i], stock:'border_accession',
-                        blkn:blocks[i], row:rows[lowest_row - 1], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp})
+                        blkn:blocks[i], row:lowest_row, plot_image_ids:plotImageDbIds[lowest_col], col:i, plot_msg:plot_popUp});
                     }
+                    highest_row += 1;
+
                     modifiedRowLabels = svg.selectAll(".rowLabel");
                     modifiedRowLabels.attr("y", function(d, i) { return (i+1) * gridSize; });
                 }
-                if (left_border) {
-                    datasets.forEach(function(d) { 
-                    d.col += 1;
-                    })
+                if (left_border_selection == "yes") {
+                    datasets.forEach(function(d) {
+                        if (d.stock != "border_accession") {
+                            d.col += 1;
+                        }
+                    });
+                    if (top_border_selection == "yes") {
+                        lowest_row += 1;
+                    }
                     for (let i = lowest_row; i <= highest_row; i++) {
                         datasets.push({plotname:plot_names[i] + "_left_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:'border_accession',
-                        blkn:blocks[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[lowest_col - 1], plot_msg:plot_popUp})
+                        blkn:blocks[i], row:i, plot_image_ids:plotImageDbIds[lowest_row], col:lowest_col, plot_msg:plot_popUp})
                     }
+                    lowest_col += 1;
                     modifiedColLabels = svg.selectAll(".columnLabel");
                     modifiedColLabels.attr("x", function(d, i) { return (i+1) * gridSize; });                    
                 }
+
+                if (right_border_selection == "yes") {
+                    if (top_border_selection == "yes" && left_border_selection == "yes") {
+                        lowest_row -= 1;
+                    } else if (left_border_selection == "yes") {
+                        highest_col += 1;
+                    }
+                    for (let i = lowest_row; i <= highest_row; i++) {
+                        datasets.push({plotname:plot_names[i] + "_right_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:'border_accession',
+                        blkn:blocks[i], row:i, plot_image_ids:plotImageDbIds[lowest_row], col:highest_col + 1, plot_msg:plot_popUp})
+                    }
+                }
+
+                if (bottom_border_selection == "yes") {
+                    if (left_border_selection == "yes") {
+                        lowest_col -= 1;
+                    }
+                    if (right_border_selection == "yes") {
+                        highest_col += 1;
+                    }
+                    for (let i = lowest_col; i <= highest_col; i++) {
+                        datasets.push({plotname:plot_names[i] + "_bottom_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:'border_accession',
+                        blkn:blocks[i], row:highest_row + 1, plot_image_ids:plotImageDbIds[lowest_row], col:i, plot_msg:plot_popUp})
+                    }
+                }
+
                 console.log(datasets);
                     
                 var cards = svg.selectAll(".col")
@@ -1241,6 +1307,9 @@ jQuery(document).ready( function() {
                                 color = '#081d58';
                             }
                         }
+                    }
+                    if (d.stock == "border_accession") {
+                        color = "lightgrey";
                     }
                     return color;
                 }
@@ -1476,24 +1545,14 @@ jQuery(document).ready( function() {
     }) 
     
     jQuery("#submit_border_selection").click(function() {
-        var border_selection = document.getElementById("border_selection").value;
-        if (border_selection == "default") {
+        top_border_selection = document.getElementById("top_border_selection").value;
+        left_border_selection = document.getElementById("left_border_selection").value;
+        right_border_selection = document.getElementById("right_border_selection").value;
+        bottom_border_selection = document.getElementById("bottom_border_selection").value;
+
+        if (top_border_selection == "default" && left_border_selection == "default" && right_border_selection == "default" && bottom_border_selection == "default") {
             alert("Please Select a side!");
         } else {
-            switch(border_selection) {
-                case "top":
-                    top_border = true;
-                    break;
-                case "left":
-                    left_border = true;
-                    break;
-                case "right":
-                    right_border = true;
-                    break;
-                case "bottom":
-                    bottom_border = true;
-                    break;
-            }
             jQuery("#add_border_dialog").modal("hide");
             d3.select("svg").remove();
             field_map_view();
