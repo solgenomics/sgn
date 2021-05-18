@@ -9,14 +9,15 @@ $material_source
 $breeding_program
 $availability
 $contact_person_username
+$item_prop_id
 </%args>
 
-<div class="modal fade" id="catalog_details_edit_dialog" tabindex="-1" role="dialog" aria-labelledby="catalogDetailsEditDialog">
+<div class="modal fade" id="edit_catalog_details_dialog" tabindex="-1" role="dialog" aria-labelledby="editCatalogDetailsDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="catalogDetailsEditDialog">Edit Catalog Item Details</h4>
+                <h4 class="modal-title" id="editCatalogDetailsDialog">Edit Catalog Item Details</h4>
             </div>
             <div class="modal-body" id="catalog_details_edit_body">
                 <div class="container-fluid">
@@ -69,10 +70,10 @@ $contact_person_username
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_material_source">Material Source: </label>
+                            <label class="col-sm-3 control-label" for="edit_item_material_source">Material Source: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_material_source" title="material_source" value="<%$material_source%>">
+                                    <select class="form-control" id="edit_item_material_source" title="material_source" value="<%$material_source%>">
                                         <option value="Arusha">Arusha</option>
                                         <option value="Sendusu">Sendusu</option>
                                         <option value="Kawanda">Kawanda</option>
@@ -89,10 +90,10 @@ $contact_person_username
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_availability">Availability: </label>
+                            <label class="col-sm-3 control-label" for="edit_item_availability">Availability: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_availability" title="availability" value="<%$availability%>">
+                                    <select class="form-control" id="edit_item_availability" title="availability" value="<%$availability%>">
                                         <option value="in stock">in stock</option>
                                         <option value="out of stock">out of stock</option>
                                         <option value="available in 3 months">available in 3 months</option>
@@ -120,18 +121,92 @@ $contact_person_username
 </div>
 
 
+<div class="modal fade" id="edit_catalog_saved_dialog_message" name="edit_catalog_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="editCatalogSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editCatalogSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The catalog info was saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_edit_item_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 
 jQuery(document).ready( function() {
+
+    var item_prop_id = <% $item_prop_id %>;
 
     jQuery("#edit_catalog_item_link").click( function() {
         var default_bp = document.getElementById("edit_item_breeding_program").getAttribute("value");
         get_select_box('breeding_programs', 'edit_item_breeding_program', { 'default' : default_bp });
 
-        jQuery('#catalog_details_edit_dialog').modal('show');
-
-
+        jQuery('#edit_catalog_details_dialog').modal('show');
     });
+
+    jQuery('#save_item_details').click( function() {
+        var name = jQuery('#edit_item_name').val();
+        var type = jQuery('#edit_item_type').val();
+        var category = jQuery('#edit_item_category').val();
+        var description = jQuery('#edit_item_description').val();
+        var material_source = jQuery('#edit_item_material_source').val();
+        var breeding_program = jQuery('#edit_item_breeding_program').val();
+        var availability = jQuery('#edit_item_availability').val();
+        var contact_person = jQuery('#edit_contact_person').val();
+        alert(breeding_program);
+        alert(availability);
+        jQuery.ajax({
+            url: '/ajax/catalog/add_item',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'item_name' : name,
+                'item_type': type,
+                'item_category': category,
+                'item_description': description,
+                'item_material_source': material_source,
+                'item_breeding_program': breeding_program,
+                'item_availability': availability,
+                'contact_person': contact_person,
+                'item_prop_id': item_prop_id
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#edit_catalog_details_dialog').modal('hide');
+                    jQuery('#edit_catalog_saved_dialog_message').modal("show");
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred adding item');
+            }
+        });
+    });
+
+    jQuery("#dismiss_edit_item_saved_dialog").click(function(){
+        location.reload();
+    });
+
 });
 
 </script>

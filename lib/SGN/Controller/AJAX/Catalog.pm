@@ -31,8 +31,9 @@ sub add_catalog_item_POST : Args(0) {
     my $item_breeding_program = $c->req->param('item_breeding_program');
     my $item_availability = $c->req->param('item_availability');
     my $contact_person = $c->req->param('contact_person');
+    my $item_prop_id = $c->req->param('item_prop_id');
     my $item_stock_id;
-
+    print STDERR "AJAX AVAILABILITY =".Dumper($item_availability)."\n";
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
         $c->stash->{rest} = {error_string => "You must be logged in to add a catalog item." };
@@ -65,7 +66,8 @@ sub add_catalog_item_POST : Args(0) {
         breeding_program => $program_name,
         availability => $item_availability,
         contact_person_id => $sp_person_id,
-        parent_id => $item_stock_id
+        parent_id => $item_stock_id,
+        prop_id => $item_prop_id
     });
 
     $stock_catalog->store();
