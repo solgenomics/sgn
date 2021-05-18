@@ -24,15 +24,13 @@ sub validate {
     my @missing;
     my @wrong_case;
     my @multiple_wrong_case;
+    my @synonyms;
     
     foreach my $item (@$list) {
 	my $rs = $schema->resultset("Stock::Stock")->search(
-	    { uniquename => { '~*' => $item },
+	    { 'lower(uniquename)' => lc($item),
 	      'me.type_id' => $accession_type_id,
 	      is_obsolete => 'F' },
-	    #{ join => 'stockprops',
-	    #  '+select' => [ 'stockprops.value', 'stockprops.type_id' ] ,
-	    #  '+as' => [ 'stockprop_value', 'stockprop_type_id' ]
 	    );
 
 	if ($rs->count() == 0) {
@@ -51,7 +49,14 @@ sub validate {
 		push @multiple_wrong_case, [ $item, $row->uniquename() ];
 	    }
 	}
-	    
+
+	my $rs = $schema->resultset("Stock::Stock")->search( 
+	    { 'lower(stockprops.value)' => lc($item),
+	      'stockprops.type_id' => $synonym_type_id,
+	    }, { join => stockprops, '+select' => [ 'stockprops.value' ], '+as' => [ 'stockprops_value' ]} );
+	while (my $row = $rs->next()) {
+	    push @synonyms, { uniquename =>  $row->uniquename(), synonym => $row->get_column('stockprops_value') };
+	}
     }
 
 
@@ -59,6 +64,7 @@ sub validate {
 	missing => \@missing,
 	wrong_case => \@wrong_case,
 	multiple_wrong_case => \@multiple_wrong_case,
+	synonyms => \@synonyms,
     };
 }
 
