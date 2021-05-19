@@ -231,11 +231,14 @@ sub _standard_response_construction {
 	my $result = $brapi_package_result->{result};
 	my $datafiles = $brapi_package_result->{datafiles};
 
+	# some older brapi stuff uses parameter, could refactor at some point
+	if (!$return_status) { $return_status = $brapi_package_result->{http_code} };
+
 	my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
 	my %response = (metadata=>\%metadata, result=>$result);
 	$c->stash->{rest} = \%response;
 	$c->response->status((!$return_status) ? 200 : $return_status);
-    $c->detach;
+	$c->detach;
 }
 
 =head2 /brapi/v1/token
