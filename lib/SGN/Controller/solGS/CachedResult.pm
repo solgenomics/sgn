@@ -35,6 +35,8 @@ sub check_cached_result :Path('/solgs/check/cached/result') Args(0) {
 
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
+    $c->stash->{rest}{arguments} = $args;
+
     my $json     = JSON->new();
     $args        = $json->decode($args);
 
@@ -139,8 +141,6 @@ sub _check_cached_output {
     elsif ($req_page =~ /pca\/analysis/)
     {
     	my $pca_pop_id  = $args->{pca_pop_id};
-    	# my $protocol_id = $args->{genotyping_protocol_id};
-    	# my $trait_id     = $args->{trait_id};
     	my $data_str = $args->{data_structure};
 
     	if ($data_str =~ /dataset|list/ && $pca_pop_id !~ /dataset|list/)
@@ -355,6 +355,7 @@ sub _check_pca_output {
     my ($self, $c, $file_id) = @_;
 
     $c->stash->{rest}{cached} = $self->check_pca_output($c, $file_id);
+
 }
 
 
