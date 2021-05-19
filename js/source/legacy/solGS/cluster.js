@@ -148,67 +148,62 @@ solGS.cluster = {
 
     selectRow: function(selectId, selectName, dataStr) {
 
-	var rowId = this.selectRowId(selectId);
-	var clusterTypeOpts = this.createClusterTypeSelect();
+    	var rowId = this.selectRowId(selectId);
+    	var clusterTypeOpts = this.createClusterTypeSelect();
 
-	var dataTypeOpts;
-	var url = document.URL;
-	var pagesTr = '/breeders/trial/'
-	    + '|cluster/analysis'
-	    + '|solgs/trait/\d+/population\/'
-	    + '|solgs/model/combined/populations/';
+    	var dataTypeOpts;
+    	var url = document.URL;
+    	var pagesTr = '/breeders/trial/'
+    	    + '|cluster/analysis'
+    	    + '|solgs/trait/\d+/population\/'
+    	    + '|solgs/model/combined/populations/';
 
-	var pagesMultiModels = '/solgs/traits/all/population/'
-	    + '|solgs/models/combined/trials\/';
+    	var pagesMultiModels = '/solgs/traits/all/population/'
+    	    + '|solgs/models/combined/trials\/';
 
-	if (url.match(pagesTr)) {
-	    dataTypeOpts = ['Genotype', 'Phenotype'];
-	} else if (url.match(pagesMultiModels)) {
-	    dataTypeOpts = ['Genotype', 'GEBV', 'Phenotype'];
-	}
+    	if (url.match(pagesTr)) {
+    	    dataTypeOpts = ['Genotype', 'Phenotype'];
+    	} else if (url.match(pagesMultiModels)) {
+    	    dataTypeOpts = ['Genotype', 'GEBV', 'Phenotype'];
+    	}
 
-	var dataTypeOpts=  this.createDataTypeSelect(dataTypeOpts);
+    	var dataTypeOpts=  this.createDataTypeSelect(dataTypeOpts);
 
-	var kNum = '<input class="form-control" type="text" placeholder="No. of clusters?" id="k_number" />';
+    	var kNum = '<input class="form-control" type="text" placeholder="No. of clusters?" id="k_number" />';
 
-	var onClickVal =  '<a href="#" onclick="solGS.cluster.runCluster('
-	    + selectId + ",'" + selectName + "'" +  ",'" + dataStr
-	    + "'" + ');return false;">';
+        var onClickVal =  '<button type="button" id="run_cluster" class="btn btn-success" onclick="solGS.cluster.runCluster('
+                + selectId + ",'" + selectName + "'" +  ",'" + dataStr
+            + "'" + ')">Run Cluster</button>';
 
-	var row = '<tr name="' + dataStr + '"' + ' id="' + rowId +  '">'
-	    + '<td>'
-            + onClickVal
-            + selectName + '</a>'
-            + '</td>'
-	    + '<td>' + dataStr + '</td>'
-	    + '<td>' + clusterTypeOpts + '</td>'
-	    + '<td>' + dataTypeOpts + '</td>'
-	    + '<td>' + kNum + '</td>'
-            + '<td id="list_cluster_page_' + selectId +  '">'
-            + onClickVal
-            + '[ Run Cluster ] </a>'
-            + '</td>'
-	    + '<tr>';
+    	var row = '<tr name="' + dataStr + '"' + ' id="' + rowId +  '">'
+    	    + '<td>' + selectName + '</td>'
+            + '<td>' + dataStr + '</td>'
+            + '<td>' + clusterTypeOpts + '</td>'
+            + '<td>' + dataTypeOpts + '</td>'
+            + '<td>' + kNum + '</td>'
+            + '<td id="list_cluster_page_' + selectId +  '">' + onClickVal + '</td>'
+    	    + '<tr>';
 
-	return row;
+    	return row;
+
     },
 
 
     createTable: function(tableId) {
 
-	var table ='<table class="table table-striped" id="' + tableId + '">'
-	    + '<thead>'
-	    + '<tr>'
+    	var table ='<table class="table table-striped" id="' + tableId + '">'
+    	    + '<thead>'
+    	    + '<tr>'
             + '<th>Name</th>'
-            + '<th>Data Structure</th>'
+            + '<th>Data structure</th>'
             + '<th>Cluster type</th>'
-	    + '<th>Data type</th>'
-	    + '<th>No. of  Clusters</th>'
-	    + '<th>Run</th>'
+    	    + '<th>Data type</th>'
+    	    + '<th>No. of  clusters (K)</th>'
+    	    + '<th>Run cluster</th>'
             + '</tr>'
             + '</thead></table>';
 
-	return table;
+    	return table;
 
     },
 
@@ -485,16 +480,7 @@ solGS.cluster = {
 			solGS.cluster.plotClusterOutput(res);
 
 			jQuery("#cluster_message").empty();
-
-			var pages = '/solgs/traits/all/population/'
-			    + '|solgs/models/combined/trials/'
-			    + '|/breeders/trial\/'
-			    + '|solgs/trait/\\d+/population/'
-			    + '|solgs/model/combined/populations/';
-
-			if (document.URL.match(pages)) {
-			    jQuery("#run_cluster").show();
-			}
+		    jQuery("#run_cluster").show();
 
 		    } else {
 			jQuery("#cluster_message").html(res.result);
