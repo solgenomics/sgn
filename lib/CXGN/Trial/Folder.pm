@@ -6,6 +6,7 @@ use CXGN::Location;
 use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use JSON;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 	is => 'rw',
@@ -81,6 +82,9 @@ has 'folder_cvterm_id' => (isa => 'Int',
 	is => 'rw',
 );
 
+has 'additional_info' => (
+	is  => 'rw'
+);
 
 sub BUILD {
 	my $self = shift;
@@ -100,6 +104,7 @@ sub BUILD {
 	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
 	my $analyses_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'analysis_metadata_json', 'project_property')->cvterm_id();
 	my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
+	my $additional_info_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project_additional_info', 'project_property')->cvterm_id();
 
 	$self->breeding_program_cvterm_id($breeding_program_type_id);
 	$self->folder_cvterm_id($folder_cvterm_id);
@@ -118,6 +123,9 @@ sub BUILD {
 			$self->folder_for_crosses(1);
 		} elsif ($folder_type_row->type_id() == $folder_for_genotyping_trials_cvterm_id) {
 			$self->folder_for_genotyping_trials(1);
+		} elsif ($folder_type_row->type_id() == $additional_info_cvterm_id) {
+			my $additional_info = decode_json($folder_type_row->value);
+			$self->additional_info($additional_info);
 		}
 	}
 
@@ -174,6 +182,7 @@ sub create {
 	my $folder_for_trials = $args->{folder_for_trials};
 	my $folder_for_crosses = $args->{folder_for_crosses};
 	my $folder_for_genotyping_trials = $args->{folder_for_genotyping_trials};
+	my $additional_info = $args->{additional_info} || undef;
 
 	# check if name is already taken
 	my $check_rs = $schema->resultset('Project::Project')->search( { name => $folder_name } );
@@ -201,6 +210,10 @@ sub create {
         my $folder_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_genotyping_trials', 'project_property');
         $project->create_projectprops({ $folder_type_cvterm->name() => '1' });
     }
+	if ($additional_info){
+		my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_additional_info', 'project_property');
+		$project->create_projectprops({ $additional_info_cvterm->name() => encode_json($additional_info) });
+	}
 
 	my $folder = CXGN::Trial::Folder->new({
 		bcs_schema => $schema,

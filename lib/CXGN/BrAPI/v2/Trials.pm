@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial::Folder;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use JSON;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -123,14 +124,14 @@ sub details {
 		if ($folder->is_folder) {
 			my $total_count = 1;
 			my @folder_studies;
-			my %additional_info;
+			my $additional_info = $folder->additional_info;
             my $folder_id = $folder->folder_id;
             my $folder_description = $folder->name; #description doesn't exist 
             my $breeding_program_id = $folder->breeding_program->project_id();
 
 			my %result = (
                 active=>JSON::true,
-				additionalInfo=>\%additional_info,
+				additionalInfo=>$additional_info,
                 commonCropName=>$crop,
                 contacts=>undef,
                 datasetAuthorships=>undef,
@@ -175,7 +176,7 @@ sub store {
         my $folder_name = $params->{trialName} || undef;
         my $existing = $schema->resultset("Project::Project")->find( { name => $folder_name });
         if ($existing) {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A folder or trial with the name %s already exists in the database. Please select another name.',$folder_name ), 409);
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('A trial or study with the name %s already exists in the database. Please select another name.',$folder_name ), 409);
         }
     }
 
@@ -184,6 +185,7 @@ sub store {
         my $parent_folder_id = $params->{programDbId} || undef;        
         my $breeding_program_id = $params->{programDbId} || undef;
         my $description = $params->{trialDescription} || undef;
+        my $additional_info = $params->{additionalInfo} || undef;
         my $folder_for_trials = 1;
         my $folder_for_crosses = 0;
         my $folder_for_genotyping_trials = 0;
@@ -198,14 +200,15 @@ sub store {
         }
 
         my $folder = CXGN::Trial::Folder->create({
-            bcs_schema => $schema,
-            parent_folder_id => $parent_folder_id,
-            name => $folder_name,
-            breeding_program_id => $breeding_program_id,
-            description => $description,
-            folder_for_trials => $folder_for_trials,
-            folder_for_crosses => $folder_for_crosses,
-            folder_for_genotyping_trials => $folder_for_genotyping_trials
+            bcs_schema                   => $schema,
+            parent_folder_id             => $parent_folder_id,
+            name                         => $folder_name,
+            breeding_program_id          => $breeding_program_id,
+            description                  => $description,
+            folder_for_trials            => $folder_for_trials,
+            folder_for_crosses           => $folder_for_crosses,
+            folder_for_genotyping_trials => $folder_for_genotyping_trials,
+            additional_info              => $additional_info
         });
 
         push @stored_ids, $folder->folder_id();
@@ -258,6 +261,7 @@ sub update {
     my $parent_folder_id = $params->{programDbId} || undef;        
     my $breeding_program_id = $params->{programDbId} || undef;
     my $description = $params->{trialDescription} || undef;
+    my $additional_info = $params->{additionalInfo} || undef;
 
     # Check that the breeding program was passed and exists
     if (! defined $breeding_program_id) {
@@ -284,6 +288,18 @@ sub update {
         $project_rel_row->update();
     }
 
+    # Additional info - Delete and create new
+    my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project_additional_info', 'project_property');
+    my $folder_type = $self->bcs_schema()->resultset('Project::Projectprop')-> search( { project_id => $folder_id });
+    while (my $folder_type_row = $folder_type->next) {
+        if ($folder_type_row->type_id() == $additional_info_cvterm->cvterm_id()) {
+            $folder_type_row->delete();
+        }
+    }
+    if ($additional_info) {
+        $folder->create_projectprops({ $additional_info_cvterm->name() => encode_json($additional_info) });
+    }
+
     #retrieve updated trial
     my $folder = CXGN::Trial::Folder->new(bcs_schema=>$schema, folder_id=>$folder_id);
 
@@ -296,7 +312,7 @@ sub update {
 
     my %result = (
         active=>JSON::true,
-        additionalInfo=>\%additional_info,
+        additionalInfo=>$folder->additional_info,
         commonCropName=>$crop,
         contacts=>undef,
         datasetAuthorships=>undef,
@@ -409,7 +425,7 @@ sub _get_folders {
     if ($trial_filter < 1){
         push @{$data}, {
             active=>JSON::true,
-            additionalInfo=>\%additional_info,
+            additionalInfo=>$self->{project_additional_info} ? decode_json($self->{project_additional_info}) : undef,
             commonCropName=>$crop,
             contacts=>undef,
             datasetAuthorships=>undef,
