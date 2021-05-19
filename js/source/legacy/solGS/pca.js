@@ -89,9 +89,10 @@ solGS.pca = {
                 pcaTable = this.createTable();
 		jQuery("#pca_pops_section").append(pcaTable).show();
             }
-	    var onClickVal =  '<a href="/pca/analysis#" onclick="solGS.pca.pcaRun('
-		+ selectId + ",'" + selectName + "'" +  ",'" + dataStructure
-		+ "'" + ');return false;">';
+
+        var onClickVal =  '<button type="button" id="run_pca" class="btn btn-success" onclick="solGS.pca.pcaRun('
+                + selectId + ",'" + selectName + "'" +  ",'" + dataStructure
+	    	+ "'" + ')">Run PCA</button>';
 
 	    var dataType = ['Genotype', 'Phenotype'];
 	    var dataTypeOpts = this.createDataTypeSelect(dataType);
@@ -100,7 +101,7 @@ solGS.pca = {
                 + '<td>' + selectName + '</td>'
 		        + '<td>' + dataStructure + '</td>'
 		        + '<td>' + dataTypeOpts + '</td>'
-                + '<td id="list_pca_page_' + selectId +  '">' + onClickVal + '[ Run PCA ]' + '</a></td>'
+                + '<td id="list_pca_page_' + selectId +  '">' + onClickVal + '</td>'
                 + '<tr>';
 
 	    var tdId = '#list_pca_page_' + selectId;
