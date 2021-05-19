@@ -433,42 +433,27 @@ my $image_ids =  $stockref->{image_ids} || [] ;
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="add_border_form" name="add_border_form">
-                        <div class="form-group">
-                            <label for="top_border_selection" class="col-sm-4 control-label">Top Border: </label>
-                            <select name="top_border_selection" id="top_border_selection">
-                                <option value="default"></option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="left_border_selection" class="col-sm-4 control-label">Left Border: </label>
-                            <select name="left_border_selection" id="left_border_selection">
-                                <option value="default"></option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="right_border_selection" class="col-sm-4 control-label">Right Border: </label>
-                            <select name="right_border_selection" id="right_border_selection">
-                                <option value="default"></option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="bottom_border_selection" class="col-sm-4 control-label">Bottom Border: </label>
-                            <select name="bottom_border_selection" id="bottom_border_selection">
-                                <option value="default"></option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                            </select>
-                        </div> 
+                    <form id="border_accession_form" class="form-group"> 
+                        <label for="border_accession_name">Border Accession Name: </label>
+                        <input type="text" class="form-right" name="border_accession_name" id="border_accession_name">
+                    </form>
+                    <form class="form-group">
+                        <label for="top_border_selection">Top Border</label><br>                       
+                        <input type="checkbox" id="top_border_selection" name="top_border_selection" value="yes">
+                    </form>
+                    <form class="form-group">
+                        <label for="left_border_selection">Left Border</label><br>
+                        <input type="checkbox" id="left_border_selection" name="left_border_selection" value="yes">
+                    </form>
+                    <form class="form-group">
+                        <label for="right_border_selection">Right Border</label><br>
+                        <input type="checkbox" id="right_border_selection" name="right_border_selection" value="yes">
+                    </form>
+                    <form class="form-group">
+                        <label for="bottom_border_selection">Bottom Border</label><br>      
+                        <input type="checkbox" id="bottom_border_selection" name="bottom_border_selection" value="yes">
                     </form>
                 </div>
-            </div>
             <div class="modal-footer">
                 <button id="view_border_selection_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button id="submit_border_selection" type="button" class="btn btn-primary">Add Border(s)</button>
@@ -488,6 +473,7 @@ var top_border_selection;
 var left_border_selection;
 var right_border_selection;
 var bottom_border_selection;
+var border_accession_name;
 
 jQuery(document).ready( function() {
 
@@ -1210,7 +1196,7 @@ jQuery(document).ready( function() {
 
                 if (top_border_selection == "yes") {
                     datasets.forEach(function(d) { 
-                        if (d.stock != "border_accession") {
+                        if (d.stock != border_accession_name) {
                             d.row += 1;
                         }
                     });
@@ -1218,7 +1204,7 @@ jQuery(document).ready( function() {
                         highest_col += 1;
                     }
                     for (let i = lowest_col; i <= highest_col; i++) {
-                        datasets.push({plotname:plot_names[i] + "_top_border", plot_id:plot_ids[i] + plot_ids[i], stock:'border_accession',
+                        datasets.push({plotname:plot_names[i] + "_top_border", plot_id:plot_ids[i] + plot_ids[i], stock:border_accession_name,
                         blkn:blocks[i], row:lowest_row, plot_image_ids:plotImageDbIds[lowest_col], col:i, plot_msg:plot_popUp});
                     }
                     highest_row += 1;
@@ -1228,7 +1214,7 @@ jQuery(document).ready( function() {
                 }
                 if (left_border_selection == "yes") {
                     datasets.forEach(function(d) {
-                        if (d.stock != "border_accession") {
+                        if (d.stock != border_accession_name) {
                             d.col += 1;
                         }
                     });
@@ -1236,7 +1222,7 @@ jQuery(document).ready( function() {
                         lowest_row += 1;
                     }
                     for (let i = lowest_row; i <= highest_row; i++) {
-                        datasets.push({plotname:plot_names[i] + "_left_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:'border_accession',
+                        datasets.push({plotname:plot_names[i] + "_left_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:border_accession_name,
                         blkn:blocks[i], row:i, plot_image_ids:plotImageDbIds[lowest_row], col:lowest_col, plot_msg:plot_popUp})
                     }
                     lowest_col += 1;
@@ -1251,7 +1237,7 @@ jQuery(document).ready( function() {
                         highest_col += 1;
                     }
                     for (let i = lowest_row; i <= highest_row; i++) {
-                        datasets.push({plotname:plot_names[i] + "_right_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:'border_accession',
+                        datasets.push({plotname:plot_names[i] + "_right_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:border_accession_name,
                         blkn:blocks[i], row:i, plot_image_ids:plotImageDbIds[lowest_row], col:highest_col + 1, plot_msg:plot_popUp})
                     }
                 }
@@ -1267,7 +1253,7 @@ jQuery(document).ready( function() {
                         highest_col += 1;
                     }
                     for (let i = lowest_col; i <= highest_col; i++) {
-                        datasets.push({plotname:plot_names[i] + "_bottom_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:'border_accession',
+                        datasets.push({plotname:plot_names[i] + "_bottom_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:border_accession_name,
                         blkn:blocks[i], row:highest_row + 1, plot_image_ids:plotImageDbIds[lowest_row], col:i, plot_msg:plot_popUp})
                     }
                 }
@@ -1311,7 +1297,7 @@ jQuery(document).ready( function() {
                             }
                         }
                     }
-                    if (d.stock == "border_accession") {
+                    if (d.stock == border_accession_name) {
                         color = "lightgrey";
                     }
                     return color;
@@ -1543,24 +1529,24 @@ jQuery(document).ready( function() {
         }
     }); 
     
-        jQuery('#add_border').click(function(){
+    jQuery('#add_border').click(function(){
         jQuery("#add_border_dialog").modal("show");
     }) 
     
+    jQuery("#border_accession_form").submit( function() {
+        event.preventDefault();
+    })
+
     jQuery("#submit_border_selection").click(function() {
-        top_border_selection = document.getElementById("top_border_selection").value;
-        left_border_selection = document.getElementById("left_border_selection").value;
-        right_border_selection = document.getElementById("right_border_selection").value;
-        bottom_border_selection = document.getElementById("bottom_border_selection").value;
-
-        if (top_border_selection == "default" && left_border_selection == "default" && right_border_selection == "default" && bottom_border_selection == "default") {
-            alert("Please Select a side!");
-        } else {
-            jQuery("#add_border_dialog").modal("hide");
-            d3.select("svg").remove();
-            field_map_view();
-        }
-
+        top_border_selection = document.getElementById("top_border_selection").checked ? 'yes' : 'no';
+        left_border_selection = document.getElementById("left_border_selection").checked ? 'yes' : 'no';
+        right_border_selection = document.getElementById("right_border_selection").checked ? 'yes' : 'no';
+        bottom_border_selection = document.getElementById("bottom_border_selection").checked ? 'yes' : 'no';
+ 
+        border_accession_name = document.getElementById("border_accession_name").value;
+        jQuery("#add_border_dialog").modal("hide");
+        d3.select("svg").remove();
+        field_map_view();
     })
 
     jQuery("#hm_view_plot_image_submit").click( function() {
