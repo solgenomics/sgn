@@ -39,6 +39,11 @@ has 'name' => (isa => 'Str',
 	default => 'Untitled',
 );
 
+has 'description' => (
+	isa => 'Str',
+	is  => 'rw'
+);
+
 has 'folder_for_trials' => (isa => 'Bool',
 	is => 'rw',
 	default => 0,
@@ -96,6 +101,7 @@ sub BUILD {
 	}
 
 	$self->name($row->name());
+	$self->description($row->description());
 
 	my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program', 'project_property')->cvterm_id();
 	my $folder_for_trials_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_trials', 'project_property')->cvterm_id();
