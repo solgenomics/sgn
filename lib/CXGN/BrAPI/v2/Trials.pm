@@ -126,7 +126,7 @@ sub details {
 			my @folder_studies;
 			my $additional_info = $folder->additional_info;
             my $folder_id = $folder->folder_id;
-            my $folder_description = $folder->name; #description doesn't exist 
+            my $folder_description = $folder->description;
             my $breeding_program_id = $folder->breeding_program->project_id();
 
 			my %result = (
@@ -423,6 +423,7 @@ sub _get_folders {
     }
 
     if ($trial_filter < 1){
+        print Dumper($self);
         push @{$data}, {
             active=>JSON::true,
             additionalInfo=>$self->{project_additional_info} ? decode_json($self->{project_additional_info}) : undef,
@@ -438,7 +439,7 @@ sub _get_folders {
             startDate=>undef,
             trialDbId=>qq|$self->{'id'}|,
             trialName=>$self->{'name'},
-            trialDescription=>$self->{'program_description'},
+            trialDescription=>$self->{'description'},
             trialPUI=>undef
         }
     };
@@ -470,14 +471,15 @@ sub _get_studies {
             subject_project_id => { 'not in' => \@folder_contents }
         },
         {   join      => { subject_project => { projectprops => 'type' } },
-            '+select' => ['subject_project.name', 'projectprops.value', 'type.name'],
-            '+as'     => ['project_name', 'project_value', 'project_type']
+            '+select' => ['subject_project.name', 'subject_project.description', 'projectprops.value', 'type.name'],
+            '+as'     => ['project_name', 'project_description', 'project_value', 'project_type']
         }
      );
 
     while (my $row = $rs->next) {
         my $name = $row->get_column('project_name');
         $studies{$name}{'name'} = $name;
+        $studies{$name}{'description'} = $row->get_column('project_description');
         $studies{$name}{'id'} = $row->subject_project_id();
         $studies{$name}{'program_name'} = $self->{'program_name'};
         $studies{$name}{'program_id'} = $self->{'program_id'};
