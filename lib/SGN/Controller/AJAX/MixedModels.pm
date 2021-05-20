@@ -84,8 +84,10 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
     $ds->retrieve_phenotypes();
+
+    
 
     my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
 

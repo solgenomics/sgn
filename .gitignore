@@ -21,9 +21,11 @@ programs/draw_contigalign
 programs/fast_mapping
 sgn_local.conf
 sgn_testing.conf
+sgn_fixture.conf
 t/data/data/prod/tmp/
 t/data/vigstool/vigs*
 *.log
+logfile*.txt
 MANIFEST*
 ./cgi-bin/secretom
 MYMETA.json

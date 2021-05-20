@@ -1,0 +1,857 @@
+
+<& /util/import_javascript.mas, classes => [ 'jquery' ],  &>
+
+<p>Sequence Metadata queries can be made using a public API (Application Programming Interface).  Below are the available 
+endpoints related to sequence metadata that can be used to query the database using HTTP requests.</p>
+
+<br />
+
+<h3>Sequence Metadata Query</h3>
+<p class='sequence_metadata_description'>Perform a query of the stored sequence metadata for a specific parent feature (i.e., chromosome) using any combination of additional filter criteria, provided as query parameters</p>
+<code class='sequence_metadata_method'>GET</code>&nbsp;
+<code class='sequence_metadata_path'><span class='sequence_metadata_host'></span>/ajax/sequence_metadata/query</code>
+<br /><br />
+<p><strong>Query Parameters:</strong></p>
+<table class='table table-striped sequence_metadata_query_params'>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Example</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>feature_id<br /><strong>REQUIRED</strong></td>
+            <td>ID of the parent feature (i.e., chromosome) associated with the sequence metadata</td>
+            <td><code>2881383</code></td>
+        </tr>
+        <tr>
+            <td>start</td>
+            <td>start position of the query range<br /><strong>default:</strong> 0</td>
+            <td><code>1000000</code></td>
+        </tr>
+        <tr>
+            <td>end</td>
+            <td>end position of the query range<br /><strong>default:</strong> max of specified feature</td>
+            <td><code>2000000</code></td>
+        </tr>
+        <tr>
+            <td>type_id</td>
+            <td>cvterm_id(s) of sequence metadata type(s) (comma separated list of multiple type_ids)<br /><strong>default:</strong> any</td>
+            <td><code>86273</code><br /><code>86273,86275</code></td>
+        </tr>
+        <tr>
+            <td>nd_protocol_id</td>
+            <td>nd_protocol_id(s) of sequence metadata protocol(s) (comma separated list of multiple nd_protocol_ids)<br /><strong>default:</strong> any</td>
+            <td><code>204</code><br /><code>204,207</code></td>
+        </tr>
+        <tr>
+            <td>attribute</td>
+            <td>
+                Filter results using the value of an attribute (score or any of the defined secondary attributes) from a specific protocol.  
+                The query parameter value includes the attribute(s) and their properties (attribute name, protocol id, comparison type, comparison value - separated by a '|') 
+                (multiple attribute filters separated by a ',')<br />
+                <strong>format:</strong> {attribute name}|{nd_protocol_id}|{comparison}|{value}<br />
+                <strong>comparison:</strong> 'eq' (equal), 'con' (contains), 'lt' (less than), 'lte' (less than or equal), 'gt' (greater than), 'gte' (greater than or equal)<br />
+                <strong>default:</strong> none
+            </td>
+            <td><code>score|207|gt|0</code><br /><code>score|207|gt|0,Trait|204|con|grain+yield</code></td>
+        </tr>
+        <tr>
+            <td>format</td>
+            <td>
+                The output format of the response<br />
+                <strong>format:</strong> 'JSON' (breedbase JSON format), 'GA4GH' (Global Alliance for Genomics &amp; Health JSON format), 'gff' (gff3 format)<br />
+                <strong>default:</strong> JSON
+            </td>
+            <td><code>JSON</code><br /><code>GA4GH</code><br /><code>gff</code></td>
+        </tr>
+    </tbody>
+</table>
+<br />
+<p><strong>Response:</strong></p>
+<p>An example response for each format:</p>
+<ul class="nav nav-tabs">
+  <li class="active"><a data-toggle="tab" href="#sequence_metadata_response_json">JSON</a></li>
+  <li><a data-toggle="tab" href="#sequence_metadata_response_ga4gh">GA4GH</a></li>
+  <li><a data-toggle="tab" href="#sequence_metadata_response_gff">gff</a></li>
+</ul>
+
+<div class="tab-content">
+  <div id="sequence_metadata_response_json" class="tab-pane fade in active">
+    <pre class='sequence_metadata_response'>
+{
+  "results": [
+    {
+      "start": 1207522,
+      "score": "0.0454952857260828",
+      "nd_protocol_id": 204,
+      "featureprop_json_id": 1253,
+      "type_id": 86274,
+      "feature_name": "chr1A",
+      "attributes": {
+        "qvalue": "0.0454952857260828",
+        "pvalue": "0.00080725065468678",
+        "zvalue": "3.350296620481",
+        "ID": "RAC875_c20883_801",
+        "Population": "TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon",
+        "Locus": "TraesCS1A02G002300",
+        "Variable": "CO_321:0001138",
+        "Trait": "SDS sedimentation"
+      },
+      "type_name": "GWAS Results",
+      "end": 1207522,
+      "nd_protocol_name": "T3 Automated GWAS",
+      "feature_id": 2881383
+    },
+    {
+      "type_name": "GWAS Results",
+      "end": 1211006,
+      "feature_name": "chr1A",
+      "attributes": {
+        "ID": "GENE-0014_317",
+        "zvalue": "3.350296620481",
+        "pvalue": "0.00080725065468678",
+        "qvalue": "0.0454952857260828",
+        "Trait": "SDS sedimentation",
+        "Variable": "CO_321:0001138",
+        "Locus": "TraesCS1A02G002300",
+        "Population": "TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon"
+      },
+      "nd_protocol_id": 204,
+      "featureprop_json_id": 1253,
+      "type_id": 86274,
+      "start": 1211006,
+      "score": "0.0454952857260828",
+      "feature_id": 2881383,
+      "nd_protocol_name": "T3 Automated GWAS"
+    },
+    {
+      "attributes": {
+        "Population": "TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon",
+        "Locus": "TraesCS1A02G002300",
+        "Variable": "CO_321:0001138",
+        "Trait": "SDS sedimentation",
+        "qvalue": "0.0454952857260828",
+        "pvalue": "0.00080725065468678",
+        "zvalue": "3.350296620481",
+        "ID": "GENE-0014_262"
+      },
+      "feature_name": "chr1A",
+      "type_name": "GWAS Results",
+      "end": 1211057,
+      "start": 1211057,
+      "score": "0.0454952857260828",
+      "nd_protocol_id": 204,
+      "featureprop_json_id": 1253,
+      "type_id": 86274,
+      "nd_protocol_name": "T3 Automated GWAS",
+      "feature_id": 2881383
+    },
+    {
+      "nd_protocol_name": "T3 Automated GWAS",
+      "feature_id": 2881383,
+      "feature_name": "chr1A",
+      "attributes": {
+        "Trait": "SDS sedimentation",
+        "Locus": "TraesCS1A02G002500",
+        "Population": "TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon",
+        "Variable": "CO_321:0001138",
+        "ID": "RAC875_c95364_59",
+        "qvalue": "0.0454952857260828",
+        "pvalue": "0.00080725065468678",
+        "zvalue": "3.350296620481"
+      },
+      "end": 1234797,
+      "type_name": "GWAS Results",
+      "score": "0.0454952857260828",
+      "start": 1234797,
+      "type_id": 86274,
+      "featureprop_json_id": 1253,
+      "nd_protocol_id": 204
+    },
+    {
+      "nd_protocol_name": "T3 Automated GWAS",
+      "feature_id": 2881383,
+      "score": "0.0394888300035745",
+      "start": 1342766,
+      "type_id": 86274,
+      "featureprop_json_id": 1253,
+      "nd_protocol_id": 204,
+      "feature_name": "chr1A",
+      "attributes": {
+        "pvalue": "0.000513039677027759",
+        "zvalue": "3.4738542266235",
+        "qvalue": "0.0394888300035745",
+        "ID": "Kukri_c2408_857",
+        "Variable": "CO_321:0001138",
+        "Population": "TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon",
+        "Locus": "TraesCS1A02G002700",
+        "Trait": "SDS sedimentation"
+      },
+      "end": 1342766,
+      "type_name": "GWAS Results"
+    }
+  ]
+}
+    </pre>
+  </div>
+  <div id="sequence_metadata_response_ga4gh" class="tab-pane fade">
+    <pre class='sequence_metadata_response'>
+{
+  "features": [
+    {
+      "attributes": {
+        "qvalue": [
+          "0.0454952857260828"
+        ],
+        "pvalue": [
+          "0.00080725065468678"
+        ],
+        "zvalue": [
+          "3.350296620481"
+        ],
+        "ID": [
+          "RAC875_c20883_801"
+        ],
+        "Locus": [
+          "TraesCS1A02G002300"
+        ],
+        "Population": [
+          "TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon"
+        ],
+        "Variable": [
+          "CO_321:0001138"
+        ],
+        "bb_metadata": {
+          "nd_protocol_name": [
+            "T3 Automated GWAS"
+          ],
+          "type_name": [
+            "GWAS Results"
+          ],
+          "nd_protocol_id": [
+            204
+          ],
+          "type_id": [
+            86274
+          ]
+        },
+        "Trait": [
+          "SDS sedimentation"
+        ],
+        "score": [
+          "0.0454952857260828"
+        ]
+      },
+      "parent_id": 2881383,
+      "end": 1207522,
+      "feature_set_id": 204,
+      "reference_name": "chr1A",
+      "start": 1207522,
+      "id": "1253.0"
+    },
+    {
+      "feature_set_id": 204,
+      "start": 1211006,
+      "id": "1253.1",
+      "reference_name": "chr1A",
+      "parent_id": 2881383,
+      "end": 1211006,
+      "attributes": {
+        "bb_metadata": {
+          "nd_protocol_name": [
+            "T3 Automated GWAS"
+          ],
+          "type_name": [
+            "GWAS Results"
+          ],
+          "nd_protocol_id": [
+            204
+          ],
+          "type_id": [
+            86274
+          ]
+        },
+        "score": [
+          "0.0454952857260828"
+        ],
+        "Trait": [
+          "SDS sedimentation"
+        ],
+        "Population": [
+          "TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon"
+        ],
+        "Locus": [
+          "TraesCS1A02G002300"
+        ],
+        "Variable": [
+          "CO_321:0001138"
+        ],
+        "ID": [
+          "GENE-0014_317"
+        ],
+        "qvalue": [
+          "0.0454952857260828"
+        ],
+        "zvalue": [
+          "3.350296620481"
+        ],
+        "pvalue": [
+          "0.00080725065468678"
+        ]
+      }
+    },
+    {
+      "feature_set_id": 204,
+      "start": 1211057,
+      "reference_name": "chr1A",
+      "id": "1253.2",
+      "parent_id": 2881383,
+      "end": 1211057,
+      "attributes": {
+        "Population": [
+          "TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon"
+        ],
+        "Locus": [
+          "TraesCS1A02G002300"
+        ],
+        "Variable": [
+          "CO_321:0001138"
+        ],
+        "bb_metadata": {
+          "nd_protocol_name": [
+            "T3 Automated GWAS"
+          ],
+          "type_name": [
+            "GWAS Results"
+          ],
+          "type_id": [
+            86274
+          ],
+          "nd_protocol_id": [
+            204
+          ]
+        },
+        "score": [
+          "0.0454952857260828"
+        ],
+        "Trait": [
+          "SDS sedimentation"
+        ],
+        "qvalue": [
+          "0.0454952857260828"
+        ],
+        "pvalue": [
+          "0.00080725065468678"
+        ],
+        "zvalue": [
+          "3.350296620481"
+        ],
+        "ID": [
+          "GENE-0014_262"
+        ]
+      }
+    },
+    {
+      "feature_set_id": 204,
+      "start": 1234797,
+      "reference_name": "chr1A",
+      "id": "1253.3",
+      "end": 1234797,
+      "parent_id": 2881383,
+      "attributes": {
+        "score": [
+          "0.0454952857260828"
+        ],
+        "Trait": [
+          "SDS sedimentation"
+        ],
+        "bb_metadata": {
+          "type_name": [
+            "GWAS Results"
+          ],
+          "nd_protocol_name": [
+            "T3 Automated GWAS"
+          ],
+          "nd_protocol_id": [
+            204
+          ],
+          "type_id": [
+            86274
+          ]
+        },
+        "Variable": [
+          "CO_321:0001138"
+        ],
+        "Population": [
+          "TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon"
+        ],
+        "Locus": [
+          "TraesCS1A02G002500"
+        ],
+        "ID": [
+          "RAC875_c95364_59"
+        ],
+        "zvalue": [
+          "3.350296620481"
+        ],
+        "pvalue": [
+          "0.00080725065468678"
+        ],
+        "qvalue": [
+          "0.0454952857260828"
+        ]
+      }
+    },
+    {
+      "feature_set_id": 204,
+      "start": 1342766,
+      "reference_name": "chr1A",
+      "id": "1253.4",
+      "attributes": {
+        "Locus": [
+          "TraesCS1A02G002700"
+        ],
+        "Population": [
+          "TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon"
+        ],
+        "Variable": [
+          "CO_321:0001138"
+        ],
+        "bb_metadata": {
+          "nd_protocol_name": [
+            "T3 Automated GWAS"
+          ],
+          "type_name": [
+            "GWAS Results"
+          ],
+          "type_id": [
+            86274
+          ],
+          "nd_protocol_id": [
+            204
+          ]
+        },
+        "Trait": [
+          "SDS sedimentation"
+        ],
+        "score": [
+          "0.0394888300035745"
+        ],
+        "qvalue": [
+          "0.0394888300035745"
+        ],
+        "zvalue": [
+          "3.4738542266235"
+        ],
+        "pvalue": [
+          "0.000513039677027759"
+        ],
+        "ID": [
+          "Kukri_c2408_857"
+        ]
+      },
+      "parent_id": 2881383,
+      "end": 1342766
+    }
+  ]
+}
+    </pre>
+  </div>
+  <div id="sequence_metadata_response_gff" class="tab-pane fade">
+    <pre class='sequence_metadata_response'>
+chr1A	.	.	1207522	1207522	0.0454952857260828	.	.	Trait="SDS sedimentation";Variable=CO_321:0001138;Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon";Locus=TraesCS1A02G002300;ID=RAC875_c20883_801;pvalue=0.00080725065468678;zvalue=3.350296620481;qvalue=0.0454952857260828
+chr1A	.	.	1211006	1211006	0.0454952857260828	.	.	ID=GENE-0014_317;pvalue=0.00080725065468678;zvalue=3.350296620481;qvalue=0.0454952857260828;Trait="SDS sedimentation";Variable=CO_321:0001138;Locus=TraesCS1A02G002300;Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon"
+chr1A	.	.	1211057	1211057	0.0454952857260828	.	.	Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon";Locus=TraesCS1A02G002300;Variable=CO_321:0001138;Trait="SDS sedimentation";qvalue=0.0454952857260828;zvalue=3.350296620481;pvalue=0.00080725065468678;ID=GENE-0014_262
+chr1A	.	.	1234797	1234797	0.0454952857260828	.	.	ID=RAC875_c95364_59;pvalue=0.00080725065468678;zvalue=3.350296620481;qvalue=0.0454952857260828;Trait="SDS sedimentation";Variable=CO_321:0001138;Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon";Locus=TraesCS1A02G002500
+chr1A	.	.	1342766	1342766	0.0394888300035745	.	.	ID=Kukri_c2408_857;qvalue=0.0394888300035745;pvalue=0.000513039677027759;zvalue=3.4738542266235;Trait="SDS sedimentation";Population="TCAP90K_SpringAM_panel x SW-AMPanel_2012_Saskatoon";Locus=TraesCS1A02G002700;Variable=CO_321:0001138
+    </pre>
+</div>
+
+<br /><br /><br />
+
+<h3>Get Features</h3>
+<p class='sequence_metadata_description'>Get all of the parent features (i.e., chromosomes) associated with loaded sequence metadata</p>
+<code class='sequence_metadata_method'>GET</code>&nbsp;
+<code class='sequence_metadata_path'><span class='sequence_metadata_host'></span>/ajax/sequence_metadata/features</code>
+<br /><br />
+<p><strong>Response:</strong></p>
+<p>An example response in JSON format:</p>
+<pre class='sequence_metadata_response'>
+{
+  "features": [
+    {
+      "feature_name": "chr1A",
+      "organism_id": 109397,
+      "feature_id": 2881383,
+      "type_name": "chromosome",
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732
+    },
+    {
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732,
+      "feature_id": 2881384,
+      "type_name": "chromosome",
+      "feature_name": "chr1B",
+      "organism_id": 109397
+    },
+    {
+      "feature_name": "chr1D",
+      "organism_id": 109397,
+      "feature_id": 2881385,
+      "type_name": "chromosome",
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732
+    },
+    {
+      "type_id": 75732,
+      "organism_name": "Triticum aestivum",
+      "type_name": "chromosome",
+      "feature_id": 2881386,
+      "organism_id": 109397,
+      "feature_name": "chr2A"
+    },
+    {
+      "type_name": "chromosome",
+      "feature_id": 2881387,
+      "organism_id": 109397,
+      "feature_name": "chr2B",
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732
+    },
+    {
+      "organism_id": 109397,
+      "feature_name": "chr2D",
+      "type_name": "chromosome",
+      "feature_id": 2881388,
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732
+    },
+    {
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732,
+      "feature_name": "chr3A",
+      "organism_id": 109397,
+      "feature_id": 2881389,
+      "type_name": "chromosome"
+    },
+    {
+      "type_name": "chromosome",
+      "feature_id": 2881390,
+      "organism_id": 109397,
+      "feature_name": "chr3B",
+      "type_id": 75732,
+      "organism_name": "Triticum aestivum"
+    },
+    {
+      "type_id": 75732,
+      "organism_name": "Triticum aestivum",
+      "feature_name": "chr3D",
+      "organism_id": 109397,
+      "feature_id": 2881391,
+      "type_name": "chromosome"
+    },
+    {
+      "feature_name": "chr4A",
+      "organism_id": 109397,
+      "feature_id": 2881392,
+      "type_name": "chromosome",
+      "type_id": 75732,
+      "organism_name": "Triticum aestivum"
+    },
+    {
+      "feature_name": "chr4B",
+      "organism_id": 109397,
+      "feature_id": 2881393,
+      "type_name": "chromosome",
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732
+    },
+    {
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732,
+      "organism_id": 109397,
+      "feature_name": "chr4D",
+      "type_name": "chromosome",
+      "feature_id": 2881394
+    },
+    {
+      "feature_name": "chr5A",
+      "organism_id": 109397,
+      "feature_id": 2881395,
+      "type_name": "chromosome",
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732
+    },
+    {
+      "feature_id": 2881396,
+      "type_name": "chromosome",
+      "feature_name": "chr5B",
+      "organism_id": 109397,
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732
+    },
+    {
+      "organism_id": 109397,
+      "feature_name": "chr5D",
+      "type_name": "chromosome",
+      "feature_id": 2881397,
+      "type_id": 75732,
+      "organism_name": "Triticum aestivum"
+    },
+    {
+      "type_id": 75732,
+      "organism_name": "Triticum aestivum",
+      "feature_id": 2881398,
+      "type_name": "chromosome",
+      "feature_name": "chr6A",
+      "organism_id": 109397
+    },
+    {
+      "organism_id": 109397,
+      "feature_name": "chr6B",
+      "type_name": "chromosome",
+      "feature_id": 2881399,
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732
+    },
+    {
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732,
+      "organism_id": 109397,
+      "feature_name": "chr6D",
+      "type_name": "chromosome",
+      "feature_id": 2881400
+    },
+    {
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732,
+      "feature_id": 2881401,
+      "type_name": "chromosome",
+      "feature_name": "chr7A",
+      "organism_id": 109397
+    },
+    {
+      "type_id": 75732,
+      "organism_name": "Triticum aestivum",
+      "organism_id": 109397,
+      "feature_name": "chr7B",
+      "type_name": "chromosome",
+      "feature_id": 2881402
+    },
+    {
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732,
+      "organism_id": 109397,
+      "feature_name": "chr7D",
+      "type_name": "chromosome",
+      "feature_id": 2881403
+    },
+    {
+      "organism_id": 109397,
+      "feature_name": "chrUn",
+      "type_name": "chromosome",
+      "feature_id": 2881426,
+      "type_id": 75732,
+      "organism_name": "Triticum aestivum"
+    },
+    {
+      "feature_id": 2881427,
+      "type_name": "chromosome",
+      "feature_name": "UNK",
+      "organism_id": 109397,
+      "organism_name": "Triticum aestivum",
+      "type_id": 75732
+    }
+  ]
+}
+</pre>
+
+<br /><br /><br />
+
+<h3>Get Data Types</h3>
+<p class='sequence_metadata_description'>Get all of the sequence metadata data types supported by the database</p>
+<code class='sequence_metadata_method'>GET</code>&nbsp;
+<code class='sequence_metadata_path'><span class='sequence_metadata_host'></span>/ajax/sequence_metadata/types</code>
+<br /><br />
+<p><strong>Response:</strong></p>
+<p>An example response in JSON format:</p>
+<pre class='sequence_metadata_response'>
+{
+  "types": [
+    {
+      "type_name": "Gene Annotation",
+      "type_id": 86273,
+      "type_definition": "Provides sequence features (gene, mRNA, UTR, exon, CDS) and annotations based on alignments of biological evidence."
+    },
+    {
+      "type_name": "GWAS Results",
+      "type_id": 86274,
+      "type_definition": "Report of quantitative trait loci (QTLs) indentified by running rrBLUP analysis on phenotype trials and genotype trials within the T3 database."
+    },
+    {
+      "type_id": 86275,
+      "type_definition": "Report of chromatine accessibility score. The report can be used to prioritize genomic variants and explain phenotypes. (https://genomebiology.biomedcentral.com/track/pdf/10.1186/s13059-020-02093-1)",
+      "type_name": "MNase"
+    }
+  ]
+}
+</pre>
+
+<br /><br /><br />
+
+<h3>Get Protocols</h3>
+<p class='sequence_metadata_description'>Get all of the existing sequence metadata protocols</p>
+<code class='sequence_metadata_method'>GET</code>&nbsp;
+<code class='sequence_metadata_path'><span class='sequence_metadata_host'></span>/ajax/sequence_metadata/protocols</code>
+<br /><br />
+<p><strong>Response:</strong></p>
+<p>An example response in JSON format:</p>
+<pre class='sequence_metadata_response'>
+{
+  "protocols": [
+    {
+      "nd_protocol_id": 204,
+      "nd_protocol_description": "Description of T3 Automated GWAS",
+      "nd_protocol_properties": {
+        "reference_genome": "RefSeq_v1",
+        "score_description": "none",
+        "sequence_metadata_type": "GWAS Results",
+        "attribute_descriptions": {
+          "ID": "unique region identifier",
+          "pvalue": "significance level",
+          "zvalue": "number of standard deviations (used for meta analysis)",
+          "qvalue": "pvalue adjusted for false discovery rate",
+          "Trait": "Trait name",
+          "Variable": "Trait ontology variable identifier",
+          "Population": ".",
+          "Locus": "Ensembl Gene ID"
+        },
+        "sequence_metadata_type_id": "86274"
+      },
+      "nd_protocol_name": "T3 Automated GWAS"
+    },
+    {
+      "nd_protocol_name": "Variant Effect Predictor",
+      "nd_protocol_description": "VEP Description",
+      "nd_protocol_id": 205,
+      "nd_protocol_properties": {
+        "sequence_metadata_type": "Gene Annotation",
+        "score_description": "none",
+        "reference_genome": "RefSeq_v1",
+        "sequence_metadata_type_id": "86273",
+        "attribute_descriptions": {
+          "Consequence": ".",
+          "Name": ".",
+          "ID": ".",
+          "Impact": "."
+        }
+      }
+    },
+    {
+      "nd_protocol_description": "IWGSC Assembly Description",
+      "nd_protocol_id": 206,
+      "nd_protocol_properties": {
+        "sequence_metadata_type_id": "86273",
+        "attribute_descriptions": {
+          "logic_name": "source of the gene annotation",
+          "description": "annotation of feature, can describe function",
+          "Parent": "parent of the feature, used to group exons into transcripts and transcripts into genes",
+          "rank": ".",
+          "ensemble_phase": ".",
+          "Name": "display name for feature",
+          "Alias": "a secondary name for the feature",
+          "biotype": "type of feature",
+          "exon_id": "unique identifier for exon",
+          "gene_id": "another form of the ID for a feature",
+          "constitutive": "exon that are not spliced out",
+          "ID": "unique identifier for feature (gene)",
+          "transcript_id": "a splice variant of a gene",
+          "ensemble_end_phase": ".",
+          "protein_id": "unique identifier for protein"
+        },
+        "sequence_metadata_type": "Gene Annotation",
+        "score_description": "none",
+        "reference_genome": "RefSeq_v1"
+      },
+      "nd_protocol_name": "IWGSC Assembly"
+    },
+    {
+      "nd_protocol_description": "MNase Open Chromatin description",
+      "nd_protocol_id": 207,
+      "nd_protocol_properties": {
+        "sequence_metadata_type_id": "86275",
+        "attribute_descriptions": {
+          "ID": "unique region identifier"
+        },
+        "sequence_metadata_type": "MNase",
+        "score_description": "open chromatin score",
+        "reference_genome": "RefSeq_v1"
+      },
+      "nd_protocol_name": "MNase Open Chromatin"
+    }
+  ]
+}
+</pre>
+
+
+<br /><br /><br />
+
+<p>
+    <strong>Error:</strong> If an error is encountered processing the request, the response will return a JSON object with an <code>error</code> property containing an error message:<br />
+    <code>{"error":"The requested query is too large to perform at once. Try filtering the data by including fewer data types/protocols and/or a smaller sequence range."}</code>
+<p>
+
+
+
+<script type="text/javascript">
+    jQuery(document).ready(function() {
+        set_host();
+    });
+
+    /**
+     * Get and set the host for the API paths
+     */
+    function set_host() {
+        let host = window.location.protocol + '//' + window.location.host;
+        jQuery('.sequence_metadata_host').html(host);
+    }
+</script>
+
+
+<style>
+    code.sequence_metadata_method {
+        font-size: 14px;
+        font-weight: 700;
+        color: #096927;
+        background: #C3E9CE;
+    }
+    code.sequence_metadata_path {
+        font-size: 14px;
+        font-weight: 700;
+        color: #000;
+        background: #eee;
+    }
+    code.sequence_metadata_path > span.sequence_metadata_host {
+        color: #aaa;
+    }
+    p.sequence_metadata_description {
+        margin-top: -5px;
+        margin-bottom: 15px;
+    }
+    table.sequence_metadata_query_params {
+        margin-top: 10px;
+    }
+    table.sequence_metadata_query_params code {
+        background: none;
+        color: #333;
+        font-size: 12px;
+    }
+    pre.sequence_metadata_response {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+</style>

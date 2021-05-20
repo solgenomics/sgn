@@ -26,7 +26,7 @@ $trial_stock_type => undef
             <div class="modal-footer">
                 <button id="close_edit_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="replace_trial_stock_submit" id="replace_trial_stock_submit"></button>
-                <button type="button" class="btn btn-primary" name="substitute_stock_submit" id="substitute_stock_submit"></button>
+                <!-- <button type="button" class="btn btn-primary" name="substitute_stock_submit" id="substitute_stock_submit"></button> -->
             </div>
         </div>
     </div>
@@ -69,7 +69,7 @@ $trial_stock_type => undef
     </div>
 </div>
 
-
+<!--
 <div class="modal fade" id="substitute_plot_stocks_dialog" name="substitute_plot_stocks_dialog" tabindex="-1" role="dialog" aria-labelledby="substitute_plot_dialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
@@ -105,6 +105,7 @@ $trial_stock_type => undef
         </div>
     </div>
 </div>
+-->
 
 <div class="modal  fade" id="replace_stock_dialog_success_message" name="replace_stock_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="replace_stock_message_title">
     <div class="modal-dialog " role="document">
@@ -164,7 +165,7 @@ $trial_stock_type => undef
                 <h4>
                   Background:
                 </h4>
-                  <center><p>Field map is a tool that enable users to view the physical layout of plots in a trial. Maps can be generated on the fly while adding a trial or uploading a trial. Field map coordinates can also be uploaded independently after trials have been added or uploaded. It's a very intuitive, flexible and user friendly tool for manipulation/making changes to field trial layouts before phenotypes are uploaded. </p></center>
+                  <center><p>Field map is a tool that enable users to view the physical layout of plots in a trial. Maps can be generated on the fly while adding a trial or uploading a trial. Field map coordinates can also be uploaded independently after trials have been added or uploaded. It is a very intuitive, flexible and user friendly tool for manipulation/making changes to field trial layouts before phenotypes are uploaded. </p></center>
 
                 <h4>
                   Editing Options:
@@ -174,8 +175,10 @@ $trial_stock_type => undef
                   <dd>A plot accession can be replaced by an accession within or outside of the trial. To do this, <b>click on the plot</b> and <b>provide the name of the new accession</b> (must already exist in the database).</dd>
                   <dt>Replace Trial Accession</dt>
                   <dd>An accession used in a trial can be replaced by a new accession or another accession from the trial. When this replace option is used, it replaces every instances (plots and plants) of that accession in the trial. To do this, <b>click on the Edit Field Map link</b> by the top right of the physical trial layout section; <b>click on Replace Accession button</b>; <b>select accession</b> to replace from the trial and <b>provide a new accession</b> (must already exit in the database); <b>click on Replace Trial Accession button</b> to complete the operation.</dd>
+                  <!--
                   <dt>Substitute Plot Accessions<dt>
                   <dd>This feature allows you to switch plot accessions between any two plots. To switch the accessions of two plots, <b>click on the Edit Field Map link</b>; <b>click on Substitute Accession button</b>; <b>select the plots to switch there accessions</b>; <b>click on Substitute Plot Accession</b> to switch the accession in those plots.</dd>
+                  -->
                 </dl>
 
                 <h4>
@@ -328,45 +331,45 @@ jQuery(document).ready(function () {
     location.reload();
   });
 
-  jQuery('#close_subs_field_map_dialog').click( function() {
-    location.reload();
-  });
+//   jQuery('#close_subs_field_map_dialog').click( function() {
+//     location.reload();
+//   });
 
-  jQuery('#substitute_plot_stock_submit').click( function() {
-    substitute_plot_stock();
-  });
+//   jQuery('#substitute_plot_stock_submit').click( function() {
+//     substitute_plot_stock();
+//   });
 
-  function substitute_plot_stock() {
+//   function substitute_plot_stock() {
 
-    var plot_1_info = jQuery('#trial_plot_1_name_table').val();
-    var plot_2_info = jQuery('#trial_plot_2_name_table').val();
+//     var plot_1_info = jQuery('#trial_plot_1_name_table').val();
+//     var plot_2_info = jQuery('#trial_plot_2_name_table').val();
 
-    new jQuery.ajax({
-      type: 'POST',
-      url: '/ajax/breeders/trial/<% $trial_id %>/substitute_stock',
-      dataType: "json",
-      data: {
-              'plot_1_info': plot_1_info,
-              'plot_2_info': plot_2_info,
-      },
-      beforeSend: function(){
-        jQuery('#working_modal').modal("show");
-      },
-      success: function (response) {
-        jQuery('#working_modal').modal("hide");
+//     new jQuery.ajax({
+//       type: 'POST',
+//       url: '/ajax/breeders/trial/<% $trial_id %>/substitute_stock',
+//       dataType: "json",
+//       data: {
+//               'plot_1_info': plot_1_info,
+//               'plot_2_info': plot_2_info,
+//       },
+//       beforeSend: function(){
+//         jQuery('#working_modal').modal("show");
+//       },
+//       success: function (response) {
+//         jQuery('#working_modal').modal("hide");
 
-        if (response.error){
-          alert("Error Substituting Stock: "+response.error);
-        } else {
-          jQuery('#sub_success_message').modal("show");
-        }
-      },
-      error: function(){
-        jQuery('#working_modal').modal("hide");
-        alert('An error occurred substituting plot stock. Please try again or contact us.');
-      }
-    });
-  }
+//         if (response.error){
+//           alert("Error Substituting Stock: "+response.error);
+//         } else {
+//           jQuery('#sub_success_message').modal("show");
+//         }
+//       },
+//       error: function(){
+//         jQuery('#working_modal').modal("hide");
+//         alert('An error occurred substituting plot stock. Please try again or contact us.');
+//       }
+//     });
+//   }
 
     var trial_name = "<% $trial_name %>";
     var edit_dialog_title = '';
@@ -412,34 +415,34 @@ jQuery(document).ready(function () {
         subs_message_title = 'Substitute Cross Unique ID';
         subs_success_message = 'Crosss Unique ID was substituted successfully.';
     } else {
-        edit_dialog_title = 'Replace Trial Accessions Or Substitute Accessions Within A Trial Plots';
+        edit_dialog_title = 'Replace Trial Accessions Within A Trial Plots';
         replace_button_label = 'Replace Accession';
-        substitute_button_label = 'Substitute Accession';
+        // substitute_button_label = 'Substitute Accession';
         replace_dialog_title = 'Replace Trial Accession in '.concat(trial_name);
         replace_stock_text1 = 'Select Accession: ';
         replace_stock_text2 = 'Enter New Accession: ';
         replace_button_submit = 'Replace Trial Accession';
-        substitute_dialog_title = 'Substitute Plot Accession in '.concat(trial_name);
-        substitute_button_submit = 'Substitute Plot Accession';
+        // substitute_dialog_title = 'Substitute Plot Accession in '.concat(trial_name);
+        // substitute_button_submit = 'Substitute Plot Accession';
         replace_message_title = 'Replace Trial Accession';
         replace_success_message = 'Accession was replaced successfully.';
-        subs_message_title = 'Substitute Plot Accession';
-        subs_success_message = 'Accession was substituted successfully.';
+        // subs_message_title = 'Substitute Plot Accession';
+        // subs_success_message = 'Accession was substituted successfully.';
     }
 
     jQuery('#edit_field_map_title').text(edit_dialog_title);
     jQuery('#replace_trial_stock_submit').text(replace_button_label);
-    jQuery('#substitute_stock_submit').text(substitute_button_label);
+    // jQuery('#substitute_stock_submit').text(substitute_button_label);
     jQuery('#replace_stocks_dialog').text(replace_dialog_title);
     jQuery('#replace_stock_label1').text(replace_stock_text1);
     jQuery('#replace_stock_label2').text(replace_stock_text2);
     jQuery('#replace_stock_submit').text(replace_button_submit);
-    jQuery('#substitute_plot_dialog').text(substitute_dialog_title);
-    jQuery('#substitute_plot_stock_submit').text(substitute_button_submit);
+    // jQuery('#substitute_plot_dialog').text(substitute_dialog_title);
+    // jQuery('#substitute_plot_stock_submit').text(substitute_button_submit);
     jQuery('#replace_stock_message_title').text(replace_message_title);
     jQuery('#replace_stock_success_message').text(replace_success_message);
-    jQuery('#subs_stock_message_title').text(subs_message_title);
-    jQuery('#subs_stock_success_message').text(subs_success_message);
+    // jQuery('#subs_stock_message_title').text(subs_message_title);
+    // jQuery('#subs_stock_success_message').text(subs_success_message);
 
 });
 

@@ -8,7 +8,7 @@ use File::Slurp;
 use File::Spec;
 
 use Bio::SeqIO;
-use Bio::BLAST::Database;
+use Bio::BLAST2::Database;
 use Data::Dumper;
 use File::Temp qw | tempfile |; 
 use CXGN::Graphics::VigsGraph;
@@ -76,7 +76,7 @@ sub run_bowtie2 :Path('/tools/vigs/result') :Args(0) {
 			$db_path =~ s/\.rev\.1\.ebwt//;
 			# print STDERR "DB: $db_path\n";
 			
-			my $fs = Bio::BLAST::Database->open(full_file_basename => "$db_path",);
+			my $fs = Bio::BLAST2::Database->open(full_file_basename => "$db_path",);
 			
 			if ($fs->get_sequence($sequence)) {
 				my $seq_obj = $fs->get_sequence($sequence);

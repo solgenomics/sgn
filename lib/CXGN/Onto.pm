@@ -28,22 +28,24 @@ sub get_terms {
       my $self = shift;
       my $cv_id = shift;
 
-      my $query = "SELECT cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
+      my $query = "SELECT cvterm_id, dbxref.accession, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
                   FROM cvterm
                   JOIN dbxref USING(dbxref_id)
                   JOIN db USING(db_id)
                   LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
                   LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
-                  WHERE cv_id = ? AND is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
-                  GROUP BY 1,2
+                  WHERE cv_id = ?
+                  GROUP BY 1,2,3
                   ORDER BY 2,1";
 
       my $h = $self->schema->storage->dbh->prepare($query);
       $h->execute($cv_id);
 
       my @results;
-      while (my ($id, $name) = $h->fetchrow_array()) {
-        push @results, [$id, $name];
+      while (my ($id, $accession, $name) = $h->fetchrow_array()) {
+	  if ($accession +0 != 0) {
+	      push @results, [$id, $name];
+	  }
       }
 
       return @results;

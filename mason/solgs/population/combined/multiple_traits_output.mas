@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME
- 
+
 population/combined/multiple_traits_output.mas - displays multiple traits GS analysis output and links to traits' GS detailed output pages
 
 =AUTHOR
@@ -47,15 +47,15 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
 
 <& /util/import_javascript.mas, classes => ["solGS.listTypeSelectionPopulation"] &>
 
-<& /solgs/model/model_summary.mas, 
+<& /solgs/model/model_summary.mas,
      model_data => $model_data
 &>
 
-  
+
 <& /solgs/population/selection_populations.mas,
    selection_prediction_download  => $selection_prediction_download,
    analyzed_traits                => $analyzed_traits,
-   pop_id                         => $combo_pops_id,
+   training_pop_id                => $combo_pops_id,
    project_name                   => $project_name,
    prediction_pop_id              => $prediction_pop_id,
    list_of_prediction_pops        => $list_of_prediction_pops,
@@ -82,8 +82,8 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
   prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
   &>
 
-  
- 
+
+
 <& /solgs/selection_index/selection_index.mas,
    analyzed_traits               => $analyzed_traits,
   pop_id                         => $combo_pops_id,
@@ -98,13 +98,13 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
   <& /solgs/kinship/analysis.mas,
      pop_id => $combo_pops_id
     &>
-    
+
 <& /solgs/population/acronym.mas,
    acronym => $acronym,
   &>
 
-  
-  
+
+
   <input type="hidden" id="training_traits_ids" value= "<% $training_traits_ids %>" />
-  <input type="hidden" id="selection_traits_ids" value="<% $selection_traits_ids %>" />  
+  <input type="hidden" id="selection_traits_ids" value="<% $selection_traits_ids %>" />
   <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

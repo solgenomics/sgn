@@ -342,6 +342,18 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
 
 }
 
+sub manage_sequence_metadata :Path("/breeders/sequence_metadata") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	    $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	    return;
+    }
+
+    $c->stash->{template} = '/breeders_toolbox/manage_sequence_metadata.mas';
+}
+
 sub manage_upload :Path("/breeders/upload") Args(0) {
     my $self =shift;
     my $c = shift;
@@ -736,6 +748,12 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 
 sub breeder_search : Path('/breeders/search/') :Args(0) {
     my ($self, $c) = @_;
+
+    if (!$c->user()) {
+    	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    	return;
+    }
+
     $c->stash->{dataset_id} = $c->req->param('dataset_id');
     $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
