@@ -118,13 +118,14 @@ sub search {
 
 		if ($passes_search){
 
+			my @projects = ($_->[0]);
 			my $references = CXGN::BrAPI::v2::ExternalReferences->new({
 				bcs_schema => $self->bcs_schema,
-				table_name => 'Project::Projectprop',
-				base_id_key => 'project_id',
-				base_id => $_->[0]
+				table_name => 'project',
+				table_id_key => 'project_id',
+				id => \@projects
 			});
-			my $external_references = $references->references_db();
+			my $external_references = $references->search();
 
 			push @data, {
 				programDbId=>qq|$_->[0]|,

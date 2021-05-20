@@ -39,13 +39,14 @@ sub get_breeding_programs {
     my @projects;
     while (my $row = $rs->next()) {
 
+        my @project_array = ($row->project_id);
         my $references = CXGN::BrAPI::v2::ExternalReferences->new({
             bcs_schema => $self->schema,
-            table_name => 'Project::Projectprop',
-            base_id_key => 'project_id',
-            base_id => $row->project_id
+            table_name => 'project',
+            table_id_key => 'project_id',
+            id => \@project_array
         });
-        my $external_references = $references->references_db();
+        my $external_references = $references->search();
 
 	    push @projects, [ $row->project_id, $row->name, $row->description, $external_references ];
     }
