@@ -17,7 +17,7 @@ $item_prop_id
 
 <& /page/page_title.mas, title => "Catalog Item Details for: $item_name" &>
 
-<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0, subtitle=>"[<a id='edit_catalog_item_link' >Edit Item Details</a>]" &>
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>
 
     <div class="panel panel-default">
         <div class="panel-body">
@@ -34,14 +34,28 @@ $item_prop_id
                         <tr><td><b>Contact Person Username</b></td><td><% $contact_person_username %></td></tr>
                     </table>
                 </div>
-                <div class="col-sm-6">
-                    <br/><br/>
+            </div>
+        </div>
+    </div>
+</&>
 
-                    <br/><br/>
+<&| /page/info_section.mas, title => 'Manage Catalog Item', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button id="edit_catalog_item_link" class="btn btn-primary btn-sm">Edit Catalog Item</button>
+            </div>
+        </div>
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "catalog_item_images_table" class="table table-hover table-striped">
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </&>
+
 
 <& /order/edit_catalog_details_dialog.mas, item_name => $item_name, item_id => $item_id, species => $species, item_type => $item_type, category => $category, description => $description, material_source => $material_source, breeding_program => $breeding_program, availability => $availability, contact_person_username => $contact_person_username, item_prop_id => $item_prop_id  &>
