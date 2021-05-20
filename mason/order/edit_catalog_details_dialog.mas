@@ -166,14 +166,12 @@ jQuery(document).ready( function() {
         var breeding_program = jQuery('#edit_item_breeding_program').val();
         var availability = jQuery('#edit_item_availability').val();
         var contact_person = jQuery('#edit_contact_person').val();
-        alert(breeding_program);
-        alert(availability);
         jQuery.ajax({
             url: '/ajax/catalog/add_item',
             dataType: "json",
             type: 'POST',
             data : {
-                'item_name' : name,
+                'item_name': name,
                 'item_type': type,
                 'item_category': category,
                 'item_description': description,

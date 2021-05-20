@@ -57,6 +57,34 @@ sub add_catalog_item_POST : Args(0) {
     my $program_rs = $schema->resultset('Project::Project')->find({project_id => $item_breeding_program});
     my $program_name = $program_rs->name();
 
+    my $catalog_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_catalog_json', 'stock_property')->cvterm_id();
+    if ($item_prop_id) {
+        my $catalog_item_rs = $schema->resultset("Stock::Stockprop")->find({stockprop_id => $item_prop_id, type_id => $catalog_json_cvterm_id});
+        if (!$catalog_item_rs) {
+            $c->stash->{rest} = {error_string => "This item is not in the database!",};
+            return;
+        } else {
+            my %catalog_details = {
+                item_type => $item_type,
+                category => $item_category,
+                description => $item_description,
+                material_source => $item_material_source,
+                breeding_program => $program_name,
+                availability => $item_availability,
+                contact_person_id => $sp_person_id,
+            };
+
+            my $new_catalog_info = encode_json \%catalog_details;
+            $catalog_item_rs ->update({value => $new_catalog_info});
+
+            if (!$catalog_item_rs->update()){
+                $c->stash->{rest} = {error_string => "Error updating catalog item",};
+                return;
+            }
+
+        }
+    }
+
     my $stock_catalog = CXGN::Stock::Catalog->new({
         bcs_schema => $schema,
         item_type => $item_type,
