@@ -204,15 +204,26 @@
 
     </form>
 
-    <br />
-
-    <!-- Error Message -->
-    <div id="sequence_metadata_filter_error" class="alert alert-danger" role="alert" style="display:none"></div>
-
-    <br />
-
 </div>
 <!-- END QUERY SECTION -->
+
+
+<!-- START AUTO SEARCH SECTION -->
+<div id="sequence_metadata_section_auto_search" style="display: none">
+    <div class="well" style="max-width: 500px; margin: 50px auto">
+        <h1>Searching...</h1>
+        <br /><br />
+        <p>Querying the database for the requested sequence metadata...</p>
+        <br /><br />
+    </div>
+</div>
+<!-- END AUTO SEARCH SECTION -->
+
+
+<!-- Error Message -->
+<br />
+<div id="sequence_metadata_filter_error" class="alert alert-danger" role="alert" style="display:none"></div>
+<br />
 
 
 <!-- START RESULTS SECTION -->
@@ -271,6 +282,7 @@
 var selected_reference_genome = false;      // Selected reference genome via URL param
 var selected_feature = false;               // Selected feature name via URL param
 var selected_protocols = [];                // List of protocol ids selected via URL params
+var auto_search = false;                    // Flag for automatically performing the search via URL param
 var reference_genomes = [];                 // List of reference genomes / species fetched from the database
 var features = {};                          // Object of features (key = species) fetched from the database
 var protocols = {};                         // Object of sequence metadata protocols (key = reference) fetched from the database
@@ -282,14 +294,8 @@ jQuery(document).ready(function() {
     // Parse URL Arguments
     parse_args();
 
-    // Get the filter reference genomes, features, types, and protocols
-    get_reference_genomes(function() {
-        get_features();
-        get_types();
-        get_protocols(function() {
-            jQuery('#sequence_metadata_filter_query').attr('disabled', false);
-        });
-    });
+    // Get and setup the initial query data types
+    setup();
 
     //
     // CLICK AND CHANGE LISTENERS
@@ -329,9 +335,7 @@ jQuery(document).ready(function() {
 
     // Toggle Sections on history/state change
     if (window.history && window.history.pushState) {
-        jQuery(window).on('popstate', function() {
-            toggle_sections();
-        });
+        jQuery(window).on('popstate', toggle_sections);
     }
 
 
@@ -436,7 +440,58 @@ function parse_args() {
     if ( urlParams.has('end') ) {
         jQuery('#sequence_metadata_filter_end').val(urlParams.get('end'));
     }
+    if ( urlParams.has('results') && selected_feature ) {
+        auto_search = true;
+    }
 }
+
+
+/**
+ * Setup the initial query data types
+ * - Call get_reference_genomes()
+ * - Then, call get_features(), get_types(), and get_protocols()
+ * - Enable the search once all are complete
+ * - If auto_search is enabled, start the query and display feedback
+ */
+function setup() {
+    let completed = [];
+
+    // Show the auto search section, if enabled
+    if ( auto_search ) {
+        display_auto_search_loading();
+    }
+
+    // Setup the reference genomes...
+    get_reference_genomes(function() {
+        _complete("reference_genomes")
+    });
+
+    function _complete(type) {
+        completed.push(type);
+
+        // Setup the remaining data types...
+        if ( type === "reference_genomes" ) {
+            get_features(function() {
+                _complete("features")
+            });
+            get_types(function() {
+                _complete("types")
+            });
+            get_protocols(function() {
+                _complete("protocols")
+            });
+        }
+
+        // Finish the setup
+        if ( completed.length === 4 ) {
+            jQuery('#sequence_metadata_filter_query').attr('disabled', false);
+            if ( auto_search ) {
+                query();
+            }
+        }
+    }
+}
+
 
 /**
  * Remove the pre-defined selected protocols and display the 
@@ -494,8 +549,9 @@ function get_reference_genomes(callback) {
 /**
  * Get the features associated with stored sequence metadata
  * - call set_features() to populate the options for the feature select box
+ * @param {Function} [callback] Callback function() (only called if successful)
  */
-function get_features() {
+function get_features(callback) {
     jQuery.ajax({
         type: 'GET',
         dataType: 'json',
@@ -515,6 +571,9 @@ function get_features() {
 
                 // Set feature options
                 set_features();
+
+                // Return to callback, if provided
+                if ( callback ) return callback();
 
             }
             else {
@@ -549,8 +608,9 @@ function set_features() {
 /**
  * Get the types associated with stored sequence metadata
  * - build the data type info table
+ * @param {Function} [callback] Callback function() (only called if successful)
  */
-function get_types() {
+function get_types(callback) {
     jQuery.ajax({
         type: 'GET',
         dataType: 'json',
@@ -567,6 +627,9 @@ function get_types() {
                 info += "</tbody>";
                 info += "</table>";
                 jQuery('#sequence_metadata_filter_type_info .modal-body').html(info);
+
+                // Return to callback, if provided
+                if ( callback ) return callback();
 
             }
             else {
@@ -934,7 +997,15 @@ function handle_query_results(response) {
     }
     else if ( response && response.results && response.results.length > 0) {
         dt.rows.add(response.results);
-        toggle_sections();
+        if ( auto_search ) {
+            display_auto_search_results();
+        }
+        else {
+            toggle_sections();
+        }
+        if (window.history && window.history.pushState) {
+            window.history.pushState('results', null, null);
+        }
     }
     else {
         display_error("No results found - try modifying your filter criteria");
@@ -947,12 +1018,6 @@ function handle_query_results(response) {
     // Reset Query Button
     jQuery('#sequence_metadata_filter_query').html('Search');
     jQuery('#sequence_metadata_filter_query').attr('disabled', false);
-
-    // Add to history state
-    if (window.history && window.history.pushState) {
-        window.history.pushState('results', null, null);
-    }
-
 }
 
 
@@ -1299,6 +1364,24 @@ function toggle_sections() {
     jQuery("#sequence_metadata_section_results").toggle();
     let anchor = jQuery('#sequence_metadata_anchor');
     jQuery('html,body').animate({scrollTop: anchor.offset().top-150}, 'fast');
+}
+
+/**
+ * Display the auto search loading section
+ */
+function display_auto_search_loading() {
+    jQuery("#sequence_metadata_section_query").hide();
+    jQuery("#sequence_metadata_section_results").hide();
+    jQuery("#sequence_metadata_section_auto_search").show();
+}
+
+/**
+ * Display the auto search results
+ */
+function display_auto_search_results() {
+    jQuery("#sequence_metadata_section_query").hide();
+    jQuery("#sequence_metadata_section_auto_search").hide();
+    jQuery("#sequence_metadata_section_results").show();
 }
 
 /**

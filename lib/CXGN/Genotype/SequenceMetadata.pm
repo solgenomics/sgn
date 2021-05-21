@@ -768,7 +768,7 @@ OR ((s->>'start')::int < ? AND (s->>'end')::int > ?)
         if ( defined $defs ) {
             foreach my $title (keys %$defs) {
                 my $template = $defs->{$title};
-                my @variables = $template =~ /{{([^}]*)}}/g;
+                my @variables = $template =~ /\\{\\{([^}]*)\\}\\}/g;
 
                 # Get values for replacement
                 my $skip = 0;       # flag to skip link if one or more variables are undefined for this match
