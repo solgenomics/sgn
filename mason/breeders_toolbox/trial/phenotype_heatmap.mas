@@ -6,7 +6,7 @@ $data_level => 'plot'
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
- <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3Min.js', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
+<& /util/import_javascript.mas, entries => ['fieldmap.js'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3Min.js', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
 
 <style>
     #trait_heatmap {display: inline; }
@@ -114,6 +114,7 @@ $data_level => 'plot'
   <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image</li>
   <li><button type="button" id="rotate_map" class="btn btn-success btn-sm">Rotate Map</button></li>
   <li><button type="button" id="add_border" class="btn btn-success btn-sm">Add Border</button></li>
+  <li><button type="button" id="change_dimensions" class="btn btn-success btn-sm">Change Dimensions</button></li>
   <a id="hm_replace_accessions_link"><button class="btn btn-success" type="button" id="hm_replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
 </div>
 
@@ -424,6 +425,37 @@ my $image_ids =  $stockref->{image_ids} || [] ;
     </div>
 </div>
 
+<div class="modal fade" id="change_dimensions_dialog" name="change_dimensions_dialog" tabindex="-1" role="dialog" aria-labelledby="ChangeDimensions">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ChangeDimensions">Change Dimensions</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <label style="margin-left: 15%;">Dimensions: </label>
+                    <div style="display: inline;">
+                        <div style="margin-left: 4%; margin-right: 2%; display: inline-block; width: 10%;">
+                            <label for="row-dims" style="display:block;">Rows</label> 
+                            <input style="width: 100%;" type="text" id="row-dims" name="row-dims">
+                        </div>
+                        x
+                        <div style="margin: 2%; display: inline-block; width: 10%;">
+                            <label for="col-dims" style="display:block">Columns</label> 
+                            <input style="width: 100%;" type="text" id="col-dims" name="col-dims">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="submit_dimensions_change" type="button" class="btn btn-primary">Submit</button>
+                <button id="close_dimension_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="add_border_dialog" name="add_border_dialog" tabindex="-1" role="dialog" aria-labelledby="addBorder">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
@@ -463,7 +495,9 @@ my $image_ids =  $stockref->{image_ids} || [] ;
 </div>
 
 <script defer="defer" type="text/javascript" >
-var trial_id = <% $trial_id %>;
+var trial_id = '<% $trial_id %>';
+var data_level = '<% $data_level %>';
+
 var value = 'plot';
 var selected;
 var trialStudyDesign;
@@ -474,6 +508,10 @@ var left_border_selection;
 var right_border_selection;
 var bottom_border_selection;
 var border_accession_name;
+var num_rows;
+var num_cols;
+var changed_dim_rows;
+var changed_dim_cols;
 
 jQuery(document).ready( function() {
 
@@ -880,14 +918,15 @@ jQuery(document).ready( function() {
                 var design;
                 var plotImageDbIds = [];
                 var plant_names = [];
-                var lowest_row = 1000;
-                var lowest_col = 1000;
+                var lowest_row = 10000;
+                var lowest_col = 10000;
                 var highest_row = 0;
                 var highest_col = 0;
 
                 jQuery.each(data, function(key_obj, value_obj) {
                     jQuery.each(value_obj, function(key, value) {
                         if (key == 'Y'){
+                            value = parseInt(value);
                             if (value < lowest_row) {
                                 lowest_row = value;
                             } else if (value > highest_row) {
@@ -896,6 +935,7 @@ jQuery(document).ready( function() {
                             rows.push(value);
                         }
                         if (key == 'X'){
+                            value = parseInt(value);
                             if (value < lowest_col) {
                                 lowest_col =  value;
                             } else if (value > highest_col) {
@@ -947,6 +987,24 @@ jQuery(document).ready( function() {
                         }
                     });
                     
+                    if (changed_dim_rows) {
+                        rows = [];
+                        cols = [];
+                        let count = 0;
+                        for (let i=0; i<changed_dim_rows; i++) {
+                            for (let j=0; j<changed_dim_cols; j++) {
+                                rows[count] = lowest_row + i;
+                                cols[count] = lowest_col + j;
+                                count++;
+                            }
+                        }
+                    }
+
+                    lowest_row = Math.min.apply(Math, rows);
+                    lowest_col = Math.min.apply(Math, cols);
+                    highest_row = Math.max.apply(Math, rows);
+                    highest_col = Math.max.apply(Math, cols);
+
                     field_map_hash = {
                         'rows': rows,
                         'cols': cols,
@@ -1081,9 +1139,17 @@ jQuery(document).ready( function() {
             else {
                 plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nnumber_of_plants:"+plant_names[i]+"\nseedlot:"+seedlot_names[i];
             }
-            result.push({plotname:plot_names[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp, seedlot:seedlot_names[i]}) ;
+            result.push({plotname:plot_names[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp, seedlot:seedlot_names[i]});
         }
-               
+
+        // if (plot_names.length < ((highest_col - lowest_col + 1) * (highest_row - lowest_row + 1))) {
+        //     console.log("WHIHW");
+        //     let num_dummy_plots = (highest_col - lowest_col + 1) * (highest_row - lowest_row - 1) + plot_names.length;
+        //     for (let i = 1; i <= num_dummy_plots; i++) {
+        //         result.push({plotname:"dummy plot" + parseStr(i), row:rows[-i], blkn: blocks[0], plot_image_ids:plotImageDbIds[0], col:cols[-i], plot_msg:plot_popUp});
+        //     }
+        // }
+
         var col_max = Math.max.apply(Math,unique_cols);
         var row_max = Math.max.apply(Math,unique_rows);
         var rep_max = Math.max.apply(Math,replicates);
@@ -1091,7 +1157,8 @@ jQuery(document).ready( function() {
         var col_length = cols[0]; 
         var row_length = rows[0];
 
-
+        num_cols = col_max;
+        num_rows = row_max;
 
         unique_rows = [];
         unique_cols = [];
@@ -1188,11 +1255,6 @@ jQuery(document).ready( function() {
                     d.col = +d.col;
                     d.blkn = +d.blkn;   
                 });
-
-                lowest_col = parseInt(lowest_col);
-                highest_col = parseInt(highest_col);
-                lowest_row = parseInt(lowest_row);
-                highest_row = parseInt(highest_row);
 
                 if (top_border_selection == "yes") {
                     datasets.forEach(function(d) { 
@@ -1529,10 +1591,28 @@ jQuery(document).ready( function() {
         }
     }); 
     
-    jQuery('#add_border').click(function(){
+    jQuery('#add_border').click(function() {
         jQuery("#add_border_dialog").modal("show");
     }) 
     
+    jQuery('#change_dimensions').click(function() {
+        jQuery("#change_dimensions_dialog").modal("show");
+        jQuery("#row-dims").val(num_rows);
+        jQuery("#col-dims").val(num_cols);
+    })
+
+    jQuery('#submit_dimensions_change').click(function() {
+        jQuery("#change_dimensions_dialog").modal("hide");
+        changed_dim_rows = jQuery("#row-dims").val();
+        changed_dim_cols = jQuery("#col-dims").val();
+        if (num_rows * num_cols > changed_dim_rows * changed_dim_cols) {
+            alert('Those are not valid dimensions.\nPlease pick dimensions for a plot size equal to or larger than your current plot.');
+        } else {
+        d3.select("svg").remove();
+        field_map_view();
+        }
+    })
+
     jQuery("#border_accession_form").submit( function() {
         event.preventDefault();
     })
@@ -1544,9 +1624,11 @@ jQuery(document).ready( function() {
         bottom_border_selection = document.getElementById("bottom_border_selection").checked ? 'yes' : 'no';
  
         border_accession_name = document.getElementById("border_accession_name").value;
+        
         jQuery("#add_border_dialog").modal("hide");
         d3.select("svg").remove();
         field_map_view();
+        
     })
 
     jQuery("#hm_view_plot_image_submit").click( function() {
@@ -1712,7 +1794,7 @@ jQuery(document).ready( function() {
         jQuery("#delete_button_fm").css("display", "none");
         jQuery("#ctrldiv").css("display", "none");
         jQuery("#view_ctrl_button").show();
-        assayed_trait_heatmap_view(selected);
+        assayed_trait_heatmap_view(selected, trial_id, data_level);
     }
   });
 
