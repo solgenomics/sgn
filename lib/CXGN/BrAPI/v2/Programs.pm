@@ -126,6 +126,7 @@ sub search {
 				id => \@projects
 			});
 			my $external_references = $references->search();
+			my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
 
 			push @data, {
 				programDbId=>qq|$_->[0]|,
@@ -134,7 +135,7 @@ sub search {
 				additionalInfo => {},
 	            commonCropName => $inputs->{crop},
 	            documentationURL => undef,
-	            externalReferences  => $external_references,
+	            externalReferences  => @formatted_external_references,
 	            leadPersonDbId => $person_id,
 	            leadPersonName=> $names,
 	            objective=>$_->[2],
@@ -179,14 +180,16 @@ sub detail {
 	}
     my $names = join ',', @sp_person_names;
     my $person_id = join ',',  @sp_persons;
+	my @ids = ($id);
 
 	my $references = CXGN::BrAPI::v2::ExternalReferences->new({
 		bcs_schema => $self->bcs_schema,
-		table_name => 'Project::Projectprop',
-		base_id_key => 'project_id',
-		base_id => $id
+		table_name => 'project',
+		table_id_key => 'project_id',
+		id => \@ids
 	});
-	my $external_references = $references->references_db();
+	my $external_references = $references->search();
+	my @formatted_external_references = %{$external_references} ? values %{$external_references} : undef;
     
 	%result = (
 		programDbId=>qq|$id|,
@@ -195,7 +198,7 @@ sub detail {
 		additionalInfo => {},
         commonCropName => $crop,
         documentationURL => undef,
-        externalReferences  => $external_references,
+        externalReferences  => @formatted_external_references,
         leadPersonDbId => $person_id ? $person_id : undef,
         leadPersonName=> $names ? $names : undef,
         objective=>$description,

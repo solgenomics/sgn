@@ -62,7 +62,10 @@ sub search {
 
     my %result;
     while (my @r = $sth->fetchrow_array()) {
-        push @{$result{$r[3]}} , \@r;
+        push @{$result{$r[3]}} , {
+            referenceSource => $r[0],
+            referenceId     => $r[1] . $r[2]
+        };
     }
     return \%result;
 }
@@ -70,7 +73,7 @@ sub search {
 sub store {
     my $self = shift;
     my $schema = $self->bcs_schema();
-    my $table = $self->table_name();
+    my $table = sprintf "%s_dbxref", $self->table_name();
     my $table_id = $self->table_id_key();
     my $id = $self->id();
     my $external_references = $self->external_references();
@@ -118,10 +121,16 @@ sub store {
                     accession => $object_id
                 });
 
-                my $create_stock_dbxref = $schema->resultset($table)->find_or_create({
-                    $table_id => $id,
-                    dbxref_id => $create_dbxref->dbxref_id()
-                });
+                # Switch to model way to do it once project_dbxref is added to chado schema
+                my $dbh = $self->bcs_schema->storage()->dbh();
+                my $sql = "INSERT INTO $table (dbxref_id, $table_id) VALUES ( ?, ? )";
+                my $sth = $dbh->prepare( $sql );
+                $sth->execute($create_dbxref->dbxref_id(), $id);
+
+                #my $create_stock_dbxref = $schema->resultset($table)->find_or_create({
+                #    $table_id => $id,
+                #    dbxref_id => $create_dbxref->dbxref_id()
+                #});
             }
         }
     }

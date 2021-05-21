@@ -500,9 +500,9 @@ sub new_breeding_program {
             my $references = CXGN::BrAPI::v2::ExternalReferences->new({
                 bcs_schema          => $self->schema,
                 external_references => $external_references,
-                table_name          => 'Project::Projectprop',
-                base_id_key         => 'project_id',
-                base_id             => $project_id
+                table_name          => 'project',
+                table_id_key         => 'project_id',
+                id             => $project_id
             });
 
             $references->store();
@@ -523,6 +523,7 @@ sub new_breeding_program {
     };
 
     if ($transaction_error) {
+        warn $transaction_error;
         return {error => "An error occurred while generating a new breeding program."}
     }
 
