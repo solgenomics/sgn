@@ -10,6 +10,7 @@ $breeding_program
 $availability
 $contact_person_username
 $item_prop_id
+$check_vendor_role
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
@@ -39,23 +40,47 @@ $item_prop_id
     </div>
 </&>
 
-<&| /page/info_section.mas, title => 'Manage Catalog Item', collapsible=>1, collapsed=>0 &>
-    <div class = "well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <button id="edit_catalog_item_link" class="btn btn-primary btn-sm">Edit Catalog Item</button>
+% if ($check_vendor_role == 1) {
+    <&| /page/info_section.mas, title => 'Manage Catalog Item', collapsible=>1, collapsed=>0 &>
+        <div class = "well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <button id="edit_catalog_item_link" class="btn btn-primary btn-sm">Edit Catalog Item</button>
+                </div>
             </div>
-        </div>
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-                <div style="overflow:scroll">
-                    <table id = "catalog_item_images_table" class="table table-hover table-striped">
-                    </table>
+            <div class = "panel panel-default">
+                <div class = "panel-body">
+                    <div style="overflow:scroll">
+                        <table id = "catalog_item_images_table" class="table table-hover table-striped">
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</&>
+    </&>
+% }
 
 
 <& /order/edit_catalog_details_dialog.mas, item_name => $item_name, item_id => $item_id, species => $species, item_type => $item_type, category => $category, description => $description, material_source => $material_source, breeding_program => $breeding_program, availability => $availability, contact_person_username => $contact_person_username, item_prop_id => $item_prop_id  &>
+
+
+<script>
+
+jQuery(document).ready( function() {
+
+    var item_images_table = jQuery('#catalog_item_images_table').DataTable( {
+        'autoWidth': false,
+        'order': false,
+        'searching': false,
+        'ajax': '/ajax/catalog/image_list/' + <% $item_id %>,
+        'columns': [
+            { title: "Name", "data": "image_name" },
+            { title: "Image", "data": "small_image" },
+            { title: "Description", "data": "image_description"},
+            { title: "Add to Catalog", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addImage(\""+row.image_id+"\")' >Add</a>"; } },
+        ],
+    });
+
+});
+
+</script>

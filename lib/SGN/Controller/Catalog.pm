@@ -30,6 +30,17 @@ sub stock_catalog :Path('/catalog/view') :Args(0) {
 sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     my $self = shift;
     my $c = shift;
+
+    if (! $c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    if ($c->user) {
+        my $check_vendor_role = $c->user->check_roles('vendor');
+        $c->stash->{check_vendor_role} = $check_vendor_role;
+    }
+
     my $item_id = shift;
 #    print STDERR "CATALOG STOCK ID =".Dumper($item_id)."\n";
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -45,7 +56,7 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     } else {
         $item_stockprop_id = $stock_catalog_info->stockprop_id();
         print STDERR "STOCKPROP ID =".Dumper($item_stockprop_id)."\n";
-}
+    }
 
     my $stock_catalog_item = $schema->resultset("Stock::Stock")->find({stock_id => $item_id});
     my $item_name = $stock_catalog_item->uniquename();
@@ -68,17 +79,6 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     my $person = CXGN::People::Person->new($dbh, $contact_person_id);
     my $contact_person_username = $person->get_username;
 #    print STDERR "CONTACT PERSON NAME=".Dumper($contact_person_username)."\n";
-
-
-    my @image_ids;
-    my $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ? ORDER BY stock_image.display_order ASC";
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($item_id);
-    while (my ($image_id, $stock_type) = $h->fetchrow_array()){
-        push @image_ids, [$image_id, $stock_type];
-    }
-    print STDERR "IMAGE IDS =".Dumper(\@image_ids)."\n";
-
 
     $c->stash->{item_id} = $item_id;
     $c->stash->{item_name} = $item_name;
