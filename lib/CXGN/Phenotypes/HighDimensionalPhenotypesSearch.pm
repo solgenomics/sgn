@@ -184,9 +184,11 @@ sub search {
         my $h = $dbh->prepare($q);
         $h->execute($nd_protocol_id);
         while (my ($stock_uniquename, $stock_id, $spectra, $device_type) = $h->fetchrow_array()) {
-            $spectra = decode_json $spectra;
-            $data_matrix{$stock_id}->{spectra} = $spectra;
-            $data_matrix{$stock_id}->{device_type} = $device_type;
+            eval {
+                $spectra = decode_json $spectra;
+                $data_matrix{$stock_id}->{spectra} = $spectra;
+                $data_matrix{$stock_id}->{device_type} = $device_type;
+            };
         }
 
         $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
@@ -204,8 +206,10 @@ sub search {
         my $h = $dbh->prepare($q);
         $h->execute($nd_protocol_id);
         while (my ($stock_uniquename, $stock_id, $transcriptomics) = $h->fetchrow_array()) {
-            $transcriptomics = decode_json $transcriptomics;
-            $data_matrix{$stock_id}->{transcriptomics} = $transcriptomics;
+            eval {
+                $transcriptomics = decode_json $transcriptomics;
+                $data_matrix{$stock_id}->{transcriptomics} = $transcriptomics;
+            };
         }
 
         $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_transcriptomics_protocol', 'protocol_type')->cvterm_id();
@@ -223,8 +227,10 @@ sub search {
         my $h = $dbh->prepare($q);
         $h->execute($nd_protocol_id);
         while (my ($stock_uniquename, $stock_id, $metabolomics) = $h->fetchrow_array()) {
-            $metabolomics = decode_json $metabolomics;
-            $data_matrix{$stock_id}->{metabolomics} = $metabolomics;
+            eval {
+                $metabolomics = decode_json $metabolomics;
+                $data_matrix{$stock_id}->{metabolomics} = $metabolomics;
+            };
         }
 
         $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_metabolomics_protocol', 'protocol_type')->cvterm_id();
