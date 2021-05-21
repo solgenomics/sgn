@@ -48,14 +48,14 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
 
     my $stock_catalog_info = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $stock_catalog_type_id});
 
-    my $item_stockprop_id;
+    my $item_prop_id;
     if (!$stock_catalog_info){
         $c->stash->{template} = '/generic_message.mas';
         $c->stash->{message} = 'The requested catalog item does not exist.';
         return;
     } else {
-        $item_stockprop_id = $stock_catalog_info->stockprop_id();
-        print STDERR "STOCKPROP ID =".Dumper($item_stockprop_id)."\n";
+        $item_prop_id = $stock_catalog_info->stockprop_id();
+        print STDERR "STOCKPROP ID =".Dumper($item_prop_id)."\n";
     }
 
     my $stock_catalog_item = $schema->resultset("Stock::Stock")->find({stock_id => $item_id});
@@ -90,7 +90,7 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     $c->stash->{breeding_program} = $breeding_program;
     $c->stash->{availability} = $availability;
     $c->stash->{contact_person_username} = $contact_person_username;
-    $c->stash->{item_prop_id} = $item_stockprop_id;
+    $c->stash->{item_prop_id} = $item_prop_id;
 
     $c->stash->{template} = '/order/catalog_item_details.mas';
 }

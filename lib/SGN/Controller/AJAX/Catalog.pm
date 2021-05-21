@@ -309,17 +309,30 @@ sub item_image_list :Path('/ajax/catalog/image_list') :Args(1) {
                 small_image => qq|<a href="$medium_image"  title="<a href=$image_page>Go to image page ($image_obj_name)</a>" class="stock_image_group" rel="gallery-figures"><img src="$small_image"/></a> |,
                 image_description => $image_obj_description,
             };
-        print STDERR "IMAGE LIST =".Dumper(\@image_list)."\n";
-
-        $c->stash->{rest} = {data => \@image_list};
-
-
+            print STDERR "IMAGE LIST =".Dumper(\@image_list)."\n";
     }
 
+    $c->stash->{rest} = {data => \@image_list};
+}
 
 
+sub delete_catalog_item : Path('/ajax/catalog/delete') : ActionClass('REST'){ }
 
+sub delete_catalog_item_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
+    my $item_prop_id = $c->req->param('item_prop_id');
+    print STDERR "ITEM PROP ID =".Dumper($item_prop_id)."\n";
+    my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema, prop_id => $item_prop_id });
+    $catalog_obj->delete();
+    if ($catalog_obj->delete() == 0) {
+        $c->stash->{rest} = { error_string => "An error occurred attempting to delete a catalog item." };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 1;

@@ -46,6 +46,7 @@ $check_vendor_role
             <div class="panel panel-default">
                 <div class="panel-body">
                     <button id="edit_catalog_item_link" class="btn btn-primary btn-sm">Edit Catalog Item</button>
+                    <button id="delete_catalog_item_button" class="btn btn-primary btn-sm">Delete Catalog Item</button>
                 </div>
             </div>
             <div class = "panel panel-default">
@@ -59,6 +60,29 @@ $check_vendor_role
         </div>
     </&>
 % }
+
+<div class="modal fade" id="delete_item_success_dialog" name="order_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="deleteItemSuccessDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="deleteItemSuccessDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The catalog item was delete.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_deleted_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 <& /order/edit_catalog_details_dialog.mas, item_name => $item_name, item_id => $item_id, species => $species, item_type => $item_type, category => $category, description => $description, material_source => $material_source, breeding_program => $breeding_program, availability => $availability, contact_person_username => $contact_person_username, item_prop_id => $item_prop_id  &>
@@ -79,6 +103,34 @@ jQuery(document).ready( function() {
             { title: "Description", "data": "image_description"},
             { title: "Add to Catalog", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addImage(\""+row.image_id+"\")' >Add</a>"; } },
         ],
+    });
+
+    jQuery('#delete_catalog_item_button').click( function() {
+        var response = confirm('Really delete this catalog item? This action cannot be undone.');
+        if (response) {
+            jQuery.ajax({
+                url: '/ajax/catalog/delete',
+                dataType: "json",
+                type: 'POST',
+                data : {'item_prop_id' : <% $item_prop_id %>},
+                beforeSend: function(response){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        jQuery('#delete_item_success_dialog').modal('show');
+                    }
+                    if (response.error_string) {
+                        alert(response.error_string);
+                    }
+                }
+            });
+        }
+    });
+
+    jQuery("#dismiss_deleted_message_dialog").click(function(){
+        location.reload();
     });
 
 });
