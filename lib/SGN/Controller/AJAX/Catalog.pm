@@ -34,7 +34,6 @@ sub add_catalog_item_POST : Args(0) {
     my $contact_person = $c->req->param('contact_person');
     my $item_prop_id = $c->req->param('item_prop_id');
     my $item_stock_id;
-    print STDERR "AJAX AVAILABILITY =".Dumper($item_availability)."\n";
     if (!$c->user()) {
         print STDERR "User not logged in... not adding a catalog item.\n";
         $c->stash->{rest} = {error_string => "You must be logged in to add a catalog item." };
@@ -54,50 +53,23 @@ sub add_catalog_item_POST : Args(0) {
         $c->stash->{rest} = {error_string => "Contact person has no record in the database!",};
         return;
     }
-    print STDERR "PERSON ID =".Dumper($sp_person_id)."\n";
+#    print STDERR "PERSON ID =".Dumper($sp_person_id)."\n";
     my $program_rs = $schema->resultset('Project::Project')->find({project_id => $item_breeding_program});
     my $program_name = $program_rs->name();
 
-    my $catalog_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_catalog_json', 'stock_property')->cvterm_id();
-    if ($item_prop_id) {
-        my $catalog_item_rs = $schema->resultset("Stock::Stockprop")->find({stockprop_id => $item_prop_id, type_id => $catalog_json_cvterm_id});
-        if (!$catalog_item_rs) {
-            $c->stash->{rest} = {error_string => "This item is not in the database!",};
-            return;
-        } else {
-            my %catalog_details = {
-                item_type => $item_type,
-                category => $item_category,
-                description => $item_description,
-                material_source => $item_material_source,
-                breeding_program => $program_name,
-                availability => $item_availability,
-                contact_person_id => $sp_person_id,
-            };
-
-            my $new_catalog_info = encode_json \%catalog_details;
-            $catalog_item_rs ->update({value => $new_catalog_info});
-
-            if (!$catalog_item_rs->update()){
-                $c->stash->{rest} = {error_string => "Error updating catalog item",};
-                return;
-            }
-
-        }
-    }
-
     my $stock_catalog = CXGN::Stock::Catalog->new({
         bcs_schema => $schema,
-        item_type => $item_type,
-        category => $item_category,
-        description => $item_description,
-        material_source => $item_material_source,
-        breeding_program => $program_name,
-        availability => $item_availability,
-        contact_person_id => $sp_person_id,
         parent_id => $item_stock_id,
         prop_id => $item_prop_id
     });
+
+    $stock_catalog->item_type($item_type);
+    $stock_catalog->category($item_category);
+    $stock_catalog->description($item_description);
+    $stock_catalog->material_source($item_material_source);
+    $stock_catalog->breeding_program($program_name);
+    $stock_catalog->availability($item_availability);
+    $stock_catalog->contact_person_id($sp_person_id);
 
     $stock_catalog->store();
 
