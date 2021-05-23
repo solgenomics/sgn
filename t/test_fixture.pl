@@ -218,7 +218,7 @@ unless( $prove_pid ) {
 
     # set up env vars for prove and the tests
     #
-    $ENV{SGN_TEST_SERVER} = "http://localhost:$catalyst_server_port";
+    $ENV{SGN_TEST_SERVER} ||= "http://localhost:$catalyst_server_port";
     if(! $noparallel ) {
         $ENV{SGN_PARALLEL_TESTING} = 1;
         $ENV{SGN_SKIP_LEAK_TEST}   = 1;
