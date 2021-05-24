@@ -136,7 +136,7 @@ solGS.sIndex = {
             var row    = selPopsRows[i];
             var popRow = row.innerHTML;
 
-            predictedPop = popRow.match(/\/solgs\/selection\//g);
+            predictedPop = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
 
             if (predictedPop) {
 		if (predictedPop.length) {
@@ -438,7 +438,7 @@ solGS.sIndex = {
             var row    = listTypeSelPopsRows[i];
             var popRow = row.innerHTML;
 
-            predictedListTypePops = popRow.match(/\/solgs\/selection\//g);
+            predictedListTypePops = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
 
             if (predictedListTypePops) {
 		var selPopsInput  = row.getElementsByTagName("input")[0];
