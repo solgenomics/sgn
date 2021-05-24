@@ -170,25 +170,9 @@ sub search {
 
         #Get external references
         my @references;
-
         if (%$reference_result{$_->{stock_id}}){
             foreach (@{%$reference_result{$_->{stock_id}}}){
-                my $reference_source = $_->[0] || undef;
-                my $url = $_->[1];
-                my $accession = $_->[2];
-                my $reference_id;
-
-                if($reference_source eq 'DOI') {
-                    $reference_id = ($url) ? "$url$accession" : "doi:$accession";
-                } else {
-                    $reference_id = ($accession) ? "$url$accession" : $url;
-                }
-
-                push @references, {
-                    referenceID => $reference_id,
-                    referenceSource => $reference_source
-                };
-
+                push @references, $_;
             }
         }
 
@@ -774,7 +758,7 @@ sub store {
 
                 my $references = CXGN::BrAPI::v2::ExternalReferences->new({
                     bcs_schema => $self->bcs_schema,
-                    table_name => 'Stock::StockDbxref',
+                    table_name => 'stock',
                     table_id_key => 'stock_id',
                     external_references => $externalReferences,
                     id => $added_stock_id
@@ -962,7 +946,7 @@ sub update {
 
                 my $references = CXGN::BrAPI::v2::ExternalReferences->new({
                     bcs_schema => $self->bcs_schema,
-                    table_name => 'Stock::StockDbxref',
+                    table_name => 'stock',
                     table_id_key => 'stock_id',
                     external_references => $externalReferences,
                     id => $germplasm_id
@@ -1080,21 +1064,7 @@ sub _simple_search {
         my @references;
         if (%$reference_result{$_->{stock_id}}){
             foreach (@{%$reference_result{$_->{stock_id}}}){
-                my $reference_source = $_->[0] || undef;
-                my $url = $_->[1];
-                my $accession = $_->[2];
-                my $reference_id;
-
-                if($reference_source eq 'DOI') {
-                    $reference_id = ($url) ? "$url$accession" : "doi:$accession";
-                } else {
-                    $reference_id = ($accession) ? "$url$accession" : $url;
-                }
-
-                push @references, {
-                    referenceID => $reference_id,
-                    referenceSource => $reference_source
-                };
+                push @references, $_;
             }
         }
 

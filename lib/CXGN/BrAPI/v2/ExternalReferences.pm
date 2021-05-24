@@ -62,9 +62,20 @@ sub search {
 
     my %result;
     while (my @r = $sth->fetchrow_array()) {
-        push @{$result{$r[3]}} , {
-            referenceSource => $r[0],
-            referenceId     => $r[1] . $r[2]
+        my $reference_source = $r[0] || undef;
+        my $url = $r[1];
+        my $accession = $r[2];
+        my $reference_id;
+
+        if($reference_source eq 'DOI') {
+            $reference_id = ($url) ? "$url$accession" : "doi:$accession";
+        } else {
+            $reference_id = ($accession) ? "$url$accession" : $url;
+        }
+
+        push @{$result{$r[3]}}, {
+            referenceID => $reference_id,
+            referenceSource => $reference_source
         };
     }
     return \%result;
