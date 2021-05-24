@@ -1142,13 +1142,13 @@ jQuery(document).ready( function() {
             result.push({plotname:plot_names[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp, seedlot:seedlot_names[i]});
         }
 
-        // if (plot_names.length < ((highest_col - lowest_col + 1) * (highest_row - lowest_row + 1))) {
-        //     console.log("WHIHW");
-        //     let num_dummy_plots = (highest_col - lowest_col + 1) * (highest_row - lowest_row - 1) + plot_names.length;
-        //     for (let i = 1; i <= num_dummy_plots; i++) {
-        //         result.push({plotname:"dummy plot" + parseStr(i), row:rows[-i], blkn: blocks[0], plot_image_ids:plotImageDbIds[0], col:cols[-i], plot_msg:plot_popUp});
-        //     }
-        // }
+        if (plot_names.length < ((highest_col - lowest_col + 1) * (highest_row - lowest_row + 1))) {
+            console.log("WHIHW");
+            let num_dummy_plots = (changed_dim_rows * changed_dim_cols) - plot_names.length;
+            for (let i = 1; i <= num_dummy_plots; i++) {
+                result.push({plotname:"dummy plot" + String(i), row:rows[rows.length-i], blkn: blocks[0], plot_image_ids:plotImageDbIds[0], col:cols[cols.length-i], plot_msg:plot_popUp});
+            }
+        }
 
         var col_max = Math.max.apply(Math,unique_cols);
         var row_max = Math.max.apply(Math,unique_rows);
@@ -1361,6 +1361,9 @@ jQuery(document).ready( function() {
                     }
                     if (d.stock == border_accession_name) {
                         color = "lightgrey";
+                    }
+                    if (d.plotname.indexOf("dummy") !== -1) {
+                        color = '#41b6c4';
                     }
                     return color;
                 }
