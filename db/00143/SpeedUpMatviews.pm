@@ -359,7 +359,7 @@ SELECT public.materialized_phenoview.accession_id,
 WITH DATA;
 CREATE UNIQUE INDEX accessionsXtrait_components_idx ON public.accessionsXtrait_components(accession_id, trait_component_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXtrait_components', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE MATERIALIZED VIEW public.breeding_programsXtrait_components AS
 SELECT public.materialized_phenoview.breeding_program_id,
@@ -372,7 +372,7 @@ GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXtrait_components_idx ON public.breeding_programsXtrait_components(breeding_program_id, trait_component_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXtrait_components', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXtrait_components AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
@@ -386,7 +386,7 @@ GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXtrait_components_idx ON public.genotyping_protocolsXtrait_components(genotyping_protocol_id, trait_component_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXtrait_components', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE MATERIALIZED VIEW public.locationsXtrait_components AS
 SELECT public.materialized_phenoview.location_id,
@@ -399,7 +399,7 @@ GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX locationsXtrait_components_idx ON public.locationsXtrait_components(location_id, trait_component_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locationsXtrait_components', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locationsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE MATERIALIZED VIEW public.plantsXtrait_components AS
 SELECT public.stock.stock_id AS plant_id,
@@ -413,7 +413,7 @@ GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plantsXtrait_components_idx ON public.plantsXtrait_components(plant_id, trait_component_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXtrait_components', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE MATERIALIZED VIEW public.plotsXtrait_components AS
 SELECT public.stock.stock_id AS plot_id,
@@ -427,7 +427,7 @@ GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX plotsXtrait_components_idx ON public.plotsXtrait_components(plot_id, trait_component_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plotsXtrait_components', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plotsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE MATERIALIZED VIEW public.trait_componentsXtrials AS
 SELECT trait_component.cvterm_id AS trait_component_id,
@@ -440,7 +440,7 @@ SELECT trait_component.cvterm_id AS trait_component_id,
 WITH DATA;
 CREATE UNIQUE INDEX trait_componentsXtrials_idx ON public.trait_componentsXtrials(trait_component_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trait_componentsXtrials OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrials', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrials', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE MATERIALIZED VIEW public.trait_componentsXtrial_designs AS
 SELECT trait_component.cvterm_id AS trait_component_id,
@@ -454,7 +454,7 @@ SELECT trait_component.cvterm_id AS trait_component_id,
 WITH DATA;
 CREATE UNIQUE INDEX trait_componentsXtrial_designs_idx ON public.trait_componentsXtrial_designs(trait_component_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trait_componentsXtrial_designs OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrial_designs', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrial_designs', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE MATERIALIZED VIEW public.trait_componentsXtrial_types AS
 SELECT trait_component.cvterm_id AS trait_component_id,
@@ -469,7 +469,7 @@ SELECT trait_component.cvterm_id AS trait_component_id,
 WITH DATA;
 CREATE UNIQUE INDEX trait_componentsXtrial_types_idx ON public.trait_componentsXtrial_types(trait_component_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trait_componentsXtrial_types OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrial_types', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrial_types', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE MATERIALIZED VIEW public.trait_componentsXyears AS
 SELECT trait_component.cvterm_id AS trait_component_id,
@@ -482,7 +482,7 @@ SELECT trait_component.cvterm_id AS trait_component_id,
 WITH DATA;
 CREATE UNIQUE INDEX trait_componentsXyears_idx ON public.trait_componentsXyears(trait_component_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trait_componentsXyears OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXyears', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXyears', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 -- FIX VIEWS FOR PLANTS, PLOTS, TRIAL DESIGNS AND TRIAL TYPES
 
@@ -795,7 +795,7 @@ SELECT plant.stock_id AS plant_id,
 WITH DATA;
 CREATE UNIQUE INDEX plantsXplots_idx ON public.plantsXplots(plant_id, plot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXplots OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXplots', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXplots', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE MATERIALIZED VIEW public.plantsXtrials AS
 SELECT public.stock.stock_id AS plant_id,
