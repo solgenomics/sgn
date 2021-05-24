@@ -15,7 +15,6 @@ var solGS = solGS || function solGS() {};
 solGS.submitJob = {
 
     waitPage: function(page, args) {
-
 		var host = window.location.protocol + '//'  + window.location.host;
 		page = page.replace(host, '');
 
@@ -483,6 +482,8 @@ solGS.submitJob = {
     getArgsFromUrl: function(url, args) {
 
 	var referer = document.URL;
+    var host = window.location.protocol + '//'  + window.location.host;
+    referer = referer.replace(host, '');
 
 	if (args === undefined) { args = {};}
 
@@ -590,6 +591,8 @@ solGS.submitJob = {
 	args['training_pop_desc'] = jQuery('#training_pop_desc').val();
 	args['selection_pop_desc'] = jQuery('#selection_pop_desc').val();
 	args['genotyping_protocol_id'] = protocolId;
+    args['referer'] = referer;
+
 
 	return args;
 
