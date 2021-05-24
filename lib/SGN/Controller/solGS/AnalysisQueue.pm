@@ -336,30 +336,40 @@ sub format_log_entry {
 
 	my $json = JSON->new;
 	my $time = $json->decode($args)->{analysis_time};
-    my $analysis_page = $profile->{analysis_page};
+
+   my $traits_args = $json->decode($args);
+   my $traits_ids = $traits_args->{training_traits_ids} || $traits_args->{trait_id};
+   my @traits_ids = ref($traits_ids) eq 'ARRAY' ? @$traits_ids : ($traits_ids);
+
+   my $analysis_page;
+
+    if (@traits_ids > 1 && $traits_args->{analysis_type} =~ /selection/)
+    {
+        $analysis_page = $traits_args->{referer};
+    }
+    else
+    {
+        $analysis_page = $traits_args->{analysis_page};
+    }
 
     my $entry   = join("\t", (
-			$profile->{user_name},
-			$profile->{analysis_name},
-			$analysis_page,
-			'Submitted',
-			$time,
-			$args)
-	);
+    		$profile->{user_name},
+    		$profile->{analysis_name},
+    		$analysis_page,
+    		'Submitted',
+    		$time,
+    		$args)
+    );
 
-	$entry .= "\n";
-
-    my $traits_args = $json->decode($args);
-    my $traits_ids = $traits_args->{training_traits_ids} || $traits_args->{trait_id};
-    my @traits_ids = ref($traits_ids) eq 'ARRAY' ? @$traits_ids : ($traits_ids);
+    $entry .= "\n";
 
     if (@traits_ids > 1)
-	{
-		my $traits_entries = $self->create_itemized_prediction_log_entries($c, $profile);
-		$entry .= $traits_entries;
-	}
+    {
+    	my $traits_entries = $self->create_itemized_prediction_log_entries($c, $profile);
+    	$entry .= $traits_entries;
+    }
 
-	$c->stash->{formatted_log_entry} = $entry;
+    $c->stash->{formatted_log_entry} = $entry;
 
 }
 
