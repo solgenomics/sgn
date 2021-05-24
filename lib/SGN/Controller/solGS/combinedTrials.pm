@@ -272,7 +272,8 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 	$c->stash->{training_pop_desc} = $training_pop_desc;
 	$c->stash->{training_pop_page} = $training_pop_page;
 	$c->stash->{training_traits_ids} = \@traits_ids;
-
+    $c->stash->{training_traits_code} = $traits_selection_id;
+    
 	$c->controller('solGS::solGS')->analyzed_traits($c);
 	my $analyzed_traits = $c->stash->{analyzed_traits_ids};
 
