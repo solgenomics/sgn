@@ -9,6 +9,7 @@ use Email::Simple;
 use Email::Simple::Creator;
 use File::Spec::Functions qw /catfile catdir/;
 use File::Slurp qw /write_file read_file/;
+use JSON;
 use Storable qw/ nstore retrieve /;
 
 
@@ -646,13 +647,17 @@ sub get_file {
 sub report_status {
     my ($self, $output_details) = @_;
 
-    my $user_name  = $output_details->{analysis_profile}->{user_name};
+    my $args  = $output_details->{analysis_profile}->{arguments};
+    my $json = JSON->new();
+    $args = $json->decode($args);
+    my $first_name = $args->{first_name};
+    
     my $analysis_status = $self->email_body($output_details);
     my $closing = "If you have any remarks, please contact us:\n"
    . $output_details->{contact_page}
    ."\n\nThanks and regards,\nsolGS M Tool";
 
-    my $body = "Dear $user_name,\n"
+    my $body = "Dear $first_name,\n"
 	. "\n$analysis_status"
 	. "$closing";
 
