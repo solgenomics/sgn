@@ -304,7 +304,7 @@ sub relationship_matrix_adjusted_file {
     my $data_set_type = $c->stash->{data_set_type};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $trait_abbr = $c->stash->{trait_abbr};
-    
+
     my $file_id;
     if ($trait_abbr)
     {
@@ -688,22 +688,19 @@ sub create_file_id {
     my $sel_prop         = $c->stash->{selection_proportion};
     my $protocol_id      = $c->stash->{genotyping_protocol_id};
     my $cluster_pop_id   = $c->stash->{cluster_pop_id};
+    my $training_traits_code = $c->stash->{training_traits_code};
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my $traits_ids = $c->stash->{training_traits_ids};
-    my @traits_ids =   ref($traits_ids) eq 'ARRAY' ? @{$traits_ids} : $c->stash->{trait_id};
+    my @traits_ids =   ref($traits_ids) eq 'ARRAY' ? @{$traits_ids} : ($c->stash->{trait_id});
 
-    my $trait_id; #=  $c->stash->{trait_id} if !@{$traits_ids};
-    my $traits_selection_id;
-    if (scalar(@traits_ids > 1))
+    my $trait_id;
+
+    if (scalar(@traits_ids == 1))
     {
-	$traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id($traits_ids);
-    }
-    elsif (scalar(@traits_ids == 1))
-    {
-	$trait_id = $traits_ids[0];
+	    $trait_id = $traits_ids[0];
     }
 
     my $file_id;
@@ -717,10 +714,10 @@ sub create_file_id {
 
     if ($referer =~ /cluster\/analysis\/|\/solgs\/model\/combined\/populations\// && $combo_pops_id)
     {
-	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+	    $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
         $c->stash->{pops_ids_list} = $c->stash->{combined_pops_list};
-	$file_id = $combo_pops_id;
-	$c->stash->{data_set_type} = 'combined_populations';
+	    $file_id = $combo_pops_id;
+	    $c->stash->{data_set_type} = 'combined_populations';
     }
     elsif ($referer =~ /$selection_pages/)
     {
@@ -760,20 +757,20 @@ sub create_file_id {
     {
 	if ($sindex_name ne $selection_pop_id)
 	{
-	    $file_id = $sindex_name ? $file_id . '-' . $sindex_name : $file_id;
+	    $file_id .= $sindex_name ? '-' . $sindex_name : "";
 	}
     }
 
-    if (!$sindex_name)
+    # if ($data_type =~ /phenotype|gebv/i && $training_traits_code)
+    if (!$sindex_name && $training_traits_code)
     {
-	$file_id = $file_id . '-traits-' . $traits_selection_id if $traits_selection_id;
+	$file_id .= '-traits-' . $training_traits_code;
     }
 
-    if (!$traits_selection_id && $trait_id)
+    if (!$training_traits_code && $trait_id)
     {
 	$file_id = $file_id . '-' . $trait_id;
     }
-
 
     $file_id = $data_type ? $file_id . '-' . lc($data_type) : $file_id;
     $file_id = $k_number  ? $file_id . '-k-' . $k_number : $file_id;
