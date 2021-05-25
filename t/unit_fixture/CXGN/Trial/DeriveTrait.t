@@ -73,7 +73,7 @@ print STDERR Dumper $design;
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
+    owner_id => 41,
     design => $design,
     program => "test",
     trial_year => "2016",

@@ -1124,33 +1124,16 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     $c->stash->{rest} = { success => 1 };
 }
 
-sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot_accessions_using_file') Args(0) {
+sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot_accessions_using_file') Args(1) {
     my $self = shift;
     my $c = shift;
-    my $user_id;
-    my $user_name;
-    my $user_role;
-    my $session_id = $c->req->param("sgn_session_id");
+    my $override = shift;
+    my $trial_id = $c->stash->{trial_id};
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else{
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user->get_object->get_user_type();
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+        return;
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -1169,8 +1152,8 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         archive_path => $c->config->{archive_path},
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
+        user_id => $c->user->get_object->get_sp_person_id(),
+        user_role => ($c->user->get_roles)[0]
     });
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -1203,6 +1186,23 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
     }
 
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+
+    my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    });
+
+    my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();
+    if ($c->user()->check_roles("curator") and $return_error) {
+        if ($override eq "check") {
+            $c->stash->{rest} = { warning => "curator warning" };
+            return;
+        }
+    } elsif ($return_error){
+        $c->stash->{rest} = { error => $return_error };
+        return;
+    }
+
     my $upload_change_plot_accessions_txn = sub {
         my @stock_names;
         print STDERR Dumper $parsed_data;
@@ -1743,6 +1743,7 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
     old_accession_id => $old_stock_id,
     new_accession => $new_stock,
     trial_stock_type => $trial_stock_type,
+
   });
 
   my $return_error = $replace_stock_fieldmap->update_fieldmap_precheck();
@@ -1768,7 +1769,13 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
   my $new_accession = $c->req->param('new_accession');
   my $old_plot_id = $c->req->param('old_plot_id');
   my $old_plot_name = $c->req->param('old_plot_name');
+  my $override = $c->req->param('override');
   my $trial_id = $c->stash->{trial_id};
+  
+  if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+        return;
+    }
 
   if ($self->privileges_denied($c)) {
     $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
@@ -1781,8 +1788,8 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
   }
 
   my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
-    bcs_schema => $schema,
     trial_id => $trial_id,
+    bcs_schema => $schema,
     new_accession => $new_accession,
     old_accession => $old_accession,
     old_plot_id => $old_plot_id,
@@ -1790,11 +1797,16 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
 
   });
 
-  my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
-     if ($return_error) {
-       $c->stash->{rest} = { error => $return_error };
-       return;
-     }
+    my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
+    if ($c->user()->check_roles("curator") and $return_error) {
+        if ($override eq "check") {
+            $c->stash->{rest} = { warning => "curator warning" };
+            return;
+        }
+    } elsif ($return_error) {
+        $c->stash->{rest} = { error => $return_error};
+        return;
+    }
 
   print "Calling Replace Function...............\n";
   my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
@@ -1857,7 +1869,7 @@ sub replace_well_accession : Chained('trial') PathPart('replace_well_accessions'
 
 sub substitute_stock : Chained('trial') PathPart('substitute_stock') Args(0) {
   my $self = shift;
-	my $c = shift;
+  my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
   my $trial_id = $c->stash->{trial_id};
   my $plot_1_info = $c->req->param('plot_1_info');
@@ -1949,6 +1961,7 @@ sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Ar
 sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $tissue_sample_owner = $c->user->get_object->get_sp_person_id;
     my $tissues_per_plant = $c->req->param("tissue_samples_per_plant") || 3;
     my $tissue_names = decode_json $c->req->param("tissue_samples_names");
     my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
@@ -1979,7 +1992,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
 
     my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments)) {
+    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $tissue_sample_owner)) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});

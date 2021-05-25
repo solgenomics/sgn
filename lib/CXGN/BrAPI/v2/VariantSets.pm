@@ -55,9 +55,6 @@ sub search {
         }
     }
     
-    my $limit = $page_size*($page+1)-1;
-    my $offset = $page_size*$page;
-
     my $genotype_search = CXGN::Genotype::Search->new({
             bcs_schema=>$self->bcs_schema,
             people_schema => $self->people_schema(),
@@ -68,8 +65,6 @@ sub search {
             protocolprop_marker_hash_select=>[],
             accession_list=>$callset_id,
             protocol_id_list=>\@protocol_ids,
-            limit=>$limit,
-            offset=>$offset,
     });
 
     my %variant_sets;
@@ -168,8 +163,6 @@ sub detail {
         genotypeprop_hash_select=>['DS'],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[],
-        # offset=>$page_size*$page,
-        # limit=>$page_size
     });
     my $file_handle = $genotype_search->get_cached_file_search_json($c->config->{cluster_shared_tempdir}, 1); #Metadata only returned
 

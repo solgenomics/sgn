@@ -16,29 +16,29 @@ BEGIN { extends 'Catalyst::Controller' }
 
 
 sub download_validation :Path('/solgs/download/validation/pop') Args() {
-    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;   
- 
+    my ($self, $c, $pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;
+
     $c->stash->{training_pop_id} = $pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;    
-    
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);  
+    $c->stash->{genotyping_protocol_id} = $protocol_id;
+
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
-  
+
     $c->controller('solGS::Files')->validation_file($c);
     my $val_file = $c->stash->{validation_file};
-    
-    if (-s $val_file) 
+
+    if (-s $val_file)
     {
 	my @raw = read_file($val_file);
-	
+
 	$self->cross_validation_stat($c, $pop_id, $trait_abbr);
 	my $cv_stat = $c->stash->{cross_validation_stat};
-  
+
 	my @summary = join("\n", map { $_->[0] . "\t" . $_->[1] }  @$cv_stat);
 
 	my @all = (@raw, "\n ---- Summary --- \n", @summary);
 	$c->res->content_type("text/plain");
-        $c->res->body(join('', @all));  
+        $c->res->body(join('', @all));
     }
     else
     {
@@ -58,9 +58,9 @@ sub get_model_accuracy_value {
     my $cv_stat = $c->stash->{cross_validation_stat};
 
     my ($accuracy) = grep{ $_->[0] eq 'Mean accuracy'} @$cv_stat;
- 
+
     $c->stash->{accuracy_value} = $accuracy->[1];
-  
+
 }
 
 
@@ -73,9 +73,9 @@ sub get_cross_validations {
     $c->controller('solGS::Files')->validation_file($c);
     my $file = $c->stash->{validation_file};
 
-    my $cvs = $c->controller('solGS::Utils')->read_file_data($file);    
+    my $cvs = $c->controller('solGS::Utils')->read_file_data($file);
     my @raw_cvs = grep { $_->[0] ne 'Average'} @$cvs;
-   
+
     $c->stash->{cross_validations} =  \@raw_cvs;
 }
 
@@ -85,23 +85,23 @@ sub model_accuracy_report {
     my $file = $c->stash->{validation_file};
 
     my $accuracy;
-    if (!-e $file) 
-    { 
+    if (!-e $file)
+    {
 	$accuracy = [["Validation file doesn't exist.", "None"]];
     }
-    elsif (!-s $file) 
-    { 
+    elsif (!-s $file)
+    {
 	$accuracy = [["There is no cross-validation output report.", "None"]];
     }
     else
     {
 	my $model_id = $c->stash->{training_pop_id};
 	my $trait_abbr = $c->stash->{trait_abbr};
-	
+
 	$self->cross_validation_stat($c, $model_id, $trait_abbr);
 	$c->stash->{accuracy_report} = $c->stash->{cross_validation_stat};
     }
- 
+
 }
 
 
@@ -110,49 +110,49 @@ sub cross_validation_stat {
 
     $self->get_cross_validations($c, $model_id, $trait_abbr);
     my $cv_data = $c->stash->{cross_validations};
-    
+
     my @data = map {$_->[1] =~ s/\s+//r } @$cv_data;
-  
+
     my $stat = Statistics::Descriptive::Full->new();
     $stat->add_data(@data);
-    
-    my $min  = $stat->min; 
-    my $max  = $stat->max; 
+
+    my $min  = $stat->min;
+    my $max  = $stat->max;
     my $mean = $stat->mean;
     my $med  = $stat->median;
     my $std  = $stat->standard_deviation;
     my $cv   = ($std / $mean) * 100;
     my $cnt  = scalar(@data);
-    
+
     my $round = Math::Round::Var->new(0.01);
     $std  = $round->round($std);
     $mean = $round->round($mean);
-    $cv   = $round->round($cv);  
-  
+    $cv   = $round->round($cv);
+
     $cv  = $cv . '%';
-    
+
     my @desc_stat = (
 	['No. of K-folds', 10],
 	['Replications', 2],
 	['Total cross-validation runs', $cnt],
-	['Minimum accuracy', $min], 
+	['Minimum accuracy', $min],
 	['Maximum accuracy', $max],
 	['Standard deviation', $std],
-	['Coefficient of variation', $cv],		    
-	['Median accuracy', $med],  
+	['Coefficient of variation', $cv],
+	['Median accuracy', $med],
 	['Mean accuracy',  $mean]
 	);
-          
+
     $c->stash->{cross_validation_stat} = \@desc_stat;
-    
+
 }
 
 
 sub create_model_summary {
     my ($self, $c, $model_id, $trait_id) = @_;
- 
+
     my $protocol_id = $c->stash->{genotyping_protocol_id};
-    
+
     $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
     my $tr_abbr = $c->stash->{trait_abbr};
 
@@ -165,18 +165,18 @@ sub create_model_summary {
     }
     elsif ($path =~ /solgs\/models\/combined\/trials\//)
     {
-	$trait_page = qq | <a href="/solgs/model/combined/populations/$model_id/trait/$trait_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
+	$trait_page = qq | <a href="/solgs/model/combined/trials/$model_id/trait/$trait_id/gp/$protocol_id" onclick="solGS.waitPage()">$tr_abbr</a>|;
     }
-	            
+
     $self->get_model_accuracy_value($c, $model_id, $tr_abbr);
     my $accuracy_value = $c->stash->{accuracy_value};
-     
+
     my $heritability = $c->controller("solGS::Heritability")->get_heritability($c, $model_id, $trait_id);
-   	    	    
-    my $model_summary = [$trait_page, $accuracy_value, $heritability];	        
+
+    my $model_summary = [$trait_page, $accuracy_value, $heritability];
 
     $c->stash->{model_summary} = $model_summary;
-    
+
 }
 
 
@@ -185,7 +185,7 @@ sub begin : Private {
     my ($self, $c) = @_;
 
     $c->controller('solGS::Files')->get_solgs_dirs($c);
-  
+
 }
 
 

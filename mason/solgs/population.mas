@@ -1,11 +1,12 @@
 <%args>
 
+$pop_id => ''
 $training_pop_id
+$training_pop_name
+$training_pop_desc
 $show_data => 1;
 $traits_form => ''
 $all_traits_file
-$project_name
-$project_desc
 $stocks_no
 $markers_no
 $traits_no
@@ -19,8 +20,13 @@ $genotyping_protocol_id
 <%perl>
 
 #my $submit_new = qq | <a href="/submit/intro">Submit GS population</a> |;
- 
+
+if ($pop_id && !$training_pop_id) {
+$training_pop_id = $pop_id;
+}
+
 </%perl>
+
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
 
@@ -28,20 +34,20 @@ $genotyping_protocol_id
 <br />
 <br />
 
-<& /page/page_title.mas, 
-   title => "Select one or more traits from training population \"$project_name\" to build a GS model and predict GEBVs for."
+<& /page/page_title.mas,
+   title => "Select one or more traits from training population \"$training_pop_name\" to build a GS model and predict GEBVs for."
 &>
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
     title       => "Training population summary",
   &>
 
  <& population/summary.mas,
-    project_id   => $training_pop_id,
-    project_name => $project_name,
-    project_desc => $project_desc,
+    pop_id   => $training_pop_id,
+    pop_name => $training_pop_name,
+    pop_desc => $training_pop_desc,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
@@ -53,25 +59,26 @@ $genotyping_protocol_id
 
 % if ($show_data) {
 % if ($markers_no > 1) {
- 
 
-<&| /page/info_section.mas, 
-      collapsible => 1, 
-      collapsed   => 0, 
+
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 0,
       title       => "Train model"
 &>
-       
-<& population/select_traits.mas, 
+
+<& population/select_traits.mas,
    training_pop_id    => $training_pop_id,
   traits_form        => $traits_form,
   all_traits_file    => $all_traits_file,
   genotyping_protocol_id => $genotyping_protocol_id,
 &>
 
+
 </&>
 
-     
-  <& population/correlation.mas, 
+
+  <& population/correlation.mas,
      training_pop_id  => $training_pop_id,
   &>
 
@@ -82,21 +89,21 @@ $genotyping_protocol_id
   &>
 
 
-  <& /tools/heritability/heritability.mas, 
+  <& /tools/heritability/heritability.mas,
      pop_id  => $training_pop_id,
     &>
 
 %}
-    
+
   <& population/acronym.mas,
    acronym => $acronym,
     &>
 
 %} else {
 
-<&| /page/info_section.mas, 
-      collapsible => 1, 
-      collapsed   => 0, 
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 0,
       title       => "Genotype Data"
 &>
 
@@ -108,9 +115,9 @@ $genotyping_protocol_id
 %}
 %} else {
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
     title       => "Data Accessibility",
   &>
 
@@ -119,7 +126,10 @@ $genotyping_protocol_id
 </&>
 %}
 
+ <& /solgs/population/hidden_input.mas,
+      training_pop_id  => $training_pop_id,
+     training_pop_name => $training_pop_name,
+     training_pop_desc => $training_pop_desc,
+     genotyping_protocol_id => $genotyping_protocol_id,
 
-<input type="hidden" id="population_id" value="<% $training_pop_id %>" />
-<input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />
-
+   &>

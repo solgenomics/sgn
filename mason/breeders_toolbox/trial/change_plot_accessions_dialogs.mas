@@ -58,6 +58,58 @@ $trial_id
     </div>
 </div>
 
+<div class="modal fade" id="td_replace_accession_curator_warning_message" name="td_replace_accession_curator_warning_message" tabindex="-1" role="dialog" aria-labelledby="td_curator_warning">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="tDDialog"><b>Warning!</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">  
+
+                    <big>
+                        <span>&#9888;</span> 
+                        <p3>
+                            One or more traits have been assayed for this trial; <br>
+                            It is not recommended to change accessions at this point. Are you sure?
+                        </p3>
+                    </big>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="td_override_accession_warning" type="button" class="btn btn-primary" >Yes</button>
+                <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal">No</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal  fade" id="trial_design_replace_accessions_dialog_message" name="trial_design_replace_accessions_dialog_message" tabindex="-1" role="dialog" aria-labelledby="tDDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="tDDialog"><b>Replace Plot Accessions</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <p3> Plot accession was replaced successfully...</p3>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 
 jQuery(document).ready(function () {
@@ -68,11 +120,16 @@ jQuery(document).ready(function () {
 
     jQuery('#trial_design_change_accessions_submit').click( function() {
         var uploadFile = jQuery("#trial_design_change_accessions_file").val();
-        jQuery('#trial_design_change_accessions_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/change_plot_accessions_using_file");
+        jQuery('#trial_design_change_accessions_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/change_plot_accessions_using_file/check");
         if (uploadFile === '') {
             alert("Please select a file");
             return;
         }
+        jQuery("#trial_design_change_accessions_form").submit();
+    });
+
+    jQuery('#td_override_accession_warning').click( function() {
+        jQuery('#trial_design_change_accessions_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/change_plot_accessions_using_file/override");
         jQuery("#trial_design_change_accessions_form").submit();
     });
 
@@ -84,14 +141,21 @@ jQuery(document).ready(function () {
         complete: function (response) {
             jQuery('#working_modal').modal("hide");
             console.log(response);
-            if (response.error) {
+            if (response.warning) {
+                jQuery('#trial_design_change_accessions_dialog').modal("hide");
+                jQuery('#td_replace_accession_curator_warning_message').modal("show");
+            } else if (response.error) {
                 alert(response.error);
             }
             else {
-                location.reload();
+	            jQuery('#trial_design_change_accessions_dialog').modal("hide");
+                jQuery('#td_replace_accession_curator_warning_message').modal("hide");
+                jQuery('#trial_design_replace_accessions_dialog_message').modal("show");
             }
         },
         error: function(response) {
+            jQuery('#trial_design_change_accessions_dialog').modal("hide");
+            jQuery('#td_replace_accession_curator_warning_message').modal("hide");
             jQuery('#working_modal').modal("hide");
             alert("An error occurred changing plot accessions");
         }

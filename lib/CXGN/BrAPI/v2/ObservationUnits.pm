@@ -8,6 +8,7 @@ use CXGN::Trait;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::BrAPI::v2::ExternalReferences;
 use Try::Tiny;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::List::Transform;
@@ -54,10 +55,18 @@ sub search {
         }
     }
 
+    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        bcs_schema => $self->bcs_schema,
+        table_name => 'stock',
+        table_id_key => 'stock_id',
+        id => $observation_unit_db_id
+    });
+    my $reference_result = $references->search();
+
     my $lt = CXGN::List::Transform->new();
     my $trait_ids_arrayref = $lt->transform($self->bcs_schema, "traits_2_trait_ids", $trait_list_arrayref)->{transform};
 
-    my $limit = $page_size*($page+1);
+    my $limit = $page_size;
     my $offset = $page_size*$page;
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
@@ -205,12 +214,36 @@ sub search {
 
         my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
 
+        #Get external references
+        my @references;
+
+        if (%$reference_result{$obs_unit->{observationunit_stock_id}}){
+            foreach (@{%$reference_result{$obs_unit->{observationunit_stock_id}}}){
+                my $reference_source = $_->[0] || undef;
+                my $url = $_->[1];
+                my $accession = $_->[2];
+                my $reference_id;
+
+                if($reference_source eq 'DOI') { 
+                    $reference_id = ($url) ? "$url$accession" : "doi:$accession";
+                } else {
+                    $reference_id = ($accession) ? "$url$accession" : $url;
+                }
+
+                push @references, {
+                    referenceID => $reference_id,
+                    referenceSource => $reference_source
+                };
+                
+            }
+        }
+
         push @data_window, {
             additionalInfo => {},
-            externalReferences => [],
+            externalReferences => \@references,
             germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
             germplasmName => $obs_unit->{germplasm_uniquename},
-            locationDbId => qq|$obs_unit->{trial_location_id}|,   
+            locationDbId => qq|$obs_unit->{trial_location_id}|,
             locationName => $obs_unit->{trial_location_name},
             observationUnitDbId => qq|$obs_unit->{observationunit_stock_id}|,
             observations => \@brapi_observations,
@@ -219,12 +252,12 @@ sub search {
             observationUnitPUI => qq|$obs_unit->{obsunit_plot_number}|,
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
-            seedLotDbId => undef, # not implemented yet
+            seedLotDbId => $obs_unit->{seedlot_stock_id} ? qq|$obs_unit->{seedlot_stock_id}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,
-            trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : undef,
-            trialName => $obs_unit->{folder_name},
+            trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
+            trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
         };
         $total_count = $obs_unit->{full_count};       
         
@@ -243,9 +276,6 @@ sub detail {
     my $status = $self->status;
     my @data_files;
 
-    my $limit = $page_size*($page+1)-1;
-    my $offset = $page_size*$page;
-
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
         {
@@ -253,11 +283,18 @@ sub detail {
             data_level=>'all',
             include_timestamp=>1,
             plot_list=>[$observation_unit_db_id],
-            # limit=>$limit,
-            offset=>$offset,
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
+
+    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        bcs_schema => $self->bcs_schema,
+        table_name => 'stock',
+        table_id_key => 'stock_id',
+        id => [$observation_unit_db_id]
+    });
+    my $reference_result = $references->search();
+
     #print STDERR Dumper $data;
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
@@ -365,9 +402,33 @@ sub detail {
 
         my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
 
+        #Get external references
+        my @references;
+
+        if (%$reference_result{$obs_unit->{observationunit_stock_id}}){
+            foreach (@{%$reference_result{$obs_unit->{observationunit_stock_id}}}){
+                my $reference_source = $_->[0] || undef;
+                my $url = $_->[1];
+                my $accession = $_->[2];
+                my $reference_id;
+
+                if($reference_source eq 'DOI') { 
+                    $reference_id = ($url) ? "$url$accession" : "doi:$accession";
+                } else {
+                    $reference_id = ($accession) ? "$url$accession" : $url;
+                }
+
+                push @references, {
+                    referenceID => $reference_id,
+                    referenceSource => $reference_source
+                };
+                
+            }
+        }
+
         push @data_window, {
             additionalInfo => {},
-            externalReferences => [],
+            externalReferences => \@references,
             germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
             germplasmName => $obs_unit->{germplasm_uniquename},
             locationDbId => qq|$obs_unit->{trial_location_id}|,   
@@ -379,20 +440,19 @@ sub detail {
             observationUnitPUI => qq|$obs_unit->{obsunit_plot_number}|,
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
-            seedLotDbId => undef, # not implemented yet
+            seedLotDbId => $obs_unit->{seedlot_stock_id} ? qq|$obs_unit->{seedlot_stock_id}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             treatments => \@brapi_treatments,
-            trialDbId => qq|$obs_unit->{folder_id}|,
-            trialName => $obs_unit->{folder_name},
+            trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
+            trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
         };
         $total_count = $obs_unit->{full_count};
         $counter++;
     }
-
-    my %result = (data=>\@data_window);
+ 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Units search result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(@data_window, $pagination, \@data_files, $status, 'Observation Units search result constructed');
 }
 
 sub observationunits_update {
@@ -421,7 +481,7 @@ sub observationunits_update {
         my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
         my $observationUnit_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef; 
         my $observationUnit_position_arrayref = $params->{observationUnitPosition} ? $params->{observationUnitPosition} : undef;
-        my $observationUnit_x_ref = $params->{externalReferences} || ""; #not implemented
+        my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
         my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
         my $treatments = $params->{treatments} || ""; #not implemented yet
 
@@ -488,6 +548,19 @@ sub observationunits_update {
             my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
             my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
         }
+
+        #store/update external references
+        if ($observationUnit_x_ref){
+            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema => $self->bcs_schema,
+                table_name => 'Stock::StockDbxref',
+                table_id_key => 'stock_id',
+                external_references => $observationUnit_x_ref,
+                id => $observation_unit_db_id
+            });
+            my $reference_result = $references->store();
+        }
+
     }
 
     my $result = '';
@@ -539,7 +612,7 @@ sub observationunits_store {
         my $range_number = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
         my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
         my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
-        my $seedlot_name = $params->{seedLotDbId} ? $params->{seedLotDbId} : undef;
+        my $seedlot_id = $params->{seedLotDbId} ? $params->{seedLotDbId} : undef;
         my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates} ? $params->{observationUnitPosition}->{geoCoordinates} : undef;
         my $levels = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
         my $block_number;
@@ -600,6 +673,22 @@ sub observationunits_store {
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('ERROR store: ' . $error));
         };
     }
+
+    #TODO get design ids to store external references
+    #if ($externalReferences){
+       #  my $externalReferences = $params->{externalReferences} ? $params->{externalReferences} : undef;
+
+       #  my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+       #      bcs_schema => $self->bcs_schema,
+       #      table_name => 'Stock::StockDbxref',
+       #      table_id_key => 'stock_id',
+       #      external_references => $externalReferences,
+       #      id => $added_stock_id
+       #  });
+       # my $reference_result = $references->store();
+    #}
+     ###
+     
     if(!$error){
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});

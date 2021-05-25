@@ -38,7 +38,8 @@ sub save_results {
 
     my $search_id = substr($tempfile, -16);
     my %result = ( searchResultDbId => $search_id );
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
+    #Pagination should be present in BrAPI only if data available in the result 
+    my $pagination = {}; #CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page); 
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, "search $search_type result constructed");
 
 }

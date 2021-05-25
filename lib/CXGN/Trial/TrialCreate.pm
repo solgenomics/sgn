@@ -19,7 +19,7 @@ Will do the following:
     my $trial_create = CXGN::Trial::TrialCreate->new({
         chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
         dbh => $c->dbc->dbh(),
-        user_name => $user_name, #not implemented,
+		owner_id => $c->user()->get_object()->get_sp_person_id(),
         operator => $c->user()->get_object()->get_username(),
         design_type => 'CRD',
         design => $design_hash,
@@ -48,7 +48,7 @@ Will do the following:
     my $ct = CXGN::Trial::TrialCreate->new( {
         chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
         dbh => $c->dbc->dbh(),
-        user_name => $c->user()->get_object()->get_username(), #not implemented
+		owner_id => $c->user()->get_object()->get_sp_person_id(),
         operator => $c->user()->get_object()->get_username(),
         trial_year => $year,
         trial_location => $location->name(),
@@ -199,6 +199,7 @@ has 'is_sampling_trial' => (isa => 'Bool', is => 'rw', required => 0, default =>
 has 'sampling_trial_facility' => (isa => 'Str', is => 'rw');
 has 'sampling_trial_sample_type' => (isa => 'Str', is => 'rw');
 
+has 'owner_id' => (isa => 'Int' , is => 'rw');
 
 sub trial_name_already_exists {
     my $self = shift;
@@ -234,12 +235,12 @@ sub save_trial {
     my %design = %{$self->get_design()};
     my $trial_name = $self->get_trial_name();
     $trial_name =~ s/^\s+|\s+$//g; #trim whitespace from both ends
-    
-    # if a trial id is provided, the project row has already been 
+
+    # if a trial id is provided, the project row has already been
     # created by other means, so use that trial_id
-    
-    if (! $self->has_trial_id()) { 
-	
+
+    if (! $self->has_trial_id()) {
+
 	if (!$trial_name) {
 		print STDERR "Trial not saved: Can't create trial without a trial name\n";
 		return { error => "Trial not saved: Can't create trial without a trial name" };
@@ -311,7 +312,7 @@ sub save_trial {
         trial_id => $project->project_id()
     });
 
-
+    $t->set_trial_owner($self->get_owner_id);
     #print STDERR "TRIAL TYPE = ".ref($t)."!!!!\n";
     my $nd_experiment_type_id;
     if ($self->get_is_genotyping()) {
@@ -337,7 +338,7 @@ sub save_trial {
     });
 
 
-    if ($self->get_is_genotyping()) { 
+    if ($self->get_is_genotyping()) {
         #print STDERR "Storing user_id and project_name provided by the IGD spreadksheet for later recovery in the spreadsheet download... ".(join ",", ($self->get_genotyping_user_id(), $self->get_genotyping_project_name()))."\n";
         $nd_experiment->create_nd_experimentprops({
             $genotyping_user_cvterm->name() => $self->get_genotyping_user_id(),
@@ -359,7 +360,7 @@ sub save_trial {
             $nd_experiment->find_or_create_related('nd_experiment_protocols', {nd_protocol_id => $self->get_analysis_model_protocol_id() });
         }
     }
-    elsif ($self->get_is_sampling_trial()) { 
+    elsif ($self->get_is_sampling_trial()) {
         $project->create_projectprops({
             $sampling_facility_cvterm->name() => $self->get_sampling_trial_facility(),
             $sampling_trial_sample_type_cvterm->name() => $self->get_sampling_trial_sample_type()
@@ -427,7 +428,7 @@ sub save_trial {
             $field_trial_is_planned_to_be_genotyped_cvterm->name() => $self->get_field_trial_is_planned_to_be_genotyped
         });
     }
-    
+
     if (!$self->get_is_genotyping) {
         if ($self->has_trial_stock_type && $self->get_trial_stock_type){
             $project->create_projectprops({
