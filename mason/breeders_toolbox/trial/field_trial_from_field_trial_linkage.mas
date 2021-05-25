@@ -37,7 +37,7 @@ jQuery(document).ready(function () {
           html2 = html2 + '</tbody></table>';
           jQuery('#field_trial_to_field_trial_html').html(html1+html2);
 
-          var nodes = [{"name":"This Trial", "id":"This Trial" , "trialType":null}]; //Initialize nodes list with this node.
+          var nodes = [{"name":"<% $trial_id %>", "id":"This Trial" , "trialType":null}]; //Initialize nodes list with this node.
           var primitiveSourceLinks = []; //List of connections flowing into this trial
           var primitiveSinkLinks = []; //List of connections flowing out of this trial
           var links = []; //List to be used for all connections at the accession level
@@ -229,7 +229,7 @@ jQuery(document).ready(function () {
                   tooltip_region.selectAll("*").remove();
                 })
                 .on("dblclick",function(d){
-                  if (d.name == "This Trial"){
+                  if (d.name == "<% $trial_id %>"){
 
                   } else {
                     window.open("/breeders/trial/"+d.name);
