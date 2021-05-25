@@ -41,24 +41,42 @@ A hashref containing the variants and the markers related to one or more of the 
         print "<p><strong>ERROR: </strong>Missing variant markers!</p>";
     }
 
+    # Set variant properties
+    my $species = ${$markers}[0]->{'species_name'};
+    my $ref = ${$markers}[0]->{'reference_genome_name'};
+    my $chrom = ${$markers}[0]->{'chrom'};
+    my $pos = ${$markers}[0]->{'pos'};
+
     # Set title
-    my $title = ${$markers}[0]->{'species_name'} . " Markers";
-    my $subtitle = "Chromosome " . ${$markers}[0]->{'chrom'} . " @ " . ${$markers}[0]->{'pos'};
+    my $title = $species . " Markers";
+    my $subtitle = "Chromosome " . $chrom . " @ " . $pos;
+
+    # Set parameters for flanking sequence
+    my $flanking_sequence_blast_db = undef;
+    my $conf_blast_db = $c->config->{flanking_sequence_blast_db};
+    if ( defined $conf_blast_db && $conf_blast_db ne '' ) {
+        my @blast_dbs = split(',', $conf_blast_db);
+        foreach my $blast_db (@blast_dbs) {
+            my @blast_db_parts = split('\|', $blast_db);
+            if ( $blast_db_parts[0] eq $species && $blast_db_parts[1] eq $ref ) {
+                $flanking_sequence_blast_db = $blast_db_parts[2];
+            }
+        }
+    }
+
+    # Set parameters for jbrowse
+    my $jbrowse_location = $chrom . ':' . $pos;
 
     # Set query parameters for the sequence metadata table
     my %smd_params = (
         "sequence_metadata_results" => {
-            "feature" => ${$markers}[0]->{'chrom'},
-            "species" => ${$markers}[0]->{'species_name'},
-            "reference_genome" => ${$markers}[0]->{'reference_genome_name'},
-            "start" => ${$markers}[0]->{'pos'},
-            "end" => ${$markers}[0]->{'pos'}
+            "feature" => $chrom,
+            "species" => $species,
+            "reference_genome" => $ref,
+            "start" => $pos,
+            "end" => $pos
         }
     );
-
-    # Set parameters for jbrowse
-    my $location = ${$markers}[0]->{'chrom'} . ':' . ${$markers}[0]->{'pos'};
-    my $ref = ${$markers}[0]->{'reference_genome_name'};
 </%init>
 
 
@@ -73,6 +91,15 @@ A hashref containing the variants and the markers related to one or more of the 
 <&| /page/info_section.mas, title=>'Genotype locations', collapsible=>1, collapsed=>0 &>
     <& /markers/genotyped/genotype_locations.mas, markers => $markers &>
 </&>
+
+
+
+<!-- FLANKING SEQUENCE -->
+% if (defined $flanking_sequence_blast_db) {
+<&| /page/info_section.mas, title=>'Flanking Sequence', collapsible=>1, collapsed=>0 &>
+    <& /markers/genotyped/flanking_sequence.mas, blast_db => $flanking_sequence_blast_db, chrom => $chrom, pos => $pos &>
+</&>
+% }
 
 
 
@@ -92,7 +119,7 @@ A hashref containing the variants and the markers related to one or more of the 
 
 <!-- JBROWSE LINKS -->
 <&| /page/info_section.mas, title=>'Genome Browser', collapsible=>1 &>
-    <& /feature/jbrowse_exact_match.mas, feature=> $location, src_feature=> $ref &>
+    <& /feature/jbrowse_exact_match.mas, feature=> $jbrowse_location, src_feature=> $ref &>
 </&>
 
 
