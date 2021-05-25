@@ -562,7 +562,7 @@ function updateSpecies() {
                 || (protocol_species && !Array.isArray(protocol_species) && protocol_species !== SPECIES[i])
                 || (protocol_species && Array.isArray(protocol_species) && !protocol_species.includes(SPECIES[i])) 
                 ? 'disabled' : '';
-            let s = d !== 'disabled' && SPECIES[i] === SEL_SPECIES ? 'selected' : '';
+            let s = d !== 'disabled' && SPECIES[i] === species ? 'selected' : '';
             html += "<option value='" + SPECIES[i] + "' " + d + " " + s + ">";
             html += SPECIES[i];
             html += "</option>";
@@ -570,6 +570,12 @@ function updateSpecies() {
 
         jQuery("#marker-species").html(html);
         jQuery("#marker-species").attr("disabled", false);
+
+        // Set intial value, if not already set
+        if ( SEL_SPECIES ) {
+            jQuery("#marker-species").val(SEL_SPECIES);
+            SEL_SPECIES = undefined;
+        }
     }
 }
 
