@@ -27,21 +27,24 @@ my $noserver;
 my $dumpupdatedfixture;
 my $noparallel = 0;
 my $list_config = "";
+my $logfile = "logfile.$$.txt";
 # relative to `sgn/ (or parent of wherever this script is located)
 my $fixture_path = 't/data/fixture/cxgn_fixture.sql';
 
 GetOptions(
-    "carpalways" => \( my $carpalways = 0 ),
-    "verbose" => \$verbose ,
-    "nocleanup" => \$nocleanup,
-    "dumpupdatedfixture" => \$dumpupdatedfixture,
-    "noserver" => \$noserver,
-    "noparallel" => \$noparallel,
-    "fixture_path" => \$fixture_path,
-    "list_config" => \$list_config
+	"carpalways"         => \(my $carpalways = 0),
+	"verbose"            => \$verbose,
+	"nocleanup"          => \$nocleanup,
+	"dumpupdatedfixture" => \$dumpupdatedfixture,
+	"noserver"           => \$noserver,
+	"noparallel"         => \$noparallel,
+	"fixture_path"       => \$fixture_path,
+	"list_config"        => \$list_config,
+	"logfile=s"            => \$logfile
     );
 
 require Carp::Always if $carpalways;
+
 
 my @prove_args = @ARGV;
 if(@prove_args){
@@ -59,7 +62,7 @@ chdir($sgn_dir);
 $ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'fixture';
 #my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
 # relative to `sgn/`
-my $conf_file_base = 'sgn_local.conf';
+my $conf_file_base = 'sgn_test.conf';
 my $template_file = 'sgn_fixture_template.conf';
 # get some defaults from sgn_local.conf
 #
@@ -124,7 +127,7 @@ print $NEWCONF $new_conf;
 close($NEWCONF);
 
 #run fixture and db patches.
-system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $config->{dbhost} -d $dbname -e janedoe -s 117");
+system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $dbhost -d $dbname -e janedoe -s 117");
 
 # run the materialized views creation script
 #
@@ -141,13 +144,11 @@ print STDERR "Done.\n";
 # start the test web server
 #
 my $server_pid;
-my $logfile;
 if ($noserver) {
     print STDERR "# [ --noserver option: not starting web server]\n";
 }
 else {
     $server_pid = fork;
-    $logfile  = "logfile.$$.txt";
 
     unless( $server_pid ) {
 
