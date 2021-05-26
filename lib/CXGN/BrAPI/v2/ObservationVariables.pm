@@ -257,15 +257,25 @@ sub get_query {
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $dbxref_id, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
 
+        # Get the external references
+        my @references_cvterms = ($cvterm_id);
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->bcs_schema,
+            table_name => 'cvterm',
+            table_id_key => 'cvterm_id',
+            id => \@references_cvterms
+        });
+
         #TODO: This is running many queries each time, can make one big query above if need be
         # Retrieve the trait, which retrieves its scales and methods
         my $trait = CXGN::Trait->new({
-            bcs_schema => $self->bcs_schema,
-            cvterm_id  => $cvterm_id,
-            dbxref_id  => $dbxref_id,
-            db_id      => $db_id,
-            db         => $db_name,
-            accession  => $accession
+            bcs_schema          => $self->bcs_schema,
+            cvterm_id           => $cvterm_id,
+            dbxref_id           => $dbxref_id,
+            db_id               => $db_id,
+            db                  => $db_name,
+            accession           => $accession,
+            external_references => $references
         });
 
         push @variables, $self->_construct_variable_response($c, $trait);
@@ -320,10 +330,11 @@ sub store {
             method => $params->{method}
         });
         my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
-            bcs_schema => $self->bcs_schema,
+            bcs_schema          => $self->bcs_schema,
             external_references => $params->{externalReferences} || [],
-            table_name => "Cv::Dbxrefprop",
-            base_id_key => "dbxref_id"
+            table_name          => "cvterm",
+            table_id_key        => "cvterm_id",
+            id                  => $cvterm_id
         });
         my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
             cvterm_id                             => $cvterm_id,
@@ -382,10 +393,11 @@ sub update {
         method => $data->{method}
     });
     my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
-        bcs_schema => $self->bcs_schema,
+        bcs_schema          => $self->bcs_schema,
         external_references => $data->{externalReferences} || [],
-        table_name => "Cv::Dbxrefprop",
-        base_id_key => "dbxref_id"
+        table_name          => "cvterm",
+        table_id_key        => "cvterm_id",
+        id                  => $cvterm_id
     });
     my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
         cvterm_id                             => $cvterm_id,
@@ -464,7 +476,7 @@ sub _construct_variable_response {
     my $variable = shift;
 
     my $external_references_json;
-    if (defined($variable->external_references)) { $external_references_json = $variable->external_references->references_db();}
+    if (defined($variable->external_references)) { $external_references_json = $variable->external_references->search()->{$variable->cvterm_id};}
     my $method_json;
     if (defined($variable->method)) { $method_json = $variable->method->method_db();}
     my $scale_json;
