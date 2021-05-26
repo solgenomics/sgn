@@ -739,18 +739,22 @@ sub create_file_id {
     {
         $file_id = $c->stash->{pca_pop_id};
     }
+    elsif ($cluster_pop_id)
+    {
+        $file_id = $cluster_pop_id;
+    }
     else
     {
-	       $file_id = $training_pop_id;
+	    $file_id = $training_pop_id;
     }
 
     if ($data_structure =~ /list/)
     {
-	$file_id = "list_${list_id}";
+	$file_id = "list_${list_id}" if $list_id;
     }
     elsif ($data_structure =~ /dataset/)
     {
-	$file_id = "dataset_${dataset_id}";
+	$file_id = "dataset_${dataset_id}" if $dataset_id;
     }
 
     if ($sindex_name)

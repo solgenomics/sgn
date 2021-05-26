@@ -1205,7 +1205,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 	 $c->stash->{training_pop_name} = $training_pop_name;
 	 $c->stash->{training_pop_desc} = $training_pop_desc;
 	 $c->stash->{training_pop_url} = $training_pop_page;
-
+     $c->stash->{training_traits_code} = $traits_selection_id;
 
 	 $self->get_acronym_pairs($c, $training_pop_id);
 
