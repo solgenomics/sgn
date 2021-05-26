@@ -74,27 +74,6 @@ jQuery(document).ready(function () {
 
           function construct_primitive_graph(){
 
-            //Start by initializing the ajax lists with the calls for this trial
-            linkAjaxCalls.push( jQuery.ajax({
-              url:'/brapi/v2/germplasm?studyDbId='+<% $trial_id %>,
-              success: function(re){
-                console.log(re);
-              },
-              error: function(re){
-                console.log("Failed to retrieve trial germplasm.");
-              }
-            }) );
-            linkAjaxCallsMap["This Trial"] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
-            nodeAjaxCalls.push( jQuery.ajax({
-              url: '/brapi/v2/studies/'+<% $trial_id %>,
-              success: function(re){
-                console.log(re);
-              },
-              error: function(re){
-                console.log("Failed to retrieve study.");
-              }
-            }) );
-
             //Send ajax calls for studies that are the source of this study
             for (var i = 0; i < r.source_field_trials.length; i++){
               linkAjaxCalls.push( jQuery.ajax({
@@ -106,7 +85,7 @@ jQuery(document).ready(function () {
                   console.log("Failed to retrieve trial germplasm.");
                 }
               }) );
-              linkAjaxCallsMap[ r.source_field_trials[i][1] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+              linkAjaxCallsMap[ r.source_field_trials[i][0] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
               nodeAjaxCalls.push( jQuery.ajax({
                 url: '/brapi/v2/studies/'+r.source_field_trials[i][0],
                 success: function(re){
@@ -132,7 +111,7 @@ jQuery(document).ready(function () {
                   console.log("Failed to retrieve trial germplasm.");
                 }
               }) );
-              linkAjaxCallsMap[ r.field_trials_sourced[i][1] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+              linkAjaxCallsMap[ r.field_trials_sourced[i][0] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
               nodeAjaxCalls.push( jQuery.ajax({
                 url: '/brapi/v2/studies/'+r.field_trials_sourced[i][0],
                 success: function(re){
@@ -175,11 +154,11 @@ jQuery(document).ready(function () {
                 //Make links from the source trials
                 for (var i = 0; i < primitiveSourceLinks.length; i++){
 
-                  for (var j = 0; j < linkAjaxCallsMap[primitiveSourceLinks[i].source.id].responseJSON.result.data.length; j++){
+                  for (var j = 0; j < linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data.length; j++){
 
-                    for (var k = 0; k < linkAjaxCallsMap["This Trial"].responseJSON.result.data.length; k++){
-                      if (linkAjaxCallsMap["This Trial"].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSourceLinks[i].source.id].responseJSON.result.data[j].germplasmName){
-                        links.push({"source": primitiveSourceLinks[i].source, "target":primitiveSourceLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSourceLinks[i].source.id].responseJSON.result.data[j].germplasmName});
+                    for (var k = 0; k < linkAjaxCallsMap[parseInt( "<% $trial_id %>" )].responseJSON.result.data.length; k++){
+                      if (linkAjaxCallsMap[parseInt( "<% $trial_id %>" )].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data[j].germplasmName){
+                        links.push({"source": primitiveSourceLinks[i].source, "target":primitiveSourceLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data[j].germplasmName});
                       }
                     }
                   }
@@ -188,11 +167,11 @@ jQuery(document).ready(function () {
                 //Make links to sourced trials
                 for (var i = 0; i < primitiveSinkLinks.length; i++){
 
-                  for (var j = 0; j < linkAjaxCallsMap[primitiveSinkLinks[i].target.id].responseJSON.result.data.length; j++){
+                  for (var j = 0; j < linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data.length; j++){
 
-                    for (var k = 0; k < linkAjaxCallsMap["This Trial"].responseJSON.result.data.length; k++){
-                      if (linkAjaxCallsMap["This Trial"].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSinkLinks[i].target.id].responseJSON.result.data[j].germplasmName){
-                        links.push({"source": primitiveSinkLinks[i].source, "target":primitiveSinkLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSinkLinks[i].target.id].responseJSON.result.data[j].germplasmName});
+                    for (var k = 0; k < linkAjaxCallsMap[parseInt( "<% $trial_id %>" )].responseJSON.result.data.length; k++){
+                      if (linkAjaxCallsMap[parseInt( "<% $trial_id %>" )].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data[j].germplasmName){
+                        links.push({"source": primitiveSinkLinks[i].source, "target":primitiveSinkLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data[j].germplasmName});
                       }
                     }
                   }
