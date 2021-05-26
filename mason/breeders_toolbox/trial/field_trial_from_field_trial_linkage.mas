@@ -142,6 +142,8 @@ jQuery(document).ready(function () {
                 nodeMap[values1[i].result.studyDbId].trialType = values1[i].result.studyType;
               }
 
+              console.log(Object.keys(nodeMap));
+
               for (var key in Object.keys(nodeMap)){
                 nodes.push(nodeMap[key]);
               }
