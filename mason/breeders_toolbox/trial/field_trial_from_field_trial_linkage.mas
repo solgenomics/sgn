@@ -99,7 +99,7 @@ jQuery(document).ready(function () {
 
               nodeMap[response.source_field_trials[i][0]] = {"name":response.source_field_trials[i][0], "id":response.source_field_trials[i][1], "trialType":null};
               nodes.push(nodeMap[response.source_field_trials[i][0]]);
-              primitiveSourceLinks.push({"source":nodes[nodes.length - 1], "target": nodes[0], "value":1});
+              primitiveSourceLinks.push({"source":nodeMap[response.source_field_trials[i][0]], "target": nodeMap[base_node_id], "value":1});
             }
 
             //Send ajax calls for studies that are sourced from this trial
@@ -126,7 +126,7 @@ jQuery(document).ready(function () {
 
               nodeMap[response.field_trials_sourced[i][0]] = {"name":response.field_trials_sourced[i][0], "id":response.field_trials_sourced[i][1], "trialType":null};
               nodes.push(nodeMap[response.field_trials_sourced[i][0]]);
-              primitiveSinkLinks.push({"source":nodes[0], "target": nodes[nodes.length-1], "value":1});
+              primitiveSinkLinks.push({"source":nodeMap[base_node_id], "target": nodeMap[response.field_trials_sourced[i][0]], "value":1});
             }
 
           }
@@ -246,7 +246,7 @@ jQuery(document).ready(function () {
                       tooltip_region.selectAll("*").remove();
                     })
                     .on("dblclick",function(d){
-                      if (d.name == "<% $trial_id %>"){
+                      if (d.name == base_node_id){
 
                       } else {
                         window.open("/breeders/trial/"+d.name);
