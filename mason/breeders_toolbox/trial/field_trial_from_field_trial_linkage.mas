@@ -57,7 +57,7 @@ jQuery(document).ready(function () {
               console.log("Failed to retrieve trial germplasm.");
             }
           }) );
-          linkAjaxCallsMap["This Trial"] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+          linkAjaxCallsMap[parseInt( "<% $trial_id %>" )] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
           nodeAjaxCalls.push( jQuery.ajax({
             url: '/brapi/v2/studies/'+<% $trial_id %>,
             success: function(re){
@@ -162,14 +162,14 @@ jQuery(document).ready(function () {
 
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
               Promise.all(linkAjaxCalls).then((values2) => {
-                // console.log("Here are the link values: ");
-                // console.log(values2);
-                //
-                // console.log("Primitive Sink Links: ");
-                // console.log(primitiveSinkLinks);
-                //
-                // console.log("Primitive Source Links: ");
-                // console.log(primitiveSourceLinks);
+                console.log("Here are the link values: ");
+                console.log(values2);
+
+                console.log("Primitive Sink Links: ");
+                console.log(primitiveSinkLinks);
+
+                console.log("Primitive Source Links: ");
+                console.log(primitiveSourceLinks);
 
                 //Make links from the source trials
                 for (var i = 0; i < primitiveSourceLinks.length; i++){
