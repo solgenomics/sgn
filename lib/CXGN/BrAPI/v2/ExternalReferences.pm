@@ -44,10 +44,6 @@ sub search {
     my $table = $self->table_name();
     my $table_id = $self->table_id_key();
 
-    # if (!defined($id)) {
-    #     CXGN::BrAPI::Exceptions::ServerException->throw({message => "Error: External References base id not specified, cannot be retrieve."});
-    # }
-
     my $query = "select db.name, db.url, ref.accession, s.$table_id from $table as s
                 join $table\_dbxref as o_dbxref using ($table_id)
                 join dbxref as ref on (ref.dbxref_id=o_dbxref.dbxref_id)
@@ -112,10 +108,16 @@ sub store {
                 accession => $ref_id
             });
 
-            my $create_stock_dbxref = $schema->resultset($table)->find_or_create({
-                $table_id => $id,
-                dbxref_id => $create_dbxref->dbxref_id()
-            });
+            # Switch to model way to do it once project_dbxref is added to chado schema
+            my $dbh = $self->bcs_schema->storage()->dbh();
+            my $sql = "INSERT INTO $table (dbxref_id, $table_id) VALUES ( ?, ? ) ON CONFLICT DO NOTHING";
+            my $sth = $dbh->prepare( $sql );
+            $sth->execute($create_dbxref->dbxref_id(), $id);
+
+            #my $create_stock_dbxref = $schema->resultset($table)->find_or_create({
+            #    $table_id => $id,
+            #    dbxref_id => $create_dbxref->dbxref_id()
+            #});
 
         } else {
             my ($url,$object_id) = _check_brapi_url($_->{'referenceID'});
@@ -134,7 +136,7 @@ sub store {
 
                 # Switch to model way to do it once project_dbxref is added to chado schema
                 my $dbh = $self->bcs_schema->storage()->dbh();
-                my $sql = "INSERT INTO $table (dbxref_id, $table_id) VALUES ( ?, ? )";
+                my $sql = "INSERT INTO $table (dbxref_id, $table_id) VALUES ( ?, ? ) ON CONFLICT DO NOTHING";
                 my $sth = $dbh->prepare( $sql );
                 $sth->execute($create_dbxref->dbxref_id(), $id);
 
