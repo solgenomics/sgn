@@ -39,7 +39,7 @@ jQuery(document).ready(function () {
 
           var nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
           nodeMap["<% $trial_id %>"] = {"name": parseInt( "<% $trial_id %>" ), "id":"This Trial" , "trialType":null}; //Initialize the node hash
-          var nodes = [nodeMap["<% $trial_id %>"]]; //Initialize nodes list with this node.
+          var nodes = []; //Initialize nodes list with this node.
           var primitiveSourceLinks = []; //List of connections flowing into this trial
           var primitiveSinkLinks = []; //List of connections flowing out of this trial
           var links = []; //List to be used for all connections at the accession level
@@ -142,13 +142,7 @@ jQuery(document).ready(function () {
                 nodeMap[values1[i].result.studyDbId].trialType = values1[i].result.studyType;
               }
 
-              let keys = Object.keys(nodeMap);
-              console.log(keys);
-
-              for (var key; key < keys.length; key++){
-                console.log("Test!"+nodeMap[parseInt(keys[key])]);
-                nodes.push(nodeMap[parseInt(keys[key])]);
-              }
+              nodes = nodeMap;
 
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
               Promise.all(linkAjaxCalls).then((values2) => {
