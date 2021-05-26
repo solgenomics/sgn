@@ -259,7 +259,7 @@ sub stash_json_args {
     foreach my $key (keys %{$args_hash})
     {
         my $val = $args_hash->{$key};
-        $val = $val =~ /null/ ? undef : $val;
+        $val = $val =~ /null|undefined/ ? undef : $val;
 
         if (ref($val) eq 'ARRAY' && scalar(@$val) == 1)
         {
