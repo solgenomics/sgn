@@ -37,7 +37,7 @@ jQuery(document).ready(function () {
           html2 = html2 + '</tbody></table>';
           jQuery('#field_trial_to_field_trial_html').html(html1+html2);
 
-          var nodes = [{"name":"<% $trial_id %>", "id":"This Trial" , "trialType":null}]; //Initialize nodes list with this node.
+          var nodes = [{"name": ( <% $trial_id %> + 0), "id":"This Trial" , "trialType":null}]; //Initialize nodes list with this node.
           var nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
           nodeMap["<% $trial_id %>"] = nodes[0]; //Initialize the node hash
           var primitiveSourceLinks = []; //List of connections flowing into this trial
