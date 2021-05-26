@@ -107,7 +107,8 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
 
     #$c->controller('solGS::Files')->selection_index_file($c);
 
-    $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);
+    # $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);
+    $c->controller('solGS::TraitsGebvs')->run_combine_traits_gebvs($c);
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     $combined_gebvs_file = $c->controller('solGS::Files')->copy_file($combined_gebvs_file, $tmp_dir);
