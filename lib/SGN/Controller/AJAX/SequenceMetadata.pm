@@ -579,10 +579,11 @@ sub sequence_metadata_query_GET : Args(0) {
 
     # Get feature id from name and species, if provided
     if ( defined $feature_name && defined $species_name ) {
-        my $q = "SELECT feature_id, CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), '')) AS species
+        my $q = "SELECT feature_id
                     FROM public.feature 
                     LEFT JOIN public.organism USING (organism_id)
-                    WHERE uniquename = ? AND species = ?;";
+                    WHERE uniquename = ?
+                    AND CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), '')) = ?;";
         my $h = $dbh->prepare($q);
         $h->execute($feature_name, $species_name);
         ($feature_id) = $h->fetchrow_array();

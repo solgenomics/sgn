@@ -182,11 +182,11 @@ sub verify {
         my @missing = ();
         foreach my $feature ( @features ) {
             chomp($feature);
-            my $query = "SELECT feature_id, feature.uniquename, 
-                            CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), '')) AS species
+            my $query = "SELECT feature_id 
                         FROM public.feature 
                         LEFT JOIN public.organism USING (organism_id)
-                        WHERE uniquename=? AND species=?;";
+                        WHERE uniquename=?
+                        AND CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), ''))=?;";
             my $sth = $self->bcs_schema->storage->dbh()->prepare($query);
             $sth->execute($feature, $species);
             my ($feature_id) = $sth->fetchrow_array();
@@ -497,11 +497,11 @@ sub _write_chunk() {
     my $nd_protocol_id = $self->nd_protocol_id;
 
     # Get Feature ID
-    my $query = "SELECT feature_id, feature.uniquename, 
-                    CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), '')) AS species
+    my $query = "SELECT feature_id 
                 FROM public.feature 
                 LEFT JOIN public.organism USING (organism_id)
-                WHERE uniquename=? AND species=?;";
+                WHERE uniquename=?
+                AND CONCAT(organism.genus, ' ', REGEXP_REPLACE(organism.species, CONCAT('^', organism.genus, ' '), ''))=?;";
     my $sth = $dbh->prepare($query);
     $sth->execute($chunk_feature, $species);
     my ($feature_id) = $sth->fetchrow_array();
