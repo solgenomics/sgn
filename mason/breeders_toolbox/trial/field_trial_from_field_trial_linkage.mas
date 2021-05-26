@@ -146,6 +146,7 @@ jQuery(document).ready(function () {
               console.log(keys);
 
               for (var key; key < keys.length; key++){
+                console.log(nodeMap[parseInt(keys[key])]);
                 nodes.push(nodeMap[parseInt(keys[key])]);
               }
 
