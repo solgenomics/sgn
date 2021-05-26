@@ -175,6 +175,7 @@ solGS.submitJob = {
 	    args = {};
 	}
 
+
 	jQuery.ajax({
 	    type    : 'POST',
 	    dataType: 'json',
@@ -186,9 +187,7 @@ solGS.submitJob = {
 		    args['first_name']  = contact.first_name;
 		    args['user_email'] = contact.email;
 		    args['user_name'] = contact.user_name;
-
 		    solGS.submitJob.getProfileDialog(page, args);
-
 		} else {
 		    solGS.submitJob.loginAlert();
 		}
@@ -364,12 +363,11 @@ solGS.submitJob = {
 		+ '|solgs/combined/model/\\d+|\\w+_\\d+/selection/'
 	    + '|solgs/selection/\\d+|\\w+_\\d+/model/';
 
-	if (page.match(matchItems) ) {
+	if (page.match(matchItems)) {
 	    args = this.getArgsFromUrl(page, args);
 	}
 
 	var form = this.getProfileForm(args);
-
 	jQuery('<div />', {id: 'email-form'})
 	    .html(form)
 	    .dialog({
@@ -458,7 +456,10 @@ solGS.submitJob = {
 	 	    solGS.submitJob.checkEmail(email);
 
 		} else {
-		    analysisProfile['arguments'] = JSON.stringify(analysisProfile.arguments);
+            
+            if (typeof analysisProfile.arguments !== 'string') {
+		              analysisProfile['arguments'] = JSON.stringify(analysisProfile.arguments);
+            }
 
 		    var email = jQuery('#user_email').val();
 	 	    solGS.submitJob.checkEmail(email);
