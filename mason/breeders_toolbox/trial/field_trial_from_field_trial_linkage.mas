@@ -153,8 +153,8 @@ jQuery(document).ready(function () {
               console.log("Here are the node values: ");
               console.log(values1);
 
-              for (var i = 0; i < nodes.length; i++){
-                nodes[i].trialType = values1[i].result.studyType;
+              for (var i = 0; i < values1.length; i++){
+                nodeMap[values1[i].result.studyDbId] = values1[i].result.studyType;
               }
 
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
@@ -163,11 +163,11 @@ jQuery(document).ready(function () {
                 console.log(values2);
                 // console.log(linkAjaxCallsMap);
                 //
-                // console.log("Primitive Sink Links: ");
-                // console.log(primitiveSinkLinks);
-                //
-                // console.log("Primitive Source Links: ");
-                // console.log(primitiveSourceLinks);
+                console.log("Primitive Sink Links: ");
+                console.log(primitiveSinkLinks);
+
+                console.log("Primitive Source Links: ");
+                console.log(primitiveSourceLinks);
 
                 //Make links from the source trials
                 for (var i = 0; i < primitiveSourceLinks.length; i++){
@@ -320,7 +320,7 @@ jQuery(document).ready(function () {
           // Promise.all(nodeAjaxCalls).then((values1) => {
           //   // console.log("Here are the node values: ");
           //   // console.log(values1);
-          // 
+          //
           //   for (var i = 0; i < nodes.length; i++){
           //     nodes[i].trialType = values1[i].result.studyType;
           //   }
