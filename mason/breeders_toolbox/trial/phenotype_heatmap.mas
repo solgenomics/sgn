@@ -1,4 +1,3 @@
-
 <%args>
 $trial_id
 $stockref => undef
@@ -119,7 +118,12 @@ $data_level => 'plot'
 </div>
 
 <div id="container_heatmap" ></div>
-<div id="container_fm" ></div>
+<div id="container_fm" >
+    <div style="margin-left: 5%; float: inline;">
+        <label for="invert_rows">Invert Rows</label>
+        <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
+    </div>
+</div>
 <div id="trait_heatmap" >loading...</div>
 <div id="container_heatmap_geo" ></div>
 <div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
@@ -512,6 +516,9 @@ var num_rows;
 var num_cols;
 var changed_dim_rows;
 var changed_dim_cols;
+var num_real_plots;
+var invert_rows;
+
 
 jQuery(document).ready( function() {
 
@@ -986,6 +993,9 @@ jQuery(document).ready( function() {
                             });
                         }
                     });
+
+                    num_real_plots = plot_names.length;
+
                     
                     if (changed_dim_rows) {
                         rows = [];
@@ -1004,7 +1014,7 @@ jQuery(document).ready( function() {
                     lowest_col = Math.min.apply(Math, cols);
                     highest_row = Math.max.apply(Math, rows);
                     highest_col = Math.max.apply(Math, cols);
-
+               
                     field_map_hash = {
                         'rows': rows,
                         'cols': cols,
@@ -1036,7 +1046,8 @@ jQuery(document).ready( function() {
         });    
     }
 
-    function field_view(field_map_hash) {
+     function field_view(field_map_hash) {
+
         var rows = field_map_hash['rows'];
         var cols = field_map_hash['cols'];
         var blocks = field_map_hash['blocks'];
@@ -1055,6 +1066,7 @@ jQuery(document).ready( function() {
         var highest_col = field_map_hash['highest_col'];
         var lowest_row = field_map_hash['lowest_row'];
         var highest_row = field_map_hash['highest_row'];
+        invert_rows = document.getElementById("invert_row_checkmark").checked ? "yes" : "no";
 
 
 
@@ -1143,7 +1155,6 @@ jQuery(document).ready( function() {
         }
 
         if (plot_names.length < ((highest_col - lowest_col + 1) * (highest_row - lowest_row + 1))) {
-            console.log("WHIHW");
             let num_dummy_plots = (changed_dim_rows * changed_dim_cols) - plot_names.length;
             for (let i = 1; i <= num_dummy_plots; i++) {
                 result.push({plotname:"dummy plot" + String(i), row:rows[rows.length-i], blkn: blocks[0], plot_image_ids:plotImageDbIds[0], col:cols[cols.length-i], plot_msg:plot_popUp});
@@ -1231,7 +1242,14 @@ jQuery(document).ready( function() {
             var rowLabels = svg.selectAll(".rowLabel")
                 .data(rows)
                 .enter().append("text")
-                .text(function (d) { return d; })
+                .text(function (d) {
+                    
+                    if (invert_rows == "yes") {
+                        return highest_row + 1 - d;
+                    } else {
+                        return d;
+                    }
+                })
                 .attr("x", 0 )
                 .attr("y", function (d, i) { return i * gridSize; })
                 .style("text-anchor", "end")
@@ -1249,7 +1267,7 @@ jQuery(document).ready( function() {
                 .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });                
                 
 
-            var heatmapChart = function(datasets) {
+            var fieldmapChart = function(datasets) {
                 datasets.forEach(function(d) { 
                     d.row = +d.row;
                     d.col = +d.col;
@@ -1319,6 +1337,17 @@ jQuery(document).ready( function() {
                         blkn:blocks[i], row:highest_row + 1, plot_image_ids:plotImageDbIds[lowest_row], col:i, plot_msg:plot_popUp})
                     }
                 }
+                
+                if (invert_rows == "yes") {
+                    datasets.forEach(function (d) {
+                        if (!d.plotname.includes("border")) {
+                            d.row = highest_row + 1 - d.row;
+                            if (top_border_selection == "yes") {
+                                d.row = d.row + 1;
+                            }
+                        }
+                    })
+                }
 
                 console.log(datasets);
                     
@@ -1363,7 +1392,7 @@ jQuery(document).ready( function() {
                         color = "lightgrey";
                     }
                     if (d.plotname.indexOf("dummy") !== -1) {
-                        color = '#41b6c4';
+                        color = 'lightgrey';
                     }
                     return color;
                 }
@@ -1541,7 +1570,7 @@ jQuery(document).ready( function() {
             
             } ; 
             
-            heatmapChart(datasets);
+            fieldmapChart(datasets);
             if (false_coord){
                 alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
             }
@@ -1608,7 +1637,7 @@ jQuery(document).ready( function() {
         jQuery("#change_dimensions_dialog").modal("hide");
         changed_dim_rows = jQuery("#row-dims").val();
         changed_dim_cols = jQuery("#col-dims").val();
-        if (num_rows * num_cols > changed_dim_rows * changed_dim_cols) {
+        if (changed_dim_rows * changed_dim_cols < num_real_plots) {
             alert('Those are not valid dimensions.\nPlease pick dimensions for a plot size equal to or larger than your current plot.');
         } else {
         d3.select("svg").remove();
@@ -1632,6 +1661,11 @@ jQuery(document).ready( function() {
         d3.select("svg").remove();
         field_map_view();
         
+    })
+
+    jQuery("#invert_row_checkmark").change(function() {
+        d3.select("svg").remove();
+        field_map_view();
     })
 
     jQuery("#hm_view_plot_image_submit").click( function() {
