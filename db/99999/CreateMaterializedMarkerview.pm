@@ -101,7 +101,7 @@ AS \$function\$
 		END LOOP;
 
 		-- Add an empty query in case there is no existing marker data
-		emptyquery := 'SELECT column1 AS nd_protocol_id, column2 AS species_name, column3 AS reference_genome_name, column4 AS marker_name, column5 AS chrom, column6 AS pos, column7 AS ref, column8 AS alt, column9 AS variant_name FROM (values (null,null,null,null,null,null,null,null,null)) AS x WHERE false';
+		emptyquery := 'SELECT column1::int AS nd_protocol_id, column2::text AS species_name, column3::text AS reference_genome_name, column4::text AS marker_name, column5::text AS chrom, column6::int AS pos, column7::text AS ref, column8::text AS alt, column9::text AS variant_name FROM (values (null,null,null,null,null,null,null,null,null)) AS x WHERE false';
 		queries := array_append(queries, emptyquery);
 		
 		-- Combine queries with a UNION
