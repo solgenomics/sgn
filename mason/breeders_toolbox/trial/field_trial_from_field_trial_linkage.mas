@@ -37,9 +37,9 @@ jQuery(document).ready(function () {
           html2 = html2 + '</tbody></table>';
           jQuery('#field_trial_to_field_trial_html').html(html1+html2);
 
-          var nodes = [{"name": parseInt( "<% $trial_id %>" ), "id":"This Trial" , "trialType":null}]; //Initialize nodes list with this node.
+          var nodes = []; //Initialize nodes list with this node.
           var nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
-          nodeMap["<% $trial_id %>"] = nodes[0]; //Initialize the node hash
+          nodeMap["<% $trial_id %>"] = {"name": parseInt( "<% $trial_id %>" ), "id":"This Trial" , "trialType":null}; //Initialize the node hash
           var primitiveSourceLinks = []; //List of connections flowing into this trial
           var primitiveSinkLinks = []; //List of connections flowing out of this trial
           var links = []; //List to be used for all connections at the accession level
@@ -98,7 +98,7 @@ jQuery(document).ready(function () {
               }) );
 
               nodeMap[response.source_field_trials[i][0]] = {"name":response.source_field_trials[i][0], "id":response.source_field_trials[i][1], "trialType":null};
-              nodes.push(nodeMap[response.source_field_trials[i][0]]);
+              //nodes.push(nodeMap[response.source_field_trials[i][0]]);
               primitiveSourceLinks.push({"source":nodeMap[response.source_field_trials[i][0]], "target": nodeMap[base_node_id], "value":1});
             }
 
@@ -125,7 +125,7 @@ jQuery(document).ready(function () {
               }) );
 
               nodeMap[response.field_trials_sourced[i][0]] = {"name":response.field_trials_sourced[i][0], "id":response.field_trials_sourced[i][1], "trialType":null};
-              nodes.push(nodeMap[response.field_trials_sourced[i][0]]);
+              //nodes.push(nodeMap[response.field_trials_sourced[i][0]]);
               primitiveSinkLinks.push({"source":nodeMap[base_node_id], "target": nodeMap[response.field_trials_sourced[i][0]], "value":1});
             }
 
@@ -140,6 +140,10 @@ jQuery(document).ready(function () {
 
               for (var i = 0; i < values1.length; i++){
                 nodeMap[values1[i].result.studyDbId].trialType = values1[i].result.studyType;
+              }
+
+              for (var key in Object.keys(nodeMap)){
+                nodes.push(nodeMap[key]);
               }
 
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
