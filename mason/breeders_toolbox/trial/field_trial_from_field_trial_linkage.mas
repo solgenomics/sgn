@@ -142,11 +142,8 @@ jQuery(document).ready(function () {
                 nodeMap[values1[i].result.studyDbId].trialType = values1[i].result.studyType;
               }
 
-              console.log(Object.keys(nodeMap));
-
               for (var key in Object.keys(nodeMap)){
-                console.log(nodeMap[key]);
-                nodes.push(nodeMap[key]);
+                nodes.push(nodeMap[parseInt(key)]);
               }
 
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
