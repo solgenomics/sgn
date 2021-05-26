@@ -174,11 +174,11 @@ jQuery(document).ready(function () {
                 //Make links from the source trials
                 for (var i = 0; i < primitiveSourceLinks.length; i++){
 
-                  for (var j = 0; j < linkAjaxCallsMap[primitiveSourceLinks[i].source.id].responseJSON.result.data.length; j++){
+                  for (var j = 0; j < linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data.length; j++){
 
                     for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
-                      if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSourceLinks[i].source.id].responseJSON.result.data[j].germplasmName){
-                        links.push({"source": primitiveSourceLinks[i].source, "target":primitiveSourceLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSourceLinks[i].source.id].responseJSON.result.data[j].germplasmName});
+                      if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data[j].germplasmName){
+                        links.push({"source": primitiveSourceLinks[i].source, "target":primitiveSourceLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data[j].germplasmName});
                       }
                     }
                   }
@@ -187,11 +187,11 @@ jQuery(document).ready(function () {
                 //Make links to sourced trials
                 for (var i = 0; i < primitiveSinkLinks.length; i++){
 
-                  for (var j = 0; j < linkAjaxCallsMap[primitiveSinkLinks[i].target.id].responseJSON.result.data.length; j++){
+                  for (var j = 0; j < linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data.length; j++){
 
                     for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
-                      if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSinkLinks[i].target.id].responseJSON.result.data[j].germplasmName){
-                        links.push({"source": primitiveSinkLinks[i].source, "target":primitiveSinkLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSinkLinks[i].target.id].responseJSON.result.data[j].germplasmName});
+                      if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data[j].germplasmName){
+                        links.push({"source": primitiveSinkLinks[i].source, "target":primitiveSinkLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data[j].germplasmName});
                       }
                     }
                   }
