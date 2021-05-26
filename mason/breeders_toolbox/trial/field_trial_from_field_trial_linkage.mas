@@ -509,7 +509,7 @@ jQuery(document).ready(function () {
                 }
               }) );
 
-              nodeMap[response.source_field_trials[i][0]] = {"name":""+response.source_field_trials[i][0]+"", "id":response.source_field_trials[i][1], "trialType":null};
+              nodeMap[response.source_field_trials[i][0]] = {"name":response.source_field_trials[i][0], "id":response.source_field_trials[i][1], "trialType":null};
               nodes.push(nodeMap[response.source_field_trials[i][0]]);
               primitiveSourceLinks.push({"source":nodeMap[response.source_field_trials[i][0]], "target": nodeMap[base_node_id], "value":1});
             }
@@ -536,7 +536,7 @@ jQuery(document).ready(function () {
                 }
               }) );
 
-              nodeMap[response.field_trials_sourced[i][0]] = {"name":""+response.field_trials_sourced[i][0]+"", "id":response.field_trials_sourced[i][1], "trialType":null};
+              nodeMap[response.field_trials_sourced[i][0]] = {"name":response.field_trials_sourced[i][0], "id":response.field_trials_sourced[i][1], "trialType":null};
               nodes.push({"name":response.field_trials_sourced[i][0], "id":response.field_trials_sourced[i][1], "trialType":null});
               primitiveSinkLinks.push({"source":nodeMap[base_node_id], "target": nodeMap[response.field_trials_sourced[i][0]], "value":1});
             }
