@@ -154,7 +154,7 @@ jQuery(document).ready(function () {
               console.log(values1);
 
               for (var i = 0; i < values1.length; i++){
-                nodeMap[values1[i].result.studyDbId] = values1[i].result.studyType;
+                nodeMap[values1[i].result.studyDbId].trialType = values1[i].result.studyType;
               }
 
               console.log("Node map:");
