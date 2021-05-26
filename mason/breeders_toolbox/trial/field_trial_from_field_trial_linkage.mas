@@ -68,16 +68,16 @@ jQuery(document).ready(function () {
             }
           }) );
 
-          construct_primitive_graph(parseInt("<% $trial_id %>"));
+          construct_primitive_graph(parseInt("<% $trial_id %>"), r);
 
           receive_JSONs_and_construct_graph();
 
-          function construct_primitive_graph(base_node_id){
+          function construct_primitive_graph(base_node_id, response){
 
             //Send ajax calls for studies that are the source of this study
-            for (var i = 0; i < r.source_field_trials.length; i++){
+            for (var i = 0; i < response.source_field_trials.length; i++){
               linkAjaxCalls.push( jQuery.ajax({
-                url: '/brapi/v2/germplasm?studyDbId='+r.source_field_trials[i][0],
+                url: '/brapi/v2/germplasm?studyDbId='+response.source_field_trials[i][0],
                 success: function(re){
                   console.log(re);
                 },
@@ -85,9 +85,9 @@ jQuery(document).ready(function () {
                   console.log("Failed to retrieve trial germplasm.");
                 }
               }) );
-              linkAjaxCallsMap[ r.source_field_trials[i][0] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+              linkAjaxCallsMap[ response.source_field_trials[i][0] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
               nodeAjaxCalls.push( jQuery.ajax({
-                url: '/brapi/v2/studies/'+r.source_field_trials[i][0],
+                url: '/brapi/v2/studies/'+response.source_field_trials[i][0],
                 success: function(re){
                   console.log(re);
                 },
@@ -96,15 +96,15 @@ jQuery(document).ready(function () {
                 }
               }) );
 
-              nodeMap[r.source_field_trials[i][0]] = {"name":r.source_field_trials[i][0], "id":r.source_field_trials[i][1], "trialType":null};
-              nodes.push(nodeMap[r.source_field_trials[i][0]]);
+              nodeMap[response.source_field_trials[i][0]] = {"name":response.source_field_trials[i][0], "id":response.source_field_trials[i][1], "trialType":null};
+              nodes.push(nodeMap[response.source_field_trials[i][0]]);
               primitiveSourceLinks.push({"source":nodes[nodes.length - 1], "target": nodes[0], "value":1});
             }
 
             //Send ajax calls for studies that are sourced from this trial
-            for (var i = 0; i < r.field_trials_sourced.length; i++){
+            for (var i = 0; i < response.field_trials_sourced.length; i++){
               linkAjaxCalls.push( jQuery.ajax({
-                url: '/brapi/v2/germplasm?studyDbId='+r.field_trials_sourced[i][0],
+                url: '/brapi/v2/germplasm?studyDbId='+response.field_trials_sourced[i][0],
                 success: function(re){
                   console.log(re);
                 },
@@ -112,9 +112,9 @@ jQuery(document).ready(function () {
                   console.log("Failed to retrieve trial germplasm.");
                 }
               }) );
-              linkAjaxCallsMap[ r.field_trials_sourced[i][0] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+              linkAjaxCallsMap[ response.field_trials_sourced[i][0] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
               nodeAjaxCalls.push( jQuery.ajax({
-                url: '/brapi/v2/studies/'+r.field_trials_sourced[i][0],
+                url: '/brapi/v2/studies/'+response.field_trials_sourced[i][0],
                 success: function(re){
                   console.log(re);
                 },
@@ -123,8 +123,8 @@ jQuery(document).ready(function () {
                 }
               }) );
 
-              nodeMap[r.field_trials_sourced[i][0]] = {"name":r.field_trials_sourced[i][0], "id":r.field_trials_sourced[i][1], "trialType":null};
-              nodes.push(nodeMap[r.field_trials_sourced[i][0]]);
+              nodeMap[response.field_trials_sourced[i][0]] = {"name":response.field_trials_sourced[i][0], "id":response.field_trials_sourced[i][1], "trialType":null};
+              nodes.push(nodeMap[response.field_trials_sourced[i][0]]);
               primitiveSinkLinks.push({"source":nodes[0], "target": nodes[nodes.length-1], "value":1});
             }
 
