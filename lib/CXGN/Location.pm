@@ -233,9 +233,9 @@ sub store_location {
                 my $references = CXGN::BrAPI::v2::ExternalReferences->new({
                     bcs_schema          => $schema,
                     external_references => $external_references,
-                    table_name          => 'NaturalDiversity::NdGeolocationprop',
-                    base_id_key         => 'nd_geolocation_id',
-                    base_id             => $self->location()->nd_geolocation_id()
+                    table_name          => 'nd_geolocation',
+                    table_id_key         => 'nd_geolocation_id',
+                    id             => $self->location()->nd_geolocation_id()
                 });
 
                 $references->store();

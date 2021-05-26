@@ -104,22 +104,22 @@ sub search {
 		# combine referenceID and referenceSource into AND check as used by bi-api filter
 		# won't work with general search but wasn't implemented anyways
 		my $passes_search = 0;
-
 		# if location has external references
 		if ($_->[11]) { #
 			# see if any of the references match search parameters
 			foreach my $reference (@{$_->[11]}) {
 				my $ref_id = $reference->{'referenceID'};
 				my $ref_source = $reference->{'referenceSource'};
-				if (exists($externalreference_ids_arrayref{$ref_id}) && exists($externalreference_sources_arrayref{$ref_source})) {
+				if (exists($externalreference_ids_arrayref{$ref_id}) &&
+						exists($externalreference_sources_arrayref{$ref_source})
+				) {
 					$passes_search = 1;
 				}
 			}
 		}
-
 		if (!$passes_search && %externalreference_ids_arrayref && %externalreference_sources_arrayref) { next; }
-		push @available, $_;
 
+		push @available, $_;
 	}
 
 	$self->get_response(\@available, 1);
@@ -169,13 +169,7 @@ sub get_response {
 			};
 		}
 
-		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-			bcs_schema => $self->bcs_schema,
-			table_name => 'NaturalDiversity::NdGeolocationprop',
-			base_id_key => 'nd_geolocation_id',
-			base_id => $_->[0]
-		});
-		my $external_references = $references->references_db();
+		my $external_references = $_->[11];
 		push @data, {
 			locationDbId => qq|$_->[0]|,
 			locationType=> $_->[8],
