@@ -68,9 +68,10 @@ jQuery(document).ready(function () {
             }
           }) );
 
+          // The primitive graph is the graph with the nodes and just the links between nodes but without any information regarding accessions
           construct_primitive_graph(parseInt("<% $trial_id %>"), r);
 
-          receive_JSONs_and_construct_graph();
+          receive_JSONs_and_construct_graph(parseInt("<% $trial_id %>"));
 
           function construct_primitive_graph(base_node_id, response){
 
@@ -130,15 +131,15 @@ jQuery(document).ready(function () {
 
           }
 
-          function receive_JSONs_and_construct_graph(){
+          function receive_JSONs_and_construct_graph(base_node_id){
 
             //Wait for all study JSONs to be collected, then construct the nodes with them.
             Promise.all(nodeAjaxCalls).then((values1) => {
               // console.log("Here are the node values: ");
               // console.log(values1);
 
-              for (var i = 0; i < nodes.length; i++){
-                nodes[i].trialType = values1[i].result.studyType;
+              for (var i = 0; i < values1.length; i++){
+                nodeMap[values1[i].result.studyDbId].trialType = values1[i].result.studyType;
               }
 
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
@@ -158,8 +159,8 @@ jQuery(document).ready(function () {
 
                   for (var j = 0; j < linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data.length; j++){
 
-                    for (var k = 0; k < linkAjaxCallsMap[parseInt( "<% $trial_id %>" )].responseJSON.result.data.length; k++){
-                      if (linkAjaxCallsMap[parseInt( "<% $trial_id %>" )].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data[j].germplasmName){
+                    for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
+                      if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data[j].germplasmName){
                         links.push({"source": primitiveSourceLinks[i].source, "target":primitiveSourceLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data[j].germplasmName});
                       }
                     }
@@ -171,8 +172,8 @@ jQuery(document).ready(function () {
 
                   for (var j = 0; j < linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data.length; j++){
 
-                    for (var k = 0; k < linkAjaxCallsMap[parseInt( "<% $trial_id %>" )].responseJSON.result.data.length; k++){
-                      if (linkAjaxCallsMap[parseInt( "<% $trial_id %>" )].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data[j].germplasmName){
+                    for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
+                      if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data[j].germplasmName){
                         links.push({"source": primitiveSinkLinks[i].source, "target":primitiveSinkLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data[j].germplasmName});
                       }
                     }
