@@ -14,9 +14,6 @@
     if ( !$pos ) {
         print "<p><strong>ERROR: </strong>Missing pos!</p>";
     }
-
-    # Strip chr prefix from chromosome name
-    $chrom =~ s/^chr//;
 </%init>
 
 
