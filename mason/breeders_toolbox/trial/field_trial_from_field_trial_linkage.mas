@@ -68,11 +68,11 @@ jQuery(document).ready(function () {
             }
           }) );
 
-          construct_primitive_graph();
+          construct_primitive_graph(parseInt("<% $trial_id %>"));
 
           receive_JSONs_and_construct_graph();
 
-          function construct_primitive_graph(){
+          function construct_primitive_graph(base_node_id){
 
             //Send ajax calls for studies that are the source of this study
             for (var i = 0; i < r.source_field_trials.length; i++){
@@ -96,7 +96,8 @@ jQuery(document).ready(function () {
                 }
               }) );
 
-              nodes.push({"name":r.source_field_trials[i][0], "id":r.source_field_trials[i][1], "trialType":null});
+              nodeMap[r.source_field_trials[i][0]] = {"name":r.source_field_trials[i][0], "id":r.source_field_trials[i][1], "trialType":null};
+              nodes.push(nodeMap[r.source_field_trials[i][0]]);
               primitiveSourceLinks.push({"source":nodes[nodes.length - 1], "target": nodes[0], "value":1});
             }
 
@@ -122,7 +123,8 @@ jQuery(document).ready(function () {
                 }
               }) );
 
-              nodes.push({"name":r.field_trials_sourced[i][0], "id":r.field_trials_sourced[i][1], "trialType":null});
+              nodeMap[r.field_trials_sourced[i][0]] = {"name":r.field_trials_sourced[i][0], "id":r.field_trials_sourced[i][1], "trialType":null};
+              nodes.push(nodeMap[r.field_trials_sourced[i][0]]);
               primitiveSinkLinks.push({"source":nodes[0], "target": nodes[nodes.length-1], "value":1});
             }
 
