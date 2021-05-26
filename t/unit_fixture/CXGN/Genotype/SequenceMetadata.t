@@ -26,11 +26,15 @@ my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema);
 my $smd_script_dir = $t->config->{basepath} . $smd->shell_script_dir;
 my $test_file = $t->config->{basepath} . "/t/data/sequence_metadata/gwas_sgn.gff3";
 
-my ($organism_rs) = $schema->resultset("Organism::Organism")->find_or_create({genus => 'Test', species => 'test'});
+my $genus_name = "Test";
+my $species_name = "test";
+my $species = $genus_name . ' ' . $species_name;
+my ($organism_rs) = $schema->resultset("Organism::Organism")->find_or_create({genus => $genus_name, species => $species_name});
 my $feature_organism_id = $organism_rs->organism_id;
 my $feature_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'chromosome', 'sequence')->cvterm_id();
 my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'GWAS Results', 'sequence_metadata_types')->cvterm_id();
 
+my $query_reference_genome_name = "Test Reference Genome";
 my $query_feature_name = "chr1A";
 my $query_feature_id;
 my $query_type_name = "GWAS Results";
@@ -85,6 +89,7 @@ isnt($sgn_session_id, '', "SGN Session Token");
 ##
 my %verification_body = (
     file => [ $test_file, 'sequence_metadata_upload' ],
+    species => $species,
     "use_existing_protocol" => "false",
     "new_protocol_attribute_count" => scalar @attributes
 );
@@ -117,7 +122,8 @@ my %store_body = (
     "new_protocol_name" => $query_protocol_name,
     "new_protocol_description" => "Protocol used for testing the sequence metadata storage",
     "new_protocol_sequence_metadata_type" => $type_id,
-    "new_protocol_reference_genome" => "Test Reference Genome",
+    "new_protocol_reference_genome" => $query_reference_genome_name,
+    "new_protocol_species" => $species,
     "new_protocol_score_description" => "score description",
     "new_protocol_attribute_count" => scalar @attributes
 );
@@ -207,7 +213,7 @@ isnt($query_type_id, undef, "Query Type ID Defined");
 isnt($query_protocol_id, undef, "Query Protocol ID Defined");
 
 my $params = "feature_id=$query_feature_id&type_id=$query_type_id&nd_protocol_id=$query_protocol_id&";
-$params .= "start=20000000&end=22000000&";
+$params .= "reference_genome=$query_reference_genome_name&start=20000000&end=22000000&";
 $params .= "attribute=score|$query_protocol_id|gt|0.03,Locus|$query_protocol_id|eq|TraesCS1A02G038400";
 
 # JSON Format
@@ -235,7 +241,8 @@ is_deeply($json_response, {
             'feature_id' => $query_feature_id,
             'nd_protocol_name' => $query_protocol_name,
             'feature_name' => $query_feature_name,
-            'score' => '0.0455793811186712'
+            'score' => '0.0455793811186712',
+            'links' => {}
         }
     ]
 }, 'Query JSON Response');
