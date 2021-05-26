@@ -145,6 +145,7 @@ jQuery(document).ready(function () {
               console.log(Object.keys(nodeMap));
 
               for (var key in Object.keys(nodeMap)){
+                console.log(nodeMap[key]);
                 nodes.push(nodeMap[key]);
               }
 
