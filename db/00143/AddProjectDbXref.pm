@@ -58,11 +58,21 @@ sub patch {
 
  --do your SQL here
 CREATE TABLE IF NOT EXISTS public.project_dbxref (
-	project_dbxref_id int4,
-	project_id int4,
-	dbxref_id int4,
-	is_current bool
+	project_dbxref_id serial NOT NULL,
+	project_id int4 NOT NULL,
+	dbxref_id int4 NOT NULL,
+	is_current bool NOT NULL DEFAULT true,
+	CONSTRAINT fkey_project_id
+	    FOREIGN KEY(project_id)
+	        REFERENCES project(project_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;,
+	CONSTRAINT fkey_dbxref_id
+	    FOREIGN KEY(dxbref_id)
+	        REFERENCES dbxref(dbxref_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+	CONSTRAINT project_dbxref_c1 UNIQUE (project_id, dbxref_id),
+	CONSTRAINT project_dbxref_pkey PRIMARY KEY (project_dbxref_id)
 );
+CREATE INDEX IF NOT EXISTS project_dbxref_idx1 ON public.project_dbxref USING btree (project_id);
+CREATE INDEX IF NOT EXISTS project_dbxref_idx2 ON public.project_dbxref USING btree (dbxref_id);
 EOSQL
 
         return 1;
