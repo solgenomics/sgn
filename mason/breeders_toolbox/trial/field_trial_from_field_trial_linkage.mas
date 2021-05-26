@@ -157,6 +157,9 @@ jQuery(document).ready(function () {
                 nodeMap[values1[i].result.studyDbId] = values1[i].result.studyType;
               }
 
+              console.log("Node map:");
+              console.log(nodeMap);
+
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
               Promise.all(linkAjaxCalls).then((values2) => {
                 console.log("Here are the link values: ");
