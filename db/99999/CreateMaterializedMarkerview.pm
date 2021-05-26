@@ -73,9 +73,14 @@ AS \$function\$
 		maprow RECORD;
 		querystr TEXT;
 		queries TEXT[];
+		emptyquery TEXT;
 		matviewquery TEXT;
 	BEGIN
+	
+		-- Remove exsiting materialized view, if it exists
 		DROP MATERIALIZED VIEW IF EXISTS public.materialized_markerview;
+
+		-- Get the unique species / reference genome combinations from the nd_protocolprop table
 		FOR maprow IN (
 			SELECT value->>'species_name' AS species,
 				concat(
@@ -88,13 +93,25 @@ AS \$function\$
 			WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'vcf_map_details')
 			GROUP BY species, reference_genome
 		)
+		
+		-- Loop through each unique combination of species / reference genome and build the marker query
 		LOOP
 			querystr := 'SELECT nd_protocolprop.nd_protocol_id, ''' || maprow.species || ''' AS species_name, ''' || maprow.reference_genome || ''' AS reference_genome_name, s.value->>''name'' AS marker_name, s.value->>''chrom'' AS chrom, (s.value->>''pos'')::int AS pos, s.value->>''ref'' AS ref, s.value->>''alt'' AS alt, CASE WHEN s.value->>''alt'' < s.value->>''ref'' THEN concat(''' || maprow.species_abbreviation || ''', ''' || maprow.reference_genome_cleaned || ''', ''_'', REGEXP_REPLACE(s.value->>''chrom'', ''^chr?'', ''''), ''_'', s.value->>''pos'', ''_'', s.value->>''alt'', ''_'', s.value->>''ref'') ELSE concat(''' || maprow.species_abbreviation || ''', ''' || maprow.reference_genome_cleaned || ''', ''_'', REGEXP_REPLACE(s.value->>''chrom'', ''^chr?'', ''''), ''_'', s.value->>''pos'', ''_'', s.value->>''ref'', ''_'', s.value->>''alt'') END AS variant_name FROM nd_protocolprop, LATERAL jsonb_each(nd_protocolprop.value) s(key, value) WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = ''vcf_map_details_markers'') AND nd_protocol_id IN (SELECT nd_protocol_id FROM nd_protocolprop WHERE value->>''species_name'' = ''' || maprow.species || ''' AND type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = ''vcf_map_details''))';
 			queries := array_append(queries, querystr);
 		END LOOP;
+
+		-- Add an empty query in case there is no existing marker data
+		emptyquery := 'SELECT column1 AS nd_protocol_id, column2 AS species_name, column3 AS reference_genome_name, column4 AS marker_name, column5 AS chrom, column6 AS pos, column7 AS ref, column8 AS alt, column9 AS variant_name FROM (values (null,null,null,null,null,null,null,null,null)) AS x WHERE false';
+		queries := array_append(queries, emptyquery);
+		
+		-- Combine queries with a UNION
 		matviewquery := array_to_string(queries, ' UNION ');
+
+		-- Build the materialized view
 		EXECUTE 'CREATE MATERIALIZED VIEW public.materialized_markerview AS (' || matviewquery || ') WITH NO DATA';
 		ALTER MATERIALIZED VIEW public.materialized_markerview OWNER TO web_usr;
+
+		-- Add indexes
 		CREATE INDEX materialized_markerview_idx1 ON public.materialized_markerview(nd_protocol_id);
 		CREATE INDEX materialized_markerview_idx2 ON public.materialized_markerview(species_name);
 		CREATE INDEX materialized_markerview_idx3 ON public.materialized_markerview(reference_genome_name);
@@ -106,10 +123,15 @@ AS \$function\$
 		CREATE INDEX materialized_markerview_idx9 ON public.materialized_markerview(UPPER(variant_name));
 		CREATE INDEX materialized_markerview_idx10 ON public.materialized_markerview USING GIN(marker_name gin_trgm_ops);
 		CREATE INDEX materialized_markerview_idx11 ON public.materialized_markerview USING GIN(variant_name gin_trgm_ops);
+
+		-- Refresh materialzied view, if requested with function argument
 		IF \$1 THEN
 			REFRESH MATERIALIZED VIEW public.materialized_markerview;
 		END IF;
+
+		-- Return true if the materialized view is refreshed
 		RETURN \$1;
+
 	END
 \$function\$;
 
