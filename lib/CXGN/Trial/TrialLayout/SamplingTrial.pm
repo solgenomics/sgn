@@ -12,15 +12,16 @@ sub BUILD {
     my $self = shift;
 
     print STDERR "BUILD CXGN::Trial::TrialLayout::SamplingTrial...\n";
-    
+
+    $self->set_source_primary_stock_types( [ "accession" ] );
     $self->set_source_stock_types( [ "accession" ] );
     $self->set_relationship_types( [ "tissue_sample_of" ] );
     $self->set_target_stock_types( [ "tissue_sample" ] );
     $self->convert_source_stock_types_to_ids();
-    
+
         # probably better to lazy load the action design...
     #
-    
+
     $self->_lookup_trial_id();
 
 }
@@ -44,9 +45,9 @@ sub retrieve_plot_info {
      }
 
      if (! $plot_number) { print STDERR "NO PLOT NUMBER AVAILABLE!!!!\n"; }
-	      
+
      my $project = $self->get_project();
-     
+
      my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
 	 { 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_source_stock_type_ids() } },
 	 { 'join' => 'object' }
