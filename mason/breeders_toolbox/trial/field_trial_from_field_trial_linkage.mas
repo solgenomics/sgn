@@ -145,6 +145,11 @@ jQuery(document).ready(function () {
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
               Promise.all(linkAjaxCalls).then((values2) => {
 
+                //These for loops look pretty scary, so let me explain what's happening. The outer for loop iterates through every broad, overarching link between
+                //The source trials for this trial and this trial. The first inner loop then looks at the ajax call for that source trial. Finally, the inner loop
+                //compares each accession/germplasm in the target node with each accession in the source node and then adds a link with that germplasm's name to the
+                //sankey if there is a match. More or less the same thing happens with the second triple-nested for loop.
+
                 //Make links from the source trials
                 for (var i = 0; i < primitiveSourceLinks.length; i++){
 
@@ -244,6 +249,10 @@ jQuery(document).ready(function () {
                       }
                     });
 
+                  nodes.data(graph.nodes)
+                    .exit()
+                    .remove();
+
                   links = svg
                     .append("g")
                     .classed("links", true)
@@ -265,6 +274,10 @@ jQuery(document).ready(function () {
                       d3.select(this).attr("stroke", "#D3D3D3");
                     });
 
+                  links.data(graph.links)
+                    .exit()
+                    .remove();
+
                   labels = svg
                     .append("g")
                     .classed("text", true)
@@ -276,6 +289,10 @@ jQuery(document).ready(function () {
                     .attr("x", d => d.source.x1 + 5)
                     .attr("y", d => d.y0 + 5)
                     .text(d => d.name);
+
+                  labels.data(graph.links)
+                    .exit()
+                    .remove();
 
 
                   //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
