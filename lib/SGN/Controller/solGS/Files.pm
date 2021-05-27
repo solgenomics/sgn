@@ -723,7 +723,7 @@ sub create_file_id {
     {
     	if ($selection_pop_id)
     	{
-    	    $file_id =  $selection_pop_id  && $selection_pop_id != $training_pop_id ?
+    	    $file_id =  $selection_pop_id  && $selection_pop_id !~ /^$training_pop_id$/ ?
     		$training_pop_id . '-' . $selection_pop_id :
     		$training_pop_id;
     	}
@@ -739,22 +739,25 @@ sub create_file_id {
     {
         $file_id = $c->stash->{pca_pop_id};
     }
-    elsif ($cluster_pop_id)
-    {
-        $file_id = $cluster_pop_id;
-    }
+    # elsif ($cluster_pop_id)
+    # {
+    #     $file_id = $cluster_pop_id;
+    # }
     else
     {
 	    $file_id = $training_pop_id;
     }
 
-    if ($data_structure =~ /list/)
+    if ($c->req->referer =~ /cluster|pca|kinship/)
     {
-	$file_id = "list_${list_id}" if $list_id;
-    }
-    elsif ($data_structure =~ /dataset/)
-    {
-	$file_id = "dataset_${dataset_id}" if $dataset_id;
+        if ($data_structure =~ /list/)
+        {
+    	$file_id = "list_${list_id}" if $list_id;
+        }
+        elsif ($data_structure =~ /dataset/)
+        {
+    	$file_id = "dataset_${dataset_id}" if $dataset_id;
+        }
     }
 
     if ($sindex_name)
