@@ -186,6 +186,9 @@ jQuery(document).ready(function () {
                   }
                 }
 
+                console.log("linkMap:");
+                console.log(linkMap);
+
                 links = Object.values(linkMap);
 
                 let data={nodes, links};
