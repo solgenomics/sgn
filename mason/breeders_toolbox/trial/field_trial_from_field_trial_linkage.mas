@@ -40,7 +40,7 @@ jQuery(document).ready(function () {
 
           var nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
           nodeMap["<% $trial_id %>"] = {"name": parseInt( "<% $trial_id %>" ), "id": "<% $trial_name %>", "trialType":null}; //Initialize the node hash
-          var nodes = []; //Initialize nodes list with this node.
+          var nodes = [];
           //var primitiveSourceLinks = []; //List of connections flowing into this trial
           //var primitiveSinkLinks = []; //List of connections flowing out of this trial
           var primitiveLinks = [];
@@ -49,6 +49,13 @@ jQuery(document).ready(function () {
           var linkAjaxCalls = []; //List of ajax calls for germplasm (used for accessions)
           var linkAjaxCallsMap = {}; // Map of ajax calls for links
           var nodeAjaxCalls = []; //List of ajax calls for study data (used for trial types)
+
+          var sankey;
+          var graph;
+          var svgnodes;
+          var svglinks;
+          var svglabels;
+          var data;
 
           //Start by initializing the ajax lists with the calls for this trial
           linkAjaxCalls.push( jQuery.ajax({
@@ -190,21 +197,21 @@ jQuery(document).ready(function () {
 
                 links = Object.values(linkMap);
 
-                let data={nodes, links};
+                data={nodes, links};
                 console.log("Here is the sankey data: ");
                 console.log(data);
 
 
-                var sankey = d3
+                sankey = d3
                   .sankey()
                   .size([width-100, height-100])
                   .nodeId(d => d.id)
                   .nodeWidth(20)
                   .nodePadding(10)
-                  .nodeAlign(d3.sankeyJustify);
-                let graph = sankey(data);
+                  .nodeAlign(d3.sankeyCenter);
+                graph = sankey(data);
 
-                 var svgnodes = svg
+                 svgnodes = svg
                   .append("g")
                   .classed("nodes", true)
                   .selectAll("rect")
@@ -272,7 +279,7 @@ jQuery(document).ready(function () {
                     }
                   });
 
-                var svglinks = svg
+                svglinks = svg
                   .append("g")
                   .classed("links", true)
                   .selectAll("path")
@@ -294,7 +301,7 @@ jQuery(document).ready(function () {
                   });
 
 
-                var svglabels = svg
+                svglabels = svg
                   .append("g")
                   .classed("text", true)
                   .selectAll("text")
