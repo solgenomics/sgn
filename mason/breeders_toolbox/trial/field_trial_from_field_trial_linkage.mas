@@ -208,7 +208,7 @@ jQuery(document).ready(function () {
                   .nodeId(d => d.id)
                   .nodeWidth(20)
                   .nodePadding(10)
-                  .nodeAlign(d3.sankeyCenter);
+                  .nodeAlign(d3.sankeyRight);
                 graph = sankey(data);
 
                  svgnodes = svg
