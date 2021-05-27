@@ -85,7 +85,7 @@ jQuery(document).ready(function () {
             .append("g")
             .attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")")
             .attr("id", "sankeycanvas");
-            .attr("style", "overflow-x:auto");
+            .attr("style", "overflow-x: auto;");
 
 
             // The primitive graph is the graph with the nodes and just the links between nodes but without any information regarding accessions
