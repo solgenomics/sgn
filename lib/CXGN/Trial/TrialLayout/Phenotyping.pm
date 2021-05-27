@@ -13,6 +13,7 @@ sub BUILD {
     my $self = shift;
 
     print STDERR "BUILD CXGN::Trial::TrialLayout::Phenotyping...\n";
+    $self->set_source_primary_stock_types( [ "accession", "cross", "family_name" ] );
     $self->set_source_stock_types([ 'accession', 'cross', 'family_name', 'subplot', 'plant', 'grafted_accession' ] );
     $self->set_relationship_types([ 'plot_of', 'member_of', 'plant_of_subplot', 'tissue_sample_of']);
     $self->set_target_stock_types( [ 'plot'] );
