@@ -122,8 +122,6 @@ jQuery(document).ready(function () {
               }) );
 
               nodeMap[response.source_field_trials[i][0]] = {"name":response.source_field_trials[i][0], "id":response.source_field_trials[i][1], "trialType":null};
-              //nodes.push(nodeMap[response.source_field_trials[i][0]]);
-              //primitiveSourceLinks.push({"source":nodeMap[response.source_field_trials[i][0]], "target": nodeMap[base_node_id], "value":1});
               primitiveLinks.push({"source":nodeMap[response.source_field_trials[i][0]], "target": nodeMap[base_node_id], "value":1});
             }
 
@@ -150,8 +148,6 @@ jQuery(document).ready(function () {
               }) );
 
               nodeMap[response.field_trials_sourced[i][0]] = {"name":response.field_trials_sourced[i][0], "id":response.field_trials_sourced[i][1], "trialType":null};
-              //nodes.push(nodeMap[response.field_trials_sourced[i][0]]);
-              //primitiveSinkLinks.push({"source":nodeMap[base_node_id], "target": nodeMap[response.field_trials_sourced[i][0]], "value":1});
               primitiveLinks.push({"source":nodeMap[base_node_id], "target": nodeMap[response.field_trials_sourced[i][0]], "value":1});
             }
 
@@ -205,7 +201,7 @@ jQuery(document).ready(function () {
                   .nodeId(d => d.id)
                   .nodeWidth(20)
                   .nodePadding(10)
-                  .nodeAlign(d3.sankeyCenter);
+                  .nodeAlign(d3.sankeyJustify);
                 let graph = sankey(data);
 
                  var svgnodes = svg
