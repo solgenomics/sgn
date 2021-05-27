@@ -39,6 +39,10 @@ has 'source_stock_types' => (isa => 'ArrayRef[Str]', is=> 'rw', default =>sub { 
 
 has 'source_stock_type_ids' => (isa => 'ArrayRef[Int]', is => 'rw' );
 
+has 'source_primary_stock_types' => (isa => 'ArrayRef[Str]', is=> 'rw', default =>sub {  [ 'accession' ]  });
+
+has 'source_primary_stock_type_ids' => (isa => 'ArrayRef[Int]', is => 'rw' );
+
 has 'target_stock_types' => (isa => 'ArrayRef[Str]', is => 'rw', default => sub { [ 'plot' ] }); # the object things are placed on, such as plot
 
 has 'target_stock_type_ids' => (isa => 'ArrayRef[Int]', is => 'rw');
@@ -92,9 +96,9 @@ has 'cvterm_hash' => (isa => 'HashRef', is => 'rw');
 sub BUILD {
     my $self = shift;
     my $args = shift;
-    
+
     print STDERR "Build CXGN::Trial::TrialLayout::AbstractLayout... ($args->{trial_id})\n";
-    
+
     $self->_build_cvterm_hash();
 }
 
@@ -109,37 +113,44 @@ sub cvterm_id {
 
 sub convert_source_stock_types_to_ids {
     my $self = shift;
-    my @source_cvterm_ids;
 
     print STDERR "Converting source stock types to ids... \n";
-    
+
+    my @source_cvterm_ids;
     foreach my $source_stock (@{$self->get_source_stock_types()}) {
-	print STDERR "Converting $source_stock to ... ";
-	my $source_stock_cvterm_id = $self->cvterm_id($source_stock);
-	print STDERR "$source_stock_cvterm_id . \n";
-	push @source_cvterm_ids, $source_stock_cvterm_id;
+        # print STDERR "Converting $source_stock to ... ";
+        my $source_stock_cvterm_id = $self->cvterm_id($source_stock);
+        # print STDERR "$source_stock_cvterm_id . \n";
+        push @source_cvterm_ids, $source_stock_cvterm_id;
     }
     $self->set_source_stock_type_ids(\@source_cvterm_ids);
 
+    my @source_primary_cvterm_ids;
+    foreach my $source_stock (@{$self->get_source_primary_stock_types()}) {
+        # print STDERR "Converting $source_stock to ... ";
+        my $source_stock_cvterm_id = $self->cvterm_id($source_stock);
+        # print STDERR "$source_stock_cvterm_id . \n";
+        push @source_primary_cvterm_ids, $source_stock_cvterm_id;
+    }
+    $self->set_source_primary_stock_type_ids(\@source_primary_cvterm_ids);
+
     my @target_cvterm_ids;
     foreach my $target_stock (@{$self->get_target_stock_types()}) {
-	print STDERR "Converting $target_stock to ... ";
-	my $target_stock_cvterm_id = $self->cvterm_id($target_stock);
-	print STDERR "$target_stock_cvterm_id . \n";
-	push @target_cvterm_ids, $target_stock_cvterm_id;
+        # print STDERR "Converting $target_stock to ... ";
+        my $target_stock_cvterm_id = $self->cvterm_id($target_stock);
+        # print STDERR "$target_stock_cvterm_id . \n";
+        push @target_cvterm_ids, $target_stock_cvterm_id;
     }
     $self->set_target_stock_type_ids(\@target_cvterm_ids);
 
-    
     my @rel_type_cvterm_ids;
     foreach my $rel_type (@{$self->get_relationship_types()}) {
-	print STDERR "Converting $rel_type to ... ";
-	my $rel_type_cvterm_id = $self->cvterm_id($rel_type);
-	print STDERR "$rel_type_cvterm_id . \n";
-	push @rel_type_cvterm_ids, $rel_type_cvterm_id;
+        # print STDERR "Converting $rel_type to ... ";
+        my $rel_type_cvterm_id = $self->cvterm_id($rel_type);
+        # print STDERR "$rel_type_cvterm_id . \n";
+        push @rel_type_cvterm_ids, $rel_type_cvterm_id;
     }
     $self->set_relationship_type_ids(\@rel_type_cvterm_ids);
-
 }
 
 
@@ -174,7 +185,7 @@ sub _lookup_trial_id {
     my $design = $self->_set_design($self->_get_design_from_trial());
 
 ###  print STDERR "_lookup_trial_id TRIAL design is now ".Dumper($self->get_design());
-    
+
   $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
 # moved to subclass  $self->_set_block_numbers($self->_get_plot_info_fields_from_trial("block_number") || []);
   $self->_set_replicate_numbers($self->_get_plot_info_fields_from_trial("rep_number") || []);
@@ -274,7 +285,7 @@ sub _get_plot_info_fields_from_trial {
 	    $unique_field_values{$design_info{$field_name}} = 1;
 	}
     }
-    
+
     if (! scalar(@field_values) >= 1){
 	return;
     }
@@ -298,7 +309,7 @@ sub _get_design_from_trial {
     if (keys(%$design)) {
         	    print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
 	    #print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
-	    
+
 	    #Plant index number needs to be in the cached layout of trials that have plants. this serves a check to assure this.
 	    if ($trial_has_plants){
 		my @plot_values = values %$design;
@@ -356,11 +367,11 @@ sub generate_and_cache_layout {
     #         ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
     #     $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
     # }
-    
+
     @plots = @{$plots_ref};
 
     my %design;
-    
+
     #print STDERR "PLOTS: ".Dumper(\@plots);
     foreach my $plot (@plots) {
 	$self->retrieve_plot_info($plot, \%design);
@@ -376,13 +387,13 @@ sub generate_and_cache_layout {
     $project->create_projectprops({
         'trial_layout_json' => encode_json(\%design)
 				  });
-    
+
     if ($self->get_verify_layout || $self->get_verify_physical_map){
         return \%verify_errors;
     }
 
     #print STDERR "DESIGN AS READ : ".Dumper(\%design);
-	
+
     return \%design;
 }
 
@@ -394,9 +405,9 @@ sub retrieve_plot_info {
 
     #print STDERR "retrieve_plot_info()... Working on plot ".$plot->uniquename()."\n";
     my %design_info;
-    
+
     my $json = JSON->new();
-    
+
     # if ($self->get_experiment_type eq 'genotyping_trial'){
     #     $design_info{genotyping_user_id} = $genotyping_user_id;
     #     #print STDERR "RETRIEVED: genotyping_user_id: $design{genotyping_user_id}\n";
@@ -427,15 +438,15 @@ sub retrieve_plot_info {
     my $well_notes_prop = $stockprop_hash{$self->cvterm_id('notes')} ? join ',', @{$stockprop_hash{$self->cvterm_id('notes')}} : undef;
     my $well_ncbi_taxonomy_id_prop = $stockprop_hash{$self->cvterm_id('ncbi_taxonomy_id')} ? join ',', @{$stockprop_hash{$self->cvterm_id('ncbi_taxonomy_id')}} : undef;
     my $plot_geo_json_prop = $stockprop_hash{$self->cvterm_id('plot_geo_json')} ? $stockprop_hash{$self->cvterm_id('plot_geo_json')}->[0] : undef;
-    
+
     #print  STDERR "SORUCE STOCK TYPES: ".Dumper($self->get_source_stock_type_ids())."\n".Dumper($self->get_source_stock_types());
     #print STDERR "REL TYEPS = ".Dumper($self->get_relationship_types());
-    
+
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
-	{ 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_source_stock_type_ids() } },
+	{ 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_source_primary_stock_type_ids() } },
 	{ 'join' => 'object' } 
 	);
-    
+
     # was: $plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $analysis_of_cvterm_id
     if ($accession_rs->count != 1){
 	die "There is more than one or no (".$accession_rs->count.") accession/cross/family_name linked  here!\n";
@@ -481,31 +492,31 @@ sub retrieve_plot_info {
     # }
     my $accession = $accession_rs->first->object;
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $self->cvterm_id('plant_of')})->search_related('object', {'object.type_id' => $self->cvterm_id('plant') }, {order_by=>"object.stock_id"});
-    
+
     my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $self->cvterm_id('subplot_of')})->search_related('object', {'object.type_id' => $self->cvterm_id('subplot')}, {order_by=>"object.stock_id"});
     my $tissues = $plot->search_related('stock_relationship_objects', { 'me.type_id' => $self->cvterm_id('tissue_sample_of') })->search_related('subject', {'subject.type_id' => $self->cvterm_id('tissue_sample')}, {order_by=>"subject.stock_id"});
     my $seedlot_transaction = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $self->cvterm_id('seed transaction'), 'object.type_id' => $self->cvterm_id('seedlot') }, {'join'=>'object', order_by=>"object.stock_id"});
     if ($seedlot_transaction->count > 0 && $seedlot_transaction->count != 1){
 	die "There is more than one seedlot linked here!\n";
 	}
-    
+
     my $accession_name = $accession->uniquename;
     my $accession_id = $accession->stock_id;
-    
+
     $design_info{"plot_name"}=$plot_name;
     $design_info{"plot_id"}=$plot_id;
 
     my %unique_controls;
     my %unique_accessions;
     my %verify_errors;
-    
+
     if ($plot_number_prop) {
 	$design_info{"plot_number"}=$plot_number_prop;
     }
     else {
 	die "no plot number stockprop found for plot $plot_name";
     }
-    
+
     if ($block_number_prop) {
 	$design_info{"block_number"}=$block_number_prop;
     }
@@ -584,7 +595,7 @@ sub retrieve_plot_info {
 	    push @{$verify_errors{errors}->{physical_map_errors}}, "Plot: $plot_name does not have a row_number and/or col_number!";
 	}
     }
-    
+
     if ($seedlot_transaction->first()){
 	my $val = $json->decode($seedlot_transaction->first()->value());
 	my $seedlot = $seedlot_transaction->search_related('object');
@@ -616,19 +627,19 @@ sub retrieve_plot_info {
 	    my $plant_id = $p->stock_id();
 	    push @plant_names, $plant_name;
 	    push @plant_ids, $plant_id;
-	    
+
 	    my $plant_number_rs = $p->search_related('stockprops', {'me.type_id' => $self->cvterm_id('plant_index_number') });
 	    if ($plant_number_rs->count != 1){
 		print STDERR "Problem with plant_index_number stockprop for plant: $plant_name\n";
 	    }
 	    my $plant_index_number = $plant_number_rs->first->value;
 	    push @plant_index_numbers, $plant_index_number;
-	    
+
 	    my $tissues_of_plant = $p->search_related('stock_relationship_objects', { 'me.type_id' => $self->cvterm_id('tissue_sample_of') })->search_related('subject', {'subject.type_id'=>$self->cvterm_id('tissue_sample')});
 	    while (my $t = $tissues_of_plant->next()){
 		push @{$plants_tissue_hash{$plant_name}}, $t->uniquename();
 	    }
-	    
+
 	}
 	$design_info{"plant_names"}=\@plant_names;
 	$design_info{"plant_ids"}=\@plant_ids;
@@ -650,7 +661,7 @@ sub retrieve_plot_info {
 	    my $tissue_id = $t->stock_id();
 	    push @tissue_sample_names, $tissue_name;
 	    push @tissue_sample_ids, $tissue_id;
-	    
+
 	    my $tissue_number_rs = $t->search_related('stockprops', {'me.type_id' => $self->cvterm_id('tissue_sample_index_number') });
 	    if ($tissue_number_rs->count > 0) {
 		if ($tissue_number_rs->count != 1){
@@ -681,19 +692,19 @@ sub retrieve_plot_info {
 	    my $subplot_id = $p->stock_id();
 	    push @subplot_names, $subplot_name;
 	    push @subplot_ids, $subplot_id;
-	    
+
 	    my $subplot_number_rs = $p->search_related('stockprops', {'me.type_id' => $self->cvterm_id('subplot_index_number') });
 	    if ($subplot_number_rs->count != 1){
 		print STDERR "Problem with subplot_index_number stockprop for subplot: $subplot_name\n";
 	    }
 	    my $subplot_index_number = $subplot_number_rs->first->value;
 	    push @subplot_index_numbers, $subplot_index_number;
-	    
+
 	    my $plants_of_subplot = $p->search_related('stock_relationship_objects', { 'me.type_id' => $self->cvterm_id('plant_of_subplot') })->search_related('subject', {'subject.type_id'=>$self->cvterm_id('plant')});
 	    while (my $pp = $plants_of_subplot->next()){
 		push @{$subplots_plants_hash{$subplot_name}}, $pp->uniquename();
 	    }
-	    
+
 	    my $tissues_of_subplot = $p->search_related('stock_relationship_objects', { 'me.type_id' => $self->cvterm_id('tissue_sample_of') })->search_related('subject', {'subject.type_id'=>$self->cvterm_id('tissue_sample')});
 	    while (my $t = $tissues_of_subplot->next()){
 		push @{$subplots_tissues_hash{$subplot_name}}, $t->uniquename();
@@ -763,7 +774,7 @@ sub _get_design_type_from_project {
     my $design_prop;
     my $design_type;
     my $project;
-    
+
     if (!$self->has_trial_id()) {
 	print STDERR "Have no trial_id, aborting...\n";
 	return;
@@ -792,7 +803,7 @@ sub _get_trial_year_from_project {
     my $project;
     my $year_prop;
     my $year;
-    
+
     if (!$self->has_trial_id()) {
 	return;
     }
@@ -820,7 +831,7 @@ sub _get_plots {
     if (!$project) {
 	return;
     }
-    
+
     $field_layout_experiment = $self->_get_field_layout_experiment_from_project();
     if (!$field_layout_experiment) {
 	print STDERR "No field layout experiment found!\n";
@@ -831,7 +842,7 @@ sub _get_plots {
     my $source_cvterm_ids = $self->get_source_stock_type_ids();
 
      print STDERR "EXP TYPE =".$self->get_experiment_type()."\n";
-    
+
      # if ($self->get_experiment_type eq 'field_layout'){
      # 	$unit_type_id = $plot_cvterm_id;
      # }
@@ -843,17 +854,17 @@ sub _get_plots {
      # 	$unit_type_id = $analysis_instance_cvterm_id;
      # }
     @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock', {'stock.type_id' => {-in => $self->get_target_stock_type_ids()  } });
-    
+
     #debug...
     print STDERR "PLOT LIST: \n";
     print STDERR  join( "\n", map { $_->name() } @plots)."\n";
-    
+
     return \@plots;
 }
 
 sub _build_cvterm_hash {
     my $self = shift;
-    
+
     print STDERR "Building cvterm has...\n";
     my %hash;
 
@@ -869,9 +880,9 @@ sub _build_cvterm_hash {
 
     $self->set_cvterm_hash(\%hash);
 }
-    
-    
-    
+
+
+
     # $hash{accession} = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "accession", "stock_type")->cvterm_id();
     # $hash{cross} = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "cross", "stock_type")->cvterm_id();
     # $hash{family_name} = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "family_name", "stock_type")->cvterm_id();
@@ -888,7 +899,7 @@ sub _build_cvterm_hash {
     # my $subplot_rel_cvterm_id = $subplot_rel_cvterm->cvterm_id();
     # my $plant_rel_cvterm_id = $plant_rel_cvterm->cvterm_id();
     # my $analysis_of_cvterm_id = $analysis_of_cv->cvterm_id();
-	
+
 
     # my $plant_of_subplot_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of_subplot', 'stock_relationship' )->cvterm_id();
     # my $seed_transaction_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'seed transaction', 'stock_relationship' )->cvterm_id();
