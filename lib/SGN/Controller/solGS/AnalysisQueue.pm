@@ -342,8 +342,9 @@ sub format_log_entry {
    my @traits_ids = ref($traits_ids) eq 'ARRAY' ? @$traits_ids : ($traits_ids);
 
    my $analysis_page;
+   my $analysis_type = $traits_args->{analysis_type};
 
-    if (@traits_ids > 1 && $traits_args->{analysis_type} =~ /selection/)
+    if (@traits_ids > 1 && $analysis_type =~ /selection/)
     {
         $analysis_page = $traits_args->{referer};
     }
@@ -363,7 +364,7 @@ sub format_log_entry {
 
     $entry .= "\n";
 
-    if (@traits_ids > 1)
+    if (@traits_ids > 1 && $analysis_type =~ /model|selection/ )
     {
     	my $traits_entries = $self->create_itemized_prediction_log_entries($c, $profile);
     	$entry .= $traits_entries;
