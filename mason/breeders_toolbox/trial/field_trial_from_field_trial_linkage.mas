@@ -300,7 +300,7 @@ jQuery(document).ready(function () {
                   .on("mouseout", function(d){
                     d3.select(this).attr("stroke", "#D3D3D3");
                   })
-                  .exit.remove();
+                  .exit().remove();
 
 
                 svglabels = svg
@@ -314,7 +314,7 @@ jQuery(document).ready(function () {
                   .attr("x", d => d.source.x1 + 5)
                   .attr("y", d => d.y0 + 5)
                   .text(d => d.name)
-                  .exit.remove();
+                  .exit().remove();
 
 
                 //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
