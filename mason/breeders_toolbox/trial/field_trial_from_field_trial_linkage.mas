@@ -241,6 +241,22 @@ jQuery(document).ready(function () {
                       d3.select(this).attr("fill", "#add8e6");
                       tooltip_region.selectAll("*").remove();
                     })
+                    .on("click", function(d){
+
+                      jQuery.ajax({
+                        url : '/ajax/breeders/trial/'+d.name+'/field_trial_from_field_trial',
+                        success: function(res){
+
+                          construct_primitive_graph(d.name, res);
+
+                          receive_JSONs_and_construct_graph(d.name);
+
+                          //Here's where I will try to change the onclick of this node, may not work
+
+                        }
+                      });
+
+                    })
                     .on("dblclick",function(d){
                       if (d.name == base_node_id){
 
