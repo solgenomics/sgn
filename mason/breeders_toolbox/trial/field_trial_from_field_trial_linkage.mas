@@ -51,7 +51,6 @@ jQuery(document).ready(function () {
           var nodeAjaxCalls = []; //List of ajax calls for study data (used for trial types)
 
           var sankey;
-          var graph;
           var svgnodes;
           var svglinks;
           var svglabels;
@@ -205,7 +204,7 @@ jQuery(document).ready(function () {
 
             });
 
-          }//End of receive_JSONs_and_construct_graph
+          }//End of receive_JSONs
 
           function construct_graph(){
 
@@ -216,7 +215,7 @@ jQuery(document).ready(function () {
               .nodeWidth(20)
               .nodePadding(10)
               .nodeAlign(d3.sankeyCenter);
-            graph = sankey(data);
+            var graph = sankey(data);
 
             svglinks = svg
               .append("g")
@@ -332,7 +331,7 @@ jQuery(document).ready(function () {
 
             //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
             var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
-          }
+          }//End construct_graph
 
 
         },
