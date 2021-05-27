@@ -2,6 +2,7 @@
 <%args>
 $trial_id
 $trial_type
+$trial_name
 </%args>
 
 <& /util/import_javascript.mas, legacy => [ "d3/d3-shape/dist/d3-shape.js", "d3/d3-pedigree-tree.js", "d3/d3Min.js", "d3/d3-sankey/dist/d3-sankey.js", "d3/d3-sankey/src/sankey.js", "d3/d3-array/dist/d3-array.js", "d3/d3-path/dist/d3-path.js" ]  &>
@@ -38,7 +39,7 @@ jQuery(document).ready(function () {
           jQuery('#field_trial_to_field_trial_html').html(html1+html2);
 
           var nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
-          nodeMap["<% $trial_id %>"] = {"name": parseInt( "<% $trial_id %>" ), "id":"This Trial" , "trialType":null}; //Initialize the node hash
+          nodeMap["<% $trial_id %>"] = {"name": parseInt( "<% $trial_id %>" ), "id": "<% $trial_name %>", "trialType":null}; //Initialize the node hash
           var nodes = []; //Initialize nodes list with this node.
           //var primitiveSourceLinks = []; //List of connections flowing into this trial
           //var primitiveSinkLinks = []; //List of connections flowing out of this trial
@@ -82,7 +83,9 @@ jQuery(document).ready(function () {
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
-            .attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")");
+            .attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")")
+            .attr("id", "sankeycanvas");
+            .attr("style", "overflow-x:auto");
 
 
             // The primitive graph is the graph with the nodes and just the links between nodes but without any information regarding accessions
@@ -251,7 +254,7 @@ jQuery(document).ready(function () {
 
                         console.log("Expanding tree from "+d.name);
 
-                        //svg.selectAll("*").remove();
+                        $('#')
 
                         primitiveLinks = [];
 
@@ -272,11 +275,6 @@ jQuery(document).ready(function () {
                       window.open("/breeders/trial/"+d.name);
                     }
                   });
-
-                // svg.selectAll("nodes")
-                //   .data(graph.nodes)
-                //   .exit()
-                //   .remove();
 
                 var svglinks = svg
                   .append("g")
@@ -299,10 +297,6 @@ jQuery(document).ready(function () {
                     d3.select(this).attr("stroke", "#D3D3D3");
                   });
 
-                // svg.selectAll("path")
-                //   .data(graph.links)
-                //   .exit()
-                //   .remove();
 
                 var svglabels = svg
                   .append("g")
@@ -315,11 +309,6 @@ jQuery(document).ready(function () {
                   .attr("x", d => d.source.x1 + 5)
                   .attr("y", d => d.y0 + 5)
                   .text(d => d.name);
-
-                // svglabels.selectAll("text")
-                //   .data(graph.links)
-                //   .exit()
-                //   .remove();
 
 
                 //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
