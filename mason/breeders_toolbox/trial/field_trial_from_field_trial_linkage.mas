@@ -196,7 +196,7 @@ jQuery(document).ready(function () {
                 console.log(data);
 
 
-                const sankey = d3
+                var sankey = d3
                   .sankey()
                   .size([width-100, height-100])
                   .nodeId(d => d.id)
@@ -205,7 +205,7 @@ jQuery(document).ready(function () {
                   .nodeAlign(d3.sankeyCenter);
                 let graph = sankey(data);
 
-                nodes = svg
+                 var svgnodes = svg
                   .append("g")
                   .classed("nodes", true)
                   .selectAll("rect")
@@ -272,11 +272,11 @@ jQuery(document).ready(function () {
                     }
                   });
 
-                nodes.data(graph.nodes)
+                svgnodes.data(graph.nodes)
                   .exit()
                   .remove();
 
-                links = svg
+                var svglinks = svg
                   .append("g")
                   .classed("links", true)
                   .selectAll("path")
@@ -297,11 +297,11 @@ jQuery(document).ready(function () {
                     d3.select(this).attr("stroke", "#D3D3D3");
                   });
 
-                links.data(graph.links)
+                svglinks.data(graph.links)
                   .exit()
                   .remove();
 
-                labels = svg
+                var svglabels = svg
                   .append("g")
                   .classed("text", true)
                   .selectAll("text")
@@ -313,7 +313,7 @@ jQuery(document).ready(function () {
                   .attr("y", d => d.y0 + 5)
                   .text(d => d.name);
 
-                labels.data(graph.links)
+                svglabels.data(graph.links)
                   .exit()
                   .remove();
 
