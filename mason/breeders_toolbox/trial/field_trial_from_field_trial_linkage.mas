@@ -297,7 +297,7 @@ jQuery(document).ready(function () {
 
                    })
                    .on("dblclick",function(d){
-                     if (d.name == base_node_id){
+                     if (d.name == "<% $trial_id %>"){
 
                      } else {
                        window.open("/breeders/trial/"+d.name);
