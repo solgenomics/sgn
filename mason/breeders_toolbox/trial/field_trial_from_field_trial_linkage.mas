@@ -251,7 +251,7 @@ jQuery(document).ready(function () {
 
                         console.log("Expanding tree from "+d.name);
 
-                        svg.selectAll("*").remove();
+                        //svg.selectAll("*").remove();
 
                         primitiveLinks = [];
 
