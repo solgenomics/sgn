@@ -83,8 +83,8 @@ jQuery(document).ready(function () {
 
             //Set margins and set up svg area
             var margin = {top: 100, right: 100, bottom: 100, left: 100};
-            var width = 800//document.querySelector('#field_trial_to_field_trial_html').offsetWidth*0.90;
-            var height = 400;//document.querySelector('#field_trial_to_field_trial_html').offsetHeight*0.90;
+            var width = 1000//document.querySelector('#field_trial_to_field_trial_html').offsetWidth*0.90;
+            var height = 600;//document.querySelector('#field_trial_to_field_trial_html').offsetHeight*0.90;
 
             var svg = d3.select("#field_trial_to_field_trial_html").append("svg")
             .attr("width", width + margin.left + margin.right)
@@ -177,7 +177,7 @@ jQuery(document).ready(function () {
                 //These for loops look pretty scary, so let me explain what's happening. The outer for loop iterates through every broad, overarching link between
                 //The source trials for this trial and this trial. The first inner loop then looks at the ajax call for that source trial. Finally, the inner loop
                 //compares each accession/germplasm in the target node with each accession in the source node and then adds a link with that germplasm's name to the
-                //sankey if there is a match. More or less the same thing happens with the second triple-nested for loop.
+                //sankey if there is a match.
 
 
                 for (var i = 0; i < primitiveLinks.length; i++){
