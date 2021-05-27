@@ -87,7 +87,6 @@ jQuery(document).ready(function () {
             linkAjaxCallsMap[base_node_id] = jQuery.ajax({
               url:'/brapi/v2/germplasm?studyDbId='+base_node_id,
               success: function(re){
-                console.log(re);
               },
               error: function(re){
                 console.log("Failed to retrieve trial germplasm.");
@@ -96,7 +95,6 @@ jQuery(document).ready(function () {
             nodeAjaxCalls.push( jQuery.ajax({
               url: '/brapi/v2/studies/'+base_node_id,
               success: function(re){
-                console.log(re);
               },
               error: function(re){
                 console.log("Failed to retrieve study.");
@@ -109,7 +107,6 @@ jQuery(document).ready(function () {
               linkAjaxCallsMap[ response.source_field_trials[i][0] ] = jQuery.ajax({
                 url: '/brapi/v2/germplasm?studyDbId='+response.source_field_trials[i][0],
                 success: function(re){
-                  console.log(re);
                 },
                 error: function(re){
                   console.log("Failed to retrieve trial germplasm.");
@@ -118,7 +115,6 @@ jQuery(document).ready(function () {
               nodeAjaxCalls.push( jQuery.ajax({
                 url: '/brapi/v2/studies/'+response.source_field_trials[i][0],
                 success: function(re){
-                  console.log(re);
                 },
                 error: function(re){
                   console.log("Failed to retrieve study.");
@@ -135,7 +131,6 @@ jQuery(document).ready(function () {
               linkAjaxCallsMap[ response.field_trials_sourced[i][0] ] = jQuery.ajax({
                 url: '/brapi/v2/germplasm?studyDbId='+response.field_trials_sourced[i][0],
                 success: function(re){
-                  console.log(re);
                 },
                 error: function(re){
                   console.log("Failed to retrieve trial germplasm.");
@@ -144,7 +139,6 @@ jQuery(document).ready(function () {
               nodeAjaxCalls.push( jQuery.ajax({
                 url: '/brapi/v2/studies/'+response.field_trials_sourced[i][0],
                 success: function(re){
-                  console.log(re);
                 },
                 error: function(re){
                   console.log("Failed to retrieve study.");
@@ -161,6 +155,9 @@ jQuery(document).ready(function () {
 
             //Wait for all study JSONs to be collected, then construct the nodes with them.
             Promise.all(nodeAjaxCalls).then((values1) => {
+
+              console.log("Debug:");
+              console.log(nodeMap);
 
               for (var i = 0; i < values1.length; i++){
                 nodeMap[values1[i].result.studyDbId].trialType = values1[i].result.studyType;
