@@ -57,27 +57,6 @@ jQuery(document).ready(function () {
           var svglabels;
           var data;
 
-          //Start by initializing the ajax lists with the calls for this trial
-          linkAjaxCalls.push( jQuery.ajax({
-            url:'/brapi/v2/germplasm?studyDbId='+<% $trial_id %>,
-            success: function(re){
-              console.log(re);
-            },
-            error: function(re){
-              console.log("Failed to retrieve trial germplasm.");
-            }
-          }) );
-          linkAjaxCallsMap[parseInt( "<% $trial_id %>" )] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
-          nodeAjaxCalls.push( jQuery.ajax({
-            url: '/brapi/v2/studies/'+<% $trial_id %>,
-            success: function(re){
-              console.log(re);
-            },
-            error: function(re){
-              console.log("Failed to retrieve study.");
-            }
-          }) );
-
           //Need to check that there's actually data to render before making a big svg canvas
           if (!(r.source_field_trials.length == 0 && r.field_trials_sourced.length == 0)){
 
@@ -106,9 +85,29 @@ jQuery(document).ready(function () {
 
           function construct_primitive_graph(base_node_id, response){
 
+            linkAjaxCallsMap[base_node_id] = jQuery.ajax({
+              url:'/brapi/v2/germplasm?studyDbId='+base_node_id,
+              success: function(re){
+                console.log(re);
+              },
+              error: function(re){
+                console.log("Failed to retrieve trial germplasm.");
+              }
+            });
+            nodeAjaxCalls.push( jQuery.ajax({
+              url: '/brapi/v2/studies/'+base_node_id,
+              success: function(re){
+                console.log(re);
+              },
+              error: function(re){
+                console.log("Failed to retrieve study.");
+              }
+            }) );
+
             //Send ajax calls for studies that are the source of this study
             for (var i = 0; i < response.source_field_trials.length; i++){
-              linkAjaxCalls.push( jQuery.ajax({
+
+              linkAjaxCallsMap[ response.source_field_trials[i][0] ] = jQuery.ajax({
                 url: '/brapi/v2/germplasm?studyDbId='+response.source_field_trials[i][0],
                 success: function(re){
                   console.log(re);
@@ -116,8 +115,7 @@ jQuery(document).ready(function () {
                 error: function(re){
                   console.log("Failed to retrieve trial germplasm.");
                 }
-              }) );
-              linkAjaxCallsMap[ response.source_field_trials[i][0] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+              });
               nodeAjaxCalls.push( jQuery.ajax({
                 url: '/brapi/v2/studies/'+response.source_field_trials[i][0],
                 success: function(re){
@@ -134,7 +132,8 @@ jQuery(document).ready(function () {
 
             //Send ajax calls for studies that are sourced from this trial
             for (var i = 0; i < response.field_trials_sourced.length; i++){
-              linkAjaxCalls.push( jQuery.ajax({
+
+              linkAjaxCallsMap[ response.field_trials_sourced[i][0] ] = jQuery.ajax({
                 url: '/brapi/v2/germplasm?studyDbId='+response.field_trials_sourced[i][0],
                 success: function(re){
                   console.log(re);
@@ -142,8 +141,7 @@ jQuery(document).ready(function () {
                 error: function(re){
                   console.log("Failed to retrieve trial germplasm.");
                 }
-              }) );
-              linkAjaxCallsMap[ response.field_trials_sourced[i][0] ] = linkAjaxCalls[ (linkAjaxCalls.length - 1) ];
+              });
               nodeAjaxCalls.push( jQuery.ajax({
                 url: '/brapi/v2/studies/'+response.field_trials_sourced[i][0],
                 success: function(re){
@@ -172,7 +170,7 @@ jQuery(document).ready(function () {
               nodes = Object.values(nodeMap);
 
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
-              Promise.all(linkAjaxCalls).then((values2) => {
+              Promise.all(Object.values(linkAjaxCallsMap)).then((values2) => {
 
                 //These for loops look pretty scary, so let me explain what's happening. The outer for loop iterates through every broad, overarching link between
                 //The source trials for this trial and this trial. The first inner loop then looks at the ajax call for that source trial. Finally, the inner loop
