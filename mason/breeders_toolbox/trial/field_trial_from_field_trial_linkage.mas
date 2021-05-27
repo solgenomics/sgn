@@ -157,10 +157,9 @@ jQuery(document).ready(function () {
             //Wait for all study JSONs to be collected, then construct the nodes with them.
             Promise.all(nodeAjaxCalls).then((values1) => {
 
-              console.log("Debug:");
-              console.log(nodeMap);
-
               for (var i = 0; i < values1.length; i++){
+                console.log("Debug values:");
+                console.log(values[i]);
                 nodeMap[values1[i].result.studyDbId].trialType = values1[i].result.studyType;
               }
 
