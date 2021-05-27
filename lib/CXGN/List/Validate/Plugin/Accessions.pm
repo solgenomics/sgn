@@ -27,8 +27,10 @@ sub validate {
     my @synonyms;
     
     foreach my $item (@$list) {
+
+	# first match case sensitively to catch all the missing ones 
 	my $rs = $schema->resultset("Stock::Stock")->search(
-	    { 'lower(uniquename)' => lc($item),
+	    { uniquename => $item,
 	      'me.type_id' => $accession_type_id,
 	      is_obsolete => 'F' },
 	    );
@@ -37,23 +39,32 @@ sub validate {
 	    push @missing, $item;
 	}
 
-	elsif ($rs->count() == 1) {
+
+	
+	my $rs = $schema->resultset("Stock::Stock")->search(
+	    { 'lower(uniquename)' => lc($item),
+		  'me.type_id' => $accession_type_id,
+		  is_obsolete => 'F' },
+	    );
+	
+	if ($rs->count() == 1) {
 	    my $row = $rs->next();
 	    if ($row->uniquename() ne $item) {
 		push @wrong_case, [ $item, $row->uniquename() ];
 	    }
 	}
-
+	
 	elsif ($rs->count() > 1) {
 	    while(my $row = $rs->next()) { 
 		push @multiple_wrong_case, [ $item, $row->uniquename() ];
 	    }
 	}
-
+	
+    
 	my $rs = $schema->resultset("Stock::Stock")->search( 
 	    { 'lower(stockprops.value)' => lc($item),
-	      'stockprops.type_id' => $synonym_type_id,
-	    }, { join => stockprops, '+select' => [ 'stockprops.value' ], '+as' => [ 'stockprops_value' ]} );
+		  'stockprops.type_id' => $synonym_type_id,
+	    }, { join => 'stockprops', '+select' => [ 'stockprops.value' ], '+as' => [ 'stockprops_value' ]} );
 	while (my $row = $rs->next()) {
 	    push @synonyms, { uniquename =>  $row->uniquename(), synonym => $row->get_column('stockprops_value') };
 	}
