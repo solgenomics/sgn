@@ -285,6 +285,8 @@ jQuery(document).ready(function () {
                          svgnodes = null;
                          svglinks = null;
                          svglabels = null;
+                         nodeMap = {};
+                         linkMap = {};
 
                          construct_primitive_graph(d.name, res);
 
