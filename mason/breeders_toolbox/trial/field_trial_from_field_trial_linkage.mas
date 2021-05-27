@@ -254,7 +254,7 @@ jQuery(document).ready(function () {
 
                         console.log("Expanding tree from "+d.name);
 
-                        $('#')
+                        $('#sankeycanvas').empty();
 
                         primitiveLinks = [];
 
