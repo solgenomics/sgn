@@ -252,7 +252,6 @@ jQuery(document).ready(function () {
                         console.log("Expanding tree from "+d.name);
 
                         primitiveLinks = [];
-                        svg.selectAll("*").remove();
 
                         construct_primitive_graph(d.name, res);
 
