@@ -333,7 +333,7 @@ jQuery(document).ready(function () {
 
               //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
               var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
-            }
+            });
 
           }//End construct_graph
 
