@@ -159,7 +159,7 @@ jQuery(document).ready(function () {
 
               for (var i = 0; i < values1.length; i++){
                 console.log("Debug values:");
-                console.log(values[i]);
+                console.log(values1[i]);
                 nodeMap[values1[i].result.studyDbId].trialType = values1[i].result.studyType;
               }
 
