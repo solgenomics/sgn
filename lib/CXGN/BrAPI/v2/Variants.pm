@@ -26,6 +26,9 @@ sub search {
     my $start = $inputs->{start}->[0] || undef;
     my $end = $inputs->{end}->[0] || undef;
     my $pageToken = $inputs->{pageToken}->[0] || undef;
+    if ($pageToken) {
+        $page = $pageToken;
+    }
     my $schema = $self->bcs_schema;
     my @data_out;
 
@@ -45,7 +48,7 @@ sub search {
 
     my $marker_search = CXGN::Marker::SearchBrAPI->new({
         bcs_schema => $schema,
-        protocol_id_list => \@protocol_ids, 
+        protocol_id_list => \@protocol_ids,
         project_id_list => \@trial_ids,
         marker_name_list => $marker_ids,
         #protocolprop_marker_hash_select=>['name', 'chrom', 'pos', 'alt', 'ref'] Use default which is all marker info
@@ -94,7 +97,7 @@ sub search {
 
     my %result = (data=>\@data_out);
     my @data_files;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_tokens_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Variants result constructed');
 }
 
@@ -179,7 +182,7 @@ sub calls {
         bcs_schema=>$self->bcs_schema,
         trial_design_list=>['genotype_data_project']
     });
-    my ($data, $total_count) = $trial_search->search(); 
+    my ($data, $total_count) = $trial_search->search();
 
     foreach (@$data){
         push @trial_ids, $_->{trial_id};
@@ -244,9 +247,9 @@ sub calls {
     }
 
     %result = ( data=>\@data,
-                expandHomozygotes=>undef, 
-                sepPhased=>undef, 
-                sepUnphased=>undef, 
+                expandHomozygotes=>undef,
+                sepPhased=>undef,
+                sepUnphased=>undef,
                 unknownString=>undef);
 
 
