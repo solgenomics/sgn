@@ -282,6 +282,9 @@ jQuery(document).ready(function () {
                          jQuery('#sankeycanvas').empty();
 
                          primitiveLinks = [];
+                         svgnodes = null;
+                         svglinks = null;
+                         svglabels = null;
 
                          construct_primitive_graph(d.name, res);
 
