@@ -77,7 +77,9 @@ jQuery(document).ready(function () {
             // The primitive graph is the graph with the nodes and just the links between nodes but without any information regarding accessions
             construct_primitive_graph(parseInt("<% $trial_id %>"), r);
 
-            receive_JSONs_and_construct_graph(parseInt("<% $trial_id %>"));
+            receive_JSONs(parseInt("<% $trial_id %>"));
+
+            construct_graph();
 
 
           }
@@ -158,7 +160,7 @@ jQuery(document).ready(function () {
 
           }//end of construct_primitive_graph
 
-          function receive_JSONs_and_construct_graph(base_node_id){
+          function receive_JSONs(base_node_id){
 
             //Wait for all study JSONs to be collected, then construct the nodes with them.
             Promise.all(nodeAjaxCalls).then((values1) => {
@@ -199,138 +201,138 @@ jQuery(document).ready(function () {
                 console.log("Here is the sankey data: ");
                 console.log(data);
 
-
-                sankey = d3
-                  .sankey()
-                  .size([width-100, height-100])
-                  .nodeId(d => d.id)
-                  .nodeWidth(20)
-                  .nodePadding(10)
-                  .nodeAlign(d3.sankeyCenter);
-                graph = sankey(data);
-
-                svglinks = svg
-                  .append("g")
-                  .classed("links", true)
-                  .selectAll("path")
-                  .data(graph.links)
-                  .enter()
-                  .append("path")
-                  .classed("link", true)
-                  .attr("d", d3.sankeyLinkHorizontal())
-                  .attr("fill", "none")
-                  .attr("stroke", "#D3D3D3")
-                  .attr("stroke-width", d => d.width)
-                  .attr("marker-end", "url(#triangle)")
-                  .attr("stoke-opacity", 0.3)
-                  .on("mouseover", function(d){
-                    d3.select(this).attr("stroke", "#808080");
-                  })
-                  .on("mouseout", function(d){
-                    d3.select(this).attr("stroke", "#D3D3D3");
-                  });
-
-
-                  svgnodes = svg
-                   .append("g")
-                   .classed("nodes", true)
-                   .selectAll("rect")
-                   .data(graph.nodes)
-                   .enter()
-                   .append("rect")
-                   .classed("node", true)
-                   .attr("x", d => d.x0)
-                   .attr("y", d => d.y0)
-                   .attr("width", d => d.x1 - d.x0)
-                   .attr("height", d => d.y1 - d.y0)
-                   .attr("fill", "#add8e6")
-                   .attr("opacity", 0.8)
-                   .on("mouseover", function(d){
-                     d3.select(this).attr("fill", "#6699cc");
-                     tooltip_region.selectAll("*").remove();
-                     tooltip_region.attr("transform", "translate("+ ((d.x1+d.x0)/2 - 5 - 110) +", "+ (d.y0 - 5 - 70) +")" );
-                     var tooltip = tooltip_region
-                       .append("path")
-                       .attr('fill', 'white')
-                       .attr('stroke', 'black')
-                       .attr('stroke-width', '1.5');
-                     var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -40 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 40 c 0 10 0 10 10 10 h 90 l 10 10 z";
-                     tooltip.attr("d", pathString);
-                     var tooltip_text1 = tooltip_region.append("text")
-                     .attr("text-anchor", "middle")
-                     .attr("transform", "translate(110,20)");
-                     tooltip_text1.text("Trial: "+d.id);
-                     var tooltip_text2 = tooltip_region.append("text")
-                     .attr("text-anchor", "middle")
-                     .attr("transform", "translate(110,40)");
-                     tooltip_text2.text("Trial Type: "+d.trialType);
-                   })
-                   .on("mouseout", function(d){
-                     d3.select(this).attr("fill", "#add8e6");
-                     tooltip_region.selectAll("*").remove();
-                   })
-                   .on("click", function(d){
-
-                     jQuery.ajax({
-                       url : '/ajax/breeders/trial/'+d.name+'/field_trial_from_field_trial',
-                       success: function(res){
-
-                         console.log("Expanding tree from "+d.name);
-
-                         jQuery('#sankeycanvas').empty();
-
-                         primitiveLinks = [];
-                         svgnodes = null;
-                         svglinks = null;
-                         svglabels = null;
-                         nodeMap = {};
-                         linkMap = {};
-
-                         construct_primitive_graph(d.name, res);
-
-                         receive_JSONs_and_construct_graph(d.name);
-
-                         //Here's where I will try to change the onclick of this node, may not work
-
-                       }
-                     });
-
-                   })
-                   .on("dblclick",function(d){
-                     if (d.name == "<% $trial_id %>"){
-
-                     } else {
-                       window.open("/breeders/trial/"+d.name);
-                     }
-                   });
-
-
-                svglabels = svg
-                  .append("g")
-                  .classed("text", true)
-                  .selectAll("text")
-                  .data(graph.links)
-                  .enter()
-                  .append("text")
-                  .classed("link", true)
-                  .attr("x", d => d.source.x1 + 5)
-                  .attr("y", d => d.y0 + 5)
-                  .text(d => d.name);
-
-
-                //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
-                var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
-
-
-
               });
-
 
             });
 
           }//End of receive_JSONs_and_construct_graph
 
+          function construct_graph(){
 
+            sankey = d3
+              .sankey()
+              .size([width-100, height-100])
+              .nodeId(d => d.id)
+              .nodeWidth(20)
+              .nodePadding(10)
+              .nodeAlign(d3.sankeyCenter);
+            graph = sankey(data);
+
+            svglinks = svg
+              .append("g")
+              .classed("links", true)
+              .selectAll("path")
+              .data(graph.links)
+              .enter()
+              .append("path")
+              .classed("link", true)
+              .attr("d", d3.sankeyLinkHorizontal())
+              .attr("fill", "none")
+              .attr("stroke", "#D3D3D3")
+              .attr("stroke-width", d => d.width)
+              .attr("marker-end", "url(#triangle)")
+              .attr("stoke-opacity", 0.3)
+              .on("mouseover", function(d){
+                d3.select(this).attr("stroke", "#808080");
+              })
+              .on("mouseout", function(d){
+                d3.select(this).attr("stroke", "#D3D3D3");
+              });
+
+
+              svgnodes = svg
+               .append("g")
+               .classed("nodes", true)
+               .selectAll("rect")
+               .data(graph.nodes)
+               .enter()
+               .append("rect")
+               .classed("node", true)
+               .attr("x", d => d.x0)
+               .attr("y", d => d.y0)
+               .attr("width", d => d.x1 - d.x0)
+               .attr("height", d => d.y1 - d.y0)
+               .attr("fill", "#add8e6")
+               .attr("opacity", 0.8)
+               .on("mouseover", function(d){
+                 d3.select(this).attr("fill", "#6699cc");
+                 tooltip_region.selectAll("*").remove();
+                 tooltip_region.attr("transform", "translate("+ ((d.x1+d.x0)/2 - 5 - 110) +", "+ (d.y0 - 5 - 70) +")" );
+                 var tooltip = tooltip_region
+                   .append("path")
+                   .attr('fill', 'white')
+                   .attr('stroke', 'black')
+                   .attr('stroke-width', '1.5');
+                 var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -40 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 40 c 0 10 0 10 10 10 h 90 l 10 10 z";
+                 tooltip.attr("d", pathString);
+                 var tooltip_text1 = tooltip_region.append("text")
+                 .attr("text-anchor", "middle")
+                 .attr("transform", "translate(110,20)");
+                 tooltip_text1.text("Trial: "+d.id);
+                 var tooltip_text2 = tooltip_region.append("text")
+                 .attr("text-anchor", "middle")
+                 .attr("transform", "translate(110,40)");
+                 tooltip_text2.text("Trial Type: "+d.trialType);
+               })
+               .on("mouseout", function(d){
+                 d3.select(this).attr("fill", "#add8e6");
+                 tooltip_region.selectAll("*").remove();
+               })
+               .on("click", function(d){
+
+                 jQuery.ajax({
+                   url : '/ajax/breeders/trial/'+d.name+'/field_trial_from_field_trial',
+                   success: function(res){
+
+                     console.log("Expanding tree from "+d.name);
+
+                     jQuery('#sankeycanvas').empty();
+
+                     primitiveLinks = [];
+                     svgnodes = null;
+                     svglinks = null;
+                     svglabels = null;
+                     nodeMap = {};
+                     linkMap = {};
+                     linkAjaxCallsMap = {};
+
+                     construct_primitive_graph(d.name, res);
+
+                     receive_JSONs(d.name);
+
+                     construct_graph();
+
+                     //Here's where I will try to change the onclick of this node, may not work
+
+                   }
+                 });
+
+               })
+               .on("dblclick",function(d){
+                 if (d.name == "<% $trial_id %>"){
+
+                 } else {
+                   window.open("/breeders/trial/"+d.name);
+                 }
+               });
+
+
+            svglabels = svg
+              .append("g")
+              .classed("text", true)
+              .selectAll("text")
+              .data(graph.links)
+              .enter()
+              .append("text")
+              .classed("link", true)
+              .attr("x", d => d.source.x1 + 5)
+              .attr("y", d => d.y0 + 5)
+              .text(d => d.name);
+
+
+            //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
+            var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
+          }
 
 
         },
