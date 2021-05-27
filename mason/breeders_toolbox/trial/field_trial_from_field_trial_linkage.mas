@@ -272,6 +272,7 @@ jQuery(document).ready(function () {
 
                         primitiveSinkLinks = [];
                         primitiveSourceLinks = [];
+                        primitiveLinks = [];
 
                         construct_primitive_graph(d.name, res);
 
