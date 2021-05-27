@@ -42,6 +42,7 @@ jQuery(document).ready(function () {
           var nodes = []; //Initialize nodes list with this node.
           var primitiveSourceLinks = []; //List of connections flowing into this trial
           var primitiveSinkLinks = []; //List of connections flowing out of this trial
+          var primitiveLinks = [];
           var links = []; //List to be used for all connections at the accession level
           var linkAjaxCalls = []; //List of ajax calls for germplasm (used for accessions)
           var linkAjaxCallsMap = {}; // Map of ajax calls for links
@@ -119,6 +120,7 @@ jQuery(document).ready(function () {
               nodeMap[response.source_field_trials[i][0]] = {"name":response.source_field_trials[i][0], "id":response.source_field_trials[i][1], "trialType":null};
               //nodes.push(nodeMap[response.source_field_trials[i][0]]);
               primitiveSourceLinks.push({"source":nodeMap[response.source_field_trials[i][0]], "target": nodeMap[base_node_id], "value":1});
+              primitiveLinks.push({"source":nodeMap[response.source_field_trials[i][0]], "target": nodeMap[base_node_id], "value":1});
             }
 
             //Send ajax calls for studies that are sourced from this trial
@@ -146,6 +148,7 @@ jQuery(document).ready(function () {
               nodeMap[response.field_trials_sourced[i][0]] = {"name":response.field_trials_sourced[i][0], "id":response.field_trials_sourced[i][1], "trialType":null};
               //nodes.push(nodeMap[response.field_trials_sourced[i][0]]);
               primitiveSinkLinks.push({"source":nodeMap[base_node_id], "target": nodeMap[response.field_trials_sourced[i][0]], "value":1});
+              primitiveLinks.push({"source":nodeMap[base_node_id], "target": nodeMap[response.field_trials_sourced[i][0]], "value":1});
             }
 
           }//end of construct_primitive_graph
@@ -169,27 +172,39 @@ jQuery(document).ready(function () {
                 //compares each accession/germplasm in the target node with each accession in the source node and then adds a link with that germplasm's name to the
                 //sankey if there is a match. More or less the same thing happens with the second triple-nested for loop.
 
-                //Make links from the source trials
-                for (var i = 0; i < primitiveSourceLinks.length; i++){
+                // //Make links from the source trials
+                // for (var i = 0; i < primitiveSourceLinks.length; i++){
+                //
+                //   for (var j = 0; j < linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data.length; j++){
+                //
+                //     for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
+                //       if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data[j].germplasmName){
+                //         links.push({"source": primitiveSourceLinks[i].source, "target":primitiveSourceLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data[j].germplasmName});
+                //       }
+                //     }
+                //   }
+                // }
+                //
+                // //Make links to sourced trials
+                // for (var i = 0; i < primitiveSinkLinks.length; i++){
+                //
+                //   for (var j = 0; j < linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data.length; j++){
+                //
+                //     for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
+                //       if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data[j].germplasmName){
+                //         links.push({"source": primitiveSinkLinks[i].source, "target":primitiveSinkLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data[j].germplasmName});
+                //       }
+                //     }
+                //   }
+                // }
 
-                  for (var j = 0; j < linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data.length; j++){
+                for (var i = 0; i < primitiveLinks.length; i++){
+
+                  for (var j = 0; j < linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data.length; j++){
 
                     for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
-                      if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data[j].germplasmName){
-                        links.push({"source": primitiveSourceLinks[i].source, "target":primitiveSourceLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSourceLinks[i].source.name].responseJSON.result.data[j].germplasmName});
-                      }
-                    }
-                  }
-                }
-
-                //Make links to sourced trials
-                for (var i = 0; i < primitiveSinkLinks.length; i++){
-
-                  for (var j = 0; j < linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data.length; j++){
-
-                    for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
-                      if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data[j].germplasmName){
-                        links.push({"source": primitiveSinkLinks[i].source, "target":primitiveSinkLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveSinkLinks[i].target.name].responseJSON.result.data[j].germplasmName});
+                      if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName){
+                        links.push({"source": primitiveLinks[i].source, "target":primitiveLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName});
                       }
                     }
                   }
@@ -252,6 +267,8 @@ jQuery(document).ready(function () {
                     jQuery.ajax({
                       url : '/ajax/breeders/trial/'+d.name+'/field_trial_from_field_trial',
                       success: function(res){
+
+                        console.log("Expanding tree from"+d.name);
 
                         primitiveSinkLinks = [];
                         primitiveSourceLinks = [];
