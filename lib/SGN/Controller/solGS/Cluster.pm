@@ -44,84 +44,84 @@ sub cluster_analysis :Path('/cluster/analysis/') Args() {
 }
 
 
-sub cluster_check_result :Path('/cluster/check/result/') Args() {
-    my ($self, $c) = @_;
-
-    my $training_pop_id  = $c->req->param('training_pop_id');
-    my $selection_pop_id = $c->req->param('selection_pop_id');
-    my $combo_pops_id    = $c->req->param('combo_pops_id');
-    my $protocol_id    = $c->req->param('genotyping_protocol_id');
-    my @traits_ids  = $c->req->param('training_traits_ids[]');
-
-    my $list_id     = $c->req->param('list_id');
-    my $list_type;
-    my $list_name;
-
-    if ($list_id)
-    {
-	$list_id =~ s/list_//;
-	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-
-	$list_type = $list->type();
-	$list_name = $list->name();
-    }
-
-    my $dataset_id     =  $c->req->param('dataset_id');
-    my $dataset_name   = $c->req->param('dataset_name');
-    my $data_structure =  $c->req->param('data_structure');
-    my $k_number       =  $c->req->param('k_number');
-    my $cluster_type   = $c->req->param('cluster_type');
-    my $selection_prop = $c->req->param('selection_proportion');
-    my $sindex_name    = $c->req->param('sindex_name');
-    $cluster_type      = 'k-means' if !$cluster_type;
-    my $data_type      =  $c->req->param('data_type');
-    $data_type         = 'Genotype' if !$data_type;
-
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    $c->stash->{training_pop_id}  = $training_pop_id;
-    $c->stash->{selection_pop_id} = $selection_pop_id;
-    $c->stash->{data_structure}   = $data_structure;
-    $c->stash->{list_id}          = $list_id;
-    $c->stash->{list_name}        = $list_name;
-    $c->stash->{list_type}        = $list_type;
-    $c->stash->{dataset_id}       = $dataset_id;
-    $c->stash->{dataset_name}     = $dataset_name;
-    $c->stash->{cluster_type}     = $cluster_type;
-    $c->stash->{combo_pops_id}    = $combo_pops_id;
-    $c->stash->{k_number}         = $k_number;
-    $c->stash->{selection_proportion} = $selection_prop;
-    $c->stash->{sindex_name}      = $sindex_name;
-
-    $c->stash->{training_traits_ids} = \@traits_ids;
-
-    $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
-
-    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
-    $c->stash->{file_id} = $file_id;
-
-    $self->check_cluster_output_files($c);
-    my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
-
-    my $ret->{result} = undef;
-
-    if ($cluster_plot_exists)
-    {
-	$ret = $self->_prepare_response($c);
-    }
-
-    $ret = to_json($ret);
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
-
+# sub cluster_check_result :Path('/cluster/check/result/') Args() {
+#     my ($self, $c) = @_;
+#
+#     my $training_pop_id  = $c->req->param('training_pop_id');
+#     my $selection_pop_id = $c->req->param('selection_pop_id');
+#     my $combo_pops_id    = $c->req->param('combo_pops_id');
+#     my $protocol_id    = $c->req->param('genotyping_protocol_id');
+#     my @traits_ids  = $c->req->param('training_traits_ids[]');
+#     my $training_traits_code = $c->req->param('training_traits_code');
+#
+#     my $list_id     = $c->req->param('list_id');
+#     my $list_type;
+#     my $list_name;
+#
+#     if ($list_id)
+#     {
+# 	$list_id =~ s/list_//;
+# 	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+#
+# 	$list_type = $list->type();
+# 	$list_name = $list->name();
+#     }
+#
+#     my $dataset_id     =  $c->req->param('dataset_id');
+#     my $dataset_name   = $c->req->param('dataset_name');
+#     my $data_structure =  $c->req->param('data_structure');
+#     my $k_number       =  $c->req->param('k_number');
+#     my $cluster_type   = $c->req->param('cluster_type');
+#     my $selection_prop = $c->req->param('selection_proportion');
+#     my $sindex_name    = $c->req->param('sindex_name');
+#     $cluster_type      = 'k-means' if !$cluster_type;
+#     my $data_type      =  $c->req->param('data_type');
+#     $data_type         = 'Genotype' if !$data_type;
+#
+#     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+#     $c->stash->{training_pop_id}  = $training_pop_id;
+#     $c->stash->{selection_pop_id} = $selection_pop_id;
+#     $c->stash->{data_structure}   = $data_structure;
+#     $c->stash->{list_id}          = $list_id;
+#     $c->stash->{list_name}        = $list_name;
+#     $c->stash->{list_type}        = $list_type;
+#     $c->stash->{dataset_id}       = $dataset_id;
+#     $c->stash->{dataset_name}     = $dataset_name;
+#     $c->stash->{cluster_type}     = $cluster_type;
+#     $c->stash->{combo_pops_id}    = $combo_pops_id;
+#     $c->stash->{k_number}         = $k_number;
+#     $c->stash->{selection_proportion} = $selection_prop;
+#     $c->stash->{sindex_name}      = $sindex_name;
+#
+#     $c->stash->{training_traits_ids} = \@traits_ids;
+#     $c->stash->{training_traits_code} = $training_traits_code;
+#     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+#
+#     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+#     $c->stash->{file_id} = $file_id;
+#
+#     $self->check_cluster_output_files($c);
+#     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
+#
+#     my $ret->{result} = undef;
+#
+#     if ($cluster_plot_exists)
+#     {
+# 	$ret = $self->_prepare_response($c);
+#     }
+#
+#     $ret = to_json($ret);
+#     $c->res->content_type('application/json');
+#     $c->res->body($ret);
+#
+# }
+#
 
 sub check_cluster_output_files {
     my ($self, $c) = @_;
 
     $c->controller('solGS::Files')->create_file_id($c);
     my $file_id = $c->stash->{file_id};
-
     my $cluster_type = $c->stash->{cluster_type};
     my $cluster_result_file;
     my $cluster_plot_file;
@@ -148,67 +148,29 @@ sub check_cluster_output_files {
 }
 
 
-sub cluster_result :Path('/cluster/result/') Args() {
+sub run_cluster_analysis :Path('/run/cluster/analysis/') Args() {
     my ($self, $c) = @_;
 
-    my $training_pop_id  = $c->req->param('training_pop_id');
-    my $selection_pop_id = $c->req->param('selection_pop_id');
-    my $combo_pops_id    = $c->req->param('combo_pops_id');
-    my $cluster_pop_id   = $c->req->param('cluster_pop_id');
-    my $cluster_pop_name = $c->req->param('cluster_pop_name');
-    my $dataset_id       = $c->req->param('dataset_id');
-    my $dataset_name     = $c->req->param('dataset_name');
-    my $data_structure   = $c->req->param('data_structure');
-    my $k_number         = $c->req->param('k_number');
-    my $data_type        = $c->req->param('data_type');
-    my $selection_prop   = $c->req->param('selection_proportion');
-    my $sindex_name      = $c->req->param('sindex_name');
-    my $cluster_type     = $c->req->param('cluster_type');
-    my @traits_ids       = $c->req->param('training_traits_ids[]');
-    my $list_id          = $c->req->param('list_id');
-    my $protocol_id      = $c->req->param('genotyping_protocol_id');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    my $list_type;
-    my $list_name;
-
+    my $list_id = $c->stash->{list_id};
     if ($list_id)
     {
-	$list_id =~ s/list_//;
-	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-
-	$list_type = $list->type();
-	$list_name = $list->name();
+        $c->controller('solGs::List')->stash_list_metadata($c, $list_id);
     }
 
-    $cluster_type = 'k-means' if !$cluster_type;
-    $data_type    = 'genotype' if !$data_type;
-    $data_type    = lc($data_type);
-
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    $c->stash->{training_pop_id}  = $training_pop_id;
-    $c->stash->{selection_pop_id} = $selection_pop_id;
-    $c->stash->{cluster_pop_id}   = $cluster_pop_id;
-    $c->stash->{cluster_pop_name} = $cluster_pop_name;
-    $c->stash->{data_structure}   = $data_structure;
-    $c->stash->{list_id}          = $list_id;
-    $c->stash->{list_name}        = $list_name;
-    $c->stash->{list_type}        = $list_type;
-    $c->stash->{dataset_id}       = $dataset_id;
-    $c->stash->{dataset_name}     = $dataset_name;
-    $c->stash->{cluster_type}     = $cluster_type;
-    $c->stash->{combo_pops_id}    = $combo_pops_id;
-    $c->stash->{data_type}        = $data_type;
-    $c->stash->{k_number}         = $k_number;
-    $c->stash->{sindex_name}      = $sindex_name;
-    $c->stash->{selection_proportion} = $selection_prop;
-
-    $c->stash->{training_traits_ids} = \@traits_ids;
-
-    my $pop_id = $selection_pop_id || $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
+    # my $pop_id = $c->stash->{selection_pop_id} ||
+    #     $c->stash->{training_pop_id} ||
+    #     $list_id ||
+    #     $c->stash->{combo_pops_id} ||
+    #     $c->stash->{dataset_id};
 
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
     $c->stash->{file_id} = $file_id;
-    $c->stash->{pop_id} = $cluster_pop_id || $pop_id;
+
+    $c->stash->{pop_id} = $c->stash->{cluster_pop_id};
+    my $cluster_type = $c->stash->{cluster_type};
 
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
@@ -217,7 +179,6 @@ sub cluster_result :Path('/cluster/result/') Args() {
 
     if (!$cluster_plot_exists)
     {
-	    # $self->save_cluster_opts($c);
 	    $self->run_cluster($c);
     }
 
@@ -264,11 +225,8 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
 sub cluster_gebvs_file {
     my ($self, $c) = @_;
 
-    $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);
+    $c->controller('solGS::TraitsGebvs')->combined_gebvs_file($c);
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
-
-    my $tmp_dir = $c->stash->{cluster_temp_dir};
-    $combined_gebvs_file = $c->controller('solGS::Files')->copy_file($combined_gebvs_file, $tmp_dir);
 
     $c->stash->{cluster_gebvs_file} = $combined_gebvs_file;
 
@@ -911,8 +869,17 @@ sub run_cluster {
 
      $self->save_cluster_opts($c);
 
-    $self->cluster_query_jobs_file($c);
-    $c->stash->{prerequisite_jobs} = $c->stash->{cluster_query_jobs_file};
+     if ($c->stash->{data_type} =~ /genotype|phenotype/i)
+     {
+         $self->cluster_query_jobs_file($c);
+         $c->stash->{prerequisite_jobs} = $c->stash->{cluster_query_jobs_file};
+     }
+
+    if ($c->stash->{data_type} =~ /gebv/i)
+    {
+        $self->cluster_combine_gebvs_jobs_file($c);
+        $c->stash->{prerequisite_jobs} = $c->stash->{cluster_combine_gebvs_jobs_file};
+    }
 
     $self->cluster_r_jobs_file($c);
     $c->stash->{dependent_jobs} = $c->stash->{cluster_r_jobs_file};
@@ -1024,6 +991,25 @@ sub cluster_query_jobs_file {
 	or croak "cluster query jobs : $! serializing $cluster_type cluster query jobs to $jobs_file";
 
     $c->stash->{cluster_query_jobs_file} = $jobs_file;
+
+}
+
+
+sub cluster_combine_gebvs_jobs_file {
+    my ($self, $c) = @_;
+
+    my $cluster_type = $c->stash->{cluster_type};
+
+    $c->controller('solGS::TraitsGebvs')->combine_gebvs_jobs($c);
+    my $jobs = $c->stash->{combine_gebvs_jobs};
+
+    my $temp_dir = $c->stash->{cluster_temp_dir};
+    my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, "${cluster_type}-combine-gebvs-jobs-file");
+
+    nstore $jobs, $jobs_file
+	or croak "cluster combine gebvs jobs : $! serializing $cluster_type cluster combine gebvs jobs to $jobs_file";
+
+    $c->stash->{cluster_combine_gebvs_jobs_file} = $jobs_file;
 
 }
 
