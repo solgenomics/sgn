@@ -12,6 +12,7 @@ use MooseX::FollowPBP;
 use Try::Tiny;
 use Data::Dumper;
 use CXGN::Stock;
+use JSON;
 
 =head1 ACCESSORS
 
@@ -62,11 +63,11 @@ has 'nd_geolocation_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_geolo
 
 =head2 set_design_type(), get_design_type(), has_design_type()
 
-The type of the design. CBSD, etc. Required.
+The type of the design. CBSD, etc. Optional.
 
 =cut
 
-has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
+has 'design_type' => (isa => 'Maybe[Str]', is => 'rw', predicate => 'has_design_type', required => 0);
 
 =head2 set_design(), get_design(), has_design()
 
@@ -402,6 +403,7 @@ sub store {
     my $nd_experiment_type_id = $self->get_nd_experiment_type_id();
     my $stock_type_id = $self->get_stock_type_id();
     my $stock_rel_type_id = $self->get_stock_relationship_type_id();
+    my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
 
     my @source_stock_types = @{$self->get_source_stock_types()};
 
@@ -598,6 +600,7 @@ sub store {
             if ($design{$key}->{ncbi_taxonomy_id}) {
                 $ncbi_taxonomy_id = $design{$key}->{ncbi_taxonomy_id};
             }
+            my $additional_info = $design{$key}->{additional_info} ? encode_json $design{$key}->{additional_info} : undef;
 
             #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
             if ($stock_data{$stock_name}) {
@@ -666,6 +669,9 @@ sub store {
                 }
                 if ($ncbi_taxonomy_id) {
                     push @plot_stock_props, { type_id => $self->get_ncbi_taxonomy_id_cvterm_id, value => $ncbi_taxonomy_id };
+                }
+                if ($additional_info) {
+                    push @plot_stock_props, { type_id => $additional_info_type_id, value => $additional_info };
                 }
 
                 my @plot_subjects;

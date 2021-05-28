@@ -17,23 +17,24 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
 
     $self->set_valid_properties(
 	[
-	 'seedlot_name',
-	 'num_seed_per_plot',
-	 'weight_gram_seed_per_plot',
-	 'stock_name',
-	 'plot_name',
-	 'plot_number',
-	 'block_number',
-	 'rep_number',
-	 'is_a_control',
-	 'range_number',
-	 'row_number',
-	 'col_number',
-	 'plant_names',
-	 'plot_num_per_block',
-	 'subplots_names', #For splotplot
-	 'treatments', #For splitplot
-	 'subplots_plant_names', #For splitplot
+        'seedlot_name',
+        'num_seed_per_plot',
+        'weight_gram_seed_per_plot',
+        'stock_name',
+        'plot_name',
+        'plot_number',
+        'block_number',
+        'rep_number',
+        'is_a_control',
+        'range_number',
+        'row_number',
+        'col_number',
+        'plant_names',
+        'plot_num_per_block',
+        'subplots_names', #For splotplot
+        'treatments', #For splitplot
+        'subplots_plant_names', #For splitplot
+        'additional_info' # For brapi additional info storage
 	]);
 
 }
@@ -47,16 +48,14 @@ sub validate_design {
     my %design = %{$self->get_design};
     my $error = '';
 
-    if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
-        $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, Westcott or splitplot";
-        return $error;
+    if (defined $design_type){
+        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
+            $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, Westcott or splitplot";
+            return $error;
+        }
     }
-    my @valid_properties;
 
-    if ($design_type eq 'CRD' || $design_type eq 'Alpha' || $design_type eq 'Augmented' || $design_type eq 'RCBD' || $design_type eq 'p-rep' || $design_type eq 'splitplot' || $design_type eq 'Lattice' || $design_type eq 'MAD' || $design_type eq 'greenhouse' || $design_type eq 'Westcott' || $design_type eq 'Analysis'){
-        # valid plot's properties
-        @valid_properties = @{$self->get_valid_properties()};
-    }
+    my @valid_properties = @{$self->get_valid_properties()};
     my %allowed_properties = map {$_ => 1} @valid_properties;
 
     my %seen_stock_names;
@@ -137,15 +136,15 @@ sub validate_design {
 
     my %found_data;
     foreach my $a (@accession_names) {
-	my $rs = $chado_schema->resultset('Stock::Stock')->search({
-	    'is_obsolete' => { '!=' => 't' },
-	    'type_id' => { -in => \@source_stock_types },
-	    'uniquename' => { ilike => $a } });
+        my $rs = $chado_schema->resultset('Stock::Stock')->search({
+            'is_obsolete' => { '!=' => 't' },
+            'type_id' => { -in => \@source_stock_types },
+            'uniquename' => { ilike => $a } });
 
-	while (my $s = $rs->next()) {
-	    print STDERR "FOUND ".$s->uniquename()."\n";
-	    $found_data{$s->uniquename} = 1;
-	}
+        while (my $s = $rs->next()) {
+            print STDERR "FOUND ".$s->uniquename()."\n";
+            $found_data{$s->uniquename} = 1;
+        }
     }
     foreach (@accession_names){
         if (!$found_data{$_}){

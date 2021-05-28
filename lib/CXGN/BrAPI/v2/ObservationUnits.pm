@@ -44,6 +44,7 @@ sub search {
     # externalReferenceID
     # externalReferenceSource
 
+    #TODO: Use materialized_view_stockprop or construct own query. Materialized phenotype jsonb takes too long when there is data in the db
     if ($levels_arrayref){
         $data_level = ();
         foreach ( @{$levels_arrayref} ){
@@ -157,7 +158,14 @@ sub search {
 
         if ($geo_coordinates_string){
             $geo_coordinates = decode_json $geo_coordinates_string;
-        } 
+        }
+
+        my $additional_info;
+        my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
+        my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $additional_info_type_id, stock_id => $obs_unit->{observationunit_stock_id} });
+        if ($rs->count() > 0){
+            $additional_info = $rs->first_row->value();
+        }
 
         my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
 
@@ -239,8 +247,8 @@ sub search {
         }
 
         push @data_window, {
-            additionalInfo => {},
             externalReferences => \@references,
+            additionalInfo => $additional_info,
             germplasmDbId => qq|$obs_unit->{germplasm_stock_id}|,
             germplasmName => $obs_unit->{germplasm_uniquename},
             locationDbId => qq|$obs_unit->{trial_location_id}|,
@@ -584,11 +592,24 @@ sub observationunits_store {
     my $person = CXGN::People::Person->new($dbh, $user_id);
     my $user_name = $person->get_username;
     my %design;
-    
-    my %studies = map { $_->{studyDbId} => 1 } @$data; 
-    if(keys %studies ne 1){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one study at the time.'));
+
+    # TODO
+    # TODO: Check if we can have different studies, instead of just one
+    # TODO: Check if we can have different locations, instead of just one
+    # TODO: Allow setting of own observation level -> Big one
+    # TODO: Make plot number not required
+    # TODO: Return new observation unit
+
+    my %studies = map { $_->{studyDbId} => 1 } @$data;
+    for (keys %studies) {
+        if ($_ eq '') {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('studyDbId is required'), 400);
+        }
     }
+    if(keys %studies ne 1){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one study at a time.'), 422);
+    }
+
     my $trial_id = join ',', keys %studies;
 
     my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $trial_id });
@@ -598,15 +619,35 @@ sub observationunits_store {
     }
     my $design_type = $design_prop->value;
 
-    my %locations = map { $_->{locationDbId} => 1 } @$data; 
+    # Get the location from study if it wasn't passed.
+    my $default_location_id;
+    my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property');
+    my $row = $self->bcs_schema()->resultset('Project::Projectprop')->find({
+        project_id => $project->project_id(),
+        type_id => $location_type_id->cvterm_id(),
+    });
+    if ($row) {
+        print('Row value: ' . $row->value());
+        $default_location_id = $row->value();
+    }
+
+    my %locations = map { $_->{locationDbId} => 1 } @$data;
     if(keys %locations ne 1){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one location at the time.'));
     }
     my $location_id = join ',', keys %locations;
+    if ($location_id eq ''){
+        print(Dumper($default_location_id));
+        $location_id = $default_location_id;
+        if (! defined $location_id) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Error retrieving default location from study.'), 500);
+        }
+    }
 
     foreach my $params (@{$data}) {
         my $plot_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode} ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
         my $plot_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
+        my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
         my $accession_name = $params->{germplasmName} ? $params->{germplasmName} : undef;
         my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
         my $range_number = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
@@ -615,11 +656,32 @@ sub observationunits_store {
         my $seedlot_id = $params->{seedLotDbId} ? $params->{seedLotDbId} : undef;
         my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates} ? $params->{observationUnitPosition}->{geoCoordinates} : undef;
         my $levels = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
+        my $additional_info = $params->{additionalInfo} || undef;
         my $block_number;
         my $rep_number;
-   
+
+        # Required fields check
+        if (! defined $accession_id && ! defined $accession_name) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either ermplasmDbId or germplasmName is required.'), 400);
+        }
+        #TODO: Generate a plot number if one isn't provided -> This actually may not be required as it says it is. See store method
         if (!$plot_number){
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide a sequential plot number unique for the study.'));
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide a sequential plot number unique for the study.'), 422);
+        }
+
+        # Get the germplasm name from germplasmDbId. Check if a germplasm name passed exists
+        my $rs = $schema->resultset("Stock::Stock")->search({stock_id=>$accession_id});
+        if ($rs->count() eq 0 && ! defined $accession_name){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Germplasm with that id does not exist.'), 404);
+        } elsif ($rs->count() > 0) {
+            my $stock = $rs->first;
+            $accession_name = $stock->uniquename();
+        } else {
+            # Check that a germplasm exists with that name
+            my $rs = $schema->resultset("Stock::Stock")->search({uniquename=>$accession_name});
+            if ($rs->count() eq 0) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Germplasm with that name does not exist.'), 404);
+            }
         }
 
         foreach (@$levels){
@@ -643,9 +705,11 @@ sub observationunits_store {
             row_number => $row_number,
             col_number => $col_number,
             # plot_geo_json => $plot_geo_json,
-            
+            additional_info => $additional_info
         };
+        printf(Dumper($design{$plot_number}));
     }
+
 
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
         bcs_schema => $schema,
@@ -664,13 +728,14 @@ sub observationunits_store {
     my $error;
     my $validate_design_error = $trial_design_store->validate_design();
     if ($validate_design_error) {
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Error validating study design: ' . $validate_design_error));
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Error validating study design: ' . $validate_design_error), 422);
     } else {
         try {
             $error = $trial_design_store->store();
         } catch {
             $error = $_;
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('ERROR store: ' . $error));
+            # TODO: This could get more specific error codes from the store method
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('ERROR store: ' . $error), 500);
         };
     }
 
