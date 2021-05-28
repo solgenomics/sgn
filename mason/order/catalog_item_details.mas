@@ -35,6 +35,14 @@ $check_vendor_role
                         <tr><td><b>Contact Person Username</b></td><td><% $contact_person_username %></td></tr>
                     </table>
                 </div>
+
+                <div class="col-sm-6">
+                    <br /><br />
+
+                    <br /><br />
+                </div>
+
+
             </div>
         </div>
     </div>
@@ -134,5 +142,43 @@ jQuery(document).ready( function() {
     });
 
 });
+
+
+function addImage(image_id){
+
+    var item_name = '<% $item_name %>';
+    var item_prop_id = '<% $item_prop_id %>';
+    var image_id = image_id;
+
+    jQuery.ajax({
+        url: '/ajax/catalog/add_image',
+        dataType: "json",
+        type: 'POST',
+        data : {
+            'item_name': item_name,
+            'item_prop_id': item_prop_id,
+            'image_id': image_id
+        },
+
+        beforeSend: function(response){
+            jQuery('#working_modal').modal('show');
+        },
+        success: function(response) {
+            jQuery('#working_modal').modal('hide');
+            if (response.success == 1) {
+                alert('Added');
+            }
+            if (response.error_string) {
+                alert(response.error_string);
+            }
+        },
+        error: function(response){
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred adding image');
+        }
+    });
+
+}
+
 
 </script>

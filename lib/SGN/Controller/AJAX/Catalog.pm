@@ -277,6 +277,7 @@ sub item_image_list :Path('/ajax/catalog/image_list') :Args(1) {
         print STDERR "IMAGE MEDIUM =".Dumper($medium_image)."\n";
         print STDERR "IMAGE PAGE =".Dumper($image_page)."\n";
         push @image_list, {
+                image_id => $image_obj_id,
                 image_name => $image_obj_name,
                 small_image => qq|<a href="$medium_image"  title="<a href=$image_page>Go to image page ($image_obj_name)</a>" class="stock_image_group" rel="gallery-figures"><img src="$small_image"/></a> |,
                 image_description => $image_obj_description,
@@ -285,6 +286,55 @@ sub item_image_list :Path('/ajax/catalog/image_list') :Args(1) {
     }
 
     $c->stash->{rest} = {data => \@image_list};
+}
+
+
+sub add_catalog_image : Path('/ajax/catalog/add_image') : ActionClass('REST'){ }
+
+sub add_catalog_image_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+
+    my $item_name = $c->req->param('item_name');
+    my $item_prop_id = $c->req->param('item_prop_id');
+    my $image_id = $c->req->param('image_id');
+    my @images;
+    my $item_stock_id;
+    push @images, $image_id;
+    print STDERR "IMAGE ID =".Dumper(\@images)."\n";
+    if (!$c->user()) {
+        print STDERR "User not logged in... not adding a catalog item.\n";
+        $c->stash->{rest} = {error_string => "You must be logged in to add a catalog image." };
+        return;
+    }
+
+    my $item_rs = $schema->resultset("Stock::Stock")->find({uniquename => $item_name});
+    if (!$item_rs) {
+        $c->stash->{rest} = {error_string => "Item name is not in the database!",};
+        return;
+    } else {
+        $item_stock_id = $item_rs->stock_id();
+    }
+
+    my $stock_catalog = CXGN::Stock::Catalog->new({
+        bcs_schema => $schema,
+        parent_id => $item_stock_id,
+        prop_id => $item_prop_id
+    });
+
+    $stock_catalog->images(\@images);
+
+    $stock_catalog->store();
+
+    if (!$stock_catalog->store()){
+        $c->stash->{rest} = {error_string => "Error saving catalog image",};
+        return;
+    }
+
+    $c->stash->{rest} = {success => "1",};
+
 }
 
 
