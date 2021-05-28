@@ -148,9 +148,28 @@ sub detail {
 
 			my %additional_info = ();
 			my $project_type = '';
-			if ($t->get_project_type()) {
-				$project_type = $t->get_project_type()->[1];
+			my $project_type_array = $t->get_project_type();
+			if ($project_type_array) {
+				my $project_type_name = $project_type_array->[1];
+				my $misc_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'misc_trial', 'project_type');
+				printf($misc_type_cvterm->name());
+				printf($project_type_name);
+				if ($project_type_name eq $misc_type_cvterm->name()) {
+					my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search(
+						{
+							type_id => $misc_type_cvterm->cvterm_id(),
+							project_id => $t->get_trial_id()
+						});
+					if ($rs->count() > 0) {
+						$project_type = $rs->first()->value();
+					}
+				}
+
+				if (! defined $project_type){
+					$project_type = $project_type_name;
+				}
 			}
+
 			my $location_id = '';
 			my $location_name = '';
 			if ($t->get_location()) {
@@ -287,12 +306,6 @@ sub store {
 	my $page = $self->page;
 	my $status = $self->status;
 
-    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
-    my %project_type_ids;
-	foreach (@project_type_ids) {
-		$project_type_ids{$_->[1]} = $_->[0];
-    }
-
     my @study_dbids;
 
     foreach my $params (@{$data}) {
@@ -303,33 +316,58 @@ sub store {
 	    my $trial_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot;
 	    my $folder_id = $params->{trialDbId} ? $params->{trialDbId} : undef;
 	    my $study_type = $params->{studyType} ? $params->{studyType} : undef;
-	    my $trial_type = $project_type_ids{$study_type};
 	    my $field_size = $params->{additionalInfo}->{field_size} ? $params->{additionalInfo}->{field_size} : undef;
 	    my $plot_width = $params->{additionalInfo}->{plot_width} ? $params->{additionalInfo}->{plot_width} : undef;
 	    my $plot_length = $params->{additionalInfo}->{plot_length} ? $params->{additionalInfo}->{plot_length} : undef;
 
-	    if(!$trial_type){
-	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study type name: ' . $study_type . ' does not exist. Check study types supported!'));
-	    } 
-	    my $folder = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
-	    
-	    my $program;
-	    if($folder->breeding_program){
-	    	$program = $folder->breeding_program->name();
-	    } elsif ($folder->name()){
-	    	$program = $folder->name();
+		if (!$folder_id) {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, 'trialDbId is required', 400);
+		}
+	    if(!$study_type){
+	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study type is required'), 400);
 	    }
+
+		# Check the trial exists
+		my $brapi_trial = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=>$folder_id });
+		if (! defined $brapi_trial) {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Trial does not exist with that id', 404);
+		}
+
+		my $folder = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
+		my $program;
+		if($folder->breeding_program){
+			$program = $folder->breeding_program->name();
+		} elsif ($folder->name()){
+			$program = $folder->name();
+		}
 
 	    my $save;
 		my $coderef = sub {
+
+			# Use the misc_trial type if it doesn't match any of the other ones.
+			my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+			my %project_type_ids;
+			foreach (@project_type_ids) {
+				$project_type_ids{$_->[1]} = $_->[0];
+			}
+
+			my $trial_type;
+			if ($project_type_ids{$study_type}) {
+				$trial_type = $project_type_ids{$study_type};
+			} else {
+				# Create a new trial type
+				my $misc_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'misc_trial', 'project_type');
+				$trial_type = $misc_type_cvterm->cvterm_id();
+			}
 
 		    my %trial_info_hash = (
 	            chado_schema => $schema,
 	            dbh => $dbh,
 	            trial_year => $trial_year,
-	            trial_description => $trial_description,
+	            trial_description => $trial_description || '',
 	            trial_location => $trial_location,
 	            trial_type => $trial_type,
+				trial_type_value => $study_type,
 	            trial_name => $trial_name,
 	            user_name => $user_name, #not implemented
 	            design_type => $trial_design_method,
@@ -357,7 +395,7 @@ sub store {
 	        my $error = $save->{error};
 	        if ($error){
 	            $schema->txn_rollback();
-	           	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('There was an error storing studies. %s', $error));
+	           	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('There was an error storing studies. %s', $error, 500));
 	        }
 	        return $save->{project_id};
 	    };
@@ -365,10 +403,10 @@ sub store {
 	    #save data
 	    eval {
 	        my $trial_id = $schema->txn_do($coderef);
-
 	        if (ref \$trial_id eq 'SCALAR'){
 		    	push @study_dbids, $trial_id;
 
+				# Associate the study with the trial
 				my $folder = CXGN::Trial::Folder->new(
 				{
 					bcs_schema => $schema,
@@ -378,6 +416,10 @@ sub store {
 				$folder->associate_parent($folder_id);
 			}
 	    };
+		if ($@) {
+			warn $@;
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, 'There was an error saving the study', 500);
+		};
 	}
 
 	my $data_out;
@@ -400,6 +442,7 @@ sub store {
 }
 
 sub update {
+	#TODO: This needs to update to the object sent. Currently it only changes fields that are sent
 	my $self = shift;
 	my $params = shift;
 	my $user_id =shift;
@@ -434,13 +477,6 @@ sub update {
 
 	print STDERR "my user roles = @user_roles and trial breeding program = $breeding_program_name \n";
 
-	#Get project type
-	my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
-    my %project_type_ids;
-	foreach (@project_type_ids) {
-		$project_type_ids{$_->[1]} = $_->[0];
-    }
-
     # set each new detail that is defined
 	my $study_name = $params->{studyName} ? $params->{studyName} : undef;
 	my $study_description = $params->{studyDescription} ? $params->{studyDescription} : undef;
@@ -449,20 +485,49 @@ sub update {
 	my $study_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot;
 	my $folder_id = $params->{trialDbId} ? $params->{trialDbId} : undef;
 	my $study_t = $params->{studyType} ? $params->{studyType} : undef;
-	my $study_type = $project_type_ids{$study_t};
 	my $field_size = $params->{additionalInfo}->{field_size} ? $params->{additionalInfo}->{field_size} : undef;
 	my $plot_width = $params->{additionalInfo}->{plot_width} ? $params->{additionalInfo}->{plot_width} : undef;
 	my $plot_length = $params->{additionalInfo}->{plot_length} ? $params->{additionalInfo}->{plot_length} : undef;
 	my $planting_date = $params->{startDate} ? $params->{startDate} : undef;
 	my $harvest_date = $params->{endDate} ? $params->{endDate} : undef;
 
-	if(!$study_type && $study_t){
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study type name: ' . $study_t . ' does not exist. Check study types supported!'));
+	if (!$folder_id) {
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, 'trialDbId is required', 400);
 	}
+	if(!$study_t){
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study type is required'), 400);
+	}
+
+	# Check the brapi trial exists
+	my $brapi_trial = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=>$folder_id });
+	if (! defined $brapi_trial) {
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, 'Trial does not exist with that id', 404);
+	}
+
+	# Get the trial (brapi trial) parent
 	my $folder = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
+	printf(Dumper($folder));
+	# Get the breeding program for that brapi trial
 	my $program = $folder->breeding_program->project_id();
 
     # eval {
+
+		# Use the misc_trial type if it doesn't match any of the other ones.
+		my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+		my %project_type_ids;
+		foreach (@project_type_ids) {
+			$project_type_ids{$_->[1]} = $_->[0];
+		}
+
+		my $trial_type;
+		if ($project_type_ids{$study_t}) {
+			$trial_type = $project_type_ids{$study_t};
+		} else {
+			# Create a new trial type
+			my $misc_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'misc_trial', 'project_type');
+			$trial_type = $misc_type_cvterm->cvterm_id();
+		}
+
     	my $trial_name_exists = CXGN::Trial::Search->new({
 	        bcs_schema => $schema,
 	        metadata_schema => $metadata_schema,
@@ -470,16 +535,23 @@ sub update {
 	        trial_name_list => [$study_name]
 	    });
 	    my ($data, $total_count) = $trial_name_exists->search();
-	    
-	    if($total_count>0){
-	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("Can't create trial: Trial name already exists\n"));
+
+		# Check that the object found was not the object we are trying to update
+		my $non_object_match = 0;
+		foreach (@$data){
+			if ($_->{trial_id} ne $trial_id) {
+				$non_object_match = 1;
+			}
+		}
+	    if($total_count>0 && $non_object_match eq 1){
+	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("Can't create trial: Trial name already exists\n"), 409);
 		}
     	my $trial = CXGN::Trial->new({
 	        bcs_schema => $schema,
 	        metadata_schema => $metadata_schema,
 	        phenome_schema => $phenome_schema,
 	        trial_id => $trial_id
-	    }); 
+	    });
 		if ($study_name) { $trial->set_name($study_name); }
 		if ($folder_id) { 
 			$trial->set_breeding_program($program);
@@ -491,7 +563,7 @@ sub update {
 		}
 		if ($study_location) { $trial->set_location($study_location); }
 		if ($study_year) { $trial->set_year($study_year); }
-		if ($study_type) { $trial->set_project_type($study_type); }
+		if ($trial_type) { $trial->set_project_type($trial_type, $study_t); }
 		if ($planting_date) {
 			if ($planting_date eq '') { $trial->remove_planting_date($trial->get_planting_date()); }
 			else { $trial->set_planting_date($planting_date); }
@@ -656,37 +728,38 @@ sub _search {
 	        		description => $t->get_design_type() };
 	    }
 
-        my $folder_id = $t->get_folder()->id();
-        my $folder_name = $t->get_folder()->name();
+		my $folder_id = $t->get_folder()->id();
+		my $folder_name = $t->get_folder()->name();
+		my $trial_type = $_->{trial_type} ne 'misc_trial' ? $_->{trial_type} : $_->{trial_type_value};
         my %data_obj = (
-			active=>JSON::true,
-			additionalInfo=>\%additional_info,
-			commonCropName => $supported_crop,
-			contacts => $brapi_contacts,
-			culturalPractices => undef,
-			dataLinks => \@data_links,
-			documentationURL => "",
-			endDate => $harvest_date ? $harvest_date :  undef ,
-			environmentParameters => undef,
-			experimentalDesign => $experimental_design,
-			externalReferences => undef,
-			growthFacility => undef,
-			lastUpdate => undef,
-			license => $data_agreement,
-			locationDbId => $_->{location_id},
-			locationName => $_->{location_name},
-			observationLevels => undef,
+			active                      => JSON::true,
+			additionalInfo              => \%additional_info,
+			commonCropName              => $supported_crop,
+			contacts                    => $brapi_contacts,
+			culturalPractices           => undef,
+			dataLinks                   => \@data_links,
+			documentationURL            => "",
+			endDate                     => $harvest_date ? $harvest_date : undef,
+			environmentParameters       => undef,
+			experimentalDesign          => $experimental_design,
+			externalReferences          => undef,
+			growthFacility              => undef,
+			lastUpdate                  => undef,
+			license                     => $data_agreement,
+			locationDbId                => $_->{location_id},
+			locationName                => $_->{location_name},
+			observationLevels           => undef,
 			observationUnitsDescription => undef,
-			seasons => \@seasons,
-			startDate => $planting_date ? $planting_date : undef,
-			studyCode => qq|$_->{trial_id}|,
-            studyDbId => qq|$_->{trial_id}|,
-            studyDescription => $_->{description},
-			studyName => $_->{trial_name},
-			studyPUI => undef,
-			studyType => $_->{trial_type},
-            trialDbId => qq|$folder_id|,
-            trialName => $folder_name
+			seasons                     => \@seasons,
+			startDate                   => $planting_date ? $planting_date : undef,
+			studyCode                   => qq|$_->{trial_id}|,
+			studyDbId                   => qq|$_->{trial_id}|,
+			studyDescription            => $_->{description},
+			studyName                   => $_->{trial_name},
+			studyPUI                    => undef,
+			studyType                   => $trial_type,
+			trialDbId                   => qq|$folder_id|,
+			trialName                   => $folder_name
         );
         push @data_out, \%data_obj;
     }
@@ -714,15 +787,6 @@ sub _save_trial {
 		return { error => "Trial not saved: breeding program does not exist" };
 	}
 
-	my $geolocation;
-	my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $chado_schema);
-	$geolocation_lookup->set_location_name($self->get_trial_location());
-	$geolocation = $geolocation_lookup->get_geolocation();
-	if (!$geolocation) {
-		print STDERR "Can't create trial: Location not found\n";
-		return { error => "Trial not saved: location not found" };
-	}
-
 	my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property');
 	my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
 	my $field_size_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_size', 'project_property');
@@ -734,33 +798,66 @@ sub _save_trial {
 	my $has_subplot_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property');
 	my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_stock_type', 'project_property');
 
+	# Create the trial (brapi study)
 	my $project = $chado_schema->resultset('Project::Project')
 	->create({
 		name => $trial_name,
 		description => $self->get_trial_description(),
 	});
 
+	# Gets the trial (brapi study)
     my $t = CXGN::Project->new({
 		bcs_schema => $chado_schema,
 		trial_id => $project->project_id()
 	});
 
 	print STDERR "TRIAL TYPE = ".ref($t)."!!!!\n";
-	my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
 
+	# Check if a location was passed, set as N/A location if it does not exist
+	my $geolocation;
+	if (defined $self->get_trial_location()) {
+		my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $chado_schema);
+		$geolocation_lookup->set_location_name($self->get_trial_location());
+		$geolocation = $geolocation_lookup->get_geolocation();
+	} else {
+		# Check if there is already a N/A location
+		my $na_location_name = 'N/A';
+		my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $chado_schema);
+		$geolocation_lookup->set_location_name($na_location_name);
+		$geolocation = $geolocation_lookup->get_geolocation();
+
+		if (! defined $geolocation){
+			# Create a N/A location
+			$geolocation = CXGN::Location->new( {
+				bcs_schema => $chado_schema,
+				name => $na_location_name
+			});
+			my $store = $geolocation->store_location();
+			if (defined $store->{error}) {
+				return $store;
+			} else {
+				$geolocation->nd_geolocation_id($store->{nd_geolocation_id});
+			}
+		}
+	}
+
+	my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
 	my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
 	->create({
 		nd_geolocation_id => $geolocation->nd_geolocation_id(),
 		type_id => $nd_experiment_type_id,
 	});
+	#link location to the trial (brapi study)
+	$nd_experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
 
     my $source_field_trial_ids = $t->set_field_trials_source_field_trials($self->get_field_trial_from_field_trial);
 
 	$t->set_location($geolocation->nd_geolocation_id()); # set location also as a project prop
 	$t->set_breeding_program($self->get_breeding_program_id);
 	if ($self->get_trial_type){
-		$t->set_project_type($self->get_trial_type);
+		$t->set_project_type($self->get_trial_type, $self->get_trial_type_value);
 	}
+
 	if ($self->get_planting_date){
 		$t->set_planting_date($self->get_planting_date);
 	}
@@ -768,13 +865,16 @@ sub _save_trial {
 		$t->set_harvest_date($self->get_harvest_date);
 	}
 
-	#link to the project
-	$nd_experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});
-
-	$project->create_projectprops({
-		$project_year_cvterm->name() => $self->get_trial_year(),
-		$project_design_cvterm->name() => $self->get_design_type()
-	});
+	if ($self->has_trial_year) {
+		$project->create_projectprops({
+			$project_year_cvterm->name() => $self->get_trial_year()
+		});
+	}
+	if ($self->has_design_type) {
+		$project->create_projectprops({
+			$project_design_cvterm->name() => $self->get_design_type()
+		});
+	}
     if ($self->has_field_size && $self->get_field_size){
 		$project->create_projectprops({
 			$field_size_cvterm->name() => $self->get_field_size
