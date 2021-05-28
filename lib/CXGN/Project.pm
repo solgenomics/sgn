@@ -102,42 +102,42 @@ sub BUILD {
     print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
 
     if (! $args->{description}) {
-	$args->{description} = "(No description provided)";
+	    $args->{description} = "(No description provided)";
     }
 
     my $row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $args->{trial_id} });
 
     # print STDERR "PROJECT ID = $args->{trial_id}\n";
     if ($row){
-	$self->name( $row->name() );
+	    $self->name( $row->name() );
     }
 
     if ($args->{trial_id} && ! $row) {
-	die "The trial ".$args->{trial_id}." does not exist - aborting.";
+	    die "The trial ".$args->{trial_id}." does not exist - aborting.";
     }
 
     $row = $self->bcs_schema()->resultset("Project::Project")->find( { name => $args->{name } } );
 
 
     if (! $args->{trial_id} && $row) {
-	die "A trial with the name $args->{name} already exists. Please choose another name.";
+	    die "A trial with the name $args->{name} already exists. Please choose another name.";
     }
 
     if (! $args->{trial_id} && ! $row) {
-	print STDERR "INSERTING A NEW ROW...\n";
+        print STDERR "INSERTING A NEW ROW...\n";
 
         my $new_row = $args->{bcs_schema}->resultset("Project::Project")->create( { name => $args->{name}, description => $args->{description} });
-	my $project_id = $new_row->project_id();
-	print STDERR "new project object has project id $project_id\n";
+        my $project_id = $new_row->project_id();
+        print STDERR "new project object has project id $project_id\n";
 
-	$self->set_trial_id($project_id);
+        $self->set_trial_id($project_id);
     }
 
     if ($args->{trial_id} && $row) {
-	# print STDERR "Existing project... populating object.\n";
-	$self->set_trial_id($args->{trial_id});
-	$self->name($args->{name});
-	$self->description($args->{description});
+        # print STDERR "Existing project... populating object.\n";
+        $self->set_trial_id($args->{trial_id});
+        $self->name($args->{name});
+        $self->description($args->{description});
     }
 }
 
@@ -925,30 +925,35 @@ sub get_project_type {
 sub set_project_type {
     my $self = shift;
     my $type_id = shift;
-		my $project_id = $self->get_trial_id();
-		my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
-		my $type;
+    my $type_value = shift;
+    my $project_id = $self->get_trial_id();
+    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+    my $type;
 
-		foreach my $pt (@project_type_ids) {
-			if ($pt->[0] eq $type_id) {
-				$type = $pt->[1];
-			}
+    foreach my $pt (@project_type_ids) {
+        if ($pt->[0] eq $type_id) {
+            $type = $pt->[1];
+        }
     }
 
-		my @ids = map { $_->[0] } @project_type_ids;
+    if ($type eq 'misc_trial' && defined $type_value) {
+        $type = $type_value;
+    }
+
+    my @ids = map { $_->[0] } @project_type_ids;
     my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search({
-			type_id => { -in => [ @ids ] },
-			project_id => $project_id
-		});
+        type_id => { -in => [ @ids ] },
+        project_id => $project_id
+    });
     if (my $row = $rs->next()) {
-			$row->delete();
+        $row->delete();
     }
 
-		my $row = $self->bcs_schema()->resultset('Project::Projectprop')->create({
-				project_id => $project_id,
-				type_id => $type_id,
-				value => $type,
-		});
+    my $row = $self->bcs_schema()->resultset('Project::Projectprop')->create({
+            project_id => $project_id,
+            type_id => $type_id,
+            value => $type,
+    });
 }
 
 
