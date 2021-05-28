@@ -688,6 +688,7 @@ sub create_file_id {
     my $sel_prop         = $c->stash->{selection_proportion};
     my $protocol_id      = $c->stash->{genotyping_protocol_id};
     my $cluster_pop_id   = $c->stash->{cluster_pop_id};
+    my $pca_pop_id   = $c->stash->{pca_pop_id};
     my $training_traits_code = $c->stash->{training_traits_code};
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
@@ -695,7 +696,6 @@ sub create_file_id {
 
     my $traits_ids = $c->stash->{training_traits_ids};
     my @traits_ids =   ref($traits_ids) eq 'ARRAY' ? @{$traits_ids} : ($c->stash->{trait_id});
-
     my $trait_id;
 
     if (scalar(@traits_ids == 1))
@@ -733,19 +733,10 @@ sub create_file_id {
     		$training_pop_id . '-' . $cluster_pop_id :
     		$training_pop_id;
     	}
-
     }
-    elsif ($c->stash->{pca_pop_id})
-    {
-        $file_id = $c->stash->{pca_pop_id};
-    }
-    # elsif ($cluster_pop_id)
-    # {
-    #     $file_id = $cluster_pop_id;
-    # }
     else
     {
-	    $file_id = $training_pop_id;
+	    $file_id = $training_pop_id || $cluster_pop_id || $pca_pop_id;
     }
 
     if ($c->req->referer =~ /cluster|pca|kinship/)
@@ -768,7 +759,6 @@ sub create_file_id {
 	}
     }
 
-    # if ($data_type =~ /phenotype|gebv/i && $training_traits_code)
     if (!$sindex_name && $training_traits_code)
     {
 	$file_id .= '-traits-' . $training_traits_code;
