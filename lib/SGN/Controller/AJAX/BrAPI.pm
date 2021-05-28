@@ -136,8 +136,18 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->stash->{session_token} = $session_token;
 
 	if (defined $c->request->data){
-		if ($c->request->method ne "PUT"){
+		if ($c->request->method eq "POST"){
+			if (ref $c->request->data ne 'ARRAY') {
+				my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'Array data type required', 400);
+				_standard_response_construction($c, $response);
+			}
 			$c->stash->{clean_inputs} = _clean_inputs($c->req->params,$c->request->data);
+		} elsif ($c->request->method eq "PUT") {
+			if (ref $c->request->data eq 'ARRAY') {
+				my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'Hash data type required', 400);
+				_standard_response_construction($c, $response);
+			}
+			$c->stash->{clean_inputs} = $c->request->data;
 		} else {
 			$c->stash->{clean_inputs} = $c->request->data;
 		}
@@ -183,6 +193,36 @@ sub _clean_inputs {
 
 	}
 	return $params;
+}
+
+sub _validate_request {
+	my $c = shift;
+	my $data_type = shift;
+	my $data = shift;
+	my $required_fields = shift;
+
+	# Check the required fields
+	# TODO: Only top level right now, maybe in the future add nested checks
+	if ($required_fields) {
+		if ($data_type eq 'ARRAY') {
+			foreach my $object (values %{$data}) {
+				foreach my $required_field (@{$required_fields}) {
+					print $required_field;
+					if (!$object->{$required_field}) {
+						my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, sprintf('%s required', $required_field), 400);
+						_standard_response_construction($c, $response);
+					}
+				}
+			}
+		} elsif ($data_type eq 'HASH') {
+			foreach my $required_field (@{$required_fields}) {
+				if (!$data->{$required_field}) {
+					my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, sprintf('%s required', $required_field), 400);
+					_standard_response_construction($c, $response);
+				}
+			}
+		}
+	}
 }
 
 sub _authenticate_user {
@@ -1997,6 +2037,8 @@ sub studies_POST {
     my ($auth, $user_id) = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $data = $clean_inputs;
+	_validate_request($c, 'ARRAY', $data, ['trialDbId', 'studyName', 'studyType']);
+
     my @all_studies;
 	foreach my $study (values %{$data}) {
 	    push @all_studies, $study;
@@ -2140,7 +2182,9 @@ sub studies_info_PUT {
 	my ($auth,$user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
+	_validate_request($c, 'HASH', $data, ['trialDbId', 'studyName', 'studyType']);
 	$data->{studyDbId} = $c->stash->{study_id};
+
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->update($data,$user_id,$c);
