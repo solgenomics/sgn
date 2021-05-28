@@ -29,14 +29,11 @@ BEGIN { extends 'Catalyst::Controller' }
 sub cluster_analysis :Path('/cluster/analysis/') Args() {
     my ($self, $c, $id) = @_;
 
-    $c->stash->{pop_id} = $id;
-
-    $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $id);
-    my $combo_pops_list = $c->stash->{combined_pops_list};
-
-    if ($combo_pops_list)
+    if ($id && !$c->user)
     {
-	$c->stash->{data_set_type} = 'combined_populations';
+        my $page = "/" . $c->req->path;
+        $c->res->redirect("/solgs/login/message?page=$page");
+        $c->detach;
     }
 
     $c->stash->{template} = '/solgs/cluster/analysis.mas';
@@ -159,12 +156,6 @@ sub run_cluster_analysis :Path('/run/cluster/analysis/') Args() {
     {
         $c->controller('solGs::List')->stash_list_metadata($c, $list_id);
     }
-
-    # my $pop_id = $c->stash->{selection_pop_id} ||
-    #     $c->stash->{training_pop_id} ||
-    #     $list_id ||
-    #     $c->stash->{combo_pops_id} ||
-    #     $c->stash->{dataset_id};
 
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
     $c->stash->{file_id} = $file_id;
