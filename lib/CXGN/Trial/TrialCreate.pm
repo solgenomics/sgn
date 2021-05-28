@@ -163,6 +163,7 @@ has 'planting_date' => (isa => 'Str', is => 'rw', predicate => 'has_planting_dat
 has 'harvest_date' => (isa => 'Str', is => 'rw', predicate => 'has_harvest_date', required => 0);
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
 has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0, default => 'accession');
+has 'additional_info' => (isa => 'Maybe[HashRef]', is => 'rw', required => 0);
 
 # Trial linkage when saving a field trial
 #
