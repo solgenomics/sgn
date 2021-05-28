@@ -2037,7 +2037,7 @@ sub studies_POST {
     my ($auth, $user_id) = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $data = $clean_inputs;
-	_validate_request($c, 'ARRAY', $data, ['trialDbId', 'studyName', 'studyType']);
+	_validate_request($c, 'ARRAY', $data, ['trialDbId', 'studyName', 'studyType', 'locationDbId']);
 
     my @all_studies;
 	foreach my $study (values %{$data}) {
@@ -2182,7 +2182,7 @@ sub studies_info_PUT {
 	my ($auth,$user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
-	_validate_request($c, 'HASH', $data, ['trialDbId', 'studyName', 'studyType']);
+	_validate_request($c, 'HASH', $data, ['trialDbId', 'studyName', 'studyType', 'locationDbId']);
 	$data->{studyDbId} = $c->stash->{study_id};
 
 	my $brapi = $self->brapi_module;
