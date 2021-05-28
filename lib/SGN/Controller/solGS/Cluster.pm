@@ -31,9 +31,7 @@ sub cluster_analysis :Path('/cluster/analysis/') Args() {
 
     if ($id && !$c->user)
     {
-        my $page = "/" . $c->req->path;
-        $c->res->redirect("/solgs/login/message?page=$page");
-        $c->detach;
+        $c->controller('solGS::Utils')->require_login($c);
     }
 
     $c->stash->{template} = '/solgs/cluster/analysis.mas';

@@ -24,9 +24,7 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
 
     if ($id && !$c->user)
     {
-        my $page = "/" . $c->req->path;
-        $c->res->redirect("/solgs/login/message?page=$page");
-        $c->detach;
+        $c->controller('solGS::Utils')->require_login($c);
     }
 
 	$c->stash->{template} = '/solgs/pca/analysis.mas';

@@ -304,6 +304,15 @@ sub generic_message {
     $c->stash->{template} = "/generic_message.mas";
 }
 
+sub require_login {
+    my ($self, $c) = @_;
+
+    my $page = "/" . $c->req->path;
+    $c->res->redirect("/solgs/login/message?page=$page");
+    $c->detach;
+    
+}
+
 ####
 1;
 ####
