@@ -1,0 +1,55 @@
+
+<%args>
+
+</%args>
+
+
+<& /page/page_title.mas, title => "Breeding Progress" &>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+  
+  <table class="table">
+    <tr>
+      <th width="100">Select Trait</th>
+
+    </tr>
+
+    <tr>
+      <td>
+	<div id="trait_selector_div">[loading...]</div>
+      </td>
+
+
+    </tr>
+  </table>
+
+  <button class="btn btn-normal" id="display_stats_button">Show</button>
+  
+  <table id="progress_stats_datatable">
+  </table>
+
+  <script>
+
+    jQuery(window).ready( function() { 
+       alert('hello');
+       get_select_box('traits', 'trait_selector_div', { 'name' : 'trait_progress', 'id' : 'trait_progress_select', 'empty' : 1 } );
+
+    });
+
+    jQuery('#display_stats_button').click( function() {
+    var trait_id = jQuery('#trait_progress_select').val();
+      alert('trait = '+trait_id);
+      jQuery('#progress_stats_datatable').DataTable({
+        ajax: '/ajax/progress?trait_id='+trait_id,
+        destroy: true,
+        columns: [
+        { "title" : "year" },
+        { "title" : "average" },
+        { "title" : "std dev" } ,
+        { "title" : "observations [count]" }
+        ]
+      });
+    });
+    
+
+  </script>
