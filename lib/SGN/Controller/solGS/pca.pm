@@ -22,17 +22,11 @@ BEGIN { extends 'Catalyst::Controller' }
 sub pca_analysis :Path('/pca/analysis/') Args() {
     my ($self, $c, $id) = @_;
 
-    $c->stash->{pop_id} = $id;
-
-    unless($id =~ /dataset|list/)
+    if ($id && !$c->user)
     {
-	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $id);
-	my $combo_pops_list = $c->stash->{combined_pops_list};
-
-	if ($combo_pops_list)
-	{
-	    $c->stash->{data_set_type} = 'combined_populations';
-	}
+        my $page = "/" . $c->req->path;
+        $c->res->redirect("/solgs/login/message?page=$page");
+        $c->detach;
     }
 
 	$c->stash->{template} = '/solgs/pca/analysis.mas';
