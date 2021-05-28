@@ -172,7 +172,8 @@ sub store {
     	my $trial_name = $params->{studyName} ? $params->{studyName} : undef;
 	    my $trial_description = $params->{studyDescription} ? $params->{studyDescription} : undef;
 	    my $trial_year = $params->{seasons} ? $params->{seasons}->[0] : undef;
-	    my $trial_location = $params->{locationName} ? $params->{locationName} : undef;
+	    my $trial_location;
+		my $trial_location_id = $params->{locationDbId} ? $params->{locationDbId} : undef;
 	    my $trial_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot;
 	    my $folder_id = $params->{trialDbId} ? $params->{trialDbId} : undef;
 	    my $study_type = $params->{studyType} ? $params->{studyType} : undef;
@@ -202,6 +203,17 @@ sub store {
 			$program = $folder->breeding_program->name();
 		} elsif ($folder->name()){
 			$program = $folder->name();
+		}
+
+		# Check that the location exists if it was passed in
+		if ($trial_location_id) {
+			my $location = $schema->resultset('NaturalDiversity::NdGeolocation')->find({nd_geolocation_id => $trial_location_id});
+			if (!$location) {
+				my $err_string = sprintf('Location with id %s does not exist.',$trial_location_id);
+				warn $err_string;
+				return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 404);
+			}
+			$trial_location = $location->description();
 		}
 
 		# Check that a study with this name does not already exist
@@ -389,6 +401,16 @@ sub update {
 	my $folder = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
 	# Get the breeding program for that brapi trial
 	my $program = $folder->breeding_program->project_id();
+
+	# Check that the location exists if it was passed in
+	if ($study_location) {
+		my $location = $schema->resultset('NaturalDiversity::NdGeolocation')->find({nd_geolocation_id => $study_location});
+		if (!$location) {
+			my $err_string = sprintf('Location with id %s does not exist.',$study_location);
+			warn $err_string;
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 404);
+		}
+	}
 
     # eval {
 
@@ -700,7 +722,7 @@ sub _save_trial {
 
 	# Check if a location was passed, set as N/A location if it does not exist
 	my $geolocation;
-	if (defined $self->get_trial_location()) {
+	if ($self->has_trial_location()) {
 		my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $chado_schema);
 		$geolocation_lookup->set_location_name($self->get_trial_location());
 		$geolocation = $geolocation_lookup->get_geolocation();
