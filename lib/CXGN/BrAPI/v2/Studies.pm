@@ -172,7 +172,6 @@ sub store {
     	my $trial_name = $params->{studyName} ? $params->{studyName} : undef;
 	    my $trial_description = $params->{studyDescription} ? $params->{studyDescription} : undef;
 	    my $trial_year = $params->{seasons} ? $params->{seasons}->[0] : undef;
-	    my $trial_location;
 		my $trial_location_id = $params->{locationDbId} ? $params->{locationDbId} : undef;
 	    my $trial_design_method = $params->{experimentalDesign} ? $params->{experimentalDesign}->{PUI} : undef; #Design type must be either: genotyping_plate, CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, or splitplot;
 	    my $folder_id = $params->{trialDbId} ? $params->{trialDbId} : undef;
@@ -206,6 +205,7 @@ sub store {
 		}
 
 		# Check that the location exists if it was passed in
+		my $trial_location;
 		if ($trial_location_id) {
 			my $location = $schema->resultset('NaturalDiversity::NdGeolocation')->find({nd_geolocation_id => $trial_location_id});
 			if (!$location) {
@@ -565,7 +565,6 @@ sub _search {
 		};
 		# Join the additional info with the existing additional info
 		if ($_->{additional_info}) {
-			print Dumper($_->{additional_info});
 			foreach my $key (keys %{$_->{additional_info}}){
 				$additional_info->{$key} = $_->{additional_info}->{$key};
 			}
@@ -721,32 +720,9 @@ sub _save_trial {
 	print STDERR "TRIAL TYPE = ".ref($t)."!!!!\n";
 
 	# Check if a location was passed, set as N/A location if it does not exist
-	my $geolocation;
-	if ($self->has_trial_location()) {
-		my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $chado_schema);
-		$geolocation_lookup->set_location_name($self->get_trial_location());
-		$geolocation = $geolocation_lookup->get_geolocation();
-	} else {
-		# Check if there is already a N/A location
-		my $na_location_name = 'N/A';
-		my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $chado_schema);
-		$geolocation_lookup->set_location_name($na_location_name);
-		$geolocation = $geolocation_lookup->get_geolocation();
-
-		if (! defined $geolocation){
-			# Create a N/A location
-			$geolocation = CXGN::Location->new( {
-				bcs_schema => $chado_schema,
-				name => $na_location_name
-			});
-			my $store = $geolocation->store_location();
-			if (defined $store->{error}) {
-				return $store;
-			} else {
-				$geolocation->nd_geolocation_id($store->{nd_geolocation_id});
-			}
-		}
-	}
+	my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $chado_schema);
+	$geolocation_lookup->set_location_name($self->get_trial_location());
+	my $geolocation = $geolocation_lookup->get_geolocation();
 
 	my $nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
 	my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
