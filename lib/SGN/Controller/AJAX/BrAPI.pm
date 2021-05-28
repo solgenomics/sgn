@@ -207,8 +207,8 @@ sub _validate_request {
 		if ($data_type eq 'ARRAY') {
 			foreach my $object (values %{$data}) {
 				foreach my $required_field (@{$required_fields}) {
-					print $required_field;
-					if (!$object->{$required_field}) {
+					# Ignore the query params if they were passed in
+					if (ref($object) eq 'HASH' && !$object->{$required_field}) {
 						my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, sprintf('%s required', $required_field), 400);
 						_standard_response_construction($c, $response);
 					}
