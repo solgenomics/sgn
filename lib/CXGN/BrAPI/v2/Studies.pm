@@ -320,13 +320,6 @@ sub store {
 	    my $plot_width = $params->{additionalInfo}->{plot_width} ? $params->{additionalInfo}->{plot_width} : undef;
 	    my $plot_length = $params->{additionalInfo}->{plot_length} ? $params->{additionalInfo}->{plot_length} : undef;
 
-		if (!$folder_id) {
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, 'trialDbId is required', 400);
-		}
-	    if(!$study_type){
-	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study type is required'), 400);
-	    }
-
 		# Check the trial exists
 		my $brapi_trial = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=>$folder_id });
 		if (! defined $brapi_trial) {
@@ -490,13 +483,6 @@ sub update {
 	my $plot_length = $params->{additionalInfo}->{plot_length} ? $params->{additionalInfo}->{plot_length} : undef;
 	my $planting_date = $params->{startDate} ? $params->{startDate} : undef;
 	my $harvest_date = $params->{endDate} ? $params->{endDate} : undef;
-
-	if (!$folder_id) {
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, 'trialDbId is required', 400);
-	}
-	if(!$study_t){
-		return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study type is required'), 400);
-	}
 
 	# Check the brapi trial exists
 	my $brapi_trial = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=>$folder_id });
