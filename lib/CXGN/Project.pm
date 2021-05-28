@@ -95,6 +95,11 @@ has 'year' => (
     lazy => 1,
     );
 
+has 'additional_info' => (
+    is  => 'rw',
+    isa => 'Maybe[HashRef]'
+);
+
 sub BUILD {
     my $self = shift;
     my $args = shift;
@@ -1847,6 +1852,28 @@ sub set_field_size {
     $self->_set_projectprop('field_size', $value);
 }
 
+=head2 accessors get_additional_info(), set_additional_info()
+
+ Usage: For field trials, this stores brapi additional information
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_additional_info {
+    my $self = shift;
+    my $additional_info = $self->_get_projectprop('project_additional_info');
+    return $additional_info ? decode_json($additional_info) : undef;
+}
+
+sub set_additional_info {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('project_additional_info', encode_json($value));
+}
 
 sub _get_projectprop {
     my $self = shift;

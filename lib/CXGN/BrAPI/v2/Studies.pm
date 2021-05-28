@@ -135,156 +135,16 @@ sub detail {
 	my $page = $self->page;
 	my $status = $self->status;
 
-	my $total_count = 0;
-	my %result;
-	my $study_check = $self->bcs_schema->resultset('Project::Project')->find({project_id=>$study_id});
-	if ($study_check) {
-		my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
-		$total_count = 1;
-		my $folder = CXGN::Trial::Folder->new( { folder_id => $study_id, bcs_schema => $self->bcs_schema } );
-		if ($folder->folder_type eq 'trial') {
+	my ($data_out,$total_count) = _search($self,$self->bcs_schema(),$page_size,$page,$supported_crop,[$study_id]);
 
-			my @season = ($t->get_year());
-
-			my %additional_info = ();
-			my $project_type = '';
-			my $project_type_array = $t->get_project_type();
-			if ($project_type_array) {
-				my $project_type_name = $project_type_array->[1];
-				my $misc_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'misc_trial', 'project_type');
-				printf($misc_type_cvterm->name());
-				printf($project_type_name);
-				if ($project_type_name eq $misc_type_cvterm->name()) {
-					my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search(
-						{
-							type_id => $misc_type_cvterm->cvterm_id(),
-							project_id => $t->get_trial_id()
-						});
-					if ($rs->count() > 0) {
-						$project_type = $rs->first()->value();
-					}
-				}
-
-				if (! defined $project_type){
-					$project_type = $project_type_name;
-				}
-			}
-
-			my $location_id = '';
-			my $location_name = '';
-			if ($t->get_location()) {
-				$location_id = $t->get_location()->[0];
-				$location_name = $t->get_location()->[1];
-			}
-			my $planting_date;
-			if ($t->get_planting_date()) {
-				$planting_date = $t->get_planting_date();
-				my $t = Time::Piece->strptime($planting_date, "%Y-%B-%d");
-				$planting_date = $t->strftime("%Y-%m-%d");
-				if($planting_date == "") { $planting_date = undef; }
-			}
-			my $harvest_date;
-			if ($t->get_harvest_date()) {
-				$harvest_date = $t->get_harvest_date();
-				my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
-				$harvest_date = $t->strftime("%Y-%m-%d");
-				if($harvest_date == "") { $harvest_date = undef;}
-			}
-			my $contacts = $t->get_trial_contacts();
-			my $brapi_contacts;
-			foreach (@$contacts){
-				push @$brapi_contacts, {
-					contactDbId => $_->{sp_person_id},
-					name => $_->{salutation}." ".$_->{first_name}." ".$_->{last_name},
-                    instituteName => $_->{organization},
-					email => $_->{email},
-					type => $_->{user_type},
-					orcid => ''
-				};
-			}
-			my $location = CXGN::Trial::get_all_locations($self->bcs_schema, $location_id)->[0];
-
-            my $additional_files = $t->get_additional_uploaded_files();
-            my @data_links;
-            foreach (@$additional_files){
-                push @data_links, {
-                    scientificType => 'Additional File',
-                    name => $_->[4],
-                    url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
-                    provenance => undef,
-                    dataFormat => undef,
-                    description => undef,
-                    fileFormat => undef,
-                    version => undef
-                };
-            }
-
-            # my $phenotype_files = $t->get_phenotype_metadata();
-            # foreach (@$phenotype_files){
-            #     push @data_links, {
-            #         scientificType => 'Uploaded Phenotype File',
-            #         name => $_->[4],
-            #         url => $main_production_site_url.'/breeders/phenotyping/download/'.$_->[0],
-            #         provenance => undef,
-            #         dataFormat => undef,
-            #         description => undef,
-            #         fileFormat => undef,
-            #         version => undef
-            #     };
-            # }
-
-            my $data_agreement = $t->get_data_agreement() ? $t->get_data_agreement() : '';
-            my $study_db_id = $t->get_trial_id();
-            my $folder_db_id = $folder->project_parent->project_id();
-            my $breeding_program_id = $folder->breeding_program->project_id();
-
-            my $experimental_design = {};
-
-            if ($t->get_design_type()){
-		        	$experimental_design = { PUI => undef,
-		        	description => $t->get_design_type(),
-		        };
-		    }
-
-			%result = (
-				active=>JSON::true,
-				additionalInfo=>\%additional_info,
-				commonCropName => $supported_crop,
-				contacts => $brapi_contacts,
-				culturalPractices => undef,
-				dataLinks =>\@data_links,
-				documentationURL => "",
-				endDate => $harvest_date ? $harvest_date :  undef ,
-				environmentParameters => undef,
-				experimentalDesign => $experimental_design,
-				externalReferences => undef,
-				growthFacility => undef,
-				lastUpdate => undef,
-				license => $data_agreement,
-				locationDbId => $location_id,
-				locationName => $location_name,
-				observationLevels => undef,
-				observationUnitsDescription => undef,
-				seasons => \@season,
-				startDate => $planting_date ? $planting_date : undef,
-				studyDbId=>qq|$study_db_id|,
-				studyDescription=>$t->get_description(),
-				studyName=>$t->get_name(),
-				studyType=>$project_type,
-				trialDbId=>qq|$folder_db_id|,
-				trialName=>$folder->project_parent->name(),
-				studyCode => qq|$study_db_id|,
-				studyPUI => undef,
-			);
-		} else {
-			return CXGN::BrAPI::JSONResponse->return_error($status, 'StudyDbId not a study');
-		}
+	if ($data_out > 0){
+		my $result = @$data_out[0];
+		my @data_files;
+		my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+		return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies search result constructed');
 	} else {
-		return CXGN::BrAPI::JSONResponse->return_error($status, 'StudyDbId not found');
+		return CXGN::BrAPI::JSONResponse->return_error($status, 'StudyDbId not found', 404);
 	}
-	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies detail result constructed');
 }
 
 sub store {
@@ -319,6 +179,16 @@ sub store {
 	    my $field_size = $params->{additionalInfo}->{field_size} ? $params->{additionalInfo}->{field_size} : undef;
 	    my $plot_width = $params->{additionalInfo}->{plot_width} ? $params->{additionalInfo}->{plot_width} : undef;
 	    my $plot_length = $params->{additionalInfo}->{plot_length} ? $params->{additionalInfo}->{plot_length} : undef;
+		my $raw_additional_info = $params->{additionalInfo} || undef;
+		my %specific_keys = map { $_ => 1 } ("field_size", "plot_width", "plot_length");
+		my %additional_info;
+		if (defined $raw_additional_info) {
+			foreach my $key (keys %$raw_additional_info) {
+				if (!exists($specific_keys{$key})) {
+					$additional_info{$key} = $raw_additional_info->{$key};
+				}
+			}
+		}
 
 		# Check the trial exists
 		my $brapi_trial = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=>$folder_id });
@@ -332,6 +202,20 @@ sub store {
 			$program = $folder->breeding_program->name();
 		} elsif ($folder->name()){
 			$program = $folder->name();
+		}
+
+		# Check that a study with this name does not already exist
+		my $metadata_schema = $self->metadata_schema;
+		my $phenome_schema = $self->phenome_schema;
+		my $trial_name_exists = CXGN::Trial::Search->new({
+			bcs_schema => $schema,
+			metadata_schema => $metadata_schema,
+			phenome_schema => $phenome_schema,
+			trial_name_list => [$trial_name]
+		});
+		my ($data, $total_count) = $trial_name_exists->search();
+		if ($total_count > 0) {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study with the name \'%s\' already exists', $trial_name), 409);
 		}
 
 	    my $save;
@@ -368,7 +252,8 @@ sub store {
 	            program => $program,
 	            # upload_trial_file => $upload,
 	            operator => $user_name,
-				trial_stock_type => 'accession' #can be cross or family name, not implemented
+				trial_stock_type => 'accession', #can be cross or family name, not implemented
+				additional_info => \%additional_info
 	        );
 
 	        print STDERR "Trial type is ".$trial_info_hash{'trial_type'}."\n";
@@ -481,6 +366,16 @@ sub update {
 	my $field_size = $params->{additionalInfo}->{field_size} ? $params->{additionalInfo}->{field_size} : undef;
 	my $plot_width = $params->{additionalInfo}->{plot_width} ? $params->{additionalInfo}->{plot_width} : undef;
 	my $plot_length = $params->{additionalInfo}->{plot_length} ? $params->{additionalInfo}->{plot_length} : undef;
+	my $raw_additional_info = $params->{additionalInfo} || undef;
+	my %specific_keys = map { $_ => 1 } ("field_size", "plot_width", "plot_length");
+	my %additional_info;
+	if (defined $raw_additional_info) {
+		foreach my $key (keys %$raw_additional_info) {
+			if (!exists($specific_keys{$key})) {
+				$additional_info{$key} = $raw_additional_info->{$key};
+			}
+		}
+	}
 	my $planting_date = $params->{startDate} ? $params->{startDate} : undef;
 	my $harvest_date = $params->{endDate} ? $params->{endDate} : undef;
 
@@ -492,7 +387,6 @@ sub update {
 
 	# Get the trial (brapi trial) parent
 	my $folder = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
-	printf(Dumper($folder));
 	# Get the breeding program for that brapi trial
 	my $program = $folder->breeding_program->project_id();
 
@@ -563,21 +457,17 @@ sub update {
 		if ($plot_width) { $trial->set_plot_width($plot_width); }
 		if ($plot_length) { $trial->set_plot_length($plot_length); }
 		if ($study_design_method) { $trial->set_design_type($study_design_method); }
+		if (%additional_info) { $trial->set_additional_info(\%additional_info); }
     # };
-
-    my $data_out;
-	my $total_count=0;
 
 	my $supported_crop = $c->config->{"supportedCrop"};
 
-    ($data_out,$total_count) = _search($self,$schema,$page_size,$page,$supported_crop,[$trial_id]);
+	my ($data_out,$total_count) = _search($self,$self->bcs_schema(),$page_size,$page,$supported_crop,[$trial_id]);
 
-    my %result = (data=>$data_out);
-
+	my $result = @$data_out[0];
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies result constructed');
-
+	return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies result constructed');
 }
 
 sub format_date {
@@ -647,10 +537,18 @@ sub _search {
     my @data_out;
     foreach (@$data){
 
-        my %additional_info = (
-            programDbId => qq|$_->{breeding_program_id}|,
+        my $additional_info = {
+			programDbId => qq|$_->{breeding_program_id}|,
 			programName => $_->{breeding_program_name},
-        );
+		};
+		# Join the additional info with the existing additional info
+		if ($_->{additional_info}) {
+			print Dumper($_->{additional_info});
+			foreach my $key (keys %{$_->{additional_info}}){
+				$additional_info->{$key} = $_->{additional_info}->{$key};
+			}
+		}
+
 		my @seasons = ( $_->{"year"} );
 
 		my $planting_date;
@@ -719,7 +617,7 @@ sub _search {
 		my $trial_type = $_->{trial_type} ne 'misc_trial' ? $_->{trial_type} : $_->{trial_type_value};
         my %data_obj = (
 			active                      => JSON::true,
-			additionalInfo              => \%additional_info,
+			additionalInfo              => $additional_info,
 			commonCropName              => $supported_crop,
 			contacts                    => $brapi_contacts,
 			culturalPractices           => undef,
@@ -738,7 +636,7 @@ sub _search {
 			observationUnitsDescription => undef,
 			seasons                     => \@seasons,
 			startDate                   => $planting_date ? $planting_date : undef,
-			studyCode                   => qq|$_->{trial_id}|,
+			studyCode                   => undef,
 			studyDbId                   => qq|$_->{trial_id}|,
 			studyDescription            => $_->{description},
 			studyName                   => $_->{trial_name},
@@ -783,6 +681,7 @@ sub _save_trial {
 	my $has_plant_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
 	my $has_subplot_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property');
 	my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_stock_type', 'project_property');
+	my $additional_info_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema,'project_additional_info', 'project_property');
 
 	# Create the trial (brapi study)
 	my $project = $chado_schema->resultset('Project::Project')
@@ -881,6 +780,11 @@ sub _save_trial {
 		    $trial_stock_type_cvterm->name() => $self->get_trial_stock_type
 	    });
     }
+	if ($self->get_additional_info) {
+		$project->create_projectprops({
+			$additional_info_cvterm_id->name() => encode_json($self->get_additional_info)
+		});
+	}
 
 	return { project_id => $project->project_id() };
 }
