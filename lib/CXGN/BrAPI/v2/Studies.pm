@@ -719,7 +719,6 @@ sub _save_trial {
 
 	print STDERR "TRIAL TYPE = ".ref($t)."!!!!\n";
 
-	# Check if a location was passed, set as N/A location if it does not exist
 	my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $chado_schema);
 	$geolocation_lookup->set_location_name($self->get_trial_location());
 	my $geolocation = $geolocation_lookup->get_geolocation();
