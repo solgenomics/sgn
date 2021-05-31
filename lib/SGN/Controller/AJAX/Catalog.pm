@@ -248,7 +248,7 @@ sub item_image_list :Path('/ajax/catalog/image_list') :Args(1) {
     my $item_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
-    print STDERR "ITEM ID =".Dumper($item_id)."\n";
+#    print STDERR "ITEM ID =".Dumper($item_id)."\n";
 
     my @image_ids;
     my $q = "select distinct image_id, cvterm.name, stock_image.display_order FROM phenome.stock_image JOIN stock USING(stock_id) JOIN cvterm ON(type_id=cvterm_id) WHERE stock_id = ? ORDER BY stock_image.display_order ASC";
@@ -257,7 +257,7 @@ sub item_image_list :Path('/ajax/catalog/image_list') :Args(1) {
     while (my ($image_id, $stock_type) = $h->fetchrow_array()){
         push @image_ids, [$image_id, $stock_type];
     }
-    print STDERR "IMAGE IDS =".Dumper(\@image_ids)."\n";
+#    print STDERR "IMAGE IDS =".Dumper(\@image_ids)."\n";
     my @image_list;
     foreach my $image_info(@image_ids) {
         my $image_obj = SGN::Image->new($dbh, $image_info->[0]);
@@ -271,18 +271,18 @@ sub item_image_list :Path('/ajax/catalog/image_list') :Args(1) {
         my $image_page  = "/image/view/$image_obj_id";
         my $small_image = $image_obj->get_image_url("thumbnail");
 
-        print STDERR "IMAGE OBJECT ID =".Dumper($image_obj_id)."\n";
-        print STDERR "IMAGE OBJECT NAME =".Dumper($image_obj_name)."\n";
-        print STDERR "IMAGE OBJECT DESCRIPTION =".Dumper($image_obj_description)."\n";
-        print STDERR "IMAGE MEDIUM =".Dumper($medium_image)."\n";
-        print STDERR "IMAGE PAGE =".Dumper($image_page)."\n";
+#        print STDERR "IMAGE OBJECT ID =".Dumper($image_obj_id)."\n";
+#        print STDERR "IMAGE OBJECT NAME =".Dumper($image_obj_name)."\n";
+#        print STDERR "IMAGE OBJECT DESCRIPTION =".Dumper($image_obj_description)."\n";
+#        print STDERR "IMAGE MEDIUM =".Dumper($medium_image)."\n";
+#        print STDERR "IMAGE PAGE =".Dumper($image_page)."\n";
         push @image_list, {
                 image_id => $image_obj_id,
                 image_name => $image_obj_name,
                 small_image => qq|<a href="$medium_image"  title="<a href=$image_page>Go to image page ($image_obj_name)</a>" class="stock_image_group" rel="gallery-figures"><img src="$small_image"/></a> |,
                 image_description => $image_obj_description,
             };
-            print STDERR "IMAGE LIST =".Dumper(\@image_list)."\n";
+#            print STDERR "IMAGE LIST =".Dumper(\@image_list)."\n";
     }
 
     $c->stash->{rest} = {data => \@image_list};

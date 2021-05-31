@@ -30,6 +30,7 @@ sub stock_catalog :Path('/catalog/view') :Args(0) {
 sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     my $self = shift;
     my $c = shift;
+    my $dbh = $c->dbc->dbh;
 
     if (! $c->user()) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -55,7 +56,7 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
         return;
     } else {
         $item_prop_id = $stock_catalog_info->stockprop_id();
-        print STDERR "STOCKPROP ID =".Dumper($item_prop_id)."\n";
+#        print STDERR "STOCKPROP ID =".Dumper($item_prop_id)."\n";
     }
 
     my $stock_catalog_item = $schema->resultset("Stock::Stock")->find({stock_id => $item_id});
@@ -74,8 +75,11 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     my $breeding_program = $item_details[4];
     my $availability = $item_details[5];
     my $contact_person_id = $item_details[6];
+    my $images = $item_details[7];
+    my $image_id = $images->[0];
+    my $image_obj = SGN::Image->new($dbh, $image_id);
+    my $medium_image  = $image_obj->get_image_url("medium");
 
-    my $dbh = $c->dbc->dbh;
     my $person = CXGN::People::Person->new($dbh, $contact_person_id);
     my $contact_person_username = $person->get_username;
 #    print STDERR "CONTACT PERSON NAME=".Dumper($contact_person_username)."\n";
@@ -91,6 +95,7 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     $c->stash->{availability} = $availability;
     $c->stash->{contact_person_username} = $contact_person_username;
     $c->stash->{item_prop_id} = $item_prop_id;
+    $c->stash->{image} = qq|<a href="$medium_image" class="stock_image_group" rel="gallery-figures"><img src="$medium_image"/></a> |,
 
     $c->stash->{template} = '/order/catalog_item_details.mas';
 }

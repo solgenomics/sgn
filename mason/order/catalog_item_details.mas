@@ -11,6 +11,7 @@ $availability
 $contact_person_username
 $item_prop_id
 $check_vendor_role
+$image
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
@@ -38,7 +39,7 @@ $check_vendor_role
 
                 <div class="col-sm-6">
                     <br /><br />
-
+                    <% $image %>
                     <br /><br />
                 </div>
 
