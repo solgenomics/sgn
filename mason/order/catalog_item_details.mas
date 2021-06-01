@@ -12,6 +12,7 @@ $contact_person_username
 $item_prop_id
 $check_vendor_role
 $image
+$image_id => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
@@ -39,11 +40,11 @@ $image
 
                 <div class="col-sm-6">
                     <br /><br />
+% if ($image_id) {
                     <% $image %>
+% }
                     <br /><br />
                 </div>
-
-
             </div>
         </div>
     </div>
@@ -92,6 +93,27 @@ $image
     </div>
 </div>
 
+<div class="modal fade" id="add_image_message_dialog" name="add_image_message_dialog" tabindex="-1" role="dialog" aria-labelledby="addImageMessageDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addImageMessageDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The image was added successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_add_image_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <& /order/edit_catalog_details_dialog.mas, item_name => $item_name, item_id => $item_id, species => $species, item_type => $item_type, category => $category, description => $description, material_source => $material_source, breeding_program => $breeding_program, availability => $availability, contact_person_username => $contact_person_username, item_prop_id => $item_prop_id  &>
@@ -167,7 +189,7 @@ function addImage(image_id){
         success: function(response) {
             jQuery('#working_modal').modal('hide');
             if (response.success == 1) {
-                alert('Added');
+                jQuery('#add_image_message_dialog').modal('show');
             }
             if (response.error_string) {
                 alert(response.error_string);
@@ -178,6 +200,11 @@ function addImage(image_id){
             alert('An error occurred adding image');
         }
     });
+
+    jQuery("#dismiss_add_image_message_dialog").click(function(){
+        location.reload();
+    });
+
 
 }
 
