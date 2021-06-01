@@ -12,7 +12,7 @@ $contact_person_username
 $item_prop_id
 $check_vendor_role
 $image
-$image_id => undef
+$selected_image_id => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
@@ -40,7 +40,7 @@ $image_id => undef
 
                 <div class="col-sm-6">
                     <br /><br />
-% if ($image_id) {
+% if ($selected_image_id) {
                     <% $image %>
 % }
                     <br /><br />
@@ -115,6 +115,27 @@ $image_id => undef
     </div>
 </div>
 
+<div class="modal fade" id="remove_image_message_dialog" name="remove_image_message_dialog" tabindex="-1" role="dialog" aria-labelledby="removeImageMessageDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="removeImageMessageDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The image was removed from the catalog item.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_remove_image_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <& /order/edit_catalog_details_dialog.mas, item_name => $item_name, item_id => $item_id, species => $species, item_type => $item_type, category => $category, description => $description, material_source => $material_source, breeding_program => $breeding_program, availability => $availability, contact_person_username => $contact_person_username, item_prop_id => $item_prop_id  &>
 
@@ -123,17 +144,25 @@ $image_id => undef
 
 jQuery(document).ready( function() {
 
+    var selected_image_id = "<% $selected_image_id %>";
+
     var item_images_table = jQuery('#catalog_item_images_table').DataTable( {
-        'autoWidth': false,
-        'order': false,
-        'searching': false,
-        'ajax': '/ajax/catalog/image_list/' + <% $item_id %>,
-        'columns': [
-            { title: "Name", "data": "image_name" },
-            { title: "Image", "data": "small_image" },
-            { title: "Description", "data": "image_description"},
-            { title: "Add to Catalog", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addImage(\""+row.image_id+"\")' >Add</a>"; } },
-        ],
+            'autoWidth': false,
+            'order': false,
+            'searching': false,
+            'ajax': '/ajax/catalog/image_list/' + <% $item_id %>,
+            'columns': [
+                { title: "Name", "data": "image_name" },
+                { title: "Image", "data": "small_image" },
+                { title: "Description", "data": "image_description"},
+                { title: "Add or Remove Image", "data": "null", "render": function ( data, type, row ) {
+                    if (row.image_id == selected_image_id) {
+                        return "<a onclick='removeImage()' >Remove</a>"
+                    } else {
+                        return "<a onclick='addImage(\""+row.image_id+"\")' >Add</a>"
+                    }
+                }},
+            ],
     });
 
     jQuery('#delete_catalog_item_button').click( function() {
@@ -174,7 +203,7 @@ function addImage(image_id){
     var image_id = image_id;
 
     jQuery.ajax({
-        url: '/ajax/catalog/add_image',
+        url: '/ajax/catalog/edit_image',
         dataType: "json",
         type: 'POST',
         data : {
@@ -205,6 +234,45 @@ function addImage(image_id){
         location.reload();
     });
 
+}
+
+
+function removeImage(){
+
+    var item_name = '<% $item_name %>';
+    var item_prop_id = '<% $item_prop_id %>';
+    var image_id = undefined;
+
+    jQuery.ajax({
+        url: '/ajax/catalog/edit_image',
+        dataType: "json",
+        type: 'POST',
+        data : {
+            'item_name': item_name,
+            'item_prop_id': item_prop_id,
+            'image_id': image_id
+        },
+        beforeSend: function(response){
+            jQuery('#working_modal').modal('show');
+        },
+        success: function(response) {
+            jQuery('#working_modal').modal('hide');
+            if (response.success == 1) {
+                jQuery('#remove_image_message_dialog').modal('show');
+            }
+            if (response.error_string) {
+                alert(response.error_string);
+            }
+        },
+        error: function(response){
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred removing image');
+        }
+    });
+
+    jQuery("#dismiss_remove_image_message_dialog").click(function(){
+        location.reload();
+    });
 
 }
 

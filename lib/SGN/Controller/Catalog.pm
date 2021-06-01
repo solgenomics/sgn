@@ -96,7 +96,7 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     $c->stash->{contact_person_username} = $contact_person_username;
     $c->stash->{item_prop_id} = $item_prop_id;
     $c->stash->{image} = qq|<a href="$medium_image" class="stock_image_group" rel="gallery-figures"><img src="$medium_image"/></a> |,
-    $c->stash->{image_id} = $image_id;
+    $c->stash->{selected_image_id} = $image_id;
 
     $c->stash->{template} = '/order/catalog_item_details.mas';
 }

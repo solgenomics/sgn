@@ -289,9 +289,9 @@ sub item_image_list :Path('/ajax/catalog/image_list') :Args(1) {
 }
 
 
-sub add_catalog_image : Path('/ajax/catalog/add_image') : ActionClass('REST'){ }
+sub edit_catalog_image : Path('/ajax/catalog/edit_image') : ActionClass('REST'){ }
 
-sub add_catalog_image_POST : Args(0) {
+sub edit_catalog_image_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
