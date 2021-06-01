@@ -10,7 +10,14 @@ var solGS = solGS || function solGS () {};
 solGS.acronyms = {
 
     loadAcronyms: function() {
-       var id = jQuery('#trial_id').val();
+       var id;
+       var page = document.URL;
+
+       if (page.match(/breeders\/trial\//)) {
+           id = jQuery('#trial_id').val();
+       } else {
+          id = jQuery('#training_pop_id').val();
+       }
 
        var acros = jQuery.ajax({
             type    : 'POST',
@@ -52,6 +59,7 @@ jQuery(document).ready( function() {
     });
 
     solGS.acronyms.loadAcronyms().fail( function(res) {
+         jQuery('#trait_acronyms_table').hide();
         var errorMsg = 'Error occured loading acronyms';
         jQuery('#acronyms_message')
             .html(errorMsg)
