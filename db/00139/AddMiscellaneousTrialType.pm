@@ -57,10 +57,9 @@ sub patch {
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
     print STDOUT "\nExecuting the SQL commands.\n";
 
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
     my $coderef = sub {
-
-        my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
         my $new_cvterm = $schema->resultset("Cv::Cvterm")->create_with(
             {
