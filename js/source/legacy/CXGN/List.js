@@ -762,6 +762,8 @@ CXGN.List.prototype = {
 	var wrong_case = new Array();
 	var multiple_wrong_case = new Array();
 	var synonym_matches = new Array();
+	var multiple_synonyms = new Array();
+	
         var error = 0;
         jQuery.ajax( {
             url: '/list/validate/'+list_id+'/'+type,
@@ -895,9 +897,9 @@ CXGN.List.prototype = {
 			     }
 		    	 });
 		     });
-
+		    
 		    var synonym_matches_table = new Array();
-
+		    
 		    for(var i=0; i<synonym_matches.length; i++) {
 			synonym_matches_table.push( [ synonym_matches[i]['synonym'], synonym_matches[i]['uniquename'] ] );
 		    }
@@ -910,9 +912,8 @@ CXGN.List.prototype = {
 			    data: { 'list_id' : list_id },
 		    	    error: function() { alert('An error occurred'); },
 		    	    success: function(r) {
-				
+
 				if (r.error) { alert(r.error); }
-				
 				else {
 				    var lo = new CXGN.List();
 				    lo.renderItems('list_item_dialog', list_id);
@@ -923,11 +924,8 @@ CXGN.List.prototype = {
 				    jQuery('#replace_synonyms_with_uniquenames_button').prop('disabled', true);    
 				}
 			    }
-			    
 		    	});
 		    });
-		
-		    
 		    
 		    if (synonym_matches.length > 0) {
 			jQuery('#synonym_matches_div').show();
@@ -948,12 +946,11 @@ CXGN.List.prototype = {
 		    }
 		    else {
 			jQuery('#synonym_matches_div').hide();
-			
 			jQuery('#synonym_message').html('No synonym matches found.');
 		    }
 
 		    if (multiple_synonyms.count > 0) {
-			jQuery('#element_matches_multiple_synonyms').DataTable( {
+			jQuery('#element_matches_multiple_synonyms_table').DataTable( {
 			    destroy: true,
 			    data: multiple_synonyms,
 			    sDom: 'lrtip',
@@ -969,14 +966,15 @@ CXGN.List.prototype = {
                     jQuery('#validate_accession_error_display').modal("show");
                     //alert("List validation failed. Elements not found: "+ missing.join(","));
                     //return 0;
-		} else {
+		}
+		else {
                     alert('List did not pass validation because of these items: '+missing.join(", "));
 		}
             }
             return;
 	}
     },
-    
+
     seedlotSearch: function(list_id){
         var self = this;
         jQuery('#availible_seedlots_modal').modal('show');
