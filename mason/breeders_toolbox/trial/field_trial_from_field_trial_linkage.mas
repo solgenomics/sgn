@@ -48,7 +48,6 @@ jQuery(document).ready(function () {
           var linkAjaxCalls = []; //List of ajax calls for germplasm (used for accessions)
           var linkAjaxCallsMap = {}; // Map of ajax calls for links
           var nodeAjaxCalls = []; //List of ajax calls for study data (used for trial types)
-          var receive_to_build_promise = new Promise();
 
           var graph;
           var sankey;
@@ -80,9 +79,9 @@ jQuery(document).ready(function () {
               resolve();
             }).then(function(){
               receive_JSONs(parseInt("<% $trial_id %>"));
-              when(receive_to_build_promise).then(function(){
-                construct_graph();
-              });
+            })
+            .then(function(){
+              construct_graph();
             });
 
           }
@@ -176,8 +175,6 @@ jQuery(document).ready(function () {
 
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
               Promise.all(Object.values(linkAjaxCallsMap)).then((values2) => {
-
-                receive_to_build_promise.resolve();
 
               });
             });
@@ -305,9 +302,9 @@ jQuery(document).ready(function () {
                        resolve();
                      }).then(function(){
                        receive_JSONs(d.name);
-                       when(receive_to_build_promise).then(function(){
-                         construct_graph();
-                       });
+                     })
+                     .then(function(){
+                       construct_graph();
                      });
 
                      //Here's where I will try to change the onclick of this node, may not work
@@ -340,6 +337,7 @@ jQuery(document).ready(function () {
 
             //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
             var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
+
       }//End construct_graph
 
 
