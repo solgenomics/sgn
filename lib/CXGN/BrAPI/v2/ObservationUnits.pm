@@ -600,51 +600,48 @@ sub observationunits_store {
     # TODO: Make plot number not required
     # TODO: Return new observation unit
 
-    my %studies = map { $_->{studyDbId} => 1 } @$data;
-    for (keys %studies) {
-        if ($_ eq '') {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('studyDbId is required'), 400);
-        }
-    }
-    if(keys %studies ne 1){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one study at a time.'), 422);
-    }
+    #my %studies = map { $_->{studyDbId} => 1 } @$data;
+    #if(keys %studies ne 1){
+    #    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one study at a time.'), 422);
+    #}
 
-    my $trial_id = join ',', keys %studies;
+    #my $trial_id = join ',', keys %studies;
 
-    my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $trial_id });
-    my $design_prop =  $project->projectprops->find( { 'type.name' => 'design' },{ join => 'type'}); #there should be only one design prop.
-    if (!$design_prop) {
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study does not have a proper Study type.'));
-    }
-    my $design_type = $design_prop->value;
+    #my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $trial_id });
+    #my $design_prop =  $project->projectprops->find( { 'type.name' => 'design' },{ join => 'type'}); #there should be only one design prop.
+    #if (!$design_prop) {
+     #   return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study does not have a proper Study type.'));
+    #}
+    #my $design_type = $design_prop->value;
 
     # Get the location from study if it wasn't passed.
-    my $default_location_id;
-    my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property');
-    my $row = $self->bcs_schema()->resultset('Project::Projectprop')->find({
-        project_id => $project->project_id(),
-        type_id => $location_type_id->cvterm_id(),
-    });
-    if ($row) {
-        print('Row value: ' . $row->value());
-        $default_location_id = $row->value();
-    }
+    #my $default_location_id;
+    #my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property');
+    #my $row = $self->bcs_schema()->resultset('Project::Projectprop')->find({
+    #    project_id => $project->project_id(),
+    #    type_id => $location_type_id->cvterm_id(),
+    #});
+    #if ($row) {
+    #    print('Row value: ' . $row->value());
+    #    $default_location_id = $row->value();
+    #}
 
-    my %locations = map { $_->{locationDbId} => 1 } @$data;
-    if(keys %locations ne 1){
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one location at the time.'));
-    }
-    my $location_id = join ',', keys %locations;
-    if ($location_id eq ''){
-        print(Dumper($default_location_id));
-        $location_id = $default_location_id;
-        if (! defined $location_id) {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Error retrieving default location from study.'), 500);
-        }
-    }
+    #my %locations = map { $_->{locationDbId} => 1 } @$data;
+    #if(keys %locations ne 1){
+    #    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one location at the time.'));
+    #}
+    #my $location_id = join ',', keys %locations;
+    #if ($location_id eq ''){
+    #    print(Dumper($default_location_id));
+     #   $location_id = $default_location_id;
+     #   if (! defined $location_id) {
+     #       return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Error retrieving default location from study.'), 500);
+     #   }
+    #}
 
+    my %study_plots;
     foreach my $params (@{$data}) {
+        my $study_id = $params->{studyDbId} || undef;
         my $plot_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode} ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
         my $plot_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
         my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
@@ -662,7 +659,7 @@ sub observationunits_store {
 
         # Required fields check
         if (! defined $accession_id && ! defined $accession_name) {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either ermplasmDbId or germplasmName is required.'), 400);
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
         }
         #TODO: Generate a plot number if one isn't provided -> This actually may not be required as it says it is. See store method
         if (!$plot_number){
@@ -693,7 +690,7 @@ sub observationunits_store {
             }
         }
 
-        $design{$plot_number} = {
+         my $plot_hash = {
             plot_name => $plot_name,
             # accession_name => $accession_name,
             stock_name => $accession_name,
@@ -707,57 +704,73 @@ sub observationunits_store {
             # plot_geo_json => $plot_geo_json,
             additional_info => $additional_info
         };
-        printf(Dumper($design{$plot_number}));
+
+        #TODO: this is breaking stuff
+        %study_plots->{$study_id}->{$plot_number} = $plot_hash;
+
+        #TODO: Structure by by study_hash{studyDbId}{$plot_number}
+        printf(Dumper(%study_plots));
     }
 
+    # TODO: Make a transaction
+    foreach my $study_id (keys %study_plots) {
+        # Get the study design type
+        # TODO: Do we need a study design type?
+        my $study = $study_plots->{$study_id};
+        my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $study_id });
+        my $design_prop =  $project->projectprops->find( { 'type.name' => 'design' },{ join => 'type'}); #there should be only one design prop.
+        if (!$design_prop) {
+           return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study does not have a proper Study type.'), 500);
+        }
+        my $design_type = $design_prop->value;
 
-    my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
-        bcs_schema => $schema,
-        trial_id => $trial_id,
-        nd_geolocation_id => $location_id,
-        # nd_experiment_id => $nd_experiment->nd_experiment_id(), #optional
-        is_genotyping => 0,
-        new_treatment_has_plant_entries => 0,
-        new_treatment_has_subplot_entries => 0,
-        operator => $user_name,
-        trial_stock_type => 'accessions',
-        design_type => $design_type,
-        design => \%design,
-    });
+        # Get the study location
+        my $location_id;
+        my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property');
+        my $row = $self->bcs_schema()->resultset('Project::Projectprop')->find({
+            project_id => $project->project_id(),
+            type_id => $location_type_id->cvterm_id(),
+        });
+        if ($row) {
+            print('Row value: ' . $row->value());
+            $location_id = $row->value();
+        } else {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Erro retrieving the location of the study'), 500);
+        }
 
-    my $error;
-    my $validate_design_error = $trial_design_store->validate_design();
-    if ($validate_design_error) {
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Error validating study design: ' . $validate_design_error), 422);
-    } else {
-        try {
-            $error = $trial_design_store->store();
-        } catch {
-            $error = $_;
-            # TODO: This could get more specific error codes from the store method
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('ERROR store: ' . $error), 500);
-        };
+        my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
+            bcs_schema => $schema,
+            trial_id => $study_id,
+            nd_geolocation_id => $location_id,
+            # nd_experiment_id => $nd_experiment->nd_experiment_id(), #optional
+            is_genotyping => 0,
+            new_treatment_has_plant_entries => 0,
+            new_treatment_has_subplot_entries => 0,
+            operator => $user_name,
+            trial_stock_type => 'accessions',
+            design_type => $design_type,
+            design => $study,
+        });
+
+        my $error;
+        my $validate_design_error = $trial_design_store->validate_design();
+        if ($validate_design_error) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Error validating study design: ' . $validate_design_error), 422);
+        } else {
+            try {
+                $error = $trial_design_store->store();
+            } catch {
+                $error = $_;
+                # TODO: This could get more specific error codes from the store method
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('ERROR store: ' . $error), 500);
+            };
+        }
     }
 
-    #TODO get design ids to store external references
-    #if ($externalReferences){
-       #  my $externalReferences = $params->{externalReferences} ? $params->{externalReferences} : undef;
+    # TODO: Does not this to be refresh every study save?
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-       #  my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-       #      bcs_schema => $self->bcs_schema,
-       #      table_name => 'Stock::StockDbxref',
-       #      table_id_key => 'stock_id',
-       #      external_references => $externalReferences,
-       #      id => $added_stock_id
-       #  });
-       # my $reference_result = $references->store();
-    #}
-     ###
-     
-    if(!$error){
-        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
-    }
     my $result = '';
     my $total_count = 1;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
