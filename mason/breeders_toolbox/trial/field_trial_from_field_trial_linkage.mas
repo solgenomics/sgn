@@ -76,13 +76,14 @@ jQuery(document).ready(function () {
             // The primitive graph is the graph with the nodes and just the links between nodes but without any information regarding accessions
             var promise = new Promise(function(resolve, reject){
               construct_primitive_graph(parseInt("<% $trial_id %>"),"<% $trial_name %>", r);
+              resolve();
             }).then(function(){
               receive_JSONs(parseInt("<% $trial_id %>"));
             });
 
 
 
-            
+
 
           }
 
