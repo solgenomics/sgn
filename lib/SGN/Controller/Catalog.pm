@@ -97,6 +97,7 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     $c->stash->{item_prop_id} = $item_prop_id;
     $c->stash->{image} = qq|<a href="$medium_image" class="stock_image_group" rel="gallery-figures"><img src="$medium_image"/></a> |,
     $c->stash->{selected_image_id} = $image_id;
+    $c->stash->{main_page} = qq{<a href="/stock/$item_id/view">$item_name</a>};
 
     $c->stash->{template} = '/order/catalog_item_details.mas';
 }

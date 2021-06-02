@@ -13,6 +13,7 @@ $item_prop_id
 $check_vendor_role
 $image
 $selected_image_id => undef
+$main_page
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
@@ -35,9 +36,9 @@ $selected_image_id => undef
                         <tr><td><b>Breeding Program</b></td><td><% $breeding_program %></td></tr>
                         <tr><td><b>Availability</b></td><td><% $availability %></td></tr>
                         <tr><td><b>Contact Person Username</b></td><td><% $contact_person_username %></td></tr>
+                        <tr><td><b>Main Detail Page</b></td><td><% $main_page %></td></tr>
                     </table>
                 </div>
-
                 <div class="col-sm-6">
                     <br /><br />
 % if ($selected_image_id) {
@@ -51,7 +52,7 @@ $selected_image_id => undef
 </&>
 
 % if ($check_vendor_role == 1) {
-    <&| /page/info_section.mas, title => 'Manage Catalog Item', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, title => 'Edit or Remove Catalog Item', collapsible=>1, collapsed=>0 &>
         <div class = "well well-sm">
             <div class="panel panel-default">
                 <div class="panel-body">
@@ -59,6 +60,10 @@ $selected_image_id => undef
                     <button id="delete_catalog_item_button" class="btn btn-primary btn-sm">Delete Catalog Item</button>
                 </div>
             </div>
+        </div>
+    </&>
+    <&| /page/info_section.mas, title => 'Add or Remove Image', collapsible=>1, collapsed=>0 &>
+        <div class = "well well-sm">
             <div class = "panel panel-default">
                 <div class = "panel-body">
                     <div style="overflow:scroll">
