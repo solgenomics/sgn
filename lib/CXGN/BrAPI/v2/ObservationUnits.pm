@@ -705,67 +705,74 @@ sub observationunits_store {
             additional_info => $additional_info
         };
 
-        #TODO: this is breaking stuff
-        %study_plots->{$study_id}->{$plot_number} = $plot_hash;
+        $study_plots{$study_id}{$plot_number} = $plot_hash;
 
-        #TODO: Structure by by study_hash{studyDbId}{$plot_number}
         printf(Dumper(%study_plots));
     }
 
-    # TODO: Make a transaction
-    foreach my $study_id (keys %study_plots) {
-        # Get the study design type
-        # TODO: Do we need a study design type?
-        my $study = $study_plots->{$study_id};
-        my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $study_id });
-        my $design_prop =  $project->projectprops->find( { 'type.name' => 'design' },{ join => 'type'}); #there should be only one design prop.
-        if (!$design_prop) {
-           return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study does not have a proper Study type.'), 500);
-        }
-        my $design_type = $design_prop->value;
+    my $coderef = sub {
+        foreach my $study_id (keys %study_plots) {
+            # Get the study design type
+            my $study = $study_plots{$study_id};
+            my $project = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $study_id });
+            my $design_prop = $project->projectprops->find({ 'type.name' => 'design' }, { join => 'type' }); #there should be only one design prop.
+            if (!$design_prop) {
+                die {error => 'Study does not have a study type.', errorCode => 500};
+            }
+            my $design_type = $design_prop->value;
 
-        # Get the study location
-        my $location_id;
-        my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property');
-        my $row = $self->bcs_schema()->resultset('Project::Projectprop')->find({
-            project_id => $project->project_id(),
-            type_id => $location_type_id->cvterm_id(),
-        });
-        if ($row) {
-            print('Row value: ' . $row->value());
-            $location_id = $row->value();
-        } else {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Erro retrieving the location of the study'), 500);
-        }
+            # Get the study location
+            my $location_id;
+            my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property');
+            my $row = $self->bcs_schema()->resultset('Project::Projectprop')->find({
+                project_id => $project->project_id(),
+                type_id    => $location_type_id->cvterm_id(),
+            });
+            if ($row) {
+                print('Row value: ' . $row->value());
+                $location_id = $row->value();
+            }
+            else {
+                die {error => sprintf('Erro retrieving the location of the study'), errorCode => 500};
+            }
 
-        my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
-            bcs_schema => $schema,
-            trial_id => $study_id,
-            nd_geolocation_id => $location_id,
-            # nd_experiment_id => $nd_experiment->nd_experiment_id(), #optional
-            is_genotyping => 0,
-            new_treatment_has_plant_entries => 0,
-            new_treatment_has_subplot_entries => 0,
-            operator => $user_name,
-            trial_stock_type => 'accessions',
-            design_type => $design_type,
-            design => $study,
-        });
+            my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
+                bcs_schema                        => $schema,
+                trial_id                          => $study_id,
+                nd_geolocation_id                 => $location_id,
+                # nd_experiment_id => $nd_experiment->nd_experiment_id(), #optional
+                is_genotyping                     => 0,
+                new_treatment_has_plant_entries   => 0,
+                new_treatment_has_subplot_entries => 0,
+                operator                          => $user_name,
+                trial_stock_type                  => 'accessions',
+                design_type                       => $design_type,
+                design                            => $study,
+            });
 
-        my $error;
-        my $validate_design_error = $trial_design_store->validate_design();
-        if ($validate_design_error) {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Error validating study design: ' . $validate_design_error), 422);
-        } else {
-            try {
+            my $error;
+            my $validate_design_error = $trial_design_store->validate_design();
+            if ($validate_design_error) {
+                die {error => sprintf('Error validating study design: ' . $validate_design_error), errorCode => 422};
+            }
+            else {
                 $error = $trial_design_store->store();
-            } catch {
-                $error = $_;
-                # TODO: This could get more specific error codes from the store method
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('ERROR store: ' . $error), 500);
-            };
+                if ($error) {
+                    die {error => sprintf('ERROR store: ' . $error), errorCode => 500};
+                }
+            }
         }
+    };
+
+    my $error_resp;
+    try {
+        $schema->txn_do($coderef);
     }
+    catch {
+        print Dumper("Error: $_\n");
+        $error_resp = CXGN::BrAPI::JSONResponse->return_error($self->status, $_->{error}, $_->{errorCode} || 500);
+    };
+    if ($error_resp) { return $error_resp; }
 
     # TODO: Does not this to be refresh every study save?
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
