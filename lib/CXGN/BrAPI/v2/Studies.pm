@@ -629,7 +629,7 @@ sub _search {
 
         if ($t->get_design_type()){
 	        	$experimental_design = { 
-	        		PUI => undef,
+	        		PUI => $t->get_design_type(),
 	        		description => $t->get_design_type() };
 	    }
 
