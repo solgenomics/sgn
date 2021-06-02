@@ -48,6 +48,7 @@ jQuery(document).ready(function () {
           var linkAjaxCalls = []; //List of ajax calls for germplasm (used for accessions)
           var linkAjaxCallsMap = {}; // Map of ajax calls for links
           var nodeAjaxCalls = []; //List of ajax calls for study data (used for trial types)
+          var receive_to_build_promise = new Promise();
 
           var graph;
           var sankey;
@@ -79,6 +80,9 @@ jQuery(document).ready(function () {
               resolve();
             }).then(function(){
               receive_JSONs(parseInt("<% $trial_id %>"));
+              when(receive_to_build_promise).then(function(){
+                construct_graph();
+              });
             });
 
           }
@@ -157,6 +161,8 @@ jQuery(document).ready(function () {
 
           function receive_JSONs(base_node_id){
 
+            receive_to_build_promise = new Promise();
+
             //Wait for all study JSONs to be collected, then construct the nodes with them.
             Promise.all(nodeAjaxCalls).then((values1) => {
 
@@ -171,164 +177,172 @@ jQuery(document).ready(function () {
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
               Promise.all(Object.values(linkAjaxCallsMap)).then((values2) => {
 
-                //These for loops look pretty scary, so let me explain what's happening. The outer for loop iterates through every broad, overarching link between
-                //The source trials for this trial and this trial. The first inner loop then looks at the ajax call for that source trial. Finally, the inner loop
-                //compares each accession/germplasm in the target node with each accession in the source node and then adds a link with that germplasm's name to the
-                //sankey if there is a match.
+                receive_to_build_promise.resolve();
 
-
-                for (var i = 0; i < primitiveLinks.length; i++){
-
-                  for (var j = 0; j < linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data.length; j++){
-
-                    for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
-                      if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName){
-                        linkMap["start"+primitiveLinks[i].source.name+","+primitiveLinks[i].target.name+","+linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName+"end"] = {"source": primitiveLinks[i].source, "target":primitiveLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName};
-                      }
-                    }
-                  }
-                }
-
-                console.log("linkMap:");
-                console.log(linkMap);
-
-                links = Object.values(linkMap);
-
-                data={nodes, links};
-                console.log("Here is the sankey data: ");
-                console.log(data);
-
-                sankey = d3
-                  .sankey()
-                  .size([width-100, height-100])
-                  .nodeId(d => d.id)
-                  .nodeWidth(20)
-                  .nodePadding(10)
-                  .nodeAlign(d3.sankeyCenter);
-                var graph = sankey(data);
-
-                svglinks = svg
-                  .append("g")
-                  .classed("links", true)
-                  .selectAll("path")
-                  .data(graph.links)
-                  .enter()
-                  .append("path")
-                  .classed("link", true)
-                  .attr("d", d3.sankeyLinkHorizontal())
-                  .attr("fill", "none")
-                  .attr("stroke", "#D3D3D3")
-                  .attr("stroke-width", d => d.width)
-                  .attr("marker-end", "url(#triangle)")
-                  .attr("stoke-opacity", 0.3)
-                  .on("mouseover", function(d){
-                    d3.select(this).attr("stroke", "#808080");
-                  })
-                  .on("mouseout", function(d){
-                    d3.select(this).attr("stroke", "#D3D3D3");
-                  });
-
-
-                  svgnodes = svg
-                   .append("g")
-                   .classed("nodes", true)
-                   .selectAll("rect")
-                   .data(graph.nodes)
-                   .enter()
-                   .append("rect")
-                   .classed("node", true)
-                   .attr("x", d => d.x0)
-                   .attr("y", d => d.y0)
-                   .attr("width", d => d.x1 - d.x0)
-                   .attr("height", d => d.y1 - d.y0)
-                   .attr("fill", "#add8e6")
-                   .attr("opacity", 0.8)
-                   .on("mouseover", function(d){
-                     d3.select(this).attr("fill", "#6699cc");
-                     tooltip_region.selectAll("*").remove();
-                     tooltip_region.attr("transform", "translate("+ ((d.x1+d.x0)/2 - 5 - 110) +", "+ (d.y0 - 5 - 70) +")" );
-                     var tooltip = tooltip_region
-                       .append("path")
-                       .attr('fill', 'white')
-                       .attr('stroke', 'black')
-                       .attr('stroke-width', '1.5');
-                     var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -40 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 40 c 0 10 0 10 10 10 h 90 l 10 10 z";
-                     tooltip.attr("d", pathString);
-                     var tooltip_text1 = tooltip_region.append("text")
-                     .attr("text-anchor", "middle")
-                     .attr("transform", "translate(110,20)");
-                     tooltip_text1.text("Trial: "+d.id);
-                     var tooltip_text2 = tooltip_region.append("text")
-                     .attr("text-anchor", "middle")
-                     .attr("transform", "translate(110,40)");
-                     tooltip_text2.text("Trial Type: "+d.trialType);
-                   })
-                   .on("mouseout", function(d){
-                     d3.select(this).attr("fill", "#add8e6");
-                     tooltip_region.selectAll("*").remove();
-                   })
-                   .on("click", function(d){
-
-                     jQuery.ajax({
-                       url : '/ajax/breeders/trial/'+d.name+'/field_trial_from_field_trial',
-                       success: function(res){
-
-                         console.log("Expanding tree from "+d.name);
-
-                         jQuery('#sankeycanvas').empty();
-
-                         primitiveLinks = [];
-                         svgnodes = null;
-                         svglinks = null;
-                         svglabels = null;
-                         nodeMap = {};
-                         linkMap = {};
-                         linkAjaxCallsMap = {};
-
-
-                         new Promise(function(resolve, reject){
-                           construct_primitive_graph(d.name, d.id, res);
-                           resolve();
-                         }).then(function(){
-                           receive_JSONs(d.name);
-                         });
-
-                         //Here's where I will try to change the onclick of this node, may not work
-
-                       }
-                     });
-
-                   })
-                   .on("dblclick",function(d){
-                     if (d.name == "<% $trial_id %>"){
-
-                     } else {
-                       window.open("/breeders/trial/"+d.name);
-                     }
-                   });
-
-
-                svglabels = svg
-                  .append("g")
-                  .classed("text", true)
-                  .selectAll("text")
-                  .data(graph.links)
-                  .enter()
-                  .append("text")
-                  .classed("link", true)
-                  .attr("x", d => d.source.x1 + 5)
-                  .attr("y", d => d.y0 + 5)
-                  .text(d => d.name);
-
-
-                //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
-                var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
-
-              });
-
-            });
 
           }//End of receive_JSONs
+
+          function construct_graph(){
+
+            //These for loops look pretty scary, so let me explain what's happening. The outer for loop iterates through every broad, overarching link between
+            //The source trials for this trial and this trial. The first inner loop then looks at the ajax call for that source trial. Finally, the inner loop
+            //compares each accession/germplasm in the target node with each accession in the source node and then adds a link with that germplasm's name to the
+            //sankey if there is a match.
+
+            for (var i = 0; i < primitiveLinks.length; i++){
+
+              for (var j = 0; j < linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data.length; j++){
+
+                for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
+                  if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName){
+                    linkMap["start"+primitiveLinks[i].source.name+","+primitiveLinks[i].target.name+","+linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName+"end"] = {"source": primitiveLinks[i].source, "target":primitiveLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName};
+                  }
+                }
+              }
+            }
+
+            console.log("linkMap:");
+            console.log(linkMap);
+
+            links = Object.values(linkMap);
+
+            data={nodes, links};
+            console.log("Here is the sankey data: ");
+            console.log(data);
+
+            sankey = d3
+              .sankey()
+              .size([width-100, height-100])
+              .nodeId(d => d.id)
+              .nodeWidth(20)
+              .nodePadding(10)
+              .nodeAlign(d3.sankeyCenter);
+            var graph = sankey(data);
+
+            svglinks = svg
+              .append("g")
+              .classed("links", true)
+              .selectAll("path")
+              .data(graph.links)
+              .enter()
+              .append("path")
+              .classed("link", true)
+              .attr("d", d3.sankeyLinkHorizontal())
+              .attr("fill", "none")
+              .attr("stroke", "#D3D3D3")
+              .attr("stroke-width", d => d.width)
+              .attr("marker-end", "url(#triangle)")
+              .attr("stoke-opacity", 0.3)
+              .on("mouseover", function(d){
+                d3.select(this).attr("stroke", "#808080");
+              })
+              .on("mouseout", function(d){
+                d3.select(this).attr("stroke", "#D3D3D3");
+              });
+
+
+              svgnodes = svg
+               .append("g")
+               .classed("nodes", true)
+               .selectAll("rect")
+               .data(graph.nodes)
+               .enter()
+               .append("rect")
+               .classed("node", true)
+               .attr("x", d => d.x0)
+               .attr("y", d => d.y0)
+               .attr("width", d => d.x1 - d.x0)
+               .attr("height", d => d.y1 - d.y0)
+               .attr("fill", "#add8e6")
+               .attr("opacity", 0.8)
+               .on("mouseover", function(d){
+                 d3.select(this).attr("fill", "#6699cc");
+                 tooltip_region.selectAll("*").remove();
+                 tooltip_region.attr("transform", "translate("+ ((d.x1+d.x0)/2 - 5 - 110) +", "+ (d.y0 - 5 - 70) +")" );
+                 var tooltip = tooltip_region
+                   .append("path")
+                   .attr('fill', 'white')
+                   .attr('stroke', 'black')
+                   .attr('stroke-width', '1.5');
+                 var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -40 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 40 c 0 10 0 10 10 10 h 90 l 10 10 z";
+                 tooltip.attr("d", pathString);
+                 var tooltip_text1 = tooltip_region.append("text")
+                 .attr("text-anchor", "middle")
+                 .attr("transform", "translate(110,20)");
+                 tooltip_text1.text("Trial: "+d.id);
+                 var tooltip_text2 = tooltip_region.append("text")
+                 .attr("text-anchor", "middle")
+                 .attr("transform", "translate(110,40)");
+                 tooltip_text2.text("Trial Type: "+d.trialType);
+               })
+               .on("mouseout", function(d){
+                 d3.select(this).attr("fill", "#add8e6");
+                 tooltip_region.selectAll("*").remove();
+               })
+               .on("click", function(d){
+
+                 jQuery.ajax({
+                   url : '/ajax/breeders/trial/'+d.name+'/field_trial_from_field_trial',
+                   success: function(res){
+
+                     console.log("Expanding tree from "+d.name);
+
+                     jQuery('#sankeycanvas').empty();
+
+                     primitiveLinks = [];
+                     svgnodes = null;
+                     svglinks = null;
+                     svglabels = null;
+                     nodeMap = {};
+                     linkMap = {};
+                     linkAjaxCallsMap = {};
+
+
+                     new Promise(function(resolve, reject){
+                       construct_primitive_graph(d.name, d.id, res);
+                       resolve();
+                     }).then(function(){
+                       receive_JSONs(d.name);
+                       when(receive_to_build_promise).then(function(){
+                         construct_graph();
+                       });
+                     });
+
+                     //Here's where I will try to change the onclick of this node, may not work
+
+                   }
+                 });
+
+               })
+               .on("dblclick",function(d){
+                 if (d.name == "<% $trial_id %>"){
+
+                 } else {
+                   window.open("/breeders/trial/"+d.name);
+                 }
+               });
+
+
+            svglabels = svg
+              .append("g")
+              .classed("text", true)
+              .selectAll("text")
+              .data(graph.links)
+              .enter()
+              .append("text")
+              .classed("link", true)
+              .attr("x", d => d.source.x1 + 5)
+              .attr("y", d => d.y0 + 5)
+              .text(d => d.name);
+
+
+            //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
+            var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
+
+          });
+
+        });
+      }//End construct_graph
 
 
         },
