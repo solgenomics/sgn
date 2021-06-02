@@ -4,44 +4,156 @@ $roles => undef
 $is_curator => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
+<& /util/import_javascript.mas, entries => [ "manage_user_roles" ] &>
 
 <& /page/page_title.mas, title=>"Manage User Roles" &>
-
-<hr>
-% if ($is_curator) {
-	<h3>Curators can <button class="btn btn-default" id="add_person_role_button">Give User a Role</button> </h3>
-% }
-<hr>
 
 <table id="manage_user_roles_table" class="table table-bordered">
 <thead>
 % if ($is_curator){
-<tr><th>Role</th><th>Username</th></tr>
+<tr><th>User</th><th>Roles</th></tr>
 % } else {
-<tr><th>Breeding Program</th><th>Username</th></tr>
+<tr><th>User</th><th>Breeding Programs</th></tr>
 % }
 </thead>
 <tbody>
-% foreach (@$roles) {
-% if ($is_curator){
-	<tr><td><% $_->[2] %></td><td><a href="/solpeople/personal-info.pl?sp_person_id=<% $_->[1] %>"><% $_->[0] %></a></td></tr>
-% } else {
-% if ($_->[2] ne 'curator' && $_->[2] ne 'user' && $_->[2] ne 'submitter' && $_->[2] ne 'sequencer'){
-	<tr><td><% $_->[2] %></td><td><a href="/solpeople/personal-info.pl?sp_person_id=<% $_->[1] %>"><% $_->[0] %></a></td></tr>
-% }
-% }
-% }
 </tbody>
 </table>
 
-<& /people/add_person_role.mas &>
+<div id="manage_user_roles" >
+
+<div class="modal fade" id="add_person_role_dialog" name="add_person_role_dialog" tabindex="-1" role="dialog" aria-labelledby="addPersonRoleDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addPersonRoleDialog">Add Role for <span id="person_name_for_role"></span></h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+	       <!-- form class="form-horizontal" >
+	        <div class="form-group">
+                <label class="col-sm-3 control-label">Username: </label>
+                <div class="col-sm-9" >
+                    <div id="add_person_role_person_select_div">
+                    [LOADING...]
+                    </div>
+                </div>
+	        </div -->
+            <input type="hidden" id="sp_person_id" name="sp_person_id" value="" />
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Role: </label>
+                <div class="col-sm-9" >
+                    <div id="add_person_role_role_select_div">
+                    [LOADING...]
+                    </div>
+                </div>
+	        </div>
+	       </form><br/>
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="add_person_role_cancel_button" id="add_person_role_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="add_person_role_submit_button" id="add_person_role_submit_button" title="Submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>  <!-- manage_user_roles -->
+
+% if (! $is_curator) {
+Note: Only curators can change user role assignments.
+% }
 
 <script>
 
 jQuery(document).ready(function() {
-    jQuery('#manage_user_roles_table').DataTable();
-} );
+
+   jQuery('#manage_user_roles_table').DataTable( {
+       ajax : '/ajax/roles/list'
+   });
+
+ 
+});
+
+
+function delete_user_role(sp_person_role_id) {
+    
+    var yes = confirm("Really delete this role association?");
+    if (yes) { 
+      $.ajax( {
+        url: '/ajax/roles/delete/association/'+sp_person_role_id
+      });
+      jQuery('#manage_user_roles_table').DataTable().ajax.reload();					  
+      alert('Association deleted.');
+    }
+  }
+
+function add_user_role(sp_person_id, person_name) {
+	$('#add_person_role_dialog').modal("show");
+        $('#sp_person_id').val(sp_person_id);
+        $('#person_name_for_role').html(person_name);
+
+        jQuery.ajax ( {
+            url : '/ajax/people/people_and_roles',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+             //   var sp_person_html = '<select class="form-control" id="add_person_role_person_select">';
+             //   for (var i=0; i<response.sp_persons.length; i++) {
+             //       sp_person_html = sp_person_html + '<option value="'+response.sp_persons[i][1]+'">'+response.sp_persons[i][0]+'</option>';
+             //   }
+             //   jQuery('#add_person_role_person_select_div').empty().html(sp_person_html);
+
+                var sp_role_html = '<select class="form-control" id="add_person_role_role_select">';
+                for (var i=0; i<response.sp_roles.length; i++) {
+                    sp_role_html = sp_role_html + '<option value="'+response.sp_roles[i][1]+'">'+response.sp_roles[i][0]+'</option>';
+                }
+                jQuery('#add_person_role_role_select_div').empty().html(sp_role_html);
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occured: '+response);
+            }
+        });
+
+
+        jQuery('#add_person_role_submit_button').click( function(e) {
+
+
+        jQuery.ajax ( {
+            url : '/ajax/people/add_person_role?sp_person_id='+jQuery("#sp_person_id").val()+'&sp_role_id='+jQuery("#add_person_role_role_select").val(),
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert('Error: '+response.error);
+                } else {
+		     jQuery('#manage_user_roles_table').DataTable().ajax.reload();					  
+                    alert('Role Added for User!');
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occured: '+response);
+            }
+		});
+
+	
+
+        });
+	
+	
+}
 
 </script>
 
