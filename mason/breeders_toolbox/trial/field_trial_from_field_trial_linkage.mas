@@ -160,8 +160,6 @@ jQuery(document).ready(function () {
 
           function receive_JSONs(base_node_id){
 
-            receive_to_build_promise = new Promise();
-
             //Wait for all study JSONs to be collected, then construct the nodes with them.
             Promise.all(nodeAjaxCalls).then((values1) => {
 
