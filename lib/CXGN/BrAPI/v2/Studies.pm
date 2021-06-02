@@ -756,6 +756,8 @@ sub _save_trial {
 		$project->create_projectprops({
 			$project_design_cvterm->name() => $self->get_design_type()
 		});
+	} else {
+		return {error => 'A design type is required'};
 	}
     if ($self->has_field_size && $self->get_field_size){
 		$project->create_projectprops({
