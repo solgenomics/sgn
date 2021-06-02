@@ -25,6 +25,7 @@ sub validate {
     my @wrong_case;
     my @multiple_wrong_case;
     my @synonyms;
+    my @multiple_synonyms;
     
     foreach my $item (@$list) {
 
@@ -65,9 +66,16 @@ sub validate {
 	    { 'lower(stockprops.value)' => lc($item),
 		  'stockprops.type_id' => $synonym_type_id,
 	    }, { join => 'stockprops', '+select' => [ 'stockprops.value' ], '+as' => [ 'stockprops_value' ]} );
-	while (my $row = $rs->next()) {
+
+	if ($rs->count() == 1) { 
+	    my $row = $rs->next();
 	    push @synonyms, { uniquename =>  $row->uniquename(), synonym => $row->get_column('stockprops_value') };
 	}
+	elsif($rs->count() > 1)  {
+	    my $row = $rs->next();
+	    push @multiple_synonyms, [ $row->uniquename(), $row->get_column('stockprops_value') ];
+	}
+	  
     }
 
 
@@ -76,6 +84,7 @@ sub validate {
 	wrong_case => \@wrong_case,
 	multiple_wrong_case => \@multiple_wrong_case,
 	synonyms => \@synonyms,
+	multiple_synonyms => \@multiple_synonyms,
     };
 }
 

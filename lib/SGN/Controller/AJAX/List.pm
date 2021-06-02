@@ -733,8 +733,7 @@ sub transform :Path('/list/transform/') Args(2) {
     my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema"), $transform_name, \@list_items);
 
     if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
-	$c->stash->{rest} = { error => "This lists contains elements that cannot be converted. Not converting list.", };
-	return;
+	$result->{error}  =  "Warning. This lists contains elements that cannot be converted.";
     }
 
     $c->stash->{rest} = $result;
@@ -1097,6 +1096,75 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
 	
 }
 
+sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $list_id = $c->req->param("list_id");
+    
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+        $c->stash->{rest} = { error => "You must be logged in to use lists.", };
+        return;
+    }
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $list_id } );
+
+    if ($user_id != $list->owner()) {
+	$c->stash->{rest} = { error => "You don't own this list and you cannot modify it." };
+	return;
+    }
+
+    if ($list->type() ne "accessions") {
+	$c->stash->{rest} = { error => "Only lists with type 'accessions' can be adjusted for synonyms in the database." };
+    }
+
+    my $lt = CXGN::List::Transform->new();
+    my $elements = $list->elements();
+    print STDERR "Elements: ".Dumper($elements);
+    
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+	
+    my $data = $lt->transform($schema, 'synonyms2accession_uniquename', $elements);
+
+    print STDERR "Converted data: ".Dumper($data);
+
+    print STDERR Dumper($data);
+    
+    if (! $data) {
+	$c->stash->{rest} = { error => "No data!" };
+	return;
+    }
+    my $error_message = "";
+    my $replace_count = 0;
+   
+    foreach my $item (@$elements) {
+	print STDERR "Replacing element $item...\n";
+	if ($data->{mapping}->{$item}) {
+	    print STDERR "  with $data->{mapping}->{$item}...\n";
+	    my $error = $list->replace_by_name($item, $data->{mapping}->{$item});
+	    if ($error) {
+		$error_message .= "Error: $item not replaced. ";
+	    }
+	    else {
+		$replace_count++;
+	    }
+	}
+    }
+
+    $c->stash->{rest} = {
+	transform => $data->{transform},
+	error => $error_message,
+	replace_count => $replace_count,
+	missing => $data->{missing} || [],
+	duplicated => $data->{duplicated} || [],
+	mapping => $data->{mapping},
+    }
+
+    
+
+
+}
 
 #########
 1;

@@ -776,6 +776,7 @@ CXGN.List.prototype = {
 		    wrong_case = response.wrong_case;
 		    multiple_wrong_case = response.multiple_wrong_case;
 		    synonym_matches = response.synonyms;
+		    multiple_synonyms = response.multiple_synonyms;
                 }
             },
             error: function(response) {
@@ -903,10 +904,9 @@ CXGN.List.prototype = {
 
 		    //alert(JSON.stringify(synonym_matches_table));
 
-
 		    jQuery('#replace_synonyms_with_uniquenames_button').click( function() {
 		    	jQuery.ajax( {
-		    	    url : '/list/desynonymize',
+		    	    url : '/ajax/list/adjust_synonyms',
 			    data: { 'list_id' : list_id },
 		    	    error: function() { alert('An error occurred'); },
 		    	    success: function(r) {
@@ -917,44 +917,66 @@ CXGN.List.prototype = {
 				    var lo = new CXGN.List();
 				    lo.renderItems('list_item_dialog', list_id);
 				    
+				    jQuery('#synonym_matches_div').hide();
+				    jQuery('#synonym_message').show();
 				    jQuery('#synonym_message').html("<br /><br /><h3>Synonyms</h3><b>Synonyms have been successfully replaced with uniquenames.</b>");
 				    jQuery('#replace_synonyms_with_uniquenames_button').prop('disabled', true);    
 				}
 			    }
+			    
 		    	});
 		    });
-		    
+		
 		    
 		    
 		    if (synonym_matches.length > 0) {
-		    	jQuery('#element_matches_synonym').DataTable( {
+			jQuery('#synonym_matches_div').show();
+			jQuery('#synonym_message').html('');
+
+			jQuery('#element_matches_synonym').DataTable( {
 			    destroy: true,
 			    data: synonym_matches_table,
 			    sDom: 'lrtip',
 			    bInfo: false,
 			    paging: false,
 			    columns: [
-
+				
 				{ title : 'List elements matching synonym' },
 				{ title : 'Corresponding db names' } 
 			    ]
 			});
 		    }
 		    else {
+			jQuery('#synonym_matches_div').hide();
+			
 			jQuery('#synonym_message').html('No synonym matches found.');
+		    }
+
+		    if (multiple_synonyms.count > 0) {
+			jQuery('#element_matches_multiple_synonyms').DataTable( {
+			    destroy: true,
+			    data: multiple_synonyms,
+			    sDom: 'lrtip',
+			    bInfo: false,
+			    paging: false,
+			    columns: [
+				{title : 'Item' },
+				{title: 'Synonym'}
+			    ]
+			});
 		    }
 		    
                     jQuery('#validate_accession_error_display').modal("show");
                     //alert("List validation failed. Elements not found: "+ missing.join(","));
                     //return 0;
-                } else {
+		} else {
                     alert('List did not pass validation because of these items: '+missing.join(", "));
-                }
+		}
             }
             return;
-        }
+	}
     },
-
+    
     seedlotSearch: function(list_id){
         var self = this;
         jQuery('#availible_seedlots_modal').modal('show');
