@@ -81,10 +81,6 @@ jQuery(document).ready(function () {
               receive_JSONs(parseInt("<% $trial_id %>"));
             });
 
-
-
-
-
           }
 
 
@@ -290,10 +286,12 @@ jQuery(document).ready(function () {
                          linkAjaxCallsMap = {};
 
 
-
-                         construct_primitive_graph(d.name, d.id, res);
-
-                         receive_JSONs(d.name);
+                         new Promise(function(resolve, reject){
+                           construct_primitive_graph(d.name, d.id, res);
+                           resolve();
+                         }).then(function(){
+                           receive_JSONs(d.name);
+                         });
 
                          //Here's where I will try to change the onclick of this node, may not work
 
