@@ -74,9 +74,15 @@ jQuery(document).ready(function () {
 
 
             // The primitive graph is the graph with the nodes and just the links between nodes but without any information regarding accessions
-            construct_primitive_graph(parseInt("<% $trial_id %>"),"<% $trial_name %>", r);
+            var promise = new Promise(function(resolve, reject){
+              construct_primitive_graph(parseInt("<% $trial_id %>"),"<% $trial_name %>", r);
+            }).then(function(){
+              receive_JSONs(parseInt("<% $trial_id %>"));
+            });
 
-            receive_JSONs(parseInt("<% $trial_id %>"));
+
+
+            
 
           }
 
@@ -281,6 +287,8 @@ jQuery(document).ready(function () {
                          nodeMap = {};
                          linkMap = {};
                          linkAjaxCallsMap = {};
+
+
 
                          construct_primitive_graph(d.name, d.id, res);
 
