@@ -491,7 +491,7 @@ CXGN.List.prototype = {
             if (jQuery('#type_select').val() == 'accessions' || jQuery('#type_select').val() == 'crosses'){
                 jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Available Seedlots</button>');
             } else {
-                jQuery('#availableSeedlotButtonDiv').html('')
+                jQuery('#availableSeedlotButtonDiv').html('');
             }
 
             if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples', 'family_names'].indexOf(jQuery('#type_select').val()) >= 0){
@@ -693,7 +693,7 @@ CXGN.List.prototype = {
         }
 
         if (refresh) {
-            if (types.length > 1) { types = types.join(',') };
+            if (types.length > 1) { types = types.join(',') }
             html = '<div class="input-group" id="'+div_name+'_list_select_div">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" type="button" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'\',\''+types+'\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
             return html;
         }
