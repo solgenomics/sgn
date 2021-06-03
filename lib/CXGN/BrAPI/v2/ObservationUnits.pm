@@ -36,6 +36,7 @@ sub search {
     my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
     my $end_time = $params->{observationTimeStampRangeEnd}->[0] || undef;
     my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
+    my $observation_unit_names_list = $params->{observationUnitName} || ($params->{observationUnitNames} || ());
     my $include_observations = $params->{includeObservations}->[0] || "False";
     my $level_order_arrayref = $params->{observationUnitLevelOrder} || ($params->{observationUnitLevelOrders} || ());
     my $level_code_arrayref = $params->{observationUnitLevelCode} || ($params->{observationUnitLevelCodes} || ());
@@ -86,6 +87,7 @@ sub search {
             plot_list=>$observation_unit_db_id,
             limit=>$limit,
             offset=>$offset,
+            observation_unit_names_list=>$observation_unit_names_list,
             # phenotype_min_value=>$phenotype_min_value,
             # phenotype_max_value=>$phenotype_max_value,
             # exclude_phenotype_outlier=>$exclude_phenotype_outlier
@@ -164,7 +166,7 @@ sub search {
         my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
         my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $additional_info_type_id, stock_id => $obs_unit->{observationunit_stock_id} });
         if ($rs->count() > 0){
-            $additional_info = $rs->first_row->value();
+            $additional_info = $rs->first()->value();
         }
 
         my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
@@ -594,50 +596,8 @@ sub observationunits_store {
     my %design;
 
     # TODO
-    # TODO: Check if we can have different studies, instead of just one
-    # TODO: Check if we can have different locations, instead of just one
-    # TODO: Allow setting of own observation level -> Big one
+    # TODO: Allow setting of own observation level (plant or plot)
     # TODO: Make plot number not required
-    # TODO: Return new observation unit
-
-    #my %studies = map { $_->{studyDbId} => 1 } @$data;
-    #if(keys %studies ne 1){
-    #    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one study at a time.'), 422);
-    #}
-
-    #my $trial_id = join ',', keys %studies;
-
-    #my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $trial_id });
-    #my $design_prop =  $project->projectprops->find( { 'type.name' => 'design' },{ join => 'type'}); #there should be only one design prop.
-    #if (!$design_prop) {
-     #   return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study does not have a proper Study type.'));
-    #}
-    #my $design_type = $design_prop->value;
-
-    # Get the location from study if it wasn't passed.
-    #my $default_location_id;
-    #my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property');
-    #my $row = $self->bcs_schema()->resultset('Project::Projectprop')->find({
-    #    project_id => $project->project_id(),
-    #    type_id => $location_type_id->cvterm_id(),
-    #});
-    #if ($row) {
-    #    print('Row value: ' . $row->value());
-    #    $default_location_id = $row->value();
-    #}
-
-    #my %locations = map { $_->{locationDbId} => 1 } @$data;
-    #if(keys %locations ne 1){
-    #    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one location at the time.'));
-    #}
-    #my $location_id = join ',', keys %locations;
-    #if ($location_id eq ''){
-    #    print(Dumper($default_location_id));
-     #   $location_id = $default_location_id;
-     #   if (! defined $location_id) {
-     #       return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Error retrieving default location from study.'), 500);
-     #   }
-    #}
 
     my %study_plots;
     foreach my $params (@{$data}) {
@@ -774,15 +734,15 @@ sub observationunits_store {
     };
     if ($error_resp) { return $error_resp; }
 
-    # TODO: Does not this to be refresh every study save?
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    my $result = '';
-    my $total_count = 1;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, undef, $status, 'Observation Units have been added');
-
+    # Get our new OUs by name. Not ideal, but names are unique and its the quickest solution
+    my @observationUnitNames;
+    foreach my $ou (@{$data}) { push @observationUnitNames, $ou->{observationUnitName}; }
+    my $search_params = {observationUnitNames => \@observationUnitNames};
+    $self->page_size(scalar @{$data});
+    return $self->search($search_params);
 }
 
 sub _order {

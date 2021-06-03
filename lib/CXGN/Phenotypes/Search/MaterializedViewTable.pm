@@ -229,8 +229,9 @@ sub search {
         push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample' OR observationunit_type_name = 'analysis_instance')"; #plots AND plants AND subplots AND tissue_samples AND analysis_instance
     }
     if ($self->observation_unit_names_list && scalar(@{$self->observation_unit_names_list})>0) {
-        my $arrayref = $self->observation_unit_names_list;
-        my $sql = join ("','" , lc @$arrayref);
+        my @arrayref;
+        for my $name (@{$self->observation_unit_names_list}) {push @arrayref, lc $name;}
+        my $sql = join ("','" , @arrayref);
         my $ou_name_sql = "'" . $sql . "'";
         push @where_clause, "LOWER(observationunit_uniquename) in ($ou_name_sql)";
     }
