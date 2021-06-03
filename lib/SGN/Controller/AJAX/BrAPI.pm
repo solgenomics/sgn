@@ -5065,6 +5065,20 @@ sub breedingmethods_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+sub nirs : Chained('brapi') PathPart('nirs') Args(0) : ActionClass('REST') { }
+
+sub nirs_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Nirs');
+    my $brapi_package_result = $brapi_module->search($clean_inputs);
+
+    _standard_response_construction($c, $brapi_package_result);
+}
+
 
 #functions
 sub save_results {
@@ -5085,12 +5099,12 @@ sub save_results {
 
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper($search_type);
-    
+
     #set default value to 100000 to get as much as possible records when page size is not a parameter
     if(!$search_params->{pageSize}) {
     	$brapi_module->{page_size} = 100000;
 	}
-    
+
     my $search_result = $brapi_module->search($search_params,$c);
 
     my $dir = $c->tempfiles_subdir('/brapi_searches');

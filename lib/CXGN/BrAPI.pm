@@ -40,6 +40,7 @@ use CXGN::BrAPI::v2::Images;
 use CXGN::BrAPI::v2::Lists;
 use CXGN::BrAPI::v2::Locations;
 use CXGN::BrAPI::v2::MarkerPositions;
+use CXGN::BrAPI::v2::Nirs;
 use CXGN::BrAPI::v2::Observations;
 use CXGN::BrAPI::v2::ObservationTables;
 use CXGN::BrAPI::v2::ObservationUnits;
