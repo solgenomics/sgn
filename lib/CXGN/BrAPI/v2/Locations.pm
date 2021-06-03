@@ -86,20 +86,22 @@ sub search {
 	}
 
 	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema ); #, $location_id);
+	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($locations,$page_size,$page);
+	my @data;
 
 	my @available;
 
 	foreach (@$locations){
 		if ( (%location_ids_arrayref && !exists($location_ids_arrayref{$_->[0]}))) { next; }
 		if ( (%abbreviations_arrayref && !exists($abbreviations_arrayref{$_->[9]}))) { next; }
-        if ( (%country_codes_arrayref && !exists($country_codes_arrayref{$_->[6]}))) { next; }
-        if ( (%country_names_arrayref && !exists($country_names_arrayref{$_->[5]}))) { next; }
-        if ( (%institute_addresses_arrayref && !exists($institute_addresses_arrayref{$_->[10]}))) { next; }
-        # if ( (%institute_names_arrayref && !exists($institute_names_arrayref{$_->[]}))) { next; }
-        if ( (%location_names_arrayref && !exists($location_names_arrayref{$_->[1]}))) { next; }
-        if ( (%location_types_arrayref && !exists($location_types_arrayref{$_->[8]}))) { next; }
-        if ( $altitude_max && $_->[4] > $altitude_max ) { next; } 
-        if ( $altitude_min && $_->[4] < $altitude_min ) { next; }
+    if ( (%country_codes_arrayref && !exists($country_codes_arrayref{$_->[6]}))) { next; }
+    if ( (%country_names_arrayref && !exists($country_names_arrayref{$_->[5]}))) { next; }
+    if ( (%institute_addresses_arrayref && !exists($institute_addresses_arrayref{$_->[10]}))) { next; }
+    # if ( (%institute_names_arrayref && !exists($institute_names_arrayref{$_->[]}))) { next; }
+    if ( (%location_names_arrayref && !exists($location_names_arrayref{$_->[1]}))) { next; }
+    if ( (%location_types_arrayref && !exists($location_types_arrayref{$_->[8]}))) { next; }
+    if ( $altitude_max && $_->[4] > $altitude_max ) { next; } 
+    if ( $altitude_min && $_->[4] < $altitude_min ) { next; }
 
 		# combine referenceID and referenceSource into AND check as used by bi-api filter
 		# won't work with general search but wasn't implemented anyways
@@ -202,8 +204,12 @@ sub get_response {
 		$pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
 		return CXGN::BrAPI::JSONResponse->return_success(@data[0], $pagination, \@data_files, $status, 'Locations object result constructed');
 	}
+<<<<<<< HEAD
 
+=======
+>>>>>>> master-upstream
 }
+
 
 sub store {
 	my $self = shift;
@@ -285,10 +291,10 @@ sub store {
 			push @location_ids, $store->{'nd_geolocation_id'};
 		}
 	}
-	my %result;
-	my $count = scalar @location_ids;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status(), $count . " Locations were saved.");
+
+	# Retrieve our new locations
+	my $locations = CXGN::Trial::get_all_locations($schema, \@location_ids);
+	return $self->get_response($locations, 1);
 }
 
 1;

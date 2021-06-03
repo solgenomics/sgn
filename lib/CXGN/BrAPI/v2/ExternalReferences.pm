@@ -122,28 +122,30 @@ sub store {
         } else {
             my ($url,$object_id) = _check_brapi_url($_->{'referenceID'});
 
-            if($url){
+            if($ref_name){
 
                 my $create_db = $schema->resultset("General::Db")->find_or_create({
                     name => $ref_name,
                     url => $url
                 });
             
-                my $create_dbxref = $schema->resultset("General::Dbxref")->find_or_create({
-                    db_id => $create_db->db_id(),
-                    accession => $object_id
-                });
+                if($object_id){
+                  my $create_dbxref = $schema->resultset("General::Dbxref")->find_or_create({
+                      db_id => $create_db->db_id(),
+                      accession => $object_id
+                  });
 
-                # Switch to model way to do it once project_dbxref is added to chado schema
-                my $dbh = $self->bcs_schema->storage()->dbh();
-                my $sql = "INSERT INTO $table (dbxref_id, $table_id) VALUES ( ?, ? ) ON CONFLICT DO NOTHING";
-                my $sth = $dbh->prepare( $sql );
-                $sth->execute($create_dbxref->dbxref_id(), $id);
+                  # Switch to model way to do it once project_dbxref is added to chado schema
+                  my $dbh = $self->bcs_schema->storage()->dbh();
+                  my $sql = "INSERT INTO $table (dbxref_id, $table_id) VALUES ( ?, ? ) ON CONFLICT DO NOTHING";
+                  my $sth = $dbh->prepare( $sql );
+                  $sth->execute($create_dbxref->dbxref_id(), $id);
 
-                #my $create_stock_dbxref = $schema->resultset($table)->find_or_create({
-                #    $table_id => $id,
-                #    dbxref_id => $create_dbxref->dbxref_id()
-                #});
+                  #my $create_stock_dbxref = $schema->resultset($table)->find_or_create({
+                  #    $table_id => $id,
+                  #    dbxref_id => $create_dbxref->dbxref_id()
+                  #});
+                }
             }
         }
     }
@@ -167,6 +169,9 @@ sub _check_brapi_url {
         $url_object_id = $url;
         $url = $`;
         $url_object_id =~ s/$url//;
+    } else{
+        $url_object_id = $url;
+        $url = "";
     }
     return ($url,$url_object_id);
 }

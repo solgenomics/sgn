@@ -288,7 +288,7 @@ sub store_location {
             return { error => $error };
         } else {
             print STDERR "Location $name was successfully updated\n";
-            return { success => "Location $name was successfully updated\n" };
+            return { success => "Location $name was successfully updated\n", nd_geolocation_id=>$self->location()->nd_geolocation_id() };
         }
     }
 }
