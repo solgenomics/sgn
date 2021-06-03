@@ -84,9 +84,6 @@
 		<table id="missing_accessions_table" style="margin:0pt">
 		</table><br />
 					
-		
-		
-						
                 <div id="validate_stock_add_missing_accessions">
                 </div>
 
@@ -124,10 +121,10 @@
 		</table>
 		
 		<div id="multiple_case_match_div"><br /><br /></div>
-
+		
 		<h3>List elements matching a synonym</h3>
 		<div id="synonym_matches_div">
-
+		  
 		  <table id="element_matches_synonym"  style="margin:0pt">
 		  </table>
 		  <br />
@@ -137,16 +134,18 @@
 		
 		<div id="synonym_message"></div>
 		<br />
-
+		
 		<h3>Multiple synonym matches</h3>
 		<div id="multiple_synonym_matches_div">
 		  <table id="element_matches_multiple_synonyms" style="margin:0pt">
 		  </table>
-
+		  
 		  Multiple synonym matches have to be resolved manually. Contact database administrators if necessary.
+		</div>
               </div>
             </div>
-        </div>
+	</div>
+	
         <div class="modal-footer">
           <button id="close_missing_accessions_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         </div>
