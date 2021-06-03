@@ -204,10 +204,6 @@ sub get_response {
 		$pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
 		return CXGN::BrAPI::JSONResponse->return_success(@data[0], $pagination, \@data_files, $status, 'Locations object result constructed');
 	}
-<<<<<<< HEAD
-
-=======
->>>>>>> master-upstream
 }
 
 
