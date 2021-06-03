@@ -61,10 +61,14 @@ sub ACCEPT_CONTEXT {
 sub search_trait {
     my ($self, $trait) = @_;
 
-    my $q = "SELECT distinct(cvterm.name) FROM materialized_phenoview me
-                    JOIN cvterm ON cvterm.cvterm_id = me.trait_id
-                    WHERE cvterm.name ilike ?
-                    ORDER BY cvterm.name";
+    my $q = "SELECT distinct(cvterm.name) FROM genotyping_protocolsXtrials
+                        LEFT JOIN traitsXtrials ON genotyping_protocolsXtrials.trial_id = traitsXtrials.trial_id
+                        LEFT JOIN cvterm ON cvterm.cvterm_id = traitsXtrials.trait_id
+                        LEFT JOIN locationsXtrials  ON traitsXtrials.trial_id = locationsXtrials.trial_id
+                        LEFT JOIN locations ON locations.location_id = locationsXtrials.location_id
+                        WHERE location_name NOT LIKE '[Computation]'
+                            AND cvterm.name ILIKE ?
+                        ORDER BY cvterm.name";
 
     my $sth = $self->context->dbc->dbh->prepare($q);
 
@@ -125,12 +129,13 @@ sub trait_details {
 sub all_gs_traits {
     my $self = shift;
 
-    # my $q = "SELECT cvterm_id, name
-    #                 FROM all_gs_traits
-    #                 ORDER BY name";
-    my $q = "SELECT distinct(cvterm.name), cvterm_id FROM materialized_phenoview me
-                                    JOIN cvterm ON cvterm_id = me.trait_id
-                                    ORDER BY cvterm.name";
+    my $q =  "SELECT distinct(cvterm.name) FROM genotyping_protocolsXtrials
+                        LEFT JOIN traitsXtrials ON genotyping_protocolsXtrials.trial_id = traitsXtrials.trial_id
+                        LEFT JOIN cvterm ON cvterm.cvterm_id = traitsXtrials.trait_id
+                        LEFT JOIN locationsXtrials  ON traitsXtrials.trial_id = locationsXtrials.trial_id
+                        LEFT JOIN locations ON locations.location_id = locationsXtrials.location_id
+                        WHERE location_name NOT LIKE '[Computation]'
+                        ORDER BY cvterm.name";
 
     my $sth = $self->context->dbc->dbh->prepare($q);
 
