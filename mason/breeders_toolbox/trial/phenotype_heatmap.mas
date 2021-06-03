@@ -123,6 +123,8 @@ $data_level => 'plot'
         <label for="invert_rows">Invert Rows</label>
         <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
     </div>
+<button style="margin-right: 5%; float: right;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success btn-sm">Submit Field Layout</button>
+
 </div>
 <div id="trait_heatmap" >loading...</div>
 <div id="container_heatmap_geo" ></div>

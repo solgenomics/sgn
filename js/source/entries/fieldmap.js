@@ -151,6 +151,19 @@ export function init() {
 
 
         field_view() {
+            var trial_id = this.trial_id;
+            var image = [];
+            var image_ids = [];
+            function btnClick(n){
+            if (n.length == 0){
+                jQuery("#hm_view_plot_image_submit").addClass("disabled");
+            } else {
+                jQuery("#hm_view_plot_image_submit").removeClass("disabled");
+            }
+            return true; 
+            }
+            var list_of_checks;
+            var checks = {};
 
             var field_map_hash = this.field_map_hash;
             var rows = field_map_hash['rows'];
@@ -289,7 +302,8 @@ export function init() {
             var design_type;
             var datasets;
             var color;
-            var image;
+            var old_plot_id;
+            var old_plot_accession;
             var modifiedRowLabels;
             var modifiedColLabels;
             var unique_ctrl = [];
@@ -574,7 +588,7 @@ export function init() {
                         .style("stroke", strokes)
                         .style("fill", colors)
                         
-                        .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); })
+                        .on("mouseover", function(d) { d3.select(this).style('fill', 'green').style('cursor', 'pointer'); })
                         .on("mouseout", function(d) { 
                                                         var cards = svg.selectAll(".col")
                                                             .data(datasets, function(d) {return d.row+':'+d.col;});
@@ -627,7 +641,7 @@ export function init() {
                                                         
                                                         new jQuery.ajax({
                                                             type: 'POST',
-                                                            url: '/ajax/breeders/trial/'+ this.trial_id +'/retrieve_plot_images',
+                                                            url: '/ajax/breeders/trial/'+ trial_id +'/retrieve_plot_images',
                                                             dataType: "json",
                                                             data: {
                                                                     'image_ids': JSON.stringify(image_ids),
@@ -647,8 +661,8 @@ export function init() {
                                                             }
                                                             },
                                                             error: function () {
-                                                            jQuery('#working_modal').modal("hide");
-                                                            alert('An error occurred retrieving plot images');
+                                                                jQuery('#working_modal').modal("hide");
+                                                                alert('An error occurred retrieving plot images');
                                                             }
                                                         });
                                                     
