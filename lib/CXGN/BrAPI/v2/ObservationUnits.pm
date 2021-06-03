@@ -708,6 +708,7 @@ sub observationunits_store {
                 trial_stock_type                  => 'accessions',
                 design_type                       => $design_type,
                 design                            => $study,
+                operator                          => $user_name
             });
 
             my $error;

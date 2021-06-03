@@ -2607,7 +2607,9 @@ sub observation_units_POST {
 
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c);
+	# The observation units need an operator, so login required
+	my $force_authenticate = 1;
+	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
 	_validate_request($c, 'ARRAY', $data, ['studyDbId', 'observationUnitName']);
