@@ -21,9 +21,9 @@ $combo_pops_id
 $project_name
 $model_data
 $selection_prediction_download => undef
-$prediction_pop_id => undef
+$selection_pop_id => undef
 $list_of_prediction_pops => undef
-$prediction_pop_name => ''
+$selection_pop_name => ''
 $prediction_pop_analyzed_traits => undef
 $prediction_pop_analyzed_traits_ids => undef
 $genotyping_protocol_id
@@ -57,9 +57,9 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
    analyzed_traits                => $analyzed_traits,
    training_pop_id                => $combo_pops_id,
    project_name                   => $project_name,
-   prediction_pop_id              => $prediction_pop_id,
+   selection_pop_id              => $selection_pop_id,
    list_of_prediction_pops        => $list_of_prediction_pops,
-   prediction_pop_name            => $prediction_pop_name,
+   selection_pop_name            => $selection_pop_name,
    prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
 &>
 
@@ -67,8 +67,8 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
    analyzed_traits               => $analyzed_traits,
   pop_id                         => $combo_pops_id,
   project_name                   => $project_name,
-  prediction_pop_id              => $prediction_pop_id,
-  prediction_pop_name            => $prediction_pop_name,
+  selection_pop_id              => $selection_pop_id,
+  selection_pop_name            => $selection_pop_name,
   prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
 &>
 
@@ -77,8 +77,8 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
   analyzed_traits_ids            => $analyzed_traits_ids,
   pop_id                         => $combo_pops_id,
   project_name                   => $project_name,
-  prediction_pop_id              => $prediction_pop_id,
-  prediction_pop_name            => $prediction_pop_name,
+  selection_pop_id              => $selection_pop_id,
+  selection_pop_name            => $selection_pop_name,
   prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
   &>
 
@@ -88,8 +88,8 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
    analyzed_traits               => $analyzed_traits,
   pop_id                         => $combo_pops_id,
   project_name                   => $project_name,
-  prediction_pop_id              => $prediction_pop_id,
-  prediction_pop_name            => $prediction_pop_name,
+  selection_pop_id              => $selection_pop_id,
+  selection_pop_name            => $selection_pop_name,
   prediction_pop_analyzed_traits => $prediction_pop_analyzed_traits,
 &>
 
