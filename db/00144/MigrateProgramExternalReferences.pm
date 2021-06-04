@@ -56,8 +56,7 @@ sub patch {
     my $coderef = sub {
 
         $self->dbh->do(<<EOSQL);
-
- --do your SQL here
+--do your SQL here
 --
 -- Create new dbxref records for unique reference source, reference id combos
 with external_references as (
