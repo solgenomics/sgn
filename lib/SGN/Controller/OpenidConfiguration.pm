@@ -8,7 +8,7 @@ BEGIN { extends "Catalyst::Controller"; }
 
 
 
-sub openid_configuration : Path('/well-known/openid-configuration') Args(0) {
+sub openid_configuration : Path('/.well-known/openid-configuration') Args(0) {
     my $self = shift;
     my $c = shift;
 
