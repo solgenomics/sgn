@@ -17,6 +17,8 @@ use JSON;
 use Try::Tiny;
 use Scalar::Util qw /weaken reftype/;
 use Storable qw/ nstore retrieve /;
+
+
 BEGIN { extends 'Catalyst::Controller' }
 
 
@@ -103,12 +105,14 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     $c->stash->{pop_id}   = $model_id;
     $c->stash->{training_pop_id} = $model_id;
     $c->stash->{training_traits_ids} = \@traits_ids;
+
     $c->stash->{selection_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
 
     #$c->controller('solGS::Files')->selection_index_file($c);
 
     # $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);
     $c->controller('solGS::TraitsGebvs')->run_combine_traits_gebvs($c);
+    
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     $combined_gebvs_file = $c->controller('solGS::Files')->copy_file($combined_gebvs_file, $tmp_dir);
@@ -237,6 +241,7 @@ sub genetic_correlation_output_files {
     my $type         = $c->stash->{type};
 
     my $selection_pop_id = $c->stash->{selection_pop_id};
+
     $model_id    = $c->stash->{model_id};
     my $identifier  =  $type =~ /selection/ ? $model_id . "_" . $corre_pop_id :  $corre_pop_id;
 
@@ -271,7 +276,7 @@ sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/ou
 
     if (-s $corre_json_file)
     {
-	$ret->{acronyms} =  $self->trait_acronyms($c);
+	# $ret->{acronyms} =  $self->trait_acronyms($c);
         $ret->{status}   = 'success';
         $ret->{data}     = read_file($corre_json_file, {binmode => ':utf8'});
     }

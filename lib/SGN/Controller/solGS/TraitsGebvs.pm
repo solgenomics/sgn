@@ -45,16 +45,16 @@ sub combine_gebvs_jobs_args {
             write_file($gebvs_files, {append => 1, binmode => ':utf8'}, "\t". $index_file)
         }
 
-        my $identifier = $self->combined_gebvs_file_id($c);
-	    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
-        $self->combined_gebvs_file($c);
-        my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
+	my $identifier = $self->combined_gebvs_file_id($c);	
+	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+	
+        my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}");
 
         $c->stash->{input_files}  = $gebvs_files;
         $c->stash->{output_files} = $combined_gebvs_file;
         $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
         $c->stash->{r_script}     = 'R/solGS/combine_gebvs_files.r';
-	    $c->stash->{analysis_tempfiles_dir} = $tmp_dir;
+	$c->stash->{analysis_tempfiles_dir} = $tmp_dir;
     }
     else
     {
@@ -126,7 +126,6 @@ sub get_gebv_files_of_traits {
     my $training_pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} || $c->stash->{corre_pop_id};
     $c->stash->{model_id} = $training_pop_id;
     my $selection_pop_id = $c->stash->{selection_pop_id};
-
     my $dir = $c->stash->{solgs_cache_dir};
 
     my $gebv_files;
@@ -272,6 +271,24 @@ sub create_traits_selection_id {
     {
 	return 0;
     }
+}
+
+
+
+sub load_acronyms: Path('/solgs/load/trait/acronyms') Args() {
+    my ($self, $c) = @_;
+
+   my $id = $c->req->param('id');
+   $c->controller('solGS::solGS')->get_all_traits($c, $id);
+   my $acronyms = $c->controller('solGS::solGS')->get_acronym_pairs($c, $id);
+
+   my $ret->{acronyms}  = $acronyms;
+   my $json = JSON->new();
+   $ret = $json->encode($ret);
+
+   $c->res->content_type('application/json');
+   $c->res->body($ret);
+
 }
 
 

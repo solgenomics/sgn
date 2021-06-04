@@ -1540,7 +1540,7 @@ sub get_all_traits {
     if (!-s $traits_file)
     {
 	my $page = $c->req->path;
-	if ($page =~ /solgs\/population\/|anova\/|correlation\// && $pop_id !~ /\D+/)
+	if ($page =~ /solgs\/population\/|anova\/|correlation\/|acronyms/ && $pop_id !~ /\D+/)
 	{
 	    $self->save_single_trial_traits($c, $pop_id);
 	}
