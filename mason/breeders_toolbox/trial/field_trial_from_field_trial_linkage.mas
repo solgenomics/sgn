@@ -40,8 +40,6 @@ jQuery(document).ready(function () {
 
           var nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
           var nodes = [];
-          //var primitiveSourceLinks = []; //List of connections flowing into this trial
-          //var primitiveSinkLinks = []; //List of connections flowing out of this trial
           var primitiveLinks = [];
           var linkMap = {};
           var links = []; //List to be used for all connections at the accession level
@@ -268,6 +266,14 @@ jQuery(document).ready(function () {
                        success: function(res){
 
                          jQuery("#sankeycanvas").empty();
+
+                         nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
+                         nodes = [];
+                         primitiveLinks = [];
+                         linkMap = {};
+                         links = []; //List to be used for all connections at the accession level
+                         linkAjaxCallsMap = {}; // Map of ajax calls for links
+                         nodeAjaxCallsMap = {}; // Map of ajax calls for nodes
 
                          construct_primitive_graph(d.name, d.id, res);
 
