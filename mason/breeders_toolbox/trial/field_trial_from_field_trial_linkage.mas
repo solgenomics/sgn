@@ -45,9 +45,8 @@ jQuery(document).ready(function () {
           var primitiveLinks = [];
           var linkMap = {};
           var links = []; //List to be used for all connections at the accession level
-          var linkAjaxCalls = []; //List of ajax calls for germplasm (used for accessions)
           var linkAjaxCallsMap = {}; // Map of ajax calls for links
-          var nodeAjaxCalls = []; //List of ajax calls for study data (used for trial types)
+          var nodeAjaxCallsMap = {}; // Map of ajax calls for nodes
 
           var graph;
           var sankey;
@@ -81,7 +80,7 @@ jQuery(document).ready(function () {
           }
 
 
-          function construct_primitive_graph(base_node_id, base_trial_name,response){
+          function construct_primitive_graph(base_node_id, base_trial_name, response){
 
             nodeMap[base_node_id] = {"name": base_node_id, "id": base_trial_name, "trialType":null}; //Initialize the node hash
 
@@ -93,14 +92,14 @@ jQuery(document).ready(function () {
                 console.log("Failed to retrieve trial germplasm.");
               }
             });
-            nodeAjaxCalls.push( jQuery.ajax({
+            nodeAjaxCallsMap[base_node_id] = jQuery.ajax({
               url: '/brapi/v2/studies/'+base_node_id,
               success: function(re){
               },
               error: function(re){
                 console.log("Failed to retrieve study.");
               }
-            }) );
+            });
 
             //Send ajax calls for studies that are the source of this study
             for (var i = 0; i < response.source_field_trials.length; i++){
@@ -113,14 +112,14 @@ jQuery(document).ready(function () {
                   console.log("Failed to retrieve trial germplasm.");
                 }
               });
-              nodeAjaxCalls.push( jQuery.ajax({
+              nodeAjaxCallsMap[response.source_field_trials[i][0]] = jQuery.ajax({
                 url: '/brapi/v2/studies/'+response.source_field_trials[i][0],
                 success: function(re){
                 },
                 error: function(re){
                   console.log("Failed to retrieve study.");
                 }
-              }) );
+              });
 
               nodeMap[response.source_field_trials[i][0]] = {"name":response.source_field_trials[i][0], "id":response.source_field_trials[i][1], "trialType":null};
               primitiveLinks.push({"source":nodeMap[response.source_field_trials[i][0]], "target": nodeMap[base_node_id], "value":1});
@@ -137,14 +136,14 @@ jQuery(document).ready(function () {
                   console.log("Failed to retrieve trial germplasm.");
                 }
               });
-              nodeAjaxCalls.push( jQuery.ajax({
+              nodeAjaxCallsMap[response.field_trials_sourced[i][0]] = jQuery.ajax({
                 url: '/brapi/v2/studies/'+response.field_trials_sourced[i][0],
                 success: function(re){
                 },
                 error: function(re){
                   console.log("Failed to retrieve study.");
                 }
-              }) );
+              });
 
               nodeMap[response.field_trials_sourced[i][0]] = {"name":response.field_trials_sourced[i][0], "id":response.field_trials_sourced[i][1], "trialType":null};
               primitiveLinks.push({"source":nodeMap[base_node_id], "target": nodeMap[response.field_trials_sourced[i][0]], "value":1});
@@ -155,7 +154,7 @@ jQuery(document).ready(function () {
           function receive_JSONs(base_node_id){
 
             //Wait for all study JSONs to be collected, then construct the nodes with them.
-            Promise.all(nodeAjaxCalls).then((values1) => {
+            Promise.all(Object.values(nodeAjaxCallsMap)).then((values1) => {
 
               for (var i = 0; i < values1.length; i++){
                 console.log("Debug values:");
