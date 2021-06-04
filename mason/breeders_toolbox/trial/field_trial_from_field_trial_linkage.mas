@@ -262,6 +262,20 @@ jQuery(document).ready(function () {
                      d3.select(this).attr("fill", "#add8e6");
                      tooltip_region.selectAll("*").remove();
                    })
+                   .on("click", function(d){
+                     jQuery.ajax({
+                       url : '/ajax/breeders/trial/'+d.name+'/field_trial_from_field_trial',
+                       success: function(res){
+
+                         jQuery("#sankeycanvas").empty();
+
+                         construct_primitive_graph(d.name, d.id, res);
+
+                         receive_JSONs(d.name);
+
+                       }
+                     });
+                   })
                    .on("dblclick",function(d){
                      if (d.name == "<% $trial_id %>"){
 
