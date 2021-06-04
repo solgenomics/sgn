@@ -38,9 +38,14 @@ jQuery(document).ready(function () {
           html2 = html2 + '</tbody></table>';
           jQuery('#field_trial_to_field_trial_html').html(html1+html2);
 
+
+          // BEGIN: Code for sankey visualizer
+
+
           var nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
           var nodes = [];
           var primitiveLinks = [];
+          //var primitiveLinkMap = {};
           var linkMap = {};
           var links = []; //List to be used for all connections at the accession level
           var linkAjaxCallsMap = {}; // Map of ajax calls for links
@@ -267,13 +272,13 @@ jQuery(document).ready(function () {
 
                          jQuery("#sankeycanvas").empty();
 
-                         nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
+                         //nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
                          nodes = [];
                          primitiveLinks = [];
-                         linkMap = {};
+                         //linkMap = {};
                          links = []; //List to be used for all connections at the accession level
-                         linkAjaxCallsMap = {}; // Map of ajax calls for links
-                         nodeAjaxCallsMap = {}; // Map of ajax calls for nodes
+                         //linkAjaxCallsMap = {}; // Map of ajax calls for links
+                         //nodeAjaxCallsMap = {}; // Map of ajax calls for nodes
 
                          construct_primitive_graph(d.name, d.id, res);
 
