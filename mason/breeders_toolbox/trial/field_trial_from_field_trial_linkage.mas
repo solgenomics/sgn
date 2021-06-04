@@ -18,6 +18,7 @@ jQuery(document).ready(function () {
 
     jQuery('#field_trial_from_field_trial_section_onswitch').one("click",  function() {
       var trial_id = "<% $trial_id %>";
+      var trial_name = "<% $trial_name %>";
       jQuery.ajax({
         url : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_from_field_trial',
         beforeSend: function() {
@@ -45,7 +46,6 @@ jQuery(document).ready(function () {
           var nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
           var nodes = [];
           var primitiveLinks = [];
-          //var primitiveLinkMap = {};
           var linkMap = {};
           var links = []; //List to be used for all connections at the accession level
           var linkAjaxCallsMap = {}; // Map of ajax calls for links
@@ -76,8 +76,8 @@ jQuery(document).ready(function () {
 
 
             // The primitive graph is the graph with the nodes and just the links between nodes but without any information regarding accessions
-            console.log("<% $trial_name %>");
-            construct_primitive_graph(parseInt("<% $trial_id %>"),"<% $trial_name %>", r);
+            console.log(trial_name);
+            construct_primitive_graph(parseInt("<% $trial_id %>"),trial_name, r);
 
             receive_JSONs(parseInt("<% $trial_id %>"));
 
@@ -265,26 +265,26 @@ jQuery(document).ready(function () {
                      tooltip_region.selectAll("*").remove();
                    })
                    .on("click", function(d){
-                     jQuery.ajax({
-                       url : '/ajax/breeders/trial/'+d.name+'/field_trial_from_field_trial',
-                       success: function(res){
-
-                         jQuery("#sankeycanvas").empty();
-
-                         //nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
-                         nodes = [];
-                         primitiveLinks = [];
-                         //linkMap = {};
-                         links = []; //List to be used for all connections at the accession level
-                         linkAjaxCallsMap = {}; // Map of ajax calls for links
-                         nodeAjaxCallsMap = {}; // Map of ajax calls for nodes
-
-                         construct_primitive_graph(d.name, d.id, res);
-
-                         receive_JSONs(d.name);
-
-                       }
-                     });
+                     // jQuery.ajax({
+                     //   url : '/ajax/breeders/trial/'+d.name+'/field_trial_from_field_trial',
+                     //   success: function(res){
+                     //
+                     //     jQuery("#sankeycanvas").empty();
+                     //
+                     //     nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
+                     //     nodes = [];
+                     //     primitiveLinks = [];
+                     //     linkMap = {};
+                     //     links = []; //List to be used for all connections at the accession level
+                     //     linkAjaxCallsMap = {}; // Map of ajax calls for links
+                     //     nodeAjaxCallsMap = {}; // Map of ajax calls for nodes
+                     //
+                     //     construct_primitive_graph(d.name, d.id, res);
+                     //
+                     //     receive_JSONs(d.name);
+                     //
+                     //   }
+                     // });
                    })
                    .on("dblclick",function(d){
                      if (d.name == "<% $trial_id %>"){
