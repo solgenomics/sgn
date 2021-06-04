@@ -8,7 +8,7 @@ use Carp qw/ carp confess croak /;
 use File::Slurp qw /write_file read_file/;
 
 
-BEGIN { extends 'Catalyst::Controller::REST' }
+BEGIN { extends 'Catalyst::Controller' }
 
 
 
@@ -43,57 +43,46 @@ sub download_validation :Path('/solgs/download/validation/pop') Args() {
 }
 
 
-sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args() {
-    my ($self, $c, $training_pop_id, $prediction, $selection_pop_id, $trait_id, $gp, $protocol_id) = @_;
+sub download_gebvs :Path('/solgs/download/gebvs/pop') Args() {
+    my ($self, $c, $gebvs_id, $trait, $trait_id, $gp, $protocol_id) = @_;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-    $c->stash->{training_pop_id} = $training_pop_id;
+	my @pops_ids;
+	if ($gebvs_id =~ /-/)
+	{
+		@pops_ids = split(/-/, $gebvs_id);
+	}
+	else
+	{
+		@pops_ids = $gebvs_id;
+	}
+
+	my $training_pop_id = $pops_ids[0];
+	my $selection_pop_id = $pops_ids[1];
+
     $c->stash->{genotyping_protocol_id} = $protocol_id;
-
-    # my $identifier = $training_pop_id . "_" . $selection_pop_id;
-    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
-    my $selection_gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
-
-    unless (!-s $selection_gebvs_file)
-    {
-	my @selection_gebvs =  read_file($selection_gebvs_file, {binmode => ':utf8'});
-	$c->res->content_type("text/plain");
-	$c->res->body(join("", @selection_gebvs));
-    }
-
-}
-
-
-
-sub download_blups :Path('/solgs/download/blups/pop') Args() {
-    my ($self, $c, $training_pop_id, $trait, $trait_id, $gp, $protocol_id) = @_;
-
-    $c->stash->{training_pop_id} = $training_pop_id;
-    $c->stash->{genotyping_protocol_id} = $protocol_id;
-
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-    my $trait_abbr = $c->stash->{trait_abbr};
 
-    my $referer = $c->req->referer;
-    if ($referer =~ /combined\/populations\//)
+	my $gebvs_file;
+	if ($selection_pop_id)
+	{
+		$c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
+    	$gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
+	}
+	else
+	{
+		$c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
+		$gebvs_file = $c->stash->{rrblup_training_gebvs_file};
+	}
+
+    unless (!-s $gebvs_file)
     {
-	$c->stash->{data_set_type} = 'combined populations';
-	$c->stash->{combo_pops_id} = $training_pop_id;
-    }
-
-    $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
-    my $training_gebvs_file = $c->stash->{rrblup_training_gebvs_file};
-
-    unless (!-s $training_gebvs_file)
-    {
-        my @training_gebvs = read_file($training_gebvs_file, {binmode => ':utf8'});
+        my @gebvs = read_file($gebvs_file, {binmode => ':utf8'});
 
         $c->res->content_type("text/plain");
-        $c->res->body(join("", @training_gebvs));
+        $c->res->body(join("", @gebvs));
     }
 
 }
-
 
 
 sub download_marker_effects :Path('/solgs/download/marker/pop') Args() {
@@ -121,51 +110,95 @@ sub download_marker_effects :Path('/solgs/download/marker/pop') Args() {
 
 sub training_prediction_download_urls {
     my ($self, $c) = @_;
+
     my $data_set_type = $c->stash->{data_set_type};
-    my $pop_id;
+    my $pop_id = $c->stash->{training_pop_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
-
-    no warnings 'uninitialized';
-
-    if ($data_set_type =~ /combined populations/)
-    {
-        $pop_id = $c->stash->{combo_pops_id};
-    }
-    else
-    {
-        $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-    }
-
     my $trait_id = $c->stash->{trait_id};
 
-    my $blups_url = qq | <a href="/solgs/download/blups/pop/$pop_id/trait/$trait_id/|
-	. qq|gp/$protocol_id">Download all GEBVs</a>|;
-    my $marker_url = qq | <a href="/solgs/download/marker/pop/$pop_id/trait/$trait_id/|
-	. qq|gp/$protocol_id">Download all marker effects</a>|;
+	my $gebvs_url = $self->gebvs_download_url($c);
+	my $gebvs_link = $c->controller('solGS::Path')->create_hyperlink($gebvs_url, 'Download GEBVs');
 
-    my $validation_url = qq | <a href="/solgs/download/validation/pop/$pop_id/trait/$trait_id/|
-	. qq|gp/$protocol_id">Download model accuracy report</a>|;
+	my $marker_url = $self->marker_effects_download_url($c);
+	my $marker_link = $c->controller('solGS::Path')->create_hyperlink($marker_url, 'Download marker effects');
+
+	my $val_url = $self->validation_download_url($c);
+	my $val_link = $c->controller('solGS::Path')->create_hyperlink($val_url, 'Download model accuracy');
 
     $c->stash(
-	blups_download_url          => $blups_url,
-	marker_effects_download_url => $marker_url,
-	validation_download_url     => $validation_url
+		blups_download_url          => $gebvs_link,
+		marker_effects_download_url => $marker_link,
+		validation_download_url     => $val_link
 	);
 
 }
 
 
+sub gebvs_download_url {
+	my ($self, $c) = @_;
+
+	my $data_set_type = $c->stash->{data_set_type};
+	my $protocol_id = $c->stash->{genotyping_protocol_id};
+	my $trait_id = $c->stash->{trait_id};
+	my $selection_pop_id = $c->stash->{selection_pop_id};
+	my $pop_id = $c->stash->{training_pop_id};
+
+	$pop_id .= '-' . $selection_pop_id if $selection_pop_id;
+
+	my $url = "/solgs/download/gebvs/pop/$pop_id/trait/$trait_id/"
+	. "gp/$protocol_id";
+
+	return $url;
+
+}
+
+
+sub marker_effects_download_url {
+	my ($self, $c) = @_;
+
+	my $data_set_type = $c->stash->{data_set_type};
+	my $protocol_id = $c->stash->{genotyping_protocol_id};
+	my $trait_id = $c->stash->{trait_id};
+	my $pop_id = $c->stash->{training_pop_id};
+
+	my $url = "/solgs/download/marker/pop/$pop_id/trait/$trait_id/"
+	. "gp/$protocol_id";
+
+	return $url;
+
+}
+
+sub validation_download_url {
+	my ($self, $c) = @_;
+
+	my $data_set_type = $c->stash->{data_set_type};
+	my $protocol_id = $c->stash->{genotyping_protocol_id};
+	my $trait_id = $c->stash->{trait_id};
+	my $pop_id = $c->stash->{training_pop_id};
+
+	my $url = "/solgs/download/validation/pop/$pop_id/trait/$trait_id/"
+   . "gp/$protocol_id";
+
+	return $url;
+
+}
+
 
 sub selection_prediction_download_urls {
     my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
-
-    my $selection_traits_ids;
-    my $download_url;
 
     my $selected_model_traits = $c->stash->{training_traits_ids} || [$c->stash->{trait_id}];
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     no warnings 'uninitialized';
+
+	my $url_args = {
+	  'training_pop_id' => $training_pop_id,
+	  'selection_pop_id' => $selection_pop_id,
+	  'genotyping_protocol_id' => $protocol_id,
+	};
+
+	my $selection_traits_ids;
 
     if ($selection_pop_id)
     {
@@ -175,47 +208,42 @@ sub selection_prediction_download_urls {
 
     my @selection_traits_ids = sort(@$selection_traits_ids) if $selection_traits_ids->[0];
     my @selected_model_traits = sort(@$selected_model_traits) if $selected_model_traits->[0];
+
 	my $page = $c->req->referer;
+	my $data_set_type = $page =~ /combined/ ? 'combined populations' : 'single population';
+	$url_args->{data_set_type} = $data_set_type;
+
+	my $sel_pop_page;
+ 	my $download_url;
 
     if (@selected_model_traits ~~ @selection_traits_ids)
     {
 		foreach my $trait_id (@selection_traits_ids)
 		{
+			$url_args->{trait_id} = $trait_id;
+
 		    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 		    my $trait_abbr = $c->stash->{trait_abbr};
 
-		    if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
+			$sel_pop_page =  $c->controller('solGS::Path')->selection_page_url($url_args);
+
+			if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
 		    {
-			$download_url .= " | " if $download_url;
+				$download_url .= " | " if $download_url;
 		    }
 
-		    if ($page =~ /combined/)
-		    {
-			$download_url .= qq | <a href="/solgs/combined/model/$training_pop_id/selection/|
-			    . qq|$selection_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
-		    }
-		    else
-		    {
-			$download_url .= qq |<a href="/solgs/selection/$selection_pop_id/model/|
-			    . qq|$training_pop_id/trait/$trait_id/gp/$protocol_id">$trait_abbr</a> |;
-		    }
+			$download_url .= qq |<a href="$sel_pop_page">$trait_abbr</a> |;
 		}
     }
 
     if (!$download_url)
     {
 		my $trait_id = $selected_model_traits[0];
-		if ($page =~ /combined/)
-	    {
-	    	$download_url .= qq | <a href="/solgs/combined/model/$training_pop_id/selection/|
-	   	 	. qq|$selection_pop_id/trait/$trait_id/gp/$protocol_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a> |;
-	    }
-		else
-		{
-			$download_url = qq | <a href ="/solgs/selection/$selection_pop_id/model/$training_pop_id/|
-		    . qq|trait/$trait_id/gp/$protocol_id"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a>|;
-	    }
-}
+		$url_args->{trait_id} = $trait_id;
+
+		$sel_pop_page =  $c->controller('solGS::Path')->selection_page_url($url_args);
+		$download_url = qq | <a href ="$sel_pop_page"  onclick="solGS.waitPage(this.href); return false;">[ Predict ]</a>|;
+    }
 
     $c->stash->{selection_prediction_download} = $download_url;
 

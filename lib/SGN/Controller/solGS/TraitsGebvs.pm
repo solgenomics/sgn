@@ -13,6 +13,7 @@ use File::Copy;
 use File::Basename;
 use JSON;
 use List::MoreUtils qw /uniq/;
+use Scalar::Util qw /weaken reftype/;
 use String::CRC;
 use Try::Tiny;
 
@@ -22,7 +23,7 @@ BEGIN { extends 'Catalyst::Controller' }
 
 
 
-sub combine_gebvs_of_traits {
+sub combine_gebvs_jobs_args {
     my ($self, $c) = @_;
 
     $self->get_gebv_files_of_traits($c);
@@ -30,7 +31,7 @@ sub combine_gebvs_of_traits {
 
     if (!-s $gebvs_files)
     {
-	$gebvs_files = $c->stash->{gebv_files_of_traits};
+	       $gebvs_files = $c->stash->{gebv_files_of_traits};
     }
 
     my $index_file  = $c->stash->{selection_index_file};
@@ -44,11 +45,9 @@ sub combine_gebvs_of_traits {
             write_file($gebvs_files, {append => 1, binmode => ':utf8'}, "\t". $index_file)
         }
 
-        my $pred_pop_id = $c->stash->{prediction_pop_id};
-        my $model_id    = $c->stash->{model_id};
-        my $identifier  =  $pred_pop_id ? $model_id . "_" . $pred_pop_id :  $model_id;
-
+	my $identifier = $self->combined_gebvs_file_id($c);	
 	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+	
         my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}");
 
         $c->stash->{input_files}  = $gebvs_files;
@@ -56,9 +55,6 @@ sub combine_gebvs_of_traits {
         $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
         $c->stash->{r_script}     = 'R/solGS/combine_gebvs_files.r';
 	$c->stash->{analysis_tempfiles_dir} = $tmp_dir;
-
-        $c->controller("solGS::solGS")->run_r_script($c);
-	$c->stash->{combined_gebvs_file} = $combined_gebvs_file;
     }
     else
     {
@@ -67,6 +63,60 @@ sub combine_gebvs_of_traits {
 
 }
 
+sub combined_gebvs_file_id {
+    my ($self, $c) = @_;
+
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+    my $training_pop_id    = $c->stash->{training_pop_id};
+    my $traits_code = $c->stash->{training_traits_code};
+
+    my $file_id  =  $selection_pop_id ? "${training_pop_id}-${selection_pop_id}-${traits_code}"  :  $training_pop_id;
+
+    return $file_id;
+
+}
+
+sub combined_gebvs_file {
+    my ($self, $c) = @_;
+
+    my $identifier = $self->combined_gebvs_file_id($c);
+
+    my $cache_data = {
+           key => "combined_gebvs_${identifier}",
+           file      => "combined_gebvs_${identifier}" . '.txt',
+           stash_key => 'combined_gebvs_file',
+		   cache_dir => $c->stash->{solgs_cache_dir}
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+
+sub combine_gebvs_jobs {
+    my ($self, $c) = @_;
+
+    $self->combine_gebvs_jobs_args($c);
+
+    $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
+    my $jobs  = $c->stash->{cluster_r_job_args};
+
+    if (reftype $jobs ne 'ARRAY')
+    {
+    $jobs = [$jobs];
+    }
+
+    $c->stash->{combine_gebvs_jobs} = $jobs;
+
+}
+
+sub run_combine_traits_gebvs {
+    my ($self, $c) = @_;
+
+    $self->combine_gebvs_jobs_args($c);
+    $c->controller("solGS::solGS")->run_r_script($c);
+    
+}
 
 #creates and writes a list of GEBV files of
 #traits selected for ranking genotypes.
@@ -75,8 +125,7 @@ sub get_gebv_files_of_traits {
 
     my $training_pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} || $c->stash->{corre_pop_id};
     $c->stash->{model_id} = $training_pop_id;
-    my $selection_pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
-
+    my $selection_pop_id = $c->stash->{selection_pop_id};
     my $dir = $c->stash->{solgs_cache_dir};
 
     my $gebv_files;
@@ -225,6 +274,7 @@ sub create_traits_selection_id {
 }
 
 
+
 sub load_acronyms: Path('/solgs/load/trait/acronyms') Args() {
     my ($self, $c) = @_;
 
@@ -240,6 +290,7 @@ sub load_acronyms: Path('/solgs/load/trait/acronyms') Args() {
    $c->res->body($ret);
 
 }
+
 
 
 #####

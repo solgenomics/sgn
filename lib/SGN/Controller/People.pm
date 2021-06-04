@@ -14,7 +14,7 @@ use CXGN::Phenome::Locus;
 
 BEGIN { extends 'Catalyst::Controller' };
 
-sub people_search : Path('/search/people') Args(0) { 
+sub people_search : Path('/search/people') Args(0) {
     my $self = shift;
     my $c = shift;
     $c->stash->{template} = '/search/people.mas';
@@ -32,7 +32,7 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
     #will redirect user to login page if they are not logged in.
     my $user_id=CXGN::Login->new($dbh)->verify_session();
     if (!$user_id) {
-	
+
         $c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         $c->detach();
     }
@@ -67,21 +67,6 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
         }
         $c->stash->{populations_list} = $pops_list;
 
-        ##SOLGS user's submitted jobs sections
-        my $solgs_jobs = SGN::Controller::solGS::AnalysisQueue->solgs_analysis_status_log($c);
-        my $solgs_jobs_table;
-        if(@$solgs_jobs) {
-            $solgs_jobs_table =  columnar_table_html(
-                headings   => [ 'Analysis name', 'Submitted on', 'Status', 'Result page'],
-                data       => $solgs_jobs,
-                __alt_freq => 2,
-                __align    => 'llll',
-            );
-        } else {
-            $solgs_jobs_table = '<h4>You have no submitted jobs.</h4>';
-        }
-        $c->stash->{solgs_jobs_list} = $solgs_jobs_table;
-
         #User Loci section
         my @loci = CXGN::Phenome::Locus::get_locus_ids_by_editor( $dbh, $person_id );
         my $top  = 50;
@@ -105,7 +90,7 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
             $locus_editor_info .= qq|<br><b>and <a href="/search/locus/>$more more</a></b><br />|;
         }
         $c->stash->{loci_editor_privileges} = $locus_editor_info;
-        
+
         my @annotated_loci = CXGN::Phenome::Locus::get_locus_ids_by_annotator( $dbh, $person_id );
         $more = 0;
         $max  = @annotated_loci;
@@ -132,7 +117,7 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
         }
         $locus_annotations .= qq| <a href="../phenome/recent_annotated_loci.pl">[View annotated loci by date]</a> |;
         $c->stash->{loci_annotations} = $locus_annotations;
-        
+
         #User status section
         my $user_info = {
             user => qq{ Your current user status is <b>$user_type</b>. Please contact <a href="mailto:sgn-feedback\@sgn.cornell.edu">SGN</a> to upgrade to a <b>submitter</b> account with more privileges. Submitters can upload user maps, EST data, and become locus editors. },

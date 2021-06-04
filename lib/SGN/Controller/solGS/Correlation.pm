@@ -105,11 +105,14 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     $c->stash->{pop_id}   = $model_id;
     $c->stash->{training_pop_id} = $model_id;
     $c->stash->{training_traits_ids} = \@traits_ids;
-    $c->stash->{prediction_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
+
+    $c->stash->{selection_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
 
     #$c->controller('solGS::Files')->selection_index_file($c);
 
-    $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);
+    # $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);
+    $c->controller('solGS::TraitsGebvs')->run_combine_traits_gebvs($c);
+    
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     $combined_gebvs_file = $c->controller('solGS::Files')->copy_file($combined_gebvs_file, $tmp_dir);
@@ -237,7 +240,8 @@ sub genetic_correlation_output_files {
     my $model_id     = $c->stash->{model_id};
     my $type         = $c->stash->{type};
 
-    my $pred_pop_id = $c->stash->{prediction_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+
     $model_id    = $c->stash->{model_id};
     my $identifier  =  $type =~ /selection/ ? $model_id . "_" . $corre_pop_id :  $corre_pop_id;
 
