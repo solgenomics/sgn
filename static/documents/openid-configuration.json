@@ -1,6 +1,6 @@
 {
   "issuer": "",
-  "authorization_endpoint": "<% $site %>/.well-known/openid-configuration",
+  "authorization_endpoint": "<% $site %>/brapi/authorize",
   "jwks_uri": "",
   "token_endpoint": "",
   "grant_types_supported": ["implicit"],
