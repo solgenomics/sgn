@@ -179,7 +179,7 @@ jQuery(document).ready(function () {
 
                     for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
                       if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName){
-                        linkMap["start"+primitiveLinks[i].source.name+","+primitiveLinks[i].target.name+","+linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName+"end"] = {"source": primitiveLinks[i].source, "target":primitiveLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName};
+                        linkMap[primitiveLinks[i].source.name+","+primitiveLinks[i].target.name+","+linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName] = {"source": primitiveLinks[i].source, "target":primitiveLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName};
                       }
                     }
                   }
