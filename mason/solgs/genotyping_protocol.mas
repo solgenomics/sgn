@@ -18,14 +18,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <& /util/import_javascript.mas, classes => ['solGS.genotypingProtocol'] &>
 
 
-  <div class='row text-center'
+  <div  class='row text-center'
        id='genotyping_protocol'
        style='margin-top:30px;margin-bottom:60px;'>
     <div>
       <button class='btn btn-light'
 	      type='button'
 	      id='genotyping_protocol_message'>
-      </button>    
+      </button>
       <button class='btn btn-success'
 	      type='button'
 	      id='genotyping_protocols_change'>Change
@@ -42,9 +42,3 @@ Isaak Y Tecle (iyt2@cornell.edu)
 	   id='genotyping_protocol_id'
 	   value=''/>
   </div>
-  
-  
-
-
-  
-    

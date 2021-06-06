@@ -169,7 +169,7 @@ my $genotyping_trial_create;
 ok($genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
+    owner_id => 41,
     program => "test",
     trial_location => "test_location",
     operator => "janedoe",

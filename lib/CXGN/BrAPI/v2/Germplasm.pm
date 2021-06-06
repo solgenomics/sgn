@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Stock::Search;
 use CXGN::Stock;
+use CXGN::BrAPI::v2::ExternalReferences;
 use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
@@ -31,7 +32,7 @@ sub search {
     my $species_arrayref = $params->{species} || ($params->{species} || ());
     my $synonyms_arrayref = $params->{synonym} || ($params->{synonyms} || ());
     my $subtaxa = $params->{germplasmSubTaxa}->[0];
-    my $match_method = $params->{matchMethod}->[0] || 'exact';  
+    my $match_method = $params->{matchMethod}->[0] || 'exact';
     my $collection = $params->{collection} || ($params->{collections} || ());
     my $study_db_id = $params->{studyDbId} || ($params->{studyDbIds} || ());
     my $study_names = $params->{studyName} || ($params->{studyNames} || ());
@@ -40,8 +41,8 @@ sub search {
     my $external_reference_id = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
     my $external_reference_source = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
 
-    if ( $collection || $external_reference_id || $external_reference_source || $progeny_db_id || $parent_db_id ){
-        push @$status, { 'error' => 'The following search parameters are not implemented: collection, externalReferenceID, externalReferenceSource,parentDbId,progenyDbId' };
+    if ( $collection || $progeny_db_id || $parent_db_id ){
+        push @$status, { 'error' => 'The following search parameters are not implemented: collection, parentDbId, progenyDbId' };
     }
 
     if ($match_method ne 'exact' && $match_method ne 'wildcard') {
@@ -86,6 +87,15 @@ sub search {
         }
     }
 
+    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        bcs_schema => $self->bcs_schema,
+        table_name => 'stock',
+        table_id_key => 'stock_id',
+        id => $germplasm_ids_arrayref
+    });
+    my $reference_result = $references->search();
+
+
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$self->bcs_schema,
         people_schema=>$self->people_schema,
@@ -106,6 +116,8 @@ sub search {
         display_pedigree=>1
     });
     my ($result, $total_count) = $stock_search->search();
+
+    my $main_production_site_url = SGN::Context->new()->get_conf('main_production_site_url');
 
     my @data;
     foreach (@$result){
@@ -142,31 +154,65 @@ sub search {
                 taxonId => $_
             };
         }
+
+        #Get external references
+        my @references;
+
+        if (%$reference_result{$_->{stock_id}}){
+            foreach (@{%$reference_result{$_->{stock_id}}}){
+                my $reference_source = $_->[0] || undef;
+                my $url = $_->[1];
+                my $accession = $_->[2];
+                my $reference_id;
+
+                if($reference_source eq 'DOI') {
+                    $reference_id = ($url) ? "$url$accession" : "doi:$accession";
+                } else {
+                    $reference_id = ($accession) ? "$url$accession" : $url;
+                }
+
+                push @references, {
+                    referenceID => $reference_id,
+                    referenceSource => $reference_source
+                };
+
+            }
+        }
+
+        my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
+        my $q = "SELECT value FROM stock_relationship WHERE object_id = ? AND type_id = ?;";
+    	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    	$h->execute($_->{stock_id}, $female_parent_cvterm_id);
+    	my ($cross_type) = $h->fetchrow_array();
+        if ( ! defined $cross_type) {
+            $cross_type = "unknown";
+        }
+
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'},
             additionalInfo=>undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
-            breedingMethodDbId=>undef,
+            breedingMethodDbId=>$cross_type,
             collection=>undef,
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{stock_name},
-            documentationURL=>$_->{'PUI'},
+            documentationURL=>$_->{'PUI'} || $main_production_site_url . "/stock/$_->{stock_id}/view",
             donors=>\@donors,
-            externalReferences=>[],
+            externalReferences=>\@references,
             genus=>$_->{genus},
             germplasmName=>$_->{uniquename},
             germplasmOrigin=>[],
             germplasmDbId=>qq|$_->{stock_id}|,
-            germplasmPUI=>$_->{'PUI'},     
+            germplasmPUI=>$_->{'PUI'} || $main_production_site_url . "/stock/$_->{stock_id}/view",
             germplasmPreprocessing=>undef,
             instituteCode=>$_->{'institute code'},
             instituteName=>$_->{'institute name'},
             pedigree=>$_->{pedigree},
             seedSource=>$_->{'seed source'},
-            seedSourceDescription=>$_->{'seed source'}, 
+            seedSourceDescription=>$_->{'seed source'},
             species=>$_->{species},
             speciesAuthority=>$_->{speciesAuthority},
             storageTypes=>\@type_of_germplasm_storage_codes,
@@ -190,7 +236,6 @@ sub germplasm_detail {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my @data_files;
-
     my $verify_id = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$stock_id});
     if (!$verify_id) {
         return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database');
@@ -254,7 +299,7 @@ sub germplasm_pedigree {
             INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id) AND stock_relationship1.type_id = ?
             INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ?
             LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
-            LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id) "; 
+            LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id) ";
 
         my $h;
 
@@ -304,12 +349,12 @@ sub germplasm_pedigree {
             my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "family_name", "stock_type")->cvterm_id();
             my $project_year_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project year', 'project_property')->cvterm_id();
 
-            my $q = "SELECT project.project_id, project.name, project.description, stock.stock_id, stock.uniquename, year.value 
+            my $q = "SELECT project.project_id, project.name, project.description, stock.stock_id, stock.uniquename, year.value
                 FROM nd_experiment_stock
                 JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id) AND nd_experiment.type_id = ?
                 JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
                 JOIN project ON (nd_experiment_project.project_id = project.project_id)
-                LEFT JOIN projectprop AS year ON (project.project_id=year.project_id) 
+                LEFT JOIN projectprop AS year ON (project.project_id=year.project_id)
                 LEFT JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.subject_id) AND stock_relationship.type_id = ?
                 LEFT JOIN stock ON (stock_relationship.object_id = stock.stock_id) AND stock.type_id = ?
                 WHERE nd_experiment_stock.stock_id = ? AND year.type_id = ?";
@@ -317,7 +362,7 @@ sub germplasm_pedigree {
             my $h = $self->bcs_schema->storage->dbh()->prepare($q);
             $h->execute($cross_experiment_type_id, $cross_member_of_type_id, $family_name_type_id, $stock_id, $project_year_cvterm_id);
 
-            
+
             while (my ($crossing_experiment_id, $crossing_experiment_name, $description, $family_id, $family_name, $year) = $h->fetchrow_array()){
                 push @membership_info, [$crossing_experiment_id, $crossing_experiment_name, $description, $family_id, $family_name, $year]
             }
@@ -437,7 +482,7 @@ sub germplasm_mcpd {
         stockprop_columns_view=>{'accession number'=>1, 'PUI'=>1, 'seed source'=>1, 'institute code'=>1, 'institute name'=>1, 'biological status of accession code'=>1, 'country of origin'=>1, 'type of germplasm storage code'=>1, 'acquisition date'=>1, 'ncbi_taxonomy_id'=>1},
         display_pedigree=>1
     });
-    
+
     my ($result, $total_count) = $stock_search->search();
 
     my %result;
@@ -503,16 +548,16 @@ sub germplasm_mcpd {
             germplasmPUI=>$_->{'PUI'},
             ancestralData=>$_->{pedigree},
             commonCropName=>$_->{common_name},
-            instituteCode=>$_->{'institute code'}, 
+            instituteCode=>$_->{'institute code'},
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             countryOfOrigin=>$_->{'country of origin'},
-            storageTypeCodes=>\@type_of_germplasm_storage_codes, 
+            storageTypeCodes=>\@type_of_germplasm_storage_codes,
             genus=>$_->{genus},
             species=>$_->{species},
             speciesAuthority=>$_->{speciesAuthority},
             subtaxon=>$_->{subtaxa},
             subtaxonAuthority=>$_->{subtaxaAuthority},
-            donorInfo=>\@donors, 
+            donorInfo=>\@donors,
             acquisitionDate=>$_->{'acquisition date'}
         );
     }
@@ -612,6 +657,7 @@ sub store {
             my $typeOfGermplasmStorageCode = $params->{storageTypes}->[0]->{code} || undef;
             my $donors = $params->{donors} || undef;
             my $acquisitionDate = $params->{acquisitionDate} || undef;
+            my $externalReferences = $params->{externalReferences} || undef;
             #adding breedbase specific info using additionalInfo
             my $organization_name = $params->{additionalInfo}->{organizationName} || undef;
             my $population_name = $params->{additionalInfo}->{populationName} || undef;
@@ -622,6 +668,7 @@ sub store {
             my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
             my $description = $params->{additionalInfo}->{description} || undef;
             my $stock_id = $params->{additionalInfo}->{stock_id} || undef;
+
             #not supported
             # speciesAuthority
             # genus
@@ -631,7 +678,6 @@ sub store {
             # breedingMethodDbId
             # collection
             # documentationURL
-            # externalReferences
             # germplasmOrigin
             # germplasmPreprocessing
             # taxonIds
@@ -674,6 +720,16 @@ sub store {
                 });
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
+
+                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                    bcs_schema => $self->bcs_schema,
+                    table_name => 'Stock::StockDbxref',
+                    table_id_key => 'stock_id',
+                    external_references => $externalReferences,
+                    id => $added_stock_id
+                });
+                my $reference_result = $references->store();
+
             }
         }
     };
@@ -683,7 +739,7 @@ sub store {
 
     try {
        $schema->txn_do($coderef_bcs);
-    } 
+    }
     catch {
         $transaction_error = $_;
     };
@@ -726,9 +782,9 @@ sub update {
     my $person = CXGN::People::Person->new($dbh, $user_id);
     my $user_name = $person->get_username;
 
-    my $verify_id = $schema->resultset('Stock::Stock')->find({stock_id=>$germplasm_id});
-    if (!$verify_id) {
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database');
+    my $stock_exists = $schema->resultset('Stock::Stock')->find({stock_id=>$germplasm_id});
+    if (!$stock_exists) {
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database',400);
     }
 
     my $main_production_site_url = $c->config->{main_production_site_url};
@@ -791,6 +847,7 @@ sub update {
             my $variety = $params->{additionalInfo}->{variety} || undef;
             my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
             my $description = $params->{additionalInfo}->{description} || undef;
+            my $externalReferences = $params->{externalReferences} || undef;
             #not supported
             # speciesAuthority
             # genus
@@ -800,7 +857,6 @@ sub update {
             # breedingMethodDbId
             # collection
             # documentationURL
-            # externalReferences
             # germplasmOrigin
             # germplasmPreprocessing
             # taxonIds
@@ -843,7 +899,24 @@ sub update {
                     modification_note => 'Bulk load of accession information'
                 });
                 my $added_stock_id = $stock->store();
+                
+                my $previous_name = $stock_exists->uniquename();
+
+                if($previous_name ne $uniquename){
+                    $stock_exists->uniquename($uniquename);
+                    $stock_exists->update();
+                }
+
                 push @added_stocks, $added_stock_id;
+
+                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                    bcs_schema => $self->bcs_schema,
+                    table_name => 'Stock::StockDbxref',
+                    table_id_key => 'stock_id',
+                    external_references => $externalReferences,
+                    id => $germplasm_id
+                });
+                my $reference_result = $references->store();
             }
         }
     };
@@ -853,6 +926,7 @@ sub update {
 
     try {
        $schema->txn_do($coderef_bcs);
+
     }
     catch {
         $transaction_error = $_;
@@ -881,6 +955,14 @@ sub _simple_search {
 
     my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
 
+    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        bcs_schema => $self->bcs_schema,
+        table_name => 'stock',
+        table_id_key => 'stock_id',
+        id => $germplasm_ids_arrayref
+    });
+    my $reference_result = $references->search();
+
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$self->bcs_schema,
         people_schema=>$self->people_schema,
@@ -893,6 +975,8 @@ sub _simple_search {
         display_pedigree=>1
     });
     my ($result, $total_count) = $stock_search->search();
+
+    my $main_production_site_url = SGN::Context->new()->get_conf('main_production_site_url');
 
     my @data;
     foreach (@$result){
@@ -929,31 +1013,62 @@ sub _simple_search {
                 taxonId => $_
             };
         }
+
+        my @references;
+        if (%$reference_result{$_->{stock_id}}){
+            foreach (@{%$reference_result{$_->{stock_id}}}){
+                my $reference_source = $_->[0] || undef;
+                my $url = $_->[1];
+                my $accession = $_->[2];
+                my $reference_id;
+
+                if($reference_source eq 'DOI') {
+                    $reference_id = ($url) ? "$url$accession" : "doi:$accession";
+                } else {
+                    $reference_id = ($accession) ? "$url$accession" : $url;
+                }
+
+                push @references, {
+                    referenceID => $reference_id,
+                    referenceSource => $reference_source
+                };
+            }
+        }
+
+        my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
+        my $q = "SELECT value FROM stock_relationship WHERE object_id = ? AND type_id = ?;";
+    	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+    	$h->execute($_->{stock_id}, $female_parent_cvterm_id);
+    	my ($cross_type) = $h->fetchrow_array();
+        if ( ! defined $cross_type) {
+            $cross_type = "unknown";
+        }
+
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'},
             additionalInfo=>undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
-            breedingMethodDbId=>undef,
+            breedingMethodDbId=>$cross_type,
             collection=>undef,
             commonCropName=>$_->{common_name},
             countryOfOriginCode=>$_->{'country of origin'},
             defaultDisplayName=>$_->{stock_name},
-            documentationURL=>$_->{'PUI'},
+            documentationURL=>$_->{'PUI'} || $main_production_site_url . "/stock/$_->{stock_id}/view",
             donors=>\@donors,
-            externalReferences=>[],
+            externalReferences=>\@references,
             genus=>$_->{genus},
             germplasmName=>$_->{uniquename},
             germplasmOrigin=>[],
             germplasmDbId=>qq|$_->{stock_id}|,
-            germplasmPUI=>$_->{'PUI'},     
+            germplasmPUI=>$_->{'PUI'} || $main_production_site_url . "/stock/$_->{stock_id}/view",
             germplasmPreprocessing=>undef,
             instituteCode=>$_->{'institute code'},
             instituteName=>$_->{'institute name'},
             pedigree=>$_->{pedigree},
             seedSource=>$_->{'seed source'},
-            seedSourceDescription=>$_->{'seed source'}, 
+            seedSourceDescription=>$_->{'seed source'},
             species=>$_->{species},
             speciesAuthority=>$_->{speciesAuthority},
             storageTypes=>\@type_of_germplasm_storage_codes,

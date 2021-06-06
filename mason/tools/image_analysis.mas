@@ -3,7 +3,7 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery', 'jquery.cookie', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.cookie', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
 <style>
 td.details-control {
@@ -345,16 +345,16 @@ jQuery(document).ready(function(){
         jQuery('#progress_msg').text('All '+image_total+' images submitted, waiting for responses.');
 
         jQuery.when.apply(jQuery, deferred_calls).then(function() {
-            console.log("Results are:");
-            console.log(results);
+            // console.log("Results are:");
+            // console.log(results);
             if (results.length > 0) {
                 jQuery.ajax({
                     url: '/ajax/image_analysis/group',
                     method: 'POST',
                     data: { 'result': JSON.stringify(results) },
                     success: function(response) {
-                        console.log("Grouped Results are:");
-                        console.log(response);
+                        // console.log("Grouped Results are:");
+                        // console.log(response);
                         current_progress = 100;
                         progress_bar.css("width", current_progress + "%")
                         .attr("aria-valuenow", current_progress)
@@ -363,7 +363,12 @@ jQuery(document).ready(function(){
                         jQuery('#image_analysis_result').show();
 
                         var table = jQuery('#image_analysis_result_table').DataTable( {
+                            "destroy" : true,
                             "data": response.results,
+                            "dom": 'Bfrtip',
+                            "buttons":  [
+                                'copy', 'excel', 'csv', 'pdf'
+                            ],
                             "columns": [
                                 {
                                     "className":      'details-control',
@@ -435,7 +440,7 @@ jQuery(document).ready(function(){
         jQuery.ajax({
             url: '/brapi/v2/observations/',
             method: 'POST',
-            headers: { "access_token": jQuery.cookie("sgn_session_id") },
+            headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
             data: JSON.stringify(table_data),
             contentType: "application/json; charset=utf-8",
             beforeSend: function() {
@@ -485,12 +490,19 @@ function _load_image_search_results() {
 function format ( d ) {
     var detail_rows = '';
     d.details.forEach(function (image, index) {
-      detail_rows +=
-      `<tr>
-        <td>`+image.image_name+`</td>
-        <td><img src="`+image.analyzed_link+`"></td>
-        <td>`+image.value+`</td>
-      </tr>`
+        var result = image.analyzed_link;
+        var text;
+        if (result.startsWith("Error: ")) {
+            text = result;
+        } else {
+            text = '<img src="'+result+'">';
+        }
+        detail_rows +=
+        `<tr>
+          <td>`+image.image_name+`</td>
+          <td>`+text+`</td>
+          <td>`+image.value+`</td>
+        </tr>`
     });
 
 return `<table class="table">

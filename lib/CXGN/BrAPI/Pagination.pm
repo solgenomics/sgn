@@ -23,7 +23,7 @@ sub paginate_array {
 	my $data = shift;
 	my $page_size = shift;
 	my $page = shift;
-	my $total_count = scalar(@$data);
+	my $total_count = $data ? scalar(@$data) : 0;
 	my $start = $page_size*$page;
 	my $end = $page_size*($page+1)-1;
 	my @data_window;

@@ -95,7 +95,7 @@ sub image_search :Path('/ajax/search/images') Args(0) {
         my $associations = $_->{stock_id} ? "Stock (".$_->{stock_type_name}."): <a href='/stock/".$_->{stock_id}."/view' >".$_->{stock_uniquename}."</a>" : "";
         my $observations = $_->{observations_array} ? join("\n", map { $_->{observationvariable_name} . " : " . $_->{value} } @{$_->{observations_array}}) : "";
         if ($_->{project_name}) {
-            $associations = $_->{stock_id} ? $associations."<br/>Project (".$_->{project_image_type_name}."): ".$_->{project_name} : "Project (".$_->{project_image_type_name}."): ".$_->{project_name};
+            $associations = $_->{stock_id} ? $associations."<br/>Project (".$_->{project_image_type_name}."): <a href='/breeders/trial/".$_->{project_id}."' >".$_->{project_name}."</a>" : "Project (".$_->{project_image_type_name}."): <a href='/breeders/trial/".$_->{project_id}."' >".$_->{project_name}."</a>";
         }
         my @tags;
         foreach my $t (@{$_->{tags_array}}) {
