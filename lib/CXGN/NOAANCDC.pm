@@ -217,5 +217,20 @@ sub get_averaged_precipitation {
     return $result;
 }
 
-1;
+sub get_daily_values {
+    my $self = shift;
+    my $result;
 
+    my $weather_hash = $self->do_query_max_one_year();
+
+    while (my ($date, $do) = each %$weather_hash) {
+        while (my ($data_type, $value) = each %$do) {
+            $result->{$date}->{$data_type} = $value;
+        }
+    }
+    my @sorted_dates = sort keys %$result;
+
+    return ($result, \@sorted_dates);
+}
+
+1;
