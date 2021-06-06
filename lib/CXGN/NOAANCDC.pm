@@ -148,7 +148,12 @@ sub do_query_max_one_year {
                 last;
             }
             else {
-                push @time_ranges, [$day_start->strftime("%Y-%m-%d"), $day_end_year->strftime("%Y-%m-%d")];
+                if ($year_counter == 0) {
+                    push @time_ranges, [$day_start->strftime("%Y-%m-%d"), $day_end_year->strftime("%Y-%m-%d")];
+                }
+                else {
+                    push @time_ranges, [$day_start->strftime("%Y-01-01"), $day_start->strftime("%Y-12-31")];
+                }
                 $day_start = $day_end_year_start_original + ONE_YEAR * $year_counter;
             }
             $year_counter++;
@@ -161,6 +166,7 @@ sub do_query_max_one_year {
 
     my %weather_hash;
     foreach (@time_ranges) {
+        sleep(1);
         $self->start_date($_->[0]);
         $self->end_date($_->[1]);
         my $message_hash = $self->get_noaa_data();

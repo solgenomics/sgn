@@ -43,6 +43,22 @@ $locations => undef
             </div>
         </div>
     </div>
+    <div class="form-horizontal">
+        <div class="form-group">
+            <label class="col-sm-4 control-label">Window Start (YYYY-MM-DD) (Optional): </label>
+            <div class="col-sm-8" >
+                <input class="form-control" id="noaa_ncdc_analysis_window_start_date" name="noaa_ncdc_analysis_window_start_date" type="text" />
+            </div>
+        </div>
+    </div>
+    <div class="form-horizontal">
+        <div class="form-group">
+            <label class="col-sm-4 control-label">Window End (YYYY-MM-DD) (Optional): </label>
+            <div class="col-sm-8" >
+                <input class="form-control" id="noaa_ncdc_analysis_window_end_date" name="noaa_ncdc_analysis_window_end_date" type="text" />
+            </div>
+        </div>
+    </div>
     <br/><br/>
     <center>
         <button class="btn btn-primary" type="button" id="noaa_ncdc_analysis_submit" name="noaa_ncdc_analysis_submit">Submit</button>
@@ -114,6 +130,8 @@ jQuery(document).ready(function() {
         noaa_ncdc_analysis_start_date = jQuery('#noaa_ncdc_analysis_start_date').val();
         noaa_ncdc_analysis_end_date = jQuery('#noaa_ncdc_analysis_end_date').val();
         noaa_ncdc_analysis_type = jQuery('#noaa_ncdc_analysis_type').val();
+        noaa_ncdc_analysis_window_start_date = jQuery('#noaa_ncdc_analysis_window_start_date').val();
+        noaa_ncdc_analysis_window_end_date = jQuery('#noaa_ncdc_analysis_window_end_date').val();
         if (noaa_ncdc_analysis_start_date == '') {
             alert('Please give a start date!');
             return false;
@@ -124,7 +142,7 @@ jQuery(document).ready(function() {
         }
 
         jQuery.ajax({
-            url : '/ajax/location/noaa_ncdc_analysis?location_id'+noaa_ncdc_analysis_location_id+'&station_id='+noaa_ncdc_analysis_location_station_id+'&start_date='+noaa_ncdc_analysis_start_date+'&end_date='+noaa_ncdc_analysis_end_date+'&analysis_type='+noaa_ncdc_analysis_type,
+            url : '/ajax/location/noaa_ncdc_analysis?location_id'+noaa_ncdc_analysis_location_id+'&station_id='+noaa_ncdc_analysis_location_station_id+'&start_date='+noaa_ncdc_analysis_start_date+'&end_date='+noaa_ncdc_analysis_end_date+'&analysis_type='+noaa_ncdc_analysis_type+'&w_start='+noaa_ncdc_analysis_window_start_date+'&w_end='+noaa_ncdc_analysis_window_end_date,
             success: function(response){
                 console.log(response);
                 if (response.noaa_station_id) {

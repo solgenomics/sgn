@@ -21,6 +21,7 @@ use Try::Tiny;
 use JSON;
 use CXGN::NOAANCDC;
 use File::Temp 'tempfile';
+use Time::Piece;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -242,6 +243,8 @@ sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
     my $start_date = $c->req->param('start_date');
     my $end_date = $c->req->param('end_date');
     my $analysis_type = $c->req->param('analysis_type');
+    my $window_start = $c->req->param('w_start');
+    my $window_end = $c->req->param('w_end');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -275,8 +278,8 @@ sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
             noaa_ncdc_access_token => $noaa_ncdc_access_token
         });
         my ($weather_hash, $sorted_dates) = $noaa->get_daily_values();
-        print STDERR Dumper $weather_hash;
-        print STDERR Dumper $sorted_dates;
+        # print STDERR Dumper $weather_hash;
+        # print STDERR Dumper $sorted_dates;
 
         my %years_groups;
         foreach my $date (@$sorted_dates) {
@@ -284,30 +287,57 @@ sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
             push @{$years_groups{$year}}, $date;
         }
 
+        my $window_start_epoch;
+        my $window_end_epoch;
+        if ($window_start) {
+            my $time_object = Time::Piece->strptime($window_start, "%Y-%m-%d");
+            $window_start_epoch = $time_object->yday;
+        }
+        if ($window_end) {
+            my $time_object = Time::Piece->strptime($window_end, "%Y-%m-%d");
+            $window_end_epoch = $time_object->yday;
+        }
+
         open(my $F, ">", $stats_tempfile_temp) || die "Can't open file ".$stats_tempfile_temp;
             print $F "day,date,value,variable,year\n";
 
             while (my($year, $dates) = each %years_groups) {
                 my $increment = 1;
-
                 foreach my $d (@$dates) {
+                    my $time_object = Time::Piece->strptime($d, "%Y-%m-%dT%H:%M:%S");
+                    my $epoch_seconds = $time_object->yday;
+                    my $date = $time_object->strftime("%m-%d");
+
+                    if ($window_start_epoch) {
+                        if ($epoch_seconds < $window_start_epoch) {
+                            next;
+                        }
+                    }
+                    if ($window_end_epoch) {
+                        if ($epoch_seconds > $window_end_epoch) {
+                            next;
+                        }
+                    }
+
                     my $tmax = $weather_hash->{$d}->{TMAX};
-                    print $F "$increment,$d,$tmax,TMAX,$year\n";
+                    print $F "$increment,$date,$tmax,TMAX,$year\n";
                     my $tmin = $weather_hash->{$d}->{TMIN};
-                    print $F "$increment,$d,$tmin,TMIN,$year\n";
+                    print $F "$increment,$date,$tmin,TMIN,$year\n";
                     my $tavg = 0.5*($tmax + $tmin);
-                    print $F "$increment,$d,$tavg,TAVG,$year\n";
+                    print $F "$increment,$date,$tavg,TAVG,$year\n";
                     $increment++;
                 }
             }
         close($F);
 
-        my $cmd = 'R -e "library(data.table); library(ggplot2);
+        my $cmd = 'R -e "library(data.table); library(ggplot2); library(dplyr);
         data <- data.frame(fread(\''.$stats_tempfile_temp.'\', header=TRUE, sep=\',\'));
+        data\$date <- as.Date(as.character(data\$date), tryFormats = c(\'%m-%d\'));
         data\$day <- as.numeric(as.character(data\$day));
         data\$year <- as.factor(as.character(data\$year));
-        sp <- ggplot(data, aes(x = day, y = value)) +
-        geom_line(aes(color = year), size = 0.1);
+        sp <- ggplot(data, aes(x = date, y = value)) +
+        geom_line(aes(color = year), size = 0.1) +
+        theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5));
         sp <- sp + facet_wrap(~variable);
         sp <- sp + ggtitle(\'Daily Weather\');
 
@@ -323,19 +353,36 @@ sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
                 my $increment = 1;
 
                 foreach my $d (@$dates) {
+                    my $time_object = Time::Piece->strptime($d, "%Y-%m-%dT%H:%M:%S");
+                    my $epoch_seconds = $time_object->yday;
+                    my $date = $time_object->strftime("%m-%d");
+
+                    if ($window_start_epoch) {
+                        if ($epoch_seconds < $window_start_epoch) {
+                            next;
+                        }
+                    }
+                    if ($window_end_epoch) {
+                        if ($epoch_seconds > $window_end_epoch) {
+                            next;
+                        }
+                    }
+
                     my $prcp = $weather_hash->{$d}->{PRCP};
-                    print $F "$increment,$d,$prcp,PRCP,$year\n";
+                    print $F "$increment,$date,$prcp,PRCP,$year\n";
                     $increment++;
                 }
             }
         close($F);
 
-        my $cmd = 'R -e "library(data.table); library(ggplot2);
+        my $cmd = 'R -e "library(data.table); library(ggplot2); library(dplyr);
         data <- data.frame(fread(\''.$stats_tempfile_prcp.'\', header=TRUE, sep=\',\'));
+        data\$date <- as.Date(as.character(data\$date), tryFormats = c(\'%m-%d\'));
         data\$day <- as.numeric(as.character(data\$day));
         data\$year <- as.factor(as.character(data\$year));
-        sp <- ggplot(data, aes(x = day, y = value)) +
-        geom_line(aes(color = year), size = 0.1);
+        sp <- ggplot(data, aes(x = date, y = value)) +
+        geom_line(aes(color = year), size = 0.1) +
+        theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5));
         sp <- sp + facet_wrap(~variable);
         sp <- sp + ggtitle(\'Daily Weather\');
 
