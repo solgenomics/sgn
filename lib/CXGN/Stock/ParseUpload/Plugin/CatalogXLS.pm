@@ -278,13 +278,15 @@ sub _parse_with_plugin {
 
         my $contact_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_name);
 
+        my $program_rs = $schema->resultset('Project::Project')->find({name => $breeding_program});
+        my $breeding_program_id = $program_rs->project_id();
 
         $parsed_result{$item_name} = {
             'item_type' => $item_type,
             'category' => $category,
             'description' => $description,
             'material_source' => $material_source,
-            'breeding_program' => $breeding_program,
+            'breeding_program' => $breeding_program_id,
             'availability' => $availability,
             'contact_person_id' => $contact_person_id,
         }

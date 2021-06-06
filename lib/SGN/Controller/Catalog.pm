@@ -72,7 +72,7 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     my $category = $item_details[1];
     my $description = $item_details[2];
     my $material_source = $item_details[3];
-    my $breeding_program = $item_details[4];
+    my $program_id = $item_details[4];
     my $availability = $item_details[5];
     my $contact_person_id = $item_details[6];
     my $images = $item_details[7];
@@ -82,8 +82,11 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
 
     my $person = CXGN::People::Person->new($dbh, $contact_person_id);
     my $contact_person_username = $person->get_username;
-#    print STDERR "CONTACT PERSON NAME=".Dumper($contact_person_username)."\n";
 
+    my $program_rs = $schema->resultset('Project::Project')->find({project_id => $program_id});
+    my $program_name = $program_rs->name();
+
+#    print STDERR "CONTACT PERSON NAME=".Dumper($contact_person_username)."\n";
     $c->stash->{item_id} = $item_id;
     $c->stash->{item_name} = $item_name;
     $c->stash->{species} = $species;
@@ -91,7 +94,8 @@ sub catalog_item_details : Path('/catalog/item_details') Args(1) {
     $c->stash->{category} = $category;
     $c->stash->{description} = $description;
     $c->stash->{material_source} = $material_source;
-    $c->stash->{breeding_program} = $breeding_program;
+    $c->stash->{program_id} = $program_id;
+    $c->stash->{breeding_program} = $program_name;
     $c->stash->{availability} = $availability;
     $c->stash->{contact_person_username} = $contact_person_username;
     $c->stash->{item_prop_id} = $item_prop_id;

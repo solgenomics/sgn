@@ -7,6 +7,7 @@ $category
 $description
 $material_source
 $breeding_program
+$program_id
 $availability
 $contact_person_username
 $item_prop_id
@@ -85,7 +86,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_breeding_program">Breeding Program: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_item_breeding_program" value="<%$breeding_program%>"></select>
+                                    <select class="form-control" id="edit_item_breeding_program" value="<%$program_id%>"></select>
                                 </div>
                             </div>
                         </div>

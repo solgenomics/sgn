@@ -25,7 +25,7 @@ has 'material_source' => ( isa => 'Str', is => 'rw');
 has 'item_type' => ( isa => 'Str', is => 'rw');
 
 # the breeding program this clones originated from
-has 'breeding_program' => ( isa => 'Str', is => 'rw');
+has 'breeding_program' => ( isa => 'Int', is => 'rw');
 
 #
 has 'category' => ( isa => 'Str', is => 'rw' );

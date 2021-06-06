@@ -29,7 +29,7 @@ sub add_catalog_item_POST : Args(0) {
     my $item_category = $c->req->param('item_category');
     my $item_description = $c->req->param('item_description');
     my $item_material_source = $c->req->param('item_material_source');
-    my $item_breeding_program = $c->req->param('item_breeding_program');
+    my $item_breeding_program_id = $c->req->param('item_breeding_program');
     my $item_availability = $c->req->param('item_availability');
     my $contact_person = $c->req->param('contact_person');
     my $item_prop_id = $c->req->param('item_prop_id');
@@ -54,8 +54,11 @@ sub add_catalog_item_POST : Args(0) {
         return;
     }
 #    print STDERR "PERSON ID =".Dumper($sp_person_id)."\n";
-    my $program_rs = $schema->resultset('Project::Project')->find({project_id => $item_breeding_program});
-    my $program_name = $program_rs->name();
+    my $program_rs = $schema->resultset('Project::Project')->find({project_id => $item_breeding_program_id});
+    if (!$program_rs) {
+        $c->stash->{rest} = {error_string => "Breeding program is not in the database!",};
+        return;
+    }
 
     my $stock_catalog = CXGN::Stock::Catalog->new({
         bcs_schema => $schema,
@@ -67,7 +70,7 @@ sub add_catalog_item_POST : Args(0) {
     $stock_catalog->category($item_category);
     $stock_catalog->description($item_description);
     $stock_catalog->material_source($item_material_source);
-    $stock_catalog->breeding_program($program_name);
+    $stock_catalog->breeding_program($item_breeding_program_id);
     $stock_catalog->availability($item_availability);
     $stock_catalog->contact_person_id($sp_person_id);
 
@@ -225,6 +228,11 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
         my $item_id = shift @item_details;
         my $stock_rs = $schema->resultset("Stock::Stock")->find({stock_id => $item_id });
         my $item_name = $stock_rs->uniquename();
+
+        my $program_id = $item_details[4];
+        my $program_rs = $schema->resultset('Project::Project')->find({project_id => $program_id});
+        my $program_name = $program_rs->name();
+
         push @catalog_items, {
             item_id => $item_id,
             item_name => $item_name,
@@ -232,7 +240,7 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
             category => $item_details[1],
             description => $item_details[2],
             material_source => $item_details[3],
-            breeding_program => $item_details[4],
+            breeding_program => $program_name,
             availability => $item_details[5],
         };
     }

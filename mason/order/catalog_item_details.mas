@@ -7,6 +7,7 @@ $category
 $description
 $material_source
 $breeding_program
+$program_id
 $availability
 $contact_person_username
 $item_prop_id
@@ -142,7 +143,7 @@ $main_page
     </div>
 </div>
 
-<& /order/edit_catalog_details_dialog.mas, item_name => $item_name, item_id => $item_id, species => $species, item_type => $item_type, category => $category, description => $description, material_source => $material_source, breeding_program => $breeding_program, availability => $availability, contact_person_username => $contact_person_username, item_prop_id => $item_prop_id  &>
+<& /order/edit_catalog_details_dialog.mas, item_name => $item_name, item_id => $item_id, species => $species, item_type => $item_type, category => $category, description => $description, material_source => $material_source, breeding_program => $breeding_program, program_id => $program_id, availability => $availability, contact_person_username => $contact_person_username, item_prop_id => $item_prop_id  &>
 
 
 <script>
