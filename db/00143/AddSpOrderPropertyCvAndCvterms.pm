@@ -3,17 +3,17 @@
 
 =head1 NAME
 
- AddSpOrderPropertyCvAndCvterm
+ AddSpOrderPropertyCvAndCvterms
 
 =head1 SYNOPSIS
 
-mx-run AddSpOrderPropertyCvAndCvterm [options] -H hostname -D dbname -u username [-F]
+mx-run AddSpOrderPropertyCvAndCvterms [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds sp_order_property cv and order_batch_json cvterm
+This patch adds sp_order_property cv and order_batch_json, order_progress_json cvterms
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddSpOrderPropertyCvAndCvterm;
+package AddSpOrderPropertyCvAndCvterms;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -39,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'sp_order_property' cv and 'order_batch_json' sp_order_property cvterm
+This patch adds the 'sp_order_property' cv and 'order_batch_json', 'order_progress_json' sp_order_property cvterms
 
 has '+prereq' => (
 	default => sub {
