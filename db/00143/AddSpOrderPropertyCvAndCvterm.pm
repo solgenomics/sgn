@@ -64,11 +64,20 @@ sub patch {
     my $cv = $cv_rs->find_or_create({ name => 'sp_order_property' });
 
     print STDERR "ADDING CVTERMS...\n";
-    $cvterm_rs->create_with({
-		name => 'order_batch_json',
-		cv => 'sp_order_property'
-	});
+	my $terms = {
+	    'sp_order_property' => [
+            'order_batch_json',
+            'order_progress_json'],
+	};
 
+	foreach my $t (keys %$terms){
+		foreach (@{$terms->{$t}}){
+			$schema->resultset("Cv::Cvterm")->create_with({
+				name => $_,
+				cv => $t
+			});
+		}
+	}
 
     print "You're done!\n";
 }
