@@ -26,7 +26,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_name">Item Name: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input class="form-control col-sm-8" id="edit_item_name" title="item_name" type="text" value="<%$item_name%>" disabled/>
+                                    <input class="form-control col-sm-8" id="edit_item_name" type="text" value="<%$item_name%>" disabled/>
                                 </div>
                             </div>
                         </div>
@@ -34,7 +34,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_species">Species: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input class="form-control col-sm-8" id="edit_item_species" title="item_species" type="text" value="<%$species%>" disabled/>
+                                    <input class="form-control col-sm-8" id="edit_item_species" type="text" value="<%$species%>" disabled/>
                                 </div>
                             </div>
                         </div>
@@ -42,7 +42,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_type">Item Type: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_item_type" title="item_type" value="<%$item_type%>">
+                                    <select class="form-control" id="edit_item_type" value="<%$item_type%>">
                                         <option value="single item">single item</option>
                                         <option value="set of items">set of items</option>
                                     </select>
@@ -53,7 +53,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_category">Item Category: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_item_category" title="item_category" value="<%$category%>">
+                                    <select class="form-control" id="edit_item_category" value="<%$category%>">
                                         <option value="released variety">released variety</option>
                                         <option value="pathogen assay ">pathogen assay</option>
                                         <option value="control">control</option>
@@ -65,7 +65,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_description">Description: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <textarea class="form-control" id="edit_item_description" title="description" rows="3" maxlength="250"><% $description %></textarea>
+                                    <textarea class="form-control" id="edit_item_description" rows="3" maxlength="250"><% $description %></textarea>
                                 </div>
                             </div>
                         </div>
@@ -73,7 +73,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_material_source">Material Source: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_item_material_source" title="material_source" value="<%$material_source%>">
+                                    <select class="form-control" id="edit_item_material_source" value="<%$material_source%>">
                                         <option value="Arusha">Arusha</option>
                                         <option value="Sendusu">Sendusu</option>
                                         <option value="Kawanda">Kawanda</option>
@@ -85,7 +85,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_breeding_program">Breeding Program: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_item_breeding_program" title="breeding_program" value="<%$breeding_program%>"></select>
+                                    <select class="form-control" id="edit_item_breeding_program" value="<%$breeding_program%>"></select>
                                 </div>
                             </div>
                         </div>
@@ -93,7 +93,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_item_availability">Availability: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <select class="form-control" id="edit_item_availability" title="availability" value="<%$availability%>">
+                                    <select class="form-control" id="edit_item_availability" value="<%$availability%>">
                                         <option value="in stock">in stock</option>
                                         <option value="out of stock">out of stock</option>
                                         <option value="available in 3 months">available in 3 months</option>
@@ -105,7 +105,7 @@ $item_prop_id
                             <label class="col-sm-3 control-label" for="edit_contact_person">Contact Person Username: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input class="form-control col-sm-8" id="edit_contact_person" title="contact_person" type="text" value="<%$contact_person_username%>" />
+                                    <input class="form-control col-sm-8" id="edit_contact_person" type="text" value="<%$contact_person_username%>" />
                                 </div>
                             </div>
                         </div>
@@ -151,10 +151,24 @@ jQuery(document).ready( function() {
     var item_prop_id = <% $item_prop_id %>;
 
     jQuery("#edit_catalog_item_link").click( function() {
+
+        jQuery('#edit_catalog_details_dialog').modal('show');
+
         var default_bp = document.getElementById("edit_item_breeding_program").getAttribute("value");
         get_select_box('breeding_programs', 'edit_item_breeding_program', { 'default' : default_bp });
 
-        jQuery('#edit_catalog_details_dialog').modal('show');
+        var default_type = document.getElementById("edit_item_type").getAttribute("value");
+        jQuery('#edit_item_type option[value="'+default_type+'"]').prop("selected", true);
+
+        var default_category = document.getElementById("edit_item_category").getAttribute("value");
+        jQuery('#edit_item_category option[value="'+default_category+'"]').prop("selected", true);
+
+        var default_source = document.getElementById("edit_item_material_source").getAttribute("value");
+        jQuery('#edit_item_material_source option[value="'+default_source+'"]').prop("selected", true);
+
+        var default_availability = document.getElementById("edit_item_availability").getAttribute("value");
+        jQuery('#edit_item_availability option[value="'+default_availability+'"]').prop("selected", true);
+
     });
 
     jQuery('#save_item_details').click( function() {
