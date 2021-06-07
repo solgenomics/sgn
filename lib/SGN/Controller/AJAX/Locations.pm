@@ -238,6 +238,7 @@ sub get_noaa_station_id :Path("/ajax/location/get_noaa_station_id") Args(1) {
 sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
     my $self = shift;
     my $c = shift;
+    print STDERR Dumper $c->req->params;
     my $location_id = $c->req->param('location_id');
     my $station_id = $c->req->param('station_id');
     my $start_date = $c->req->param('start_date');
