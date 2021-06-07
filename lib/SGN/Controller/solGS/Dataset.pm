@@ -253,7 +253,7 @@ sub dataset_genotype_query_jobs {
     };
 
     $c->stash->{r_temp_file} = $args->{r_temp_file};
-    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+    $c->controller('solGS::solGS')->create_cluster_accessible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 

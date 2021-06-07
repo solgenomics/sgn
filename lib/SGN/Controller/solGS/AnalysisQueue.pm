@@ -383,7 +383,7 @@ sub analysis_report_job_args {
 	my $temp_dir = $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir} ;
 
 	my $temp_file_template = "analysis-status";
-	my $cluster_files = $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c, $temp_file_template);
+	my $cluster_files = $c->controller('solGS::solGS')->create_cluster_accessible_tmp_files($c, $temp_file_template);
 	my $out_file      = $cluster_files->{out_file_temp};
 	my $err_file      = $cluster_files->{err_file_temp};
 	my $in_file       = $cluster_files->{in_file_temp};

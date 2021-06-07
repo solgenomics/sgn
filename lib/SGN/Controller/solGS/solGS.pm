@@ -1254,7 +1254,7 @@ sub submit_cluster_compare_trials_markers {
     my ($self, $c, $geno_files) = @_;
 
     $c->stash->{r_temp_file} = 'compare-trials-markers';
-    $self->create_cluster_accesible_tmp_files($c);
+    $self->create_cluster_accessible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
@@ -1711,7 +1711,7 @@ sub get_cluster_phenotype_query_job_args {
 	    my $args = $self->phenotype_trial_query_args($c, $trial_id);
 
 	    $c->stash->{r_temp_file} = "phenotype-data-query-${trial_id}";
-	    $self->create_cluster_accesible_tmp_files($c);
+	    $self->create_cluster_accessible_tmp_files($c);
 	    my $out_temp_file = $c->stash->{out_file_temp};
 	    my $err_temp_file = $c->stash->{err_file_temp};
 
@@ -1885,7 +1885,7 @@ sub get_cluster_genotype_query_job_args {
 	    my $args = $self->genotype_trial_query_args($c, $trial_id, $protocol_id);
 
 	    $c->stash->{r_temp_file} = "genotype-data-query-${trial_id}";
-	    $self->create_cluster_accesible_tmp_files($c);
+	    $self->create_cluster_accessible_tmp_files($c);
 	    my $out_temp_file = $c->stash->{out_file_temp};
 	    my $err_temp_file = $c->stash->{err_file_temp};
 
@@ -2285,7 +2285,7 @@ sub run_rrblup_trait {
 }
 
 
-sub create_cluster_accesible_tmp_files {
+sub create_cluster_accessible_tmp_files {
     my ($self, $c, $template) = @_;
 
     my $temp_file_template = $template || $c->stash->{r_temp_file};
@@ -2315,7 +2315,7 @@ sub run_async {
     my $temp_dir            = $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
 
     $c->stash->{r_temp_file} = 'run-async';
-    $self->create_cluster_accesible_tmp_files($c);
+    $self->create_cluster_accessible_tmp_files($c);
     my $err_temp_file = $c->stash->{err_file_temp};
     my $out_temp_file = $c->stash->{out_file_temp};
 
@@ -2425,7 +2425,7 @@ sub get_selection_pop_query_args {
 
     $c->stash->{population_type} = $pop_type;
     my $temp_file_template = "genotype-data-query-${selection_pop_id}";
-    $self->create_cluster_accesible_tmp_files($c, $temp_file_template);
+    $self->create_cluster_accessible_tmp_files($c, $temp_file_template);
     my $in_file   = $c->stash->{in_file_temp};
     my $out_temp_file  = $c->stash->{out_file_temp};
     my $err_temp_file  = $c->stash->{err_file_temp};
@@ -2460,7 +2460,7 @@ sub get_cluster_query_job_args {
     if (!-s $geno_file)
     {
 	$c->stash->{r_temp_file} = "genotype-data-query-${pop_id}";
-	$self->create_cluster_accesible_tmp_files($c);
+	$self->create_cluster_accessible_tmp_files($c);
 	my $out_temp_file = $c->stash->{out_file_temp};
 	my $err_temp_file = $c->stash->{err_file_temp};
 
@@ -2617,7 +2617,7 @@ sub get_cluster_r_job_args {
 	$self->get_gs_r_temp_file($c);
     }
 
-    $self->create_cluster_accesible_tmp_files($c);
+    $self->create_cluster_accessible_tmp_files($c);
     my $in_file   = $c->stash->{in_file_temp};
     my $out_temp_file  = $c->stash->{out_file_temp};
     my $err_temp_file  = $c->stash->{err_file_temp};

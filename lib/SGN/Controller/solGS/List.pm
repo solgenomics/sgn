@@ -675,7 +675,7 @@ sub genotypes_list_genotype_query_job {
     };
 
     $c->stash->{r_temp_file} = $args->{r_temp_file};
-    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+    $c->controller('solGS::solGS')->create_cluster_accessible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
@@ -741,7 +741,7 @@ sub plots_list_phenotype_query_job {
     my $data_dir = $c->stash->{solgs_lists_dir};
 
     $c->stash->{r_temp_file} = 'plots-phenotype-data-query';
-    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+    $c->controller('solGS::solGS')->create_cluster_accessible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 

@@ -273,7 +273,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 	$c->stash->{training_pop_page} = $training_pop_page;
 	$c->stash->{training_traits_ids} = \@traits_ids;
     $c->stash->{training_traits_code} = $traits_selection_id;
-    
+
 	$c->controller('solGS::solGS')->analyzed_traits($c);
 	my $analyzed_traits = $c->stash->{analyzed_traits_ids};
 
@@ -1108,7 +1108,7 @@ sub r_combine_populations_args {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
-    my $cluster_files = $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c, $temp_file_template);
+    my $cluster_files = $c->controller('solGS::solGS')->create_cluster_accessible_tmp_files($c, $temp_file_template);
     my $out_file      = $cluster_files->{out_file_temp};
     my $err_file      = $cluster_files->{err_file_temp};
     my $in_file       = $cluster_files->{in_file_temp};
