@@ -15,7 +15,7 @@ my $noaa = CXGN::NOAANCDC->new({
 });
 my $temperature_averaged_growing_degree_days = $noaa->get_temperature_averaged_gdd($gdd_base_temperature);
 
-# STILL HAS BUGS WITH QUERIES STARTING/ENDING WITH YYYY/01/01 or YYYY/12/31 DUE TO do_query_max_one_year()...
+# STILL HAS BUGS WITH MULTIYEAR QUERIES STARTING/ENDING WITH YYYY/01/01 or YYYY/12/31 DUE TO do_query_max_one_year()...
 
 # Musgrave stationid = GHCND:USC00300331
 
