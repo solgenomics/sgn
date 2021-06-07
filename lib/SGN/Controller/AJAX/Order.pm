@@ -27,7 +27,7 @@ sub submit_order_POST : Args(0) {
     my $dbh = $c->dbc->dbh();
     my $list_id = $c->req->param('list_id');
     my $time = DateTime->now();
-    my $timestamp = $time->ymd();
+    my $timestamp = $time->ymd()."_".$time->hms();
 #    print STDERR "LIST ID =".Dumper($list_id)."\n";
 
     if (!$c->user()) {
@@ -237,7 +237,7 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
     my $new_status = $c->req->param('new_status');
     my $contact_person_comments = $c->req->param('contact_person_comments');
     my $time = DateTime->now();
-    my $timestamp = $time->ymd();
+    my $timestamp = $time->ymd()."_".$time->hms();
     my $user_id;
 
     if (!$c->user){
