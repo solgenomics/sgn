@@ -123,11 +123,10 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my @all_orders = @$all_orders_ref;
     foreach my $order (@all_orders) {
         if (($order->[3]) ne 'completed') {
-            push @current_orders, [$order->[0], $order->[1], $order->[2], $order->[3], $order->[5], $order->[6]]
+            push @current_orders, [qq{<a href="/order/details/view/$order->[0]">$order->[0]</a>}, $order->[1], $order->[2], $order->[3], $order->[5], $order->[6]]
         }
     }
     $c->stash->{rest} = {data => \@current_orders};
-
 }
 
 sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {

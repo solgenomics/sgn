@@ -74,9 +74,9 @@ $timestamp => localtime()
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Contact Person: </label>
+                            <label class="col-sm-3 control-label">Contact Person Username: </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" id="contact_person_name" placeholder="Please provide contact person">
+                                <input class="form-control" id="contact_person_name" placeholder="Please provide contact person username">
                             </div>
                         </div>
                     </form>
