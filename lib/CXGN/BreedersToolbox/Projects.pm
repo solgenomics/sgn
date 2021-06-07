@@ -47,8 +47,12 @@ sub get_breeding_programs {
             id => \@project_array
         });
         my $external_references = $references->search();
+        my @external_references_array;
+        foreach my $values (values %{$external_references}) {
+            push @external_references_array, $values;
+        }
 
-	    push @projects, [ $row->project_id, $row->name, $row->description, $external_references ];
+	    push @projects, [ $row->project_id, $row->name, $row->description, @external_references_array ];
     }
 
     return \@projects;

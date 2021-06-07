@@ -28,8 +28,8 @@ sub search {
 	my @program_ids = $inputs->{programDbIds} ? @{$inputs->{programDbIds}} : ();
 	my @program_names = $inputs->{programNames} ? @{$inputs->{programNames}} : ();
 
-	if (scalar(@abbreviations)>0 || scalar(@externalreference_sources)>0){
-        push @$status, { 'error' => 'The following parameters are not implemented: abbreviations, externalReferenceSource' };
+	if (scalar(@abbreviations)>0){
+        push @$status, { 'error' => 'The following parameters are not implemented: abbreviations' };
     }
 
 	my $ps = CXGN::BreedersToolbox::Projects->new({ schema => $self->bcs_schema });
@@ -59,6 +59,8 @@ sub search {
 			# combine referenceID and referenceSource into AND check as used by bi-api filter
 			# won't work with general search but wasn't implemented anyways
 			if ($_->[3]) {
+				print "here";
+				print Dumper($_->[3]);
 				foreach my $reference (@{$_->[3]}) {
 
 					my $ref_id = $reference->{'referenceID'};
