@@ -1,0 +1,53 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/population/acronym.mas -- displays a list of traits and their acronyms.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$trial_id => undef;
+$training_pop_id => undef;
+
+</%args>
+
+<%perl>
+</%perl>
+
+
+<& /util/import_javascript.mas, classes => ["solGS.loadAcronyms", "jquery.dataTables"] &>
+
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 1,
+    title       => "Acronyms legend",
+  &>
+
+  
+  <div id="trait_acronyms_div" style="display:none">
+    <div id="acronyms_message"  class="message"></div>
+
+      <table class="table" id="trait_acronyms_table" style="text-align: left;">
+        <thead>
+          <tr>
+        	<th>Acronym</th>
+            <th>Trait</th>
+          </tr>
+        </thead>
+      </table>
+
+      <input type="hidden" id="trial_id" value="<% $trial_id %>" />
+
+</div>
+
+
+
+</&>
