@@ -45,9 +45,9 @@ sub combine_gebvs_jobs_args {
             write_file($gebvs_files, {append => 1, binmode => ':utf8'}, "\t". $index_file)
         }
 
-	my $identifier = $self->combined_gebvs_file_id($c);	
+	my $identifier = $self->combined_gebvs_file_id($c);
 	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
-	
+
         my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}");
 
         $c->stash->{input_files}  = $gebvs_files;
@@ -115,7 +115,7 @@ sub run_combine_traits_gebvs {
 
     $self->combine_gebvs_jobs_args($c);
     $c->controller("solGS::solGS")->run_r_script($c);
-    
+
 }
 
 #creates and writes a list of GEBV files of
@@ -271,24 +271,6 @@ sub create_traits_selection_id {
     {
 	return 0;
     }
-}
-
-
-
-sub load_acronyms: Path('/solgs/load/trait/acronyms') Args() {
-    my ($self, $c) = @_;
-
-   my $id = $c->req->param('id');
-   $c->controller('solGS::solGS')->get_all_traits($c, $id);
-   my $acronyms = $c->controller('solGS::solGS')->get_acronym_pairs($c, $id);
-
-   my $ret->{acronyms}  = $acronyms;
-   my $json = JSON->new();
-   $ret = $json->encode($ret);
-
-   $c->res->content_type('application/json');
-   $c->res->body($ret);
-
 }
 
 

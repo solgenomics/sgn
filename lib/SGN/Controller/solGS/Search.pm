@@ -45,7 +45,6 @@ sub solgs_breeder_search :Path('/solgs/breeder_search') Args(0) {
     $c->stash->{template} = '/solgs/breeder_search_solgs.mas';
 }
 
-
 sub solgs_login_message :Path('/solgs/login/message') Args(0) {
     my ($self, $c) = @_;
 
@@ -174,6 +173,24 @@ sub search_traits : Path('/solgs/search/traits/') Args() {
     $c->res->body($ret);
 
 }
+
+
+sub load_acronyms: Path('/solgs/load/trait/acronyms') Args() {
+    my ($self, $c) = @_;
+
+   my $id = $c->req->param('id');
+   $c->controller('solGS::solGS')->get_all_traits($c, $id);
+   my $acronyms = $c->controller('solGS::solGS')->get_acronym_pairs($c, $id);
+
+   my $ret->{acronyms}  = $acronyms;
+   my $json = JSON->new();
+   $ret = $json->encode($ret);
+
+   $c->res->content_type('application/json');
+   $c->res->body($ret);
+
+}
+
 
 
 sub gs_traits : Path('/solgs/traits') Args(1) {
