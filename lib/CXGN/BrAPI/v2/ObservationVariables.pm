@@ -126,12 +126,12 @@ sub search {
         if (scalar(@dbxref_ids)>0){
             # TODO: Should this be OR?
             foreach (@dbxref_ids) {
-                push @sub_and_wheres, "reference_id_prop.value = '$_'";
+                push @sub_and_wheres, "dbxref.accession = '$_'";
             }
         }
         if (scalar(@dbxref_terms)>0) {
             foreach (@dbxref_terms) {
-                push @sub_and_wheres, "reference_source_prop.value = '$_'";
+                push @sub_and_wheres, "db.name = '$_'";
             }
         }
 
@@ -144,18 +144,14 @@ sub search {
             ")) AS externalReferences " .
             "from " .
             "(" .
-            "select cvterm.cvterm_id, reference_source_prop.value as reference_source, reference_id_prop.value as reference_id " .
+            "select cvterm.cvterm_id, db.name as reference_source, dbxref.accession as reference_id " .
             "FROM " .
             "cvterm " .
             "JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) " .
             "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) " .
-            "JOIN dbxrefprop reference_source_prop ON cvterm.dbxref_id = reference_source_prop.dbxref_id " .
-            "JOIN cvterm reference_source_term " .
-                "ON reference_source_term.cvterm_id = reference_source_prop.type_id and reference_source_term.name = 'reference_source' " .
-            "JOIN dbxrefprop reference_id_prop " .
-            "ON cvterm.dbxref_id = reference_id_prop.dbxref_id and reference_id_prop.rank = reference_source_prop.rank " .
-            "JOIN cvterm reference_id_term " .
-                "ON reference_id_term.cvterm_id = reference_id_prop.type_id and reference_id_term.name = 'reference_id' " .
+            "JOIN cvterm_dbxref on cvterm.cvterm_id = cvterm_dbxref.cvterm_id " .
+            "JOIN dbxref on cvterm_dbxref.dbxref_id = dbxref.dbxref_id " .
+            "JOIN db on dbxref.db_id = db.db_id " .
             "where $sub_and_where_clause " .
             ") as references_query " .
             "group by cvterm_id " .
