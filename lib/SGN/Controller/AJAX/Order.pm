@@ -231,6 +231,7 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
     my $self = shift;
     my $c = shift;
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
     my $order_id = $c->req->param('order_id');
     my $new_status = $c->req->param('new_status');
@@ -265,7 +266,7 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
     my $orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_id } );
     my $orderprop_id = $orderprop_rs->sp_orderprop_id();
     my $details_json = $orderprop_rs->value();
-#    print STDERR "ORDER DETAILS =".Dumper($details_json)."\n";
+    print STDERR "ORDER PROP ID =".Dumper($orderprop_id)."\n";
     my $detail_hash = JSON::Any->jsonToObj($details_json);
 
     my $order_history_ref = $detail_hash->{'history'};
@@ -275,12 +276,17 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
     push @order_history, $new_status_record;
     $detail_hash->{'history'} = \@order_history;
 
-    my $new_order_details = encode_json $detail_hash;
-#    print STDERR "NEW ORDER DETAILS =".Dumper($new_order_details)."\n";
-    $orderprop_rs->value($new_order_details);
-	$orderprop_rs->update();
+    my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema, sp_order_id => $order_id, prop_id => $orderprop_id});
+    $order_prop->history(\@order_history);
+    my $updated_orderprop = $order_prop->store_sp_orderprop();
+
+    if (!$updated_orderprop){
+        $c->stash->{rest} = {error_string => "Error updating the order",};
+        return;
+    }
 
     $c->stash->{rest} = {success => "1",};
+
 
 }
 

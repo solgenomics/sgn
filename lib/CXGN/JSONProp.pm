@@ -332,18 +332,19 @@ Example:
 
 sub store_sp_orderprop {
     my $self = shift;
-
-    my $rs = $self->people_schema()->resultset($self->prop_namespace())->search( { $self->parent_primary_key() => $self->parent_id(), type_id => $self->_prop_type_id() });
-
-    my $rank = 1;
-#    if ($rs->count() > 0) {
-#        $rank = $rs->get_column("rank")->max();
-#    }
-#    $rank++;
-    my $row = $self->people_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id(), rank => $rank});
-	my $prop_primary_key = $self->prop_primary_key();
-	$self->prop_id($row->$prop_primary_key);
-
+    print STDERR "PROP ID =".Dumper($self->prop_id())."\n";
+    if ($self->prop_id()) {
+        print STDERR "UPDATING JSONPROP ".$self->to_json()."\n";
+        my $row = $self->people_schema()->resultset($self->prop_namespace())->find( { $self->prop_primary_key() => $self->prop_id() } );
+        if ($row) {
+            $row->value($self->to_json());
+            $row->update();
+        }
+    } else {
+        my $row = $self->people_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id(), rank => 1});
+        my $prop_primary_key = $self->prop_primary_key();
+        $self->prop_id($row->$prop_primary_key);
+    }
 }
 
 
