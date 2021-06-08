@@ -51,27 +51,6 @@ sub BUILD {
 }
 
 
-# class functions
-#
-sub get_orders_by_person_id {
-    my $class = shift;
-    my $people_schema = shift;
-    my $person_id = shift;
-
-    my $rs = $people_schema->resultset('SpOrder')->search( { order_by_person_id => $person_id } );
-
-    my @orders;
-
-    while (my $row = $rs->next()) {
-
-	my $o = CXGN::Stock::Order->new( { sp_order_id => $row->sp_order_id() } );
-	push @orders, $o;
-    }
-
-    return @orders;
-}
-
-
 sub store {
     my $self = shift;
     my %data = (
@@ -82,8 +61,6 @@ sub store {
     create_date => $self->create_date(),
     completion_date => $self->completion_date(),
 	);
-#    print STDERR "NEW ORDER STATUS =".Dumper($self->order_status())."\n";
-#    print STDERR "COMPLETION DATE =".Dumper($self->completion_date())."\n";
 
     if ($self->sp_order_id()) { $data{sp_order_id} = $self->sp_order_id(); }
 
