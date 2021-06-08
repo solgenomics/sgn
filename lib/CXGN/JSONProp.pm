@@ -102,25 +102,25 @@ sub load {  # must be called from BUILD in subclass
     print STDERR "LOAD PROP ID = ".$self->prop_id()."\n";
 
     if ($self->prop_id()) {
-	my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
-	if (my $row = $rs->next()) {
-	    if ($row->type_id() == $self->_prop_type_id()) {
-		#print STDERR "ROW VALUE = ".$row->value().", TYPEID=".$row->type_id()." TYPE = ".$self->prop_type()."\n";
-		 my $parent_primary_key = $self->parent_primary_key();
-		my $parent_id = $row->$parent_primary_key;
-		$self->parent_id($parent_id);
-		$self->from_json($row->value());
-	    }
-	    else {
-		print STDERR "Skipping property unrelated to metadata...\n";
-	    }
-
-	}
-	else {
-	    die "The object with id ".$self->prop_id()." does not exist. Sorry!";
-	}
-
-
+        my $rs;
+        if ($self->prop_table eq 'sp_orderprop') {
+            $rs = $self->people_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
+        } else {
+            my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
+        }
+	    if (my $row = $rs->next()) {
+	        if ($row->type_id() == $self->_prop_type_id()) {
+		    #print STDERR "ROW VALUE = ".$row->value().", TYPEID=".$row->type_id()." TYPE = ".$self->prop_type()."\n";
+                my $parent_primary_key = $self->parent_primary_key();
+                my $parent_id = $row->$parent_primary_key;
+                $self->parent_id($parent_id);
+                $self->from_json($row->value());
+            } else {
+                print STDERR "Skipping property unrelated to metadata...\n";
+            }
+        } else {
+            die "The object with id ".$self->prop_id()." does not exist. Sorry!";
+        }
     }
 }
 

@@ -22,7 +22,8 @@ sub BUILD {
     my $args = shift;
 
     $self->prop_table('sp_orderprop');
-    $self->prop_namespace('CXGN::People::Schema::Result::SpOrderprop');
+#    $self->prop_namespace('CXGN::People::Schema::Result::SpOrderprop');
+    $self->prop_namespace('SpOrderprop');
     $self->prop_primary_key('sp_orderprop_id');
     $self->prop_type('order_batch_json');
     $self->cv_name('sp_order_property');
