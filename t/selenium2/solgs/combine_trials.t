@@ -107,8 +107,8 @@ $d->while_logged_in_as("submitter", sub {
 
     my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
-    sleep(2);
-    $d->find_element_ok('Download all GEBVs', 'partial_link_text',  'download gebvs')->click();
+    sleep(5);
+    $d->find_element_ok('Download GEBVs', 'partial_link_text',  'download gebvs')->click();
     sleep(3);
     $d->driver->go_back();
     sleep(5);
@@ -118,7 +118,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('Marker Effects', 'partial_link_text', 'expand marker effects')->click();
     sleep(2);
-    $d->find_element_ok('Download all marker', 'partial_link_text',  'build marker effects')->click();
+    $d->find_element_ok('Download marker', 'partial_link_text',  ' download marker effects')->click();
     sleep(3);
     $d->driver->go_back();
     sleep(5);
@@ -292,7 +292,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
 	#$d->get_ok('/solgs/models/combined/trials/2804608595/traits/1971973596/gp/1');
-	
+
 	sleep(5);
     $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "FRW")]', 'xpath', 'go back')->click();
     sleep(5);

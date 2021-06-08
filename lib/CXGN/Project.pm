@@ -2270,15 +2270,27 @@ sub _delete_field_layout_experiment {
         my @tissue_sample_ids = $design_info->{tissue_sample_ids} ? @{$design_info->{tissue_sample_ids}} : ();
         push @all_stock_ids, $plot_id;
         push @all_stock_ids, @plant_ids;
-        push @all_stock_ids, @subplot_ids;
         push @all_stock_ids, @tissue_sample_ids;
+        push @all_stock_ids, @subplot_ids;
     }
 
-    #print STDERR Dumper \@all_stock_ids;
-    my $stock_delete_rs = $self->bcs_schema->resultset('Stock::Stock')->search({stock_id=>{'-in'=>\@all_stock_ids}});
-    while (my $r = $stock_delete_rs->next){
-        $r->delete();
+    my $phenome_schema = CXGN::Phenome::Schema->connect( sub { 
+            $self->bcs_schema->storage->dbh() 
+        },
+        {
+            on_connect_do => ['SET search_path TO public,phenome;']
+        });
+    foreach my $s (@all_stock_ids) {
+        my $stock_owner_rs = $phenome_schema->resultset('StockOwner')->search({stock_id=>$s});
+        while (my $stock_row = $stock_owner_rs->next) {
+            $stock_row->delete();   
+        }
+        my $stock_delete_rs = $self->bcs_schema->resultset('Stock::Stock')->search({stock_id=>$s});
+        while (my $r = $stock_delete_rs->next){
+            $r->delete();
+        }
     }
+
 
     my $has_plants = $self->has_plant_entries();
     my $has_subplots = $self->has_subplot_entries();
@@ -2373,14 +2385,22 @@ sub delete_project_entry {
         return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
     }
 
+    my $project_owner_schema = CXGN::Phenome::Schema->connect( sub { 
+            $self->bcs_schema->storage->dbh() 
+        },
+        {
+            on_connect_do => ['SET search_path TO public,phenome;']
+        });
+    my $project_owner_rs = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
+    $project_owner_rs->delete();
     eval {
-	my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
-	$row->delete();
-    print STDERR "deleted project ".$self->get_trial_id."\n";
+	    my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
+	    $row->delete();
+        print STDERR "deleted project ".$self->get_trial_id."\n";
     };
     if ($@) {
-	print STDERR "An error occurred during deletion: $@\n";
-	return $@;
+	    print STDERR "An error occurred during deletion: $@\n";
+	    return $@;
     }
 }
 

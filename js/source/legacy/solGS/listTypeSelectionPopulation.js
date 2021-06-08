@@ -177,20 +177,14 @@ function createSelectionReqArgs (listId) {
 
 	var selectionPopId = 'list_' + listId;
 	var protocolId = jQuery('#genotyping_protocol_id').val();
-	var trainingTraitsIds = jQuery('#training_traits_ids').val();
 
-	if (trainingTraitsIds) {
-	    trainingTraitsIds = trainingTraitsIds.split(',');
-	} else {
-	    trainingTraitsIds = [traitId];
-	}
+	var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
 	var args = {
 	    'list_name'        : listName,
 	    'list_id'          : listId,
 	    'analysis_type'    : 'selection prediction',
 	    'data_set_type'    : dataSetType,
-	    'trait_id'         : [traitId],
 	    'training_pop_id'  : modelId,
 	    'selection_pop_id' : selectionPopId,
 	    'population_type'  : popType,

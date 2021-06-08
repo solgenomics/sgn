@@ -199,6 +199,10 @@ $sampling_facilities => ()
                                     trial_id => $trial_id
                                 &>
 
+                                <& /solgs/population/trait_acronyms.mas,
+                                  trial_id => $trial_id
+                              &>
+
 % if ($c->req->base =~ /sweetpotatobase/) {
                                 <& /tools/qualityControl/qualityControl.mas,
                                     trial_id => $trial_id
