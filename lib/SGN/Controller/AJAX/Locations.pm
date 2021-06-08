@@ -224,6 +224,11 @@ sub get_noaa_station_id :Path("/ajax/location/get_noaa_station_id") Args(1) {
     my $c = shift;
     my $location_id = shift;
 
+    if (! $c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to add or edit a location.' };
+        return;
+    }
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $location = CXGN::Location->new({
@@ -238,7 +243,7 @@ sub get_noaa_station_id :Path("/ajax/location/get_noaa_station_id") Args(1) {
 sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
     my $self = shift;
     my $c = shift;
-    print STDERR Dumper $c->req->params;
+    # print STDERR Dumper $c->req->params;
     my $location_id = $c->req->param('location_id');
     my $station_id = $c->req->param('station_id');
     my $start_date = $c->req->param('start_date');
@@ -248,6 +253,11 @@ sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
     my $window_end = $c->req->param('w_end');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if (! $c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to add or edit a location.' };
+        return;
+    }
 
     my $location = CXGN::Location->new({
         bcs_schema => $schema,
