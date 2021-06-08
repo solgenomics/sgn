@@ -278,6 +278,7 @@ jQuery(document).ready(function () {
                          links = []; //List to be used for all connections at the accession level
                          linkAjaxCallsMap = {}; // Map of ajax calls for links
                          nodeAjaxCallsMap = {}; // Map of ajax calls for nodes
+                         sankey = null;
 
                          construct_primitive_graph(d.name, d.id, res);
 
