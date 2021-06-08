@@ -123,6 +123,8 @@ $data_level => 'plot'
         <label for="invert_rows">Invert Rows</label>
         <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
     </div>
+<button style="margin-right: 5%; float: right;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success btn-sm">Submit Field Layout</button>
+
 </div>
 <div id="trait_heatmap" >loading...</div>
 <div id="container_heatmap_geo" ></div>
@@ -361,6 +363,28 @@ $data_level => 'plot'
             </div>
             <div class="modal-footer">
                 <button id="close_hmfieldma_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="fieldplot_layout_success_dialog" name="fieldplot_layout_success_dialog" tabindex="-1" role="dialog" aria-labelledby="fp_success_dialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmDialog"><b>Submit Field Plot Layout</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <p3> Field Plot layout submitted successfully...</p3>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_fp_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 
             </div>
         </div>
@@ -901,13 +925,13 @@ jQuery(document).ready( function() {
         jQuery.ajax( {
              //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-             url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
+             url: '/brapi/v2/studies/'+trial_id,
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
                 var data = response.result.data;
-                console.log(data);
+                console.log('DATA: ',  data);
                 var data = data.sort(function(obj1, obj2) {
 	                  // Ascending: first plotNumber less than the previous
 	                return obj1.additionalInfo.plotNumber - obj2.additionalInfo.plotNumber;
@@ -1004,6 +1028,10 @@ jQuery(document).ready( function() {
         field_map_view();
     })
 
+    jQuery('#submit_fieldmap').click( function() {
+        submit_fieldmap_metadata();
+    });
+
     jQuery("#hm_view_plot_image_submit").click( function() {
         jQuery("#view_plot_image_dialog").modal("show");
     });
@@ -1025,6 +1053,52 @@ jQuery(document).ready( function() {
     jQuery('#fm_override_accession_warning').click( function() {
       hm_replace_plotAccession_fieldMap('override');
     });
+
+    function submit_fieldmap_metadata() {
+        // invert_rows = document.getElementById("invert_row_checkmark").checked ? "yes" : "no";
+        // new jQuery.ajax({
+        //     type: 'PUT',
+        //     source: '/brapi/v1/studies/' + trial_id + '/layout?pageSize=10000&page=0',
+        //     data: {
+        //         'invert_rows': invert_rows,
+        //         'changed_dim_rows': changed_dim_rows,
+        //         'changed_dim_cols': changed_dim_cols,
+        //         'top_border': top_border_selection,
+        //         'left_border': left_border_selection,
+        //         'right_border': right_border_selection,
+        //         'bottom_border': bottom_border_selection
+        //     },
+
+        //     success: function(response) {
+        //         console.log(response);
+        //     }
+
+        // })
+        // new jQuery.ajax({
+        //     type: 'POST',
+        //     url: '/ajax/breeders/trial/<% $trial_id %>/submit_fieldmap_layout',
+        //     dataType: "json",
+        //     data: {
+        //         'invert_rows': invert_rows,
+        //         'changed_dim_rows': changed_dim_rows,
+        //         'changed_dim_cols': changed_dim_cols,
+        //         'top_border': top_border_selection,
+        //         'left_border': left_border_selection,
+        //         'right_border': right_border_selection,
+        //         'bottom_border': bottom_border_selection
+        //     },
+
+        //     success: function (response) {
+        //         if (response.error) {
+        //             alert(response.error);
+        //         }
+        //     },
+
+        //     error: function (response) {
+        //         alert('Error2');
+        //     }
+        // });
+    }
 
     function hm_replace_plotAccession_fieldMap(override) {
       jQuery('#hm_replace_plot_accessions_dialog').modal("hide");
