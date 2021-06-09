@@ -92,4 +92,36 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';
 }
 
+sub seedlot_maintenance : Path('/breeders/seedlot/maintenance') {
+    my $self = shift;
+    my $c = shift;
+
+    # Make sure the user is logged in
+    if (!$c->user()) {
+        my $url = '/' . $c->req->path;	
+        $c->res->redirect("/user/login?goto_url=$url");
+        return;
+    }
+
+    # Make sure the user has submitter or curator privileges
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{template} = '/generic_message.mas';
+        $c->stash->{message} = 'Your account must have either submitter or curator privileges to add seedlot maintenance events.';
+        return;
+    }
+
+    # Make sure the seedlot maintenance event ontology is set
+    if ( !defined $c->config->{seedlot_maintenance_event_ontology_root} || $c->config->{seedlot_maintenance_event_ontology_root} eq '' ) {
+        $c->stash->{template} = '/generic_message.mas';
+        $c->stash->{message} = 'Seedlot Maintenance Events are not enabled on this server!';
+        return;
+    }
+
+    my $ts = DateTime->now(time_zone => 'local');
+    $c->stash->{timestamp} = $ts->strftime("%Y-%m-%d %H:%M:%S");
+    $c->stash->{operator} = $c->user()->get_object()->get_username();
+    $c->stash->{ontology_root} = $c->config->{seedlot_maintenance_event_ontology_root};
+    $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance.mas';
+}
+
 1;
