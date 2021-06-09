@@ -20,6 +20,25 @@ sub _validate_with_plugin {
     my $parser = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
+    my %supported_types;
+    my %supported_categories;
+    my %supported_material_sources;
+    my %supported_availability;
+
+    $supported_types{'single item'} = 1;
+    $supported_types{'set of items'} = 1;
+
+    $supported_categories{'released variety'} = 1;
+    $supported_categories{'pathogen assay'} = 1;
+    $supported_categories{'control'} = 1;
+
+    $supported_material_sources{'Arusha'} = 1;
+    $supported_material_sources{'Sendusu'} = 1;
+    $supported_material_sources{'Kawanda'} = 1;
+
+    $supported_availability{'in stock'} = 1;
+    $supported_availability{'out of stock'} = 1;
+    $supported_availability{'available in 3 months'} = 1;
 
     #try to open the excel file and report any errors
     $excel_obj = $parser->parse($filename);
@@ -55,7 +74,7 @@ sub _validate_with_plugin {
     my $material_source_header;
     my $breeding_program_header;
     my $availability_header;
-    my $contact_person_name;
+    my $contact_person_username;
     my $comment_header;
 
     if ($worksheet->get_cell(0,0)) {
@@ -83,8 +102,8 @@ sub _validate_with_plugin {
         $contact_person_header  = $worksheet->get_cell(0,7)->value();
     }
 
-    if (!$name_header || $name_header ne 'name' ) {
-        push @error_messages, "Cell A1: name is missing from the header";
+    if (!$name_header || $name_header ne 'item_name' ) {
+        push @error_messages, "Cell A1: item_name is missing from the header";
     }
     if (!$type_header || $type_header ne 'type') {
         push @error_messages, "Cell B1: type is missing from the header";
@@ -104,8 +123,8 @@ sub _validate_with_plugin {
     if (!$availability_header || $availability_header ne 'availability') {
         push @error_messages, "Cell G1: availability is missing from the header";
     }
-    if (!$contact_person_header || $contact_person_header ne 'contact_person_name') {
-        push @error_messages, "Cell H1: contact_person_name is missing from the header";
+    if (!$contact_person_header || $contact_person_header ne 'contact_person_username') {
+        push @error_messages, "Cell H1: contact_person_username is missing from the header";
     }
 
     my %seen_stock_names;
@@ -120,59 +139,78 @@ sub _validate_with_plugin {
         my $material_source;
         my $breeding_program;
         my $availability;
-        my $contact_person_name;
+        my $contact_person_username;
 
         if ($worksheet->get_cell($row,0)) {
             $item_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
             $item_type =  $worksheet->get_cell($row,1)->value();
+            $item_type =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $category = $worksheet->get_cell($row,2)->value();
+            $category =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,3)) {
             $description =  $worksheet->get_cell($row,3)->value();
         }
         if ($worksheet->get_cell($row,4)) {
             $material_source =  $worksheet->get_cell($row,4)->value();
+            $material_source =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,5)) {
             $breeding_program =  $worksheet->get_cell($row,5)->value();
         }
         if ($worksheet->get_cell($row,6)) {
             $availability =  $worksheet->get_cell($row,6)->value();
+            $availability =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,7)) {
-            $contact_person_name =  $worksheet->get_cell($row,7)->value();
+            $contact_person_username =  $worksheet->get_cell($row,7)->value();
         }
 
+
         if (!$item_name || $item_name eq '') {
-            push @error_messages, "Cell A$row_name: name missing";
+            push @error_messages, "Cell A$row_name: item_name missing";
         }
+
         if (!$item_type || $item_type eq '') {
             push @error_messages, "Cell B$row_name: type missing";
+        } elsif (!$supported_types{$item_type}) {
+            push @error_messages, "Cell B$row_name: type not supported: $item_type";
         }
+
         if (!$category || $category eq '') {
             push @error_messages, "Cell C$row_name: category missing";
+        } elsif (!$supported_categories{$category}) {
+            push @error_messages, "Cell C$row_name: category not supported: $category";
         }
         if (!$description || $description eq '') {
             push @error_messages, "Cell D$row_name: description missing";
         }
+
         if (!$material_source || $material_source eq '') {
             push @error_messages, "Cell E$row_name: material_source missing";
+        } elsif (!$supported_material_sources{$material_source}) {
+            push @error_messages, "Cell E$row_name: material source not supported: $material_source";
         }
+
         if (!$breeding_program || $breeding_program eq '') {
             push @error_messages, "Cell F$row_name: breeding_program missing";
         }
+
         if (!$availability || $availability eq '') {
             push @error_messages, "Cell G$row_name: availability missing";
-        }
-        if (!$contact_person_name || $contact_person_name eq '') {
-            push @error_messages, "Cell H$row_name: contact person name missing";
+        } elsif (!$supported_availability{$availability}) {
+            push @error_messages, "Cell G$row_name: availability not supported: $availability";
         }
 
-        my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_name);
+        if (!$contact_person_username || $contact_person_username eq '') {
+            push @error_messages, "Cell H$row_name: contact person username missing";
+        }
+
+        my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_username);
         if (!$sp_person_id) {
             push @error_messages, "Cell H$row_name: contact person name in not in database";
         }
@@ -249,7 +287,7 @@ sub _parse_with_plugin {
         my $material_source;
         my $breeding_program;
         my $availability;
-        my $contact_person_name;
+        my $contact_person_username;
 
         if ($worksheet->get_cell($row,0)) {
             $item_name = $worksheet->get_cell($row,0)->value();
@@ -273,10 +311,10 @@ sub _parse_with_plugin {
             $availability =  $worksheet->get_cell($row,6)->value();
         }
         if ($worksheet->get_cell($row,7)) {
-            $contact_person_name =  $worksheet->get_cell($row,7)->value();
+            $contact_person_username =  $worksheet->get_cell($row,7)->value();
         }
 
-        my $contact_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_name);
+        my $contact_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_username);
 
         my $program_rs = $schema->resultset('Project::Project')->find({name => $breeding_program});
         my $breeding_program_id = $program_rs->project_id();

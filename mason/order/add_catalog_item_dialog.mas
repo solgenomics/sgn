@@ -15,7 +15,7 @@ $timestamp => localtime()
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Item Name: </label>
                             <div class="col-sm-9" >
-                                <input class="form-control" id="item_name" placeholder="The item name must be in the database">
+                                <input class="form-control" id="item_name" placeholder="Item name must be in the database">
                             </div>
                         </div>
                         <div class="form-group">
