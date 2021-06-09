@@ -251,6 +251,7 @@ sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
     my $analysis_type = $c->req->param('analysis_type');
     my $window_start = $c->req->param('w_start');
     my $window_end = $c->req->param('w_end');
+    my $cumulative_year = $c->req->param('cumul_year') eq 'yes' ? 1 : 0;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -313,11 +314,38 @@ sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
             print $F "day,date,value,variable,year\n";
 
             while (my($year, $dates) = each %years_groups) {
+                my $tmax_rep = 0;
+                my $tmin_rep = 0;
+                my $tavg_rep = 0;
                 my $increment = 1;
                 foreach my $d (@$dates) {
                     my $time_object = Time::Piece->strptime($d, "%Y-%m-%dT%H:%M:%S");
                     my $epoch_seconds = $time_object->yday;
                     my $date = $time_object->strftime("%m-%d");
+
+                    my $tmax = $weather_hash->{$d}->{TMAX};
+                    if ($cumulative_year) {
+                        $tmax_rep = $tmax_rep + $tmax;
+                    }
+                    else {
+                        $tmax_rep = $tmax;
+                    }
+
+                    my $tmin = $weather_hash->{$d}->{TMIN};
+                    if ($cumulative_year) {
+                        $tmin_rep = $tmin_rep + $tmin;
+                    }
+                    else {
+                        $tmin_rep = $tmin;
+                    }
+
+                    my $tavg = 0.5*($tmax + $tmin);
+                    if ($cumulative_year) {
+                        $tavg_rep = $tavg_rep + $tavg;
+                    }
+                    else {
+                        $tavg_rep = $tavg;
+                    }
 
                     if ($window_start_epoch) {
                         if ($epoch_seconds < $window_start_epoch) {
@@ -330,12 +358,9 @@ sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
                         }
                     }
 
-                    my $tmax = $weather_hash->{$d}->{TMAX};
-                    print $F "$increment,$date,$tmax,TMAX,$year\n";
-                    my $tmin = $weather_hash->{$d}->{TMIN};
-                    print $F "$increment,$date,$tmin,TMIN,$year\n";
-                    my $tavg = 0.5*($tmax + $tmin);
-                    print $F "$increment,$date,$tavg,TAVG,$year\n";
+                    print $F "$increment,$date,$tmax_rep,TMAX,$year\n";
+                    print $F "$increment,$date,$tmin_rep,TMIN,$year\n";
+                    print $F "$increment,$date,$tavg_rep,TAVG,$year\n";
                     $increment++;
                 }
             }
@@ -361,12 +386,20 @@ sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
             print $F "day,date,value,variable,year\n";
 
             while (my($year, $dates) = each %years_groups) {
+                my $prcp_rep = 0;
                 my $increment = 1;
-
                 foreach my $d (@$dates) {
                     my $time_object = Time::Piece->strptime($d, "%Y-%m-%dT%H:%M:%S");
                     my $epoch_seconds = $time_object->yday;
                     my $date = $time_object->strftime("%m-%d");
+
+                    my $prcp = $weather_hash->{$d}->{PRCP};
+                    if ($cumulative_year) {
+                        $prcp_rep = $prcp_rep + $prcp;
+                    }
+                    else {
+                        $prcp_rep = $prcp;
+                    }
 
                     if ($window_start_epoch) {
                         if ($epoch_seconds < $window_start_epoch) {
@@ -379,8 +412,7 @@ sub noaa_ncdc_analysis :Path("/ajax/location/noaa_ncdc_analysis") Args(0) {
                         }
                     }
 
-                    my $prcp = $weather_hash->{$d}->{PRCP};
-                    print $F "$increment,$date,$prcp,PRCP,$year\n";
+                    print $F "$increment,$date,$prcp_rep,PRCP,$year\n";
                     $increment++;
                 }
             }
