@@ -6,8 +6,11 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 use Data::Dumper;
+use DateTime;
+use DateTime::Format::Strptime;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
+use CXGN::Stock::Seedlot::Maintenance;
 use SGN::Model::Cvterm;
 use CXGN::Stock::Seedlot::ParseUpload;
 use CXGN::Login;
@@ -1062,6 +1065,115 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
 
     $c->stash->{rest} = { success => 1, transaction_id => $transaction_id };
 }
+
+
+#
+# SEEDLOT MAINTENANCE EVENTS
+#
+
+#
+# List all of the Maintenance Events for the specified Seedlot
+# PATH: GET /ajax/breedbers/seedlot/{seedlot id}/maintenance
+# 
+sub seedlot_maintenance_event : Chained('seedlot_base') PathPart('maintenance') Args(0) : ActionClass('REST') { }
+sub seedlot_maintenance_event_GET {
+    my $self = shift;
+    my $c = shift;
+    my $seedlot = $c->stash->{seedlot};
+
+    print STDERR "======== LIST SEEDLOT MAINTENANCE EVENTS ========\n";
+
+    $c->stash->{rest} = {};
+}
+
+
+#
+# Add one or more Maintenance Events to the specified Seedlot
+# PATH: POST /ajax/breeders/seedlot/{seedlot id}/maintenance
+# PARAMS:
+#   events: the events to store in the databsae, an array of objects with the following keys:
+#       - cvterm_id: id of seedlot maintenance event ontology term
+#       - value: value of the seedlot maintenance event
+#       - notes: (optional) additional notes/comments about the event
+#       - operator: (optional, default=username of user making request) username of the person creating the event
+#       - timestamp: (optional, default=now) timestamp of when the event was created (YYYY-MM-DD HH:MM:SS format)
+# RETURNS: 
+#   events: the processed events stored in the database, an array of objects with the following keys:
+#       - stockprop_id: seedlot maintenance event id (stockprop_id) 
+#       - cvterm_id: id of seedlot maintenance event ontology term
+#       - cvterm_name: name of seedlot maintenance event ontology term
+#       - value: value of seedlot maintenance event
+#       - notes: additional notes/comments about the event
+#       - operator: username of the person creating the event
+#       - timestamp: parsed timestamp of when the event was created (YYYY-MM-DD HH:MM:SS z format)
+#
+sub seedlot_maintenance_event_POST {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->stash->{schema};
+    my $seedlot_id = $c->stash->{seedlot_id};
+    my $strp = DateTime::Format::Strptime->new(pattern => '%Y-%m-%d %H:%M:%S', time_zone => 'local');
+
+    # Require user login
+    if (!$c->user){
+        $c->stash->{rest} = {error => 'You must be logged in to add a seedlot transaction!'};
+        $c->detach();
+    }
+
+    # Get user information and check role
+    my $user_name = $c->user()->get_object()->get_username();
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => 'You do not have the required privileges to seedlot maintenance events.' };
+        $c->detach();
+    }
+
+    # Get event parameters
+    my $body = $c->request->data;
+    my $events = $body->{events};
+    if ( !defined $events || $events eq '' || ref $events ne 'ARRAY' ) {
+        $c->stash->{rest} = {error => 'Event parameters not provided!'};
+        $c->detach();
+    }
+
+    # Process each Event
+    my @processed_events = ();
+    foreach my $event (@$events) {        
+
+        # Parse timestamp
+        my $timestamp = $event->{timestamp} ? $strp->parse_datetime($event->{timestamp}) : DateTime->now(time_zone => 'local');
+        if ( !defined $timestamp ) {
+            $c->stash->{rest} = {error => "Could not parse event timestamp [" . $event->{timestamp} . "]!"};
+            $c->detach();
+        }
+        
+        # Build event arguments
+        my %args = (
+            cvterm_id => $event->{cvterm_id},
+            value => $event->{value},
+            notes => $event->{notes},
+            operator => $event->{operator} || $user_name,
+            timestamp => $timestamp
+        );
+
+        # Add the event
+        eval {
+            my $event_obj = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema, parent_id => $seedlot_id });
+            my $processed_event = $event_obj->add(\%args);
+            push(@processed_events, $processed_event);
+        };
+        if ($@) {
+            $c->stash->{rest} = {error => "Could not store seedlot maintenance event [$@]!"};
+            $c->detach();
+        }
+
+    }
+
+    # Return the processed events in the response
+    $c->stash->{rest} = {
+        events => \@processed_events
+    };
+}
+
 
 1;
 
