@@ -1110,8 +1110,7 @@ sub seedlot_maintenance_event_GET {
 sub seedlot_maintenance_event_POST {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->stash->{schema};
-    my $seedlot_id = $c->stash->{seedlot_id};
+    my $seedlot = $c->stash->{seedlot};
     my $strp = DateTime::Format::Strptime->new(pattern => '%Y-%m-%d %H:%M:%S', time_zone => 'local');
 
     # Require user login
@@ -1121,7 +1120,6 @@ sub seedlot_maintenance_event_POST {
     }
 
     # Get user information and check role
-    my $user_name = $c->user()->get_object()->get_username();
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
         $c->stash->{rest} = { error => 'You do not have the required privileges to seedlot maintenance events.' };
         $c->detach();
@@ -1136,10 +1134,13 @@ sub seedlot_maintenance_event_POST {
     }
 
     # Process each Event
-    my @processed_events = ();
+    my @args = ();
     foreach my $event (@$events) {        
 
-        # Parse timestamp
+        # Set operator
+        my $operator = $event->{operator} || $c->user()->get_object()->get_username();
+
+        # Parse timestamp to DateTime
         my $timestamp = $event->{timestamp} ? $strp->parse_datetime($event->{timestamp}) : DateTime->now(time_zone => 'local');
         if ( !defined $timestamp ) {
             $c->stash->{rest} = {error => "Could not parse event timestamp [" . $event->{timestamp} . "]!"};
@@ -1147,31 +1148,28 @@ sub seedlot_maintenance_event_POST {
         }
         
         # Build event arguments
-        my %args = (
+        my %arg = (
             cvterm_id => $event->{cvterm_id},
             value => $event->{value},
             notes => $event->{notes},
-            operator => $event->{operator} || $user_name,
+            operator => $operator,
             timestamp => $timestamp
         );
 
-        # Add the event
-        eval {
-            my $event_obj = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema, parent_id => $seedlot_id });
-            my $processed_event = $event_obj->add(\%args);
-            push(@processed_events, $processed_event);
-        };
-        if ($@) {
-            $c->stash->{rest} = {error => "Could not store seedlot maintenance event [$@]!"};
-            $c->detach();
-        }
+        # Add event to arguments list
+        push(@args, \%arg)
 
     }
 
-    # Return the processed events in the response
-    $c->stash->{rest} = {
-        events => \@processed_events
+    # Store the events
+    eval {
+        my $processed_events = $seedlot->store_events(\@args);
+        $c->stash->{rest} = { events => $processed_events };
     };
+    if ($@) {
+        $c->stash->{rest} = {error => "Could not store seedlot maintenance events [$@]!"};
+        $c->detach();
+    }
 }
 
 

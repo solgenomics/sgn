@@ -99,6 +99,26 @@ my $cross => $seedlot->cross(),
 
 Seed transactions can be added using CXGN::Stock::Seedlot::Transaction.
 
+------------------------------------------------------------------------------
+
+Seed Maintenance Events can be stored and retrieved using the helper functions 
+in this Seedlot class.
+
+To add a Maintenance Event:
+
+my $seedlot = CXGN::Stock::Seedlot->new( schema => $schema, seedlot_id => $seedlot_id );
+my @events = (
+    {
+        cvterm_id => $cvterm_id,
+        value => $value,
+        notes => $notes,
+        operator => $operator,
+        timestamp => $timestamp
+    }
+);
+my $stored_events = $seedlot->store_events(\@events);
+
+
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
@@ -111,6 +131,7 @@ Nick Morales <nm529@cornell.edu>
 package CXGN::Stock::Seedlot;
 
 use Moose;
+use DateTime;
 
 extends 'CXGN::Stock';
 
@@ -1219,6 +1240,97 @@ sub delete {
     }
 
     return $error;
+}
+
+
+
+#
+# SEEDLOT MAINTENANCE EVENT FUNCTIONS
+#
+
+=head2 store_events()
+
+ Usage:         my @events = ( { cvterm_id => $cvterm_id, value => $value, notes => $notes, operator => $operator, timestamp => $timestamp }, ... );
+                my $stored_events = $sl->store_events(\@events);
+ Desc:          store one or more seedlot maintenance events in the database as a JSON stockprop associated with the seedlot's stock entry.
+                this function uses the CXGN::Stock::Seedlot::Maintenance class to store the JSON stockprop
+ Args:          $events = arrayref of hashes of the event properties, with the following keys:
+                    - cvterm_id: id of seedlot maintenance event ontology term
+                    - value: value of the seedlot maintenance event
+                    - notes: (optional) additional notes/comments about the event
+                    - operator: username of the person creating the event
+                    - timestamp: DateTime object of when the event was created 
+ Ret:           an arrayref of the processed/stored events (includes stockprop_id and processed timestamp)
+                the function will die on a caught error 
+
+=cut
+
+sub store_events {
+    my $self = shift;
+    my $events = shift;
+    my $schema = $self->schema();
+    my $seedlot_id = $self->seedlot_id();
+
+    # Process the passed events
+    my @processed_events = ();
+    foreach my $event (@$events) {
+        my $cvterm_id = $event->{cvterm_id};
+        my $value = $event->{value};
+        my $notes = $event->{notes};
+        my $operator = $event->{operator};
+        my $timestamp = $event->{timestamp};
+
+        # Check for required parameters
+        if ( !defined $cvterm_id || $cvterm_id eq '' ) {
+            die "cvterm_id is required!";
+        }
+        if ( !defined $value || $value eq '' ) {
+            die "value is required!";
+        }
+        if ( !defined $operator || $operator eq '' ) {
+            die "operator is required!";
+        }
+        if ( !defined $timestamp || $timestamp eq '' ) {
+            die "timestamp is required!";
+        }
+
+        # Parse DateTime into string
+        my $timestamp_str = $timestamp->strftime("%Y-%m-%d %H:%M:%S %z");
+
+        # Find matching cvterm by id
+        my $cvterm_rs = $schema->resultset("Cv::Cvterm")->search({ cvterm_id => $cvterm_id })->first();
+        if ( !defined $cvterm_rs ) {
+            die "cvterm_id $cvterm_id not found!";
+        }
+        my $cvterm_name = $cvterm_rs->name();
+
+        # Save processed event
+        my %processed_event = (
+            cvterm_id => $cvterm_id,
+            cvterm_name => $cvterm_name,
+            value => $value,
+            notes => $notes,
+            operator => $operator,
+            timestamp => $timestamp_str
+        );
+        push(@processed_events, \%processed_event);
+    }
+
+    # Store the processed events
+    foreach my $processed_event (@processed_events) {
+        my $event_obj = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema, parent_id => $seedlot_id });
+        $event_obj->cvterm_id($processed_event->{cvterm_id});
+        $event_obj->cvterm_name($processed_event->{cvterm_name});
+        $event_obj->value($processed_event->{value});
+        $event_obj->notes($processed_event->{notes});
+        $event_obj->operator($processed_event->{operator});
+        $event_obj->timestamp($processed_event->{timestamp});
+        my $stockprop_id = $event_obj->store_by_rank();
+        $processed_event->{stockprop_id} = $stockprop_id;
+    }
+
+    # Return the processed events
+    return(\@processed_events);
 }
 
 1;
