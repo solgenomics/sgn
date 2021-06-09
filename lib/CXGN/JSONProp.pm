@@ -106,7 +106,7 @@ sub load {  # must be called from BUILD in subclass
         if ($self->prop_table eq 'sp_orderprop') {
             $rs = $self->people_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
         } else {
-            my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
+            $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
         }
 	    if (my $row = $rs->next()) {
 	        if ($row->type_id() == $self->_prop_type_id()) {

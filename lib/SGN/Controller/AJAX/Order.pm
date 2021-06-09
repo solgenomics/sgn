@@ -152,7 +152,7 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     my @all_orders = @$all_orders_ref;
     foreach my $order (@all_orders) {
         if (($order->[3]) eq 'completed') {
-            push @completed_orders, [$order->[0], $order->[1], $order->[2], $order->[3], $order->[4], $order->[5], $order->[6]]
+            push @completed_orders, [qq{<a href="/order/details/view/$order->[0]">$order->[0]</a>}, $order->[1], $order->[2], $order->[3], $order->[4], $order->[5], $order->[6]]
         }
     }
 
