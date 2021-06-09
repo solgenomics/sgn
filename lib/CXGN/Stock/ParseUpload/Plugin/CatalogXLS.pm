@@ -74,8 +74,7 @@ sub _validate_with_plugin {
     my $material_source_header;
     my $breeding_program_header;
     my $availability_header;
-    my $contact_person_username;
-    my $comment_header;
+    my $contact_person_header;
 
     if ($worksheet->get_cell(0,0)) {
         $name_header  = $worksheet->get_cell(0,0)->value();
@@ -178,13 +177,13 @@ sub _validate_with_plugin {
         if (!$item_type || $item_type eq '') {
             push @error_messages, "Cell B$row_name: type missing";
         } elsif (!$supported_types{$item_type}) {
-            push @error_messages, "Cell B$row_name: type not supported: $item_type";
+            push @error_messages, "Cell B$row_name: type is not supported: $item_type";
         }
 
         if (!$category || $category eq '') {
             push @error_messages, "Cell C$row_name: category missing";
         } elsif (!$supported_categories{$category}) {
-            push @error_messages, "Cell C$row_name: category not supported: $category";
+            push @error_messages, "Cell C$row_name: category is not supported: $category";
         }
         if (!$description || $description eq '') {
             push @error_messages, "Cell D$row_name: description missing";
@@ -193,7 +192,7 @@ sub _validate_with_plugin {
         if (!$material_source || $material_source eq '') {
             push @error_messages, "Cell E$row_name: material_source missing";
         } elsif (!$supported_material_sources{$material_source}) {
-            push @error_messages, "Cell E$row_name: material source not supported: $material_source";
+            push @error_messages, "Cell E$row_name: material source is not supported: $material_source";
         }
 
         if (!$breeding_program || $breeding_program eq '') {
@@ -203,7 +202,7 @@ sub _validate_with_plugin {
         if (!$availability || $availability eq '') {
             push @error_messages, "Cell G$row_name: availability missing";
         } elsif (!$supported_availability{$availability}) {
-            push @error_messages, "Cell G$row_name: availability not supported: $availability";
+            push @error_messages, "Cell G$row_name: availability is not supported: $availability";
         }
 
         if (!$contact_person_username || $contact_person_username eq '') {
@@ -212,7 +211,7 @@ sub _validate_with_plugin {
 
         my $sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $contact_person_username);
         if (!$sp_person_id) {
-            push @error_messages, "Cell H$row_name: contact person name in not in database";
+            push @error_messages, "Cell H$row_name: contact person username is not in database";
         }
 
         if ($item_name){
