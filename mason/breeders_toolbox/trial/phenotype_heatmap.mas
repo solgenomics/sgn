@@ -925,20 +925,22 @@ jQuery(document).ready( function() {
         jQuery.ajax( {
              //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-             url: '/brapi/v2/studies/'+trial_id,
+             url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&pageSize=10000',
+            // url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
+                 console.log(response.result);
                 var data = response.result.data;
-                console.log('DATA: ',  data);
+                console.log('unordered: ',  data);
                 var data = data.sort(function(obj1, obj2) {
 	                  // Ascending: first plotNumber less than the previous
-	                return obj1.additionalInfo.plotNumber - obj2.additionalInfo.plotNumber;
+	                return obj1.observationUnitPUI - obj2.observationUnitPUI;
                 });
                 FieldMap.make_hash_map(data);
                 FieldMap.field_view();
-                console.log(data);
+                console.log('ordered: ', data);
             },
              error: function(reponse) {
                 alert('Error displaying traits assayed heatmap');   
@@ -1055,25 +1057,25 @@ jQuery(document).ready( function() {
     });
 
     function submit_fieldmap_metadata() {
-        // invert_rows = document.getElementById("invert_row_checkmark").checked ? "yes" : "no";
-        // new jQuery.ajax({
-        //     type: 'PUT',
-        //     source: '/brapi/v1/studies/' + trial_id + '/layout?pageSize=10000&page=0',
-        //     data: {
-        //         'invert_rows': invert_rows,
-        //         'changed_dim_rows': changed_dim_rows,
-        //         'changed_dim_cols': changed_dim_cols,
-        //         'top_border': top_border_selection,
-        //         'left_border': left_border_selection,
-        //         'right_border': right_border_selection,
-        //         'bottom_border': bottom_border_selection
-        //     },
+        invert_rows = document.getElementById("invert_row_checkmark").checked ? "yes" : "no";
+        new jQuery.ajax({
+            type: 'PUT',
+            url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&pageSize=10000',
+            data: [{
+                'invert_rows': invert_rows,
+                'changed_dim_rows': changed_dim_rows,
+                'changed_dim_cols': changed_dim_cols,
+                'top_border': top_border_selection,
+                'left_border': left_border_selection,
+                'right_border': right_border_selection,
+                'bottom_border': bottom_border_selection
+            }],
 
-        //     success: function(response) {
-        //         console.log(response);
-        //     }
+            success: function(response) {
+                console.log(response);
+            }
 
-        // })
+        })
         // new jQuery.ajax({
         //     type: 'POST',
         //     url: '/ajax/breeders/trial/<% $trial_id %>/submit_fieldmap_layout',

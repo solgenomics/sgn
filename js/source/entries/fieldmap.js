@@ -38,29 +38,31 @@ export function init() {
 
             jQuery.each(data, function(key_obj, value_obj) {
                 jQuery.each(value_obj, function(key, value) {
-                    if (key == 'Y'){
-                        value = parseInt(value);
-                        if (value < lowest_row) {
-                            lowest_row = value;
-                        } else if (value > highest_row) {
-                            highest_row = value;
+                    if (key == 'observationUnitPosition') {
+                        
+                        var row = parseInt(value.positionCoordinateY);
+                        var col = parseInt(value.positionCoordinateX);
+                        var entry_type = value.entryType;
+                        var block = parseInt(value.observationLevelRelationships[1].levelCode);
+                        var replicate = parseInt(value.observationLevelRelationships[0].levelCode);
+                        console.log(block);
+                        if (row < lowest_row) {
+                            lowest_row = row;
+                        } else if (row > highest_row) {
+                            highest_row = row;
                         }
-                        rows.push(value);
-                    }
-                    if (key == 'X'){
-                        value = parseInt(value);
-                        if (value < lowest_col) {
-                            lowest_col =  value;
-                        } else if (value > highest_col) {
-                            highest_col = value;
+                    
+                        if (col < lowest_col) {
+                            lowest_col = col;
+                        } else if (col > highest_col) {
+                            highest_col = col;
                         }
-                        cols.push(value);
-                    }
-                    if (key == 'blockNumber'){
-                        blocks.push(value);
-                    }
-                    if (key == 'entryType'){
-                        check.push(value);
+
+                        rows.push(row);
+                        cols.push(col);
+                        check.push(entry_type);
+                        blocks.push(block);
+                        replicates.push(replicate);
                     }
                     if (key == 'germplasmDbId'){
                         accession_ids.push(value);
@@ -74,14 +76,12 @@ export function init() {
                     if (key == 'observationUnitName'){
                         plot_names.push(value);
                     }
-                    if (key == 'replicate'){
-                        replicates.push(value);
+                    if (key == 'observationUnitPUI'){
+                        plot_mums.push(value);
                     }
+
                     if (key == 'additionalInfo'){
                         jQuery.each(value, function(key_add, value_add){
-                            if (key_add == 'plotNumber'){
-                                plot_mums.push(value_add);
-                            }
                             if (key_add == 'designType'){
                                 design = value_add;
                                 trialStudyDesign = value_add;
