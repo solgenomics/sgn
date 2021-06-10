@@ -1105,7 +1105,7 @@ sub seedlot_maintenance_event_GET {
 #       - value: value of seedlot maintenance event
 #       - notes: additional notes/comments about the event
 #       - operator: username of the person creating the event
-#       - timestamp: parsed timestamp of when the event was created (YYYY-MM-DD HH:MM:SS z format)
+#       - timestamp: timestamp of when the event was created (YYYY-MM-DD HH:MM:SS format)
 #
 sub seedlot_maintenance_event_POST {
     my $self = shift;
@@ -1140,11 +1140,14 @@ sub seedlot_maintenance_event_POST {
         # Set operator
         my $operator = $event->{operator} || $c->user()->get_object()->get_username();
 
-        # Parse timestamp to DateTime
-        my $timestamp = $event->{timestamp} ? $strp->parse_datetime($event->{timestamp}) : DateTime->now(time_zone => 'local');
-        if ( !defined $timestamp ) {
-            $c->stash->{rest} = {error => "Could not parse event timestamp [" . $event->{timestamp} . "]!"};
-            $c->detach();
+        # Set timestamp
+        my $timestamp;
+        if ( defined $event->{timestamp} && $event->{timestamp} ne '' ) {
+            $timestamp = $event->{timestamp};
+        }
+        else {
+            my $d = DateTime->now(time_zone => 'local');
+            $timestamp = $d->strftime("%Y-%m-%d %H:%M:%S");
         }
         
         # Build event arguments

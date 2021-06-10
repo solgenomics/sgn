@@ -1259,8 +1259,8 @@ sub delete {
                     - value: value of the seedlot maintenance event
                     - notes: (optional) additional notes/comments about the event
                     - operator: username of the person creating the event
-                    - timestamp: DateTime object of when the event was created 
- Ret:           an arrayref of the processed/stored events (includes stockprop_id and processed timestamp)
+                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+ Ret:           an arrayref of the processed/stored events (includes stockprop_id)
                 the function will die on a caught error 
 
 =cut
@@ -1293,9 +1293,9 @@ sub store_events {
         if ( !defined $timestamp || $timestamp eq '' ) {
             die "timestamp is required!";
         }
-
-        # Parse DateTime into string
-        my $timestamp_str = $timestamp->strftime("%Y-%m-%d %H:%M:%S %z");
+        if ( $timestamp !~ /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/ ) {
+            die "timestamp not valid format [YYYY-MM-DD HH:MM:SS]!";
+        }
 
         # Find matching cvterm by id
         my $cvterm_rs = $schema->resultset("Cv::Cvterm")->search({ cvterm_id => $cvterm_id })->first();
@@ -1311,7 +1311,7 @@ sub store_events {
             value => $value,
             notes => $notes,
             operator => $operator,
-            timestamp => $timestamp_str
+            timestamp => $timestamp
         );
         push(@processed_events, \%processed_event);
     }

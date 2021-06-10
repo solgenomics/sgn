@@ -1,6 +1,5 @@
 <%args>
     $operator => undef
-    $timestamp => undef
     $ontology_root => undef
 </%args>
 
@@ -8,7 +7,7 @@
 
 <& /page/page_title.mas, title => 'Seedlot Maintenance' &>
 
-<&| /page/info_section.mas, title=>"Record Maintenance Events",  collapsible => 1, collapsed=>0, subtitle=>"" &>
+<&| /page/info_section.mas, title=>"Record Events",  collapsible => 1, collapsed=>0, subtitle=>"Record maitenance events for the Seedlot" &>
     <br /><br />
     <div class="well" id="seedlot-maintenance-record-well">
 
@@ -60,7 +59,7 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label">Timestamp: </label>
                 <div class="col-sm-9">
-                    <input class="form-control" id="seedlot_event_timestamp" type="text" value="<% $timestamp %>">
+                    <input class="form-control" id="seedlot_event_timestamp" type="text" value="">
                 </div>
             </div>
 
@@ -69,7 +68,7 @@
             <!-- Record Button -->
             <div class="center">
                 <button id="seedlot_event_record" class="btn btn-info btn-block" style="max-width: 400px; margin: auto">Record</button>
-                <p id="seedlot_event_pending">&nbsp;</p>
+                <p id="seedlot_event_pending_count">&nbsp;</p>
             </div>
 
             <br />
@@ -80,191 +79,522 @@
     <br /><br />
 </&>
 
-<&| /page/info_section.mas, title=>"Submit Maintenance Events",  collapsible => 1, collapsed=>0, subtitle=>"" &>
+<&| /page/info_section.mas, title=>"Pending Events",  collapsible => 1, collapsed=>0, subtitle=>"Submit pending events to the database" &>
     <br /><br />
-    <div class="well">
-        <p>Testing</p>
+    
+    <!-- Pending Events -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Seedlot</th>
+                <th>Event</th>
+                <th>Value</th>
+                <th>Notes</th>
+                <th>Operator</th>
+                <th>Timestamp</th>
+                <th>Remove</th>
+            </tr>
+        <thead>
+        <tbody id="seedlot_event_pending_table"></tbody>
+    </table>
+
+    <br />
+
+    <!-- Submit Button -->
+    <div class="center">
+        <button id="seedlot_event_submit" class="btn btn-primary btn-block" style="max-width: 400px; margin: auto" disabled>Submit</button>
     </div>
+
     <br /><br />
 </&>
 
 
 <script type="text/javascript">
-let ONTOLOGY = [];
+    let ONTOLOGY = [];          // Seedlot Event Ontology representation (array of categories with events and values)
+    let PENDING_EVENTS = [];    // Array of pending events (recorded but not yet submitted)
 
-jQuery(document).ready(function () {
+    jQuery(document).ready(function () {
 
-    // Get ontology terms to build the event type selection
-    buildOntology(function() {
-        setEvents();
-    });
+        // Parse query arguments
+        parseArgs();
 
-    // Event change listener
-    jQuery('#seedlot_event_cvterm').change(setValues);
-
-    // Autocomplete for Seedlot Name input
-    jQuery("#seedlot_event_name").autocomplete({
-       source: '/ajax/stock/seedlot_name_autocomplete',
-    });
-
-});
-
-
-/**
- * Build the Seedlot Maintenance Event Ontology
- * - Get the categories, events, and values of the ontology
- * @param {function}  callback  Callback function(ontology)
- */
-function buildOntology(callback) {
-    _getCategories("<% $ontology_root %>", function(categories) {
-        _addEventsToCategories(categories, function(categories_events) {
-            _addValuesToEvents(categories_events, function(categories_events_values) {
-                ONTOLOGY = categories_events_values;
-                console.log("====> RETURN FROM buildOntology()");
-                return callback();
-            });
+        // Get ontology terms to build the event type selection, set intitial timestamp
+        buildOntology(function() {
+            setEvents();
         });
+        setTimestamp();
+
+        // Event change / Click listeners
+        jQuery('#seedlot_event_cvterm').change(setValues).change(setTimestamp);
+        jQuery('#seedlot_event_record').click(recordEvent);
+        jQuery('#seedlot_event_submit').click(submitEvents);
+
+        // Autocomplete for Seedlot Name input
+        jQuery("#seedlot_event_name").autocomplete({
+            source: '/ajax/stock/seedlot_name_autocomplete',
+        });
+
     });
+
+
+    //
+    // SETUP FUNCTIONS
+    //
 
     /**
-     * Get the categories (first children of the root) of the ontology
-     */
-    function _getCategories(root, callback) {
-        _getOntologyChildren(root, function(categories) {
-            console.log("==> RETURN FROM getCategories()");
-            return callback(categories);
-        });
+    * Parse the query parameters
+    * - Use `seedlot_name` to set the Seedlot Name input
+    */
+    function parseArgs() {
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        if ( urlSearchParams.has('seedlot_name') ) {
+            let seedlot_name = urlSearchParams.get('seedlot_name');
+            jQuery('#seedlot_event_name').val(seedlot_name);
+        }
     }
 
     /**
-     * Get the events (second children of the root) of each of the category terms
-     * - Add the events to the categories using the 'events' key
-     */
-    function _addEventsToCategories(categories, callback) {
-        let count = 0;
-        let total = categories.length;
+    * Build the Seedlot Maintenance Event Ontology
+    * - Get the categories, events, and values of the ontology
+    * @param {function}  callback  Callback function()
+    */
+    function buildOntology(callback) {
+        _getCategories("<% $ontology_root %>", function(categories) {
+            _addEventsToCategories(categories, function(categories_events) {
+                _addValuesToEvents(categories_events, function(categories_events_values) {
+                    ONTOLOGY = categories_events_values;
+                    return callback();
+                });
+            });
+        });
 
-        for ( let i = 0; i < categories.length; i++ ) {
-            _getOntologyChildren(categories[i].accession, function(events) {
-                categories[i].events = events;
+        /**
+        * Get the categories (first children of the root) of the ontology
+        */
+        function _getCategories(root, callback) {
+            _getOntologyChildren(root, function(categories) {
+                return callback(categories);
+            });
+        }
+
+        /**
+        * Get the events (second children of the root) of each of the category terms
+        * - Add the events to the categories using the 'events' key
+        */
+        function _addEventsToCategories(categories, callback) {
+            let count = 0;
+            let total = categories.length;
+
+            for ( let i = 0; i < categories.length; i++ ) {
+                _getOntologyChildren(categories[i].accession, function(events) {
+                    categories[i].events = events;
+                    _finish();
+                });
+            }
+
+            function _finish() {
+                count++;
+                if ( count >= total ) {
+                    return callback(categories);
+                }
+            }
+        }
+
+        /**
+        * Get the values (third children of the root) of each of the event terms
+        * - Add values to the events using the 'values' key
+        */
+        function _addValuesToEvents(categories_events, callback) {
+            let count = 0;
+            let total = 0;
+            for ( let i = 0; i < categories_events.length; i++ ) {
+                for ( let j = 0; j < categories_events[i].events.length; j++ ) {
+                    total++;
+                }
+            }
+
+            for ( let i = 0; i < categories_events.length; i++ ) {
+                for ( let j = 0; j < categories_events[i].events.length; j++ ) {
+                    _getOntologyChildren(categories_events[i].events[j].accession, function(values) {
+                        categories_events[i].events[j].values = values;
+                        _finish();
+                    })
+                }
+            }
+
+            function _finish() {
+                count++;
+                if ( count >= total ) {
+                    return callback(categories_events);
+                }
+            }
+        }
+
+        /**
+        * Get the children of the specified ontology term
+        * @param {string} root Ontology accession
+        * @param {function} callback Callback function(children)
+        */
+        function _getOntologyChildren(root, callback) {
+            jQuery.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: '/ajax/onto/children?node=' + root,
+                success: function(data) {
+                    return callback(data);
+                },
+                error: function() {
+                    alert("ERROR: Could not fetch ontology terms");
+                }
+            });
+        }
+    }
+
+    /**
+    * Set the selection box for the Seedlot Maintenance Events
+    * - Parse the ONTOLOGY array into option groups and options
+    */
+    function setEvents() {
+        let html = "<option value=''>...Select Maintenance Event...</option>";
+        for ( let i = 0; i < ONTOLOGY.length; i++ ) {
+            html += "<optgroup label='" + ONTOLOGY[i].cvterm_name + "'>";
+            for ( let j = 0; j < ONTOLOGY[i].events.length; j++ ) {
+                html += "<option value='" + ONTOLOGY[i].events[j].cvterm_id + "'>" + ONTOLOGY[i].events[j].cvterm_name + "</option>";
+            }
+            html += "</optgroup>";
+        }
+        jQuery("#seedlot_event_cvterm").html(html);
+        jQuery("#seedlot_event_cvterm").prop("disabled", false);
+        setValues();
+    }
+
+    /**
+    * Set the Seedot Maintenance Event Value input based on the currently selected Event
+    */
+    function setValues() {
+        let event = jQuery("#seedlot_event_cvterm").val();
+        let html = "";
+
+        if ( !event || event === '' ) {
+            html = "<p style='margin-top: 7px'><em>...Select Maintenance Event...</em></p>";
+        }
+        else {
+            let values = [];
+            for ( let i = 0; i < ONTOLOGY.length; i++ ) {
+                for ( let j = 0; j < ONTOLOGY[i].events.length; j++ ) {
+                    if ( parseInt(ONTOLOGY[i].events[j].cvterm_id) === parseInt(event) ) {
+                        values = ONTOLOGY[i].events[j].values;
+                    }
+                }
+            }
+            if ( values.length > 0 ) {
+                html = "<select class='form-control' id='seedlot_event_value' data-type='cvterm'>";
+                for ( let i = 0; i < values.length; i++ ) {
+                    html += "<option value='" + values[i].cvterm_id + "'>" + values[i].cvterm_name + "</option>";
+                }
+                html += "</select>";
+            }
+            else {
+                html += "<input class='form-control' id='seedlot_event_value' type='text' data-type='text'>";
+            }
+        }
+
+        jQuery("#seedlot_event_value_div").html(html);
+    }
+
+    /**
+     * Set the value of the timestamp input to YYYY-MM-DD HH:MM:SS
+     */
+    function setTimestamp() {
+        let now = new Date();
+        let y = now.getFullYear();
+        let m = now.getMonth() + 1;
+        let d = now.getDate();
+        let h = now.getHours();
+        let i = now.getMinutes();
+        let s = now.getSeconds();
+
+        if ( m <= 9 ) m = '0' + m;
+        if ( d <= 9 ) d = '0' + d;
+        if ( h <= 9 ) h = '0' + h;
+        if ( i <= 9 ) i = '0' + i;
+        if ( s <= 9 ) s = '0' + s;
+
+        let ts = y + '-' + m + '-' + d + ' ' + h + ':' + i + ':' + s;
+        jQuery("#seedlot_event_timestamp").val(ts);
+    }
+
+
+    //
+    // RECORD / SUBMIT FUNCTIONS
+    //
+
+    /**
+     * Add event input as a pending event
+     * - Check if seedlot name, event, and value have been entered
+     * - Add event info to PENDING_EVENTS array
+     * - call displayPendingEvents() to update the table of pending events
+     */
+    function recordEvent() {
+
+        // Add event to list of pending events
+        let event = {
+            seedlot_name: jQuery("#seedlot_event_name").val(),
+            cvterm_id: jQuery("#seedlot_event_cvterm").val(),
+            cvterm_name: jQuery("#seedlot_event_cvterm option:selected").text(),
+            value: jQuery("#seedlot_event_value").data("type") === 'cvterm' ? jQuery("#seedlot_event_value option:selected").text() : jQuery("#seedlot_event_value").val(),
+            notes: jQuery("#seedlot_event_notes").val(),
+            operator: jQuery("#seedlot_event_operator").val(),
+            timestamp: jQuery("#seedlot_event_timestamp").val()
+        }
+        if ( !event.seedlot_name || event.seedlot_name === '' ) {
+            alert("Seedlot name required!");
+            return false;
+        }
+        if ( !event.cvterm_id || event.cvterm_id === '' || !event.cvterm_name || event.cvterm_name === '' ) {
+            alert("Maintenance event required!");
+            return false;
+        }
+        if ( !event.value || event.value === '' ) {
+            alert("Event value required!");
+            return false;
+        }
+        if ( event.timestamp && event.timestamp !== '' ) {
+            let regex = /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/;
+            if ( !event.timestamp.match(regex) ) {
+                alert("Timestamp must be in YYYY-MM-DD HH:MM:SS format!");
+                return false;
+            }
+        }
+        PENDING_EVENTS.push(event);
+
+        // Reset input
+        jQuery("#seedlot_event_cvterm").val("");
+        setValues();
+        jQuery("#seedlot_event_notes").val("");
+        setTimestamp();
+
+        // Update table of pending events
+        displayPendingEvents();
+        return false;
+
+    }
+
+    /**
+     * Rebuild the table of pending events
+     * - Use the PENDING_EVENTS array to rebuild the body of the table of pending events
+     * - Display the count of pending events
+     * - Enable submit button when there is 1+ pending events
+     */
+    function displayPendingEvents() {
+
+        // Build Table Body
+        let html = "";
+        for ( let i = 0; i < PENDING_EVENTS.length; i++ ) {
+            html += "<tr>";
+            html += "<td>" + PENDING_EVENTS[i].seedlot_name + "</td>";
+            html += "<td>" + PENDING_EVENTS[i].cvterm_name + "</td>";
+            html += "<td>" + PENDING_EVENTS[i].value + "</td>";
+            html += "<td>" + PENDING_EVENTS[i].notes + "</td>";
+            html += "<td>" + PENDING_EVENTS[i].operator + "</td>";
+            html += "<td>" + PENDING_EVENTS[i].timestamp + "</td>";
+            html += "<td><button class='seedlot_event_pending_remove btn btn-danger btn-xs' data-row='" + i + "'><span class='glyphicon glyphicon-remove'></span></button></td>";
+            html += "</tr>";
+        }
+        jQuery("#seedlot_event_pending_table").html(html);
+
+        // Display count of pending events
+        jQuery("#seedlot_event_pending_count").html("<em>" + PENDING_EVENTS.length + " pending event(s)</em>");
+
+        // Enable submit button
+        jQuery("#seedlot_event_submit").attr('disabled', PENDING_EVENTS.length === 0);
+
+        // Add click listener for remove button
+        jQuery('.seedlot_event_pending_remove').off().click(function() {
+            let row = jQuery(this).attr('data-row');
+            PENDING_EVENTS.splice(row, 1);
+            displayPendingEvents();
+        });
+
+    }
+
+
+    /**
+     * Submit the pending events to the database
+     * - Get the IDs of the Seedlots (by name) in PENDING_EVENTS
+     * - Submit the events for each Seedlot
+     * - If submitted, remove the events from PENDING_EVENTS
+     */
+    function submitEvents() {
+        let count = 0;          // count of seedlot names that have been processed
+        let total = 0;          // total number of seedlot names to process (to be set later)
+        let submitted = [];     // array of indexes of events in PENDING_EVENTS that have been submitted
+
+        // Disable Submit Button
+        jQuery("#seedlot_event_submit").attr('disabled', true);
+        jQuery("#seedlot_event_submit").html("Submitting...");
+
+        // Get Seedlot Stock IDs by Seedlot Name
+        getSeedlotIDs(function(seedlot_ids) {
+            total = Object.keys(seedlot_ids).length;
+
+            // Parse each Seedlot Name
+            for ( let seedlot_name in seedlot_ids ) {
+                if ( seedlot_ids.hasOwnProperty(seedlot_name) ) {
+                    let seedlot_id = seedlot_ids[seedlot_name];
+                    
+                    // Add the events if the Seedlot has a valid ID
+                    if ( seedlot_id && seedlot_id !== "" ) {
+                        
+                        // Get events for the current seedlot
+                        let events = [];
+                        let event_indexes = [];
+                        for ( let j = 0; j < PENDING_EVENTS.length; j++ ) {
+                            if ( PENDING_EVENTS[j].seedlot_name === seedlot_name ) {
+                                events.push(PENDING_EVENTS[j]);
+                                event_indexes.push(j);
+                            }
+                        }
+
+                        // Submit all events for the current seedlot
+                        _submitSeedlotEvents(seedlot_id, events, function(success) {
+                            if ( success ) {
+                                submitted = submitted.concat(event_indexes);
+                            }
+                            _finish();
+                        });
+
+                    }
+
+                    // Seedlot ID not found...
+                    else {
+                        _finish();
+                    }
+                }
+            }
+        });
+
+        /**
+         * Submit the specified events to the database for the specified Seedlot
+         * @param {int} seedlot_id Seedlot Stock ID
+         * @param {Object[]} events Array of event parameters
+         * @param {function} callback Callback function(success)
+         */
+        function _submitSeedlotEvents(seedlot_id, events, callback) {
+            jQuery.ajax({
+                type: "POST",
+                url: "/ajax/breeders/seedlot/" + seedlot_id + "/maintenance",
+                data: JSON.stringify({events: events}),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function(data) {
+                    if ( data && data.events && data.events.length === events.length ) {
+                        return callback(true);
+                    }
+                    else if ( data && data.error ) {
+                        alert("Could not submit events! [" + data.error + "]");
+                        return callback(false);
+                    }
+                    else {
+                        alert("Could not submit events! [Unknown error]");
+                        return callback(false);
+                    }
+                },
+                error: function(msg) {
+                    alert("Could not submit events! [" + msg + "]");
+                    return callback(false);
+                }
+            });
+        }
+
+        /**
+         * Finish processing a Seedlot
+         * - Remove submitted events from PENDING_EVENTS
+         * - Rebuild the pending events table
+         */
+        function _finish() {
+            count++;
+            if ( count >= total ) {
+                for ( let i = PENDING_EVENTS.length-1; i >= 0; i-- ) {
+                    if ( submitted.includes(i) ) {
+                        PENDING_EVENTS.splice(i, 1);
+                    }
+                }
+                jQuery("#seedlot_event_submit").attr('disabled', false);
+                jQuery("#seedlot_event_submit").html("Submit");
+                displayPendingEvents();
+            }
+        }
+    }
+
+    /**
+     * Get the Seedlot IDs by Seedlot names (as listed in PENDING_EVENTS)
+     * - Query the DB for Seedlot details by Seedlot name(s)
+     * - Returns to the callback an object of seedlot_names -> ids
+     * @param {function} callback Callback function(seedlot_ids)
+     */
+    function getSeedlotIDs(callback) {
+        let seedlot_ids = {};
+
+        // Get array of Seedlot Names
+        let names = [];
+        for ( let i = 0; i < PENDING_EVENTS.length; i++ ) {
+            if ( !names.includes(PENDING_EVENTS[i].seedlot_name) ) {
+                names.push(PENDING_EVENTS[i].seedlot_name);
+            }
+        }
+        
+        // Check to make sure each Seedlot name is associated with an existing Seedlot
+        let count = 0;
+        let total = names.length;
+        for ( let i = 0; i < names.length; i++ ) {
+            let seedlot_name = names[i];
+            _getSeedlot(seedlot_name, function(id) {
+                if ( !id ) {
+                    alert("Seedlot " + seedlot_name + " does not exist!  Check the name to make sure it matches an existing Seedlot.");
+                }
+                seedlot_ids[seedlot_name] = id;
                 _finish();
             });
         }
 
-        function _finish() {
-            count++;
-            if ( count >= total ) {
-                console.log("==> RETURN FROM addEventsToCategories()");
-                return callback(categories);
-            }
-        }
-    }
-
-    /**
-     * Get the values (third children of the root) of each of the event terms
-     * - Add values to the events using the 'values' key
-     */
-    function _addValuesToEvents(categories_events, callback) {
-        let count = 0;
-        let total = 0;
-        for ( let i = 0; i < categories_events.length; i++ ) {
-            for ( let j = 0; j < categories_events[i].events.length; j++ ) {
-                total++;
-            }
-        }
-
-        for ( let i = 0; i < categories_events.length; i++ ) {
-            for ( let j = 0; j < categories_events[i].events.length; j++ ) {
-                _getOntologyChildren(categories_events[i].events[j].accession, function(values) {
-                    categories_events[i].events[j].values = values;
-                    _finish();
-                })
-            }
-        }
-
-        function _finish() {
-            count++;
-            if ( count >= total ) {
-                console.log("==> RETURN FROM addValuesToEvents()");
-                return callback(categories_events);
-            }
-        }
-    }
-}
-
-/**
- * Set the selection box for the Seedlot Maintenance Events
- * - Parse the ONTOLOGY array into option groups and options
- */
-function setEvents() {
-    let html = "<option value=''>...Select Maintenance Event...</option>";
-    for ( let i = 0; i < ONTOLOGY.length; i++ ) {
-        html += "<optgroup label='" + ONTOLOGY[i].cvterm_name + "'>";
-        for ( let j = 0; j < ONTOLOGY[i].events.length; j++ ) {
-            html += "<option value='" + ONTOLOGY[i].events[j].cvterm_id + "'>" + ONTOLOGY[i].events[j].cvterm_name + "</option>";
-        }
-        html += "</optgroup>";
-    }
-    jQuery("#seedlot_event_cvterm").html(html);
-    jQuery("#seedlot_event_cvterm").prop("disabled", false);
-    setValues();
-}
-
-/**
- * Set the Seedot Maintenance Event Value input based on the currently selected Event
- */
-function setValues() {
-    let event = jQuery("#seedlot_event_cvterm").val();
-    let html = "";
-
-    if ( !event || event === '' ) {
-        html = "<p style='margin-top: 7px'><em>...Select Maintenance Event...</em></p>";
-    }
-    else {
-        let values = [];
-        for ( let i = 0; i < ONTOLOGY.length; i++ ) {
-            for ( let j = 0; j < ONTOLOGY[i].events.length; j++ ) {
-                if ( parseInt(ONTOLOGY[i].events[j].cvterm_id) === parseInt(event) ) {
-                    values = ONTOLOGY[i].events[j].values;
+        /**
+         * Check if Seedlot exists and get the seedlot id
+         * @param {string} name Seedlot name
+         * @param {function} callback Callback function(id)
+         */
+        function _getSeedlot(name, callback) {
+            jQuery.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: '/ajax/breeders/seedlots?seedlot_name=' + name,
+                success: function(data) {
+                    let exists = data && data.recordsTotal && data.recordsTotal === 1;
+                    if ( exists ) {
+                        return callback(data.data[0].seedlot_stock_id);
+                    }
+                    else {
+                        return callback(undefined);
+                    }
+                },
+                error: function() {
+                    alert("ERROR: Could not fetch seedlot details!");
+                    return callback(undefined);
                 }
+            });
+        }
+
+        /**
+         * Finish processing the Seedlot, return to callback when done
+         */
+        function _finish() {
+            count++;
+            if ( count >= total ) {
+                return callback(seedlot_ids);
             }
         }
-        if ( values.length > 0 ) {
-            html = "<select class='form-control' id='seedlot_event_value' data-type='cvterm'>";
-            for ( let i = 0; i < values.length; i++ ) {
-                html += "<option value='" + values[i].cvterm_id + "'>" + values[i].cvterm_name + "</option>";
-            }
-            html += "</select>";
-        }
-        else {
-            html += "<input class='form-control' id='seedlot_event_value' type='text' data-type='text'>";
-        }
+
     }
-
-    jQuery("#seedlot_event_value_div").html(html);
-}
-
-
-
-
-/**
- * Get the children of the specified ontology term
- * @param {string} root Ontology accession
- * @param {function} callback Callback function(children)
- */
-function _getOntologyChildren(root, callback) {
-    jQuery.ajax({
-        type: 'GET',
-        dataType: 'json',
-        url: '/ajax/onto/children?node=' + root,
-        success: function(data) {
-            return callback(data);
-        },
-        error: function() {
-            alert("ERROR: Could not fetch ontology terms");
-        }
-    });
-}
 
 </script>
 
@@ -272,6 +602,9 @@ function _getOntologyChildren(root, callback) {
     #seedlot-maintenance-record-well {
         max-width: 800px;
         margin: 0 auto;
+    }
+    #seedlot_event_pending_count {
+        margin-top: 5px;
     }
     .center {
         margin: 0 auto;
