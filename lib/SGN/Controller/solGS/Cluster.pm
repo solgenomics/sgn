@@ -719,7 +719,7 @@ sub create_cluster_phenotype_data_query_jobs {
 	}
 
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
-	$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials);
+	$c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, $trials);
 	$c->stash->{cluster_pheno_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
     }
 
@@ -745,7 +745,7 @@ sub create_cluster_genotype_data_query_jobs {
     else
     {
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{cluster_pop_id}];
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
+	$c->controller('solGS::AsyncJob')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
 	$c->stash->{cluster_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
 
@@ -800,7 +800,7 @@ sub run_cluster {
     $self->cluster_r_jobs_file($c);
     $c->stash->{dependent_jobs} = $c->stash->{cluster_r_jobs_file};
 
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 
 }
 
@@ -816,12 +816,12 @@ sub run_cluster_single_core {
 
     foreach my $job (@$queries)
     {
-	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+	$c->controller('solGS::AsyncJob')->submit_job_cluster($c, $job);
     }
 
     foreach my $job (@$r_jobs)
     {
-	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+	$c->controller('solGS::AsyncJob')->submit_job_cluster($c, $job);
     }
 
 }
@@ -836,7 +836,7 @@ sub run_cluster_multi_cores {
     $self->cluster_r_jobs_file($c);
     $c->stash->{dependent_jobs} = $c->stash->{cluster_r_jobs_file};
 
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 
 }
 
@@ -860,7 +860,7 @@ sub cluster_r_jobs {
     $c->stash->{r_temp_file}  = "${cluster_type}-${file_id}";
     $c->stash->{r_script}     = 'R/solGS/cluster.r';
 
-    $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
+    $c->controller('solGS::AsyncJob')->get_cluster_r_job_args($c);
     my $jobs  = $c->stash->{cluster_r_job_args};
 
     if (reftype $jobs ne 'ARRAY')

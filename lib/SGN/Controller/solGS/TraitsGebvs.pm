@@ -98,7 +98,7 @@ sub combine_gebvs_jobs {
 
     $self->combine_gebvs_jobs_args($c);
 
-    $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
+    $c->controller('solGS::AsyncJob')->get_cluster_r_job_args($c);
     my $jobs  = $c->stash->{cluster_r_job_args};
 
     if (reftype $jobs ne 'ARRAY')
@@ -114,7 +114,7 @@ sub run_combine_traits_gebvs {
     my ($self, $c) = @_;
 
     $self->combine_gebvs_jobs_args($c);
-    $c->controller("solGS::solGS")->run_r_script($c);
+    $c->controller("solGS::AsyncJob")->run_r_script($c);
 
 }
 

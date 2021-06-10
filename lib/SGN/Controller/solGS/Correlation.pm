@@ -112,7 +112,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
 
     # $c->controller('solGS::TraitsGebvs')->combine_gebvs_of_traits($c);
     $c->controller('solGS::TraitsGebvs')->run_combine_traits_gebvs($c);
-    
+
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     $combined_gebvs_file = $c->controller('solGS::Files')->copy_file($combined_gebvs_file, $tmp_dir);
@@ -173,7 +173,7 @@ sub create_correlation_phenodata_file {
 	my $queries =$c->stash->{corre_pheno_query_jobs_file};
 
 	$c->stash->{dependent_jobs} = $queries;
-	$c->controller('solGS::solGS')->run_async($c);
+	$c->controller('solGS::AsyncJob')->run_async($c);
 
 	$c->controller("solGS::Files")->phenotype_file_name($c, $pop_id);
 	$phenotype_file = $c->stash->{phenotype_file_name};
@@ -516,7 +516,7 @@ sub run_correlation_analysis {
     $c->stash->{prerequisite_jobs} = $queries_file if $queries_file;
     $c->stash->{dependent_jobs} = $r_jobs_file;
 
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 
 }
 
@@ -538,7 +538,7 @@ sub corre_pheno_r_jobs {
 
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{correlation_temp_dir};
 
-    $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
+    $c->controller('solGS::AsyncJob')->get_cluster_r_job_args($c);
     my $jobs  = $c->stash->{cluster_r_job_args};
 
     if (reftype $jobs ne 'ARRAY')
@@ -572,7 +572,7 @@ sub corre_pheno_query_jobs {
 
 
     my $trial_id = $c->stash->{pop_id} || $c->stash->{trial_id};
-    $c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
+    $c->controller('solGS::Async')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
     my $jobs = $c->stash->{cluster_phenotype_query_job_args};
 
     if (reftype $jobs ne 'ARRAY')
