@@ -102,16 +102,28 @@
 
     <!-- Submit Button -->
     <div class="center">
-        <button id="seedlot_event_submit" class="btn btn-primary btn-block" style="max-width: 400px; margin: auto" disabled>Submit</button>
+        <button id="seedlot_event_submit" class="btn btn-primary btn-block" style="max-width: 600px; margin: auto" disabled>Submit</button>
     </div>
 
     <br /><br />
 </&>
 
 
+<!-- Message Modal -->
+<div id="seedlot_modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div id="seedlot_modal_body" class="modal-body"></div>
+            <div class="modal-footer"><button id="seedlot_modal_close" type="button" class="btn btn-default">Close</button></div>
+        </div>
+    </div>
+</div>
+
+
 <script type="text/javascript">
     let ONTOLOGY = [];          // Seedlot Event Ontology representation (array of categories with events and values)
     let PENDING_EVENTS = [];    // Array of pending events (recorded but not yet submitted)
+    let MESSAGES = [];          // Array of messages to display in the message modal
 
     jQuery(document).ready(function () {
 
@@ -128,6 +140,10 @@
         jQuery('#seedlot_event_cvterm').change(setValues).change(setTimestamp);
         jQuery('#seedlot_event_record').click(recordEvent);
         jQuery('#seedlot_event_submit').click(submitEvents);
+        jQuery('#seedlot_modal_close').click(function() {
+            MESSAGES = [];
+            jQuery('#seedlot_modal').modal('hide');
+        });
 
         // Autocomplete for Seedlot Name input
         jQuery("#seedlot_event_name").autocomplete({
@@ -348,21 +364,21 @@
             timestamp: jQuery("#seedlot_event_timestamp").val()
         }
         if ( !event.seedlot_name || event.seedlot_name === '' ) {
-            alert("Seedlot name required!");
+            displayError("Seedlot name is required - please enter a Seedlot name before recording the event.");
             return false;
         }
         if ( !event.cvterm_id || event.cvterm_id === '' || !event.cvterm_name || event.cvterm_name === '' ) {
-            alert("Maintenance event required!");
+            displayError("Maintenance event required - please select a Seedlot maintenace event before recording the event.");
             return false;
         }
         if ( !event.value || event.value === '' ) {
-            alert("Event value required!");
+            displayError("Event value required - please enter a Seedlot maintenance event value before recording the event.");
             return false;
         }
         if ( event.timestamp && event.timestamp !== '' ) {
             let regex = /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/;
             if ( !event.timestamp.match(regex) ) {
-                alert("Timestamp must be in YYYY-MM-DD HH:MM:SS format!");
+                displayError("Incorrect timestamp format - the timestamp must be in the format of YYYY-MM-DD HH:MM:SS");
                 return false;
             }
         }
@@ -492,16 +508,16 @@
                         return callback(true);
                     }
                     else if ( data && data.error ) {
-                        alert("Could not submit events! [" + data.error + "]");
+                        displayError("The events could not be submitted due to a database error:<br /><br /><pre><code>" + data.error + "</code></pre>");
                         return callback(false);
                     }
                     else {
-                        alert("Could not submit events! [Unknown error]");
+                        displayError("The events could not be submitted due to an unknown database error");
                         return callback(false);
                     }
                 },
                 error: function(msg) {
-                    alert("Could not submit events! [" + msg + "]");
+                    displayError("The events could not be submitted due to a database error:<br /><br /><pre><code>" + msg + "</code></pre>");
                     return callback(false);
                 }
             });
@@ -522,6 +538,7 @@
                 }
                 jQuery("#seedlot_event_submit").attr('disabled', false);
                 jQuery("#seedlot_event_submit").html("Submit");
+                if ( submitted.length > 0 ) displaySuccess(submitted.length + " Seedlot maintenance event(s) submitted!");
                 displayPendingEvents();
             }
         }
@@ -551,7 +568,7 @@
             let seedlot_name = names[i];
             _getSeedlot(seedlot_name, function(id) {
                 if ( !id ) {
-                    alert("Seedlot " + seedlot_name + " does not exist!  Check the name to make sure it matches an existing Seedlot.");
+                    displayError("Seedlot <strong>" + seedlot_name + "</strong> does not exist - check the name to make sure it matches an existing Seedlot.");
                 }
                 seedlot_ids[seedlot_name] = id;
                 _finish();
@@ -594,6 +611,48 @@
             }
         }
 
+    }
+
+
+    /**
+     * Display an error message in a bootstrap modal
+     * @param {string} msg Error message to display (can include HTML)
+     */
+    function displayError(msg) {
+        displayModal("Error", "#a94442", msg);
+    }
+
+    /**
+     * Display a success message in a bootstrap modal
+     * @param {string} msg Success message to display (can include HTML)
+     */
+    function displaySuccess(msg) {
+        displayModal("Success", "#3c763d", msg);
+    }
+
+    /**
+     * Display a message (and any existing messages) in a bootstrap modal
+     * @param {string} title Message title
+     * @param {string} color Message title color
+     * @param {string} msg Message to display (can include HTML)
+     */
+    function displayModal(title, color, msg) {
+        let message = {
+            title: title,
+            color: color,
+            msg: msg
+        }
+        MESSAGES.push(message);
+
+        let html = [];
+        for ( let i = 0; i < MESSAGES.length; i++ ) {
+            let _html = "<h1 style='color: " + MESSAGES[i].color + "'>" + MESSAGES[i].title + "</h1>";
+            _html += "<p style='margin: 15px 5px; font-size: 110%;'>" + MESSAGES[i].msg + "</p>";
+            html.push(_html);
+        }
+
+        jQuery('#seedlot_modal_body').html(html.join("<hr />"));
+        jQuery('#seedlot_modal').modal({backdrop: 'static', keyboard: false});
     }
 
 </script>
