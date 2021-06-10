@@ -138,7 +138,6 @@ sub get_cluster_genotype_query_job_args {
 
 	if (!-s $geno_file)
 	{
-	    #my $pop_id = $args->{selection_pop_id} || $args->{selection_pop_id} || $args->{training_pop_id};
 	    my $args = $self->genotype_trial_query_args($c, $trial_id, $protocol_id);
 
 	    $c->stash->{r_temp_file} = "genotype-data-query-${trial_id}";
@@ -403,9 +402,6 @@ sub get_selection_pop_query_args {
     }
     elsif ($selection_pop_id =~ /dataset/)
     {
-	# $c->controller('solGS::Dataset')->get_dataset_genotypes_list($c);
-	# $genotypes_ids = $c->stash->{genotypes_ids};
-
 	$pop_type = 'dataset';
     }
     else
