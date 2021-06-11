@@ -1,4 +1,4 @@
-package solGS::asyncJob;
+package solGS::JobSubmission;
 
 
 use Moose;
@@ -38,40 +38,40 @@ has "config_file" => (
 
 sub run {
     my $self = shift;
- 
-    my $pre_jobs = $self->run_prerequisite_jobs;  
-    my $dep_jobs = $self->run_dependent_jobs($pre_jobs);  
+
+    my $pre_jobs = $self->run_prerequisite_jobs;
+    my $dep_jobs = $self->run_dependent_jobs($pre_jobs);
     $self->send_analysis_report($dep_jobs);
-    
+
 }
 
 
 sub run_prerequisite_jobs {
     my $self = shift;
-    
+
     my @jobs;
     my $jobs = $self->prerequisite_jobs;
-   
+
     if ($jobs !~ /none/)
-    {  	     
+    {
 	$jobs = retrieve($jobs);
 
-	if (reftype $jobs eq 'HASH') 
+	if (reftype $jobs eq 'HASH')
 	{
 	    my @priority_jobs;
-	    foreach my $rank (sort keys %$jobs) 
-	    {	
+	    foreach my $rank (sort keys %$jobs)
+	    {
 		my $js = $jobs->{$rank};
-		foreach my $jb (@$js) 
+		foreach my $jb (@$js)
 		{
 		    my $sj = $self->submit_job($jb);
 		    push @priority_jobs, $sj;
-		}	
+		}
 	    }
 
-	    foreach my $priority_job (@priority_jobs) 
-	    {	
-		while (1) 
+	    foreach my $priority_job (@priority_jobs)
+	    {
+		while (1)
 		{
 		    last if !$priority_job->alive();
 		    sleep 30 if $priority_job->alive();
@@ -80,23 +80,23 @@ sub run_prerequisite_jobs {
 	}
 	else
 	{
-	    if (reftype $jobs ne 'ARRAY' && reftype $jobs ne 'HASH') 
+	    if (reftype $jobs ne 'ARRAY' && reftype $jobs ne 'HASH')
 	    {
 		$jobs = [$jobs];
 	    }
 
-	    foreach my $job (@$jobs) 
+	    foreach my $job (@$jobs)
 	    {
 		my $job = $self->submit_job($job);
 		push @jobs, $job;
 	    }
-	    
+
 	}
-	
+
     }
-    
+
     return \@jobs;
-   
+
 }
 
 
@@ -105,9 +105,9 @@ sub run_dependent_jobs {
     my $pre_jobs = shift;
 
     my @jobs;
-    foreach my $pre_job (@$pre_jobs) 
-    {	
-	while (1) 
+    foreach my $pre_job (@$pre_jobs)
+    {
+	while (1)
 	{
 	    last if !$pre_job->alive();
 	    sleep 30 if $pre_job->alive();
@@ -116,18 +116,18 @@ sub run_dependent_jobs {
 
     my $jobs_file = $self->dependent_jobs;
     my $jobs = retrieve($jobs_file);
-    
-    if (reftype $jobs ne 'ARRAY') 
+
+    if (reftype $jobs ne 'ARRAY')
     {
 	$jobs = [$jobs];
     }
 
-    foreach my $job (@$jobs) 
+    foreach my $job (@$jobs)
     {
 	my $job = $self->submit_job($job);
 	push @jobs, $job;
     }
-    
+
     return \@jobs;
 
 }
@@ -139,23 +139,23 @@ sub send_analysis_report {
     my $dep_jobs = shift;
 
     my @jobs;
-    foreach my $dep_job (@$dep_jobs) 
+    foreach my $dep_job (@$dep_jobs)
     {
-	while (1) 
+	while (1)
 	{
 	    last if !$dep_job->alive();
 	    sleep 30 if $dep_job->alive();
 	}
     }
-   
+
     my $report_file    = $self->analysis_report_job;
-    unless ($report_file =~ /none/) 
+    unless ($report_file =~ /none/)
     {
-	my $report_job = retrieve($report_file);  
+	my $report_job = retrieve($report_file);
 	my $job = $self->submit_job($report_job);
 	return $job;
     }
-    
+
 }
 
 
@@ -165,33 +165,33 @@ sub submit_job {
      my $job;
      ###my $config = $self->config_file;
      ###$config = retrieve($config);
-     
-     print STDERR "submitting job... $args->{cmd}\n";	
-   
-    eval 
-     {		
+
+     print STDERR "submitting job... $args->{cmd}\n";
+
+    eval
+     {
      	$job = CXGN::Tools::Run->new($args->{config});
      	$job->do_not_cleanup(1);
-	
+
 	$job->is_cluster(1);
 	$job->run_cluster($args->{cmd});
 
-	
-	if (!$args->{background_job}) 
-	{	   
-	    print STDERR "\n WAITING job to finish\n";	   
+
+	if (!$args->{background_job})
+	{
+	    print STDERR "\n WAITING job to finish\n";
 	    $job->wait();
-	    print STDERR "\n job COMPLETED\n";	      	    
+	    print STDERR "\n job COMPLETED\n";
 	}
      };
 
-     if ($@) 
+     if ($@)
      {
      	print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
      }
 
      return $job;
-    
+
  }
 
 
