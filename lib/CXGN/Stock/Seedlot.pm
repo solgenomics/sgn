@@ -1252,10 +1252,18 @@ sub delete {
 =head2 get_events()
 
  Usage:         my @events = $sl->get_events();
- Desc:          get all of the seedlot maintenance events associated with the seedlot
- Args:          none
+ Desc:          get the (optionally filtered) seedlot maintenance events associated with the seedlot
+ Args:          filters (optional): a hash of different filter types to apply, with the following keys:
+                    - dates: an arrayref of hashes containing date filter options:
+                        - date: date in YYYY-MM-DD format
+                        - comp: comparison type (eq, lte, lt, gte, or gt)
+                    - types: an arrayref of hashes containing type/value filter options:
+                        - type: cvterm_id of maintenance event type
+                        - values: array of allowed values
+                    - operators: arrayref of operator names
  Ret:           an arrayref of hases of the seedlot's stored events, with the following keys:
-                    - stockprop_id: the unique id of the maintenance event
+                    - prop_id: the unique id of the maintenance event
+                    - parent_id: the unique id of the seedlot
                     - cvterm_id: id of seedlot maintenance event ontology term
                     - cvterm_name: name of seedlot maintenance event ontology term
                     - value: value of the seedlot maintenance event
@@ -1267,26 +1275,76 @@ sub delete {
 
 sub get_events {
     my $self = shift;
+    my $filters = shift;
     my $schema = $self->schema();
     my $seedlot_id = $self->seedlot_id();
 
-    # Get stockprop details
-    my $event_obj = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema, parent_id => $seedlot_id });
-    my $type_id = $event_obj->_prop_type_id();
+    # Get the events for the Seedlot
+    my @all_events = CXGN::Stock::Seedlot::Maintenance->get_props($schema, $seedlot_id);
+    @all_events = @{$all_events[0]};
 
-    # Get stockprops
-    my $event_rs = $schema->resultset("Stock::Stockprop")->search({ stock_id => $seedlot_id, type_id => $type_id });
-    my @events;
-    while ( my $e = $event_rs->next() ) {
-        my $stockprop_id = $e->stockprop_id();
-        my $event_json = $e->value();
-        my $event_hash = JSON::Any->jsonToObj($event_json);
-        $event_hash->{stockprop_id} = $stockprop_id;
-        push(@events, $event_hash);
+    # Apply filters, if provided
+    my @filtered_events = ();
+    if ( defined $filters ) {
+        foreach my $event (@all_events) {
+            my $add = 1;
+
+            # Date Filter
+            if ( $filters->{dates} && $add ) {
+                foreach my $df (@{$filters->{dates}}) {
+                    my $d = $df->{date};
+                    my $t = $df->{comp};
+
+                    if ( $t eq 'eq' ) {
+                        my $r = "^$d";
+                        $add = 0 if ($event->{timestamp} !~ /$r/);
+                    }
+                    elsif ( $t eq 'lte' ) {
+                        my $c = "$d 24:00:00";
+                        $add = 0 if ($event->{timestamp} gt $c );
+                    }
+                    elsif ( $t eq 'lt' ) {
+                        my $c = "$d 00:00:00";
+                        $add = 0 if ($event->{timestamp} gt $c );
+                    }
+                    elsif ( $t eq 'gte' ) {
+                        my $c = "$d 00:00:00";
+                        $add = 0 if ($event->{timestamp} lt $c );
+                    }
+                    elsif ( $t eq 'gt' ) {
+                        my $c = "$d 24:00:00";
+                        $add = 0 if ($event->{timestamp} lt $c );
+                    }
+                }
+            }
+
+            # Type Filter
+            if ( $filters->{types} && $add ) {
+                foreach my $tf (@{$filters->{types}}) {
+                    my $id = $tf->{type};
+                    my %values = map { $_ => 1 } @{$tf->{values}};
+                    $add = 0 if ($event->{cvterm_id} ne $id);
+                    if ( %values && $add ) {
+                        $add = 0 if (!exists($values{$event->{value}}));
+                    }
+                }
+            }
+
+            # Operator Filter
+            if ( $filters->{operators} && scalar(@{$filters->{operators}}) > 0 && $add ) {
+                my %operators = map { $_ => 1 } @{$filters->{operators}};
+                $add = 0 if (!exists($operators{$event->{operator}}));
+            }
+
+            push(@filtered_events, $event) if ( $add );
+        }
+    }
+    else {
+        @filtered_events = @all_events;
     }
 
     # Sort events by timestamp
-    my @sorted = sort { $a->{timestamp} cmp $b->{timestamp} } @events;
+    my @sorted = sort { $a->{timestamp} cmp $b->{timestamp} } @filtered_events;
 
     # Return array of sorted events
     return(\@sorted);
@@ -1307,7 +1365,8 @@ sub get_events {
                     - operator: username of the person creating the event
                     - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
  Ret:           an arrayref of hashes of the processed/stored events (includes stockprop_id), with the following keys:
-                    - stockprop_id: the unique id of the maintenance event
+                    - prop_id: the unique id of the maintenance event
+                    - parent_id: the unique id of the seedlot
                     - cvterm_id: id of seedlot maintenance event ontology term
                     - cvterm_name: name of seedlot maintenance event ontology term
                     - value: value of the seedlot maintenance event
@@ -1379,7 +1438,8 @@ sub store_events {
         $event_obj->operator($processed_event->{operator});
         $event_obj->timestamp($processed_event->{timestamp});
         my $stockprop_id = $event_obj->store_by_rank();
-        $processed_event->{stockprop_id} = $stockprop_id;
+        $processed_event->{prop_id} = $stockprop_id;
+        $processed_event->{parent_id} = $seedlot_id;
     }
 
     # Return the processed events

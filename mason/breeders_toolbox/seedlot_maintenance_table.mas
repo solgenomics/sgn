@@ -9,6 +9,94 @@
 
 <&| /page/info_section.mas, title=>"Events Table",  collapsible=>1, collapsed=>0, subtitle=>"[<a href='/breeders/seedlot/maintenance?seedlot_name=$seedlot_name' id='add_seedlot_maintenance_button' >Record Maintenance</a>]" &>
 
+    <br />
+
+    <&| /page/info_section.mas, title=>"Filter Events",  collapsible=>1, collapsed=>1, subtitle=>"Filter maintenance events based on date, type, and/or value" &>
+
+        <div class="well">
+
+            <p>Add one or more filters to apply to the table of maintenance events for this Seedlot.  To add a filter, enter the properties for a filter type 
+            and click the add button to add the filter to the list.</p>
+            <br />
+            
+            <!-- Filter Form -->
+            <form class="form-horizontal" id="seedlot_maintenance_event_form" name="seedlot_maintenance_event_form">
+            
+                <!-- Date -->
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Date: </label>
+                    <div class="col-sm-4">
+                        <input class="form-control" id="event_filter_date" type="text" placeholder="YYYY-MM-DD" value="">
+                    </div>
+                    <div class="col-sm-4">
+                        <select class="form-control" id="event_filter_date_type">
+                            <option value="eq">on</option>
+                            <option value="lte">on or before</option>
+                            <option value="lt">before</option>
+                            <option value="gte">on or after</option>
+                            <option value="gt">after</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-1">
+                        <button id="event_filter_date_add" class='btn btn-info btn-sm'>Add</button>
+                    </div>
+                </div>
+
+                <!-- Type -->
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Type: </label>
+                    <div class="col-sm-4">
+                        <select class="form-control" id="event_filter_type" disabled><option>Loading...</option></select>
+                    </div>
+                    <div class="col-sm-4">
+                        <select class="form-control" id="event_filter_type_values" multiple disabled></select>
+                    </div>
+                    <div class="col-sm-1">
+                        <button id="event_filter_type_add" class='btn btn-info btn-sm'>Add</button>
+                    </div>
+                </div>
+
+                <!-- Operator -->
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Operator: </label>
+                    <div class="col-sm-8">
+                        <select class="form-control" id="event_filter_operators" multiple disabled><option>Loading...</option></select>
+                    </div>
+                    <div class="col-sm-1">
+                        <button id="event_filter_operators_add" class='btn btn-info btn-sm'>Add</button>
+                    </div>
+                </div>
+
+            </form>
+
+            <br /><br />
+
+            <!-- Filter Table -->
+            <p><strong>Event Filters:</strong></p>
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Comparison</th>
+                        <th>Value</th>
+                        <th>Remove</th>
+                    </tr>
+                </thead>
+                <tbody id="event_filter_table"></tbody>
+            </table>
+
+            <br /><br />
+
+            <!-- Submit Filters -->
+            <button id="event_filter_submit" class="btn btn-primary btn-block" style="max-width: 400px; margin: 0 auto">Filter</button>
+
+        </div>
+
+    </&>
+
+    <br /><br />
+
     <table id="seedlot_maintenance_events" class="table table-hover table-bordered"></table>
 
 </&>
@@ -17,11 +105,21 @@
 <script type="text/javascript">
 
 var events = [];        // List of maintenance events for the Seedlot
+let types = {};         // Hash of event types, id -> name
+let type_values = {};   // Hash of event type values, id -> [values]
+var filters = [];       // List of filter properties
 
 jQuery(document).ready(function() {
     
     // Load the Events
     getEvents();
+
+    // Click and Change Listeners
+    jQuery("#event_filter_date_add").click(addDateFilter);
+    jQuery("#event_filter_type_add").click(addTypeFilter);
+    jQuery("#event_filter_operators_add").click(addOperatorFilter);
+    jQuery("#event_filter_type").change(setTypeFilterValues);
+    jQuery("#event_filter_submit").click(getEvents);
 
     // Set DataTables Buttons
     let DT_BUTTONS = [
@@ -47,11 +145,36 @@ jQuery(document).ready(function() {
         autoWidth: false,
         data: [],
         columns: [
-            { title: "Event ID", data: "stockprop_id" },
-            { title: "Event Date", data: "timestamp" },
+            { title: "Event ID", data: "prop_id" },
+            {
+                title: "Event Date", 
+                data: "timestamp",
+                render: function(data, type, row) {
+                    if ( type === "display" ) {
+                        let dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                        let month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        let d = new Date(data);
+                        let h = d.getHours();
+                        let m = d.getMinutes();
+                        let s = d.getSeconds();
+                        if ( h <= 9 ) h = '0' + h;
+                        if ( m <= 9 ) m = '0' + m;
+                        if ( s <= 9 ) s = '0' + s;
+                        let ts = dow[d.getDay()] + " " + month[d.getMonth()] + " " + d.getDate() + " " + h + ":" + m + ":" + s + " " + d.getFullYear();
+                        return ts;
+                    }
+                    return data;
+                }
+            },
             { title: "Event Type", data: "cvterm_name" },
             { title: "Value", data: "value" },
-            { title: "Notes", data: "notes" },
+            { 
+                title: "Notes", 
+                data: "notes",
+                render: function(data, type, row) {
+                    return data ? data : '';
+                }
+            },
             { title: "Operator", data: "operator" }
         ],
         order: [[ 1, "asc" ]],
@@ -68,14 +191,35 @@ jQuery(document).ready(function() {
     */
 function getEvents() {
     events = [];
+
+    // Build filter arguments
+    let _filters = { dates: [], types: [], operators: [] };
+    for ( let i = 0; i < filters.length; i++ ) {
+        if ( filters[i].type_id === 'date' ) {
+            _filters.dates.push({date: filters[i].value, comp: filters[i].comp});
+        }
+        else if ( filters[i].type_id === 'operator' ) {
+            _filters.operators = _filters.operators.concat(filters[i].value);
+        }
+        else {
+            _filters.types.push({type: filters[i].type_id, values: filters[i].value});
+        }
+    }
+
+    // Disable Filter button
+    jQuery("#event_filter_submit").html("Searching...");
+    jQuery("#event_filter_submit").attr("disabled", true);
+
+    // Make request
     jQuery.ajax({
-        type: 'GET',
-        dataType: 'json',
-        url: '/ajax/breeders/seedlot/<% $seedlot_id %>/maintenance',
+        type: 'POST',
+        url: '/ajax/breeders/seedlot/<% $seedlot_id %>/maintenance/search',
+        data: JSON.stringify({filters: _filters}),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
         success: function(data) {
             if ( data && data.events ) {
                 events = data.events;
-                displayEvents();
             }
             else {
                 alert("ERROR: Could not load maintenance events!");
@@ -83,15 +227,192 @@ function getEvents() {
         },
         error: function() {
             alert("ERROR: Could not load maintenance events!");
+        },
+        complete: function() {
+            displayEvents();
+            setTypeFilter();
+            setOperators();
+
+            jQuery("#event_filter_submit").html("Filter");
+            jQuery("#event_filter_submit").attr("disabled", false);
         }
     });
 }
 
+/**
+ * Redraw the display of the Maintenance Events in the table
+ */
 function displayEvents() {
     let dt = jQuery('#seedlot_maintenance_events').DataTable();
     dt.clear();
     dt.rows.add(events);
     dt.draw();
 }
+
+
+//
+// FILTER FUNCTIONS
+//
+
+
+/**
+ * Parse the loaded events for event types
+ * - Set hash of event types
+ * - Set hash of event type values
+ * - Populate event type select
+ * - Call setTypeFilterValues to set initial values
+ */
+function setTypeFilter() {
+    
+    // Get types and values by type id
+    types = {};
+    type_values = {};
+    for ( let i = 0; i < events.length; i++ ) {
+        let id = events[i].cvterm_id;
+        let name = events[i].cvterm_name;
+        let value = events[i].value;
+        types[id] = name;
+        if ( !type_values.hasOwnProperty(id) ) {
+            type_values[id] = [value];
+        }
+        else if ( !type_values[id].includes(value) ) {
+            type_values[id].push(value);
+        }
+    }
+
+    // Populate type select
+    let html = "";
+    for ( let id in types ) {
+        if ( types.hasOwnProperty(id) ) {
+            html += "<option value='" + id + "'>" + types[id] + "</option>";
+        }
+    }
+    jQuery("#event_filter_type").html(html);
+    jQuery("#event_filter_type").attr("disabled", false);
+
+    // Set the values
+    setTypeFilterValues();
+
+}
+
+/**
+ * Populate the event type values select with the values for 
+ * the currently selected event type
+ */
+function setTypeFilterValues() {
+    let id = jQuery("#event_filter_type").val();
+    let values = type_values[id];
+    let html = "";
+    if ( values ) {
+        for ( let i = 0; i < values.length; i++ ) {
+            html += "<option value='" + values[i] + "'>" + values[i] + "</option>";
+        }
+    }
+    jQuery("#event_filter_type_values").html(html);
+    jQuery("#event_filter_type_values").attr("disabled", false);
+}
+
+/**
+ * Populate the operators select with the event operators
+ */
+function setOperators() {
+    let operators = [];
+    for ( let i = 0; i < events.length; i++ ) {
+        if ( !operators.includes(events[i].operator)) operators.push(events[i].operator);
+    }
+    let html = "";
+    for ( let i = 0; i < operators.length; i++ ) {
+        html += "<option value='" + operators[i] + "'>" + operators[i] + "</option>";
+    }
+    jQuery("#event_filter_operators").html(html);
+    jQuery("#event_filter_operators").attr("disabled", false);
+}
+
+
+/**
+ * Add a Date Filter
+ */
+function addDateFilter() {
+    let d = jQuery('#event_filter_date').val();
+    let t = jQuery('#event_filter_date_type').val();
+
+    // Check date format
+    let regex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
+    if ( !d.match(regex) ) {
+        alert("Incorrect date format - the date must be in the format of YYYY-MM-DD");
+        return false;
+    }
+
+    // Add Filter
+    addFilter('date', 'date', d, t);
+    return false;
+}
+
+/**
+ * Add a Type/Value Filter
+ */
+function addTypeFilter() {
+    let type_id = jQuery('#event_filter_type').val();
+    let type_name = jQuery('#event_filter_type option:selected').text();
+    let values = jQuery('#event_filter_type_values').val();
+    addFilter(type_id, type_name, values, 'eq');
+    return false;
+}
+
+/*
+ * Add an Operator Filter
+ */
+function addOperatorFilter() {
+    let operators = jQuery('#event_filter_operators').val();
+    addFilter('operator', 'operator', operators, 'eq');
+    return false;
+}
+
+/**
+ * Add a Filter to the list of added filters
+ * - call displayFilters() to update table
+ * @param {string|int} type_id ID of the filter type (cvterm_id, date, operator)
+ * @param {string} type_name Name of the filter type (cvterm name, date, operator)
+ * @param {string|int} value Value of the filter for comparison (type value, date, operator names)
+ * @param {string} comp Comparison used for the filter (eq, lte, lt, gte, gt)
+ */
+function addFilter(type_id, type_name, value, comp) {
+    filters.push({
+        type_id: type_id,
+        type_name: type_name,
+        value: value,
+        comp: comp
+    });
+    displayFilters();
+}
+
+/**
+ * Remove the specified filter from the list of added filters
+ * - call displayFilters() to update table
+ * @param {int} i Index of filter to remove
+ */
+function removeFilter(i) {
+    filters.splice(i, 1);
+    displayFilters();
+}
+
+/**
+ * Update the table of added filters
+ */
+function displayFilters() {
+    let html = "";
+    for ( let i = 0; i < filters.length; i++ ) {
+        let v = filters[i].value;
+        if ( !v ) v = "<em>Any Value</em>";
+        html += "<tr>";
+        html += "<td>" + filters[i].type_name + "</td>";
+        html += "<td>" + filters[i].comp + "</td>";
+        html += "<td>" + v + "</td>";
+        html += "<td><button class='btn btn-danger btn-xs' onclick='removeFilter(" + i + ")'><span class='glyphicon glyphicon-remove'></span></button></td>";
+        html += "</tr>";
+    }
+    jQuery("#event_filter_table").html(html);
+}
+
 
 </script>

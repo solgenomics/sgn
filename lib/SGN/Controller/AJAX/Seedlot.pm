@@ -1184,6 +1184,44 @@ sub seedlot_maintenance_event_POST {
     }
 }
 
+#
+# Search Maintenance Events for the Seedlot that match specified filter criteria
+# PATH: POST /ajax/breeders/seedlot/{seedlot id}/maintenance/search
+# PARAMS:
+#   filters: an array of filter properties, with the following keys:
+#       - dates: an array of date filter properies:
+#           - date: date in YYYY-MM-DD format
+#           - comp: date comparison type (eq, lte, lt, gte, gt)
+#       - types: an array of event type/value filter properties
+#           - type: cvterm_id of maintenance event type
+#           - values: array of allowed values
+#       - operators: an array of operator names
+# RETURNS: 
+#   events: an array of events from the Seedlot that match the filter criteria, with the following keys:
+#       - stockprop_id: seedlot maintenance event id (stockprop_id) 
+#       - cvterm_id: id of seedlot maintenance event ontology term
+#       - cvterm_name: name of seedlot maintenance event ontology term
+#       - value: value of seedlot maintenance event
+#       - notes: additional notes/comments about the event
+#       - operator: username of the person creating the event
+#       - timestamp: timestamp of when the event was created (YYYY-MM-DD HH:MM:SS format)
+#
+sub seedlot_maintenance_event_search : Chained('seedlot_base') PathPart('maintenance/search') Args(0) : ActionClass('REST') { }
+sub seedlot_maintenance_event_search_POST {
+    my $self = shift;
+    my $c = shift;
+    my $seedlot = $c->stash->{seedlot};
+
+    # Get filter parameters
+    my $body = $c->request->data;
+    my $filters = $body->{filters};
+
+    # Get events
+    my $events = $seedlot->get_events($filters);
+
+    # Return events
+    $c->stash->{rest} = { events => $events };
+}
 
 1;
 
