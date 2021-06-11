@@ -5079,6 +5079,147 @@ sub nirs_GET {
     _standard_response_construction($c, $brapi_package_result);
 }
 
+sub nirs_single  : Chained('brapi') PathPart('nirs') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $stock_id = shift;
+
+	$c->stash->{stock_id} = $stock_id;
+}
+
+sub nirs_detail  : Chained('nirs_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub nirs_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Nirs');
+	my $brapi_package_result = $brapi_module->nirs_detail(
+		$c->stash->{stock_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub nirs_matrix  : Chained('nirs_single') PathPart('matrix') Args(0) : ActionClass('REST') { }
+
+sub nirs_matrix_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Nirs');
+	my $brapi_package_result = $brapi_module->nirs_matrix(
+		$c->stash->{stock_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub transcriptomics : Chained('brapi') PathPart('transcriptomics') Args(0) : ActionClass('REST') { }
+
+sub transcriptomics_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
+    my $brapi_package_result = $brapi_module->search($clean_inputs);
+
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub transcriptomics_single  : Chained('brapi') PathPart('transcriptomics') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $stock_id = shift;
+
+	$c->stash->{stock_id} = $stock_id;
+}
+
+sub transcriptomics_detail  : Chained('transcriptomics_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub transcriptomics_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
+	my $brapi_package_result = $brapi_module->transcriptomics_detail(
+		$c->stash->{stock_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub transcriptomics_matrix  : Chained('transcriptomics_single') PathPart('matrix') Args(0) : ActionClass('REST') { }
+
+sub transcriptomics_matrix_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
+	my $brapi_package_result = $brapi_module->transcriptomics_matrix(
+		$c->stash->{stock_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub metabolomics : Chained('brapi') PathPart('metabolomics') Args(0) : ActionClass('REST') { }
+
+sub metabolomics_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Metabolomics');
+    my $brapi_package_result = $brapi_module->search($clean_inputs);
+
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub metabolomics_single  : Chained('brapi') PathPart('metabolomics') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $stock_id = shift;
+
+	$c->stash->{stock_id} = $stock_id;
+}
+
+sub metabolomics_detail  : Chained('metabolomics_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub metabolomics_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Metabolomics');
+	my $brapi_package_result = $brapi_module->metabolomics_detail(
+		$c->stash->{stock_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub metabolomics_matrix  : Chained('metabolomics_single') PathPart('matrix') Args(0) : ActionClass('REST') { }
+
+sub metabolomics_matrix_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Metabolomics');
+	my $brapi_package_result = $brapi_module->metabolomics_matrix(
+		$c->stash->{stock_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 #functions
 sub save_results {
