@@ -37,7 +37,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch updates the materialized_phenoview and materialized_genoview to speed up their underlying queries (prevents joining through nd_experiment, drops indexes)
+This patch updates the materialized_phenoview and materialized_genoview to speed up their underlying queries (prevents joining through nd_experiment, drops indexes). Also redefines trials view to exclude genotyping trial folders
 
 
 sub patch {
@@ -111,8 +111,24 @@ ALTER MATERIALIZED VIEW materialized_genoview OWNER TO web_usr;
 
 UPDATE matviews set mv_dependents = '{"accessionsXbreeding_programs","accessionsXlocations","accessionsXplants","accessionsXplots","accessionsXseedlots","accessionsXtrait_components","accessionsXtraits","accessionsXtrials","accessionsXtrial_designs","accessionsXtrial_types","accessionsXyears","breeding_programsXgenotyping_protocols","breeding_programsXlocations","breeding_programsXplants","breeding_programsXplots","breeding_programsXseedlots","breeding_programsXtrait_components","breeding_programsXtraits","breeding_programsXtrials","breeding_programsXtrial_designs","breeding_programsXtrial_types","breeding_programsXyears","genotyping_protocolsXlocations","genotyping_protocolsXplants","genotyping_protocolsXplots","genotyping_protocolsXseedlots","genotyping_protocolsXtrait_components","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears","locationsXplants","locationsXplots","locationsXseedlots","locationsXtrait_components","locationsXtraits","locationsXtrials","locationsXtrial_designs","locationsXtrial_types","locationsXyears","plantsXplots","plantsXseedlots","plantsXtrait_components","plantsXtraits","plantsXtrials","plantsXtrial_designs","plantsXtrial_types","plantsXyears","plotsXseedlots","plotsXtrait_components","plotsXtraits","plotsXtrials","plotsXtrial_designs","plotsXtrial_types","plotsXyears","seedlotsXtrait_components","seedlotsXtraits","seedlotsXtrial_designs","seedlotsXtrial_types","seedlotsXtrials","seedlotsXyears","trait_componentsXtraits","trait_componentsXtrial_designs","trait_componentsXtrial_types","trait_componentsXtrials","trait_componentsXyears","traitsXtrials","traitsXtrial_designs","traitsXtrial_types","traitsXyears","trial_designsXtrials","trial_typesXtrials","trialsXyears","trial_designsXtrial_types","trial_designsXyears","trial_typesXyears"}' WHERE mv_name = 'materialized_phenoview';
 
+-- REDEFINE trials view to exclude folders for genotyping trial_designs
 
--- add seedlots binary views and ADD BACK remaining BINARY VIEWS that were dropped during cascade
+DROP MATERIALIZED VIEW IF EXISTS public.trials CASCADE;
+CREATE MATERIALIZED VIEW public.trials AS
+SELECT trial.project_id AS trial_id,
+    trial.name AS trial_name
+   FROM project breeding_program
+   JOIN project_relationship ON(breeding_program.project_id = object_project_id AND project_relationship.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'breeding_program_trial_relationship'))
+   JOIN project trial ON(subject_project_id = trial.project_id)
+   JOIN projectprop on(trial.project_id = projectprop.project_id)
+   WHERE projectprop.type_id NOT IN (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name::text = 'cross'::text OR cvterm.name::text = 'trial_folder'::text OR cvterm.name::text = 'folder_for_trials'::text OR cvterm.name::text = 'folder_for_crosses'::text OR cvterm.name::text = 'folder_for_genotyping_trials'::text)
+   GROUP BY trial.project_id, trial.name
+WITH DATA;
+CREATE UNIQUE INDEX trials_idx ON public.trials(trial_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW trials OWNER TO web_usr;
+
+
+-- ADD BACK BINARY VIEWS that were dropped during cascade
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessionsXseedlots CASCADE;
 CREATE MATERIALIZED VIEW public.accessionsXseedlots AS
