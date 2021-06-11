@@ -53,7 +53,7 @@ sub patch {
 --do your SQL here
 
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenoview CASCADE;
-CREATE MATERIALIZED VIEW public.materialized_phenoview_test AS
+CREATE MATERIALIZED VIEW public.materialized_phenoview AS
 SELECT
   breeding_program.project_id AS breeding_program_id,
   location.type_id AS location_id,
