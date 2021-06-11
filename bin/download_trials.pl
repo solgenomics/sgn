@@ -1,14 +1,13 @@
 
 =head1 NAME
 
-delete_trials.pl - script to delete trials
+download_trials.pl - script to download trials
 
 =head1 DESCRIPTION
 
-perl delete_trials.pl -i trial_id -H host -D dbname -U dbuser -P dbpass -b basepath -r temp_file_nd_experiment_id
+perl download_trials.pl -i trial_id -H host -D dbname -U dbuser -P dbpass
 
-Deletes trials that whose ids are provided as a comma separated list for the -i parameter.
-First, it deletes metadata, then trial layouts, then phenotypes, and finally the trial entry in the project table. All deletes are hard deletes. There is no way of bringing the trial back, except from a backup. So be careful!
+Downloads trials whose ids are provided as a comma separated list for the -i parameter.
 
 =head1 AUTHOR
 
