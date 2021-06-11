@@ -101,6 +101,18 @@ sub search {
     my @data_window;
     my $total_count = 0;
 
+    # Get the plot parents of the plants
+    my @plant_ids;
+    my %plant_parents;
+    foreach my $obs_unit (@$data){
+        if ($obs_unit->{observationunit_type_name} eq 'plant') {
+            push @plant_ids, $obs_unit->{observationunit_stock_id};
+        }
+    }
+    if (@plant_ids && scalar @plant_ids > 0) {
+        %plant_parents = $self->_get_plants_plot_parent(\@plant_ids);
+    }
+
     foreach my $obs_unit (@$data){
         my @brapi_observations;
         
@@ -166,45 +178,64 @@ sub search {
         my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
         my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $additional_info_type_id, stock_id => $obs_unit->{observationunit_stock_id} });
         if ($rs->count() > 0){
-            $additional_info = $rs->first()->value();
+            my $additional_info_json = $rs->first()->value();
+            $additional_info = $additional_info_json ? decode_json($additional_info_json) : undef;
         }
+        # Add plot number and plant number to additional info
+        if ($obs_unit->{obsunit_plot_number}) {$additional_info->{'plotNumber'} = $obs_unit->{obsunit_plot_number}};
+        if ($obs_unit->{obsunit_plant_number}) {$additional_info->{'plantNumber'} = $obs_unit->{obsunit_plant_number}};
 
         my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
 
         my $replicate = $obs_unit->{obsunit_rep};
         my $block = $obs_unit->{obsunit_block};
-        my $plot = $obs_unit->{obsunit_plot_number};
-        my $plant = $obs_unit->{obsunit_plant_number};
+        my $plot;
+        my $plant;
+        if ($obs_unit->{observationunit_type_name} eq 'plant') {
+            $plant = $obs_unit->{observationunit_stock_id};
+            if (%plant_parents{$obs_unit->{observationunit_stock_id}}) {
+                $plot = %plant_parents{$obs_unit->{observationunit_stock_id}};
+            }
+        } else {
+            $plot = $obs_unit->{observationunit_stock_id};
+        }
 
         my $level_name = $obs_unit->{observationunit_type_name};
         my $level_order = _order($level_name) + 0;
-        my $level_code = eval "\$$level_name" || "";
+        my $level_code = $obs_unit->{observationunit_stock_id};
          
         if ( $level_order_arrayref &&  ! grep { $_ eq $level_order } @{$level_order_arrayref}  ) { next; } 
         if ( $level_code_arrayref &&  ! grep { $_ eq $level_code } @{$level_code_arrayref}  ) { next; } 
 
-        my $observationLevelRelationships = [
-            {
+        my @observationLevelRelationships;
+        if ($replicate) {
+            push @observationLevelRelationships, {
                 levelCode => $replicate,
                 levelName => "replicate",
                 levelOrder => _order("replicate"),
-            },
-            {
+            }
+        }
+        if ($block) {
+            push @observationLevelRelationships, {
                 levelCode => $block,
                 levelName => "block",
                 levelOrder => _order("block"),
-            },
-            {
-                levelCode => $plot,
+            }
+        }
+        if ($plot) {
+            push @observationLevelRelationships, {
+                levelCode => qq|$plot|,
                 levelName => "plot",
                 levelOrder => _order("plot"),
-            },
-            {
+            }
+        }
+        if ($plant) {
+            push @observationLevelRelationships, {
                 levelCode => $plant,
                 levelName => "plant",
                 levelOrder => _order("plant"),
             }
-        ];
+        }
 
         my %observationUnitPosition = (
             entryType => $entry_type,
@@ -219,7 +250,7 @@ sub search {
                 levelOrder => $level_order,
                 levelCode => $level_code,
             },
-            observationLevelRelationships => $observationLevelRelationships,
+            observationLevelRelationships => \@observationLevelRelationships,
         );
 
         my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
@@ -276,6 +307,25 @@ sub search {
     my %result = (data=>\@data_window);
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Units search result constructed');
+}
+
+sub _get_plants_plot_parent {
+    my $self = shift;
+    my $plant_id_array = shift;
+    my $schema = $self->bcs_schema;
+
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $plant_ids_string = join ',', @{$plant_id_array};
+    my $select = "select stock.stock_id, stock_relationship.subject_id from stock join stock_relationship on stock.stock_id = stock_relationship.object_id where stock_relationship.type_id = $plant_cvterm_id and stock.stock_id in ($plant_ids_string);";
+    my $h = $schema->storage->dbh()->prepare($select);
+    $h->execute();
+
+    my %plant_hash;
+    while (my ($plant_id, $plot_id) = $h->fetchrow_array()) {
+        $plant_hash{$plant_id} = $plot_id;
+    }
+
+    return %plant_hash;
 }
 
 sub detail {
@@ -596,14 +646,14 @@ sub observationunits_store {
     my %design;
 
     # TODO
-    # TODO: Allow setting of own observation level (plant or plot)
     # TODO: Make plot number not required
 
     my %study_plots;
+    my %seen_plot_numbers;
     foreach my $params (@{$data}) {
         my $study_id = $params->{studyDbId} || undef;
-        my $plot_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode} ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
         my $plot_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
+        my $plot_number = $params->{additionalInfo}->{plotNumber} ? $params->{additionalInfo}->{plotNumber} : $plot_name;
         my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
         my $accession_name = $params->{germplasmName} ? $params->{germplasmName} : undef;
         my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
@@ -613,7 +663,17 @@ sub observationunits_store {
         my $seedlot_id = $params->{seedLotDbId} ? $params->{seedLotDbId} : undef;
         my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates} ? $params->{observationUnitPosition}->{geoCoordinates} : undef;
         my $levels = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
-        my $additional_info = $params->{additionalInfo} || undef;
+        my $ou_level = $params->{observationUnitPosition}->{observationLevel}->{levelName} || undef;
+        my $raw_additional_info = $params->{additionalInfo} || undef;
+        my %specific_keys = map { $_ => 1 } ("plotNumber","control");
+        my %additional_info;
+        if (defined $raw_additional_info) {
+            foreach my $key (keys %$raw_additional_info) {
+                if (!exists($specific_keys{$key})) {
+                    $additional_info{$key} = $raw_additional_info->{$key};
+                }
+            }
+        }
         my $block_number;
         my $rep_number;
 
@@ -622,8 +682,11 @@ sub observationunits_store {
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
         }
         #TODO: Generate a plot number if one isn't provided -> This actually may not be required as it says it is. See store method
-        if (!$plot_number){
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide a sequential plot number unique for the study.'), 422);
+        #if (!$plot_number){
+        #    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide a sequential plot number unique for the study.'), 422);
+        #}
+        if ($ou_level ne 'plant' && $ou_level ne 'plot') {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Only "plot" or "plant" allowed for observation level.'), 400);
         }
 
         # Get the germplasm name from germplasmDbId. Check if a germplasm name passed exists
@@ -641,6 +704,7 @@ sub observationunits_store {
             }
         }
 
+        my $plot_parent_id;
         foreach (@$levels){
             if($_->{levelName} eq 'block'){
                 $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
@@ -648,30 +712,74 @@ sub observationunits_store {
             if($_->{levelName} eq 'replicate'){
                 $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
             }
+            if ($_->{levelName} eq 'plot' && $ou_level eq 'plant') {
+                $plot_parent_id = $_->{levelCode};
+            }
         }
 
-         my $plot_hash = {
-            plot_name => $plot_name,
-            # accession_name => $accession_name,
-            stock_name => $accession_name,
-            plot_number => $plot_number,
-            block_number => $block_number,
-            is_a_control => $is_a_control,
-            rep_number => $rep_number,
-            range_number => $range_number,
-            row_number => $row_number,
-            col_number => $col_number,
-            # plot_geo_json => $plot_geo_json,
-            additional_info => $additional_info
-        };
+        # The trial designer expects a list of plant names, this object is a plant, so add to single item list
+        my $plot_hash;
+        if ($ou_level eq 'plant') {
+            # Check that the parent already exists
+            my $plot_parent_name;
+            if ($plot_parent_id) {
+                my $rs = $schema->resultset("Stock::Stock")->search({stock_id=>$plot_parent_id});
+                if ($rs->count() eq 0){
+                    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Plot with name %s does not exist.', $plot_parent_id), 404);
+                }
+                $plot_parent_name = $rs->first()->uniquename();
+            } else {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Observation level relationship for plot parent required for observation unit with level "plant"'), 404);
+            }
+
+            $plot_hash = {
+                plot_name => $plot_parent_name,
+                plant_names => [$plot_name],
+                # accession_name => $accession_name,
+                stock_name => $accession_name,
+                plot_number => $plot_number,
+                block_number => $block_number,
+                is_a_control => $is_a_control,
+                rep_number => $rep_number,
+                range_number => $range_number,
+                row_number => $row_number,
+                col_number => $col_number,
+                # plot_geo_json => $plot_geo_json,
+                additional_info => \%additional_info
+            };
+        } else {
+            $plot_hash = {
+                plot_name => $plot_name,
+                # accession_name => $accession_name,
+                stock_name => $accession_name,
+                plot_number => $plot_number,
+                block_number => $block_number,
+                is_a_control => $is_a_control,
+                rep_number => $rep_number,
+                range_number => $range_number,
+                row_number => $row_number,
+                col_number => $col_number,
+                # plot_geo_json => $plot_geo_json,
+                additional_info => \%additional_info
+            };
+        }
 
         $study_plots{$study_id}{$plot_number} = $plot_hash;
+        $seen_plot_numbers{$study_id}{$plot_number}++;
+    }
 
-        printf(Dumper(%study_plots));
+    # Check that the plot numbers passed are unique per study
+    foreach my $study_design (values %seen_plot_numbers) {
+        foreach my $seen_plot_number (keys %{$study_design}) {
+            if ($study_design->{$seen_plot_number} > 1) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, "Plot number '$seen_plot_number' is duplicated in the data sent. Plot Number must be unique", 422);
+            }
+        }
     }
 
     my $coderef = sub {
         foreach my $study_id (keys %study_plots) {
+
             # Get the study design type
             my $study = $study_plots{$study_id};
             my $project = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $study_id });
@@ -721,6 +829,15 @@ sub observationunits_store {
                 if ($error) {
                     die {error => sprintf('ERROR store: ' . $error), errorCode => 500};
                 }
+                # Refresh the trial layout property
+                my %param = ( schema => $schema, trial_id => $study_id );
+                if ($design_type eq 'genotyping_plate'){
+                    $param{experiment_type} = 'genotyping_layout';
+                } else {
+                    $param{experiment_type} = 'field_layout';
+                }
+                my $trial_layout = CXGN::Trial::TrialLayout->new(\%param);
+                $trial_layout->generate_and_cache_layout();
             }
         }
     };
@@ -736,6 +853,7 @@ sub observationunits_store {
     if ($error_resp) { return $error_resp; }
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    #TODO: This refreshes all of the matviews by the look of the logs. Might slow things down in the future
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
     # Get our new OUs by name. Not ideal, but names are unique and its the quickest solution

@@ -2612,7 +2612,17 @@ sub observation_units_POST {
 	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
-	_validate_request($c, 'ARRAY', $data, ['studyDbId', 'observationUnitName']);
+	_validate_request($c, 'ARRAY', $data, [
+		'studyDbId',
+		'observationUnitName',
+		{
+		'observationUnitPosition' => [
+			{
+				'observationLevel' => ['levelName']
+			}
+		]
+		}
+	]);
 	my @all_units;
 	foreach my $unit (values %{$data}) {
 		push @all_units, $unit;

@@ -3,6 +3,8 @@ package CXGN::Trial::TrialDesignStore::PhenotypingTrial;
 
 use Moose;
 use Try::Tiny;
+use JSON;
+use Data::Dumper;
 
 extends 'CXGN::Trial::TrialDesignStore::AbstractTrial';
 
@@ -82,6 +84,9 @@ sub validate_design {
             }
             if ($property eq 'plot_name') {
                 my $plot_name = $design{$stock}->{$property};
+                # Check that there are no plant names, if so, this could be a lookup value for an existing plot
+                # So, we don't validate that the plot name is unique
+                if ($design{$stock}->{plant_names} && scalar $design{$stock}->{plant_names} > 0) { next; }
                 $seen_stock_names{$plot_name}++;
             }
             if ($property eq 'plant_names') {
@@ -149,6 +154,33 @@ sub validate_design {
     foreach (@accession_names){
         if (!$found_data{$_}){
             $error .= "The following name is not in the database: $_ .";
+        }
+    }
+
+    my %seen_plot_numbers;
+    my @plot_numbers;
+    foreach my $stock (values %design){
+        my $plot_number = $stock->{plot_number};
+        if (! defined $plot_number) {
+            $error .= "Plot number must be defined.";
+        }
+        $seen_plot_numbers{$plot_number}++;
+        push @plot_numbers, $plot_number;
+    }
+
+    # Check that the plot numbers are unique in the db for the given study
+    my $trial_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_layout_json', 'project_property')->cvterm_id();
+    my $plot_number_select = "select projectprop.value from project " .
+        "join projectprop on projectprop.project_id = project.project_id " .
+        "where type_id = $trial_layout_cvterm_id and project.project_id = ?";
+    my $sth = $chado_schema->storage->dbh->prepare($plot_number_select);
+    $sth->execute($self->get_trial_id());
+    while (my ($trial_layout_json) = $sth->fetchrow_array()) {
+        my $trial_layout_json = decode_json($trial_layout_json);
+        foreach my $key (keys %{$trial_layout_json}) {
+            if (defined %seen_plot_numbers{$key}) {
+                $error .= "Plot number '$key' already exists in the database for that study. Plot number must be unique.";
+            }
         }
     }
 

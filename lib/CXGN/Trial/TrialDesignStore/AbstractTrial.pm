@@ -761,7 +761,7 @@ sub store {
                 );
 
 		#print STDERR "STOCK TYPE ID NOW: $stock_type_id\n";
-                my $plot = $stock_rs->create({
+                my $plot_params = {
                     organism_id => $organism_id_checked,
                     name       => $plot_name,
                     uniquename => $plot_name,
@@ -770,7 +770,13 @@ sub store {
                     stock_relationship_subjects => \@plot_subjects,
                     stock_relationship_objects => \@plot_objects,
                     nd_experiment_stocks => \@plot_nd_experiment_stocks,
-                });
+                };
+                my $plot;
+                if (! defined $plant_names || scalar $plant_names eq 0) {
+                    $plot = $stock_rs->create($plot_params);
+                } else {
+                    $plot = $stock_rs->find_or_create($plot_params);
+                }
                 $new_plot_id = $plot->stock_id();
                 $new_stock_ids_hash{$plot_name} = $new_plot_id;
 
@@ -824,6 +830,9 @@ sub store {
                     if ($col_number) {
                         push @plant_stock_props, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
                     }
+                    if ($additional_info) {
+                        push @plant_stock_props, { type_id => $additional_info_type_id, value => $additional_info };
+                    }
 
                     my @plant_objects = (
                         { type_id => $self->get_plant_of_cvterm_id, subject_id => $new_plot_id }
@@ -834,6 +843,7 @@ sub store {
                     my @plant_nd_experiment_stocks = (
                         { type_id => $self->get_nd_experiment_type_id, nd_experiment_id => $nd_experiment_id }
                     );
+
 
                     my $plant = $stock_rs->create({
                         organism_id => $organism_id_checked,
@@ -847,6 +857,12 @@ sub store {
                     });
                     $new_stock_ids_hash{$plant_name} = $plant->stock_id();
                     $plant_index_number++;
+                }
+
+                # Set the study to have plant entries
+                if (scalar @$plant_names > 0) {
+                    my $study = $chado_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
+                    $study->create_projectprops({ 'project_has_plant_entries' => 1 });
                 }
             }
             #Create subplot entry if given. Currently this is for the splitplot trial creation.
