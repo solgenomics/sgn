@@ -143,6 +143,7 @@ use CXGN::List::Validate;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use CXGN::Stock::Search;
+use JSON::Any;
 
 =head2 Accessor seedlot_id()
 
@@ -1248,9 +1249,54 @@ sub delete {
 # SEEDLOT MAINTENANCE EVENT FUNCTIONS
 #
 
+=head2 get_events()
+
+ Usage:         my @events = $sl->get_events();
+ Desc:          get all of the seedlot maintenance events associated with the seedlot
+ Args:          none
+ Ret:           an arrayref of hases of the seedlot's stored events, with the following keys:
+                    - stockprop_id: the unique id of the maintenance event
+                    - cvterm_id: id of seedlot maintenance event ontology term
+                    - cvterm_name: name of seedlot maintenance event ontology term
+                    - value: value of the seedlot maintenance event
+                    - notes: additional notes/comments about the event
+                    - operator: username of the person creating the event
+                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+
+=cut
+
+sub get_events {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $seedlot_id = $self->seedlot_id();
+
+    # Get stockprop details
+    my $event_obj = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema, parent_id => $seedlot_id });
+    my $type_id = $event_obj->_prop_type_id();
+
+    # Get stockprops
+    my $event_rs = $schema->resultset("Stock::Stockprop")->search({ stock_id => $seedlot_id, type_id => $type_id });
+    my @events;
+    while ( my $e = $event_rs->next() ) {
+        my $stockprop_id = $e->stockprop_id();
+        my $event_json = $e->value();
+        my $event_hash = JSON::Any->jsonToObj($event_json);
+        $event_hash->{stockprop_id} = $stockprop_id;
+        push(@events, $event_hash);
+    }
+
+    # Sort events by timestamp
+    my @sorted = sort { $a->{timestamp} cmp $b->{timestamp} } @events;
+
+    # Return array of sorted events
+    return(\@sorted);
+}
+
+
+
 =head2 store_events()
 
- Usage:         my @events = ( { cvterm_id => $cvterm_id, value => $value, notes => $notes, operator => $operator, timestamp => $timestamp }, ... );
+ Usage:         my @events = ({ cvterm_id => $cvterm_id, value => $value, notes => $notes, operator => $operator, timestamp => $timestamp }, ... );
                 my $stored_events = $sl->store_events(\@events);
  Desc:          store one or more seedlot maintenance events in the database as a JSON stockprop associated with the seedlot's stock entry.
                 this function uses the CXGN::Stock::Seedlot::Maintenance class to store the JSON stockprop
@@ -1260,7 +1306,14 @@ sub delete {
                     - notes: (optional) additional notes/comments about the event
                     - operator: username of the person creating the event
                     - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
- Ret:           an arrayref of the processed/stored events (includes stockprop_id)
+ Ret:           an arrayref of hashes of the processed/stored events (includes stockprop_id), with the following keys:
+                    - stockprop_id: the unique id of the maintenance event
+                    - cvterm_id: id of seedlot maintenance event ontology term
+                    - cvterm_name: name of seedlot maintenance event ontology term
+                    - value: value of the seedlot maintenance event
+                    - notes: additional notes/comments about the event
+                    - operator: username of the person creating the event
+                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
                 the function will die on a caught error 
 
 =cut

@@ -7,6 +7,7 @@ $editable_stock_props_definitions => {}
 $programs
 $locations
 $crossing_trials
+$maintenance_enabled => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -46,9 +47,10 @@ $crossing_trials
 </&>
 
 <%perl>
+    my $maintenance_button = $maintenance_enabled ? ' <button onclick="location.href=\'/breeders/seedlot/maintenance\'" class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_record_maintenance">Seedlot Maintenance</button>' : '';
     my $seedlot_subtitle = !!$c->user() 
-        ? '<button class="btn btn-sm btn-primary" style="margin:3px" name="add_seedlot_button">Add New Seedlot</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_bulk_upload">Upload Seedlots</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>'
-        : "Login to add or upload seedlots";
+        ? '<button class="btn btn-sm btn-primary" style="margin:3px" name="add_seedlot_button">Add New Seedlot</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_bulk_upload">Upload Seedlots</button> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>' . $maintenance_button
+        : "Login to manage seedlots";
 </%perl>
 <&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => $seedlot_subtitle &>
 

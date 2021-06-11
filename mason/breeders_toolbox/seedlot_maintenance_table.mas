@@ -1,0 +1,97 @@
+<%args>
+    $seedlot_id
+    $seedlot_name
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
+
+<& /page/page_title.mas, title => 'Maintenance Events' &>
+
+<&| /page/info_section.mas, title=>"Events Table",  collapsible=>1, collapsed=>0, subtitle=>"[<a href='/breeders/seedlot/maintenance?seedlot_name=$seedlot_name' id='add_seedlot_maintenance_button' >Record Maintenance</a>]" &>
+
+    <table id="seedlot_maintenance_events" class="table table-hover table-bordered"></table>
+
+</&>
+
+
+<script type="text/javascript">
+
+var events = [];        // List of maintenance events for the Seedlot
+
+jQuery(document).ready(function() {
+    
+    // Load the Events
+    getEvents();
+
+    // Set DataTables Buttons
+    let DT_BUTTONS = [
+        {
+            extend: 'excelHtml5',
+            title: 'seedlot_events',
+            exportOptions: {
+                orthogonal: 'export'
+            }
+        },
+        {
+            extend: 'csvHtml5',
+            title: 'seedlot_events',
+            exportOptions: {
+                orthogonal: 'export'
+            }
+        }
+    ];
+
+    // Init DataTable
+    jQuery('#seedlot_maintenance_events').DataTable({
+        dom: 'Bfrtip',
+        autoWidth: false,
+        data: [],
+        columns: [
+            { title: "Event ID", data: "stockprop_id" },
+            { title: "Event Date", data: "timestamp" },
+            { title: "Event Type", data: "cvterm_name" },
+            { title: "Value", data: "value" },
+            { title: "Notes", data: "notes" },
+            { title: "Operator", data: "operator" }
+        ],
+        order: [[ 1, "asc" ]],
+        buttons: DT_BUTTONS
+    });
+
+});
+
+
+/**
+    * Get the Maintenance Events
+    * - Query the database
+    * - call displayEvents() to populate the table
+    */
+function getEvents() {
+    events = [];
+    jQuery.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: '/ajax/breeders/seedlot/<% $seedlot_id %>/maintenance',
+        success: function(data) {
+            if ( data && data.events ) {
+                events = data.events;
+                displayEvents();
+            }
+            else {
+                alert("ERROR: Could not load maintenance events!");
+            }
+        },
+        error: function() {
+            alert("ERROR: Could not load maintenance events!");
+        }
+    });
+}
+
+function displayEvents() {
+    let dt = jQuery('#seedlot_maintenance_events').DataTable();
+    dt.clear();
+    dt.rows.add(events);
+    dt.draw();
+}
+
+</script>

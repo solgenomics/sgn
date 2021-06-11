@@ -1074,6 +1074,15 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
 #
 # List all of the Maintenance Events for the specified Seedlot
 # PATH: GET /ajax/breedbers/seedlot/{seedlot id}/maintenance
+# RETURNS:
+#   events: all of the stored maintenance events for the Seedlot, an array of objects with the following keys:
+#       - stockprop_id: seedlot maintenance event id (stockprop_id) 
+#       - cvterm_id: id of seedlot maintenance event ontology term
+#       - cvterm_name: name of seedlot maintenance event ontology term
+#       - value: value of seedlot maintenance event
+#       - notes: additional notes/comments about the event
+#       - operator: username of the person creating the event
+#       - timestamp: timestamp of when the event was created (YYYY-MM-DD HH:MM:SS format)
 # 
 sub seedlot_maintenance_event : Chained('seedlot_base') PathPart('maintenance') Args(0) : ActionClass('REST') { }
 sub seedlot_maintenance_event_GET {
@@ -1081,9 +1090,9 @@ sub seedlot_maintenance_event_GET {
     my $c = shift;
     my $seedlot = $c->stash->{seedlot};
 
-    print STDERR "======== LIST SEEDLOT MAINTENANCE EVENTS ========\n";
+    my $events = $seedlot->get_events();
 
-    $c->stash->{rest} = {};
+    $c->stash->{rest} = { events => $events };
 }
 
 
