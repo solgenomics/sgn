@@ -6,12 +6,12 @@
     This page can be used to read a barcode directly from the website
     using the device's camera.  If a barcode is successfully read, the 
     page will return to the provided return url with a query parameter
-    set to the contents of the read barcode.
+    set to the URI encoded contents of the read barcode.
 
     Usage: /barcode/read?return=/breeders/seedlot/maintenance&param=barcode
     This will start the barcode reader and when a barcode is found, change 
     the location of the browser to:
-        {{host}}/breeders/seedlot/maintenance?barcode={{contents}}
+        /breeders/seedlot/maintenance?barcode={{contents}}
 
     The javascript qr code reader used: https://github.com/cozmo/jsQR
     Code based on demo: https://cozmo.github.io/jsQR/
@@ -119,13 +119,15 @@ function startReader() {
  * Stop the camera feed
  */
 function stopReader() {
-    var stream = video.srcObject;
-    var tracks = stream.getTracks();
-    video.pause();
-    tracks.forEach(function(track) { track.stop(); });
-    video.srcObject = null;
-    canvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
-    cancelAnimationFrame(animFrameId);
+    if ( video ) {
+        var stream = video.srcObject;
+        var tracks = stream.getTracks();
+        video.pause();
+        tracks.forEach(function(track) { track.stop(); });
+        video.srcObject = null;
+        canvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        cancelAnimationFrame(animFrameId);
+    }
 }
 
 
@@ -136,11 +138,11 @@ function stopReader() {
  */
 function processCode(data) {
     jQuery(".panel-footer").html("<strong>Barcode Found:</strong> " + data);
-    stopReader();
     if ( RETURN_URL && RETURN_URL !== "" && RETURN_PARAM && RETURN_PARAM !== "" ) {
         let q = RETURN_URL.includes('?') ? '&' : '?';
-        window.location = RETURN_URL + q + RETURN_PARAM + '=' + data;
+        window.location = RETURN_URL + q + RETURN_PARAM + '=' + encodeURIComponent(data);
     }
+    stopReader();
 }
 
 </script>

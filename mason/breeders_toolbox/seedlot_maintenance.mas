@@ -16,8 +16,11 @@
             <!-- Seedlot Name -->
             <div class="form-group">
                 <label class="col-sm-3 control-label">Seedlot Name: </label>
-                <div class="col-sm-9">
+                <div class="col-sm-7">
                     <input class="form-control" id="seedlot_event_name" type="text" value="">
+                </div>
+                <div class="col-sm-2">
+                    <button id="seedlot_event_name_barcode" class="btn btn-default"><span class="glyphicon glyphicon-qrcode"></span> Barcode</button>
                 </div>
             </div>
 
@@ -137,6 +140,7 @@
         setTimestamp();
 
         // Event change / Click listeners
+        jQuery('#seedlot_event_name_barcode').click(scanBarcode);
         jQuery('#seedlot_event_cvterm').change(setValues).change(setTimestamp);
         jQuery('#seedlot_event_record').click(recordEvent);
         jQuery('#seedlot_event_submit').click(submitEvents);
@@ -163,10 +167,23 @@
     */
     function parseArgs() {
         const urlSearchParams = new URLSearchParams(window.location.search);
+        if ( urlSearchParams.has('barcode') ) {
+            let barcode = decodeURIComponent(urlSearchParams.get('barcode'));
+            let seedlot_name = barcode.includes('seedlot_name=') ? barcode.match(/.*seedlot_name=(.*)/)[1] : barcode;
+            jQuery('#seedlot_event_name').val(seedlot_name);
+        }
         if ( urlSearchParams.has('seedlot_name') ) {
             let seedlot_name = urlSearchParams.get('seedlot_name');
             jQuery('#seedlot_event_name').val(seedlot_name);
         }
+    }
+
+    /**
+     * Redirect to the Barcode Reader
+     */
+    function scanBarcode() {
+        window.location = "/barcode/read?return=/breeders/seedlot/maintenance&param=barcode";
+        return false;
     }
 
     /**
