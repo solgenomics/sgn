@@ -30,7 +30,6 @@ $selection_pop_name => undef
 $list_of_prediction_pops => undef
 $prediction_pop_analyzed_traits => undef
 $prediction_pop_analyzed_traits_ids => undef
-$acronym
 $genotyping_protocol_id
 
 </%args>
@@ -118,6 +117,5 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
   <& /solgs/kinship/analysis.mas,
      pop_id => $training_pop_id &>
 
-<& acronym.mas,
-   acronym => $acronym,
+<& /solgs/population/trait_acronyms.mas,
 &>
