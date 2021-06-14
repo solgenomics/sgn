@@ -133,7 +133,6 @@ sub new_stock : Chained('get_stock') PathPart('new') Args(0) {
         );
 }
 
-
 =head2 view_stock
 
 Public path: /stock/<stock_id>/view
