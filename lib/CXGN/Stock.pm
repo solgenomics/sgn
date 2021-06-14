@@ -1540,7 +1540,7 @@ sub merge {
 
     if ($other_stock_id == $self->stock_id()) {
 	print STDERR "Trying to merge stock into itself ($other_stock_id) Skipping...\n";
-	return;
+	return "Error: cannot merge stock into itself";
     }
 
     my $stockprop_count=0;
