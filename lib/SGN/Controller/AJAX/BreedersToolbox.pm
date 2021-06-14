@@ -317,7 +317,7 @@ sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/')
     print STDERR "Phenotype file successfully made obsolete (AKA deleted).\n";
 
     my $async_refresh = CXGN::Tools::Run->new();
-    $async_refresh->run_async("perl " . $c->config->{basepath} . "/bin/refresh_matviews.pl -H " . $c->config->{dbhost} . " -D " . $c->config->{dbname} . " -U " . $c->config->{dbuser} . " -P " . $c->config->{dbpass} . " -m fullview -c");
+    $async_refresh->run_async("perl " . $c->config->{basepath} . "/bin/refresh_matviews.pl -H " . $c->config->{dbhost} . " -D " . $c->config->{dbname} . " -U " . $c->config->{dbuser} . " -P '" . $c->config->{dbpass} . "' -m fullview -c");
 
     $c->stash->{rest} = {success => 1};
 }
