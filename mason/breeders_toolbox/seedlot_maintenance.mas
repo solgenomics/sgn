@@ -157,6 +157,16 @@
     });
 
 
+    /**
+     * Warn when leaving the page if there are any pending events
+     */
+    jQuery(window).bind('beforeunload', function(e) {
+        if ( PENDING_EVENTS && PENDING_EVENTS.length > 0 ) {
+                return e.originalEvent.returnValue = "There are pending events!\nThere are " + PENDING_EVENTS.length + " pending maintenance events that have not yet been submitted to the database.  Are you sure you want to leave this page and discard the events?";
+        }
+    });
+
+
     //
     // SETUP FUNCTIONS
     //
@@ -167,13 +177,9 @@
     */
     function parseArgs() {
         const urlSearchParams = new URLSearchParams(window.location.search);
-        if ( urlSearchParams.has('barcode') ) {
-            let barcode = decodeURIComponent(urlSearchParams.get('barcode'));
-            let seedlot_name = barcode.includes('seedlot_name=') ? barcode.match(/.*seedlot_name=(.*)/)[1] : barcode;
-            jQuery('#seedlot_event_name').val(seedlot_name);
-        }
         if ( urlSearchParams.has('seedlot_name') ) {
-            let seedlot_name = urlSearchParams.get('seedlot_name');
+            let seedlot_name = decodeURIComponent(urlSearchParams.get('seedlot_name'));
+            seedlot_name = seedlot_name.includes('seedlot_name=') ? seedlot_name.match(/.*seedlot_name=(.*)/)[1] : seedlot_name;
             jQuery('#seedlot_event_name').val(seedlot_name);
         }
     }
@@ -182,7 +188,7 @@
      * Redirect to the Barcode Reader
      */
     function scanBarcode() {
-        window.location = "/barcode/read?return=/breeders/seedlot/maintenance&param=barcode";
+        window.location = "/barcode/read?return=/breeders/seedlot/maintenance&param=seedlot_name";
         return false;
     }
 
