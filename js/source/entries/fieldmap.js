@@ -7,14 +7,19 @@ export function init() {
     class FieldMap {
         constructor (trial_id) {
             this.trial_id = String;
-            this.field_map_hash = Object;
+            this.field_map_hash = Object; 
+            this.data = Object;
         }
 
         set_id(trial_id) {
             this.trial_id = trial_id;
         }
 
-        make_hash_map(data) {
+        set_data(data) {
+            this.data = data;
+        }
+
+        make_hash_map() {
             var field_map_hash;
             var checks = {};
             var rows = [];
@@ -36,7 +41,7 @@ export function init() {
             var highest_row = 0;
             var highest_col = 0;
 
-            jQuery.each(data, function(key_obj, value_obj) {
+            jQuery.each(this.data, function(key_obj, value_obj) {
                 jQuery.each(value_obj, function(key, value) {
                     if (key == 'observationUnitPosition') {
                         
@@ -79,25 +84,25 @@ export function init() {
                     if (key == 'observationUnitPUI'){
                         plot_mums.push(value);
                     }
-
-                    if (key == 'additionalInfo'){
-                        jQuery.each(value, function(key_add, value_add){
-                            if (key_add == 'designType'){
-                                design = value_add;
-                                trialStudyDesign = value_add;
-                            }
-                            if (key_add == 'plotImageDbIds'){
-                                plotImageDbIds.push(value_add);
-                            }
-                            if (key_add == 'plantNames'){
-                                var s = value_add.length;
-                                plant_names.push(s); 
-                            }
-                            if (key_add == 'seedLotName'){
-                                seedlot_names.push(value_add);
-                            }
-                        });
+                    if (key == 'plotImageDbIds'){
+                        plotImageDbIds.push(value);
                     }
+                    if (key == 'designType'){
+                        design = value;
+                    }
+                    // if (key == 'additionalInfo'){
+                    //     jQuery.each(value, function(key_add, value_add){
+                            
+                            
+                    //         if (key_add == 'plantNames'){
+                    //             var s = value_add.length;
+                    //             plant_names.push(s); 
+                    //         }
+                    //         if (key_add == 'seedLotName'){
+                    //             seedlot_names.push(value_add);
+                    //         }
+                    //     });
+                    // }
                 });
 
                 num_real_plots = plot_names.length;
@@ -408,7 +413,7 @@ export function init() {
                         }
                         for (let i = lowest_col; i <= highest_col; i++) {
                             datasets.push({plotname:plot_names[i] + "_top_border", plot_id:plot_ids[i] + plot_ids[i], stock:border_accession_name,
-                            blkn:blocks[i], row:lowest_row, plot_image_ids:plotImageDbIds[lowest_col], col:i, plot_msg:plot_popUp});
+                            blkn:blocks[i], row:lowest_row, plot_image_ids:[], col:i, plot_msg:plot_popUp});
                         }
                         highest_row += 1;
 
@@ -426,7 +431,7 @@ export function init() {
                         }
                         for (let i = lowest_row; i <= highest_row; i++) {
                             datasets.push({plotname:plot_names[i] + "_left_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:border_accession_name,
-                            blkn:blocks[i], row:i, plot_image_ids:plotImageDbIds[lowest_row], col:lowest_col, plot_msg:plot_popUp})
+                            blkn:blocks[i], row:i, plot_image_ids:[], col:lowest_col, plot_msg:plot_popUp})
                         }
                         lowest_col += 1;
                         modifiedColLabels = svg.selectAll(".columnLabel");
@@ -441,7 +446,7 @@ export function init() {
                         }
                         for (let i = lowest_row; i <= highest_row; i++) {
                             datasets.push({plotname:plot_names[i] + "_right_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:border_accession_name,
-                            blkn:blocks[i], row:i, plot_image_ids:plotImageDbIds[lowest_row], col:highest_col + 1, plot_msg:plot_popUp})
+                            blkn:blocks[i], row:i, plot_image_ids:[], col:highest_col + 1, plot_msg:plot_popUp})
                         }
                     }
 
@@ -457,7 +462,7 @@ export function init() {
                         }
                         for (let i = lowest_col; i <= highest_col; i++) {
                             datasets.push({plotname:plot_names[i] + "_bottom_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:border_accession_name,
-                            blkn:blocks[i], row:highest_row + 1, plot_image_ids:plotImageDbIds[lowest_row], col:i, plot_msg:plot_popUp})
+                            blkn:blocks[i], row:highest_row + 1, plot_image_ids:[], col:i, plot_msg:plot_popUp})
                         }
                     }
                     
@@ -479,7 +484,7 @@ export function init() {
 
                     cards.append("title");
                     var image_icon = function (d, i){
-                        image = d.plot_image_ids; 
+                        image = d.plot_image_ids || [];
                         var plot_image;
                         if (image.length > 0){
                             plot_image = "/static/css/images/plot_images.png"; 
@@ -623,7 +628,8 @@ export function init() {
                         cc.on("click", function(el) {  
                                                         var me = d3.select(el.srcElement);
                                                         var d = me.data()[0];
-                                                        image_ids = d.plot_image_ids;
+                                                        console.log('ok',d);
+                                                        image_ids = d.plot_image_ids || [];
                                                         var replace_accession = d.stock;
                                                         var replace_plot_id = d.plot_id;
                                                         var replace_plot_name = d.plotname;
