@@ -48,8 +48,8 @@
                     <div class="col-sm-4">
                         <select class="form-control" id="event_filter_type" disabled><option>Loading...</option></select>
                     </div>
-                    <div class="col-sm-4">
-                        <select class="form-control" id="event_filter_type_values" multiple disabled></select>
+                    <div class="col-sm-4" id="event_filter_type_value">
+                        
                     </div>
                     <div class="col-sm-1">
                         <button id="event_filter_type_add" class='btn btn-info btn-sm'>Add</button>
@@ -104,15 +104,17 @@
 
 <script type="text/javascript">
 
-var events = [];        // List of maintenance events for the Seedlot
-let types = {};         // Hash of event types, id -> name
-let type_values = {};   // Hash of event type values, id -> [values]
-var filters = [];       // List of filter properties
+let events = [];        // List of maintenance events for the Seedlot
+let ontology = [];      // Event type ontology
+let filters = [];       // List of filter properties
 
 jQuery(document).ready(function() {
     
     // Load the Events
     getEvents();
+    getOntology(function() {
+        setTypeFilter();
+    });
 
     // Click and Change Listeners
     jQuery("#event_filter_date_add").click(addDateFilter);
@@ -230,7 +232,6 @@ function getEvents() {
         },
         complete: function() {
             displayEvents();
-            setTypeFilter();
             setOperators();
 
             jQuery("#event_filter_submit").html("Filter");
@@ -256,35 +257,48 @@ function displayEvents() {
 
 
 /**
- * Parse the loaded events for event types
- * - Set hash of event types
- * - Set hash of event type values
+ * Get the maintenance event ontology
+ * @param {Function} [callback] Callback function()
+ */
+function getOntology(callback) {
+    jQuery.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: '/ajax/breeders/seedlot/maintenance/ontology',
+        success: function(data) {
+            if ( data && data.ontology ) {
+                ontology = data.ontology;
+                if ( callback ) return callback();
+            }
+            else {
+                alert("ERROR: Could not fetch ontology terms");
+            }
+        },
+        error: function() {
+            alert("ERROR: Could not fetch ontology terms");
+        }
+    });
+    
+}
+
+/**
+ * Parse the event ontology for event types
  * - Populate event type select
  * - Call setTypeFilterValues to set initial values
  */
 function setTypeFilter() {
     
-    // Get types and values by type id
-    types = {};
-    type_values = {};
-    for ( let i = 0; i < events.length; i++ ) {
-        let id = events[i].cvterm_id;
-        let name = events[i].cvterm_name;
-        let value = events[i].value;
-        types[id] = name;
-        if ( !type_values.hasOwnProperty(id) ) {
-            type_values[id] = [value];
-        }
-        else if ( !type_values[id].includes(value) ) {
-            type_values[id].push(value);
-        }
-    }
-
     // Populate type select
-    let html = "";
-    for ( let id in types ) {
-        if ( types.hasOwnProperty(id) ) {
-            html += "<option value='" + id + "'>" + types[id] + "</option>";
+    let html = "<option value=''>...Select Maintenance Event Type...</option>";
+    if ( ontology ) {
+        for ( let i = 0; i < ontology.length; i++ ) {
+            html += "<optgroup label='" + ontology[i].name + "'>";
+            if ( ontology[i].children ) {
+                for ( let j = 0; j < ontology[i].children.length; j++ ) {
+                    html += "<option value='" + ontology[i].children[j].cvterm_id + "'>" + ontology[i].children[j].name + "</option>";
+                }
+            }
+            html += "</optgroup>";
         }
     }
     jQuery("#event_filter_type").html(html);
@@ -296,20 +310,45 @@ function setTypeFilter() {
 }
 
 /**
- * Populate the event type values select with the values for 
- * the currently selected event type
+ * Populate the event type input values based on the currently selected event type with:
+ *  - a multi-select with the values for the currently selected event type, if set in the ontology
+ *  - a text input, if not set in the ontology
  */
 function setTypeFilterValues() {
     let id = jQuery("#event_filter_type").val();
-    let values = type_values[id];
+
+    // Build input based on possible values of selected event type
     let html = "";
-    if ( values ) {
-        for ( let i = 0; i < values.length; i++ ) {
-            html += "<option value='" + values[i] + "'>" + values[i] + "</option>";
+    let input_type;
+    if ( id && id !== '' && ontology ) {
+        let values = [];
+        for ( let i = 0; i < ontology.length; i++ ) {
+            for ( let j = 0; j < ontology[i].children.length; j++ ) {
+                if ( ontology[i].children[j].cvterm_id === parseInt(id) ) {
+                    values = ontology[i].children[j].children;
+                }
+            }
+        }
+        console.log(values);
+        if ( values && values.length > 0 ) {
+            input_type = "select";
+            html += "<select class='form-control' id='event_filter_type_value_select' multiple>";
+            for ( let i = 0; i < values.length; i++ ) {
+                html += "<option value='" + values[i].name + "'>" + values[i].name + "</option>";
+            }
+            html += "</select>";
+        }
+        else {
+            input_type = "user";
+            html += "<input class='form-control' id='event_filter_type_value_user' type='text'>";
         }
     }
-    jQuery("#event_filter_type_values").html(html);
-    jQuery("#event_filter_type_values").attr("disabled", false);
+    else {
+        input_type = "none";
+    }
+
+    jQuery("#event_filter_type_value").data("input-type", input_type);
+    jQuery("#event_filter_type_value").html(html);
 }
 
 /**
@@ -352,9 +391,22 @@ function addDateFilter() {
  * Add a Type/Value Filter
  */
 function addTypeFilter() {
+    
+    // Get event type
     let type_id = jQuery('#event_filter_type').val();
     let type_name = jQuery('#event_filter_type option:selected').text();
-    let values = jQuery('#event_filter_type_values').val();
+    
+    // Get event value(s)
+    let values;
+    let input_type = jQuery('#event_filter_type_value').data('input-type');
+    if ( input_type === 'select' ) {
+        values = jQuery('#event_filter_type_value_select').val();
+    }
+    else if ( input_type === 'user' ) {
+        let v = jQuery('#event_filter_type_value_user').val();
+        values = v && v !== '' ? [v] : undefined;
+    }
+    
     addFilter(type_id, type_name, values, 'eq');
     return false;
 }

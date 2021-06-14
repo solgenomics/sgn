@@ -16,6 +16,7 @@ use CXGN::Stock::Seedlot::ParseUpload;
 use CXGN::Login;
 use JSON;
 use CXGN::BreederSearch;
+use CXGN::Onto;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -1072,8 +1073,84 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
 #
 
 #
+# Get the Seedlot Maintenance Event Ontology terms
+#   - the first level are used as categories
+#   - the second level are the actual events
+#   - the third level, if present, are allowed values
+# PATH: GET /ajax/breeders/seedlot/maintenance/ontology
+# RETURNS:
+#   ontology: an array of objects with the child cvterm informion, with the following keys:
+#       - cvterm_id = id of the child cvterm
+#       - name = name of the child cvterm
+#       - definition = definition of the child cvterm
+#       - children = children of the child cvterm
+#
+sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/ontology') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $onto = CXGN::Onto->new({ schema => $schema });
+
+    # Make sure ontology is set in the conf file
+    if ( !defined $c->config->{seedlot_maintenance_event_ontology_root} || $c->config->{seedlot_maintenance_event_ontology_root} eq '' ) {
+        $c->stash->{rest} = { error => 'Seedlot Maintenance Events are not enabled on this server!' };
+        $c->detach();
+    }
+
+    # Get cvterm of root term
+    my ($db_name, $accession) = split ":", $c->config->{seedlot_maintenance_event_ontology_root};
+    my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
+    my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
+    my $root_cvterm = $dbxref->cvterm;
+    my $root_cvterm_id = $root_cvterm->cvterm_id;
+
+    # Get children (recursively) of root cvterm
+    my $ontology = _get_onto_children($schema, $root_cvterm_id);
+
+    $c->stash->{rest} = { ontology => $ontology };
+}
+
+#
+# Recursively get the children (and all granchildren, etc) of the specified cvterm
+# ARGS:
+#   - schema = Bio::Chado::Schema
+#   - cvterm_id = id of the root cvterm
+# RETURNS: an arrayref of hashes of the children of the cvterm, with the following keys:
+#   - cvterm_id = id of the child cvterm
+#   - name = name of the child cvterm
+#   - definition = definition of the child cvterm
+#   - children = children of the child cvterm
+#   
+sub _get_onto_children {
+    my $schema = shift;
+    my $cvterm_id = shift;
+
+    my @children;
+    my $cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $cvterm_id });
+    if ( defined $cvterm ) {
+        my $cvterm_rs = $cvterm->children();
+        while (my $r = $cvterm_rs->next()) {
+            my $child = $r->subject();
+            if ( !$child->is_obsolete() ) {
+                my $gc = _get_onto_children($schema, $child->cvterm_id);
+                my %c = (
+                    cvterm_id => $child->cvterm_id(),
+                    name => $child->name(),
+                    definition => $child->definition(),
+                    children => scalar(@$gc) > 0 ? $gc : undef
+                );
+                push(@children, \%c);
+            }
+        }
+    }
+    
+    return \@children;
+}
+
+
+#
 # List all of the Maintenance Events for the specified Seedlot
-# PATH: GET /ajax/breedbers/seedlot/{seedlot id}/maintenance
+# PATH: GET /ajax/breeders/seedlot/{seedlot id}/maintenance
 # RETURNS:
 #   events: all of the stored maintenance events for the Seedlot, an array of objects with the following keys:
 #       - stockprop_id: seedlot maintenance event id (stockprop_id) 

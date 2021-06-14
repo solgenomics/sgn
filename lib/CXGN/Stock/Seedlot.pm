@@ -1319,15 +1319,21 @@ sub get_events {
             }
 
             # Type Filter
-            if ( $filters->{types} && $add ) {
+            if ( $filters->{types} && scalar(@{$filters->{types}}) > 0 && $add ) {
+                my $filter_match = 0;
                 foreach my $tf (@{$filters->{types}}) {
                     my $id = $tf->{type};
                     my %values = map { $_ => 1 } @{$tf->{values}};
-                    $add = 0 if ($event->{cvterm_id} ne $id);
-                    if ( %values && $add ) {
-                        $add = 0 if (!exists($values{$event->{value}}));
+                    if ( $event->{cvterm_id} eq $id ) {
+                        if ( scalar(@{$tf->{values}}) > 0 ) {
+                            $filter_match = 1 if (exists($values{$event->{value}}));
+                        }
+                        else {
+                            $filter_match = 1;
+                        }
                     }
                 }
+                $add = 0 if ($filter_match ne 1);
             }
 
             # Operator Filter

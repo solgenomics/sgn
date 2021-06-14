@@ -1,6 +1,5 @@
 <%args>
     $operator => undef
-    $ontology_root => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery' ] &>
@@ -134,7 +133,7 @@
         parseArgs();
 
         // Get ontology terms to build the event type selection, set intitial timestamp
-        buildOntology(function() {
+        setOntology(function() {
             setEvents();
         });
         setTimestamp();
@@ -195,98 +194,27 @@
     /**
     * Build the Seedlot Maintenance Event Ontology
     * - Get the categories, events, and values of the ontology
+    * - Build the select with the event options
     * @param {function}  callback  Callback function()
     */
-    function buildOntology(callback) {
-        _getCategories("<% $ontology_root %>", function(categories) {
-            _addEventsToCategories(categories, function(categories_events) {
-                _addValuesToEvents(categories_events, function(categories_events_values) {
-                    ONTOLOGY = categories_events_values;
+    function setOntology(callback) {
+        jQuery.ajax({
+            type: 'GET',
+            dataType: 'json',
+            url: '/ajax/breeders/seedlot/maintenance/ontology',
+            success: function(data) {
+                if ( data && data.ontology ) {
+                    ONTOLOGY = data.ontology;
                     return callback();
-                });
-            });
-        });
-
-        /**
-        * Get the categories (first children of the root) of the ontology
-        */
-        function _getCategories(root, callback) {
-            _getOntologyChildren(root, function(categories) {
-                return callback(categories);
-            });
-        }
-
-        /**
-        * Get the events (second children of the root) of each of the category terms
-        * - Add the events to the categories using the 'events' key
-        */
-        function _addEventsToCategories(categories, callback) {
-            let count = 0;
-            let total = categories.length;
-
-            for ( let i = 0; i < categories.length; i++ ) {
-                _getOntologyChildren(categories[i].accession, function(events) {
-                    categories[i].events = events;
-                    _finish();
-                });
-            }
-
-            function _finish() {
-                count++;
-                if ( count >= total ) {
-                    return callback(categories);
                 }
-            }
-        }
-
-        /**
-        * Get the values (third children of the root) of each of the event terms
-        * - Add values to the events using the 'values' key
-        */
-        function _addValuesToEvents(categories_events, callback) {
-            let count = 0;
-            let total = 0;
-            for ( let i = 0; i < categories_events.length; i++ ) {
-                for ( let j = 0; j < categories_events[i].events.length; j++ ) {
-                    total++;
-                }
-            }
-
-            for ( let i = 0; i < categories_events.length; i++ ) {
-                for ( let j = 0; j < categories_events[i].events.length; j++ ) {
-                    _getOntologyChildren(categories_events[i].events[j].accession, function(values) {
-                        categories_events[i].events[j].values = values;
-                        _finish();
-                    })
-                }
-            }
-
-            function _finish() {
-                count++;
-                if ( count >= total ) {
-                    return callback(categories_events);
-                }
-            }
-        }
-
-        /**
-        * Get the children of the specified ontology term
-        * @param {string} root Ontology accession
-        * @param {function} callback Callback function(children)
-        */
-        function _getOntologyChildren(root, callback) {
-            jQuery.ajax({
-                type: 'GET',
-                dataType: 'json',
-                url: '/ajax/onto/children?node=' + root,
-                success: function(data) {
-                    return callback(data);
-                },
-                error: function() {
+                else {
                     alert("ERROR: Could not fetch ontology terms");
                 }
-            });
-        }
+            },
+            error: function() {
+                alert("ERROR: Could not fetch ontology terms");
+            }
+        });
     }
 
     /**
@@ -296,9 +224,11 @@
     function setEvents() {
         let html = "<option value=''>...Select Maintenance Event...</option>";
         for ( let i = 0; i < ONTOLOGY.length; i++ ) {
-            html += "<optgroup label='" + ONTOLOGY[i].cvterm_name + "'>";
-            for ( let j = 0; j < ONTOLOGY[i].events.length; j++ ) {
-                html += "<option value='" + ONTOLOGY[i].events[j].cvterm_id + "'>" + ONTOLOGY[i].events[j].cvterm_name + "</option>";
+            html += "<optgroup label='" + ONTOLOGY[i].name + "'>";
+            if ( ONTOLOGY[i].children ) {
+                for ( let j = 0; j < ONTOLOGY[i].children.length; j++ ) {
+                    html += "<option value='" + ONTOLOGY[i].children[j].cvterm_id + "'>" + ONTOLOGY[i].children[j].name + "</option>";
+                }
             }
             html += "</optgroup>";
         }
@@ -320,16 +250,18 @@
         else {
             let values = [];
             for ( let i = 0; i < ONTOLOGY.length; i++ ) {
-                for ( let j = 0; j < ONTOLOGY[i].events.length; j++ ) {
-                    if ( parseInt(ONTOLOGY[i].events[j].cvterm_id) === parseInt(event) ) {
-                        values = ONTOLOGY[i].events[j].values;
+                if ( ONTOLOGY[i].children ) {
+                    for ( let j = 0; j < ONTOLOGY[i].children.length; j++ ) {
+                        if ( parseInt(ONTOLOGY[i].children[j].cvterm_id) === parseInt(event) ) {
+                            values = ONTOLOGY[i].children[j].children;
+                        }
                     }
                 }
             }
-            if ( values.length > 0 ) {
+            if ( values && values.length > 0 ) {
                 html = "<select class='form-control' id='seedlot_event_value' data-type='cvterm'>";
                 for ( let i = 0; i < values.length; i++ ) {
-                    html += "<option value='" + values[i].cvterm_id + "'>" + values[i].cvterm_name + "</option>";
+                    html += "<option value='" + values[i].cvterm_id + "'>" + values[i].name + "</option>";
                 }
                 html += "</select>";
             }

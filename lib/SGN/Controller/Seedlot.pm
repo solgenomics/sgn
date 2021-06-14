@@ -120,7 +120,6 @@ sub seedlot_maintenance : Path('/breeders/seedlot/maintenance') {
     }
 
     $c->stash->{operator} = $c->user()->get_object()->get_username();
-    $c->stash->{ontology_root} = $c->config->{seedlot_maintenance_event_ontology_root};
     $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance.mas';
 }
 
