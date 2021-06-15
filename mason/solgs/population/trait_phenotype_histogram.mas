@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME
- 
+
 population/trait_phenotype_histogram.mas - displays histogram plot of trait phenotype data
 
 =AUTHOR
@@ -45,14 +45,9 @@ $pop_id = $trial_id if $trial_id;
 
 </style>
 
- <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram"] &>
+ <& /util/import_javascript.mas, classes => ["d3.d3Min",  "d3.d3-v6-tip", "solGS.histogram"] &>
 
-<div id="trait_histogram_canvas"></div>
-<div id="trait_histogram_plot"></div>
-<br/>
-
-
-<input type="hidden" id="population_id" value="<% $pop_id %>" /> 
-<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
-<input type="hidden" id="trait_id" value="<% $trait_id %>" />  
-
+<div id="trait_histogram_canvas">
+    <div id="trait_histogram_plot"></div>
+    <div class="message" id="histogram_message" style="display:none"></div>
+</div>
