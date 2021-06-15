@@ -21,6 +21,60 @@ BEGIN { extends 'Catalyst::Controller' }
 
 
 
+sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
+    my ($self, $c) = @_;
+
+    my $training_pop_id  = $c->req->param('training_pop_id');
+    my $trait_id         = $c->req->param('trait_id');
+    my $selection_pop_id = $c->req->param('selection_pop_id');
+    my $combo_pops_id    = $c->req->param('combo_pops_id');
+    my $protocol_id      = $c->req->param('genotyping_protocol_id');
+
+
+    if ($combo_pops_id)
+    {
+	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+	$c->stash->{data_set_type} = 'combined populations';
+	$training_pop_id = $combo_pops_id;
+	$c->stash->{combo_pops_id} = $combo_pops_id;
+    }
+
+    $c->stash->{pop_id} = $training_pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id;
+    $c->stash->{selectiion_pop_id} = $selection_pop_id;
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+
+    my $gebvs_file;
+    my $page = $c->req->referer();
+
+    if ($page =~ /solgs\/selection\//)
+    {
+        $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
+        $gebvs_file = $c->stash->{rrblup_selection_gebvs_file};
+    }
+    else
+    {
+        $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+        $gebvs_file = $c->stash->{rrblup_training_gebvs_file};
+    }
+
+    my $gebvs_data = $c->controller("solGS::Utils")->read_file_data($gebvs_file);
+
+    my $ret->{status} = 'failed';
+
+    if (@$gebvs_data)
+    {
+        $ret->{status} = 'success';
+        $ret->{gebvs_data} = $gebvs_data;
+    }
+
+    $ret = to_json($ret);
+
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
+}
 
 
 sub combine_gebvs_jobs_args {

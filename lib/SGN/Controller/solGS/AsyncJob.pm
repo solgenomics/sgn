@@ -781,3 +781,8 @@ sub submit_cluster_compare_trials_markers {
     };
 
 }
+
+
+######
+1;
+#####
