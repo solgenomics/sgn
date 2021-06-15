@@ -2686,7 +2686,7 @@ sub observation_unit_single_PUT {
     push @all_observations_units, $observationUnits;
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
-    my $brapi_package_result = $brapi_module->observationunits_update(\@all_observations_units);
+    my $brapi_package_result = $brapi_module->observationunits_update(\@all_observations_units, $c);
 
     _standard_response_construction($c, $brapi_package_result);
 }

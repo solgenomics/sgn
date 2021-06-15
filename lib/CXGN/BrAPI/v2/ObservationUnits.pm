@@ -330,7 +330,7 @@ sub _get_plants_plot_parent {
 sub detail {
     my $self = shift;
     my $observation_unit_db_id = shift;
-    
+
     my $search_params = {observationUnitDbIds => [$observation_unit_db_id] };
     $self->search($search_params);
 }
@@ -355,6 +355,7 @@ sub observationunits_update {
         my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
         my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
         my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
+        my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
         my $accession_name = $params->{germplasmName} || ($params->{germplasmNames} || ());
         my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
         my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
@@ -365,8 +366,14 @@ sub observationunits_update {
         my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
         my $treatments = $params->{treatments} || ""; #not implemented yet
 
-        if(!$observation_unit_db_id){
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Check ObservationUnits Ids'));
+        if (! defined $accession_id && ! defined $accession_name) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
+        }
+        my $germplasm_search_result = $self->_get_existing_germplasm($schema, $accession_id, $accession_id);
+        if ($germplasm_search_result->{error}) {
+            return $germplasm_search_result->{error};
+        } else {
+            $accession_name = $germplasm_search_result->{name};
         }
 
         my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate('MaterializedViewTable',
@@ -443,10 +450,34 @@ sub observationunits_update {
 
     }
 
-    my $result = '';
-    my $total_count = 1;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, undef, $status, 'Observation Units updated');
+    my @observation_unit_db_ids;
+    foreach my $params (@$data) { push @observation_unit_db_ids, $params->{observationUnitDbId}; }
+    my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
+    $self->search($search_params);
+}
+
+sub _get_existing_germplasm {
+    my $self = shift;
+    my $schema = shift;
+    my $accession_id = shift;
+    my $accession_name = shift;
+
+    # Get the germplasm name from germplasmDbId. Check if a germplasm name passed exists
+    my $rs = $schema->resultset("Stock::Stock")->search({stock_id=>$accession_id});
+    if ($rs->count() eq 0 && ! defined $accession_name){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Germplasm with that id does not exist.'), 404);
+    } elsif ($rs->count() > 0) {
+        my $stock = $rs->first;
+        $accession_name = $stock->uniquename();
+    } else {
+        # Check that a germplasm exists with that name
+        my $rs = $schema->resultset("Stock::Stock")->search({uniquename=>$accession_name});
+        if ($rs->count() eq 0) {
+            return {error => CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Germplasm with that name does not exist.'), 404)};
+        }
+    }
+
+    return {name => $accession_name};
 }
 
 sub observationunits_store {
@@ -499,18 +530,11 @@ sub observationunits_store {
         }
 
         # Get the germplasm name from germplasmDbId. Check if a germplasm name passed exists
-        my $rs = $schema->resultset("Stock::Stock")->search({stock_id=>$accession_id});
-        if ($rs->count() eq 0 && ! defined $accession_name){
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Germplasm with that id does not exist.'), 404);
-        } elsif ($rs->count() > 0) {
-            my $stock = $rs->first;
-            $accession_name = $stock->uniquename();
+        my $germplasm_search_result = $self->_get_existing_germplasm($schema, $accession_id, $accession_id);
+        if ($germplasm_search_result->{error}) {
+            return $germplasm_search_result->{error};
         } else {
-            # Check that a germplasm exists with that name
-            my $rs = $schema->resultset("Stock::Stock")->search({uniquename=>$accession_name});
-            if ($rs->count() eq 0) {
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Germplasm with that name does not exist.'), 404);
-            }
+            $accession_name = $germplasm_search_result->{name};
         }
 
         my $plot_parent_id;
