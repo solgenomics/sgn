@@ -44,7 +44,7 @@ $training_pop_url
     &>
 
 
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css', '/static/css/d3-tip.css'] &>
 
 <& /page/page_title.mas,
    title => "Genomic selection model for $trait_name ($trait_abbr) in $training_pop_name"
