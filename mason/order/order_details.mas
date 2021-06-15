@@ -1,0 +1,37 @@
+<%args>
+
+$order_id
+$order_from
+$create_date
+$item_list
+$order_to
+$order_status
+$comments
+
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<& /page/page_title.mas, title => "Details for Order Number: $order_id" &>
+
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <table class="table table-bordered table-hover">
+                        <tr><td><b>Ordered by</b></td><td><% $order_from %></td></tr>
+                        <tr><td><b>Submitted Date</b></td><td><% $create_date %></td></tr>
+                        <tr><td><b>Items</b></td><td><% $item_list %></td></tr>
+                        <tr><td><b>Sent Order to</b></td><td><% $order_to %></td></tr>
+                        <tr><td><b>Status</b><td><% $order_status %></td></tr>
+                        <tr><td><b>Comments from Vendor</b></td><td><% $comments %></td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
