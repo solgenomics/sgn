@@ -1,105 +1,144 @@
 <%args>
-    $seedlot_id
-    $seedlot_name
+    $show_filters => 0
+    $seedlot_id => undef
+    $seedlot_name => undef
+    $multi_seedlot => !(defined $seedlot_id && defined $seedlot_name) ? 1 : 0
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
 
-<& /page/page_title.mas, title => 'Maintenance Events' &>
+<br /><br />
 
-<&| /page/info_section.mas, title=>"Events Table",  collapsible=>1, collapsed=>0, subtitle=>"[<a href='/breeders/seedlot/maintenance?seedlot_name=$seedlot_name' id='add_seedlot_maintenance_button' >Record Maintenance</a>]" &>
+<&| /page/info_section.mas, title=>"Filter Events",  collapsible=>1, collapsed=>!$show_filters, subtitle=>"Filter maintenance events based on date, type, and/or value" &>
 
-    <br />
+    <div class="well">
 
-    <&| /page/info_section.mas, title=>"Filter Events",  collapsible=>1, collapsed=>1, subtitle=>"Filter maintenance events based on date, type, and/or value" &>
+        <p>Add one or more filters to apply to the table of displayed maintenance events.  To add a filter, enter the properties for a filter type 
+        and click the add button to add the filter to the list.  Once you're done adding filters, click the Filter button to display the results.</p>
+        <br />
+        
+        <!-- Filter Form -->
+        <form class="form-horizontal" id="seedlot_maintenance_event_form" name="seedlot_maintenance_event_form">
 
-        <div class="well">
-
-            <p>Add one or more filters to apply to the table of maintenance events for this Seedlot.  To add a filter, enter the properties for a filter type 
-            and click the add button to add the filter to the list.</p>
-            <br />
-            
-            <!-- Filter Form -->
-            <form class="form-horizontal" id="seedlot_maintenance_event_form" name="seedlot_maintenance_event_form">
-            
-                <!-- Date -->
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Date: </label>
-                    <div class="col-sm-4">
-                        <input class="form-control" id="event_filter_date" type="text" placeholder="YYYY-MM-DD" value="">
+% if ( $multi_seedlot ) {
+            <!-- Seedlot (by user-input) -->
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Seedlot(s): </label>
+                <div class="col-sm-8">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">Enter the name(s) of the Seedlot(s) - one per line</div>
+                        <div class="panel-body">
+                            <textarea id="event_filter_seedlot_names" class="form-control" rows=5></textarea>
+                        </div>
                     </div>
-                    <div class="col-sm-4">
-                        <select class="form-control" id="event_filter_date_type">
-                            <option value="eq">on</option>
-                            <option value="lte">on or before</option>
-                            <option value="lt">before</option>
-                            <option value="gte">on or after</option>
-                            <option value="gt">after</option>
-                        </select>
-                    </div>
-                    <div class="col-sm-1">
-                        <button id="event_filter_date_add" class='btn btn-info btn-sm'>Add</button>
+
+                    <div style="text-align: center"><strong>OR</strong></div>
+                </div>
+                <div class="col-sm-1">
+                    <button id="event_filter_seedlot_names_add" class='btn btn-info btn-sm'>Add</button>
+                </div>
+            </div>
+
+            <!-- Seedlot (by list) -->
+            <div class="form-group">
+                <label class="col-sm-3 control-label"></label>
+                <div class="col-sm-8">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">Select a List of Seedlots</div>
+                        <div class="panel-body"><div id="event_filter_seedlot_list"></div></div>
                     </div>
                 </div>
-
-                <!-- Type -->
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Type: </label>
-                    <div class="col-sm-4">
-                        <select class="form-control" id="event_filter_type" disabled><option>Loading...</option></select>
-                    </div>
-                    <div class="col-sm-4" id="event_filter_type_value">
-                        
-                    </div>
-                    <div class="col-sm-1">
-                        <button id="event_filter_type_add" class='btn btn-info btn-sm'>Add</button>
-                    </div>
+                <div class="col-sm-1">
+                    <button id="event_filter_seedlot_list_add" class='btn btn-info btn-sm'>Add</button>
                 </div>
-
-                <!-- Operator -->
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Operator: </label>
-                    <div class="col-sm-8">
-                        <select class="form-control" id="event_filter_operators" multiple disabled><option>Loading...</option></select>
-                    </div>
-                    <div class="col-sm-1">
-                        <button id="event_filter_operators_add" class='btn btn-info btn-sm'>Add</button>
-                    </div>
+            </div>
+% } else {
+            <!-- Single Seedlot Name -->
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Seedlot: </label>
+                <div class="col-sm-8">
+                    <input class="form-control" type="text" value="<% $seedlot_name %>" disabled>
                 </div>
+                <div class="col-sm-1"></div>
+            </div>
+% }
+        
+            <!-- Date -->
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Date: </label>
+                <div class="col-sm-4">
+                    <input class="form-control" id="event_filter_date" type="text" placeholder="YYYY-MM-DD" value="">
+                </div>
+                <div class="col-sm-4">
+                    <select class="form-control" id="event_filter_date_type">
+                        <option value="eq">on</option>
+                        <option value="lte">on or before</option>
+                        <option value="lt">before</option>
+                        <option value="gte">on or after</option>
+                        <option value="gt">after</option>
+                    </select>
+                </div>
+                <div class="col-sm-1">
+                    <button id="event_filter_date_add" class='btn btn-info btn-sm'>Add</button>
+                </div>
+            </div>
 
-            </form>
+            <!-- Type -->
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Type: </label>
+                <div class="col-sm-4">
+                    <select class="form-control" id="event_filter_type" disabled><option>Loading...</option></select>
+                </div>
+                <div class="col-sm-4" id="event_filter_type_value">
+                    
+                </div>
+                <div class="col-sm-1">
+                    <button id="event_filter_type_add" class='btn btn-info btn-sm'>Add</button>
+                </div>
+            </div>
 
-            <br /><br />
+            <!-- Operator -->
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Operator: </label>
+                <div class="col-sm-8">
+                    <select class="form-control" id="event_filter_operators" multiple disabled><option>Loading...</option></select>
+                </div>
+                <div class="col-sm-1">
+                    <button id="event_filter_operators_add" class='btn btn-info btn-sm'>Add</button>
+                </div>
+            </div>
 
-            <!-- Filter Table -->
-            <p><strong>Event Filters:</strong></p>
+        </form>
 
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Property</th>
-                        <th>Comparison</th>
-                        <th>Value</th>
-                        <th>Remove</th>
-                    </tr>
-                </thead>
-                <tbody id="event_filter_table"></tbody>
-            </table>
+        <br /><br />
 
-            <br /><br />
+        <!-- Filter Table -->
+        <p><strong>Applied Filters:</strong></p>
 
-            <!-- Submit Filters -->
-            <button id="event_filter_submit" class="btn btn-primary btn-block" style="max-width: 400px; margin: 0 auto">Filter</button>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Comparison</th>
+                    <th>Value</th>
+                    <th>Remove</th>
+                </tr>
+            </thead>
+            <tbody id="event_filter_table"></tbody>
+        </table>
 
-        </div>
+        <br /><br />
 
-    </&>
+        <!-- Submit Filters -->
+        <button id="event_filter_submit" class="btn btn-primary btn-block" style="max-width: 400px; margin: 0 auto">Filter</button>
 
-    <br /><br />
-
-    <table id="seedlot_maintenance_events" class="table table-hover table-bordered"></table>
+    </div>
 
 </&>
+
+<br /><br />
+
+<table id="seedlot_maintenance_events" class="table table-hover table-bordered"></table>
 
 
 <script type="text/javascript">
@@ -107,6 +146,9 @@
 let events = [];        // List of maintenance events for the Seedlot
 let ontology = [];      // Event type ontology
 let filters = [];       // List of filter properties
+
+let lo = new CXGN.List();
+let multi_seedlot = <% $multi_seedlot %> === 1;
 
 jQuery(document).ready(function() {
     
@@ -116,7 +158,14 @@ jQuery(document).ready(function() {
         setTypeFilter();
     });
 
+    // Add list selection, if enabled
+    if ( multi_seedlot ) {
+        jQuery('#event_filter_seedlot_list').html(lo.listSelect('event_filter_seedlot', [ 'seedlots' ], 'select', undefined, undefined));
+    }
+
     // Click and Change Listeners
+    jQuery("#event_filter_seedlot_names_add").click(addSeedlotNamesFilter);
+    jQuery("#event_filter_seedlot_list_add").click(addSeedlotListFilter);
     jQuery("#event_filter_date_add").click(addDateFilter);
     jQuery("#event_filter_type_add").click(addTypeFilter);
     jQuery("#event_filter_operators_add").click(addOperatorFilter);
@@ -141,45 +190,65 @@ jQuery(document).ready(function() {
         }
     ];
 
+    // Set the Columns
+    let columns = [];
+    if ( multi_seedlot ) {
+        columns = columns.concat([
+            { 
+                title: "Seedlot", 
+                data: "stock_name", 
+                render: function(data, type, row) {
+                    if ( type === 'display' ) {
+                        let url = "/breeders/seedlot/" + row.stock_id;
+                        return "<a href='" + url + "'>" + data + "</a>";
+                    }
+                    return data;
+                }
+            }
+        ]);
+    }
+    columns = columns.concat([
+        { title: "Event ID", data: "stockprop_id" },
+        {
+            title: "Event Date", 
+            data: "timestamp",
+            render: function(data, type, row) {
+                if ( type === "display" ) {
+                    let dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                    let month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    let d = new Date(data);
+                    let h = d.getHours();
+                    let m = d.getMinutes();
+                    let s = d.getSeconds();
+                    if ( h <= 9 ) h = '0' + h;
+                    if ( m <= 9 ) m = '0' + m;
+                    if ( s <= 9 ) s = '0' + s;
+                    let ts = dow[d.getDay()] + " " + month[d.getMonth()] + " " + d.getDate() + " " + h + ":" + m + ":" + s + " " + d.getFullYear();
+                    return ts;
+                }
+                return data;
+            }
+        },
+        { title: "Event Type", data: "cvterm_name" },
+        { title: "Value", data: "value" },
+        { 
+            title: "Notes", 
+            data: "notes",
+            render: function(data, type, row) {
+                return data ? data : '';
+            }
+        },
+        { title: "Operator", data: "operator" }
+    ]);
+
     // Init DataTable
     jQuery('#seedlot_maintenance_events').DataTable({
         dom: 'Bfrtip',
         autoWidth: false,
+        pageLength: multi_seedlot ? 50 : 10,
         data: [],
-        columns: [
-            { title: "Event ID", data: "prop_id" },
-            {
-                title: "Event Date", 
-                data: "timestamp",
-                render: function(data, type, row) {
-                    if ( type === "display" ) {
-                        let dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                        let month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                        let d = new Date(data);
-                        let h = d.getHours();
-                        let m = d.getMinutes();
-                        let s = d.getSeconds();
-                        if ( h <= 9 ) h = '0' + h;
-                        if ( m <= 9 ) m = '0' + m;
-                        if ( s <= 9 ) s = '0' + s;
-                        let ts = dow[d.getDay()] + " " + month[d.getMonth()] + " " + d.getDate() + " " + h + ":" + m + ":" + s + " " + d.getFullYear();
-                        return ts;
-                    }
-                    return data;
-                }
-            },
-            { title: "Event Type", data: "cvterm_name" },
-            { title: "Value", data: "value" },
-            { 
-                title: "Notes", 
-                data: "notes",
-                render: function(data, type, row) {
-                    return data ? data : '';
-                }
-            },
-            { title: "Operator", data: "operator" }
-        ],
-        order: [[ 1, "desc" ]],
+        columns: columns,
+        order: [[ multi_seedlot ? 2 : 1, "desc" ]],
         buttons: DT_BUTTONS
     });
 
@@ -195,9 +264,12 @@ function getEvents() {
     events = [];
 
     // Build filter arguments
-    let _filters = { dates: [], types: [], operators: [] };
+    let _filters = { names: [], dates: [], types: [], operators: [] };
     for ( let i = 0; i < filters.length; i++ ) {
-        if ( filters[i].type_id === 'date' ) {
+        if ( filters[i].type_id === 'name' ) {
+            _filters.names = _filters.names.concat(filters[i].value);
+        }
+        else if ( filters[i].type_id === 'date' ) {
             _filters.dates.push({date: filters[i].value, comp: filters[i].comp});
         }
         else if ( filters[i].type_id === 'operator' ) {
@@ -207,6 +279,11 @@ function getEvents() {
             _filters.types.push({type: filters[i].type_id, values: filters[i].value});
         }
     }
+    if ( !multi_seedlot ) {
+        _filters.names = ["<% $seedlot_name %>"];
+    }
+
+    console.log(JSON.stringify(_filters, null, 2));
 
     // Disable Filter button
     jQuery("#event_filter_submit").html("Searching...");
@@ -215,11 +292,12 @@ function getEvents() {
     // Make request
     jQuery.ajax({
         type: 'POST',
-        url: '/ajax/breeders/seedlot/<% $seedlot_id %>/maintenance/search',
+        url: '/ajax/breeders/seedlot/maintenance/search',
         data: JSON.stringify({filters: _filters}),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data) {
+            console.log(data);
             if ( data && data.events ) {
                 events = data.events;
             }
@@ -329,7 +407,6 @@ function setTypeFilterValues() {
                 }
             }
         }
-        console.log(values);
         if ( values && values.length > 0 ) {
             input_type = "select";
             html += "<select class='form-control' id='event_filter_type_value_select' multiple>";
@@ -365,6 +442,27 @@ function setOperators() {
     }
     jQuery("#event_filter_operators").html(html);
     jQuery("#event_filter_operators").attr("disabled", false);
+}
+
+
+/**
+ * Add a Name Filter - from the user-entered list of names
+ */
+function addSeedlotNamesFilter() {
+    let names = jQuery("#event_filter_seedlot_names").val();
+    names = names ? names.split('\n') : [];
+    addFilter('name', 'name', names && names.length > 0 ? names : undefined, 'eq');
+    return false;
+}
+
+/**
+ * Add a Name Filter - from the user-selected list of Seedlots
+ */
+function addSeedlotListFilter() {
+    let list_id = jQuery("#event_filter_seedlot_list_select").val();
+    let names = list_id ? lo.getList(list_id) : [];
+    addFilter('name', 'name', names && names.length > 0 ? names : undefined, 'eq');
+    return false;
 }
 
 

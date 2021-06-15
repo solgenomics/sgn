@@ -94,7 +94,23 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';
 }
 
+
 sub seedlot_maintenance : Path('/breeders/seedlot/maintenance') {
+    my $self = shift;
+    my $c = shift;
+
+    # Make sure the seedlot maintenance event ontology is set
+    if ( !defined $c->config->{seedlot_maintenance_event_ontology_root} || $c->config->{seedlot_maintenance_event_ontology_root} eq '' ) {
+        $c->stash->{template} = '/generic_message.mas';
+        $c->stash->{message} = 'Seedlot Maintenance Events are not enabled on this server!';
+        return;
+    }
+
+    $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance.mas';
+}
+
+
+sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
     my $self = shift;
     my $c = shift;
 
@@ -120,7 +136,7 @@ sub seedlot_maintenance : Path('/breeders/seedlot/maintenance') {
     }
 
     $c->stash->{operator} = $c->user()->get_object()->get_username();
-    $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance.mas';
+    $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance_record.mas';
 }
 
 1;
