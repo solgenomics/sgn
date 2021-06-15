@@ -77,7 +77,7 @@ sub run_histogram {
     $self->histogram_r_jobs_file($c);
     $c->stash->{dependent_jobs} = $c->stash->{histogram_r_jobs_file};
 
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 
 }
 
