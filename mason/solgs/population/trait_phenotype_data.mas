@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME
- 
+
 population/trait_phenotype_data.mas - displays plots of trait phenotype data.
 
 =AUTHOR
@@ -32,9 +32,9 @@ $combo_pops_id => ''
 <div id="tabs_phenotype" style="width:100%;height:100%;border-color:green;">
   <ul>
     <li> <a href="#tabs_scatter">Phenotype scatter plot</a> </li>
-    <li> <a href="#tabs_histogram">Frequency distribution</a> </li> 
+    <li> <a href="#tabs_histogram">Frequency distribution</a> </li>
   </ul>
- 
+
   <div id="tabs_scatter">
     <& trait_phenotype_scatter.mas,
        pop_id        => $pop_id,
@@ -51,14 +51,12 @@ $combo_pops_id => ''
     &>
   </div>
 
+<& /solgs/population/histogram_bin_elements.mas &>
+
   <& trait_pheno_desc_stat.mas,
-   descriptive_stat => $descriptive_stat,   
+   descriptive_stat => $descriptive_stat,
     &>
-    
+
+
+
 </div>
-
-
-
-
-
-
