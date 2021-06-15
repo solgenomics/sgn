@@ -290,7 +290,6 @@ sub search {
             observations => \@brapi_observations,
             observationUnitName => $obs_unit->{observationunit_uniquename},
             observationUnitPosition => $brapi_observationUnitPosition,
-            observationUnitPUI => qq|$obs_unit->{obsunit_plot_number}|,
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
             seedLotDbId => $obs_unit->{seedlot_stock_id} ? qq|$obs_unit->{seedlot_stock_id}| : undef,
@@ -635,18 +634,10 @@ sub observationunits_store {
     my $c = shift;
     my $user_id = shift;
 
-    my $page_size = $self->page_size;
-    my $page = $self->page;
-    my $status = $self->status;
-
     my $schema = $self->bcs_schema;
     my $dbh = $self->bcs_schema()->storage()->dbh();
     my $person = CXGN::People::Person->new($dbh, $user_id);
     my $user_name = $person->get_username;
-    my %design;
-
-    # TODO
-    # TODO: Make plot number not required
 
     my %study_plots;
     my %seen_plot_numbers;
@@ -681,10 +672,7 @@ sub observationunits_store {
         if (! defined $accession_id && ! defined $accession_name) {
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
         }
-        #TODO: Generate a plot number if one isn't provided -> This actually may not be required as it says it is. See store method
-        #if (!$plot_number){
-        #    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide a sequential plot number unique for the study.'), 422);
-        #}
+
         if ($ou_level ne 'plant' && $ou_level ne 'plot') {
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Only "plot" or "plant" allowed for observation level.'), 400);
         }
