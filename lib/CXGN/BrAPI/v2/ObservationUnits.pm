@@ -331,8 +331,13 @@ sub detail {
     my $self = shift;
     my $observation_unit_db_id = shift;
 
-    my $search_params = {observationUnitDbIds => [$observation_unit_db_id] };
-    $self->search($search_params);
+    my $search_params = {
+        observationUnitDbIds => [ $observation_unit_db_id ],
+        includeObservations  => [ 'true' ]
+    };
+    my $response = $self->search($search_params);
+    $response->{result} = scalar $response->{result}->{data} > 0 ? $response->{result}->{data}->[0] : {};
+    return $response;
 }
 
 sub observationunits_update {
@@ -356,7 +361,7 @@ sub observationunits_update {
         my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
         my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
         my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
-        my $accession_name = $params->{germplasmName} || ($params->{germplasmNames} || ());
+        my $accession_name = $params->{germplasmName} ? $params->{germplasmNames}: undef;
         my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
         my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
         my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
@@ -431,9 +436,6 @@ sub observationunits_update {
             if ($replace_return_error) {
                 return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
             }
-
-            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
         }
 
         #store/update external references
@@ -448,6 +450,7 @@ sub observationunits_update {
             my $reference_result = $references->store();
         }
 
+        $self->_refresh_matviews($dbh, $c, 5 * 60);
     }
 
     my @observation_unit_db_ids;
@@ -529,8 +532,13 @@ sub observationunits_store {
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Only "plot" or "plant" allowed for observation level.'), 400);
         }
 
+        my $project = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $study_id });
+        if (! defined $project) {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("A study with id $study_id does not exist"), 404);
+        }
+
         # Get the germplasm name from germplasmDbId. Check if a germplasm name passed exists
-        my $germplasm_search_result = $self->_get_existing_germplasm($schema, $accession_id, $accession_id);
+        my $germplasm_search_result = $self->_get_existing_germplasm($schema, $accession_id, $accession_name);
         if ($germplasm_search_result->{error}) {
             return $germplasm_search_result->{error};
         } else {
@@ -685,9 +693,8 @@ sub observationunits_store {
     };
     if ($error_resp) { return $error_resp; }
 
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    #TODO: This refreshes all of the matviews by the look of the logs. Might slow things down in the future
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    # Refresh materialized view so data can be retrieved. This can take a while
+    $self->_refresh_matviews($dbh, $c, 5 * 60);
 
     # Get our new OUs by name. Not ideal, but names are unique and its the quickest solution
     my @observationUnitNames;
@@ -695,6 +702,32 @@ sub observationunits_store {
     my $search_params = {observationUnitNames => \@observationUnitNames};
     $self->page_size(scalar @{$data});
     return $self->search($search_params);
+}
+
+sub _refresh_matviews {
+    my $self = shift;
+    my $dbh = shift;
+    my $c = shift;
+    my $timeout = shift || 5 * 60;
+
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+
+    # Refresh materialized view so data can be retrieved
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+    # Wait until materialized view is reset. Wait 5 minutes total, then throw an error
+    my $refreshing = 0;
+    my $refresh_time = 0;
+    while ($refreshing && $refresh_time < $timeout) {
+        my $refresh_status = $bs->matviews_status();
+        if ($refresh_status->{timestamp}) {
+            $refreshing = 1;
+        } elsif ($refresh_time >= $timeout) {
+            return {error => CXGN::BrAPI::JSONResponse->return_error($self->status, "Refreshing materialized views is taking too long to return a response", 500)};
+        } else {
+            sleep 1;
+            $refresh_time += 1;
+        }
+    }
 }
 
 sub _order {
