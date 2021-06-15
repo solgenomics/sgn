@@ -19,7 +19,7 @@ $blups_download_url => ''
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["solGS.gebvs",  "solGS.histogram"] &>
+<& /util/import_javascript.mas, classes => ["solGS.gebvs"] &>
 
 
 <&| /page/info_section.mas,
@@ -33,6 +33,10 @@ $blups_download_url => ''
   <div id="gebvs_histo_plot"> </div>
 </div>
 
+
+<& /solgs/population/histogram_bin_elements.mas &>
+<br/>
+<br/>
 <br/>
 <br/>
 <i>Top 10 genotypes</i>:
