@@ -456,7 +456,7 @@ solGS.submitJob = {
 	 	    solGS.submitJob.checkEmail(email);
 
 		} else {
-            
+
             if (typeof analysisProfile.arguments !== 'string') {
 		              analysisProfile['arguments'] = JSON.stringify(analysisProfile.arguments);
             }
@@ -917,8 +917,7 @@ solGS.getPopulationDetails = function() {
 
 solGS.showMessage = function(divId, msg) {
      jQuery("#" + divId)
-        .css({"padding-left": '0px'})
-        .html(msg);
+        .html(msg).show();
 
 }
 
