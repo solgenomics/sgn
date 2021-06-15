@@ -10,71 +10,41 @@ var solGS = solGS || function solGS () {};
 
 solGS.histogram =  {
 
-    getHistogram: function () {
+    getHistogramData: function () {
 
 	var params = this.getHistogramParams();
-
-	jQuery.ajax({
+	var histoData = jQuery.ajax({
             type: 'POST',
             dataType: 'json',
             data: params,
             url: '/histogram/phenotype/data/',
-            success: function(response) {
-		if (response.status == 'success') {
-		    var traitValues = response.data;
-		    var stat = response.stat;
+        });
 
-		    traitValues = traitValues.map( function (d) {
-
-			return  parseFloat(d[1]);
-		    });
-
-		    traitValues = traitValues.sort();
-		    traitValues = traitValues.filter( function(val) {
-
-			return !(val === ""
-				 || typeof val == "undefined"
-				 || val === null
-				 || isNaN(val) == true
-				);
-		    });
-
-		    var obs = traitValues.length;
-		    var uniqueValues = solGS.histogram.getUnique(traitValues);
-
-		    if (uniqueValues.length === 1) {
-			jQuery("#histogram_message").html('<p> All of the valid observations '
-							  + '('+ obs +') ' + 'in this dataset have '
-							  + 'a value of ' + uniqueValues[0]
-							  + '. No frequency distribution plot.</p>'
-							 );
-
-		    } else {
-			var args = {
-			    'values' : traitValues,
-			    'canvas' : 'trait_histogram_canvas',
-			    'plot_id': 'trait_histogram_plot'
-			};
-
-			solGS.histogram.plotHistogram(args);
-
-			jQuery("#histogram_message").empty();
-			//solGS.histogram.descriptiveStat(stat);
-		    }
-		} else {
-                    var errorMessage = "<p>This trait has no phenotype data to plot.</p>";
-                    jQuery("#histogram_message").html(errorMessage);
-		}
-
-            },
-            error: function(response) {
-		var errorMessage = "<p>Error occured plotting histogram for this trait dataset.</p>";
-		jQuery("#histogram_message").html(errorMessage);
-            }
-	});
-
+       return histoData;
     },
 
+    cleanData: function (traitValues) {
+        traitValues = traitValues.sort();
+        traitValues = traitValues.filter( function(val) {
+
+        return !(val === ""
+             || typeof val == "undefined"
+             || val === null
+             || isNaN(val) == true
+            );
+        });
+
+        return traitValues;
+    },
+
+    extractValues: function (traitData) {
+
+        var traitValues = traitData.map( function (d) {
+            return  parseFloat(d[1]);
+        });
+
+        return traitValues;
+    },
 
     getUnique: function (inputArray) {
 
@@ -86,6 +56,21 @@ solGS.histogram =  {
 	}
 
 	return outputArray;
+    },
+
+    checkDataVariation: function (traitData) {
+        var traitValues = this.extractValues(traitData);
+        traitValues = this.cleanData(traitValues);
+        var obsCnt = traitValues.length;
+
+        var uniqValues = this.getUnique(traitValues);
+        var uniqCnt = uniqValues.length;
+
+        return {
+            'obs_count': obsCnt,
+            'uniq_count': uniqCnt,
+            'uniqValue': uniqValues[0]
+        };
     },
 
     getHistogramParams: function () {
@@ -105,34 +90,45 @@ solGS.histogram =  {
     },
 
 
-    descriptiveStat: function (stat)  {
+    displayBinElements: function(data, canvas) {
 
-	var table = '<table style="margin-top: 40px;width:100%;text-align:left">';
+        if (canvas.match(/trait_histogram_canvas/)) {
+            canvas = '#tabs_phenotype';
+        } else if(canvas.match(/gebvs_histo_canvas/)) {
+            canvas = '#gebvs';
+        } else {
+             canvas =  '#' + canvas;
+        }
 
-	for (var i=0; i < stat.length; i++) {
+        jQuery(canvas + ' .bin_elements').show();
+        if (jQuery.fn.DataTable.isDataTable(canvas + ' .bin_elements .bin_elements_table' ) ) {
+             jQuery(canvas + ' .bin_elements .bin_elements_table').DataTable().destroy();
+        }
 
-            if (stat[i]) {
-		table += '<tr>';
-		table += '<td>' + stat[i][0] + '</td>'  + '<td>' + stat[i][1] + '</td>';
-		table += '</tr>';
-            }
-	}
+       var table = jQuery(canvas +  ' .bin_elements .bin_elements_table').DataTable({
+        'searching' : false,
+        'ordering'  : false,
+        'processing': true,
+        'paging'    : false,
+        'info'      : false,
+        });
 
-	table += '</table>';
-
-	jQuery("#trait_histogram_canvas").append(table);
-
+        table.clear().draw();
+        table.rows.add(data).draw();
 
     },
-
 
     plotHistogram: function (histo) {
 
 	var canvas = histo.canvas || 'histogram_canvas';
 	var plotId = histo.plot_id || 'histogram_plot';
 	var values = histo.values;
-	var xLabel = histo.x_label || 'Values';
-	var yLabel = histo.y_label || 'Frequency';
+    var namedValues = histo.namedValues;
+
+    if (!values || !values[0]) {
+        values = this.extractValues(namedValues);
+        values = this.cleanData(values);
+    }
 
 	var height = 300;
 	var width  = 500;
@@ -191,10 +187,33 @@ solGS.histogram =  {
             .scale(yAxisLabel)
             .orient("left");
 
+    var xLabel = histo.x_label || 'Values';
+	var yLabel = histo.y_label || 'Frequency';
+
 	var svg = d3.select("#" + canvas)
             .append("svg")
             .attr("height", totalH)
             .attr("width", totalW);
+
+    var tip = d3.tip().attr('class', 'd3-tip').html(function(d) {
+        var binElem = [];
+       var dMin = d3.min(d);
+       var dMax = d3.max(d);
+
+        namedValues.forEach(function(el, idx) {
+            var ek = el[1];
+
+           if ( ek >= dMin && ek <= dMax) {
+               binElem.push(el);
+           }
+       });
+
+    solGS.histogram.displayBinElements(binElem, canvas);
+
+        return 'See below';
+    });
+
+    svg.call(tip)
 
 	var histogramPlot = svg.append("g")
             .attr("id", plotId)
@@ -210,18 +229,24 @@ solGS.histogram =  {
                     + "," + height - yAxisScale(d.y) + ")";
             });
 
+    var barClr = '#9A2EFE';
+     var altBarClr = '#C07CFE';
+
 	bar.append("rect")
             .attr("x", function(d) { return 2*pad.left + xAxisScale(d.x); } )
             .attr("y", function(d) {return height - yAxisScale(d.y); })
             .attr("width", function(d) {return width / binNum; })
             .attr("height", function(d) { return yAxisScale(d.y); })
-            .style("fill", "green")
-	    .style('stroke', 'white')
+            .style("fill", barClr)
+	        .style('stroke', "#ffffff")
             .on("mouseover", function(d) {
-                d3.select(this).style("fill", "teal");
+                tip.show(d);
+                d3.select(this).style("fill", altBarClr);
             })
             .on("mouseout", function() {
-                d3.select(this).style("fill", "green");
+                tip.hide();
+                jQuery('.bin_elements').hide();
+                d3.select(this).style("fill", barClr);
             });
 
 	bar.append("text")
@@ -232,7 +257,7 @@ solGS.histogram =  {
             .attr("text-anchor", "end")
             .attr("font-family", "sans-serif")
             .attr("font-size", "12px")
-            .attr("fill", "green")
+            .attr("fill", barClr)
             .attr("class", "histoLabel");
 
 	histogramPlot.append("g")
@@ -244,8 +269,8 @@ solGS.histogram =  {
             .attr("x", 10)
             .attr("dy", ".1em")
             .attr("transform", "rotate(90)")
-            .attr("fill", "purple")
-            .style({"text-anchor":"start", "fill": "green"});
+            .attr("fill", barClr)
+            .style({"text-anchor":"start", "fill": barClr});
 
 	histogramPlot.append("g")
             .attr("class", "y axis")
@@ -254,22 +279,22 @@ solGS.histogram =  {
             .selectAll("text")
             .attr("y", 0)
             .attr("x", -10)
-            .attr("fill", "green")
-            .style("fill", "green");
+            .attr("fill", barClr)
+            .style("fill", barClr);
 
 	histogramPlot.append("g")
             .attr("transform", "translate(" + (totalW * 0.5) + "," + (height + pad.bottom) + ")")
             .append("text")
             .text(xLabel)
-            .attr("fill", "teal")
-            .style("fill", "teal");
+            .attr("fill", barClr)
+            .style("fill", barClr);
 
 	histogramPlot.append("g")
             .attr("transform", "translate(" + 0 + "," + ( totalH*0.5) + ")")
             .append("text")
             .text(yLabel)
-            .attr("fill", "teal")
-            .style("fill", "teal")
+            .attr("fill", barClr)
+            .style("fill", barClr)
             .attr("transform", "rotate(-90)");
     },
 
@@ -281,6 +306,43 @@ solGS.histogram =  {
 
 jQuery(document).ready(function () {
 
-    solGS.histogram.getHistogram();
+    var histMsgId = "histogram_message";
+   solGS.histogram.getHistogramData().done(function(res) {
+
+        if (res.status == 'success') {
+           var traitData = res.data;
+
+           var variation = solGS.histogram.checkDataVariation(traitData);
+
+            if (variation.uniq_count == 1) {
+                var msg = '<p> All of the valid observations '
+                                  + '('+ variation.obs_count +') ' + 'in this dataset have '
+                                  + 'a value of ' + variation.uniqValue
+                                  + '. No frequency distribution plot.</p>';
+
+                solGS.showMessage(histMsgId, msg);
+
+            } else {
+                var args = {
+                    'namedValues' : traitData,
+                    'canvas' : 'trait_histogram_canvas',
+                    'plot_id': 'trait_histogram_plot'
+                };
+
+                solGS.histogram.plotHistogram(args);
+                jQuery("#histogram_message").empty();
+
+            }
+       } else {
+            var msg = "<p>This trait has no phenotype data to plot.</p>";
+            solGS.showMessage(histMsgId, msg);
+       }
+
+    });
+
+    solGS.histogram.getHistogramData().fail(function(res) {
+        var msg = "<p>Error occured plotting histogram for this trait dataset.</p>";
+        solGS.showMessage(histMsgId, msg);
+    });
 
 });
