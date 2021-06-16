@@ -291,7 +291,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
     public.materialized_phenoview.trait_id
    FROM public.materialized_genoview
    JOIN public.materialized_phenoview USING(accession_id)
-  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.trait_id
+  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.trait_id;
   ALTER VIEW genotyping_protocolsXtraits OWNER TO web_usr;
 
 CREATE VIEW public.locationsXtraits AS
