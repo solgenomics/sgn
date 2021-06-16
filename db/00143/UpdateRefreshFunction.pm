@@ -53,74 +53,6 @@ sub patch {
 --do your SQL here
 
 
-CREATE OR REPLACE FUNCTION public.refresh_materialized_views_concurrently() RETURNS VOID AS \$\$
-CREATE MATERIALIZED VIEW public.materialized_phenoview_new AS
-SELECT
-  breeding_program.project_id AS breeding_program_id,
-  location.type_id AS location_id,
-  year.value AS year_id,
-  trial.project_id AS trial_id,
-  accession.stock_id AS accession_id,
-  seedlot.stock_id AS seedlot_id,
-  stock.stock_id AS stock_id,
-  phenotype.phenotype_id as phenotype_id,
-  phenotype.cvalue_id as trait_id
-  FROM stock accession
-     LEFT JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id AND stock_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'plot_of' OR cvterm.name = 'plant_of' OR cvterm.name = 'analysis_of')
-     LEFT JOIN stock ON stock_relationship.subject_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'plot' OR cvterm.name = 'plant' OR cvterm.name = 'analysis_instance')
-     LEFT JOIN stock_relationship seedlot_relationship ON stock.stock_id = seedlot_relationship.subject_id AND seedlot_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'seed transaction')
-     LEFT JOIN stock seedlot ON seedlot_relationship.object_id = seedlot.stock_id AND seedlot.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot')
-     LEFT JOIN nd_experiment_stock ON(stock.stock_id = nd_experiment_stock.stock_id AND nd_experiment_stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('phenotyping_experiment', 'field_layout', 'analysis_experiment')))
-     LEFT JOIN nd_experiment_project ON nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id
-     FULL OUTER JOIN project trial ON nd_experiment_project.project_id = trial.project_id
-     LEFT JOIN project_relationship ON trial.project_id = project_relationship.subject_project_id AND project_relationship.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'breeding_program_trial_relationship' )
-     FULL OUTER JOIN project breeding_program ON project_relationship.object_project_id = breeding_program.project_id
-     LEFT JOIN projectprop location ON trial.project_id = location.project_id AND location.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'project location' )
-     LEFT JOIN projectprop year ON trial.project_id = year.project_id AND year.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'project year' )
-     LEFT JOIN nd_experiment_phenotype ON(nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id)
-     LEFT JOIN phenotype ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id
-  WHERE accession.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession')
-  ORDER BY breeding_program_id, location_id, trial_id, accession_id, seedlot_id, stock.stock_id, phenotype_id, trait_id
-WITH DATA;
-
-ALTER MATERIALIZED VIEW public.materialized_phenoview rename to materialized_phenoview_old;
-ALTER MATERIALIZED VIEW public.materialized_phenoview_new rename to materialized_phenoview;
-DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenoview_old CASCADE;
-CREATE UNIQUE INDEX unq_pheno_idx ON public.materialized_phenoview(stock_id,phenotype_id,trait_id) WITH (fillfactor=100);
-ALTER MATERIALIZED VIEW materialized_phenoview OWNER TO web_usr;
-
-CREATE MATERIALIZED VIEW public.materialized_genoview_new AS
- SELECT
-     CASE WHEN nd_experiment_stock.stock_id IS NOT NULL THEN stock_relationship.object_id ELSE accession.stock_id END AS accession_id,
-     CASE WHEN nd_experiment_stock.stock_id IS NOT NULL THEN nd_experiment_protocol.nd_protocol_id ELSE nd_experiment_protocol_accession.nd_protocol_id END AS genotyping_protocol_id,
-     CASE WHEN nd_experiment_stock.stock_id IS NOT NULL THEN nd_experiment_genotype.genotype_id ELSE nd_experiment_genotype_accession.genotype_id END AS genotype_id,
-     CASE WHEN nd_experiment_stock.stock_id IS NOT NULL THEN stock_type.name ELSE 'accession' END AS stock_type
-   FROM stock AS accession
-     LEFT JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id AND stock_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('tissue_sample_of', 'plant_of', 'plot_of') )
-     LEFT JOIN stock ON stock_relationship.subject_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('tissue_sample', 'plant', 'plot') )
-     LEFT JOIN cvterm AS stock_type ON (stock_type.cvterm_id = stock.type_id)
-     LEFT JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id AND nd_experiment_stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name='genotyping_experiment'))
-     LEFT JOIN nd_experiment_protocol ON nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id
-     LEFT JOIN nd_protocol ON (nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocol.type_id IN (SELECT cvterm_id from cvterm where cvterm.name='genotyping_experiment'))
-     LEFT JOIN nd_experiment_genotype ON nd_experiment_stock.nd_experiment_id = nd_experiment_genotype.nd_experiment_id
-     LEFT JOIN nd_experiment_stock AS nd_experiment_stock_accession ON (accession.stock_id = nd_experiment_stock_accession.stock_id AND nd_experiment_stock_accession.type_id IN (SELECT cvterm_id from cvterm where cvterm.name='genotyping_experiment'))
-     LEFT JOIN nd_experiment_protocol AS nd_experiment_protocol_accession ON nd_experiment_stock_accession.nd_experiment_id = nd_experiment_protocol_accession.nd_experiment_id
-     LEFT JOIN nd_protocol AS nd_protocol_accession ON (nd_experiment_protocol_accession.nd_protocol_id = nd_protocol_accession.nd_protocol_id AND nd_protocol_accession.type_id IN (SELECT cvterm_id from cvterm where cvterm.name='genotyping_experiment'))
-     LEFT JOIN nd_experiment_genotype AS nd_experiment_genotype_accession ON nd_experiment_stock_accession.nd_experiment_id = nd_experiment_genotype_accession.nd_experiment_id
-  WHERE accession.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'accession') AND ( (nd_experiment_genotype.genotype_id IS NOT NULL AND nd_protocol.nd_protocol_id IS NOT NULL AND nd_experiment_stock.stock_id IS NOT NULL) OR (nd_experiment_genotype_accession.genotype_id IS NOT NULL AND nd_protocol_accession.nd_protocol_id IS NOT NULL AND nd_experiment_stock_accession.stock_id IS NOT NULL AND nd_experiment_stock IS NULL) )
-  GROUP BY 1,2,3,4
-  WITH DATA;
-
-ALTER MATERIALIZED VIEW public.materialized_genoview rename to materialized_genoview_old;
-ALTER MATERIALIZED VIEW public.materialized_genoview_new rename to materialized_genoview;
-DROP MATERIALIZED VIEW IF EXISTS public.materialized_genoview_old CASCADE;
-CREATE UNIQUE INDEX unq_geno_idx ON public.materialized_genoview(accession_id,genotype_id) WITH (fillfactor=100);
-ALTER MATERIALIZED VIEW materialized_genoview OWNER TO web_usr;\$\$
-LANGUAGE SQL;
-ALTER FUNCTION public.refresh_materialized_views_concurrently() OWNER TO web_usr;
-
-
-
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenoview CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_phenoview AS
 SELECT
@@ -773,6 +705,15 @@ SELECT public.stock.stock_id AS plot_id,
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plot'))
   GROUP BY public.stock.stock_id, public.materialized_phenoview.year_id;
 ALTER VIEW plotsXyears OWNER TO web_usr;
+
+
+CREATE VIEW public.traitsxtrials AS
+ SELECT materialized_phenoview.trait_id,
+    materialized_phenoview.trial_id
+   FROM public.materialized_phenoview
+  GROUP BY materialized_phenoview.trait_id, materialized_phenoview.trial_id;
+ALTER VIEW public.traitsxtrials OWNER TO web_usr;
+
 
 CREATE VIEW public.trial_designsXtrial_types AS
 SELECT trialdesign.value AS trial_design_id,
