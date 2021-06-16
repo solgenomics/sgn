@@ -244,6 +244,98 @@ sub get_props {
 }
 
 
+=head2 filter_props($schema, $conditions, $parent_ids)
+ 
+ Usage:     my $filtered_props = $JSONPropClass->filter_props($schema, $conditions, $parent_ids);
+ Desc:      This class method can be used to get props that match the provided search criteria, 
+            for the optionally provided list of parents
+ Ret:       an arrayref of hashes containing the parent_id, prop_id, and all of the prop values
+ Args:      schema = Bio::Chado::Schema
+            conditions = a hashref of DBIx where conditions to filter the props by.  If you're filtering
+                by a prop value, you should use the form: "value::json->>'prop_name' => 'prop value'"
+            parent_fields = (optional) an arrayref of the names of fields from the parent table to include in the results
+                NOTE: if a parent field is used in the search conditions, it should also be included here
+ Example:   my $conditions = {
+                '-and' => [ 
+                    { 'stock.uniquename' => [ 'TEST_SEEDLOT_1', 'TEST_SEEDLOT_2' ] },
+                    { 'value::json->>\'timestamp\'' => { '>=' => '2021-06-01 00:00:00' } },
+                    { 'value::json->>\'timestamp\'' => { '<=' => '2021-06-30 24:00:00' } }, 
+                    { 'value::json->>\'operator\'' => [ 'dwaring87' ] }
+                ], 
+                '-or' => [
+                    { 
+                        '-and' => [
+                            { 'value::json->>\'cvterm_id\'' => '78094' }, 
+                            { 'value::json->>\'value\'' => [ 'Successful' ] }
+                        ] 
+                    },
+                    {
+                        '-and' => [
+                            { 'value::json->>\'cvterm_id\'' => '78085' },
+                            { 'value::json->>\'value\'' => [ 'High', 'Medium' ] }
+                        ]
+                    },
+                    { 'value::json->>\'cvterm_id\'' => '78090' }
+                ]
+            };
+            my $filtered_props = $JSONPropClass->filter_props($schema, $conditions, ["uniquename"]);
+
+=cut
+
+sub filter_props {
+    my $class = shift;
+    my $schema = shift;
+    my $conditions = shift;
+    my $parent_fields = shift;
+    my $dbh = $schema->storage->dbh;
+    my $type_id = $class->_prop_type_id();
+
+    # Build the search conditions
+    my @all_conditions = ();
+    push(@all_conditions, { 'me.type_id' => $class->_prop_type_id() });
+    if ( $conditions ) {
+        push(@all_conditions, $conditions);
+    }
+
+    # Build the query using a ResultSet
+    my @s = ();
+    my @a = ();
+    foreach my $f (@{$class->allowed_fields()}) {
+        push(@s, "value::json->>'$f'");
+        push(@a, $f);
+    }
+    my $props = $schema->resultset($class->prop_namespace())->search(
+        { '-and' => \@all_conditions },
+        {
+            'prefetch' => defined $parent_fields ? $class->parent_table() : undef,
+            '+select' => \@s,
+            '+as' => \@a
+        }
+    );
+
+    # Parse the results
+    my @filtered_props = ();
+    while (my $r = $props->next) {
+        my %p = (
+            $class->prop_primary_key() => $r->get_column($class->prop_primary_key()),
+            $class->parent_primary_key() => $r->get_column($class->parent_primary_key())
+        );
+        foreach my $f (@a) {
+            $p{$f} = $r->get_column($f);
+        }
+        if ( defined $parent_fields ) {
+            my $pt = $class->parent_table();
+            foreach my $pf (@$parent_fields) {
+                $p{$pf} = $r->$pt->$pf;
+            }
+        }
+        push(@filtered_props, \%p);
+    }
+
+    return \@filtered_props;
+}
+
+
 =head2 OBJECT METHODS
 
 =head2 method store()
