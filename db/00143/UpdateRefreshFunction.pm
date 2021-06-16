@@ -706,15 +706,6 @@ SELECT public.stock.stock_id AS plot_id,
   GROUP BY public.stock.stock_id, public.materialized_phenoview.year_id;
 ALTER VIEW plotsXyears OWNER TO web_usr;
 
-
-CREATE VIEW public.traitsxtrials AS
- SELECT materialized_phenoview.trait_id,
-    materialized_phenoview.trial_id
-   FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.trait_id, materialized_phenoview.trial_id;
-ALTER VIEW public.traitsxtrials OWNER TO web_usr;
-
-
 CREATE VIEW public.trial_designsXtrial_types AS
 SELECT trialdesign.value AS trial_design_id,
     trialterm.cvterm_id AS trial_type_id
