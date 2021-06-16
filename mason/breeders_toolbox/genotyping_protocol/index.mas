@@ -37,7 +37,7 @@ $marker_type
 % if ($marker_type eq 'SSR') {
     <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Markers</h4>", info_section_subtitle => 'View information about the markers used in this protocol.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "pcr_based_genotyping_markers" &>
 
-    <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, marker_names => $marker_names, info_section_title => "<h4 style='display:inline'>Genotype Data</h4>", info_section_subtitle => 'View and download genotyping data from this protocol.', icon_class => "glyphicon glyphicon-save-file", info_section_id => "pcr_genotyping_protocol_genotype_data" &>
+    <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, marker_names => $marker_names, info_section_title => "<h4 style='display:inline'>Genotype Data</h4>", info_section_subtitle => 'View and download genotyping data from this protocol.',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="download_ssr_data_link">Download SSR Data</button>', icon_class => "glyphicon glyphicon-save-file", info_section_id => "pcr_genotyping_protocol_genotype_data" &>
 % } else {
     <& /page/detail_page_2_col_section.mas, protocol_id => $protocol_id, info_section_title => "<h4 style='display:inline'>Markers</h4>", info_section_subtitle => 'View information about the markers used in this protocol.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_protocol_markers" &>
 

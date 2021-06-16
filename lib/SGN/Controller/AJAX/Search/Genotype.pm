@@ -232,7 +232,7 @@ sub pcr_genotyping_data_download_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $clean_inputs = _clean_inputs($c->req->params);
-    my $genotype_id_list = $clean_inputs->{genotype_id_list};
+    my $ssr_protocol_id = $clean_inputs->{ssr_protocol_id};
 
     my $dir = $c->tempfiles_subdir('/download');
     my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
@@ -244,12 +244,11 @@ sub pcr_genotyping_data_download_POST : Args(0) {
         {
             bcs_schema=>$schema,
             people_schema=>$people_schema,
-            markerprofile_id_list=>$genotype_id_list,
+            protocol_id_list=>$ssr_protocol_id,
             filename => $tempfile,
         }
     );
     my $file_handle = $genotypes->download();
-
 
 }
 

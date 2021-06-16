@@ -4,9 +4,6 @@ $marker_names => []
 
 </%args>
 
-
-<!--
-
 <div style="overflow:scroll">
     <table id="pcr_protocol_genotype_data" width="100%" class="table table-hover table-striped">
         <thead>
@@ -20,17 +17,19 @@ $marker_names => []
     </table>
 </div>
 
--->
-
+<!--
 <div style="overflow:scroll">
     <table id="pcr_protocol_genotype_data_summary" width="100%" class="table table-hover table-striped">
     </table>
 </div>
-
+-->
 
 <script>
 
 jQuery(document).ready(function () {
+
+    var protocol_id = "<% $protocol_id %>";
+    alert(protocol_id);
 
     var pcr_genotypes_data_table = jQuery('#pcr_protocol_genotype_data').DataTable({
         'ajax': '/ajax/pcr_genotyping_data/search?protocol_id_list=<% $protocol_id %>',
@@ -49,15 +48,19 @@ jQuery(document).ready(function () {
         ]
     });
 
+    jQuery('#download_ssr_data_link').click(function(){
+        downloadSSRData(protocol_id);
+    });
+
 });
 
-function downloadSSRData(stock_id, genotype_id) {
+function downloadSSRData(protocol_id) {
     jQuery.ajax({
         url: '/ajax/pcr_genotyping_data/download',
         dataType: "json",
         type: 'POST',
         data:{
-            'genotype_id_list': genotype_id,
+            'ssr_protocol_id': protocol_id,
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
