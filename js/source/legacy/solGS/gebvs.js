@@ -53,8 +53,8 @@ solGS.gebvs = {
     plotGebvs: function (gebvsData) {
 
     	var histoArgs = {
-    	    'canvas': 'gebvs_histo_canvas',
-    	    'plot_id': 'gebvs_histo_plot',
+    	    'canvas': '#gebvs_histo_canvas',
+    	    'plot_id': '#gebvs_histo_plot',
     	    'x_label': 'GEBVs',
     	    'y_label': 'Counts',
             'namedValues' : gebvsData
