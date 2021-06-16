@@ -5,7 +5,8 @@ use namespace::autoclean;
 
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
-
+use File::Copy;
+use File::Basename;
 use CXGN::Tools::Run;
 
 BEGIN {extends 'Catalyst::Controller'}
