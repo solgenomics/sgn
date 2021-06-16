@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package SpeedUpMatviews;
+package UpdateRefreshFunction;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
@@ -52,7 +52,7 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
-CREATE OR REPLACE FUNCTION public.refresh_materialized_views_concurrently() RETURNS VOID AS '
+CREATE OR REPLACE FUNCTION public.refresh_materialized_views_concurrently() RETURNS VOID AS \$\$
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenoview CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_phenoview AS
 SELECT
@@ -1016,7 +1016,7 @@ CREATE MATERIALIZED VIEW public.genotyping_projectsxtrials AS
   GROUP BY nd_experiment_project.project_id, materialized_phenoview.trial_id
  WITH DATA;
 CREATE UNIQUE INDEX genotyping_projectsxtrials_idx ON public.genotyping_projectsxtrials(genotyping_project_id, trial_id) WITH (fillfactor=100);
-ALTER MATERIALIZED VIEW public.genotyping_projectsxtrials OWNER TO web_usr;'
+ALTER MATERIALIZED VIEW public.genotyping_projectsxtrials OWNER TO web_usr;\$\$
 LANGUAGE SQL;
 ALTER FUNCTION public.refresh_materialized_views_concurrently() OWNER TO web_usr;
 
