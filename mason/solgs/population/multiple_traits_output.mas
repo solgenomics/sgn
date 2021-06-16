@@ -21,6 +21,7 @@ $training_pop_id
 $training_pop_name
 $training_pop_desc
 $training_pop_url
+$training_traits_code => undef
 
 $model_data
 $selection_prediction_download => undef
@@ -29,7 +30,6 @@ $selection_pop_name => undef
 $list_of_prediction_pops => undef
 $prediction_pop_analyzed_traits => undef
 $prediction_pop_analyzed_traits_ids => undef
-$acronym
 $genotyping_protocol_id
 
 </%args>
@@ -66,6 +66,7 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
     genotyping_protocol_id => $genotyping_protocol_id,
     training_traits_ids    => $training_traits_ids,
     selection_traits_ids   => $selection_traits_ids,
+    training_traits_code => $training_traits_code
    &>
 
 <& selection_populations.mas,
@@ -116,6 +117,5 @@ $selection_traits_ids = join(',', @$prediction_pop_analyzed_traits_ids);
   <& /solgs/kinship/analysis.mas,
      pop_id => $training_pop_id &>
 
-<& acronym.mas,
-   acronym => $acronym,
+<& /solgs/population/trait_acronyms.mas,
 &>

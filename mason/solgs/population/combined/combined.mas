@@ -27,7 +27,6 @@ $traits_no
 $stocks_no
 $protocol_url => ''
 $owner => ''
-$acronym
 $genotyping_protocol_id
 </%args>
 
@@ -95,9 +94,7 @@ $genotyping_protocol_id
 
 
 
-<& /solgs/population/acronym.mas,
-   acronym => $acronym,
-&>
+<& /solgs/population/trait_acronyms.mas &>
 
 %}
 % else

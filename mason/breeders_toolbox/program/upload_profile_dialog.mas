@@ -150,7 +150,8 @@ $program_name
                                 <td>Benchmark Variety</td>
                                 <td>Performance (equal, smaller, larger)</td>
                                 <td>Weight</td>
-                                <td>Trait Type</tr>
+                                <td>Trait Type</td>
+                            </tr>
                         </tbody>
                     </table>
                     <b>
@@ -164,8 +165,10 @@ $program_name
                     <b>
                         Optional columns:
                     </b>
-                    <li><b>Weight:</b> Default is 1</li>
-                    <li><b>Trait Type:</b> e.g. basic trait, value-added trait</li>
+                    <ul>
+                        <li><b>Weight:</b> Default is 1</li>
+                        <li><b>Trait Type:</b> e.g. basic trait, value-added trait</li>
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">

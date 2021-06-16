@@ -440,7 +440,7 @@ jQuery(document).ready(function(){
         jQuery.ajax({
             url: '/brapi/v2/observations/',
             method: 'POST',
-            headers: { "access_token": jQuery.cookie("sgn_session_id") },
+            headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
             data: JSON.stringify(table_data),
             contentType: "application/json; charset=utf-8",
             beforeSend: function() {

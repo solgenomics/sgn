@@ -62,7 +62,7 @@ chdir($sgn_dir);
 $ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'fixture';
 #my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
 # relative to `sgn/`
-my $conf_file_base = 'sgn_test.conf';
+my $conf_file_base = $ENV{SGN_TEST_CONF} || 'sgn_test.conf';
 my $template_file = 'sgn_fixture_template.conf';
 # get some defaults from sgn_local.conf
 #
@@ -92,10 +92,16 @@ foreach my $k (keys %{$template}) {
 
 # load the database fixture
 #
-my $now = DateTime->now();
-my $dbname = join "_", map { $now->$_ } (qw | year month day hour minute |);
-$dbname = 'test_db_'.$dbname;
-$dbname .= $$;
+my $dbname;
+
+if ($ENV{TEST_DB_NAME}) { $dbname = $ENV{TEST_DB_NAME}; }
+
+else { 
+    my $now = DateTime->now();
+    $dbname = join "_", map { $now->$_ } (qw | year month day hour minute |);
+    $dbname = 'test_db_'.$dbname;
+    $dbname .= $$;
+}
 
 print STDERR "# Writing a .pgpass file... ";
 # format = hostname:port:database:username:password
@@ -106,12 +112,15 @@ close($PGPASS);
 system("chmod 0600 $ENV{HOME}/.pgpass");
 print STDERR "Done.\n";
 
-my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path;
-print STDERR "# Loading database fixture... $database_fixture_dump ... ";
-system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
-system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
+# load fixture only if no TEST_DB_NAME env var was provided
+if (! $ENV{TEST_DB_NAME}) {
+    my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path;
+    print STDERR "# Loading database fixture... $database_fixture_dump ... ";
+    system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
+    system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
 
-print STDERR "Done.\n";
+    print STDERR "Done.\n";
+}
 
 print STDERR "# Creating sgn_fixture.conf file... ";
 $config->{dbname} = $dbname;
@@ -243,9 +252,14 @@ sleep(3);
 print STDERR "Done.\n";
 
 if (!$nocleanup) {
-    print STDERR "# Removing test database ($dbname)... ";
-    system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
-    print STDERR "Done.\n";
+    if ($ENV{TEST_DB_NAME}) {
+	print STDERR "Not removing test database (TEST_DB_NAME = $ENV{TEST_DB_NAME} is set.\n";
+    }
+    else { 
+	print STDERR "# Removing test database ($dbname)... ";
+	system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
+	print STDERR "Done.\n";
+    }
 
     if ($noserver) {
 	print STDERR "# [ --noserver option: No logfile to remove]\n";
@@ -341,6 +355,10 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
 
   -- -v          options specified after two dashes will be passed to prove
                  directly, such -v will run prove in verbose mode.
+
+By default, the configuration will be taken from the file sgn_test.conf. To use another configuration file, set the environment variable SGN_TEST_CONF to the name of the file you would like to use.
+
+To use an existing database as the fixture, set the environment variable TEST_DB_NAME to the name of the database you would like to use.
 
 =head1 AUTHORS
 
