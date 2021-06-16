@@ -1155,15 +1155,15 @@ sub _get_onto_children {
 #       - names: an array of seedlot names
 #       - dates: an array of date filter properies:
 #           - date: date in YYYY-MM-DD format
-#           - comp: date comparison type (eq, lte, lt, gte, gt)
+#           - comp: date comparison type ('=', '<=', '<', '>=', '>')
 #       - types: an array of event type/value filter properties
-#           - type: cvterm_id of maintenance event type
+#           - cvterm_id: cvterm_id of maintenance event type
 #           - values: array of allowed values
 #       - operators: an array of operator names
 # RETURNS: 
 #   events: an array of events that match the filter criteria, with the following keys:
 #       - stock_id: the unique id of the seedlot
-#       - stock_name: the unique name of the seedlot
+#       - uniquename: the unique name of the seedlot
 #       - stockprop_id: the unique id of the maintenance event
 #       - cvterm_id: id of seedlot maintenance event ontology term
 #       - cvterm_name: name of seedlot maintenance event ontology term
@@ -1183,7 +1183,8 @@ sub seedlot_maintenance_event_search_POST {
     my $filters = $body->{filters};
 
     # Get events
-    my $events = CXGN::Stock::Seedlot->get_all_events($schema, $filters);
+    my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
+    my $events = $m->get_all_events($filters);
 
     # Return events
     $c->stash->{rest} = { events => $events };
@@ -1197,7 +1198,7 @@ sub seedlot_maintenance_event_search_POST {
 # RETURNS:
 #   events: all of the stored maintenance events for the Seedlot, an array of objects with the following keys:
 #       - stock_id: the unique id of the seedlot
-#       - stock_name: the unique name of the seedlot
+#       - uniquename: the unique name of the seedlot
 #       - stockprop_id: the unique id of the maintenance event
 #       - cvterm_id: id of seedlot maintenance event ontology term
 #       - cvterm_name: name of seedlot maintenance event ontology term

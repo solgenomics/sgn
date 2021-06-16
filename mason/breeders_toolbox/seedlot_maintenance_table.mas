@@ -71,11 +71,11 @@
                 </div>
                 <div class="col-sm-4">
                     <select class="form-control" id="event_filter_date_type">
-                        <option value="eq">on</option>
-                        <option value="lte">on or before</option>
-                        <option value="lt">before</option>
-                        <option value="gte">on or after</option>
-                        <option value="gt">after</option>
+                        <option value="=">on</option>
+                        <option value="<=">on or before</option>
+                        <option value="<">before</option>
+                        <option value=">=">on or after</option>
+                        <option value=">">after</option>
                     </select>
                 </div>
                 <div class="col-sm-1">
@@ -196,7 +196,7 @@ jQuery(document).ready(function() {
         columns = columns.concat([
             { 
                 title: "Seedlot", 
-                data: "stock_name", 
+                data: "uniquename", 
                 render: function(data, type, row) {
                     if ( type === 'display' ) {
                         let url = "/breeders/seedlot/" + row.stock_id;
@@ -264,26 +264,68 @@ function getEvents() {
     events = [];
 
     // Build filter arguments
-    let _filters = { names: [], dates: [], types: [], operators: [] };
+    let names = [];
+    let dates = [];
+    let types = [];
+    let operators = [];
     for ( let i = 0; i < filters.length; i++ ) {
         if ( filters[i].type_id === 'name' ) {
-            _filters.names = _filters.names.concat(filters[i].value);
+            names = names.concat(filters[i].value);
         }
         else if ( filters[i].type_id === 'date' ) {
-            _filters.dates.push({date: filters[i].value, comp: filters[i].comp});
+            if ( filters[i].comp === '=' ) {
+                dates.push({
+                    date: filters[i].value + "%",
+                    comp: filters[i].comp
+                });
+            }
+            else if ( filters[i].comp === '<=' ) {
+                dates.push({
+                    date: filters[i].value + " 24:00:00",
+                    comp: filters[i].comp
+                });
+            }
+            else if ( filters[i].comp === '<' ) {
+                dates.push({
+                    date: filters[i].value + " 00:00:00",
+                    comp: filters[i].comp
+                });
+            }
+            else if ( filters[i].comp === '>=' ) {
+                dates.push({
+                    date: filters[i].value + " 00:00:00",
+                    comp: filters[i].comp
+                });
+            }
+            else if ( filters[i].comp === '>' ) {
+                dates.push({
+                    date: filters[i].value + " 24:00:00",
+                    comp: filters[i].comp
+                });
+            }
         }
         else if ( filters[i].type_id === 'operator' ) {
-            _filters.operators = _filters.operators.concat(filters[i].value);
+            operators.push(filters[i].value);
         }
         else {
-            _filters.types.push({type: filters[i].type_id, values: filters[i].value});
+            types.push({
+                cvterm_id: filters[i].type_id,
+                values: filters[i].value
+            });
         }
     }
     if ( !multi_seedlot ) {
-        _filters.names = ["<% $seedlot_name %>"];
+        names = ["<% $seedlot_name %>"];
     }
-
-    console.log(JSON.stringify(_filters, null, 2));
+    let body = {
+        filters: {
+            names: names, 
+            dates: dates,
+            types: types,
+            operators: operators
+        }
+    }
+    console.log(JSON.stringify(body, null, 2));
 
     // Disable Filter button
     jQuery("#event_filter_submit").html("Searching...");
@@ -293,7 +335,7 @@ function getEvents() {
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/breeders/seedlot/maintenance/search',
-        data: JSON.stringify({filters: _filters}),
+        data: JSON.stringify(body),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data) {
@@ -451,7 +493,7 @@ function setOperators() {
 function addSeedlotNamesFilter() {
     let names = jQuery("#event_filter_seedlot_names").val();
     names = names ? names.split('\n') : [];
-    addFilter('name', 'name', names && names.length > 0 ? names : undefined, 'eq');
+    addFilter('name', 'name', names && names.length > 0 ? names : undefined, 'includes');
     return false;
 }
 
@@ -461,7 +503,7 @@ function addSeedlotNamesFilter() {
 function addSeedlotListFilter() {
     let list_id = jQuery("#event_filter_seedlot_list_select").val();
     let names = list_id ? lo.getList(list_id) : [];
-    addFilter('name', 'name', names && names.length > 0 ? names : undefined, 'eq');
+    addFilter('name', 'name', names && names.length > 0 ? names : undefined, 'includes');
     return false;
 }
 
@@ -505,7 +547,7 @@ function addTypeFilter() {
         values = v && v !== '' ? [v] : undefined;
     }
     
-    addFilter(type_id, type_name, values, 'eq');
+    addFilter(type_id, type_name, values, 'includes');
     return false;
 }
 
@@ -514,7 +556,7 @@ function addTypeFilter() {
  */
 function addOperatorFilter() {
     let operators = jQuery('#event_filter_operators').val();
-    addFilter('operator', 'operator', operators, 'eq');
+    addFilter('operator', 'operator', operators, '=');
     return false;
 }
 

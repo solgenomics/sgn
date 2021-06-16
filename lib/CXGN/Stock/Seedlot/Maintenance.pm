@@ -44,7 +44,7 @@ sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    $self->prop_table('propjectprop');
+    $self->prop_table('stockprop');
     $self->prop_namespace('Stock::Stockprop');
     $self->prop_primary_key('stockprop_id');
     $self->prop_type('seedlot_maintenance_json');
@@ -54,6 +54,88 @@ sub BUILD {
     $self->parent_primary_key('stock_id');
 
     $self->load();
+}
+
+
+
+=head2 Class method: get_all_events()
+
+ Usage:         my $event_obj = CXGN::Stock::Seedlot::Maintenance({ bcs_schema => $schema });
+                my @events = $event_obj->get_all_events($filters);
+ Desc:          get all of the (optionally filtered) seedlot maintenance events associated with any of the matching seedlots
+ Args:          filters (optional): a hash of different filter types to apply, with the following keys:
+                    - names: an arrayref of seedlot names
+                    - dates: an arrayref of hashes containing date filter options:
+                        - date: date in YYYY-MM-DD format
+                        - comp: comparison type (eq, lte, lt, gte, or gt)
+                    - types: an arrayref of hashes containing type/value filter options:
+                        - cvterm_id: cvterm_id of maintenance event type
+                        - values: (optional, default=any value) array of allowed values
+                    - operators: arrayref of operator names
+ Ret:           an arrayref of hases of the seedlot's stored events, with the following keys:
+                    - stock_id: the unique id of the seedlot
+                    - uniquename: the unique name of the seedlot
+                    - stockprop_id: the unique id of the maintenance event
+                    - cvterm_id: id of seedlot maintenance event ontology term
+                    - cvterm_name: name of seedlot maintenance event ontology term
+                    - value: value of the seedlot maintenance event
+                    - notes: additional notes/comments about the event
+                    - operator: username of the person creating the event
+                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+
+=cut
+
+sub get_all_events {
+    my $class = shift;
+    my $filters = shift;
+    my $schema = $class->bcs_schema();
+
+    # Parse filters into search conditions
+    my @and;
+    my @or;
+    if ( defined $filters && defined $filters->{'names'} && scalar(@{$filters->{'names'}}) > 0 ) {
+        push(@and, { 'stock.uniquename' => $filters->{'names'} });
+    }
+    if ( defined $filters && defined $filters->{'dates'} && scalar(@{$filters->{'dates'}}) > 0 ) {
+        foreach my $f (@{$filters->{'dates'}}) {
+            push(@and, { "value::json->>'timestamp'" => { $f->{'comp'} => $f->{'date'} } });
+        }
+    }
+    if ( defined $filters && defined $filters->{'types'} && scalar(@{$filters->{'types'}}) > 0 ) {
+        foreach my $f (@{$filters->{'types'}}) {
+            if ( $f->{values} ) {
+                my @c = (
+                    { "value::json->>'cvterm_id'" => $f->{cvterm_id} },
+                    { "value::json->>'value'" => $f->{values} }
+                );
+                push(@or, { "-and" => \@c });
+            }
+            else {
+                push(@or, { "value::json->>'cvterm_id'" => $f->{cvterm_id} });
+            }
+        }
+    }
+    if ( defined $filters && defined $filters->{'operators'} && scalar(@{$filters->{'operators'}}) > 0 ) {
+        push(@and, { "value::json->>'operator'" => $filters->{'operators'} });
+    }
+
+    # Build conditions
+    my %conditions = ();
+    if ( scalar(@and) > 0 ) {
+        $conditions{"-and"} = \@and;
+    }
+    if ( scalar(@or) > 0 ) {
+        $conditions{"-or"} = \@or;
+    }
+
+    # Perform the filtering
+    my $filtered_props = $class->filter_props($schema, \%conditions, ["uniquename"]);
+
+    # Sort by timestamp
+    my @sorted_props = sort { $b->{timestamp} cmp $a->{timestamp} } @$filtered_props;
+
+    return \@sorted_props;
+
 }
 
 1;

@@ -1249,161 +1249,13 @@ sub delete {
 # SEEDLOT MAINTENANCE EVENT FUNCTIONS
 #
 
-=head2 Class method: get_all_events()
-
- Usage:         my @events = CXGN::Stock::Seedlot->get_all_events($schema, $filters);
- Desc:          get all of the (optionally filtered) seedlot maintenance events associated with any of the matching seedlots
- Args:          filters (optional): a hash of different filter types to apply, with the following keys:
-                    - names: an arrayref of seedlot names
-                    - dates: an arrayref of hashes containing date filter options:
-                        - date: date in YYYY-MM-DD format
-                        - comp: comparison type (eq, lte, lt, gte, or gt)
-                    - types: an arrayref of hashes containing type/value filter options:
-                        - type: cvterm_id of maintenance event type
-                        - values: array of allowed values
-                    - operators: arrayref of operator names
- Ret:           an arrayref of hases of the seedlot's stored events, with the following keys:
-                    - stock_id: the unique id of the seedlot
-                    - stock_name: the unique name of the seedlot
-                    - stockprop_id: the unique id of the maintenance event
-                    - cvterm_id: id of seedlot maintenance event ontology term
-                    - cvterm_name: name of seedlot maintenance event ontology term
-                    - value: value of the seedlot maintenance event
-                    - notes: additional notes/comments about the event
-                    - operator: username of the person creating the event
-                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
-
-=cut
-
-sub get_all_events {
-    my $class = shift;
-    my $schema = shift;
-    my $filters = shift;
-
-    # Get the type id for seedlot events
-    my $event_obj = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
-    my $type_id = $event_obj->_prop_type_id();
-
-    # Get all of the stockprops (filtered by seedlot name, if provided)
-    my %where = (
-        'me.type_id' => $type_id
-    );
-    if ( defined $filters && $filters->{names} && scalar(@{$filters->{names}}) > 0) {
-        $where{'stock.uniquename'} = {-in => $filters->{names}};
-    }
-    my $stockprops = $schema->resultset("Stock::Stockprop")->search(
-        \%where,
-        {
-            'join' => 'stock',
-            '+select' => ['me.stock_id, stock.uniquename, me.stockprop_id, me.value'],
-            '+as' => ['stock_id', 'stock_name', 'stockprop_id', 'value']
-        }
-    );
-
-    # Filter the events by stockprop values
-    my @filtered_events = ();
-    while (my $r = $stockprops->next) {
-        my $stock_id = $r->get_column('stock_id');
-        my $stock_name = $r->get_column('stock_name');
-        my $stockprop_id = $r->get_column('stockprop_id');
-        my $value = JSON::Any->decode($r->get_column('value'));
-        my $add = 1;
-
-        # Parse the filters
-        if ( defined $filters ) {
-            
-            # Date Filter
-            if ( $filters->{dates} && $add ) {
-                foreach my $df (@{$filters->{dates}}) {
-                    my $d = $df->{date};
-                    my $t = $df->{comp};
-
-                    if ( $t eq 'eq' ) {
-                        my $r = "^$d";
-                        $add = 0 if ($value->{timestamp} !~ /$r/);
-                    }
-                    elsif ( $t eq 'lte' ) {
-                        my $c = "$d 24:00:00";
-                        $add = 0 if ($value->{timestamp} gt $c );
-                    }
-                    elsif ( $t eq 'lt' ) {
-                        my $c = "$d 00:00:00";
-                        $add = 0 if ($value->{timestamp} gt $c );
-                    }
-                    elsif ( $t eq 'gte' ) {
-                        my $c = "$d 00:00:00";
-                        $add = 0 if ($value->{timestamp} lt $c );
-                    }
-                    elsif ( $t eq 'gt' ) {
-                        my $c = "$d 24:00:00";
-                        $add = 0 if ($value->{timestamp} lt $c );
-                    }
-                }
-            }
-
-            # Type Filter
-            if ( $filters->{types} && scalar(@{$filters->{types}}) > 0 && $add ) {
-                my $filter_match = 0;
-                foreach my $tf (@{$filters->{types}}) {
-                    my $id = $tf->{type};
-                    my %values = map { $_ => 1 } @{$tf->{values}};
-                    if ( $value->{cvterm_id} eq $id ) {
-                        if ( scalar(@{$tf->{values}}) > 0 ) {
-                            $filter_match = 1 if (exists($values{$value->{value}}));
-                        }
-                        else {
-                            $filter_match = 1;
-                        }
-                    }
-                }
-                $add = 0 if ($filter_match ne 1);
-            }
-
-            # Operator Filter
-            if ( $filters->{operators} && scalar(@{$filters->{operators}}) > 0 && $add ) {
-                my %operators = map { $_ => 1 } @{$filters->{operators}};
-                $add = 0 if (!exists($operators{$value->{operator}}));
-            }
-        }
-
-        # Add the event, if it has passed the filters
-        if ( $add ) {
-            my %event = (
-                stock_id => $stock_id,
-                stock_name => $stock_name,
-                stockprop_id => $stockprop_id, 
-                cvterm_id => $value->{cvterm_id},
-                cvterm_name => $value->{cvterm_name},
-                value => $value->{value},
-                notes => $value->{notes},
-                operator => $value->{operator},
-                timestamp => $value->{timestamp}
-            );
-            push(@filtered_events, \%event);
-        }
-    }
-
-    # Sort events by timestamp (most recent first)
-    my @sorted_events = sort { $b->{timestamp} cmp $a->{timestamp} } @filtered_events;
-
-    return \@sorted_events;
-}
-
 =head2 get_events()
 
  Usage:         my @events = $sl->get_events();
- Desc:          get the (optionally filtered) seedlot maintenance events associated with the seedlot
- Args:          filters (optional): a hash of different filter types to apply, with the following keys:
-                    - dates: an arrayref of hashes containing date filter options:
-                        - date: date in YYYY-MM-DD format
-                        - comp: comparison type (eq, lte, lt, gte, or gt)
-                    - types: an arrayref of hashes containing type/value filter options:
-                        - type: cvterm_id of maintenance event type
-                        - values: array of allowed values
-                    - operators: arrayref of operator names
+ Desc:          get all of seedlot maintenance events associated with the seedlot
  Ret:           an arrayref of hases of the seedlot's stored events, with the following keys:
                     - stock_id: the unique id of the seedlot
-                    - stock_name: the unique name of the seedlot
+                    - uniquename: the unique name of the seedlot
                     - stockprop_id: the unique id of the maintenance event
                     - cvterm_id: id of seedlot maintenance event ontology term
                     - cvterm_name: name of seedlot maintenance event ontology term
@@ -1416,17 +1268,15 @@ sub get_all_events {
 
 sub get_events {
     my $self = shift;
-    my $filters = shift;
     my $schema = $self->schema();
     my $seedlot_name = $self->uniquename();
+    my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
 
     # Get the events for the Seedlot
-    my @names = ($seedlot_name);
-    $filters->{'names'} = \@names;
-    my @sorted_events = CXGN::Stock::Seedlot->get_all_events($schema, $filters);
+    my $sorted_events = $m->get_all_events({ names => [$seedlot_name] });
 
     # Return array of sorted events
-    return(\@sorted_events);
+    return($sorted_events);
 }
 
 
