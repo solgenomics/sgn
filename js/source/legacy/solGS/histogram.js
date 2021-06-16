@@ -7,21 +7,7 @@
 var solGS = solGS || function solGS () {};
 
 
-
 solGS.histogram =  {
-
-    getHistogramData: function () {
-
-	var params = this.getHistogramParams();
-	var histoData = jQuery.ajax({
-            type: 'POST',
-            dataType: 'json',
-            data: params,
-            url: '/histogram/phenotype/data/',
-        });
-
-       return histoData;
-    },
 
     cleanData: function (traitValues) {
         traitValues = traitValues.sort();
@@ -73,39 +59,36 @@ solGS.histogram =  {
         };
     },
 
-    getHistogramParams: function () {
+    createBinElementsTable: function () {
 
-	var traitId      = jQuery("#trait_id").val();
-	var population   = solGS.getPopulationDetails();
-	var populationId = population.training_pop_id;
-	var comboPopsId  = population.combo_pops_id;
+        var table = '<div class="bin_elements" style="display:none">'
+          + '<table class="table bin_elements_table" style="text-align: left;">'
+          + '<thead>'
+          +  '<tr>'
+          +  '<th>Genotypes in the selected bin</th>'
+          +  '<th>Values</th>'
+          +  '</tr>'
+          + '</thead>'
+          + '</table>'
+          + '</div>';
 
-	var params = {
-	    'trait_id'     : traitId,
-	    'training_pop_id': populationId,
-	    'combo_pops_id'  : comboPopsId
-	};
-
-	return params;
+        return table;
     },
-
 
     displayBinElements: function(data, canvas) {
 
-        if (canvas.match(/trait_histogram_canvas/)) {
-            canvas = '#tabs_phenotype';
-        } else if(canvas.match(/gebvs_histo_canvas/)) {
-            canvas = '#gebvs';
-        } else {
-             canvas =  '#' + canvas;
+        if (!jQuery(canvas + ' .bin_elements').length) {
+            var table = this.createBinElementsTable();
+            jQuery(canvas).append(table);
         }
 
         jQuery(canvas + ' .bin_elements').show();
-        if (jQuery.fn.DataTable.isDataTable(canvas + ' .bin_elements .bin_elements_table' ) ) {
-             jQuery(canvas + ' .bin_elements .bin_elements_table').DataTable().destroy();
+        var table = canvas + ' .bin_elements .bin_elements_table';
+        if (jQuery.fn.DataTable.isDataTable(table) ) {
+             jQuery(table).DataTable().destroy();
         }
 
-       var table = jQuery(canvas +  ' .bin_elements .bin_elements_table').DataTable({
+       table = jQuery(table).DataTable({
         'searching' : false,
         'ordering'  : false,
         'processing': true,
@@ -118,6 +101,18 @@ solGS.histogram =  {
 
     },
 
+
+//  call plotHistogram with an object with the ff str.
+    // histo = {'canvas': 'div element to draw the plot',
+    // 'plot_id': 'plot div element',
+    // 'x_label': 'label for x axis',
+    // 'y_label': 'label for y axis',
+    // 'bar_color': 'optional color for bars,
+    // 'alt_bar_color': 'optional color for bars for on mouseover',
+   // 'values': optional array of values
+    // 'namedValues' : an array of arrray of named values}, necessary if you want view bin
+        //elements on mouseover;
+    //
     plotHistogram: function (histo) {
 
 	var canvas = histo.canvas || 'histogram_canvas';
@@ -125,11 +120,16 @@ solGS.histogram =  {
 	var values = histo.values;
     var namedValues = histo.namedValues;
 
+    var barClr = histo.bar_color || '#9A2EFE';
+     var altBarClr = histo.alt_bar_color ||  '#C07CFE';
+
     if (!values || !values[0]) {
         values = this.extractValues(namedValues);
-        values = this.cleanData(values);
+
     }
 
+    values = this.cleanData(values);
+    
 	var height = 300;
 	var width  = 500;
 	var pad    = {left:20, top:50, right:50, bottom: 50};
@@ -190,15 +190,15 @@ solGS.histogram =  {
     var xLabel = histo.x_label || 'Values';
 	var yLabel = histo.y_label || 'Frequency';
 
-	var svg = d3.select("#" + canvas)
+	var svg = d3.select(canvas)
             .append("svg")
             .attr("height", totalH)
             .attr("width", totalW);
 
     var tip = d3.tip().attr('class', 'd3-tip').html(function(d) {
         var binElem = [];
-       var dMin = d3.min(d);
-       var dMax = d3.max(d);
+        var dMin = d3.min(d);
+        var dMax = d3.max(d);
 
         namedValues.forEach(function(el, idx) {
             var ek = el[1];
@@ -228,9 +228,6 @@ solGS.histogram =  {
 		return "translate(" + xAxisScale(d.x)
                     + "," + height - yAxisScale(d.y) + ")";
             });
-
-    var barClr = '#9A2EFE';
-     var altBarClr = '#C07CFE';
 
 	bar.append("rect")
             .attr("x", function(d) { return 2*pad.left + xAxisScale(d.x); } )
@@ -302,47 +299,3 @@ solGS.histogram =  {
 //////
 }
 //////
-
-
-jQuery(document).ready(function () {
-
-    var histMsgId = "histogram_message";
-   solGS.histogram.getHistogramData().done(function(res) {
-
-        if (res.status == 'success') {
-           var traitData = res.data;
-
-           var variation = solGS.histogram.checkDataVariation(traitData);
-
-            if (variation.uniq_count == 1) {
-                var msg = '<p> All of the valid observations '
-                                  + '('+ variation.obs_count +') ' + 'in this dataset have '
-                                  + 'a value of ' + variation.uniqValue
-                                  + '. No frequency distribution plot.</p>';
-
-                solGS.showMessage(histMsgId, msg);
-
-            } else {
-                var args = {
-                    'namedValues' : traitData,
-                    'canvas' : 'trait_histogram_canvas',
-                    'plot_id': 'trait_histogram_plot'
-                };
-
-                solGS.histogram.plotHistogram(args);
-                jQuery("#histogram_message").empty();
-
-            }
-       } else {
-            var msg = "<p>This trait has no phenotype data to plot.</p>";
-            solGS.showMessage(histMsgId, msg);
-       }
-
-    });
-
-    solGS.histogram.getHistogramData().fail(function(res) {
-        var msg = "<p>Error occured plotting histogram for this trait dataset.</p>";
-        solGS.showMessage(histMsgId, msg);
-    });
-
-});
