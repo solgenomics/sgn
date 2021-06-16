@@ -87,8 +87,8 @@ sub search {
     my @trait_dbids = $inputs->{traitDbIds} ? @{$inputs->{traitDbIds}} : ();
     my @trait_ids = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
 
-    if (scalar(@classes)>0 || scalar(@method_ids)>0 || scalar(@scale_ids)>0 || scalar(@study_ids)>0){
-        push @$status, { 'error' => 'The following search parameters are not implemented yet: scaleDbId, studyDbId, traitClasses, methodDbId' };
+    if (scalar(@classes)>0 || scalar(@method_ids)>0 || scalar(@scale_ids)>0){
+        push @$status, { 'error' => 'The following search parameters are not implemented yet: scaleDbId, traitClasses, methodDbId' };
         my %result;
         my @data_files;
         my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
@@ -126,12 +126,12 @@ sub search {
         if (scalar(@dbxref_ids)>0){
             # TODO: Should this be OR?
             foreach (@dbxref_ids) {
-                push @sub_and_wheres, "reference_id_prop.value = '$_'";
+                push @sub_and_wheres, "dbxref.accession = '$_'";
             }
         }
         if (scalar(@dbxref_terms)>0) {
             foreach (@dbxref_terms) {
-                push @sub_and_wheres, "reference_source_prop.value = '$_'";
+                push @sub_and_wheres, "db.name = '$_'";
             }
         }
 
@@ -144,18 +144,14 @@ sub search {
             ")) AS externalReferences " .
             "from " .
             "(" .
-            "select cvterm.cvterm_id, reference_source_prop.value as reference_source, reference_id_prop.value as reference_id " .
+            "select cvterm.cvterm_id, db.name as reference_source, dbxref.accession as reference_id " .
             "FROM " .
             "cvterm " .
             "JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) " .
             "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) " .
-            "JOIN dbxrefprop reference_source_prop ON cvterm.dbxref_id = reference_source_prop.dbxref_id " .
-            "JOIN cvterm reference_source_term " .
-                "ON reference_source_term.cvterm_id = reference_source_prop.type_id and reference_source_term.name = 'reference_source' " .
-            "JOIN dbxrefprop reference_id_prop " .
-            "ON cvterm.dbxref_id = reference_id_prop.dbxref_id and reference_id_prop.rank = reference_source_prop.rank " .
-            "JOIN cvterm reference_id_term " .
-                "ON reference_id_term.cvterm_id = reference_id_prop.type_id and reference_id_term.name = 'reference_id' " .
+            "JOIN cvterm_dbxref on cvterm.cvterm_id = cvterm_dbxref.cvterm_id " .
+            "JOIN dbxref on cvterm_dbxref.dbxref_id = dbxref.dbxref_id " .
+            "JOIN db on dbxref.db_id = db.db_id " .
             "where $sub_and_where_clause " .
             ") as references_query " .
             "group by cvterm_id " .
@@ -173,6 +169,31 @@ sub search {
             push @and_wheres, "cvtermprop.value = '$_'";
         }
     }
+
+    if (scalar(@study_ids)>0){
+        my $trait_ids_sql;
+
+        foreach my $study_id (@study_ids){
+            my $study_check = $self->bcs_schema->resultset('Project::Project')->find({project_id=>$study_id});
+            if ($study_check) {
+                my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
+                my $traits_assayed = $t->get_traits_assayed();
+                
+                foreach (@$traits_assayed){
+                    $trait_ids_sql .= ',' . $_->[0] ;
+                }
+            }
+        }
+
+        $trait_ids_sql =~ s/^,//g;
+
+        if ($trait_ids_sql){
+            push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
+        } else {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Variables not found for the searched studyDbId'), 400);
+        }
+    }
+
 
     push @and_wheres, "reltype.name='VARIABLE_OF'";
 
@@ -232,15 +253,25 @@ sub get_query {
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $dbxref_id, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
 
+        # Get the external references
+        my @references_cvterms = ($cvterm_id);
+        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+            bcs_schema => $self->bcs_schema,
+            table_name => 'cvterm',
+            table_id_key => 'cvterm_id',
+            id => \@references_cvterms
+        });
+
         #TODO: This is running many queries each time, can make one big query above if need be
         # Retrieve the trait, which retrieves its scales and methods
         my $trait = CXGN::Trait->new({
-            bcs_schema => $self->bcs_schema,
-            cvterm_id  => $cvterm_id,
-            dbxref_id  => $dbxref_id,
-            db_id      => $db_id,
-            db         => $db_name,
-            accession  => $accession
+            bcs_schema          => $self->bcs_schema,
+            cvterm_id           => $cvterm_id,
+            dbxref_id           => $dbxref_id,
+            db_id               => $db_id,
+            db                  => $db_name,
+            accession           => $accession,
+            external_references => $references
         });
 
         push @variables, $self->_construct_variable_response($c, $trait);
@@ -295,10 +326,11 @@ sub store {
             method => $params->{method}
         });
         my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
-            bcs_schema => $self->bcs_schema,
+            bcs_schema          => $self->bcs_schema,
             external_references => $params->{externalReferences} || [],
-            table_name => "Cv::Dbxrefprop",
-            base_id_key => "dbxref_id"
+            table_name          => "cvterm",
+            table_id_key        => "cvterm_id",
+            id                  => $cvterm_id
         });
         my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
             cvterm_id                             => $cvterm_id,
@@ -357,10 +389,11 @@ sub update {
         method => $data->{method}
     });
     my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
-        bcs_schema => $self->bcs_schema,
+        bcs_schema          => $self->bcs_schema,
         external_references => $data->{externalReferences} || [],
-        table_name => "Cv::Dbxrefprop",
-        base_id_key => "dbxref_id"
+        table_name          => "cvterm",
+        table_id_key        => "cvterm_id",
+        id                  => $cvterm_id
     });
     my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
         cvterm_id                             => $cvterm_id,
@@ -439,7 +472,7 @@ sub _construct_variable_response {
     my $variable = shift;
 
     my $external_references_json;
-    if (defined($variable->external_references)) { $external_references_json = $variable->external_references->references_db();}
+    if (defined($variable->external_references)) { $external_references_json = $variable->external_references->search()->{$variable->cvterm_id};}
     my $method_json;
     if (defined($variable->method)) { $method_json = $variable->method->method_db();}
     my $scale_json;

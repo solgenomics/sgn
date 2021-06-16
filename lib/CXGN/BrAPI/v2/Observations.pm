@@ -39,14 +39,18 @@ sub search {
     # observationUnitLevelName
     # observationUnitLevelOrder
     # observationUnitLevelCode
-    my $trial_ids;
-    if ($study_ids_arrayref || $trial_ids_arrayref){
-        $trial_ids = ($study_ids_arrayref, $trial_ids_arrayref); 
+    my @trial_ids;
+    if ($study_ids_arrayref){ 
+        push @trial_ids, @$study_ids_arrayref;
     }
+    if ($trial_ids_arrayref){ 
+        push @trial_ids, @$trial_ids_arrayref;
+    }
+    my $trial_ids = \@trial_ids;
 
-    # can't really limit in query because need to look at observations array
-    my $limit = undef;
-    my $offset = undef;
+    my $limit;
+    if (!$trial_ids) { $limit=1000000; } # if no ids, limit should be set to max and retrieve whole database. If ids no limit to retrieves all
+    my $offset; # = $page_size*$page;
 
     my $start_index = $page*$page_size;
     my $end_index = $page*$page_size + $page_size - 1;
@@ -151,8 +155,8 @@ sub detail {
         $trial_ids = ($study_ids_arrayref, $trial_ids_arrayref); 
     }
 
-    my $limit = $page_size*($page+1)-1;
-    my $offset = $page_size*$page;
+    my $limit;
+    my $offset;
 
     # TODO: change to use search factory if we want to stick with that
     my ($data, $unique_traits)  = _search_observation_id(
@@ -209,10 +213,9 @@ sub detail {
         }
     }
 
-    my %result = (data=>\@data_window);
     my @data_files;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observations result constructed');
+    return CXGN::BrAPI::JSONResponse->return_success(@data_window, $pagination, \@data_files, $status, 'Observations result constructed');
 }
 
 sub observations_store {
@@ -373,8 +376,6 @@ sub _search_observation_id {
     my $trait_contains;
     my $trait_list;
    
-
-    my $include_timestamp = $include_timestamp;
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
 
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );

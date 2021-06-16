@@ -20,6 +20,8 @@ $field_trial_is_planned_to_be_genotyped
 $field_trial_is_planned_to_cross
 $trial_stock_type
 $trial_stock_count
+$trial_owner
+
 </%args>
 
 <div class="row">
@@ -163,6 +165,18 @@ $trial_stock_count
                     <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
                     <br/><br/>
                     <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
+                </td>
+            </tr>
+
+	    <tr><td><b>Created by</b></td>
+                <td>
+                    <div id="trial_owner">
+% if ($trial_owner) {
+%  print "$trial_owner";
+% } else {
+%  print "<span class='text-danger'>[N/A]</span>";
+% }
+                    </div>
                 </td>
             </tr>
 

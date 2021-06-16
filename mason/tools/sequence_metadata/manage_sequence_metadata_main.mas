@@ -1,0 +1,13 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
+
+<&| /page/info_section.mas, title=>'Query Sequence Metadata', is_subsection=>1, collapsible=>1, collapsed=>0, subtitle=>'View and download sequence metadata' &>
+    <& /tools/sequence_metadata/query_sequence_metadata.mas &>
+</&>
+
+<&| /page/info_section.mas, title=>'Sequence Metadata API', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'Query sequence metadata through an API' &>
+    <& /tools/sequence_metadata/api_sequence_metadata.mas &>
+</&>

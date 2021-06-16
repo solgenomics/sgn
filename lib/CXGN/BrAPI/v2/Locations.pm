@@ -86,40 +86,42 @@ sub search {
 	}
 
 	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema ); #, $location_id);
+	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($locations,$page_size,$page);
+	my @data;
 
 	my @available;
 
 	foreach (@$locations){
 		if ( (%location_ids_arrayref && !exists($location_ids_arrayref{$_->[0]}))) { next; }
 		if ( (%abbreviations_arrayref && !exists($abbreviations_arrayref{$_->[9]}))) { next; }
-        if ( (%country_codes_arrayref && !exists($country_codes_arrayref{$_->[6]}))) { next; }
-        if ( (%country_names_arrayref && !exists($country_names_arrayref{$_->[5]}))) { next; }
-        if ( (%institute_addresses_arrayref && !exists($institute_addresses_arrayref{$_->[10]}))) { next; }
-        # if ( (%institute_names_arrayref && !exists($institute_names_arrayref{$_->[]}))) { next; }
-        if ( (%location_names_arrayref && !exists($location_names_arrayref{$_->[1]}))) { next; }
-        if ( (%location_types_arrayref && !exists($location_types_arrayref{$_->[8]}))) { next; }
-        if ( $altitude_max && $_->[4] > $altitude_max ) { next; } 
-        if ( $altitude_min && $_->[4] < $altitude_min ) { next; }
+    if ( (%country_codes_arrayref && !exists($country_codes_arrayref{$_->[6]}))) { next; }
+    if ( (%country_names_arrayref && !exists($country_names_arrayref{$_->[5]}))) { next; }
+    if ( (%institute_addresses_arrayref && !exists($institute_addresses_arrayref{$_->[10]}))) { next; }
+    # if ( (%institute_names_arrayref && !exists($institute_names_arrayref{$_->[]}))) { next; }
+    if ( (%location_names_arrayref && !exists($location_names_arrayref{$_->[1]}))) { next; }
+    if ( (%location_types_arrayref && !exists($location_types_arrayref{$_->[8]}))) { next; }
+    if ( $altitude_max && $_->[4] > $altitude_max ) { next; } 
+    if ( $altitude_min && $_->[4] < $altitude_min ) { next; }
 
 		# combine referenceID and referenceSource into AND check as used by bi-api filter
 		# won't work with general search but wasn't implemented anyways
 		my $passes_search = 0;
-
 		# if location has external references
 		if ($_->[11]) { #
 			# see if any of the references match search parameters
 			foreach my $reference (@{$_->[11]}) {
 				my $ref_id = $reference->{'referenceID'};
 				my $ref_source = $reference->{'referenceSource'};
-				if (exists($externalreference_ids_arrayref{$ref_id}) && exists($externalreference_sources_arrayref{$ref_source})) {
+				if (exists($externalreference_ids_arrayref{$ref_id}) &&
+						exists($externalreference_sources_arrayref{$ref_source})
+				) {
 					$passes_search = 1;
 				}
 			}
 		}
-
 		if (!$passes_search && %externalreference_ids_arrayref && %externalreference_sources_arrayref) { next; }
-		push @available, $_;
 
+		push @available, $_;
 	}
 
 	$self->get_response(\@available, 1);
@@ -169,13 +171,7 @@ sub get_response {
 			};
 		}
 
-		my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-			bcs_schema => $self->bcs_schema,
-			table_name => 'NaturalDiversity::NdGeolocationprop',
-			base_id_key => 'nd_geolocation_id',
-			base_id => $_->[0]
-		});
-		my $external_references = $references->references_db();
+		my $external_references = $_->[11];
 		push @data, {
 			locationDbId => qq|$_->[0]|,
 			locationType=> $_->[8],
@@ -208,8 +204,8 @@ sub get_response {
 		$pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
 		return CXGN::BrAPI::JSONResponse->return_success(@data[0], $pagination, \@data_files, $status, 'Locations object result constructed');
 	}
-
 }
+
 
 sub store {
 	my $self = shift;
@@ -229,9 +225,9 @@ sub store {
 		my $country_code =  $params->{countryCode} || undef;
 		my $program_id =  $params->{additionalInfo}->{programDbId}  || undef;
 		my $type =  $params->{locationType} || undef;
-		my $geo_coordinates = $params->{coordinates} || undef;
-		my $latitude = $geo_coordinates->[0] || undef;
-		my $longitude = $geo_coordinates->[1] || undef;
+		my $geo_coordinates = $params->{coordinates}->{geometry}->{coordinates} || undef;
+		my $latitude = $geo_coordinates->[1] || undef;
+		my $longitude = $geo_coordinates->[0] || undef;
 		my $altitude  = $geo_coordinates->[2]|| undef;
 		my $noaa_station_id    = $params->{additionalInfo}->{noaaStationId} || undef;
 		my $external_references = $params->{externalReferences};
@@ -291,10 +287,10 @@ sub store {
 			push @location_ids, $store->{'nd_geolocation_id'};
 		}
 	}
-	my %result;
-	my $count = scalar @location_ids;
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
-    return CXGN::BrAPI::JSONResponse->return_success( \%result, $pagination, undef, $self->status(), $count . " Locations were saved.");
+
+	# Retrieve our new locations
+	my $locations = CXGN::Trial::get_all_locations($schema, \@location_ids);
+	return $self->get_response($locations, 1);
 }
 
 1;

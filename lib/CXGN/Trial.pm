@@ -180,13 +180,15 @@ sub get_all_locations {
             }
         }
 
+        my @reference_locations = ($s->nd_geolocation_id());
         my $references = CXGN::BrAPI::v2::ExternalReferences->new({
             bcs_schema => $schema,
-            table_name => 'NaturalDiversity::NdGeolocationprop',
-            base_id_key => 'nd_geolocation_id',
-            base_id => $s->nd_geolocation_id()
+            table_name => 'nd_geolocation',
+            table_id_key => 'nd_geolocation_id',
+            id => \@reference_locations
         });
-        my $external_references = $references->references_db();
+        my $external_references_search = $references->search();
+        my $external_references = $external_references_search->{$s->nd_geolocation_id()};
 
         push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation, $address, $external_references],
     }

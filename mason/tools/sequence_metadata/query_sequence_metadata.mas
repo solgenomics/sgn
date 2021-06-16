@@ -1,0 +1,892 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
+
+<p>Filter the sequence metadata by feature, start, and end position and optionally by the sequence metadata type and/or protocol.</p>
+
+<br />
+<a id="sequence_metadata_anchor"></a>
+
+<!-- START QUERY SECTION -->
+<div id="sequence_metadata_section_query">
+
+    <form class="form-horizontal" id="sequence_metadata_filter_form" name="sequence_metadata_filter_form">
+
+        <h4>Query Range</h4>
+        
+        <!-- Feature -->
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Feature: </label>
+            <div class="col-sm-10">
+                <select class="form-control" id="sequence_metadata_filter_feature" disabled>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Start / End -->
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Start: </label>
+            <div class="col-sm-4">
+                <input class="form-control" id="sequence_metadata_filter_start" type="text" value="">
+            </div>
+            <label class="col-sm-2 control-label">End: </label>
+            <div class="col-sm-4">
+                <input class="form-control" id="sequence_metadata_filter_end" type="text" value="">
+            </div>
+        </div>
+
+        <h4>Date Type &amp; Protocol</h4>
+
+        <!-- Data Type -->
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Type: </label>
+            <div class="col-sm-10">
+                <select class="form-control" id="sequence_metadata_filter_type" multiple disabled>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-sm-2"></div>
+        <div class="col-sm-10">
+            <p><a id="sequence_metadata_filter_type_info_btn" href="#"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;Data Type Info</a></p>
+            <div id="sequence_metadata_filter_type_info" class="" style="display:none">
+                <p>Loading...</p>
+            </div>
+        </div>
+        <br /><br />
+
+        <!-- Protocol -->
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Protocol: </label>
+            <div class="col-sm-10">
+                <select class="form-control" id="sequence_metadata_filter_protocol" multiple disabled>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-sm-2"></div>
+        <div class="col-sm-10">
+            <p><a id="sequence_metadata_filter_protocol_info_btn" href="#"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;Protocol Info</a></p>
+            <div id="sequence_metadata_filter_protocol_info" class="" style="display:none">
+                <p>Loading...</p>
+            </div>
+        </div>
+        <br /><br />
+
+        <h4>Attributes</h4>
+
+        <!-- Score Min / Max -->
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Score: </label>
+            <div class="col-sm-3">
+                <label class="control-label">Protocol</label><br />
+                <select class="form-control" id="sequence_metadata_filter_score_protocol" disabled>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <label class="control-label">Comparison</label><br />
+                <select class="form-control" id="sequence_metadata_filter_score_comparison">
+                    <option value="eq">Equal</option>
+                    <option value="lte">Less Than or Equal</option>
+                    <option value="lt">Less Than</option>
+                    <option value="gte">Greater Than or Equal</option>
+                    <option value="gt">Greater Than</option>
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <label class="control-label">Value</label><br />
+                <input class="form-control" id="sequence_metadata_filter_score_value" type="text" value="">
+            </div>
+            <div class="col-sm-1">
+                <br />
+                <button id="sequence_metadata_filter_score_add" class="btn btn-info">Add</button>
+            </div>
+        </div>
+        <br /><br />
+
+        <!-- Attribute Value -->
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Attribute: </label>
+            <div class="col-sm-3">
+                <label class="control-label">Protocol</label><br />
+                <select class="form-control" id="sequence_metadata_filter_attribute_protocol" disabled>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Key</label><br />
+                <select class="form-control" id="sequence_metadata_filter_attribute_key" disabled>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Comparison</label><br />
+                <select class="form-control" id="sequence_metadata_filter_attribute_comparison">
+                    <option value="con">Contains</option>
+                    <option value="eq">Equal</option>
+                    <option value="lte">Less Than or Equal</option>
+                    <option value="lt">Less Than</option>
+                    <option value="gte">Greater Than or Equal</option>
+                    <option value="gt">Greater Than</option>
+                </select>
+            </div>
+            <div class="col-sm-2">
+                <label class="control-label">Value</label><br />
+                <input class="form-control" id="sequence_metadata_filter_attribute_value" type="text" value="">
+            </div>
+            <div class="col-sm-1">
+                <br />
+                <button id="sequence_metadata_filter_attribute_add" class="btn btn-info">Add</button>
+            </div>
+        </div>
+        <br />
+
+        <!-- Attribute Table -->
+        <div>
+            <p><strong>Attribute Filters:</strong></p>
+            <table id="sequence_metadata_filter_attributes_table" class="table table-striped table-hover">
+                <tr>
+                    <th>Protocol</th>
+                    <th>Attribute</th>
+                    <th>Comparison</th>
+                    <th>Value</th>
+                    <th></th>
+                </tr>
+            </table>
+        </div>
+
+        <br /><br /><br />
+        
+
+        <!-- QUERY -->
+        <div class="center">
+            <button id="sequence_metadata_filter_query" class="btn btn-primary btn-block" style="max-width: 400px; margin: auto">Query</button>
+        </div>
+        <br /><br /><br />
+
+
+    </form>
+
+    <br />
+
+    <!-- Error Message -->
+    <div id="sequence_metadata_filter_error" class="alert alert-danger" role="alert" style="display:none"></div>
+
+    <br />
+
+</div>
+<!-- END QUERY SECTION -->
+
+
+<!-- START RESULTS SECTION -->
+<div id="sequence_metadata_section_results" style="display: none">
+
+    <!-- Query Results -->
+    <table id="sequence_metadata_filter_results" class="display"></table>
+
+    <br /><br />
+
+    <!-- Return -->
+    <div class="center">
+        <button id="sequence_metadata_filter_return" class="btn btn-primary btn-block" style="max-width: 400px; margin: auto">
+            <span class="glyphicon glyphicon-chevron-left">&nbsp;</span>Back to Query
+        </button>
+    </div>
+
+    <br /><br />
+
+</div>
+
+
+
+<!-- JBROWSE CONFIGURATION -->
+<!-- OVERWRITE THIS FILE IN THE INSTANCE-SPECIFIC MASON REPO TO CONFIGURE -->
+<& /tools/sequence_metadata/jbrowse_config_sequence_metadata.mas &>
+
+
+<script type="text/javascript">
+
+var features = [];
+var data_types = [];
+var protocols = [];
+var attribute_filter_count = 0;
+
+jQuery(document).ready(function() {
+
+    // Get the filter features, types, and protocols
+    get_features();
+    get_types();
+    get_protocols();
+
+    // Toggle info boxes
+    jQuery('#sequence_metadata_filter_type_info_btn').click(function() {
+        jQuery('#sequence_metadata_filter_type_info').toggle();
+        return false;
+    });
+    jQuery('#sequence_metadata_filter_protocol_info_btn').click(function() {
+        jQuery('#sequence_metadata_filter_protocol_info').toggle();
+        return false;
+    });
+
+    // Type and Protocol Change Listeners
+    jQuery('#sequence_metadata_filter_type').change(set_protocols).change(set_attribute_protocols);
+    jQuery('#sequence_metadata_filter_protocol').change(set_types).change(set_attribute_protocols);
+
+    // Attribute Protocol Listener
+    jQuery('#sequence_metadata_filter_attribute_protocol').change(set_attribute_keys);
+
+    // Add Score / Attribute Buttons
+    jQuery('#sequence_metadata_filter_score_add').click(function() { add_attribute_filter('score'); return false });
+    jQuery('#sequence_metadata_filter_attribute_add').click(function() { add_attribute_filter('attribute'); return false });
+
+    // Query Data
+    jQuery('#sequence_metadata_filter_query').click(query);
+
+    // Return to Query
+    jQuery('#sequence_metadata_filter_return').click(toggle_sections);
+
+    // Set DataTables Buttons
+    let DT_BUTTONS = [
+        {
+            extend: 'excelHtml5',
+            title: 'sequence_metadata_results',
+            exportOptions: {
+                orthogonal: 'export'
+            }
+        },
+        {
+            extend: 'csvHtml5',
+            title: 'sequence_metadata_results',
+            exportOptions: {
+                orthogonal: 'export'
+            }
+        },
+        {
+            text: 'JSON',
+            action: function() {
+                download(getQueryURL('JSON'), "sequence_metadata.json");
+            }
+        },
+        {
+            text: 'GA4GH',
+            action: function() {
+                download(getQueryURL('GA4GH'), "sequence_metadata_ga4gh.json");
+            }
+        },
+        {
+            text: 'GFF',
+            action: function ( e, dt, button, config ) {
+                download(getQueryURL("gff"), "sequence_metadata.gff");
+            }
+        }
+    ];
+    if ( JBROWSE_CONFIG_SEQUENCE_METADATA && JBROWSE_CONFIG_SEQUENCE_METADATA.enabled ) {
+        DT_BUTTONS.push({
+            text: "<span class='glyphicon glyphicon-new-window'></span>&nbsp;JBrowse",
+            action: function() {
+                window.open(getJBrowseURL(JBROWSE_CONFIG_SEQUENCE_METADATA), '_blank');
+            }
+        });
+    }
+
+    // Init DataTable
+    jQuery('#sequence_metadata_filter_results').DataTable({
+        dom: 'Bfrtip',
+        autoWidth: false,
+        data: [],
+        columns: [
+            { title: "Type", data: "type_name" },
+            { title: "Protocol", data: "nd_protocol_name" },
+            { title: "Feature", data: "feature_name" },
+            { title: "Start", data: "start" },
+            { title: "End", data: "end" },
+            { title: "Score", data: "score" },
+            { 
+                title: "Attributes", 
+                data: "attributes", 
+                render: function(data, type, row) {
+                    let rtn = [];
+                    let sep = type === 'export' ? ';' : '<br />';
+                    if ( data ) {
+                        var keys = Object.keys(data);
+                        keys.sort();
+                        for ( var i=0; i<keys.length; ++i ) {
+                            let key = keys[i];
+                            let value = data[keys[i]];
+                            if ( type === 'export' ) {
+                                rtn.push(key + '=' + value);
+                            }
+                            else {
+                                rtn.push("<strong>" + key + ":</strong>&nbsp;" + value);
+                            }
+                        }
+                    }
+                    return rtn.join(sep);
+                } 
+            }
+        ],
+        buttons: DT_BUTTONS
+    });
+
+});
+
+
+/**
+ * Get the features associated with stored sequence metadata
+ * - populate the options for the feature select box
+ */
+function get_features() {
+    jQuery.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: '/ajax/sequence_metadata/features',
+        success: function(data) {
+            features = data.features;
+            if ( data && data.features ) {
+                let options = "";
+                for ( let i = 0; i < data.features.length; i++ ) {
+                    let f_id = data.features[i].feature_id;
+                    let f_name = data.features[i].feature_name;
+                    let o_name = data.features[i].organism_name;
+                    let f_label = f_name + " (" + o_name + ")";
+                    options += "<option value='" + f_id + "'>" + f_label + "</option>";
+                }
+                jQuery('#sequence_metadata_filter_feature').html(options);
+                jQuery('#sequence_metadata_filter_feature').prop('disabled', false);
+            }
+            else {
+                alert("ERROR: Could not load features!");
+            }
+        },
+        error: function() {
+         alert("ERROR: Could not load features");
+        }
+    });
+}
+
+/**
+ * Get the types associated with stored sequence metadata
+ * - populate the options for the type select box
+ */
+function get_types() {
+    jQuery.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: '/ajax/sequence_metadata/types',
+        success: function(data) {
+            if ( data && data.types ) {
+                data_types = data.types;
+                
+                // Set Select Options
+                set_types();
+
+                // Build Info Table
+                let info = "<table class='table table-striped'><thead><tr><th>Data Type</th><th>Definition</th></tr></thead>";
+                info += "<tbody>";
+                for ( let i = 0; i < data.types.length; i++ ) {
+                    info += "<tr><td>" + data.types[i].type_name + "</td><td>" + data.types[i].type_definition + "</td></tr>";
+                }
+                info += "</tbody>";
+                info += "</table>";
+                jQuery('#sequence_metadata_filter_type_info').html(info);
+
+            }
+            else {
+                alert("ERROR: Could not load types!");
+            }
+        },
+        error: function() {
+         alert("ERROR: Could not load types");
+        }
+    });
+}
+
+/**
+ * Set the options for the Data Types select box
+ */
+function set_types() {
+    let sel_types = jQuery('#sequence_metadata_filter_type').val();
+    let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
+
+    let options = "";
+    for ( let i = 0; i < data_types.length; i++ ) {
+        let t_id = data_types[i].type_id;
+        let t_name = data_types[i].type_name;
+
+        // Reselect previosuly selected items
+        let selected = false;
+        if ( sel_types ) {
+            for ( let j = 0; j < sel_types.length; j++ ) {
+                if ( parseInt(sel_types[j]) === parseInt(t_id) ) {
+                    selected = true;
+                }
+            }
+        }
+
+        // Disable data types based on selected protocols
+        let disabled = false;
+        if ( sel_protocols && sel_protocols.length > 0 ) {
+            disabled = true;
+            for ( let j = 0; j < protocols.length; j++ ) {
+                for ( let k = 0; k < sel_protocols.length; k++ ) {
+                    if ( parseInt(protocols[j].nd_protocol_id) === parseInt(sel_protocols[k]) ) {
+                        if ( parseInt(protocols[j].nd_protocol_properties.sequence_metadata_type_id) === parseInt(t_id) ) {
+                            disabled = false;
+                        }
+                    }
+                }
+            }
+        }
+        let d = disabled ? 'disabled' : '';
+        let s = disabled ? '' : selected ? 'selected' : '';
+        options += "<option value='" + t_id + "' " + d + " " + s + ">" + t_name + "</option>";
+    }
+
+    jQuery('#sequence_metadata_filter_type').html(options);
+    jQuery('#sequence_metadata_filter_type').prop('disabled', false);
+}
+
+/**
+ * Get the protocols associated with stored sequence metadata
+ * - populate the options for the protocol select box
+ */
+function get_protocols() {
+    jQuery.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: '/ajax/sequence_metadata/protocols',
+        success: function(data) {
+            if ( data && data.protocols ) {
+                protocols = data.protocols;
+
+                // Set Select Options
+                set_protocols();
+                set_attribute_protocols();
+
+                // Build Info Table
+                let info = "<table class='table table-striped'><thead><tr><th>Protocol</th><th>Description</th><th>Properties</th></tr></thead>";
+                info += "<tbody>";
+                for ( let i = 0; i < data.protocols.length; i++ ) {
+                    let props = "<strong>Data Type:</strong>&nbsp;" + data.protocols[i].nd_protocol_properties.sequence_metadata_type + "<br />";
+                    props += "<strong>Reference Genome:</strong>&nbsp;" + data.protocols[i].nd_protocol_properties.reference_genome + "<br />";
+                    props += "<strong>Score:</strong>&nbsp;" + data.protocols[i].nd_protocol_properties.score_description + "<br />";
+                    props += "<strong>Attributes:</strong><br />";
+                    let attributes = [];
+                    var keys = Object.keys(data.protocols[i].nd_protocol_properties.attribute_descriptions);
+                    keys.sort();
+                    for ( let j = 0; j < keys.length; j++ ) {
+                        let key = keys[j];
+                        let description = data.protocols[i].nd_protocol_properties.attribute_descriptions[key];
+                        attributes.push("&nbsp;&nbsp;<strong>" + key + ":</strong>&nbsp;" + description);
+                    }
+                    props += attributes.join('<br />');
+
+                    info += "<tr>";
+                    info += "<td>" + data.protocols[i].nd_protocol_name + "</td>";
+                    info += "<td>" + data.protocols[i].nd_protocol_description + "</td>";
+                    info += "<td>" + props + "</td>";
+                    info += "</tr>";
+                }
+                info += "</tbody>";
+                info += "</table>";
+                jQuery('#sequence_metadata_filter_protocol_info').html(info);
+
+            }
+            else {
+                alert("ERROR: Could not load protocols!");
+            }
+        },
+        error: function() {
+         alert("ERROR: Could not load protocols");
+        }
+    });
+}
+
+/**
+ * Set the options for the Protocol select box
+ */
+function set_protocols() {
+    let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
+    let sel_types = jQuery('#sequence_metadata_filter_type').val();
+
+    let options = "";
+    for ( let i = 0; i < protocols.length; i++ ) {
+        let p_id = protocols[i].nd_protocol_id;
+        let p_name = protocols[i].nd_protocol_name;
+        let p_type_id = protocols[i].nd_protocol_properties.sequence_metadata_type_id;
+        
+        // Reselect previosuly selected items
+        let selected = false;
+        if ( sel_protocols ) {
+            for ( let j = 0; j < sel_protocols.length; j++ ) {
+                if ( parseInt(sel_protocols[j]) === parseInt(p_id) ) {
+                    selected = true;
+                }
+            }
+        }
+
+        // Disable protocols based on selected data types
+        let disabled = false;
+        if ( sel_types && sel_types.length > 0 ) {
+            disabled = true;
+            for ( let j = 0; j < data_types.length; j++ ) {
+                for ( let k = 0; k < sel_types.length; k++ ) {
+                    if ( parseInt(data_types[j].type_id) === parseInt(sel_types[k]) ) {
+                        if ( parseInt(data_types[j].type_id) === parseInt(p_type_id) ) {
+                            disabled = false;
+                        }
+                    }
+                }
+            }
+        }
+        let d = disabled ? 'disabled' : '';
+        let s = disabled ? '' : selected ? 'selected' : '';
+        options += "<option value='" + p_id + "' " + d + " " + s + ">" + p_name + "</option>";
+    }
+
+    // Set protocol selection options
+    jQuery('#sequence_metadata_filter_protocol').html(options);
+    jQuery('#sequence_metadata_filter_protocol').prop('disabled', false);
+}
+
+
+/**
+ * Set the protocol lists for the score and attribute select menus
+ */
+function set_attribute_protocols() {
+    let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
+    let sel_types = jQuery('#sequence_metadata_filter_type').val();
+
+    let options = "";
+    for ( let i = 0; i < protocols.length; i++ ) {
+        let p_id = protocols[i].nd_protocol_id;
+        let p_name = protocols[i].nd_protocol_name;
+        let p_type_id = protocols[i].nd_protocol_properties.sequence_metadata_type_id;
+
+        // Only enable selected protocols or selected data types
+        let enabled = true;
+        if ( sel_protocols ) {
+            enabled = false;
+            for ( let j = 0; j < sel_protocols.length; j++ ) {
+                if ( parseInt(sel_protocols[j]) === parseInt(p_id) ) {
+                    enabled = true;
+                }
+            }
+        }
+        else if ( sel_types ) {
+            enabled = false;
+            for ( let j = 0; j < sel_types.length; j++ ) {
+                if ( parseInt(sel_types[j]) === parseInt(p_type_id) ) {
+                    enabled = true;
+                }
+            }
+        }
+
+        let d = !enabled ? 'disabled' : '';
+        options += "<option value='" + p_id + "' " + d + ">" + p_name + "</option>";
+    }
+
+    // Set protocol selection options
+    jQuery('#sequence_metadata_filter_score_protocol').html(options);
+    jQuery('#sequence_metadata_filter_score_protocol').prop('disabled', false);
+    jQuery('#sequence_metadata_filter_attribute_protocol').html(options);
+    jQuery('#sequence_metadata_filter_attribute_protocol').prop('disabled', false);
+
+    // Update the attribute keys
+    set_attribute_keys();
+}
+
+
+/**
+ * Set the attribute keys for the currently selected attribute protocol
+ */
+function set_attribute_keys() {
+    let sel_attribute_protocol = jQuery('#sequence_metadata_filter_attribute_protocol').val();
+    
+    let options = "";
+    for ( let i = 0; i < protocols.length; i++ ) {
+        if ( parseInt(sel_attribute_protocol) === parseInt(protocols[i].nd_protocol_id) ) {
+            let attrs = Object.keys(protocols[i].nd_protocol_properties.attribute_descriptions);
+            for ( let j = 0; j < attrs.length; j++ ) {
+                options += "<option val='" + attrs[j] + "'>" + attrs[j] + "</option>";
+            }
+        }
+    }
+
+    jQuery('#sequence_metadata_filter_attribute_key').html(options);
+    jQuery('#sequence_metadata_filter_attribute_key').prop('disabled', false);
+}
+
+
+/**
+ * Add the specified attribute to the list of included attribute filters
+ * @param {String} type Attribute type ('score' or 'attribute')
+ */
+function add_attribute_filter(type) {
+    let protocol = jQuery('#sequence_metadata_filter_' + type + '_protocol').val();
+    let protocol_name = jQuery('#sequence_metadata_filter_' + type + '_protocol option:selected').text();
+    let attribute = type === 'score' ? 'score' : jQuery('#sequence_metadata_filter_attribute_key').val();
+    let comp = jQuery('#sequence_metadata_filter_' + type + '_comparison').val();
+    let comp_name = jQuery('#sequence_metadata_filter_' + type + '_comparison option:selected').text();
+    let value = jQuery('#sequence_metadata_filter_' + type + '_value').val();
+    let attribute_param = [attribute, protocol, comp, value].join('|');
+
+    if ( value !== '' ) {
+        attribute_filter_count++;
+        let html = "<tr id='sequence_metadata_filter_attributes_table_row_" + attribute_filter_count + "'>";
+        html += "<td>" + protocol_name + "</td>";
+        html += "<td>" + attribute + "</td>";
+        html += "<td>" + comp_name + "</td>";
+        html += "<td>" + value + "</td>";
+        html += "<td style='text-align: right'>";
+        html += "<button id='sequence_metadata_filter_attributes_table_remove_" + attribute_filter_count + "' data-row='" + attribute_filter_count + "' class='btn btn-danger btn-xs'><span class='glyphicon glyphicon-remove'></span></button>";
+        html += "<input type='hidden' name='sequence_metadata_filter_attribute_" + attribute_filter_count + "' id='sequence_metadata_filter_attribute_" + attribute_filter_count + "' value='" + attribute_param + "'>";
+        html += "</td>";
+        html += "</tr>";
+
+        jQuery('#sequence_metadata_filter_' + type + '_value').val("");
+        jQuery('#sequence_metadata_filter_attributes_table').append(html);
+        jQuery('#sequence_metadata_filter_attributes_table_remove_' + attribute_filter_count).click(function() {
+            let row = jQuery(this).attr('data-row');
+            jQuery('#sequence_metadata_filter_attributes_table_row_' + row).remove();
+        });
+    }
+}
+
+
+/**
+ * Build the Query URL using the current filter properties
+ * @param {string} [format] Output format (default: JSON)
+ * @param {int[]} [nd_protocol_id] Protocol ID to use (instead of selected protocols)
+ * @returns {string} relative URL to query endpoint
+ */
+function getQueryURL(format, nd_protocol_id) {
+    let feature_id = jQuery('#sequence_metadata_filter_feature option:selected').val();
+    let start = jQuery('#sequence_metadata_filter_start').val();
+    let end = jQuery('#sequence_metadata_filter_end').val();
+    let type_ids = jQuery('#sequence_metadata_filter_type').val();
+    let sel_nd_protocol_ids = jQuery('#sequence_metadata_filter_protocol').val();
+
+    let params = {
+        feature_id: feature_id,
+        format: format ? format : 'JSON'
+    }
+    if ( start && start !== '' ) params.start = start;
+    if ( end && end !== '' ) params.end = end;
+    if ( type_ids && type_ids.length > 0 ) params.type_id = type_ids;
+    if ( nd_protocol_id ) {
+        params.nd_protocol_id = nd_protocol_id;
+    }
+    else {
+        if ( sel_nd_protocol_ids && sel_nd_protocol_ids.length > 0 ) params.nd_protocol_id = sel_nd_protocol_ids;
+    }
+    let attributes = [];
+    for ( let i = 1; i <= attribute_filter_count; i++ ) {
+        let attr = jQuery('#sequence_metadata_filter_attribute_' + i).val();
+        if ( attr && attr !== '' ) {
+            attributes.push(attr);
+        }
+    }
+    if ( attributes.length > 0 ) params.attribute = attributes.join(',');
+
+    let q = new URLSearchParams(params).toString();
+    let url = '/ajax/sequence_metadata/query?' + q;
+
+    return url;
+}
+
+
+/**
+ * Perform a sequence metadata query
+ * - Required filter params: feature_id, start, end
+ * - Optional filter params: type_id, nd_protocol_id
+ * - Get the query results and send to handle_query_results to parse
+ */
+function query() {
+    hide_error();
+    jQuery('#sequence_metadata_filter_query').html('Querying...');
+    jQuery('#sequence_metadata_filter_query').attr('disabled', true);
+
+    jQuery.ajax({
+        type: 'GET',
+        url: getQueryURL('JSON'),
+        dataType: 'json',
+        success: handle_query_results,
+        error: function() {
+            alert("ERROR: Could query database!");
+            jQuery('#sequence_metadata_filter_query').html('Query');
+            jQuery('#sequence_metadata_filter_query').attr('disabled', false);
+        }
+    });
+
+    return false;
+}
+
+
+/**
+ * Parse the query results (in JSON format)
+ * - Update the rows in the DataTable
+ * @param {Object} response          JSON response from the query endpoint
+ *                 response.error    message of error encountered by server
+ *                 response.results array of sequence metadata objects
+ */
+function handle_query_results(response) {
+    let dt = jQuery('#sequence_metadata_filter_results').DataTable();
+    dt.clear();
+    if ( response && response.error ) {
+        display_error(response.error);
+    }
+    else if ( response && response.results && response.results.length > 0) {
+        dt.rows.add(response.results);
+        toggle_sections();
+    }
+    else {
+        display_error("No results found - try modifying your filter criteria");
+    }
+    dt.draw();
+
+    jQuery('#sequence_metadata_filter_query').html('Query');
+    jQuery('#sequence_metadata_filter_query').attr('disabled', false);
+}
+
+
+
+/**
+ * Build a URL to view the seleceted data in jBrowse
+ * @params {Object} config JBrowse configuration properties
+ * @returns {string} url to jbrowse with remote tracks added
+ */
+function getJBrowseURL(config) {
+    // Get Selected Types
+    let sel_types = jQuery('#sequence_metadata_filter_type').val();
+    
+    // Get Selected Protocols (or all enabled protocols, if none selected)
+    let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
+    if ( !sel_protocols ) {
+        sel_protocols = [];
+        for ( let i = 0; i < protocols.length; i++ ) {
+            if ( sel_types && sel_types.length > 0 ) {
+                for ( let j = 0; j < sel_types.length; j++ ) {
+                    if ( parseInt(protocols[i].nd_protocol_properties.sequence_metadata_type_id) === parseInt(sel_types[j]) ) {
+                        sel_protocols.push(protocols[i].nd_protocol_id);
+                    }
+                }
+            }
+            else {
+                sel_protocols.push(protocols[i].nd_protocol_id);
+            }
+        }
+    }
+
+    // Get Selected Protocol names (for track labels)
+    let sel_protocol_names = {};
+    for ( let i = 0; i < sel_protocols.length; i++ ) {
+        for ( let j = 0; j < protocols.length; j++ ) {
+            if ( parseInt(sel_protocols[i]) === parseInt(protocols[j].nd_protocol_id) ) {
+                sel_protocol_names[sel_protocols[i].toString()] = protocols[j].nd_protocol_name.replaceAll(" ", "&nbsp;");
+            }
+        }
+    }
+    
+    // Get Selected Feature (for jBrowse chromosome name)
+    let sel_feature = jQuery('#sequence_metadata_filter_feature').val();
+    let sel_feature_name = '';
+    for ( let i = 0; i < features.length; i++ ) {
+        if ( parseInt(features[i].feature_id) === parseInt(sel_feature) ) {
+            sel_feature_name = features[i].feature_name;
+        }
+    }
+
+    // Get Selected start and end for range
+    let start = jQuery('#sequence_metadata_filter_start').val();
+    let end = jQuery('#sequence_metadata_filter_end').val();
+    let range = '';
+    if ( start && start !== '' && end && end !== '' ) {
+        range = ":" + start + ".." + end
+    }
+
+    // Build JBrowse Stores & Tracks
+    let stores = {};
+    let tracks = [];
+    for ( let i = 0; i < sel_protocols.length; i++ ) {
+        stores["url" + i] = {
+            type: "JBrowse/Store/SeqFeature/GFF3",
+            urlTemplate: window.location.protocol + "//" + window.location.host + getQueryURL("gff", sel_protocols[i])
+        }
+        tracks.push({
+            label: sel_protocol_names[sel_protocols[i].toString()],
+            type: "JBrowse/View/Track/CanvasFeatures",
+            store: "url" + i
+        });            
+    }
+
+    // Build URL
+    let base_url = config.base_url;
+    let params = {
+        data: config.data_dir,
+        loc: config.location_name(sel_feature_name) + range,
+        tracks: config.tracks.concat(Object.values(sel_protocol_names)).join(','),
+        addStores: JSON.stringify(stores),
+        addTracks: JSON.stringify(tracks)
+    }
+    let q = new URLSearchParams(params).toString();
+    let url = base_url + '?' + q;
+
+    return url;
+}
+
+
+/**
+ * Toggle the display of the query and results sections
+ */
+function toggle_sections() {
+    jQuery("#sequence_metadata_section_query").toggle();
+    jQuery("#sequence_metadata_section_results").toggle();
+    let anchor = jQuery('#sequence_metadata_anchor');
+    jQuery('html,body').animate({scrollTop: anchor.offset().top-150}, 'fast');
+}
+
+/**
+ * Display an error message
+ * @param {string} message The message to display (undefined to clear the message)
+ */
+function display_error(message) {
+    jQuery('#sequence_metadata_filter_error').html(message ? message : "");
+    jQuery('#sequence_metadata_filter_error').css('display', message ? 'block' : 'none');
+}
+
+/**
+ * Clear and hide the error message alert box
+ */
+function hide_error() {
+    display_error();
+}
+
+/**
+ * Prompt a download of the specified url with the given file name
+ * @param {String} url URL to download
+ * @param {String} name Name to give the downloaded file
+ */
+function download(url, name) {
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+</script>
+
+
+<style>
+    select option:disabled {
+        font-weight: 200;
+        font-style: italic;
+        color: #DCDCDC;
+    }
+</style>

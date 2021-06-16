@@ -284,18 +284,6 @@ has 'synonyms' => (
 has 'external_references' => (
 	isa => 'Maybe[CXGN::BrAPI::v2::ExternalReferences]',
 	is  => 'rw',
-	lazy => 1,
-	default => sub {
-		my $self = shift;
-		if (defined($self->dbxref_id)) {
-			return CXGN::BrAPI::v2::ExternalReferences->new({
-				bcs_schema => $self->bcs_schema,
-				table_name => 'Cv::Dbxrefprop',
-				base_id_key => 'dbxref_id',
-				base_id => $self->dbxref_id
-			});
-		} else {return undef;}
-	}
 );
 
 has 'method' => (
@@ -480,20 +468,15 @@ sub store {
 		}
 
 		# save scale properties
-		try {
-			$self->scale->{cvterm_id} = $new_term->cvterm_id;
-			$self->scale->store();
-			$self->method->{cvterm_id} = $new_term->cvterm_id;
-			$self->method->store();
-			$self->external_references->{base_id} = $new_term->dbxref_id;
-			$self->external_references->store();
-		} catch {
-			if ($_->isa('CXGN::BrAPI::Exceptions::Exception')){
-				$_->throw();
-			} else {
-				CXGN::BrAPI::Exceptions::ServerException->throw({message => $_->{message} || 'Unknown error has occurred.'});
-			}
-		};
+		$self->scale->{cvterm_id} = $new_term->cvterm_id;
+		$self->scale->store();
+		$self->method->{cvterm_id} = $new_term->cvterm_id;
+		$self->method->store();
+		if ($self->external_references) {
+			$self->external_references->{id} = $new_term->cvterm_id;
+			my $result = $self->external_references->store();
+			$self->external_references->{id} = [$new_term->cvterm_id];
+		}
 
 	};
 
@@ -535,21 +518,15 @@ sub update {
 		}
 
 		# update scale properties
-		try {
-			$self->scale->{cvterm_id} = $cvterm_id;
-			$self->scale->store();
-			$self->method->{cvterm_id} = $cvterm_id;
-			$self->method->store();
-			$self->external_references->{base_id} = $self->dbxref_id;
+		$self->scale->{cvterm_id} = $cvterm_id;
+		$self->scale->store();
+		$self->method->{cvterm_id} = $cvterm_id;
+		$self->method->store();
+		if ($self->external_references) {
+			$self->external_references->{id} = $cvterm_id;
 			$self->external_references->store();
-		} catch {
-			if ($_->isa('CXGN::BrAPI::Exceptions::Exception')){
-				$_->throw();
-			} else {
-				if (!defined($_->message)) { warn $_; }
-				CXGN::BrAPI::Exceptions::ServerException->throw({message => $_->{message} || 'Unknown error has occurred.'});
-			}
-		};
+			$self->external_references->{id} = [ $cvterm_id ];
+		}
 	});
 
 	# Get the variable

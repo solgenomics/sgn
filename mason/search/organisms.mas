@@ -60,6 +60,9 @@ div.paginate_nav {
 % if( $results ) {
 %   my $pager = $results->pager;
 
+<& /util/import_javascript.mas, classes => [ 'jquery' ] &>
+  
+
   <&| /page/info_section.mas, title    => 'Search Results',
                               subtitle => 'Results '
                                           .$pager->first
@@ -110,6 +113,19 @@ div.paginate_nav {
 </center>
 
 </div>
+
+<script>
+  
+   $(window).ready( function() {
+    $('#organism_search_form input[name=species]').autocomplete( {
+      source: '/organism/autocomplete'
+    });
+
+  });
+
+</script>
+
+
 
 <%init>
   use Number::Format;

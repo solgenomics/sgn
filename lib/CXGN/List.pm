@@ -100,7 +100,9 @@ sub all_types {
     $h->execute();
     my @all_types = ();
     while (my ($id, $name) = $h->fetchrow_array()) {
-	push @all_types, [ $id, $name ];
+        if ($name ne 'catalog_items') {
+            push @all_types, [ $id, $name ];
+        }
     }
     return \@all_types;
 

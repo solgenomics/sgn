@@ -96,10 +96,10 @@ jQuery(document).ready(function ($) {
                     
                     brapi_order = response.order;
                     if (order_info.full_order) {
-                        submit_order_to_facility(brapi_order,order_info.facility_id,order_info.plate_id);
+                        submit_order_to_facility(brapi_order,order_info.facility_id,order_info.plate_id,store_facility_order);
                     }
                     else {
-                        submit_plate_to_facility(brapi_order,order_info.facility_id,order_info.plate_id);
+                        submit_plate_to_facility(brapi_order,order_info.facility_id,order_info.plate_id,store_facility_order);
                     }
                 }
             },
@@ -110,7 +110,7 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    function submit_order_to_facility(brapi_plate_data,facility,plate_id) {
+    function submit_order_to_facility(brapi_plate_data,facility,plate_id,store_order) {
 
         var auth_data = new Object();
         auth_data = get_genotyping_facility_credentials();
@@ -145,7 +145,7 @@ jQuery(document).ready(function ($) {
                         order = response.result;
                         alert("Successfully!. Plate submitted to facility.");
 
-                        store_facility_order(order,parseInt(plate_id));
+                        store_order(order,parseInt(plate_id));
 
                         Workflow.complete('#submit_plate_btn');
                         Workflow.complete('#continue_submission_btn');
@@ -165,7 +165,7 @@ jQuery(document).ready(function ($) {
         }
     }
 
-    function submit_plate_to_facility(brapi_plate_data,facility,plate_id) {
+    function submit_plate_to_facility(brapi_plate_data,facility,plate_id,store_submission) {
 
         var auth_data = new Object();
         auth_data = get_genotyping_facility_credentials();
@@ -195,11 +195,14 @@ jQuery(document).ready(function ($) {
                 success: function(response) {
                     const submissionId = ((response || {}).result || {}).submissionId;
                     if (submissionId) {
-                        submission = response.result;
+                        // submission =  response.result;
+                        submission = (response || {}).result || {};
                         jQuery('#submission_lbl').html(submissionId);
                         alert("Successfully!. Plate submitted to facility.");
+                        store_submission(submission,parseInt(plate_id));
                         Workflow.complete('#submit_plate_btn');
                         document.getElementById("facility_href").href = auth_data.host + "/order.pl"; 
+                        
                     }
                     else {
                         alert(response.metadata.status);
@@ -231,8 +234,8 @@ jQuery(document).ready(function ($) {
                     const orderId = response.order_id;
                     alert('Order stored successfully.');
                      $('#order_lbl').text(orderId);
-                    Workflow.focus("#plates_to_facilities_workflow", -1); //Go to success page
-                    Workflow.check_complete("#plates_to_facilities_workflow");
+                    // Workflow.focus("#plates_to_facilities_workflow", -1); //Go to success page
+                    // Workflow.check_complete("#plates_to_facilities_workflow");
                 }
             },
             error: function(response) {
@@ -316,6 +319,7 @@ jQuery(document).ready(function ($) {
 
     function get_facility_order_status(){
         var order_id = document.getElementById('genotyping_vendor_order_id_tab').innerHTML;
+        var submission_id = document.getElementById('genotyping_vendor_submission_id_tab').innerHTML;
         var facility = document.getElementById('genotyping_facility_tab').innerHTML;
         var status;
 
@@ -358,6 +362,29 @@ jQuery(document).ready(function ($) {
 
 
             }
+        } else {
+            if(submission_id){
+                var url = auth_data.host + '/brapi/v1/vendor/orders?submissionId=' + submission_id;
+
+                jQuery.ajax({
+                    url: url,
+                    type: 'GET',
+                    headers: {"Authorization": 'Bearer ' + access_token },
+                    success: function(response) {
+                        var gdf_order = (((response || {}).result || {}).data || {})[0];
+                        const orderId = (gdf_order|| {}).orderId;
+                        if(orderId){
+                            store_facility_order(gdf_order,parseInt(plate_id));
+                        }
+                        else{
+                            alert("Something went wrong! Could not get order from submission.");
+                        }
+                    },
+                    error: function(response) {
+                        alert('Something went wrong!. Complete your order clicking the link.');
+                    }
+                });
+            }
         }
         return status;
     }
@@ -393,46 +420,52 @@ jQuery(document).ready(function ($) {
         var plate_id = document.getElementById('plate_id').innerHTML;
         var facility = jQuery('#genotyping_facility').html();
 
-        var auth_data = new Object();
-        auth_data = get_genotyping_facility_credentials();
+        // var auth_data = new Object();
+        // auth_data = get_genotyping_facility_credentials();
 
-        if (auth_data.error) {
-            alert("Genotyping server credentials are not available. Stop.");
-            return;
-        }
+        // if (auth_data.error) {
+        //     alert("Genotyping server credentials are not available. Stop.");
+        //     return;
+        // }
 
-        var access_token;
-        if (auth_data.token){
-            access_token = auth_data.token;
-        } else {
-            access_token = genotyping_facility_login(auth_data);
-        }
+        // var access_token;
+        // if (auth_data.token){
+        //     access_token = auth_data.token;
+        // } else {
+        //     access_token = genotyping_facility_login(auth_data);
+        // }
 
-        if (access_token) {
-            auth_data.token = access_token;
-        }
+        // if (access_token) {
+        //     auth_data.token = access_token;
+        // }
 
         if(submission_id){
-            var url = auth_data.host + '/brapi/v1/vendor/orders?submissionId=' + submission_id;
+            Workflow.focus("#plates_to_facilities_workflow", -1); //Go to success page
+            Workflow.check_complete("#plates_to_facilities_workflow");
 
-            jQuery.ajax({
-                url: url,
-                type: 'GET',
-                headers: {"Authorization": 'Bearer ' + access_token },
-                success: function(response) {
-                    var gdf_order = (((response || {}).result || {}).data || {})[0];
-                    const orderId = (gdf_order|| {}).orderId;
-                    if(orderId){
-                        store_facility_order(gdf_order,parseInt(plate_id));
-                    }
-                    else{
-                        alert("Something went wrong! Could not get order from submission.");
-                    }
-                },
-                error: function(response) {
-                    alert('Something went wrong!. Complete your order clicking the link.');
-                }
-            });
+        //     var submission =  { "submissionId" :  submission_id }; 
+        //     store_facility_order(submission,parseInt(plate_id));
+
+            // var url = auth_data.host + '/brapi/v1/vendor/orders?submissionId=' + submission_id;
+
+            // jQuery.ajax({
+            //     url: url,
+            //     type: 'GET',
+            //     headers: {"Authorization": 'Bearer ' + access_token },
+            //     success: function(response) {
+            //         var gdf_order = (((response || {}).result || {}).data || {})[0];
+            //         const orderId = (gdf_order|| {}).orderId;
+            //         if(orderId){
+            //             store_facility_order(gdf_order,parseInt(plate_id));
+            //         }
+            //         else{
+            //             alert("Something went wrong! Could not get order from submission.");
+            //         }
+            //     },
+            //     error: function(response) {
+            //         alert('Something went wrong!. Complete your order clicking the link.');
+            //     }
+            // });
         }
 
     });
@@ -484,7 +517,8 @@ jQuery(document).ready(function ($) {
 
     jQuery('#genotyping_facilities_section_onswitch').click( function() {
         var order_id = document.getElementById('genotyping_vendor_order_id_tab').innerHTML;
-        if(order_id){
+        var submission_id = document.getElementById('genotyping_vendor_submission_id_tab').innerHTML;
+        if(order_id || submission_id){
             jQuery('#genotyping_facility_submitted_tab').html("yes");
             jQuery('#submit_plate_link').attr("disabled", true);
             get_facility_order_status();

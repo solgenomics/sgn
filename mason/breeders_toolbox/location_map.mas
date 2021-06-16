@@ -324,7 +324,7 @@ $user_id => undef
             </div>
         </div>
         <div class="form-group">
-            <label class="col-sm-6 control-label">Nearest NOAA Weather Station ID: (<a href="https://www.ncdc.noaa.gov/cdo-web/search" target="_blank">Search Here</a>)</label>
+            <label class="col-sm-6 control-label">Nearest NOAA Weather Station ID: (<a href="https://www.ncdc.noaa.gov/cdo-web/datatools/findstation" target="_blank">Search Here</a>)</label>
             <div class="col-sm-6">
                 <input class="form-control" name="location_noaa_station_id" id="location_noaa_station_id" type="text" placeholder="e.g. GHCND:USC00300331"/>
             </div>
@@ -404,10 +404,15 @@ jQuery(document).ready(function() {
             success: function(response) {
                 if (response.error) { alert(response.error); }
                 else {
-                    if (noaa_station_id != '') {
+                    var token = '<% $c->config->{noaa_ncdc_access_token} %>';
+                    if (noaa_station_id == '') {
+                      // do nothing
+                    } else if (token == 'NULL') {
+                      alert(`Configuration variable 'noaa_ncdc_access_token' is undefined. Data from station `+noaa_station_id+` can't be accessed without a token.\r\nPlease visit https://www.ncdc.noaa.gov/cdo-web/token to generate a valid access token, then include the token in sgn_local.conf`);
+                    } else {
                         $.ajax({
                             url:'https://www.ncdc.noaa.gov/cdo-web/api/v2/stations/'+noaa_station_id,
-                            headers:{ token:'<% $c->config->{noaa_ncdc_access_token} %>' },
+                            headers:{ token: token },
                             success: function(response) {
                                 console.log(response);
                                 if (response.name) {
@@ -430,7 +435,6 @@ jQuery(document).ready(function() {
             error: function() { alert('An error occurred while storing the location details. Please try again later.'); }
         });
    });
-
 });
 
 function initialize_map (id, locationJSON, table) {

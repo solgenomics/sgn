@@ -49,7 +49,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial::TrialLayout;
 use CXGN::Calendar;
-use JSON;
+use JSON::XS;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -303,10 +303,10 @@ sub search {
         my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
         my $synonyms = $synonym_hash_lookup{$germplasm_uniquename};
         my $location_name = $location_id ? $location_id_lookup{$location_id} : '';
-        my $observations = decode_json $observations;
-        my $treatments = decode_json $treatments;
-        my $available_germplasm_seedlots = decode_json $available_germplasm_seedlots;
-        my $seedlot_transaction = $seedlot_transaction ? decode_json $seedlot_transaction : {};
+        my $observations = JSON::XS->new->decode($observations);
+        my $treatments = JSON::XS->new->decode($treatments);
+        my $available_germplasm_seedlots = JSON::XS->new->decode($available_germplasm_seedlots);
+        my $seedlot_transaction = $seedlot_transaction ? JSON::XS->new->decode($seedlot_transaction) : {};
 
         my %ordered_observations;
         foreach (@$observations){

@@ -39,15 +39,20 @@ sub get_breeding_programs {
     my @projects;
     while (my $row = $rs->next()) {
 
+        my @project_array = ($row->project_id);
         my $references = CXGN::BrAPI::v2::ExternalReferences->new({
             bcs_schema => $self->schema,
-            table_name => 'Project::Projectprop',
-            base_id_key => 'project_id',
-            base_id => $row->project_id
+            table_name => 'project',
+            table_id_key => 'project_id',
+            id => \@project_array
         });
-        my $external_references = $references->references_db();
+        my $external_references = $references->search();
+        my @external_references_array;
+        foreach my $values (values %{$external_references}) {
+            push @external_references_array, $values;
+        }
 
-	    push @projects, [ $row->project_id, $row->name, $row->description, $external_references ];
+	    push @projects, [ $row->project_id, $row->name, $row->description, @external_references_array ];
     }
 
     return \@projects;
@@ -499,9 +504,9 @@ sub new_breeding_program {
             my $references = CXGN::BrAPI::v2::ExternalReferences->new({
                 bcs_schema          => $self->schema,
                 external_references => $external_references,
-                table_name          => 'Project::Projectprop',
-                base_id_key         => 'project_id',
-                base_id             => $project_id
+                table_name          => 'project',
+                table_id_key         => 'project_id',
+                id             => $project_id
             });
 
             $references->store();
@@ -522,6 +527,7 @@ sub new_breeding_program {
     };
 
     if ($transaction_error) {
+        warn $transaction_error;
         return {error => "An error occurred while generating a new breeding program."}
     }
 

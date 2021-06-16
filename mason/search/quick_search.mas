@@ -29,27 +29,39 @@
 % }
 % if( @$xrefs ) {
   <& /sitefeatures/mixed/xref_set/link.mas, xrefs => $xrefs &>
-
-  <hr style="border: 0; border-bottom: 1px solid #aaa; width: 90%; margin: 1.5em auto 1.2em auto"  />
+    <hr style="border: 0; border-bottom: 1px solid #aaa; width: 90%; margin: 1.5em auto 1.2em auto"  />
 % }
 
   <div>
     <dl>
-    <dt>Identifiers</dt>
-    <dd>
-      <div style="float: left; width: 50%">
-        <% $search{clone} %>
-        <% $search{est} %>
-      </div>
-      <div style="float: right; width: 50%">
-        <% $search{unigene} %>
-        <% $search{microarray} %>
-      </div>
-      <div style="clear: both; margin-bottom: -1.7em">&nbsp;</div>
-    </dd>
+      <dt>Identifiers - Breeding Data</dt>
+      <dd>
+	<div style="float: left; width: 50%">
+	  <% $search{accessions} %>
+	  <% $search{populations} %>
+	  <% $search{trials} %>
+	</div>
+	<div style="float: right; width: 50%">
+	  <% $search{traits} %>
+	  <% $search{locations} %>
+	  <% $search{breeding_programs} %>
+	</div>
+	<div style="clear: both;">&nbsp;</div>
+      </dd>
+      <dt>Identifiers - Genomic Data</dt>
+      <dd >
+	<div style="float: left; width: 50%">
+          <% $search{clone} %>
+          <% $search{est} %>
+	</div>
+	<div style="float: right; width: 50%;">
+	  <% $search{unigene} %>
+	  <% $search{microarray} %>
+	</div>
+      </dd>
     </dl>
+    <span style="margin-bottom:20px;">&nbsp</span>
   </div>
-
 </div>
 
 </&>
@@ -72,9 +84,9 @@
         <% $search{marker} %>
         <% $search{bac} %>
         <% $search{phenotype} %>
-        <% $search{locus_allele} %>
       </div>
       <div style="float: right; width: 50%">
+	<% $search{locus_allele} %>
         <% $search{library} %>
       </div>
       <div style="clear: both; margin-bottom: -1.7em">&nbsp;</div>
