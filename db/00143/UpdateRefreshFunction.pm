@@ -474,7 +474,7 @@ CREATE VIEW public.accessionsXlocations AS
 SELECT public.materialized_phenoview.accession_id,
     public.materialized_phenoview.location_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.location_id
+  GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.location_id;
   ALTER VIEW accessionsXlocations OWNER TO web_usr;
 
 CREATE VIEW public.accessionsXplants AS
@@ -482,7 +482,7 @@ SELECT public.materialized_phenoview.accession_id,
     public.stock.stock_id AS plant_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plant'))
-  GROUP BY public.materialized_phenoview.accession_id, public.stock.stock_id
+  GROUP BY public.materialized_phenoview.accession_id, public.stock.stock_id;
   ALTER VIEW accessionsXplants OWNER TO web_usr;
 
 CREATE VIEW public.accessionsXplots AS
@@ -544,7 +544,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
     public.stock.stock_id AS plant_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plant'))
-  GROUP BY public.materialized_phenoview.breeding_program_id, public.stock.stock_id
+  GROUP BY public.materialized_phenoview.breeding_program_id, public.stock.stock_id;
   ALTER VIEW breeding_programsXplants OWNER TO web_usr;
 
 CREATE VIEW public.breeding_programsXplots AS
@@ -600,7 +600,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
    FROM public.materialized_genoview
    JOIN public.materialized_phenoview USING(accession_id)
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plant'))
-  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.stock.stock_id
+  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.stock.stock_id;
   ALTER VIEW genotyping_protocolsXplants OWNER TO web_usr;
 
 CREATE VIEW public.genotyping_protocolsXplots AS
@@ -652,7 +652,7 @@ SELECT public.materialized_phenoview.location_id,
     public.stock.stock_id AS plant_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plant'))
-  GROUP BY public.materialized_phenoview.location_id, public.stock.stock_id
+  GROUP BY public.materialized_phenoview.location_id, public.stock.stock_id;
   ALTER VIEW locationsXplants OWNER TO web_usr;
 
 CREATE VIEW public.locationsXplots AS
