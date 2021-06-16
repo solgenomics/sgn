@@ -357,7 +357,6 @@ SELECT public.materialized_phenoview.accession_id,
    JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
   GROUP BY 1,2;
 ALTER VIEW accessionsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE VIEW public.breeding_programsXtrait_components AS
 SELECT public.materialized_phenoview.breeding_program_id,
@@ -368,7 +367,6 @@ JOIN cvterm_relationship ON(trait.cvterm_id = cvterm_relationship.object_id AND 
 JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
 GROUP BY 1,2;
 ALTER VIEW breeding_programsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE VIEW public.genotyping_protocolsXtrait_components AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
@@ -380,7 +378,6 @@ JOIN cvterm_relationship ON(trait.cvterm_id = cvterm_relationship.object_id AND 
 JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
 GROUP BY 1,2;
 ALTER VIEW genotyping_protocolsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE VIEW public.locationsXtrait_components AS
 SELECT public.materialized_phenoview.location_id,
@@ -391,7 +388,6 @@ JOIN cvterm_relationship ON(trait.cvterm_id = cvterm_relationship.object_id AND 
 JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
 GROUP BY 1,2;
 ALTER VIEW locationsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locationsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE VIEW public.plantsXtrait_components AS
 SELECT public.stock.stock_id AS plant_id,
@@ -403,7 +399,6 @@ JOIN cvterm_relationship ON(trait.cvterm_id = cvterm_relationship.object_id AND 
 JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
 GROUP BY 1,2;
 ALTER VIEW plantsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE VIEW public.plotsXtrait_components AS
 SELECT public.stock.stock_id AS plot_id,
@@ -415,7 +410,6 @@ JOIN cvterm_relationship ON(trait.cvterm_id = cvterm_relationship.object_id AND 
 JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
 GROUP BY 1,2;
 ALTER VIEW plotsXtrait_components OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plotsXtrait_components', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE VIEW public.trait_componentsXtrials AS
 SELECT trait_component.cvterm_id AS trait_component_id,
@@ -426,7 +420,6 @@ SELECT trait_component.cvterm_id AS trait_component_id,
     JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
     GROUP BY 1,2;
 ALTER VIEW trait_componentsXtrials OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrials', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE VIEW public.trait_componentsXtrial_designs AS
 SELECT trait_component.cvterm_id AS trait_component_id,
@@ -438,7 +431,6 @@ SELECT trait_component.cvterm_id AS trait_component_id,
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'design' )
   GROUP BY 1,2;
 ALTER VIEW trait_componentsXtrial_designs OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrial_designs', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE VIEW public.trait_componentsXtrial_types AS
 SELECT trait_component.cvterm_id AS trait_component_id,
@@ -451,7 +443,6 @@ SELECT trait_component.cvterm_id AS trait_component_id,
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
   GROUP BY 1,2;
 ALTER VIEW trait_componentsXtrial_types OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXtrial_types', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE VIEW public.trait_componentsXyears AS
 SELECT trait_component.cvterm_id AS trait_component_id,
@@ -462,7 +453,6 @@ SELECT trait_component.cvterm_id AS trait_component_id,
    JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
   GROUP BY 1,2;
 ALTER VIEW trait_componentsXyears OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_componentsXyears', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 -- FIX VIEWS FOR PLANTS, PLOTS, TRIAL DESIGNS AND TRIAL TYPES
 
@@ -470,14 +460,14 @@ CREATE VIEW public.accessionsXbreeding_programs AS
 SELECT public.materialized_phenoview.accession_id,
     public.materialized_phenoview.breeding_program_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.breeding_program_id
+  GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.breeding_program_id;
   ALTER VIEW accessionsXbreeding_programs OWNER TO web_usr;
 
 CREATE VIEW public.accessionsXgenotyping_protocols AS
 SELECT public.materialized_genoview.accession_id,
     public.materialized_genoview.genotyping_protocol_id
    FROM public.materialized_genoview
-  GROUP BY public.materialized_genoview.accession_id, public.materialized_genoview.genotyping_protocol_id
+  GROUP BY public.materialized_genoview.accession_id, public.materialized_genoview.genotyping_protocol_id;
   ALTER VIEW accessionsXgenotyping_protocols OWNER TO web_usr;
 
 CREATE VIEW public.accessionsXlocations AS
@@ -713,7 +703,6 @@ SELECT plant.stock_id AS plant_id,
    JOIN stock plant ON plant_relationship.object_id = plant.stock_id AND plant.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plant')
   GROUP BY plant.stock_id, plot.stock_id;
 ALTER VIEW plantsXplots OWNER TO web_usr;
-INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXplots', FALSE, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING;
 
 CREATE VIEW public.plantsXtrials AS
 SELECT public.stock.stock_id AS plant_id,
