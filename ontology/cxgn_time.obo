@@ -1,6 +1,6 @@
-format-version: 1.0
+format-version: 1.2
 data-version: 1
-date: 05:23:2016 03:00
+date: 05:11:2017 03:00
 saved-by: sgn
 default-namespace: cxgn_time_ontology
 remark: none
@@ -14,3354 +14,2887 @@ name: Time
 id: TIME:0000001
 name: time of day
 def: "Categorical day periods." []
-is_a: TIME:0000000
+is_a: TIME:0000000 ! Time
 
 [Term]
 id: TIME:0000002
 name: end of night
-synonym: "EoN" EXACT []
 def: "Half an hour before sunrise." []
-is_a: TIME:0000001
+synonym: "EoN" EXACT []
+is_a: TIME:0000001 ! time of day
 
 [Term]
 id: TIME:0000003
 name: end of day
-synonym: "EoD" EXACT []
 def: "Late afternoon daylight." []
-is_a: TIME:0000001
+synonym: "EoD" EXACT []
+is_a: TIME:0000001 ! time of day
 
 [Term]
 id: TIME:0000004
 name: mid day
-synonym: "MD" EXACT []
 def: "Between 11:00 in the morning and 14:00 in the afternoon." []
-is_a: TIME:0000001
+synonym: "MD" EXACT []
+is_a: TIME:0000001 ! time of day
 
 [Term]
 id: TIME:0000005
 name: time of year
 def: "minutes, hours, days, weeks and months." []
-is_a: TIME:0000000
+is_a: TIME:0000000 ! Time
 
 [Term]
 id: TIME:0000006
 name: week 1
 synonym: "Wk1" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000007
 name: week 2
 synonym: "Wk2" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000008
 name: week 3
 synonym: "Wk3" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000009
 name: week 4
 synonym: "Wk4" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000010
 name: week 5
 synonym: "Wk5" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000011
 name: week 6
 synonym: "Wk6" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000012
 name: week 7
 synonym: "Wk7" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000013
 name: week 8
 synonym: "Wk8" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000014
 name: week 9
 synonym: "Wk9" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000015
 name: week 10
 synonym: "Wk10" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000016
 name: week 11
 synonym: "Wk11" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000017
 name: week 12
 synonym: "Wk12" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000018
 name: week 13
 synonym: "Wk13" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000019
 name: week 14
 synonym: "Wk14" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000020
 name: week 15
 synonym: "Wk15" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000021
 name: week 16
 synonym: "Wk16" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000022
 name: week 17
 synonym: "Wk17" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000023
 name: week 18
 synonym: "Wk18" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000024
 name: week 19
 synonym: "Wk19" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000025
 name: week 20
 synonym: "Wk20" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000026
 name: week 21
 synonym: "Wk21" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000027
 name: week 22
 synonym: "Wk22" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000028
 name: week 23
 synonym: "Wk23" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000029
 name: week 24
 synonym: "Wk24" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000030
 name: week 25
 synonym: "Wk25" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000031
 name: week 26
 synonym: "Wk26" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000032
 name: week 27
 synonym: "Wk27" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000033
 name: week 28
 synonym: "Wk28" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000034
 name: week 29
 synonym: "Wk29" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000035
 name: week 30
 synonym: "Wk30" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000036
 name: week 31
 synonym: "Wk31" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000037
 name: week 32
 synonym: "Wk32" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000038
 name: week 33
 synonym: "Wk33" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000039
 name: week 34
 synonym: "Wk34" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000040
 name: week 35
 synonym: "Wk35" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000041
 name: week 36
 synonym: "Wk36" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000042
 name: week 37
 synonym: "Wk37" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000043
 name: week 38
 synonym: "Wk38" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000044
 name: week 39
 synonym: "Wk39" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000045
 name: week 40
 synonym: "Wk40" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000046
 name: week 41
 synonym: "Wk41" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000047
 name: week 42
 synonym: "Wk42" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000048
 name: week 43
 synonym: "Wk43" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000049
 name: week 44
 synonym: "Wk44" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000050
 name: week 45
 synonym: "Wk45" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000051
 name: week 46
 synonym: "Wk46" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000052
 name: week 47
 synonym: "Wk47" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000053
 name: week 48
 synonym: "Wk48" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000054
 name: week 49
 synonym: "Wk49" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000055
 name: week 50
 synonym: "Wk50" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000056
 name: week 51
 synonym: "Wk51" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000057
 name: week 52
 synonym: "Wk52" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000058
 name: week 53
 synonym: "Wk53" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000059
 name: week 54
 synonym: "Wk54" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000060
 name: month 1
 synonym: "Mo1" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000061
 name: month 2
 synonym: "Mo2" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000062
 name: month 3
 synonym: "Mo3" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000063
 name: month 4
 synonym: "Mo4" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000064
 name: month 5
 synonym: "Mo5" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000065
 name: month 6
 synonym: "Mo6" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000066
 name: month 7
 synonym: "Mo7" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000067
 name: month 8
 synonym: "Mo8" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000068
 name: month 9
 synonym: "Mo9" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000069
 name: month 10
 synonym: "Mo10" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000070
 name: month 11
 synonym: "Mo11" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000071
 name: month 12
 synonym: "Mo12" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000072
 name: month 13
 synonym: "Mo13" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000073
 name: month 14
 synonym: "Mo14" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000074
 name: month 15
 synonym: "Mo15" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000075
 name: month 16
 synonym: "Mon16" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000076
-name: "categorical plant stage"
+name: obsolete \"categorical plant stage\"
 def: "." []
-is_a: TIME:0000000
+is_obsolete: true
 
 [Term]
 id: TIME:0000077
 name: at flowering
+def: "flowering (shooting is here equivalent to flowering) stage where the whole inflorescence comes from the neck of the pseudostem at the switch from vegetative to reproductive development" []
 synonym: "FLW" EXACT []
-def: "flowering (shooting is here equivalent to flowering) stage where the whole inflorescence comes from the neck of the pseudostem at the switch from vegetative to reproductive development"
-is_a: TIME:0000076
+is_a: TIME:0000477 ! Event relations
 
 [Term]
 id: TIME:0000078
 name: at harvesting
+def: "harvesting stage" []
 synonym: "HVT" EXACT []
-def: "harvesting stage"
-is_a: TIME:0000076
+is_a: TIME:0000477 ! Event relations
 
 [Term]
 id: TIME:0000079
-name: at post-harvesting
+name: obsolete at post-harvesting
+def: "post harvesting stage" []
 synonym: "PHVT" EXACT []
-def: "post harvesting stage"
-is_a: TIME:0000076
+is_obsolete: true
 
 [Term]
 id: TIME:0000080
 name: at planting
+def: "planting stage:" []
 synonym: "PLT" EXACT []
-def: "planting stage:
-is_a: TIME:0000076
+is_a: TIME:0000477 ! Event relations
 
 [Term]
 id: TIME:0000081
 name: date of
+def: "date of data collection (dd/mm/yyyy)" []
 synonym: "DCOL" EXACT []
-def: "date of data collection (dd/mm/yyyy)"
-is_a: TIME:0000076
+is_a: TIME:0000477 ! Event relations
 
 [Term]
 id: TIME:0000082
 name: day 1
 synonym: "D01" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000083
 name: day 2
 synonym: "D02" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000084
 name: day 3
 synonym: "D03" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000085
 name: day 4
 synonym: "D04" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000086
 name: day 5
 synonym: "D05" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000087
 name: day 6
 synonym: "D06" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000088
 name: day 7
 synonym: "D07" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000089
 name: day 8
 synonym: "D08" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000090
 name: day 9
 synonym: "D09" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000091
 name: day 10
 synonym: "D10" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000092
 name: day 11
 synonym: "D11" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000093
 name: day 12
 synonym: "D12" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000094
 name: day 13
 synonym: "D13" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000095
 name: day 14
 synonym: "D14" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000096
 name: day 15
 synonym: "D15" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000097
 name: day 16
 synonym: "D16" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000098
 name: day 17
 synonym: "D17" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000099
 name: day 18
 synonym: "D18" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000100
 name: day 19
 synonym: "D19" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000101
 name: day 20
 synonym: "D20" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000102
 name: day 21
 synonym: "D21" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000103
 name: day 22
 synonym: "D22" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000104
 name: day 23
 synonym: "D23" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000105
 name: day 24
 synonym: "D24" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000106
 name: day 25
 synonym: "D25" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000107
 name: day 26
 synonym: "D26" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000108
 name: day 27
 synonym: "D27" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000109
 name: day 28
 synonym: "D28" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000110
 name: day 29
 synonym: "D29" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000111
 name: day 30
 synonym: "D30" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000112
 name: day 31
 synonym: "D31" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000113
 name: hour 1
 synonym: "H01" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000114
 name: hour 2
 synonym: "H02" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000115
 name: hour 3
 synonym: "H03" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000116
 name: hour 4
 synonym: "H04" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000117
 name: hour 5
 synonym: "H05" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000118
 name: hour 6
 synonym: "H06" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000119
 name: hour 7
 synonym: "H07" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000120
 name: hour 8
 synonym: "H08" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000121
 name: hour 9
 synonym: "H09" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000122
 name: hour 10
 synonym: "H10" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000123
 name: hour 11
 synonym: "H11" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000124
 name: hour 12
 synonym: "H12" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000125
 name: hour 13
 synonym: "H13" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000126
 name: hour 14
 synonym: "H14" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000127
 name: hour 15
 synonym: "H15" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000128
 name: hour 16
 synonym: "H16" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000129
 name: hour 17
 synonym: "H17" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000130
 name: hour 18
 synonym: "H18" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000131
 name: hour 19
 synonym: "H19" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000132
 name: hour 20
 synonym: "H20" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000133
 name: hour 21
 synonym: "H21" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000134
 name: hour 22
 synonym: "H22" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000135
 name: hour 23
 synonym: "H23" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000136
 name: hour 24
 synonym: "H24" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000137
 name: minute 15
 synonym: "Min15" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000138
 name: minute 30
 synonym: "Min30" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000139
 name: minute 45
 synonym: "Min45" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000140
 name: minute 60
 synonym: "Min60" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000141
-name: at pre-flowering
+name: pre-flowering
 synonym: "PreFLW" EXACT []
-def: "" []
-is_a: TIME:0000076
+is_a: TIME:0000477 ! Event relations
 
 [Term]
 id: TIME:0000142
-name: at post-flowering
+name: post-flowering
 synonym: "PostFLW" EXACT []
-def: "" []
-is_a: TIME:0000076
+is_a: TIME:0000477 ! Event relations
 
 [Term]
 id: TIME:0000143
 name: day 32
 synonym: "D32" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000144
 name: day 33
 synonym: "D33" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000145
 name: day 34
 synonym: "D34" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000146
 name: day 35
 synonym: "D35" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000147
 name: day 36
 synonym: "D36" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000148
 name: day 37
 synonym: "D37" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000149
 name: day 38
 synonym: "D38" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000150
 name: day 39
 synonym: "D39" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000151
 name: day 40
 synonym: "D40" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000152
 name: day 41
 synonym: "D41" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000153
 name: day 42
 synonym: "D42" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000154
 name: day 43
 synonym: "D43" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000155
 name: day 44
 synonym: "D44" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000156
 name: day 45
 synonym: "D45" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000157
 name: day 46
 synonym: "D46" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000158
 name: day 47
 synonym: "D47" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000159
 name: day 48
 synonym: "D48" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000160
 name: day 49
 synonym: "D49" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000161
 name: day 50
 synonym: "D50" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000162
 name: day 51
 synonym: "D51" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000163
 name: day 52
 synonym: "D52" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000164
 name: day 53
 synonym: "D53" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000165
 name: day 54
 synonym: "D54" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000166
 name: day 55
 synonym: "D55" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000167
 name: day 56
 synonym: "D56" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000168
 name: day 57
 synonym: "D57" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000169
 name: day 58
 synonym: "D58" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000170
 name: day 59
 synonym: "D59" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000171
 name: day 60
 synonym: "D60" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000172
 name: day 61
 synonym: "D61" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000173
 name: day 62
 synonym: "D62" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000174
 name: day 63
 synonym: "D63" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000175
 name: day 64
 synonym: "D64" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000176
 name: day 65
 synonym: "D65" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000177
 name: day 66
 synonym: "D66" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000178
 name: day 67
 synonym: "D67" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000179
 name: day 68
 synonym: "D68" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000180
 name: day 69
 synonym: "D69" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000181
 name: day 70
 synonym: "D70" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000182
 name: day 71
 synonym: "D71" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000183
 name: day 72
 synonym: "D72" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000184
 name: day 73
 synonym: "D73" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000185
 name: day 74
 synonym: "D74" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000186
 name: day 75
 synonym: "D75" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000187
 name: day 76
 synonym: "D76" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000188
 name: day 77
 synonym: "D77" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000189
 name: day 78
 synonym: "D78" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000190
 name: day 79
 synonym: "D79" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000191
 name: day 80
 synonym: "D80" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000192
 name: day 81
 synonym: "D81" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000193
 name: day 82
 synonym: "D82" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000194
 name: day 83
 synonym: "D83" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000195
 name: day 84
 synonym: "D84" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000196
 name: day 85
 synonym: "D85" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000197
 name: day 86
 synonym: "D86" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000198
 name: day 87
 synonym: "D87" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000199
 name: day 88
 synonym: "D88" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000200
 name: day 89
 synonym: "D89" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000201
 name: day 90
 synonym: "D90" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000202
 name: day 91
 synonym: "D91" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000203
 name: day 92
 synonym: "D92" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000204
 name: day 93
 synonym: "D93" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000205
 name: day 94
 synonym: "D94" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000206
 name: day 95
 synonym: "D95" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000207
 name: day 96
 synonym: "D96" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000208
 name: day 97
 synonym: "D97" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000209
 name: day 98
 synonym: "D98" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000210
 name: day 99
 synonym: "D99" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000211
 name: day 100
 synonym: "D100" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000212
 name: day 101
 synonym: "D101" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000213
 name: day 102
 synonym: "D102" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000214
 name: day 103
 synonym: "D103" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000215
 name: day 104
 synonym: "D104" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000216
 name: day 105
 synonym: "D105" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000217
 name: day 106
 synonym: "D106" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000218
 name: day 107
 synonym: "D107" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000219
 name: day 108
 synonym: "D108" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000220
 name: day 109
 synonym: "D109" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000221
 name: day 110
 synonym: "D110" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000222
 name: day 111
 synonym: "D111" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000223
 name: day 112
 synonym: "D112" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000224
 name: day 113
 synonym: "D113" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000225
 name: day 114
 synonym: "D114" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000226
 name: day 115
 synonym: "D115" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000227
 name: day 116
 synonym: "D116" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000228
 name: day 117
 synonym: "D117" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000229
 name: day 118
 synonym: "D118" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000230
 name: day 119
 synonym: "D119" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000231
 name: day 120
 synonym: "D120" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000232
 name: day 121
 synonym: "D121" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000233
 name: day 122
 synonym: "D122" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000234
 name: day 123
 synonym: "D123" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000235
 name: day 124
 synonym: "D124" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000236
 name: day 125
 synonym: "D125" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000237
 name: day 126
 synonym: "D126" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000238
 name: day 127
 synonym: "D127" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000239
 name: day 128
 synonym: "D128" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000240
 name: day 129
 synonym: "D129" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000241
 name: day 130
 synonym: "D130" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000242
 name: day 131
 synonym: "D131" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000243
 name: day 132
 synonym: "D132" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000244
 name: day 133
 synonym: "D133" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000245
 name: day 134
 synonym: "D134" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000246
 name: day 135
 synonym: "D135" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000247
 name: day 136
 synonym: "D136" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000248
 name: day 137
 synonym: "D137" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000249
 name: day 138
 synonym: "D138" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000250
 name: day 139
 synonym: "D139" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000251
 name: day 140
 synonym: "D140" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000252
 name: day 141
 synonym: "D141" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000253
 name: day 142
 synonym: "D142" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000254
 name: day 143
 synonym: "D143" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000255
 name: day 144
 synonym: "D144" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000256
 name: day 145
 synonym: "D145" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000257
 name: day 146
 synonym: "D146" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000258
 name: day 147
 synonym: "D147" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000259
 name: day 148
 synonym: "D148" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000260
 name: day 149
 synonym: "D149" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000261
 name: day 150
 synonym: "D150" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000262
 name: day 151
 synonym: "D151" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000263
 name: day 152
 synonym: "D152" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000264
 name: day 153
 synonym: "D153" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000265
 name: day 154
 synonym: "D154" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000266
 name: day 155
 synonym: "D155" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000267
 name: day 156
 synonym: "D156" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000268
 name: day 157
 synonym: "D157" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000269
 name: day 158
 synonym: "D158" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000270
 name: day 159
 synonym: "D159" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000271
 name: day 160
 synonym: "D160" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000272
 name: day 161
 synonym: "D161" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000273
 name: day 162
 synonym: "D162" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000274
 name: day 163
 synonym: "D163" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000275
 name: day 164
 synonym: "D164" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000276
 name: day 165
 synonym: "D165" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000277
 name: day 166
 synonym: "D166" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000278
 name: day 167
 synonym: "D167" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000279
 name: day 168
 synonym: "D168" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000280
 name: day 169
 synonym: "D169" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000281
 name: day 170
 synonym: "D170" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000282
 name: day 171
 synonym: "D171" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000283
 name: day 172
 synonym: "D172" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000284
 name: day 173
 synonym: "D173" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000285
 name: day 174
 synonym: "D174" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000286
 name: day 175
 synonym: "D175" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000287
 name: day 176
 synonym: "D176" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000288
 name: day 177
 synonym: "D177" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000289
 name: day 178
 synonym: "D178" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000290
 name: day 179
 synonym: "D179" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000291
 name: day 180
 synonym: "D180" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000292
 name: day 181
 synonym: "D181" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000293
 name: day 182
 synonym: "D182" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000294
 name: day 183
 synonym: "D183" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000295
 name: day 184
 synonym: "D184" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000296
 name: day 185
 synonym: "D185" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000297
 name: day 186
 synonym: "D186" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000298
 name: day 187
 synonym: "D187" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000299
 name: day 188
 synonym: "D188" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000300
 name: day 189
 synonym: "D189" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000301
 name: day 190
 synonym: "D190" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000302
 name: day 191
 synonym: "D191" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000303
 name: day 192
 synonym: "D192" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000304
 name: day 193
 synonym: "D193" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000305
 name: day 194
 synonym: "D194" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000306
 name: day 195
 synonym: "D195" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000307
 name: day 196
 synonym: "D196" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000308
 name: day 197
 synonym: "D197" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000309
 name: day 198
 synonym: "D198" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000310
 name: day 199
 synonym: "D199" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000311
 name: day 200
 synonym: "D200" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000312
 name: day 201
 synonym: "D201" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000313
 name: day 202
 synonym: "D202" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000314
 name: day 203
 synonym: "D203" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000315
 name: day 204
 synonym: "D204" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000316
 name: day 205
 synonym: "D205" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000317
 name: day 206
 synonym: "D206" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000318
 name: day 207
 synonym: "D207" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000319
 name: day 208
 synonym: "D208" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000320
 name: day 209
 synonym: "D209" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000321
 name: day 210
 synonym: "D210" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000322
 name: day 211
 synonym: "D211" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000323
 name: day 212
 synonym: "D212" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000324
 name: day 213
 synonym: "D213" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000325
 name: day 214
 synonym: "D214" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000326
 name: day 215
 synonym: "D215" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000327
 name: day 216
 synonym: "D216" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000328
 name: day 217
 synonym: "D217" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000329
 name: day 218
 synonym: "D218" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000330
 name: day 219
 synonym: "D219" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000331
 name: day 220
 synonym: "D220" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000332
 name: day 221
 synonym: "D221" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000333
 name: day 222
 synonym: "D222" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000334
 name: day 223
 synonym: "D223" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000335
 name: day 224
 synonym: "D224" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000336
 name: day 225
 synonym: "D225" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000337
 name: day 226
 synonym: "D226" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000338
 name: day 227
 synonym: "D227" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000339
 name: day 228
 synonym: "D228" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000340
 name: day 229
 synonym: "D229" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000341
 name: day 230
 synonym: "D230" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000342
 name: day 231
 synonym: "D231" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000343
 name: day 232
 synonym: "D232" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000344
 name: day 233
 synonym: "D233" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000345
 name: day 234
 synonym: "D234" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000346
 name: day 235
 synonym: "D235" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000347
 name: day 236
 synonym: "D236" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000348
 name: day 237
 synonym: "D237" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000349
 name: day 238
 synonym: "D238" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000350
 name: day 239
 synonym: "D239" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000351
 name: day 240
 synonym: "D240" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000352
 name: day 241
 synonym: "D241" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000353
 name: day 242
 synonym: "D242" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000354
 name: day 243
 synonym: "D243" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000355
 name: day 244
 synonym: "D244" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000356
 name: day 245
 synonym: "D245" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000357
 name: day 246
 synonym: "D246" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000358
 name: day 247
 synonym: "D247" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000359
 name: day 248
 synonym: "D248" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000360
 name: day 249
 synonym: "D249" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000361
 name: day 250
 synonym: "D250" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000362
 name: day 251
 synonym: "D251" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000363
 name: day 252
 synonym: "D252" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000364
 name: day 253
 synonym: "D253" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000365
 name: day 254
 synonym: "D254" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000366
 name: day 255
 synonym: "D255" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000367
 name: day 256
 synonym: "D256" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000368
 name: day 257
 synonym: "D257" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000369
 name: day 258
 synonym: "D258" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000370
 name: day 259
 synonym: "D259" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000371
 name: day 260
 synonym: "D260" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000372
 name: day 261
 synonym: "D261" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000373
 name: day 262
 synonym: "D262" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000374
 name: day 263
 synonym: "D263" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000375
 name: day 264
 synonym: "D264" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000376
 name: day 265
 synonym: "D265" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000377
 name: day 266
 synonym: "D266" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000378
 name: day 267
 synonym: "D267" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000379
 name: day 268
 synonym: "D268" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000380
 name: day 269
 synonym: "D269" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000381
 name: day 270
 synonym: "D270" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000382
 name: day 271
 synonym: "D271" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000383
 name: day 272
 synonym: "D272" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000384
 name: day 273
 synonym: "D273" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000385
 name: day 274
 synonym: "D274" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000386
 name: day 275
 synonym: "D275" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000387
 name: day 276
 synonym: "D276" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000388
 name: day 277
 synonym: "D277" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000389
 name: day 278
 synonym: "D278" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000390
 name: day 279
 synonym: "D279" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000391
 name: day 280
 synonym: "D280" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000392
 name: day 281
 synonym: "D281" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000393
 name: day 282
 synonym: "D282" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000394
 name: day 283
 synonym: "D283" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000395
 name: day 284
 synonym: "D284" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000396
 name: day 285
 synonym: "D285" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000397
 name: day 286
 synonym: "D286" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000398
 name: day 287
 synonym: "D287" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000399
 name: day 288
 synonym: "D288" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000400
 name: day 289
 synonym: "D289" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000401
 name: day 290
 synonym: "D290" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000402
 name: day 291
 synonym: "D291" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000403
 name: day 292
 synonym: "D292" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000404
 name: day 293
 synonym: "D293" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000405
 name: day 294
 synonym: "D294" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000406
 name: day 295
 synonym: "D295" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000407
 name: day 296
 synonym: "D296" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000408
 name: day 297
 synonym: "D297" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000409
 name: day 298
 synonym: "D298" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000410
 name: day 299
 synonym: "D299" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000411
 name: day 300
 synonym: "D300" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000412
 name: day 301
 synonym: "D301" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000413
 name: day 302
 synonym: "D302" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000414
 name: day 303
 synonym: "D303" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000415
 name: day 304
 synonym: "D304" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000416
 name: day 305
 synonym: "D305" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000417
 name: day 306
 synonym: "D306" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000418
 name: day 307
 synonym: "D307" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000419
 name: day 308
 synonym: "D308" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000420
 name: day 309
 synonym: "D309" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000421
 name: day 310
 synonym: "D310" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000422
 name: day 311
 synonym: "D311" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000423
 name: day 312
 synonym: "D312" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000424
 name: day 313
 synonym: "D313" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000425
 name: day 314
 synonym: "D314" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000426
 name: day 315
 synonym: "D315" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000427
 name: day 316
 synonym: "D316" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000428
 name: day 317
 synonym: "D317" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000429
 name: day 318
 synonym: "D318" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000430
 name: day 319
 synonym: "D319" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000431
 name: day 320
 synonym: "D320" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000432
 name: day 321
 synonym: "D321" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000433
 name: day 322
 synonym: "D322" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000434
 name: day 323
 synonym: "D323" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000435
 name: day 324
 synonym: "D324" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000436
 name: day 325
 synonym: "D325" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000437
 name: day 326
 synonym: "D326" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000438
 name: day 327
 synonym: "D327" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000439
 name: day 328
 synonym: "D328" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000440
 name: day 329
 synonym: "D329" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000441
 name: day 330
 synonym: "D330" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000442
 name: day 331
 synonym: "D331" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000443
 name: day 332
 synonym: "D332" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000444
 name: day 333
 synonym: "D333" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000445
 name: day 334
 synonym: "D334" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000446
 name: day 335
 synonym: "D335" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000447
 name: day 336
 synonym: "D336" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000448
 name: day 337
 synonym: "D337" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000449
 name: day 338
 synonym: "D338" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000450
 name: day 339
 synonym: "D339" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000451
 name: day 340
 synonym: "D340" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000452
 name: day 341
 synonym: "D341" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000453
 name: day 342
 synonym: "D342" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000454
 name: day 343
 synonym: "D343" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000455
 name: day 344
 synonym: "D344" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000456
 name: day 345
 synonym: "D345" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000457
 name: day 346
 synonym: "D346" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000458
 name: day 347
 synonym: "D347" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000459
 name: day 348
 synonym: "D348" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000460
 name: day 349
 synonym: "D349" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000461
 name: day 350
 synonym: "D350" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000462
 name: day 351
 synonym: "D351" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000463
 name: day 352
 synonym: "D352" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000464
 name: day 353
 synonym: "D353" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000465
 name: day 354
 synonym: "D354" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000466
 name: day 355
 synonym: "D355" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000467
 name: day 356
 synonym: "D356" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000468
 name: day 357
 synonym: "D357" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000469
 name: day 358
 synonym: "D358" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000470
 name: day 359
 synonym: "D359" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000471
 name: day 360
 synonym: "D360" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000472
 name: day 361
 synonym: "D361" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000473
 name: day 362
 synonym: "D362" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000474
 name: day 363
 synonym: "D363" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000475
 name: day 364
 synonym: "D364" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000476
 name: day 365
 synonym: "D365" EXACT []
-def: "" []
-is_a: TIME:0000005
+is_a: TIME:0000005 ! time of year
 
 [Term]
 id: TIME:0000477
 name: Event relations
-def: "Terms that can be linked with other time terms to specify their relation to breeding events" []
-is_a: TIME:0000000
+def: "Terms that can be linked with other terms to specify their relation to breeding events" []
+is_a: TIME:0000000 ! Time
 
 [Term]
 id: TIME:0000478
 name: after planting
 synonym: "AftPlt" EXACT []
-def: "" []
-is_a: TIME:0000477
+is_a: TIME:0000477 ! Event relations
 
 [Term]
 id: TIME:0000479
 name: before harvest
 synonym: "BfrHvt" EXACT []
-def: "" []
-is_a: TIME:0000477
+is_a: TIME:0000477 ! Event relations
 
 [Term]
 id: TIME:0000480
 name: after harvest
 synonym: "AftHvt" EXACT []
-def: "" []
-is_a: TIME:0000477
+is_a: TIME:0000477 ! Event relations
+

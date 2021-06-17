@@ -1,0 +1,87 @@
+<%doc>
+Call this page when using is marker_name
+</%doc>
+
+<%args>
+$marker_name
+$title
+$collapsible
+</%args>
+
+
+<style>
+    #external-links-list {
+        list-style-type: none;
+    }
+</style>
+
+
+<div id="external-links">
+    <li id="external-links-list"></li>
+</div>
+
+
+<& /instance/external_link_sources.mas &>
+<script defer>
+
+    /**
+     * on ready: get the marker props
+     */
+    jQuery(document).ready(function() {
+        getProps();
+        flankingSeq();
+    });
+
+    /**
+     * Get the marker props for the current marker name
+     */
+    function getProps() {
+      jQuery.ajax( {
+        type: 'GET',
+        url: '/marker/prop/get',
+        data: { marker_name: "<% $marker_name %>" },
+        success: function(response) {
+            let props = [];
+            if ( response ) {
+                for ( let i = 0; i < response.length; i++ ) {
+                    props.push(response[i]);
+                }
+            }
+            renderLinks(props);
+        },
+        error: function(response) {
+            console.log("Could not load marker props");
+            console.log(response);
+        }
+      });
+    }
+
+    /**
+     * Generate the external links HTML
+     * @param  {Object[]} props A list of marker_name props
+     */
+    function renderLinks(props) {
+        let html = "<table style=\"border-spacing: 10px; border-collapse: separate;\">";
+        for ( let i = 0; i < props.length; i++ ) {
+            let prop = props[i];
+            let url = prop.url;
+            let type_name = prop.type_name;
+            let marker_name = prop.marker_name;
+            let xref_name = prop.xref_name;
+            html += "<tr><td><a href='" + url + xref_name + "' target='_new'>" + xref_name + "</a><td>" + type_name;
+        }
+	html += "</table>";
+        jQuery("#external-links-list").html(html);
+    }
+
+    /**
+     * Generate the link for marker flanking sequence
+     */
+
+    function flankingSeq() {
+        let html = "<ul></ul>";
+        jQuery("#external-links-list").html(html);
+        console.log("Made it here");
+    }
+
+</script>

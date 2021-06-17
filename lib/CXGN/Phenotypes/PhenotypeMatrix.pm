@@ -225,9 +225,16 @@ sub get_phenotype_matrix {
             }
 
             my $observations = $obs_unit->{observations};
+#            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
+            my $include_timestamp = $self->include_timestamp;
             my %trait_observations;
             foreach (@$observations){
-                $trait_observations{$_->{trait_name}} = $_->{value};
+                my $collect_date = $_->{collect_date};
+                if ($include_timestamp && $collect_date) {
+                    $trait_observations{$_->{trait_name}} = "$_->{value},$collect_date";
+                } else {
+                    $trait_observations{$_->{trait_name}} = $_->{value};
+                }
             }
             foreach my $trait (@sorted_traits) {
                 push @line, $trait_observations{$trait};
@@ -237,7 +244,7 @@ sub get_phenotype_matrix {
         }
     } else {
         $data = $phenotypes_search->search();
-        #print STDERR Dumper $data;
+#        print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
 
         my %obsunit_data;
         my %traits;

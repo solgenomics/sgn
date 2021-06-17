@@ -43,6 +43,7 @@ $protocol_url => ''
 $top_blups
 $blups_download_url
 $combined_populations => ''
+$combo_pops_id => ''
 $genotyping_protocol_id
 $data_set_type => ''
 
@@ -95,7 +96,8 @@ $data_set_type => ''
    		selection_pop_name => $selection_pop_name,
    		selection_pop_desc => $selection_pop_desc,
    		genotyping_protocol_id => $genotyping_protocol_id,
-		trait_id => $trait_id
+		trait_id => $trait_id,
+        combo_pops_id => $combo_pops_id
     &>
 </&>
 

@@ -361,6 +361,36 @@ $data_level => 'plot'
     </div>
 </div>
 
+<div class="modal fade" id="hm_replace_accession_curator_warning_message" name="hm_replace_accession_curator_warning_message" tabindex="-1" role="dialog" aria-labelledby="td_curator_warning">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="tDDialog"><b>Warning!</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <big>
+                        <span>&#9888;</span> 
+                        <p3>
+                            One or more traits have been assayed for this trial; <br>
+                            It is not recommended to change accessions at this point. Are you sure?
+                        </p3>
+                    </big>
+
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="fm_override_accession_warning" type="button" class="btn btn-primary">Yes</button>
+                <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal">No</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <%perl>
 my $dbh = $stockref->{dbh};
 my $image_ids =  $stockref->{image_ids} || [] ;
@@ -1324,14 +1354,18 @@ jQuery(document).ready( function() {
 
     jQuery("#hm_replace_plot_accession_form").submit( function() {
       event.preventDefault();
-      hm_replace_plotAccession_fieldMap();
+      hm_replace_plotAccession_fieldMap('check');
     });
 
     jQuery('#hm_replace_plot_accession_submit').click( function() {
-      hm_replace_plotAccession_fieldMap();
+      hm_replace_plotAccession_fieldMap('check');
     });
 
-    function hm_replace_plotAccession_fieldMap() {
+    jQuery('#fm_override_accession_warning').click( function() {
+      hm_replace_plotAccession_fieldMap('override');
+    });
+
+    function hm_replace_plotAccession_fieldMap(override) {
       jQuery('#hm_replace_plot_accessions_dialog').modal("hide");
       jQuery('#working_modal').modal("show");
 
@@ -1349,15 +1383,19 @@ jQuery(document).ready( function() {
                 'old_accession': old_accession,
                 'old_plot_id': old_plot_id,
                 'old_plot_name': old_plot_name,
+                'override': override,
         },
 
         success: function (response) {
           jQuery('#working_modal').modal("hide");
-
-          if (response.error) {
+          if (response.warning) {
+            jQuery('#working_modal').modal("hide");
+            jQuery('#hm_replace_accession_curator_warning_message').modal("show");
+          } else if (response.error) {
             alert("Error Replacing Plot Accession: "+response.error);
           }
           else {
+            jQuery('#hm_replace_accession_curator_warning_message').modal("hide");
             jQuery('#hm_replace_accessions_dialog_message').modal("show");
           }
         },
