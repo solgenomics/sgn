@@ -27,9 +27,13 @@
 </&>
 
 <%perl>
-    my $seedlot_subtitle = !!$c->user() 
-        ? '<button class="btn btn-sm btn-primary" style="margin:3px" id="record_events">Record Maintenace</button> <button class="btn btn-sm btn-primary" style="margin:3px" id="upload_maintenance" disabled>Upload Maintenance</button>'
-        : "Login to add Seedlot maintenance events";
+    my $seedlot_subtitle = '';
+    if ( !$c->user() ) {
+        $seedlot_subtitle = "Login to add Seedlot maintenance events";
+    }
+    elsif ( $c->user()->check_roles("curator") || $c->user()->check_roles("submitter") ) {
+        $seedlot_subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="record_events">Record Maintenace</button> <button class="btn btn-sm btn-primary" style="margin:3px" id="upload_events">Upload Maintenance</button>'
+    }
 </%perl>
 <&| /page/info_section.mas, title=>"Seedlot Maintenance Events",  collapsible => 1, collapsed=>0, subtitle => $seedlot_subtitle &>
     
@@ -38,11 +42,18 @@
 </&>
 
 
+<!-- Upload Workflow Dialog -->
+<& /breeders_toolbox/seedlot_maintenance_upload_dialog.mas &>
+
+
 <script type="text/javascript">
 
     jQuery(document).ready(function() {
         jQuery('#record_events').click(function() {
             window.location = '/breeders/seedlot/maintenance/record';
+        });
+        jQuery('#upload_events').click(function() {
+            jQuery('#upload_maintenance_event_upload_modal').modal("show");
         });
     });
 

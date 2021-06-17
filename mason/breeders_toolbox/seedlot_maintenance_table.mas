@@ -440,7 +440,6 @@ function getOntology(callback) {
             alert("ERROR: Could not fetch ontology terms");
         }
     });
-    
 }
 
 /**
@@ -700,11 +699,11 @@ function removeEvent(stock_id, stockprop_id) {
 
 
 <style>
-    .modal-title {
+    #seedlot_maintenance_remove_modal .modal-title {
         font-size: 150%;
         weight: 700;
     }
-    .modal-body {
+    #seedlot_maintenance_remove_modal .modal-body {
         font-size: 110%;
     }
 </style>

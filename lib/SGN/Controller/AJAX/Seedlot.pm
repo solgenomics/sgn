@@ -1105,47 +1105,11 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
     my $root_cvterm_id = $root_cvterm->cvterm_id;
 
     # Get children (recursively) of root cvterm
-    my $ontology = _get_onto_children($schema, $root_cvterm_id);
+    my $ontology = $onto->get_children($root_cvterm_id);
 
     $c->stash->{rest} = { ontology => $ontology };
 }
 
-#
-# Recursively get the children (and all granchildren, etc) of the specified cvterm
-# ARGS:
-#   - schema = Bio::Chado::Schema
-#   - cvterm_id = id of the root cvterm
-# RETURNS: an arrayref of hashes of the children of the cvterm, with the following keys:
-#   - cvterm_id = id of the child cvterm
-#   - name = name of the child cvterm
-#   - definition = definition of the child cvterm
-#   - children = children of the child cvterm
-#   
-sub _get_onto_children {
-    my $schema = shift;
-    my $cvterm_id = shift;
-
-    my @children;
-    my $cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $cvterm_id });
-    if ( defined $cvterm ) {
-        my $cvterm_rs = $cvterm->children();
-        while (my $r = $cvterm_rs->next()) {
-            my $child = $r->subject();
-            if ( !$child->is_obsolete() ) {
-                my $gc = _get_onto_children($schema, $child->cvterm_id);
-                my %c = (
-                    cvterm_id => $child->cvterm_id(),
-                    name => $child->name(),
-                    definition => $child->definition(),
-                    children => scalar(@$gc) > 0 ? $gc : undef
-                );
-                push(@children, \%c);
-            }
-        }
-    }
-    
-    return \@children;
-}
 
 #
 # Search Seedlot Maintenance Events that match specified filter criteria
@@ -1355,6 +1319,104 @@ sub seedlot_maintenance_event_DELETE {
         print STDERR "Could not delete seedlot maintenance event. ($@).\n";
         $c->stash->{rest} = { success => 0, error => $@ };
         $c->detach();
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
+
+sub seedlot_maintenance_event_upload : Path('/ajax/breeders/seedlot/maitenance/upload') : ActionClass('REST') { }
+sub seedlot_maintenance_event_upload_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my @params = $c->req->params();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+
+    # Check Logged In Status
+    if (!$c->user){
+        $c->stash->{rest} = {error => 'You must be logged in to do this!'};
+        $c->detach();
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_role = $c->user->get_object->get_user_type();
+    if ( $user_role ne 'submitter' && $user_role ne 'curator' ) {
+        $c->stash->{rest} = {error => 'You do not have permission in the database to do this! Please contact us.'};
+        $c->detach();
+    }
+
+    # Archive upload file
+    my $upload = $c->req->upload('file');
+    if ( !defined $upload || $upload eq '' ) {
+        $c->stash->{rest} = {error => 'You must provide the upload file!'};
+        $c->detach();
+    }
+    else {
+        my $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
+        my $subdirectory = "seedlot_maintenance_events_upload";
+
+        # Upload and Archive file
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        my $archived_filepath = $uploader->archive();
+        if (!$archived_filepath) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+
+        # Parse the file
+        my $parser = CXGN::Stock::Seedlot::ParseUpload->new(
+            chado_schema => $schema, 
+            filename => $archived_filepath, 
+            event_ontology_root => $c->config->{seedlot_maintenance_event_ontology_root}
+        );
+        $parser->load_plugin('SeedlotMaintenanceEventXLS');
+        my $parsed_data = $parser->parse();
+
+        # No parsed data returned...
+        if (!$parsed_data) {
+            if (!$parser->has_parse_errors()) {
+                $c->stash->{rest} = { error => "An unknown error occurred" };
+                $c->detach();
+            }
+            else {
+                my $parse_errors = $parser->get_parse_errors();
+                my $return_error = '';
+                foreach my $error_string(@{$parse_errors->{'error_messages'}}) {
+                    $return_error .= $error_string."<br>";
+                }
+                $c->stash->{rest} = { 
+                    error => $return_error, 
+                    missing_seedlots => $parse_errors->{'missing_seedlots'},
+                    missing_events => $parse_errors->{'missing_events'} 
+                };
+                $c->detach();
+            }
+        }
+
+        # Store the Parsed Data
+        eval {
+            foreach my $seedlot_id (keys %$parsed_data) {
+                my $events = $parsed_data->{$seedlot_id};
+                my $seedlot = CXGN::Stock::Seedlot->new(schema => $schema, phenome_schema => $phenome_schema, seedlot_id => $seedlot_id);
+                $seedlot->store_events($events);
+            }
+        };
+        if ($@) {
+            $c->stash->{rest} = { error => $@ };
+            print STDERR "An error condition occurred, was not able to upload seedlot maintenance events. ($@).\n";
+            $c->detach();
+        }
     }
 
     $c->stash->{rest} = { success => 1 };
