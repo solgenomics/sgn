@@ -95,9 +95,7 @@ $training_pop_id = $pop_id;
 
 %}
 
-  <& population/acronym.mas,
-   acronym => $acronym,
-    &>
+  <& /solgs/population/trait_acronyms.mas &>
 
 %} else {
 
@@ -107,7 +105,7 @@ $training_pop_id = $pop_id;
       title       => "Genotype Data"
 &>
 
-  <div id="traits_list_message"  style="font-weight:bold;text-align:center;text-transform:uppercase;color:#A7C942">
+  <div id="traits_list_message"  class="message">
     <p>There is no genotype data for this population.</p>
   </div>
 

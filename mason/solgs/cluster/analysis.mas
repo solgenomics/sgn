@@ -59,26 +59,26 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 % if ($url =~ /cluster\/analysis/) {
 
-<& /page/page_title.mas, 
-   title => "Cluster Analysis" 
-  &> 
-%}
-    
-
-<&| /page/info_section.mas, 
-  collapsible => 1, 
-  collapsed   => $collapsed, 
-  title       => $title 
+<& /page/page_title.mas,
+   title => "Cluster Analysis"
   &>
-  
+%}
+
+
+<&| /page/info_section.mas,
+  collapsible => 1,
+  collapsed   => $collapsed,
+  title       => $title
+  &>
+
   <div id='cluster_div'>
-    
+
 % if ($url =~ /cluster\/analysis|breeders\/trial\//) {
 
   <& /solgs/genotyping_protocol.mas &>
 
 %}
-  
+
 % if ($url =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) {
 
   <& /solgs/cluster/gebvs_cluster.mas,
@@ -87,18 +87,18 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
     pop_type => $pop_type
     &>
 
-%} elsif ($url =~ /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\//) {
+%} elsif ($url =~ /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/trials\//) {
 
     <& /solgs/cluster/cluster_options.mas &>
 
 %} elsif ($url =~ /cluster\/analysis/) {
 
    <& /solgs/cluster/select_menu.mas &>
-       
+
 %} else {
     <input id="run_cluster" class="button" type="button" value="Run Cluster" />
 %}
-  
+
 
 <& /solgs/cluster/plot.mas,
    pop_id => $pop_id,
@@ -109,4 +109,3 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 </div>
 </&>
-

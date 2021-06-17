@@ -3153,6 +3153,8 @@ sub locations_detail_PUT {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Locations');
 	my $brapi_package_result = $brapi_module->store(\@all_locations,$user_id);
+	# Format the response to be single hash
+	$brapi_package_result->{result} = $brapi_package_result->{result}->{data}[0];
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -3252,6 +3254,7 @@ sub _observationvariable_search_process {
 		observationvariable_names => $clean_inputs->{name},
 		observationvariable_datatypes => $clean_inputs->{datatype},
 		observationvariable_classes => $clean_inputs->{traitClass},
+		studyDbIds => $clean_inputs->{studyDbId},
 	}, $c);
 	_standard_response_construction($c, $brapi_package_result);
 }

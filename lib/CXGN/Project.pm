@@ -31,6 +31,7 @@ use Data::Dumper;
 use Try::Tiny;
 use Data::Dumper;
 use CXGN::Trial::Folder;
+use CXGN::Stock;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial::TrialLayoutDownload;
 use SGN::Model::Cvterm;
@@ -2390,8 +2391,8 @@ sub delete_project_entry {
         {
             on_connect_do => ['SET search_path TO public,phenome;']
         });
-    my $project_owner_rs = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
-    $project_owner_rs->delete();
+    my $project_owner_row = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
+    if ($project_owner_row) { $project_owner_row->delete(); }
     eval {
 	    my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
 	    $row->delete();
@@ -2902,9 +2903,9 @@ sub get_project_start_date_cvterm_id {
 
 =head2 function create_plant_entities()
 
- Usage:        $trial->create_plant_entries($plants_per_plot);
+ Usage:        $trial->create_plant_entities($plants_per_plot);
  Desc:         Some trials require plant-level data. This function will
-               add an additional layer of plant entries for each plot.
+               add an additional layer of plant entities for each plot.
  Ret:
  Args:         the number of plants per plot to add.
  Side Effects:
@@ -2916,6 +2917,8 @@ sub create_plant_entities {
     my $self = shift;
     my $plants_per_plot = shift || 30;
     my $inherits_plot_treatments = shift;
+    my $plant_owner = shift;
+    my $plant_owner_username = shift;
 
     my $create_plant_entities_txn = sub {
         my $chado_schema = $self->bcs_schema();
@@ -2987,7 +2990,10 @@ sub create_plant_entities {
                 my $plant_name = $parent_plot_name."_plant_$plant_index_number";
                 #print STDERR "... ... creating plant $plant_name...\n";
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, 
+                $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, 
+                $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, 
+                $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username);
             }
         }
 
@@ -3149,6 +3155,8 @@ sub _save_plant_entry {
     my $treatment_plots_ref = shift;
     my $treatment_experiments_ref = shift;
     my $treatment_cvterm = shift;
+    my $plant_owner = shift;
+    my $plant_owner_username = shift;
     my %treatment_plots = %$treatment_plots_ref;
     my %treatment_experiments = %$treatment_experiments_ref;
 
@@ -3158,6 +3166,11 @@ sub _save_plant_entry {
         uniquename => $plant_name,
         type_id => $plant_cvterm,
     });
+
+    if ($plant_owner){
+        my $stock = CXGN::Stock->new({schema=>$chado_schema,stock_id=>$plant->stock_id()});
+        $stock->associate_owner($plant_owner,$plant_owner,$plant_owner_username, "");
+    }
 
     my $plantprop = $chado_schema->resultset("Stock::Stockprop")->create( {
         stock_id => $plant->stock_id(),
@@ -3263,6 +3276,8 @@ sub create_tissue_samples {
     my $tissue_names = shift;
     my $inherits_plot_treatments = shift;
     my $tissue_sample_owner = shift;
+    my $username = shift;
+
 
     my $create_tissue_sample_entries_txn = sub {
         my $chado_schema = $self->bcs_schema();
@@ -3357,9 +3372,8 @@ sub create_tissue_samples {
                     });
 
                     if ($tissue_sample_owner) {
-                        my $q = "INSERT INTO phenome.stock_owner(stock_id, sp_person_id) values(?,?)";
-                        my $h = $chado_schema->storage->dbh->prepare($q);
-                        $h->execute($tissue->stock_id, $tissue_sample_owner);
+                        my $stock = CXGN::Stock->new({schema=>$chado_schema,stock_id=>$tissue->stock_id()});
+                        $stock->associate_owner($tissue_sample_owner,$tissue_sample_owner,$username, "");
                     }
 
                     my $tissueprop = $chado_schema->resultset("Stock::Stockprop")->create( {
