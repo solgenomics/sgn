@@ -72,12 +72,7 @@ try {
     my @mv_names = ();
 
     if ($mode eq 'fullview') {
-        my $matviews_q = "SELECT mv_name, mv_dependents FROM matviews ORDER BY 2";
-        my $matviews_h = $dbh->prepare($matviews_q);
-        $matviews_h->execute();
-        while (my ($mv_name, $mv_dependents) = $matviews_h->fetchrow_array() ) {
-            push @mv_names, $mv_name;
-        }
+        @mv_names = ('materialized_phenoview','materialized_genoview');
     }
     if ($mode eq 'stockprop'){
        @mv_names = ('materialized_stockprop');
