@@ -77,13 +77,14 @@ solGS.histogram =  {
 
     displayBinElements: function(data, canvas) {
 
+        var table;
         if (!jQuery(canvas + ' .bin_elements').length) {
-            var table = this.createBinElementsTable();
+            table = this.createBinElementsTable();
             jQuery(canvas).append(table);
         }
 
         jQuery(canvas + ' .bin_elements').show();
-        var table = canvas + ' .bin_elements .bin_elements_table';
+        table = canvas  +  ' .bin_elements .bin_elements_table';
         if (jQuery.fn.DataTable.isDataTable(table) ) {
              jQuery(table).DataTable().destroy();
         }
@@ -129,7 +130,7 @@ solGS.histogram =  {
     }
 
     values = this.cleanData(values);
-    
+
 	var height = 300;
 	var width  = 500;
 	var pad    = {left:20, top:50, right:50, bottom: 50};

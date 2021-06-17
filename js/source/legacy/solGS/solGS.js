@@ -916,8 +916,10 @@ solGS.getPopulationDetails = function() {
 
 
 solGS.showMessage = function(divId, msg) {
-     jQuery("#" + divId)
-        .html(msg).show();
+
+    divId = divId.match(/#/) ? divId : '#' + divId;
+
+    jQuery(divId).html(msg).show();
 
 }
 
