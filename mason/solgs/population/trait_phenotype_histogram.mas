@@ -45,9 +45,13 @@ $pop_id = $trial_id if $trial_id;
 
 </style>
 
- <& /util/import_javascript.mas, classes => ["d3.d3Min",  "d3.d3-v6-tip", "solGS.histogram"] &>
+<& /util/import_css.mas, paths => ['/static/css/d3-tip.css'] &>
 
-<div id="trait_histogram_canvas">
-    <div id="trait_histogram_plot"></div>
+ <& /util/import_javascript.mas, classes => ["d3.d3Min",  "d3.d3-v6-tip", "solGS.histogram", "solGS.phenoHistogram"] &>
+
+<div id="pheno_histogram_canvas">
+    <div id="pheno_histogram_plot"></div>
     <div class="message" id="histogram_message" style="display:none"></div>
 </div>
+
+ 

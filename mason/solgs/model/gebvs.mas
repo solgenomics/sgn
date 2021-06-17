@@ -19,7 +19,7 @@ $blups_download_url
 </%args>
 
 <& /util/import_javascript.mas, classes => [  "solGS.gebvs", "solGS.histogram", "d3.d3-v6-tip"] &>
-
+<& /util/import_css.mas, paths => ['/static/css/d3-tip.css'] &>
 
 <&| /page/info_section.mas,
   collapsible => 1,
@@ -31,8 +31,6 @@ $blups_download_url
     <div id="gebvs_histo_canvas">
         <div id="gebvs_histo_plot"> </div>
 </div>
-
-<& /solgs/population/histogram_bin_elements.mas &>
 <br/>
 <br/>
 
