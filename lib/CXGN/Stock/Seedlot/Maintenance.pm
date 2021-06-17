@@ -58,12 +58,13 @@ sub BUILD {
 
 
 
-=head2 Class method: get_all_events()
+=head2 Class method: filter_events()
 
  Usage:         my $event_obj = CXGN::Stock::Seedlot::Maintenance({ bcs_schema => $schema });
-                my @events = $event_obj->get_all_events($filters);
+                my @events = $event_obj->filter_events($filters);
  Desc:          get all of the (optionally filtered) seedlot maintenance events associated with any of the matching seedlots
  Args:          filters (optional): a hash of different filter types to apply, with the following keys:
+                    - events: an arrayref of event ids
                     - names: an arrayref of seedlot names
                     - dates: an arrayref of hashes containing date filter options:
                         - date: date in YYYY-MM-DD format
@@ -85,7 +86,7 @@ sub BUILD {
 
 =cut
 
-sub get_all_events {
+sub filter_events {
     my $class = shift;
     my $filters = shift;
     my $schema = $class->bcs_schema();
@@ -93,6 +94,9 @@ sub get_all_events {
     # Parse filters into search conditions
     my @and;
     my @or;
+    if ( defined $filters && defined $filters->{'events'} && scalar(@{$filters->{'events'}}) > 0 ) {
+        push(@and, { 'me.stockprop_id' => $filters->{'events'} });
+    }
     if ( defined $filters && defined $filters->{'names'} && scalar(@{$filters->{'names'}}) > 0 ) {
         push(@and, { 'stock.uniquename' => $filters->{'names'} });
     }

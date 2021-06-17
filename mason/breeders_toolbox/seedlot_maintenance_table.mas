@@ -5,6 +5,15 @@
     $multi_seedlot => !(defined $seedlot_id && defined $seedlot_name) ? 1 : 0
 </%args>
 
+<%perl>
+    my $user_role = '';
+    my $user_name = '';
+    if ($c->user) {
+        $user_role = $c->user->get_object()->get_user_type();
+        $user_name = $c->user->get_object()->get_username();
+    }
+</%perl>
+
 <& /util/import_javascript.mas, classes => [ 'CXGN.List', 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
 
 <br /><br />
@@ -138,7 +147,26 @@
 
 <br /><br />
 
+<!-- Events Table -->
 <table id="seedlot_maintenance_events" class="table table-hover table-bordered"></table>
+
+<!-- Remove Modal -->
+<div id="seedlot_maintenance_remove_modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <p class="modal-title">Remove Event?</p>
+            </div>
+            <div id="seedlot_modal_body" class="modal-body">
+                <p class="modal-body">Are you sure you want to remove this Seedlot Maintenance Event?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="seedlot_maintenance_remove_modal_cancel" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button id="seedlot_maintenance_remove_modal_ok" type="button" class="btn btn-danger">Remove Event</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <script type="text/javascript">
@@ -238,7 +266,23 @@ jQuery(document).ready(function() {
                 return data ? data : '';
             }
         },
-        { title: "Operator", data: "operator" }
+        { title: "Operator", data: "operator" },
+        {
+            title: "Options",
+            data: "stockprop_id",
+            render: function(data, type, row) {
+                if ( type === "display" ) {
+                    let html = '';
+                    if ( '<% $user_role %>' === 'curator' || ( '<% $user_role %>' === 'submitter' && '<% $user_name %>' === row.operator ) ) { 
+                        html += "<a class='event_table_remove' onclick='removeEvent(" + row.stock_id + ", " + row.stockprop_id + ")' style='cursor: pointer;'>[Remove]</a>";
+                    }
+                    return html;
+                }
+                else {
+                    return '';
+                }
+            }
+        }
     ]);
 
     // Init DataTable
@@ -325,7 +369,6 @@ function getEvents() {
             operators: operators
         }
     }
-    console.log(JSON.stringify(body, null, 2));
 
     // Disable Filter button
     jQuery("#event_filter_submit").html("Searching...");
@@ -339,7 +382,6 @@ function getEvents() {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data) {
-            console.log(data);
             if ( data && data.events ) {
                 events = data.events;
             }
@@ -607,4 +649,62 @@ function displayFilters() {
 }
 
 
+//
+// EDIT FUNCTIONS
+//
+
+/**
+ * Remove the specified Seedlot Event
+ * - Display the confirmation dialog
+ * - Remove the event from the database
+ * - Reload the displayed events
+ * @param {int} stock_id Stock ID of the Seedlot
+ * @param {int} stockprop_id Stockprop ID of the Event
+ */
+function removeEvent(stock_id, stockprop_id) {
+    jQuery('#seedlot_maintenance_remove_modal').modal({backdrop: 'static', keyboard: false});
+    jQuery("#seedlot_maintenance_remove_modal_ok").off().click(function() {
+        jQuery("#seedlot_maintenance_remove_modal_cancel").attr("disabled", true);
+        jQuery("#seedlot_maintenance_remove_modal_ok").attr("disabled", true);
+        jQuery("#seedlot_maintenance_remove_modal_ok").html("Removing...");
+
+        // Delete the Event
+        jQuery.ajax({
+            type: 'DELETE',
+            url: '/ajax/breeders/seedlot/' + stock_id + '/maintenance/' + stockprop_id,
+            dataType: "json",
+            success: function(data) {
+                if ( !data || !data.success || data.success === 0 ) {
+                    console.log(data.error);
+                    alert("ERROR: Could not remove seedlot event!");
+                }
+            },
+            error: function() {
+                alert("ERROR: Could not remove seedlot event!");
+            },
+            complete: function() {
+                jQuery('#seedlot_maintenance_remove_modal').modal('hide')
+                jQuery("#seedlot_maintenance_remove_modal_cancel").attr("disabled", false);
+                jQuery("#seedlot_maintenance_remove_modal_ok").attr("disabled", false);
+                jQuery("#seedlot_maintenance_remove_modal_ok").html("Remove Event");
+                getEvents();
+            }
+        });
+
+    });
+    return false;
+}
+
+
 </script>
+
+
+<style>
+    .modal-title {
+        font-size: 150%;
+        weight: 700;
+    }
+    .modal-body {
+        font-size: 110%;
+    }
+</style>

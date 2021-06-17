@@ -1272,13 +1272,38 @@ sub get_events {
     my $seedlot_name = $self->uniquename();
     my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
 
-    # Get the events for the Seedlot
-    my $sorted_events = $m->get_all_events({ names => [$seedlot_name] });
-
-    # Return array of sorted events
-    return($sorted_events);
+    return $m->filter_events({ names => [$seedlot_name] });
 }
 
+
+=head2 get_event()
+
+ Usage:         my $event = $sl->get_event($id);
+ Desc:          get the specified seedlot maintenance event associated with the seedlot
+ Args:          id = stockprop_id of maintenance event
+ Ret:           a hashref of the seedlot maintenance event, with the following keys:
+                    - stock_id: the unique id of the seedlot
+                    - uniquename: the unique name of the seedlot
+                    - stockprop_id: the unique id of the maintenance event
+                    - cvterm_id: id of seedlot maintenance event ontology term
+                    - cvterm_name: name of seedlot maintenance event ontology term
+                    - value: value of the seedlot maintenance event
+                    - notes: additional notes/comments about the event
+                    - operator: username of the person creating the event
+                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+
+=cut
+
+sub get_event {
+    my $self = shift;
+    my $event_id = shift;
+    my $schema = $self->schema();
+    my $seedlot_name = $self->uniquename();
+    my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
+
+    my $events = $m->filter_events({ names => [$seedlot_name], events => [$event_id]} );
+    return $events->[0];
+}
 
 
 =head2 store_events()
@@ -1294,8 +1319,8 @@ sub get_events {
                     - operator: username of the person creating the event
                     - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
  Ret:           an arrayref of hashes of the processed/stored events (includes stockprop_id), with the following keys:
-                    - prop_id: the unique id of the maintenance event
-                    - parent_id: the unique id of the seedlot
+                    - stockprop_id: the unique id of the maintenance event
+                    - stock_id: the unique id of the seedlot
                     - cvterm_id: id of seedlot maintenance event ontology term
                     - cvterm_name: name of seedlot maintenance event ontology term
                     - value: value of the seedlot maintenance event
@@ -1367,12 +1392,32 @@ sub store_events {
         $event_obj->operator($processed_event->{operator});
         $event_obj->timestamp($processed_event->{timestamp});
         my $stockprop_id = $event_obj->store_by_rank();
-        $processed_event->{prop_id} = $stockprop_id;
-        $processed_event->{parent_id} = $seedlot_id;
+        $processed_event->{stockprop_id} = $stockprop_id;
+        $processed_event->{stock_id} = $seedlot_id;
     }
 
     # Return the processed events
     return(\@processed_events);
+}
+
+
+=head2 remove_event()
+
+ Usage:         $sl->remove_event($id)
+ Desc:          delete the specified seedlot maintenance event from the database
+ Args:          $id = stockprop_id of the seedlot maintenance event
+ Ret:
+
+=cut
+
+sub remove_event {
+    my $self = shift;
+    my $event_id = shift;
+    my $seedlot_id = $self->seedlot_id();
+    my $schema = $self->schema();
+    my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema, parent_id => $seedlot_id, prop_id => $event_id });
+
+    $m->delete();
 }
 
 1;

@@ -1184,7 +1184,7 @@ sub seedlot_maintenance_event_search_POST {
 
     # Get events
     my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
-    my $events = $m->get_all_events($filters);
+    my $events = $m->filter_events($filters);
 
     # Return events
     $c->stash->{rest} = { events => $events };
@@ -1207,8 +1207,8 @@ sub seedlot_maintenance_event_search_POST {
 #       - operator: username of the person creating the event
 #       - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
 # 
-sub seedlot_maintenance_event : Chained('seedlot_base') PathPart('maintenance') Args(0) : ActionClass('REST') { }
-sub seedlot_maintenance_event_GET {
+sub seedlot_maintenance_events : Chained('seedlot_base') PathPart('maintenance') Args(0) : ActionClass('REST') { }
+sub seedlot_maintenance_events_GET {
     my $self = shift;
     my $c = shift;
     my $seedlot = $c->stash->{seedlot};
@@ -1231,6 +1231,7 @@ sub seedlot_maintenance_event_GET {
 #       - timestamp: (optional, default=now) timestamp of when the event was created (YYYY-MM-DD HH:MM:SS format)
 # RETURNS: 
 #   events: the processed events stored in the database, an array of objects with the following keys:
+#       - stock_id: stock id of the seedlot
 #       - stockprop_id: seedlot maintenance event id (stockprop_id) 
 #       - cvterm_id: id of seedlot maintenance event ontology term
 #       - cvterm_name: name of seedlot maintenance event ontology term
@@ -1239,7 +1240,7 @@ sub seedlot_maintenance_event_GET {
 #       - operator: username of the person creating the event
 #       - timestamp: timestamp of when the event was created (YYYY-MM-DD HH:MM:SS format)
 #
-sub seedlot_maintenance_event_POST {
+sub seedlot_maintenance_events_POST {
     my $self = shift;
     my $c = shift;
     my $seedlot = $c->stash->{seedlot};
@@ -1305,6 +1306,58 @@ sub seedlot_maintenance_event_POST {
         $c->stash->{rest} = {error => "Could not store seedlot maintenance events [$@]!"};
         $c->detach();
     }
+}
+
+
+# 
+# Get the details of the single specified Maintenance Event from the specified Seedlot
+# PATH: GET /ajax/breeders/seedlot/{seedlot id}/maintenance/{event id}
+# RETURNS:
+#   event: the details of the specified event, with the following keys:
+#       - stock_id: the unique id of the seedlot
+#       - uniquename: the unique name of the seedlot
+#       - stockprop_id: seedlot maintenance event id (stockprop_id) 
+#       - cvterm_id: id of seedlot maintenance event ontology term
+#       - cvterm_name: name of seedlot maintenance event ontology term
+#       - value: value of seedlot maintenance event
+#       - notes: additional notes/comments about the event
+#       - operator: username of the person creating the event
+#       - timestamp: timestamp of when the event was created (YYYY-MM-DD HH:MM:SS format)
+#
+sub seedlot_maintenance_event : Chained('seedlot_base') PathPart('maintenance') Args(1) : ActionClass('REST') { }
+sub seedlot_maintenance_event_GET {
+    my $self = shift;
+    my $c = shift;
+    my $event_id = shift;
+    my $seedlot = $c->stash->{seedlot};
+
+    my $event = $seedlot->get_event($event_id);
+    $c->stash->{rest} = { event => $event };
+}
+
+# 
+# Delete the specified event from the database
+# PATH: DELETE /ajax/breeders/seedlot/{seedlot id}/maintenance/{event id}
+# RETURNS:
+#   - success: 1 if successful, 0 if not
+#   - error: error message if not successful
+#
+sub seedlot_maintenance_event_DELETE {
+    my $self = shift;
+    my $c = shift;
+    my $event_id = shift;
+    my $seedlot = $c->stash->{seedlot};
+
+    eval {
+        $seedlot->remove_event($event_id);
+    };
+    if ($@) {
+        print STDERR "Could not delete seedlot maintenance event. ($@).\n";
+        $c->stash->{rest} = { success => 0, error => $@ };
+        $c->detach();
+    }
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 1;

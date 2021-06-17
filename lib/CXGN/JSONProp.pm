@@ -246,7 +246,7 @@ sub get_props {
 
 =head2 filter_props($schema, $conditions, $parent_ids)
  
- Usage:     my $filtered_props = $JSONPropClass->filter_props($schema, $conditions, $parent_ids);
+ Usage:     my $filtered_props = $JSONPropClass->filter_props($schema, $conditions, $parent_fields);
  Desc:      This class method can be used to get props that match the provided search criteria, 
             for the optionally provided list of parents
  Ret:       an arrayref of hashes containing the parent_id, prop_id, and all of the prop values
