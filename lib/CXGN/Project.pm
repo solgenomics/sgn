@@ -2423,8 +2423,8 @@ sub delete_project_entry {
         {
             on_connect_do => ['SET search_path TO public,phenome;']
         });
-    my $project_owner_rs = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
-    $project_owner_rs->delete();
+    my $project_owner_row = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
+    if ($project_owner_row) { $project_owner_row->delete(); }
     eval {
 	    my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
 	    $row->delete();

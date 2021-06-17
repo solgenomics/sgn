@@ -46,7 +46,7 @@
                </center>
            </div>
        </div>
-       <center><i style="margin-top:10px;">(72 pixels/inch)</i></center>
+       <center><i style="margin-top:10px;">(72 pixels/inch - approx. 28.35 pixels/cm)</i></center>
    </div>
    <div class="col-md-6" id="d3-label-custom-dimensions-div" style="visibility:hidden">
        <div class="col-md-12">
@@ -67,7 +67,7 @@
                <button id="d3-apply-custom-label-size" type="button" class="btn btn-primary">Apply</button>
            </div>
        </div>
-       <center><i style="margin-top:10px;">(72 pixels/inch)</i></center>
+       <center><i style="margin-top:10px;">(72 pixels/inch - approx. 28.35 pixels/cm)</i></center>
    </div>
 </div>
 
