@@ -64,9 +64,9 @@ CREATE TABLE IF NOT EXISTS public.project_dbxref (
 	is_current bool NOT NULL DEFAULT true,
 	CONSTRAINT fkey_project_id
 	    FOREIGN KEY(project_id)
-	        REFERENCES project(project_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;,
+	        REFERENCES project(project_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
 	CONSTRAINT fkey_dbxref_id
-	    FOREIGN KEY(dxbref_id)
+	    FOREIGN KEY(dbxref_id)
 	        REFERENCES dbxref(dbxref_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
 	CONSTRAINT project_dbxref_c1 UNIQUE (project_id, dbxref_id),
 	CONSTRAINT project_dbxref_pkey PRIMARY KEY (project_dbxref_id)
