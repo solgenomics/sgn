@@ -82,7 +82,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
     my $ret->{status} = 'Selection index failed.';
     if (@values)
     {
-        $c->controller('solGS::TraitsGebvs')->get_gebv_files_of_traits($c);
+        $c->controller('solGS::Gebvs')->get_gebv_files_of_traits($c);
 
         $self->gebv_rel_weights($c, $rel_wts);
         $self->calc_selection_index($c);

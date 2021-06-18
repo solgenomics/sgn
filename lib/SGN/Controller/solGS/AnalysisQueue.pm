@@ -689,12 +689,12 @@ sub structure_training_modeling_output {
 
 		    if ($analysis_page =~ m/solgs\/traits\/all\/population\//)
 		    {
-				my $traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id(\@traits_ids);
+				my $traits_selection_id = $c->controller('solGS::Gebvs')->create_traits_selection_id(\@traits_ids);
 				$analysis_data->{analysis_page} = $base . "solgs/traits/all/population/" . $pop_id
 				    . '/traits/' . $traits_selection_id
 				    . '/gp/' . $protocol_id;
 
-				$c->controller('solGS::TraitsGebvs')->catalogue_traits_selection($c, \@traits_ids);
+				$c->controller('solGS::Gebvs')->catalogue_traits_selection($c, \@traits_ids);
 		    }
 		}
 
@@ -715,13 +715,13 @@ sub structure_training_modeling_output {
 
 		    if ($analysis_page =~ m/solgs\/models\/combined\/trials\//)
 		    {
-				my $traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id(\@traits_ids);
+				my $traits_selection_id = $c->controller('solGS::Gebvs')->create_traits_selection_id(\@traits_ids);
 				$analysis_data->{analysis_page} = $base . "solgs/models/combined/trials/"
 				    . $combo_pops_id
 				    . '/traits/' . $traits_selection_id
 				    . '/gp/' . $protocol_id;
 
-				$c->controller('solGS::TraitsGebvs')->catalogue_traits_selection($c, \@traits_ids);
+				$c->controller('solGS::Gebvs')->catalogue_traits_selection($c, \@traits_ids);
 		    }
 		}
 

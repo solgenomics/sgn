@@ -141,7 +141,7 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
 sub cluster_gebvs_file {
     my ($self, $c) = @_;
 
-    $c->controller('solGS::TraitsGebvs')->combined_gebvs_file($c);
+    $c->controller('solGS::Gebvs')->combined_gebvs_file($c);
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
 
     $c->stash->{cluster_gebvs_file} = $combined_gebvs_file;
@@ -916,7 +916,7 @@ sub cluster_combine_gebvs_jobs_file {
 
     my $cluster_type = $c->stash->{cluster_type};
 
-    $c->controller('solGS::TraitsGebvs')->combine_gebvs_jobs($c);
+    $c->controller('solGS::Gebvs')->combine_gebvs_jobs($c);
     my $jobs = $c->stash->{combine_gebvs_jobs};
 
     my $temp_dir = $c->stash->{cluster_temp_dir};

@@ -210,7 +210,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 
     if ($traits_selection_id =~ /^\d+$/)
     {
-		$c->controller('solGS::TraitsGebvs')->get_traits_selection_list($c, $traits_selection_id);
+		$c->controller('solGS::Gebvs')->get_traits_selection_list($c, $traits_selection_id);
 		@traits_ids = @{$c->stash->{traits_selection_list}} if $c->stash->{traits_selection_list};
     }
 
