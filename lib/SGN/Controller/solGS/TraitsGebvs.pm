@@ -77,6 +77,30 @@ sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
 }
 
 
+sub get_traits_selection_id :Path('/solgs/get/traits/selection/id') Args(0) {
+    my ($self, $c) = @_;
+
+    my @traits_ids = $c->req->param('trait_ids[]');
+
+    my $ret->{status} = 0;
+
+    if (@traits_ids > 1)
+    {
+	$self->catalogue_traits_selection($c, \@traits_ids);
+
+	my $traits_selection_id = $self->create_traits_selection_id(\@traits_ids);
+	$ret->{traits_selection_id} = $traits_selection_id;
+	$ret->{status} = 1;
+    }
+
+    $ret = to_json($ret);
+
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
+}
+
+
 sub combine_gebvs_jobs_args {
     my ($self, $c) = @_;
 
@@ -117,6 +141,7 @@ sub combine_gebvs_jobs_args {
 
 }
 
+
 sub combined_gebvs_file_id {
     my ($self, $c) = @_;
 
@@ -129,6 +154,7 @@ sub combined_gebvs_file_id {
     return $file_id;
 
 }
+
 
 sub combined_gebvs_file {
     my ($self, $c) = @_;
@@ -288,34 +314,8 @@ sub get_traits_selection_list {
 }
 
 
-sub get_traits_selection_id :Path('/solgs/get/traits/selection/id') Args(0) {
-    my ($self, $c) = @_;
-
-    my @traits_ids = $c->req->param('trait_ids[]');
-
-    my $ret->{status} = 0;
-
-    if (@traits_ids > 1)
-    {
-	$self->catalogue_traits_selection($c, \@traits_ids);
-
-	my $traits_selection_id = $self->create_traits_selection_id(\@traits_ids);
-	$ret->{traits_selection_id} = $traits_selection_id;
-	$ret->{status} = 1;
-    }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
-
-
 sub create_traits_selection_id {
     my ($self, $traits_ids) = @_;
-
-
 
     if ($traits_ids)
     {
@@ -325,11 +325,8 @@ sub create_traits_selection_id {
     {
 	return 0;
     }
+
 }
-
-
-
-#####
 
 
 sub begin : Private {
