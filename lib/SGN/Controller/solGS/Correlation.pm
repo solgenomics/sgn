@@ -112,8 +112,9 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
 
     # $c->controller('solGS::Gebvs')->combine_gebvs_of_traits($c);
     $c->controller('solGS::Gebvs')->run_combine_traits_gebvs($c);
-
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
+
+    print STDERR "\ncombined_gebvs_file: $combined_gebvs_file\n";
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     $combined_gebvs_file = $c->controller('solGS::Files')->copy_file($combined_gebvs_file, $tmp_dir);
 
@@ -571,7 +572,7 @@ sub corre_pheno_query_jobs {
     my ($self, $c) = @_;
 
 
-    my $trial_id = $c->stash->{pop_id} || $c->stash->{trial_id};
+    my $trial_id = $c->stash->{pop_id} || $c->stash->{model_id}|| $c->stash->{trial_id};
     $c->controller('solGS::Async')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
     my $jobs = $c->stash->{cluster_phenotype_query_job_args};
 

@@ -202,8 +202,8 @@ sub selection_prediction_download_urls {
 
     if ($selection_pop_id)
     {
-        $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
-        $selection_traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids};
+        $c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
+        $selection_traits_ids = $c->stash->{selection_pop_analyzed_traits_ids};
     }
 
     my @selection_traits_ids = sort(@$selection_traits_ids) if $selection_traits_ids->[0];

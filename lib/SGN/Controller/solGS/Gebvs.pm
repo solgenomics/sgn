@@ -124,10 +124,12 @@ sub combine_gebvs_jobs_args {
         }
 
 	my $identifier = $self->combined_gebvs_file_id($c);
+    print STDERR "\ncombined_gebvs_file_id: $identifier\n";
 	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
 
         my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}");
-
+        $c->stash->{combined_gebvs_file} = $combined_gebvs_file;
+        print STDERR "\ncombined_gebvs_file --  $combined_gebvs_file\n";
         $c->stash->{input_files}  = $gebvs_files;
         $c->stash->{output_files} = $combined_gebvs_file;
         $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
@@ -213,14 +215,14 @@ sub get_gebv_files_of_traits {
 
     if ($selection_pop_id)
     {
-        $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
-	$gebv_files = join("\t", @{$c->stash->{prediction_pop_analyzed_traits_files}});
+        $self->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
+	$gebv_files = join("\t", @{$c->stash->{selection_pop_analyzed_traits_files}});
     }
     else
     {
-        $c->controller('solGS::solGS')->analyzed_traits($c);
-	$gebv_files = join("\t", @{$c->stash->{analyzed_traits_files}});
-	$valid_gebv_files = join("\t", @{$c->stash->{analyzed_valid_traits_files}});
+       $self->training_pop_analyzed_traits($c);
+	$gebv_files = join("\t", @{$c->stash->{training_pop_analyzed_traits_files}});
+	$valid_gebv_files = join("\t", @{$c->stash->{training_pop_analyzed_valid_traits_files}});
     }
 
     my $pred_file_suffix =   '_' . $selection_pop_id if $selection_pop_id;
@@ -325,6 +327,99 @@ sub create_traits_selection_id {
     {
 	return 0;
     }
+
+}
+
+
+sub training_pop_analyzed_traits {
+    my ($self, $c) = @_;
+
+    my $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id};
+    my @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
+
+    my @traits;
+    my @traits_ids;
+    my @si_traits;
+    my @valid_traits_files;
+    my @analyzed_traits_files;
+
+    foreach my $trait_id (@selected_analyzed_traits)
+    {
+	    $c->stash->{trait_id} = $trait_id;
+	    $c->controller('solGS::solGS')->get_trait_details($c);
+	    my $trait = $c->stash->{trait_abbr};
+
+            $c->controller('solGS::modelAccuracy')->get_model_accuracy_value($c, $training_pop_id, $trait);
+            my $av = $c->stash->{accuracy_value};
+
+	    my $trait_file;
+            if ($av && $av =~ m/\d+/ && $av > 0)
+            {
+		$c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
+		$trait_file = $c->stash->{rrblup_training_gebvs_file};
+		push @valid_traits_files, $trait_file;
+		push @si_traits, $trait;
+            }
+
+
+	    push @traits, $trait;
+	    push @analyzed_traits_files, $trait_file;
+    }
+
+    @traits = uniq(@traits);
+    @si_traits = uniq(@si_traits);
+print STDERR "\nanalyzed_traits_files -- @analyzed_traits_files\n";
+    $c->stash->{training_pop_analyzed_traits}        = \@traits;
+    $c->stash->{training_pop_analyzed_traits_ids}    = \@selected_analyzed_traits;
+    $c->stash->{training_pop_analyzed_traits_files}  = \@analyzed_traits_files;
+    $c->stash->{selection_index_traits} = \@si_traits;
+    $c->stash->{training_pop_analyzed_valid_traits_files}  = \@valid_traits_files;
+}
+
+
+sub selection_pop_analyzed_traits {
+    my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
+
+    my @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
+
+    no warnings 'uninitialized';
+
+    my $dir = $c->stash->{solgs_cache_dir};
+    opendir my $dh, $dir or die "can't open $dir: $!\n";
+
+    my @files;
+    my @trait_ids;
+    my @trait_abbrs;
+    my @selected_trait_abbrs;
+    my @selected_files;
+
+    if (@selected_analyzed_traits)
+    {
+	@trait_ids;
+
+	foreach my $trait_id (@selected_analyzed_traits)
+	{
+	    $c->stash->{trait_id} = $trait_id;
+	    $c->controller('solGS::solGS')->get_trait_details($c);
+	    push @selected_trait_abbrs, $c->stash->{trait_abbr};
+
+	    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
+	    my $file = $c->stash->{rrblup_selection_gebvs_file};
+
+	    if ( -s $c->stash->{rrblup_selection_gebvs_file})
+	    {
+		push @selected_files, $c->stash->{rrblup_selection_gebvs_file};
+		push @trait_ids, $trait_id;
+	    }
+	}
+    }
+
+    @trait_abbrs = @selected_trait_abbrs if @selected_trait_abbrs;
+    @files       = @selected_files if @selected_files;
+
+    $c->stash->{selection_pop_analyzed_traits}       = \@trait_abbrs;
+    $c->stash->{selection_pop_analyzed_traits_ids}   = \@trait_ids;
+    $c->stash->{selection_pop_analyzed_traits_files} = \@files;
 
 }
 

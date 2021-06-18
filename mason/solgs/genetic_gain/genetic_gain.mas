@@ -15,9 +15,9 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $pop_id => undef
-$analyzed_traits => undef
-$analyzed_traits_ids => undef
-$prediction_pop_analyzed_traits => undef
+$training_pop_analyzed_traits => undef
+$training_pop_analyzed_traits_ids => undef
+$selection_pop_analyzed_traits => undef
 $selection_pop_name => undef
 $project_name => undef
 
@@ -34,7 +34,7 @@ my $page = $c->req->path;
 $training_pop_id = $pop_id if !$training_pop_id;
 my $training_pop_name = $project_name;
 
-my $training_traits_ids = join(',', @$analyzed_traits_ids)  if $analyzed_traits_ids;
+my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $training_pop_analyzed_traits_ids;
 
 </%perl>
 

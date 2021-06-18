@@ -867,53 +867,6 @@ sub list_predicted_selection_pops {
 }
 
 
-sub prediction_pop_analyzed_traits {
-    my ($self, $c, $training_pop_id, $selection_pop_id) = @_;
-
-    my @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
-
-    no warnings 'uninitialized';
-
-    my $dir = $c->stash->{solgs_cache_dir};
-    opendir my $dh, $dir or die "can't open $dir: $!\n";
-
-    my @files;
-    my @trait_ids;
-    my @trait_abbrs;
-    my @selected_trait_abbrs;
-    my @selected_files;
-
-    if (@selected_analyzed_traits)
-    {
-	@trait_ids;
-
-	foreach my $trait_id (@selected_analyzed_traits)
-	{
-	    $c->stash->{trait_id} = $trait_id;
-	    $self->get_trait_details($c);
-	    push @selected_trait_abbrs, $c->stash->{trait_abbr};
-
-	    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
-	    my $file = $c->stash->{rrblup_selection_gebvs_file};
-
-	    if ( -s $c->stash->{rrblup_selection_gebvs_file})
-	    {
-		push @selected_files, $c->stash->{rrblup_selection_gebvs_file};
-		push @trait_ids, $trait_id;
-	    }
-	}
-    }
-
-    @trait_abbrs = @selected_trait_abbrs if @selected_trait_abbrs;
-    @files       = @selected_files if @selected_files;
-
-    $c->stash->{prediction_pop_analyzed_traits}       = \@trait_abbrs;
-    $c->stash->{prediction_pop_analyzed_traits_ids}   = \@trait_ids;
-    $c->stash->{prediction_pop_analyzed_traits_files} = \@files;
-
-}
-
-
 sub model_parameters {
     my ($self, $c) = @_;
 
@@ -1009,8 +962,8 @@ sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1
 	my $selection_pops_ids = $c->stash->{selection_pops_ids};
 	my $formatted_selection_pops = $c->stash->{list_of_prediction_pops};
 
-	$self->prediction_pop_analyzed_traits($c, $tr_pop_id, $selection_pops_ids->[0]);
-	my $selection_pop_traits = $c->stash->{prediction_pop_analyzed_traits_ids};
+	$c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $tr_pop_id, $selection_pops_ids->[0]);
+	my $selection_pop_traits = $c->stash->{selection_pop_analyzed_traits_ids};
 
 	$ret->{selection_traits} = $selection_pop_traits;
 	$ret->{data} = $formatted_selection_pops;
@@ -1037,8 +990,8 @@ sub selection_population_predicted_traits :Path('/solgs/selection/population/pre
     my $ret->{selection_traits} = undef;
     if ($training_pop_id && $selection_pop_id)
     {
-	$self->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
-	my $selection_pop_traits = $c->stash->{prediction_pop_analyzed_traits_ids};
+	$c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
+	my $selection_pop_traits = $c->stash->{selection_pop_analyzed_traits_ids};
 	$ret->{selection_traits} = $selection_pop_traits;
     }
 
@@ -1193,8 +1146,8 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 	 }
 
 	 $c->stash->{training_traits_ids} = \@traits_ids;
-	 $self->analyzed_traits($c);
-	 my $analyzed_traits = $c->stash->{analyzed_traits};
+	 $c->controller('solGS::Gebvs')->training_pop_analyzed_traits($c);
+	 my $analyzed_traits = $c->stash->{training_pop_analyzed_traits};
 
 	 $c->stash->{trait_pages} = \@traits_pages;
 
@@ -1220,9 +1173,9 @@ sub traits_with_valid_models {
 
     my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
 
-    $self->analyzed_traits($c);
+    $c->controller('solGS::Gebvs')->training_pop_analyzed_traits($c);
 
-    my @analyzed_traits = @{$c->stash->{analyzed_traits}};
+    my @analyzed_traits = @{$c->stash->{training_pop_analyzed_traits}};
     my @filtered_analyzed_traits;
     my @valid_traits_ids;
 
@@ -1542,52 +1495,6 @@ sub traits_acronym_table {
 }
 
 
-sub analyzed_traits {
-    my ($self, $c) = @_;
-
-    my $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id};
-    my @selected_analyzed_traits = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
-
-    my @traits;
-    my @traits_ids;
-    my @si_traits;
-    my @valid_traits_files;
-    my @analyzed_traits_files;
-
-    foreach my $trait_id (@selected_analyzed_traits)
-    {
-	    $c->stash->{trait_id} = $trait_id;
-	    $self->get_trait_details($c);
-	    my $trait = $c->stash->{trait_abbr};
-
-            $c->controller('solGS::modelAccuracy')->get_model_accuracy_value($c, $training_pop_id, $trait);
-            my $av = $c->stash->{accuracy_value};
-
-	    my $trait_file;
-            if ($av && $av =~ m/\d+/ && $av > 0)
-            {
-		$c->controller('solGS::Files')->rrblup_training_gebvs_file($c, $training_pop_id, $trait_id);
-		$trait_file = $c->stash->{rrblup_training_gebvs_file};
-		push @valid_traits_files, $trait_file;
-		push @si_traits, $trait;
-            }
-
-
-	    push @traits, $trait;
-	    push @analyzed_traits_files, $trait_file;
-    }
-
-    @traits = uniq(@traits);
-    @si_traits = uniq(@si_traits);
-
-    $c->stash->{analyzed_traits}        = \@traits;
-    $c->stash->{analyzed_traits_ids}    = \@selected_analyzed_traits;
-    $c->stash->{analyzed_traits_files}  = \@analyzed_traits_files;
-    $c->stash->{selection_index_traits} = \@si_traits;
-    $c->stash->{analyzed_valid_traits_files}  = \@valid_traits_files;
-}
-
-
 sub first_stock_genotype_data {
     my ($self, $c, $pop_id, $protocol_id) = @_;
 
@@ -1835,7 +1742,7 @@ sub get_rrblup_output {
         if (scalar(@traits) > 1)
         {
             $c->stash->{model_id} = $pop_id;
-            $self->analyzed_traits($c);
+            $c->controller('solGS::Gebvs')->training_pop_analyzed_traits($c);
             $c->stash->{template}    = $c->controller('solGS::Files')->template('/population/multiple_traits_output.mas');
             $c->stash->{trait_pages} = \@trait_pages;
         }
