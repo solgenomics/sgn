@@ -244,17 +244,19 @@ sub get_props {
 }
 
 
-=head2 filter_props($schema, $conditions, $parent_ids)
+=head2 filter_props()
  
- Usage:     my $filtered_props = $JSONPropClass->filter_props($schema, $conditions, $parent_fields);
- Desc:      This class method can be used to get props that match the provided search criteria, 
-            for the optionally provided list of parents
- Ret:       an arrayref of hashes containing the parent_id, prop_id, and all of the prop values
+ Usage:     my $filtered_props = $JSONPropClass->filter_props({ schema=> $schema, conditions => \%conditions });
+ Desc:      This class method can be used to get props that match the provided search criteria
+ Ret:       an arrayref of hashes containing the parent_id, prop_id, all of the prop values, and any specified parent fields
  Args:      schema = Bio::Chado::Schema
-            conditions = a hashref of DBIx where conditions to filter the props by.  If you're filtering
-                by a prop value, you should use the form: "value::json->>'prop_name' => 'prop value'"
-            parent_fields = (optional) an arrayref of the names of fields from the parent table to include in the results
+            conditions = (optional, default=unfiltered/all props) a hashref of DBIx where conditions to filter the props by.  
+                If you're filtering by a prop value, you should use the form: "value::json->>'prop_name' => 'prop value'"
+            parent_fields = (optional, default=none) an arrayref of the names of fields from the parent table to include in the results
                 NOTE: if a parent field is used in the search conditions, it should also be included here
+            order_by = (optional) the field to sort the results by:
+                order_by => "stockprop_id"                               // sort by ascending stockprop_id
+                order_by => { "-desc" => "value::json->'timestamp'" }    // sort by descending timestamp in the json value
  Example:   my $conditions = {
                 '-and' => [ 
                     { 'stock.uniquename' => [ 'TEST_SEEDLOT_1', 'TEST_SEEDLOT_2' ] },
@@ -278,16 +280,22 @@ sub get_props {
                     { 'value::json->>\'cvterm_id\'' => '78090' }
                 ]
             };
-            my $filtered_props = $JSONPropClass->filter_props($schema, $conditions, ["uniquename"]);
+            my $filtered_props = $JSONPropClass->filter_props({
+                schema => $schema, 
+                conditions => $conditions, 
+                parent_fields => ["uniquename"],
+                order_by => { "-desc" => "value::json->>'timestamp'" }
+            });
 
 =cut
 
 sub filter_props {
     my $class = shift;
-    my $schema = shift;
-    my $conditions = shift;
-    my $parent_fields = shift;
-    my $dbh = $schema->storage->dbh;
+    my $args = shift;
+    my $schema = $args->{schema};
+    my $conditions = $args->{conditions};
+    my $parent_fields = $args->{parent_fields};
+    my $order_by = $args->{order_by};
     my $type_id = $class->_prop_type_id();
 
     # Build the search conditions
@@ -309,7 +317,8 @@ sub filter_props {
         {
             'prefetch' => defined $parent_fields ? $class->parent_table() : undef,
             '+select' => \@s,
-            '+as' => \@a
+            '+as' => \@a,
+            'order_by' => $order_by
         }
     );
 

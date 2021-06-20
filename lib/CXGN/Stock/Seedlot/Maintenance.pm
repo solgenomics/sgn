@@ -133,12 +133,14 @@ sub filter_events {
     }
 
     # Perform the filtering
-    my $filtered_props = $class->filter_props($schema, \%conditions, ["uniquename"]);
+    my $filtered_props = $class->filter_props({ 
+        schema => $schema, 
+        conditions => \%conditions, 
+        parent_fields => ["uniquename"],
+        order_by => { "-desc" => "value::json->>'timestamp'" }
+    });
 
-    # Sort by timestamp
-    my @sorted_props = sort { $b->{timestamp} cmp $a->{timestamp} } @$filtered_props;
-
-    return \@sorted_props;
+    return $filtered_props;
 
 }
 
