@@ -1,0 +1,189 @@
+<%args>
+
+</%args>
+
+
+<div class="modal fade" id="upload_catalog_items_dialog" name="upload_catalog_items_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCatalogItemsDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCatalogItemsDialog">Upload Catalog Items </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File Format Information</b>
+                            <br>
+                            <a id="upload_catalog_items_format">Spreadsheet Format</a>
+                            <br>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_catalog_items_form" name="upload_catalog_items_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Upload File (.xls): </label>
+                                <div class="col-sm-9">
+                                    <input type="file" name="catalog_items_upload_file" id="catalog_items_upload_file" encoding="multipart/form-data" />
+                                </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_catalog_items_submit" id="upload_catalog_items_submit">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_catalog_items_error_display" name="upload_catalog_items_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCatalogItemsErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCatalogItemsErrorDialog">Upload Catalog Items File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="catalog_items_saved_dialog_message" name="catalog_items_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="catalogItemsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="catalogItemsSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The catalog items were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_catalog_items_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_catalog_items_format_dialog" name="upload_catalog_items_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCatalogItemsFormatDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCatalogItemsFormatDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Catalog Items may be uploaded in an Excel file (.xls)</b>
+                    <br>
+                    (.xlsx format not supported)
+                    <br><br>
+                    <b>Header:</b>
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>item_name</td>
+                                <td>type</td>
+                                <td>category</td>
+                                <td>description</td>
+                                <td>material_source</td>
+                                <td>breeding_program</td>
+                                <td>availability</td>
+                                <td>contact_person_username</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required columns:</b>
+                    <ul>
+                        <li><b>item_name:</b>Item name must be in the database.</li>
+                        <li><b>type:</b>Must be one of the following (single item, set of items). This field can be customized, please contact us.</li>
+                        <li><b>category:</b>Must be one of the following (released variety, pathogen assay, control). This field can be customized, please contact us.</li>
+                        <li><b>description:</b>Please describe the key features of each item.</li>
+                        <li><b>material_source:</b>Must be one of the following (Arusha, Sendusu, Kawanda). This field can be customized, please contact us.</li>
+                        <li><b>breeding_program:</b>Breeding program must be in the database.</li>
+                        <li><b>availability:</b>Must be one of the following (in stock, out of stock, available in 3 months). This field can be customized, please contact us.</li>
+                        <li><b>contact_person_username:</b>Please indicate contact person of each item. Contact person username must be in the database</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready( function() {
+
+    jQuery("#upload_catalog_items_button").click(function(){
+
+        jQuery("#upload_catalog_items_format").click(function(){
+            jQuery("#upload_catalog_items_format_dialog").modal("show");
+        });
+
+        jQuery("#upload_catalog_items_dialog").modal("show");
+    });
+
+
+    jQuery("#upload_catalog_items_submit").click(function(){
+        var uploadFile = jQuery("#catalog_items_upload_file").val();
+        jQuery('#upload_catalog_items_form').attr("action", "/ajax/catalog/upload_items");
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_catalog_items_form").submit();
+        jQuery("#upload_catalog_items_dialog").modal("hide");
+    });
+
+    jQuery("#upload_catalog_items_form").iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response){
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string){
+                jQuery("#upload_catalog_items_error_display tbody").html('');
+                jQuery("#upload_catalog_items_error_display tbody").append(response.error_string);
+                jQuery("#upload_catalog_items_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#catalog_items_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_catalog_items_saved_dialog").click(function(){
+        location.reload();
+    });
+
+});
+
+
+</script>

@@ -12,7 +12,7 @@ Example implementation of a subclass:
 
   package TestProp;
 
-  use Moose;>
+  use Moose;
 
   use Data::Dumper;
 
@@ -54,11 +54,14 @@ use Moose;
 
 use Data::Dumper;
 use Bio::Chado::Schema;
+use CXGN::People::Schema;
 use JSON::Any;
 use Try::Tiny;
 use SGN::Model::Cvterm;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema', is => 'rw');
+
+has 'people_schema' => ( isa => 'CXGN::People::Schema', is => 'rw');
 
 has 'prop_table' => (isa => 'Str', is => 'rw', default => 'Set_in_subclass!'); # for example, 'stockprop'
 
@@ -93,31 +96,31 @@ sub load {  # must be called from BUILD in subclass
     my $cvterm_row = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $self->prop_type(), $self->cv_name());
 
     if (!$cvterm_row) { die "Can't find term ".$self->prop_type()." in cv ".$self->cv_name()."!!!!"; }
-    
+
     $self->_prop_type_id($cvterm_row->cvterm_id());
 
     print STDERR "LOAD PROP ID = ".$self->prop_id()."\n";
 
     if ($self->prop_id()) {
-	my $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
-	if (my $row = $rs->next()) {
-	    if ($row->type_id() == $self->_prop_type_id()) {
-		#print STDERR "ROW VALUE = ".$row->value().", TYPEID=".$row->type_id()." TYPE = ".$self->prop_type()."\n";
-		 my $parent_primary_key = $self->parent_primary_key();
-		my $parent_id = $row->$parent_primary_key;
-		$self->parent_id($parent_id);
-		$self->from_json($row->value());
-	    }
-	    else {
-		print STDERR "Skipping property unrelated to metadata...\n";
-	    }
-
-	}
-	else {
-	    die "The object with id ".$self->prop_id()." does not exist. Sorry!";
-	}
-
-
+        my $rs;
+        if ($self->prop_table eq 'sp_orderprop') {
+            $rs = $self->people_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
+        } else {
+            $rs = $self->bcs_schema()->resultset($self->prop_namespace())->search( { $self->prop_primary_key() => $self->prop_id() });
+        }
+	    if (my $row = $rs->next()) {
+	        if ($row->type_id() == $self->_prop_type_id()) {
+		    #print STDERR "ROW VALUE = ".$row->value().", TYPEID=".$row->type_id()." TYPE = ".$self->prop_type()."\n";
+                my $parent_primary_key = $self->parent_primary_key();
+                my $parent_id = $row->$parent_primary_key;
+                $self->parent_id($parent_id);
+                $self->from_json($row->value());
+            } else {
+                print STDERR "Skipping property unrelated to metadata...\n";
+            }
+        } else {
+            die "The object with id ".$self->prop_id()." does not exist. Sorry!";
+        }
     }
 }
 
@@ -177,7 +180,7 @@ sub to_hashref {
     my $self = shift;
     my $allowed_fields = $self->allowed_fields();
     my $data;
-    
+
     foreach my $f (@$allowed_fields) {
 	if (defined($self->$f())) {
 	    $data->{$f} = $self->$f();
@@ -220,7 +223,7 @@ sub get_props {
 
     print STDERR "get_props(): creating object; using parent_id $parent_id\n";
     my $obj = $class->new( { bcs_schema => $schema });
-    
+
     my @props = $obj->_retrieve_props($schema, $parent_id);
     print STDERR "Props = ".Dumper(\@props);
     my @hashes = ();
@@ -233,7 +236,7 @@ sub get_props {
 	    $hash->{prop_id} = $sp->[0];
 	    $hash->{parent_id} = $sp->[1]
 	};
-	
+
 	if ($@) {
 	    print STDERR "Warning: $json is not valid json in prop ".$sp->[0].".!\n";
 	}
@@ -314,6 +317,37 @@ sub store_by_rank {
 }
 
 
+=head2 method store_sp_orderprop()
+
+Usage:         $prop->store_sp_orderprop();
+Desc:
+Ret:
+Args:
+
+
+Side Effects:
+Example:
+
+=cut
+
+sub store_sp_orderprop {
+    my $self = shift;
+    print STDERR "PROP ID =".Dumper($self->prop_id())."\n";
+    if ($self->prop_id()) {
+        print STDERR "UPDATING JSONPROP ".$self->to_json()."\n";
+        my $row = $self->people_schema()->resultset($self->prop_namespace())->find( { $self->prop_primary_key() => $self->prop_id() } );
+        if ($row) {
+            $row->value($self->to_json());
+            $row->update();
+        }
+    } else {
+        my $row = $self->people_schema()->resultset($self->prop_namespace())->create( { $self->parent_primary_key()=> $self->parent_id(), value => $self->to_json(), type_id => $self->_prop_type_id(), rank => 1});
+        my $prop_primary_key = $self->prop_primary_key();
+        $self->prop_id($row->$prop_primary_key);
+    }
+}
+
+
 =head2 method delete()
 
  Usage:
@@ -333,7 +367,7 @@ sub delete {
     print STDERR "Parent id: ".$self->parent_id()."\n";
     print STDERR "Prop primary key: ".$self->prop_primary_key()."\n";
     print STDERR "Prop ID : ".$self->prop_id()."\n";
-    
+
     my $prop = $self->bcs_schema()->resultset($self->prop_namespace())->find({ type_id=>$self->_prop_type_id(), $self->parent_primary_key() => $self->parent_id(), $self->prop_primary_key() => $self->prop_id() });
 
     if (!$prop) {
@@ -368,10 +402,10 @@ sub _retrieve_props {
     my $prop_primary_key = $self->prop_primary_key();
     my $parent_primary_key = $self->parent_primary_key();
 
-    if ($parent_id) { 
-	eval { 
+    if ($parent_id) {
+	eval {
 	    my $rs = $schema->resultset($self->prop_namespace())->search({ $self->parent_primary_key() => $parent_id, type_id => $self->_prop_type_id() }, { order_by => {-asc => $self->prop_primary_key() } });
-	    
+
 	    while (my $r = $rs->next()){
 		push @results, [ $r->$prop_primary_key, $r->$parent_primary_key, $r->value() ];
 	    }
@@ -379,21 +413,21 @@ sub _retrieve_props {
     }
     else {
 	eval {
-	    
+
 	    print STDERR "Searching all ".$self->_prop_type_id()." in namespace ".$self->prop_namespace()." (primary key is ".$prop_primary_key."...\n";
-	    
+
 	    my $rs = $schema->resultset($self->prop_namespace())->search({ type_id => $self->_prop_type_id() }, { order_by => {-asc => $prop_primary_key } });
-	    
+
 	    while (my $r = $rs->next()){
 		push @results, [ $r->$prop_primary_key(), $r->$parent_primary_key(), $r->value() ];
 	    }
 	};
     }
-    
+
     if ($@) {
 	print STDERR "ERROR $@\n";
     }
-    
+
     return @results;
 }
 
