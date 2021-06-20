@@ -18,6 +18,7 @@ export function init() {
         set_data(data) {
             this.data = data;
         }
+        
 
         make_hash_map() {
             var field_map_hash;
@@ -192,6 +193,7 @@ export function init() {
             var list_of_checks;
             invert_rows = document.getElementById("invert_row_checkmark").checked ? "yes" : "no";
             var psudo_rows = [];
+
             var map_option = 0;
             for (i=0; i<plot_names.length; i++){ 
                 if (rows[i] != '') {}
@@ -628,7 +630,7 @@ export function init() {
                         cc.on("click", function(el) {  
                                                         var me = d3.select(el.srcElement);
                                                         var d = me.data()[0];
-                                                        console.log('ok',d);
+                                                        console.log(d);
                                                         image_ids = d.plot_image_ids || [];
                                                         var replace_accession = d.stock;
                                                         var replace_plot_id = d.plot_id;
