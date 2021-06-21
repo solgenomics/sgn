@@ -19,6 +19,8 @@ my $people_schema = $t->people_schema();
 my $metadata_schema = $t->metadata_schema();
 my $phenome_schema = $t->phenome_schema();
 
+$dbh->begin_work();
+
 my $mech = Test::WWW::Mechanize->new;
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
@@ -246,7 +248,8 @@ print STDERR Dumper $stored_analysis_phenotypes;
 is(scalar(@$stored_analysis_phenotypes), 6);
 
 print STDERR "Rolling back...\n";
-#$dbh->rollback();
+$dbh->rollback();
+
 
 done_testing();
 
