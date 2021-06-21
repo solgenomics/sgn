@@ -16,7 +16,7 @@ Options:
  -P password
  -c flag; if present, run concurrent refresh
  -m materialized view select. can be either 'fullview' or 'stockprop' or 'phenotypes'
- -t test mode 
+ -t test mode
 
 All materialized views that are included in the refresh function will be refreshed
 If -c is used, the refresh will be done concurrently, a process that takes longer than a standard refresh but that is completed without locking the views.
@@ -69,45 +69,34 @@ $dbh->commit();
 
 try {
     print STDERR "Refreshing materialized views . . ." . localtime() . "\n";
-    my %matviews; 
-    my $matviews_q = "SELECT mv_name, mv_dependents FROM matviews";
-    my $matviews_h = $dbh->prepare($matviews_q);
-    $matviews_h->execute();
-    while (my ($mv_name, $mv_dependents) = $matviews_h->fetchrow_array() ) {
-	$matviews{$mv_name} = $mv_dependents ;
-    }
-        
     my @mv_names = ();
-    
+
     if ($mode eq 'fullview') {
-	@mv_names = keys ( %matviews );
-
-
-    } 
+        @mv_names = ('materialized_phenoview','materialized_genoview');
+    }
     if ($mode eq 'stockprop'){
-	@mv_names = ('materialized_stockprop');
+       @mv_names = ('materialized_stockprop');
     }
     if ($mode eq 'phenotypes') {
-	@mv_names = ("materialized_phenotype_jsonb_table");
-    }    
-    
-    my $status = refresh_mvs($dbh, \@mv_names, $concurrent);   
+       @mv_names = ("materialized_phenotype_jsonb_table");
+    }
+
+    my $status = refresh_mvs($dbh, \@mv_names, $concurrent);
 
     #rollback if running in test mode
-    if ($test) { die ; } 
+    if ($test) { die ; }
 }
-
-catch
-{
+catch {
     warn "Refresh failed: @_";
     if ($test ) { print STDERR "TEST MODE\n" ; }
     $dbh->rollback()
-} finally {
+}
+finally {
     if (@_) {
-	print "The try block died. Rolling back.\n";
+        print "The try block died. Rolling back.\n";
     } else {
-	print STDERR "COMMITTING\n";
-	$dbh->commit();
+        print STDERR "COMMITTING\n";
+        $dbh->commit();
     }
     #always set the refreshing status to FALSE at the end
     $state = 'FALSE';
@@ -124,22 +113,21 @@ sub refresh_mvs {
     my $start_q = "UPDATE matviews SET refresh_start = statement_timestamp() where mv_name = ?";
     my $end_q =   "UPDATE matviews SET  last_refresh = statement_timestamp() where mv_name = ? ";
     my $refresh_q = "REFRESH MATERIALIZED VIEW ";
-    if ($concurrent) { $refresh_q .= " CONCURRENTLY "; } 
+    if ($concurrent) { $refresh_q .= " CONCURRENTLY "; }
     my $status;
-   
-    foreach my $name ( @$mv_names_ref ) {
-	print STDERR "**Refreshing view $name ". localtime() . " \n";
-	my $start_h = $dbh->prepare($start_q);
-	$start_h->execute($name);
-	print STDERR "**QUERY = " . $refresh_q . $name . "\n";
-	my $refresh_h = $dbh->prepare($refresh_q . $name) ;
-	$status = $refresh_h->execute();
 
-	print STDERR "Materialized view $name refreshed! Status: $status " . localtime() . "\n\n";
-	
-	my $end_h = $dbh->prepare($end_q);
-	$end_h->execute($name);
-	
+    foreach my $name ( @$mv_names_ref ) {
+        print STDERR "**Refreshing view $name ". localtime() . " \n";
+        my $start_h = $dbh->prepare($start_q);
+        $start_h->execute($name);
+        print STDERR "**QUERY = " . $refresh_q . $name . "\n";
+        my $refresh_h = $dbh->prepare($refresh_q . $name) ;
+        $status = $refresh_h->execute();
+
+        print STDERR "Materialized view $name refreshed! Status: $status " . localtime() . "\n\n";
+
+        my $end_h = $dbh->prepare($end_q);
+        $end_h->execute($name);
     }
     return $status;
 }
