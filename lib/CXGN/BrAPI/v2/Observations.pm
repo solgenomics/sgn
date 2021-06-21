@@ -330,7 +330,7 @@ sub observations_store {
 
     if ($stored_observation_error) {
         print STDERR "Error: $stored_observation_error\n";
-        return CXGN::BrAPI::JSONResponse->return_error($status, $stored_observation_error);
+        return CXGN::BrAPI::JSONResponse->return_error($status, $stored_observation_error, 500);
     }
     if ($stored_observation_success) {
         #if no error refresh matviews 
