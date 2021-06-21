@@ -56,6 +56,7 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
+
 -- drop and recreate phenoview with single unique index and no joining through nd_experiment
 
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenoview CASCADE;
@@ -90,34 +91,42 @@ WITH DATA;
 CREATE UNIQUE INDEX unq_pheno_idx ON public.materialized_phenoview(stock_id,phenotype_id,trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW materialized_phenoview OWNER TO web_usr;
 
--- drop and recreate genoview with single unique index
+
+-- drop and recreate genoview with single unique index and unions instead of case whens
 
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_genoview CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_genoview AS
- SELECT
-     CASE WHEN nd_experiment_stock.stock_id IS NOT NULL THEN stock_relationship.object_id ELSE accession.stock_id END AS accession_id,
-     CASE WHEN nd_experiment_stock.stock_id IS NOT NULL THEN nd_experiment_protocol.nd_protocol_id ELSE nd_experiment_protocol_accession.nd_protocol_id END AS genotyping_protocol_id,
-     CASE WHEN nd_experiment_stock.stock_id IS NOT NULL THEN nd_experiment_genotype.genotype_id ELSE nd_experiment_genotype_accession.genotype_id END AS genotype_id,
-     CASE WHEN nd_experiment_stock.stock_id IS NOT NULL THEN stock_type.name ELSE 'accession' END AS stock_type
-   FROM stock AS accession
-     LEFT JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id AND stock_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('tissue_sample_of', 'plant_of', 'plot_of') )
-     LEFT JOIN stock ON stock_relationship.subject_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('tissue_sample', 'plant', 'plot') )
-     LEFT JOIN cvterm AS stock_type ON (stock_type.cvterm_id = stock.type_id)
-     LEFT JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id AND nd_experiment_stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name='genotyping_experiment'))
-     LEFT JOIN nd_experiment_protocol ON nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id
-     LEFT JOIN nd_protocol ON (nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id AND nd_protocol.type_id IN (SELECT cvterm_id from cvterm where cvterm.name='genotyping_experiment'))
-     LEFT JOIN nd_experiment_genotype ON nd_experiment_stock.nd_experiment_id = nd_experiment_genotype.nd_experiment_id
-     LEFT JOIN nd_experiment_stock AS nd_experiment_stock_accession ON (accession.stock_id = nd_experiment_stock_accession.stock_id AND nd_experiment_stock_accession.type_id IN (SELECT cvterm_id from cvterm where cvterm.name='genotyping_experiment'))
-     LEFT JOIN nd_experiment_protocol AS nd_experiment_protocol_accession ON nd_experiment_stock_accession.nd_experiment_id = nd_experiment_protocol_accession.nd_experiment_id
-     LEFT JOIN nd_protocol AS nd_protocol_accession ON (nd_experiment_protocol_accession.nd_protocol_id = nd_protocol_accession.nd_protocol_id AND nd_protocol_accession.type_id IN (SELECT cvterm_id from cvterm where cvterm.name='genotyping_experiment'))
-     LEFT JOIN nd_experiment_genotype AS nd_experiment_genotype_accession ON nd_experiment_stock_accession.nd_experiment_id = nd_experiment_genotype_accession.nd_experiment_id
-  WHERE accession.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'accession') AND ( (nd_experiment_genotype.genotype_id IS NOT NULL AND nd_protocol.nd_protocol_id IS NOT NULL AND nd_experiment_stock.stock_id IS NOT NULL) OR (nd_experiment_genotype_accession.genotype_id IS NOT NULL AND nd_protocol_accession.nd_protocol_id IS NOT NULL AND nd_experiment_stock_accession.stock_id IS NOT NULL AND nd_experiment_stock IS NULL) )
-  GROUP BY 1,2,3,4
-  WITH DATA;
+SELECT stock.stock_id AS accession_id,
+     nd_experiment_protocol.nd_protocol_id AS genotyping_protocol_id,
+     genotype.genotype_id AS genotype_id,
+     stock_type.name AS stock_type
+    FROM stock
+      JOIN cvterm AS stock_type ON (stock_type.cvterm_id = stock.type_id AND stock_type.name = 'accession')
+      JOIN nd_experiment_stock ON stock.stock_id = nd_experiment_stock.stock_id
+      JOIN nd_experiment_protocol ON nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id
+      JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id
+      JOIN nd_experiment_genotype ON nd_experiment_stock.nd_experiment_id = nd_experiment_genotype.nd_experiment_id
+      JOIN genotype ON genotype.genotype_id = nd_experiment_genotype.genotype_id
+   GROUP BY 1,2,3,4
+UNION
+SELECT accession.stock_id AS accession_id,
+    nd_experiment_protocol.nd_protocol_id AS genotyping_protocol_id,
+    nd_experiment_genotype.genotype_id AS genotype_id,
+    stock_type.name AS stock_type
+    FROM stock AS accession
+      JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id AND stock_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('tissue_sample_of', 'plant_of', 'plot_of') )
+      JOIN stock ON stock_relationship.subject_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('tissue_sample', 'plant', 'plot') )
+      JOIN cvterm AS stock_type ON (stock_type.cvterm_id = stock.type_id)
+     JOIN nd_experiment_stock ON stock.stock_id = nd_experiment_stock.stock_id
+     JOIN nd_experiment_protocol ON nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id
+     JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id
+     JOIN nd_experiment_genotype ON nd_experiment_stock.nd_experiment_id = nd_experiment_genotype.nd_experiment_id
+  GROUP BY 1,2,3,4 ORDER BY 1,2,3;
 CREATE UNIQUE INDEX unq_geno_idx ON public.materialized_genoview(accession_id,genotype_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW materialized_genoview OWNER TO web_usr;
 
--- drop and recreate all the single category and binary matviews as just views
+
+-- drop and recreate all the single category matviews as just views
 
 DROP MATERIALIZED VIEW IF EXISTS public.accessions CASCADE;
 CREATE VIEW public.accessions AS
@@ -254,6 +263,8 @@ SELECT projectprop.value AS year_id,
   GROUP BY public.projectprop.value;
 ALTER VIEW years OWNER TO web_usr;
 
+
+-- drop and recreate all the binary matviews as just views
 
 CREATE VIEW public.accessionsXseedlots AS
 SELECT public.materialized_phenoview.accession_id,
@@ -900,6 +911,7 @@ SELECT public.materialized_phenoview.trial_id,
   GROUP BY public.materialized_phenoview.trial_id, public.materialized_phenoview.year_id;
 ALTER VIEW trialsXyears OWNER TO web_usr;
 
+
 -- remove rows from matviews tracking table corresponding to single category and binary views
 
 DELETE FROM matviews where mv_name ilike '\%x%';
@@ -917,6 +929,7 @@ DELETE FROM matviews where mv_name = 'trial_designs';
 DELETE FROM matviews where mv_name = 'trial_types';
 DELETE FROM matviews where mv_name = 'trials';
 DELETE FROM matviews where mv_name = 'years';
+
 
 -- drop matview refresh functions
 
