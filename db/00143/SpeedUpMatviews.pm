@@ -218,8 +218,7 @@ CREATE VIEW public.traits AS
     JOIN db ON(dbxref.db_id = db.db_id)
     LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
     WHERE is_subject.subject_id IS NOT NULL
-    GROUP BY 1,2 ORDER BY 2
-  WITH DATA;
+    GROUP BY 1,2 ORDER BY 2;
     ALTER VIEW traits OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.trials CASCADE;
