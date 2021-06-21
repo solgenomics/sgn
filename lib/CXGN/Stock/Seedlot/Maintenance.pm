@@ -60,7 +60,7 @@ sub BUILD {
 
 =head2 Class method: filter_events()
 
- Usage:         my $event_obj = CXGN::Stock::Seedlot::Maintenance({ bcs_schema => $schema });
+ Usage:         my $event_obj = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
                 my @events = $event_obj->filter_events($filters);
  Desc:          get all of the (optionally filtered) seedlot maintenance events associated with any of the matching seedlots
  Args:          - filters (optional): a hash of different filter types to apply, with the following keys:

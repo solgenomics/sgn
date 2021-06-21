@@ -39,6 +39,7 @@ use CXGN::Genotype::DownloadFactory;
 use CXGN::Genotype::GRM;
 use CXGN::Genotype::GWAS;
 use CXGN::Accession;
+use CXGN::Stock::Seedlot::Maintenance;
 use Spreadsheet::WriteExcel;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
@@ -51,6 +52,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 	    return;
     }
 
+    $c->stash->{seedlot_maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
 
@@ -887,6 +889,89 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 # pedigree download -- end
 
 #=pod
+
+
+# seedlot maintenance events download -- start
+
+#
+# Download a file of seedlot maintenance events
+#
+# POST Params:
+#   seedlot_maintenance_events_list_list_select = list id of a seedlot list
+#   file_format: format of the file output (.xls)
+#
+sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlot_maintenance_events_action') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    
+    # Get request params
+    my $seedlot_list_id = $c->req->param("seedlot_maintenance_events_list_list_select");
+    my $file_format = $c->req->param("file_format") || ".xls";
+    my $dl_token = $c->req->param("seedlot_maintenance_events_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    if ( !$seedlot_list_id ) {
+        print STDERR "ERROR: No seedlot list id provided to download seedlot maintenance events action";
+        return;
+    }
+
+    # Get seedlots from list
+    my $seedlot_data = SGN::Controller::AJAX::List->retrieve_list($c, $seedlot_list_id);
+    my @seedlot_names = map { $_->[1] } @$seedlot_data;
+    
+    # Get Maintenance Events
+    my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
+    my $results = $m->filter_events({ names => \@seedlot_names }, 1, 65000);
+    my $events = $results->{results};
+
+    # Create tempfile
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_seedlot_maintenance_events_XXXXX", UNLINK => 0);
+
+    # Create and Return XLS file
+    if ( $file_format eq ".xls" ) {
+        my $file_path = $tempfile . ".xls";
+        my $file_name = basename($file_path);
+
+        # Get Excel worksheet
+        my $workbook = Spreadsheet::WriteExcel->new($file_path);
+        my $worksheet = $workbook->add_worksheet();
+
+        # Write header
+        my @header = ("seedlot", "type", "value", "notes", "operator", "timestamp");
+        $worksheet->write_row(0, 0, \@header);
+
+        # Write each event
+        my $row_count = 1;
+        foreach my $event (@$events) {
+            my @row = (
+                $event->{uniquename},
+                $event->{cvterm_name},
+                $event->{value},
+                $event->{notes},
+                $event->{operator},
+                $event->{timestamp}
+            );
+            $worksheet->write_row($row_count, 0, \@row);
+            $row_count++;
+        }
+        $workbook->close();
+
+        # Return the xls file
+        $c->res->content_type('Application/xls');
+        $c->res->cookies->{$dl_cookie} = {
+          value => $dl_token,
+          expires => '+1m',
+        };
+        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+        my $output = read_file($file_path);  ### works here because it is xls, otherwise does not work with utf8
+
+        $c->res->body($output);
+    }
+
+}
+
+# seedlot maintenanve events download -- end
 
 
 #Used from wizard page and manage download page for downloading gbs from accessions
