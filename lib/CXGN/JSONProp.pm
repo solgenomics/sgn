@@ -51,6 +51,7 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::JSONProp;
 
 use Moose;
+use POSIX;
 
 use Data::Dumper;
 use Bio::Chado::Schema;
@@ -248,7 +249,12 @@ sub get_props {
  
  Usage:     my $filtered_props = $JSONPropClass->filter_props({ schema=> $schema, conditions => \%conditions });
  Desc:      This class method can be used to get props that match the provided search criteria
- Ret:       an arrayref of hashes containing the parent_id, prop_id, all of the prop values, and any specified parent fields
+ Ret:       a hash with the results metadata and the matching props:
+                page: current page number
+                maxPage: the number of the last page
+                pageSize: (max) number of results per page
+                total: total number of results
+                results: an arrayref of hashes containing the parent_id, prop_id, all of the prop values, and any specified parent fields
  Args:      schema = Bio::Chado::Schema
             conditions = (optional, default=unfiltered/all props) a hashref of DBIx where conditions to filter the props by.  
                 If you're filtering by a prop value, you should use the form: "value::json->>'prop_name' => 'prop value'"
@@ -257,6 +263,8 @@ sub get_props {
             order_by = (optional) the field to sort the results by:
                 order_by => "stockprop_id"                               // sort by ascending stockprop_id
                 order_by => { "-desc" => "value::json->'timestamp'" }    // sort by descending timestamp in the json value
+            page = (optional, default=1) the page number of results to return
+            pageSize = (optional, default=1000) the number of results to return per page
  Example:   my $conditions = {
                 '-and' => [ 
                     { 'stock.uniquename' => [ 'TEST_SEEDLOT_1', 'TEST_SEEDLOT_2' ] },
@@ -296,6 +304,8 @@ sub filter_props {
     my $conditions = $args->{conditions};
     my $parent_fields = $args->{parent_fields};
     my $order_by = $args->{order_by};
+    my $page = $args->{page} || 1;
+    my $pageSize = $args->{pageSize} || 1000;
     my $type_id = $class->_prop_type_id();
 
     # Build the search conditions
@@ -305,7 +315,7 @@ sub filter_props {
         push(@all_conditions, $conditions);
     }
 
-    # Build the query using a ResultSet
+    # Build the filter query using a ResultSet
     my @s = ();
     my @a = ();
     foreach my $f (@{$class->allowed_fields()}) {
@@ -318,9 +328,13 @@ sub filter_props {
             'prefetch' => defined $parent_fields ? $class->parent_table() : undef,
             '+select' => \@s,
             '+as' => \@a,
-            'order_by' => $order_by
+            'order_by' => $order_by,
+            'page' => $page,
+            'rows' => $pageSize
         }
     );
+    my $pager = $props->pager();
+    my $total = $pager->total_entries();
 
     # Parse the results
     my @filtered_props = ();
@@ -341,7 +355,15 @@ sub filter_props {
         push(@filtered_props, \%p);
     }
 
-    return \@filtered_props;
+    # Return the results and page info
+    my %results = (
+        page => $page,
+        maxPage => int(ceil($total/$pageSize)),
+        total => $total,
+        pageSize => $pageSize,
+        results => \@filtered_props
+    );
+    return \%results;
 }
 
 

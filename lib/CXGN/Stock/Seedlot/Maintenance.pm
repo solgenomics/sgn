@@ -63,7 +63,7 @@ sub BUILD {
  Usage:         my $event_obj = CXGN::Stock::Seedlot::Maintenance({ bcs_schema => $schema });
                 my @events = $event_obj->filter_events($filters);
  Desc:          get all of the (optionally filtered) seedlot maintenance events associated with any of the matching seedlots
- Args:          filters (optional): a hash of different filter types to apply, with the following keys:
+ Args:          - filters (optional): a hash of different filter types to apply, with the following keys:
                     - events: an arrayref of event ids
                     - names: an arrayref of seedlot names
                     - dates: an arrayref of hashes containing date filter options:
@@ -73,22 +73,31 @@ sub BUILD {
                         - cvterm_id: cvterm_id of maintenance event type
                         - values: (optional, default=any value) array of allowed values
                     - operators: arrayref of operator names
- Ret:           an arrayref of hases of the seedlot's stored events, with the following keys:
-                    - stock_id: the unique id of the seedlot
-                    - uniquename: the unique name of the seedlot
-                    - stockprop_id: the unique id of the maintenance event
-                    - cvterm_id: id of seedlot maintenance event ontology term
-                    - cvterm_name: name of seedlot maintenance event ontology term
-                    - value: value of the seedlot maintenance event
-                    - notes: additional notes/comments about the event
-                    - operator: username of the person creating the event
-                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+                - page (optional): the page number of results to return
+                - pageSize (optional): the number of results per page to return
+ Ret:           a hashref with the results metadata and the matching seedlot events:
+                    - page: current page number
+                    - maxPage: the number of the last page
+                    - pageSize: (max) number of results per page
+                    - total: total number of results
+                    - results: an arrayref of hashes of the seedlot's stored events, with the following keys:
+                        - stock_id: the unique id of the seedlot
+                        - uniquename: the unique name of the seedlot
+                        - stockprop_id: the unique id of the maintenance event
+                        - cvterm_id: id of seedlot maintenance event ontology term
+                        - cvterm_name: name of seedlot maintenance event ontology term
+                        - value: value of the seedlot maintenance event
+                        - notes: additional notes/comments about the event
+                        - operator: username of the person creating the event
+                        - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
 
 =cut
 
 sub filter_events {
     my $class = shift;
     my $filters = shift;
+    my $page = shift;
+    my $pageSize = shift;
     my $schema = $class->bcs_schema();
 
     # Parse filters into search conditions
@@ -137,7 +146,9 @@ sub filter_events {
         schema => $schema, 
         conditions => \%conditions, 
         parent_fields => ["uniquename"],
-        order_by => { "-desc" => "value::json->>'timestamp'" }
+        order_by => { "-desc" => "value::json->>'timestamp'" },
+        page => $page,
+        pageSize => $pageSize
     });
 
     return $filtered_props;

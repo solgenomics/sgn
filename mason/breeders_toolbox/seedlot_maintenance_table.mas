@@ -149,6 +149,17 @@
 
 <!-- Events Table -->
 <table id="seedlot_maintenance_events" class="table table-hover table-bordered"></table>
+<br />
+<div id="seedlot_maintenance_events_status">
+    <span style="float: left">
+        <span id="seedlot_maintenance_events_status_displayed"></span><br />
+        <span id="seedlot_maintenance_events_status_page"></span>
+    </span>
+    <div class="btn-group" style="float: right">
+        <button id="seedlot_maintenance_events_prev" type="button" class="btn btn-default" disabled><span class="glyphicon glyphicon-chevron-left"></span>&nbsp;Prev</button>
+        <button id="seedlot_maintenance_events_next" type="button" class="btn btn-default" disabled>Next&nbsp;<span class="glyphicon glyphicon-chevron-right"></span></button>
+    </div>
+</div>
 
 <!-- Remove Modal -->
 <div id="seedlot_maintenance_remove_modal" class="modal fade" tabindex="-1" role="dialog">
@@ -171,24 +182,30 @@
 
 <script type="text/javascript">
 
-let events = [];        // List of maintenance events for the Seedlot
-let ontology = [];      // Event type ontology
-let filters = [];       // List of filter properties
+let MULTI_SEEDLOT = <% $multi_seedlot %> === 1;
+let LO = new CXGN.List();
+let DT;
 
-let lo = new CXGN.List();
-let multi_seedlot = <% $multi_seedlot %> === 1;
+let EVENTS = [];                            // List of maintenance events for the Seedlot
+let PAGE_SIZE = MULTI_SEEDLOT ? 50 : 10;    // Max number of results per page
+let PAGE = 1;                               // The current page of results
+let MAX_PAGE;                               // The max page of results
+let TOTAL;                                  // The total number of results
+let ONTOLOGY = [];                          // Event type ontology
+let FILTERS = [];                           // List of filter properties
 
 jQuery(document).ready(function() {
     
     // Load the Events
+    setupDataTable();
     getEvents();
     getOntology(function() {
         setTypeFilter();
     });
 
     // Add list selection, if enabled
-    if ( multi_seedlot ) {
-        jQuery('#event_filter_seedlot_list').html(lo.listSelect('event_filter_seedlot', [ 'seedlots' ], 'select', undefined, undefined));
+    if ( MULTI_SEEDLOT ) {
+        jQuery('#event_filter_seedlot_list').html(LO.listSelect('event_filter_seedlot', [ 'seedlots' ], 'select', undefined, undefined));
     }
 
     // Click and Change Listeners
@@ -198,8 +215,17 @@ jQuery(document).ready(function() {
     jQuery("#event_filter_type_add").click(addTypeFilter);
     jQuery("#event_filter_operators_add").click(addOperatorFilter);
     jQuery("#event_filter_type").change(setTypeFilterValues);
-    jQuery("#event_filter_submit").click(getEvents);
+    jQuery("#event_filter_submit").click(submitFilter);
+    jQuery("#seedlot_maintenance_events_prev").click(getPrevPage);
+    jQuery("#seedlot_maintenance_events_next").click(getNextPage);
 
+});
+
+/**
+ * Setup and Initialize the DataTable for the Events
+ */
+function setupDataTable() {
+    
     // Set DataTables Buttons
     let DT_BUTTONS = [
         {
@@ -220,7 +246,7 @@ jQuery(document).ready(function() {
 
     // Set the Columns
     let columns = [];
-    if ( multi_seedlot ) {
+    if ( MULTI_SEEDLOT ) {
         columns = columns.concat([
             { 
                 title: "Seedlot", 
@@ -286,79 +312,88 @@ jQuery(document).ready(function() {
     ]);
 
     // Init DataTable
-    jQuery('#seedlot_maintenance_events').DataTable({
-        dom: 'Bfrtip',
+    DT = jQuery('#seedlot_maintenance_events').DataTable({
+        dom: 'Bfrt',
         autoWidth: false,
-        pageLength: multi_seedlot ? 50 : 10,
+        pageLength: PAGE_SIZE,
         data: [],
         columns: columns,
-        order: [[ multi_seedlot ? 2 : 1, "desc" ]],
+        order: [[ MULTI_SEEDLOT ? 2 : 1, "desc" ]],
         buttons: DT_BUTTONS
     });
 
-});
+}
 
 
 /**
-    * Get the Maintenance Events
-    * - Query the database
-    * - call displayEvents() to populate the table
-    */
+ * Get the Maintenance Events
+ * - Query the database
+ * - call displayEvents() to populate the table
+ */
 function getEvents() {
-    events = [];
+    EVENTS = [];
+
+    // Update status
+    jQuery("#event_filter_submit").html("Searching...");
+    jQuery("#event_filter_submit").attr("disabled", true);
+    jQuery("#seedlot_maintenance_events_prev").attr('disabled', true);
+    jQuery("#seedlot_maintenance_events_next").attr('disabled', true);
+    // DT.clear().draw();
+    // jQuery("#seedlot_maintenance_events .dataTables_empty").html("Searching...");
 
     // Build filter arguments
     let names = [];
     let dates = [];
     let types = [];
     let operators = [];
-    for ( let i = 0; i < filters.length; i++ ) {
-        if ( filters[i].type_id === 'name' ) {
-            names = names.concat(filters[i].value);
+    for ( let i = 0; i < FILTERS.length; i++ ) {
+        let f = FILTERS[i];
+        if ( f.type_id === 'name' ) {
+            names = names.concat(f.value);
         }
-        else if ( filters[i].type_id === 'date' ) {
-            if ( filters[i].comp === '=' ) {
+        else if ( f.type_id === 'date' ) {
+            if ( f.comp === '=' ) {
                 dates.push({
-                    date: filters[i].value + "%",
-                    comp: filters[i].comp
+                    date: f.value + "%",
+                    comp: f.comp
                 });
             }
-            else if ( filters[i].comp === '<=' ) {
+            else if ( f.comp === '<=' ) {
                 dates.push({
-                    date: filters[i].value + " 24:00:00",
-                    comp: filters[i].comp
+                    date: f.value + " 24:00:00",
+                    comp: f.comp
                 });
             }
-            else if ( filters[i].comp === '<' ) {
+            else if ( f.comp === '<' ) {
                 dates.push({
-                    date: filters[i].value + " 00:00:00",
-                    comp: filters[i].comp
+                    date: f.value + " 00:00:00",
+                    comp: f.comp
                 });
             }
-            else if ( filters[i].comp === '>=' ) {
+            else if ( f.comp === '>=' ) {
                 dates.push({
-                    date: filters[i].value + " 00:00:00",
-                    comp: filters[i].comp
+                    date: f.value + " 00:00:00",
+                    comp: f.comp
                 });
             }
-            else if ( filters[i].comp === '>' ) {
+            else if ( f.comp === '>' ) {
                 dates.push({
-                    date: filters[i].value + " 24:00:00",
-                    comp: filters[i].comp
+                    date: f.value + " 24:00:00",
+                    comp: f.comp
                 });
             }
         }
-        else if ( filters[i].type_id === 'operator' ) {
-            operators.push(filters[i].value);
+        else if ( f.type_id === 'operator' ) {
+            operators.push(f.value);
         }
         else {
             types.push({
-                cvterm_id: filters[i].type_id,
-                values: filters[i].value
+                cvterm_id: f.type_id,
+                values: f.value
             });
         }
     }
-    if ( !multi_seedlot ) {
+    if ( !MULTI_SEEDLOT ) {
         names = ["<% $seedlot_name %>"];
     }
     let body = {
@@ -367,12 +402,10 @@ function getEvents() {
             dates: dates,
             types: types,
             operators: operators
-        }
+        },
+        page: PAGE,
+        pageSize: PAGE_SIZE
     }
-
-    // Disable Filter button
-    jQuery("#event_filter_submit").html("Searching...");
-    jQuery("#event_filter_submit").attr("disabled", true);
 
     // Make request
     jQuery.ajax({
@@ -382,8 +415,11 @@ function getEvents() {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data) {
-            if ( data && data.events ) {
-                events = data.events;
+            if ( data && data.results ) {
+                EVENTS = data.results;
+                PAGE = data.page;
+                MAX_PAGE = data.maxPage;
+                TOTAL = data.total;
             }
             else {
                 alert("ERROR: Could not load maintenance events!");
@@ -406,10 +442,50 @@ function getEvents() {
  * Redraw the display of the Maintenance Events in the table
  */
 function displayEvents() {
-    let dt = jQuery('#seedlot_maintenance_events').DataTable();
-    dt.clear();
-    dt.rows.add(events);
-    dt.draw();
+    
+    // Update table
+    DT.clear();
+    DT.rows.add(EVENTS);
+    DT.draw();
+
+    // Update Status Info
+    let end = PAGE*PAGE_SIZE;
+    let start = (end-PAGE_SIZE)+1;
+    end = end > TOTAL ? TOTAL : end;
+    let displayed = start + " - " + end + " / " + TOTAL;
+    let page_info = PAGE + " / " + MAX_PAGE;
+
+    jQuery("#seedlot_maintenance_events_status_displayed").html("<strong>EVENTS:</strong> " + displayed);
+    jQuery("#seedlot_maintenance_events_status_page").html("<strong>PAGE:</strong> " + page_info);
+    jQuery("#seedlot_maintenance_events_prev").attr('disabled', PAGE === 1);
+    jQuery("#seedlot_maintenance_events_next").attr('disabled', PAGE === MAX_PAGE || MAX_PAGE === 1);
+
+}
+
+/**
+ * Start a new filtered search
+ */
+function submitFilter() {
+    PAGE = 1;
+    getEvents();
+}
+
+/**
+ * Get the previous page of events
+ */
+function getPrevPage() {
+    if ( PAGE > 1 ) {
+        PAGE--;
+        getEvents();
+    }
+}
+
+/**
+ * Get the next page of events
+ */
+function getNextPage() {
+    PAGE++;
+    getEvents();
 }
 
 
@@ -429,7 +505,7 @@ function getOntology(callback) {
         url: '/ajax/breeders/seedlot/maintenance/ontology',
         success: function(data) {
             if ( data && data.ontology ) {
-                ontology = data.ontology;
+                ONTOLOGY = data.ontology;
                 if ( callback ) return callback();
             }
             else {
@@ -451,12 +527,12 @@ function setTypeFilter() {
     
     // Populate type select
     let html = "<option value=''>...Select Maintenance Event Type...</option>";
-    if ( ontology ) {
-        for ( let i = 0; i < ontology.length; i++ ) {
-            html += "<optgroup label='" + ontology[i].name + "'>";
-            if ( ontology[i].children ) {
-                for ( let j = 0; j < ontology[i].children.length; j++ ) {
-                    html += "<option value='" + ontology[i].children[j].cvterm_id + "'>" + ontology[i].children[j].name + "</option>";
+    if ( ONTOLOGY ) {
+        for ( let i = 0; i < ONTOLOGY.length; i++ ) {
+            html += "<optgroup label='" + ONTOLOGY[i].name + "'>";
+            if ( ONTOLOGY[i].children ) {
+                for ( let j = 0; j < ONTOLOGY[i].children.length; j++ ) {
+                    html += "<option value='" + ONTOLOGY[i].children[j].cvterm_id + "'>" + ONTOLOGY[i].children[j].name + "</option>";
                 }
             }
             html += "</optgroup>";
@@ -481,12 +557,12 @@ function setTypeFilterValues() {
     // Build input based on possible values of selected event type
     let html = "";
     let input_type;
-    if ( id && id !== '' && ontology ) {
+    if ( id && id !== '' && ONTOLOGY ) {
         let values = [];
-        for ( let i = 0; i < ontology.length; i++ ) {
-            for ( let j = 0; j < ontology[i].children.length; j++ ) {
-                if ( ontology[i].children[j].cvterm_id === parseInt(id) ) {
-                    values = ontology[i].children[j].children;
+        for ( let i = 0; i < ONTOLOGY.length; i++ ) {
+            for ( let j = 0; j < ONTOLOGY[i].children.length; j++ ) {
+                if ( ONTOLOGY[i].children[j].cvterm_id === parseInt(id) ) {
+                    values = ONTOLOGY[i].children[j].children;
                 }
             }
         }
@@ -516,8 +592,8 @@ function setTypeFilterValues() {
  */
 function setOperators() {
     let operators = [];
-    for ( let i = 0; i < events.length; i++ ) {
-        if ( !operators.includes(events[i].operator)) operators.push(events[i].operator);
+    for ( let i = 0; i < EVENTS.length; i++ ) {
+        if ( !operators.includes(EVENTS[i].operator)) operators.push(EVENTS[i].operator);
     }
     let html = "";
     for ( let i = 0; i < operators.length; i++ ) {
@@ -543,7 +619,7 @@ function addSeedlotNamesFilter() {
  */
 function addSeedlotListFilter() {
     let list_id = jQuery("#event_filter_seedlot_list_select").val();
-    let names = list_id ? lo.getList(list_id) : [];
+    let names = list_id ? LO.getList(list_id) : [];
     addFilter('name', 'name', names && names.length > 0 ? names : undefined, 'includes');
     return false;
 }
@@ -610,7 +686,7 @@ function addOperatorFilter() {
  * @param {string} comp Comparison used for the filter (eq, lte, lt, gte, gt)
  */
 function addFilter(type_id, type_name, value, comp) {
-    filters.push({
+    FILTERS.push({
         type_id: type_id,
         type_name: type_name,
         value: value,
@@ -625,7 +701,7 @@ function addFilter(type_id, type_name, value, comp) {
  * @param {int} i Index of filter to remove
  */
 function removeFilter(i) {
-    filters.splice(i, 1);
+    FILTERS.splice(i, 1);
     displayFilters();
 }
 
@@ -634,12 +710,12 @@ function removeFilter(i) {
  */
 function displayFilters() {
     let html = "";
-    for ( let i = 0; i < filters.length; i++ ) {
-        let v = filters[i].value;
+    for ( let i = 0; i < FILTERS.length; i++ ) {
+        let v = FILTERS[i].value;
         if ( !v ) v = "<em>Any Value</em>";
         html += "<tr>";
-        html += "<td>" + filters[i].type_name + "</td>";
-        html += "<td>" + filters[i].comp + "</td>";
+        html += "<td>" + FILTERS[i].type_name + "</td>";
+        html += "<td>" + FILTERS[i].comp + "</td>";
         html += "<td>" + v + "</td>";
         html += "<td><button class='btn btn-danger btn-xs' onclick='removeFilter(" + i + ")'><span class='glyphicon glyphicon-remove'></span></button></td>";
         html += "</tr>";

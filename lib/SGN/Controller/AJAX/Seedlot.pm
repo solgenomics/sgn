@@ -1124,17 +1124,23 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
 #           - cvterm_id: cvterm_id of maintenance event type
 #           - values: array of allowed values
 #       - operators: an array of operator names
-# RETURNS: 
-#   events: an array of events that match the filter criteria, with the following keys:
-#       - stock_id: the unique id of the seedlot
-#       - uniquename: the unique name of the seedlot
-#       - stockprop_id: the unique id of the maintenance event
-#       - cvterm_id: id of seedlot maintenance event ontology term
-#       - cvterm_name: name of seedlot maintenance event ontology term
-#       - value: value of the seedlot maintenance event
-#       - notes: additional notes/comments about the event
-#       - operator: username of the person creating the event
-#       - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+#   page = (optional) the page number of results to return
+#   pageSize = (optional) the number of results per page to return
+# RETURNS: the results metadata and the matching seedlot events:
+#       - page: current page number
+#       - maxPage: the number of the last page
+#       - pageSize: (max) number of results per page
+#       - total: total number of results
+#       - results: an array of events that match the filter criteria, with the following keys:
+#           - stock_id: the unique id of the seedlot
+#           - uniquename: the unique name of the seedlot
+#           - stockprop_id: the unique id of the maintenance event
+#           - cvterm_id: id of seedlot maintenance event ontology term
+#           - cvterm_name: name of seedlot maintenance event ontology term
+#           - value: value of the seedlot maintenance event
+#           - notes: additional notes/comments about the event
+#           - operator: username of the person creating the event
+#           - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
 #
 sub seedlot_maintenance_event_search : Path('/ajax/breeders/seedlot/maintenance/search') : ActionClass('REST') { }
 sub seedlot_maintenance_event_search_POST {
@@ -1145,13 +1151,15 @@ sub seedlot_maintenance_event_search_POST {
     # Get filter parameters
     my $body = $c->request->data;
     my $filters = $body->{filters};
+    my $page = $body->{page};
+    my $pageSize = $body->{pageSize};
 
     # Get events
     my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
-    my $events = $m->filter_events($filters);
+    my $results = $m->filter_events($filters, $page, $pageSize);
 
     # Return events
-    $c->stash->{rest} = { events => $events };
+    $c->stash->{rest} = $results;
 }
 
 
@@ -1159,27 +1167,36 @@ sub seedlot_maintenance_event_search_POST {
 #
 # List all of the Maintenance Events for the specified Seedlot
 # PATH: GET /ajax/breeders/seedlot/{seedlot id}/maintenance
-# RETURNS:
-#   events: all of the stored maintenance events for the Seedlot, an array of objects with the following keys:
-#       - stock_id: the unique id of the seedlot
-#       - uniquename: the unique name of the seedlot
-#       - stockprop_id: the unique id of the maintenance event
-#       - cvterm_id: id of seedlot maintenance event ontology term
-#       - cvterm_name: name of seedlot maintenance event ontology term
-#       - value: value of the seedlot maintenance event
-#       - notes: additional notes/comments about the event
-#       - operator: username of the person creating the event
-#       - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+# QUERY PARAMS:
+#   - page = (optional) the page number of results to return
+#   - pageSize = (optional) the number of results per page to return
+# RETURNS: the results metadata and the seedlot events of the specified seedlot
+#       - page: current page number
+#       - maxPage: the number of the last page
+#       - pageSize: (max) number of results per page
+#       - total: total number of results
+#       - results: an array of seedlot events, with the following keys:
+#           - stock_id: the unique id of the seedlot
+#           - uniquename: the unique name of the seedlot
+#           - stockprop_id: the unique id of the maintenance event
+#           - cvterm_id: id of seedlot maintenance event ontology term
+#           - cvterm_name: name of seedlot maintenance event ontology term
+#           - value: value of the seedlot maintenance event
+#           - notes: additional notes/comments about the event
+#           - operator: username of the person creating the event
+#           - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
 # 
 sub seedlot_maintenance_events : Chained('seedlot_base') PathPart('maintenance') Args(0) : ActionClass('REST') { }
 sub seedlot_maintenance_events_GET {
     my $self = shift;
     my $c = shift;
+    my $page = $c->req->param('page');
+    my $pageSize = $c->req->param('pageSize');
     my $seedlot = $c->stash->{seedlot};
 
-    my $events = $seedlot->get_events();
+    my $results = $seedlot->get_events($page, $pageSize);
 
-    $c->stash->{rest} = { events => $events };
+    $c->stash->{rest} = $results;
 }
 
 
@@ -1324,6 +1341,17 @@ sub seedlot_maintenance_event_DELETE {
     $c->stash->{rest} = { success => 1 };
 }
 
+#
+# Upload and process an Excel file of Seedlot events
+# PATH: POST /ajax/breeders/seedlot/maintenance/upload
+# PARAMS:
+#   - file: the Excel (.xls) file of Seedlot events to process and store
+# RETURNS:
+#   - success: 1, if the upload was successfully verified and stored
+#   - error: the error message(s) of any encountered error(s)
+#   - missing_seedlots: a list of Seedlot names not found in the database (need to be added first)
+#   - missing_events: a list of event type names not found in the maintenance event ontology
+#
 sub seedlot_maintenance_event_upload : Path('/ajax/breeders/seedlot/maitenance/upload') : ActionClass('REST') { }
 sub seedlot_maintenance_event_upload_POST : Args(0) {
     my $self = shift;

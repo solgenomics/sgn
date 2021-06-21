@@ -1253,26 +1253,35 @@ sub delete {
 
  Usage:         my @events = $sl->get_events();
  Desc:          get all of seedlot maintenance events associated with the seedlot
- Ret:           an arrayref of hases of the seedlot's stored events, with the following keys:
-                    - stock_id: the unique id of the seedlot
-                    - uniquename: the unique name of the seedlot
-                    - stockprop_id: the unique id of the maintenance event
-                    - cvterm_id: id of seedlot maintenance event ontology term
-                    - cvterm_name: name of seedlot maintenance event ontology term
-                    - value: value of the seedlot maintenance event
-                    - notes: additional notes/comments about the event
-                    - operator: username of the person creating the event
-                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+ Args:          page = (optional) the page number of results to return
+                pageSize = (optional) the number of results per page to return
+ Ret:           a hash with the results metadata and the matching seedlot events:
+                    - page: current page number
+                    - maxPage: the number of the last page
+                    - pageSize: (max) number of results per page
+                    - total: total number of results
+                    - results: an arrayref of hases of the seedlot's stored events, with the following keys:
+                        - stock_id: the unique id of the seedlot
+                        - uniquename: the unique name of the seedlot
+                        - stockprop_id: the unique id of the maintenance event
+                        - cvterm_id: id of seedlot maintenance event ontology term
+                        - cvterm_name: name of seedlot maintenance event ontology term
+                        - value: value of the seedlot maintenance event
+                        - notes: additional notes/comments about the event
+                        - operator: username of the person creating the event
+                        - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
 
 =cut
 
 sub get_events {
     my $self = shift;
+    my $page = shift;
+    my $pageSize = shift;
     my $schema = $self->schema();
     my $seedlot_name = $self->uniquename();
     my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
 
-    return $m->filter_events({ names => [$seedlot_name] });
+    return $m->filter_events({ names => [$seedlot_name] }, $page, $pageSize);
 }
 
 
@@ -1301,8 +1310,8 @@ sub get_event {
     my $seedlot_name = $self->uniquename();
     my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
 
-    my $events = $m->filter_events({ names => [$seedlot_name], events => [$event_id]} );
-    return $events->[0];
+    my $events = $m->filter_events({ names => [$seedlot_name], events => [$event_id] });
+    return $events->{'results'}->[0];
 }
 
 
