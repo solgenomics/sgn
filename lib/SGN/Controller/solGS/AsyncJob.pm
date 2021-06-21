@@ -190,7 +190,7 @@ sub get_cluster_phenotype_query_job_args {
     my ($self, $c, $trials) = @_;
 
     my @queries;
-
+    
     $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials);
     $c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
 
@@ -241,7 +241,7 @@ sub get_cluster_phenotype_query_job_args {
 	}
     }
 
-    $c->stash->{cluster_phenotype_query_job_args} = \@queries;
+    $c->stash->{cluster_phenotype_query_job_args} = \@queries if @queries;
 
 }
 
