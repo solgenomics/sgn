@@ -396,7 +396,6 @@ sub selection_pop_analyzed_traits {
 
     if (@selected_analyzed_traits)
     {
-	@trait_ids;
 
 	foreach my $trait_id (@selected_analyzed_traits)
 	{
