@@ -97,7 +97,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     my @traits_ids  = $c->req->param('traits_ids[]');
     my $index_file  = $c->req->param('index_file');
     my $protocol_id  = $c->req->param('genotyping_protocol_id');
-
+    my $training_traits_code  = $c->req->param('training_traits_code');
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 
     $c->stash->{selection_index_only_file} = $index_file;
@@ -105,6 +105,7 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     $c->stash->{pop_id}   = $model_id;
     $c->stash->{training_pop_id} = $model_id;
     $c->stash->{training_traits_ids} = \@traits_ids;
+    $c->stash->{training_traits_code} = $training_traits_code;
 
     $c->stash->{selection_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
 
@@ -493,7 +494,6 @@ sub run_pheno_correlation_analysis {
     #$self->trait_acronyms($c);
 
     $c->stash->{correlation_type} = "pheno-correlation";
-
     $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
 
     $self->run_correlation_analysis($c);
@@ -507,13 +507,11 @@ sub run_correlation_analysis {
 
     my $pop_id = $c->stash->{pop_id};
     my $corre_type = $c->stash->{correlation_type};
-
     $self->corre_pheno_query_jobs_file($c);
     my $queries_file = $c->stash->{corre_pheno_query_jobs_file};
 
     $self->corre_pheno_r_jobs_file($c);
     my $r_jobs_file = $c->stash->{corre_pheno_r_jobs_file};
-
     $c->stash->{prerequisite_jobs} = $queries_file if $queries_file;
     $c->stash->{dependent_jobs} = $r_jobs_file;
 
@@ -572,8 +570,8 @@ sub corre_pheno_query_jobs {
     my ($self, $c) = @_;
 
 
-    my $trial_id = $c->stash->{pop_id} || $c->stash->{model_id}|| $c->stash->{trial_id};
-    $c->controller('solGS::Async')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
+    my $trial_id = $c->stash->{pop_id} || $c->stash->{trial_id};
+    $c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
     my $jobs = $c->stash->{cluster_phenotype_query_job_args};
 
     if (reftype $jobs ne 'ARRAY')
