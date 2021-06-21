@@ -287,7 +287,7 @@ solGS.correlation = {
 
 
     runGenCorrelationAnalysis: function (args) {
-
+  var divPlace = args.div_place;
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
@@ -295,8 +295,6 @@ solGS.correlation = {
             url: '/genetic/correlation/analysis/output',
             success: function (response) {
 		if (response.status == 'success') {
-
-                    var divPlace = args.div_place;
 
                     if (divPlace == '#si_correlation_canvas') {
 			jQuery("#si_correlation_message").empty();
