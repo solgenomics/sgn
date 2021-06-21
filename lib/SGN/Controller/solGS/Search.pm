@@ -83,20 +83,19 @@ sub search_trials : Path('/solgs/search/trials') Args() {
     my $projects_ids = $c->model('solGS::solGS')->all_gs_projects($limit);
 
     my $ret->{status} = 'failed';
-
     my $formatted_trials = [];
 
     if (@$projects_ids)
     {
-	my $projects_rs = $c->model('solGS::solGS')->project_details($projects_ids);
+    	my $projects_rs = $c->model('solGS::solGS')->project_details([$projects_ids]);
 
-	$self->get_projects_details($c, $projects_rs);
-	my $projects = $c->stash->{projects_details};
+    	$self->get_projects_details($c, $projects_rs);
+    	my $projects = $c->stash->{projects_details};
 
-	$self->format_gs_projects($c, $projects);
-	$formatted_trials = $c->stash->{formatted_gs_projects};
+    	$self->format_gs_projects($c, $projects);
+    	$formatted_trials = $c->stash->{formatted_gs_projects};
 
-	$ret->{status} = 'success';
+    	$ret->{status} = 'success';
     }
 
     $ret->{trials}   = $formatted_trials;
@@ -287,13 +286,14 @@ sub check_population_exists :Path('/solgs/check/population/exists/') Args(0) {
 
     my $rs = $c->model("solGS::solGS")->project_details_by_name($name);
 
-    my $pop_id;
+    my @pop_ids;
     while (my $row = $rs->next)
     {
-        $pop_id =  $row->id;
+        push @pop_ids, $row->id;
+        my $id =  $row->id;
     }
 
-    my $ret->{population_id} = $pop_id;
+    my $ret->{population_ids} = \@pop_ids;
     $ret = to_json($ret);
 
     $c->res->content_type('application/json');
@@ -303,25 +303,34 @@ sub check_population_exists :Path('/solgs/check/population/exists/') Args(0) {
 
 
 sub check_training_population :Path('/solgs/check/training/population/') Args() {
-    my ($self, $c, $pop_id, $gp, $protocol_id) = @_;
+    my ($self, $c) = @_;
+
+    my @pop_ids = $c->req->param('population_ids[]');
+    my $protocol_id = $c->req->param('genotyping_protocol_id');
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{training_pop_id} = $pop_id;
+    my @gs_pop_ids;
 
-    my $is_training_pop = $self->check_population_is_training_population($c, $pop_id, $protocol_id);
-
-    my $training_pop_data;
-    if ($is_training_pop)
+    foreach my $pop_id (@pop_ids)
     {
-	my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
-	$self->projects_links($c, $pr_rs);
-	$training_pop_data = $c->stash->{projects_pages};
+        $c->stash->{pop_id} = $pop_id;
+        $c->stash->{training_pop_id} = $pop_id;
+
+        my $is_training_pop = $self->check_population_is_training_population($c, $pop_id, $protocol_id);
+
+        if ($is_training_pop)
+        {
+            push @gs_pop_ids, $pop_id;
+        }
     }
 
-    my $ret->{is_training_population} =  $is_training_pop;
+	my $pr_rs = $c->model('solGS::solGS')->project_details(\@gs_pop_ids);
+	$self->projects_links($c, $pr_rs);
+	my $training_pop_data = $c->stash->{projects_pages};
+
+    my $ret->{is_training_population} =  1 if @gs_pop_ids;
     $ret->{training_pop_data} = $training_pop_data;
     $ret = to_json($ret);
 
@@ -745,8 +754,9 @@ sub check_population_is_training_population {
 
     my $is_gs;
     my $has_phenotype = $self->check_population_has_phenotype($c);
+    my $is_computation = $self->check_saved_analysis_trial($c, $pop_id);
 
-	if ($has_phenotype)
+	if ($has_phenotype && !$is_computation)
 	{
 	    my $has_genotype = $self->check_population_has_genotype($c);
         $is_gs = 1 if $has_genotype;
@@ -758,8 +768,24 @@ sub check_population_is_training_population {
     }
 	else
 	{
-		return 0;
+		return;
 	}
+
+}
+
+
+sub check_saved_analysis_trial {
+    my ($self, $c, $pop_id) = @_;
+
+    my $location = $c->model('solGS::solGS')->project_location($pop_id);
+    if ($location && $location =~ /computation/i)
+    {
+       return 1;
+    }
+    else
+    {
+       return;
+    }
 
 }
 
