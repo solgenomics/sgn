@@ -60,10 +60,10 @@ sub patch {
 -- drop and recreate phenoview with single unique index and no joining through nd_experiment
 
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenoview CASCADE;
-CREATE MATERIALIZED VIEW public.materialized_phenoview AS
+CREATE MATERIALIZED VIEW public.materialized_phenoview_test AS
 SELECT
   breeding_program.project_id AS breeding_program_id,
-  location.value AS location_id,
+  location.value::int AS location_id,
   year.value AS year_id,
   trial.project_id AS trial_id,
   accession.stock_id AS accession_id,
