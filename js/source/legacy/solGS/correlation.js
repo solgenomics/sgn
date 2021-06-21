@@ -109,6 +109,7 @@ solGS.correlation = {
 
 
 	var traitsIds = jQuery('#training_traits_ids').val();
+    var traitsCode = jQuery('#training_traits_code').val();
 	if(traitsIds) {
 	    traitsIds = traitsIds.split(',');
 	}
@@ -118,6 +119,7 @@ solGS.correlation = {
 	    'model_id': modelId,
 	    'corr_population_id': popId,
 	    'traits_ids': traitsIds,
+        'training_traits_code': traitsCode,
 	    'type' : type,
 	    'index_file': indexFile,
 	    'genotyping_protocol_id': protocolId
@@ -150,6 +152,8 @@ solGS.correlation = {
 			divPlace = '#correlation_canvas';
 		    }
 
+            var traitsCode = jQuery('#training_traits_code').val();
+
                     var args = {
 			'model_id': modelDetail.population_id,
 			'corr_population_id': popId,
@@ -157,6 +161,7 @@ solGS.correlation = {
 			'traits_ids': traitsIds,
 			'gebvs_file': gebvsFile,
 			'index_file': indexFile,
+            'training_traits_code': traitsCode,
 			'div_place' : divPlace,
 			'genotyping_protocol_id': protocolId
                     };
