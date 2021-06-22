@@ -22,18 +22,18 @@ use Storable qw/ nstore retrieve /;
 BEGIN { extends 'Catalyst::Controller' }
 
 
-sub check_pheno_corr_result :Path('/phenotype/correlation/check/result/') Args(1) {
-    my ($self, $c, $pop_id) = @_;
+sub check_pheno_corr_result :Path('/phenotype/correlation/check/result/') Args() {
+    my ($self, $c) = @_;
 
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{training_pop_id} = $pop_id;
+    my $corre_pop_id = $c->req->param('corre_pop_id');
+    $c->stash->{corre_pop_id} = $corre_pop_id;
 
     $self->pheno_correlation_output_files($c);
     my $corre_output_file = $c->stash->{corre_coefficients_json_file};
 
     my $ret->{result} = undef;
 
-    if (-s $corre_output_file && $pop_id =~ /\d+/)
+    if (-s $corre_output_file && $corre_pop_id =~ /\d+/)
     {
 	$ret->{result} = 1;
     }
@@ -49,9 +49,8 @@ sub check_pheno_corr_result :Path('/phenotype/correlation/check/result/') Args(1
 sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->req->param('population_id');
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{training_pop_id} = $pop_id;
+    my $pop_id = $c->req->param('corre_pop_id');
+    $c->stash->{corre_pop_id} = $pop_id;
 
     my $phenotype_file;
     my $referer = $c->req->referer;
@@ -88,49 +87,37 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
 }
 
 
-sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
+sub correlation_genetic_data :Path('/correlation/genetic/data/') Args() {
     my ($self, $c) = @_;
 
-    my $corr_pop_id = $c->req->param('corr_population_id');
-    my $pop_type    = $c->req->param('type');
-    my $model_id    = $c->req->param('model_id');
-    my @traits_ids  = $c->req->param('traits_ids[]');
-    my $index_file  = $c->req->param('index_file');
-    my $protocol_id  = $c->req->param('genotyping_protocol_id');
-    my $training_traits_code  = $c->req->param('training_traits_code');
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    $c->stash->{selection_index_only_file} = $index_file;
-    $c->stash->{model_id} = $model_id;
-    $c->stash->{pop_id}   = $model_id;
-    $c->stash->{training_pop_id} = $model_id;
-    $c->stash->{training_traits_ids} = \@traits_ids;
-    $c->stash->{training_traits_code} = $training_traits_code;
+    my $corre_pop_id = $c->stash->{corre_pop_id};
+    my $pop_type = $c->stash->{pop_type};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $selection_index_file = $c->stash->{selection_index_file};
+    $c->stash->{selection_pop_id} = $corre_pop_id if $pop_type =~ /selection/;
 
-    $c->stash->{selection_pop_id} = $corr_pop_id if $pop_type =~ /selection/;
-
-    #$c->controller('solGS::Files')->selection_index_file($c);
-
-    # $c->controller('solGS::Gebvs')->combine_gebvs_of_traits($c);
     $c->controller('solGS::Gebvs')->run_combine_traits_gebvs($c);
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
 
-    print STDERR "\ncombined_gebvs_file: $combined_gebvs_file\n";
     my $tmp_dir = $c->stash->{correlation_temp_dir};
     $combined_gebvs_file = $c->controller('solGS::Files')->copy_file($combined_gebvs_file, $tmp_dir);
 
     my $ret->{status} = undef;
-
+    my $json = JSON->new();
     if ( -s $combined_gebvs_file )
     {
+        my $args_hash = $json->decode($args);
+        $args_hash->{gebvs_file} = $combined_gebvs_file;
+        $args_hash->{selection_index_file} = $selection_index_file;
+        $args_hash->{genotyping_protocol_id} = $protocol_id;
         $ret->{status} = 'success';
-        $ret->{gebvs_file} = $combined_gebvs_file;
-	$ret->{index_file} = $index_file;
-	$ret->{genotyping_protocol_id} = $protocol_id;
-
+        $ret->{corre_args} = $json->encode($args_hash);
     }
 
-    $ret = to_json($ret);
+    $ret = $json->encode($ret);
 
     $c->res->content_type('application/json');
     $c->res->body($ret);
@@ -204,7 +191,7 @@ sub create_correlation_dir {
 sub pheno_correlation_output_files {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{corre_pop_id};
 
     $self->create_correlation_dir($c);
     my $corre_cache_dir = $c->stash->{correlation_cache_dir};
@@ -239,13 +226,11 @@ sub genetic_correlation_output_files {
     my ($self, $c) = @_;
 
     my $corre_pop_id = $c->stash->{corre_pop_id};
-    my $model_id     = $c->stash->{model_id};
-    my $type         = $c->stash->{type};
+    my $pop_type         = $c->stash->{pop_type};
+    my $traits_code = $c->stash->{training_traits_code};
 
-    my $selection_pop_id = $c->stash->{selection_pop_id};
-
-    $model_id    = $c->stash->{model_id};
-    my $identifier  =  $type =~ /selection/ ? $model_id . "_" . $corre_pop_id :  $corre_pop_id;
+    my $model_id    = $c->stash->{training_pop_id};
+    my $identifier  =  $pop_type =~ /selection/ ? "$model_id-${corre_pop_id}-${traits_code}" :  "${corre_pop_id}-${traits_code}";
 
     my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
     my $corre_json_file  = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "genetic_corre_json_${identifier}");
@@ -260,9 +245,8 @@ sub genetic_correlation_output_files {
 sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/output') Args(0) {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->req->param('population_id');
-    $c->stash->{pop_id} = $pop_id;
-    $c->stash->{training_pop_id} = $pop_id;
+    my $pop_id = $c->req->param('corre_pop_id');
+    $c->stash->{corre_pop_id} = $pop_id;
 
     $self->pheno_correlation_output_files($c);
     my $corre_json_file = $c->stash->{corre_coefficients_json_file};
@@ -278,7 +262,6 @@ sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/ou
 
     if (-s $corre_json_file)
     {
-	# $ret->{acronyms} =  $self->trait_acronyms($c);
         $ret->{status}   = 'success';
         $ret->{data}     = read_file($corre_json_file, {binmode => ':utf8'});
     }
@@ -294,26 +277,14 @@ sub pheno_correlation_analysis_output :Path('/phenotypic/correlation/analysis/ou
 sub genetic_correlation_analysis_output :Path('/genetic/correlation/analysis/output') Args(0) {
     my ($self, $c) = @_;
 
-    $c->stash->{corre_pop_id} = $c->req->param('corr_population_id');
-    $c->stash->{model_id}     = $c->req->param('model_id');
-    $c->stash->{type}         = $c->req->param('type');
+    my $args = $c->req->param('arguments');
+    $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    my $corr_pop_id = $c->req->param('corr_population_id');
-    my $model_id    = $c->req->param('model_id');
-    my $type        = $c->req->param('type');
+    my $corre_pop_id = $c->stash->{corre_pop_id};
+    my $pop_type = $c->stash->{pop_type};
+    my $gebvs_file = $c->stash->{gebvs_file};
 
-    my $gebvs_file = $c->req->param('gebvs_file');
-    my $index_file = $c->req->param('index_file');
-
-    my $protocol_id  = $c->req->param('genotyping_protocol_id');
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-
-    $c->stash->{data_input_file} = $gebvs_file;
-
-    $c->stash->{selection_index_file} = $index_file;
-    $c->stash->{gebvs_file} = $gebvs_file;
-
-    $c->stash->{pop_id} = $corr_pop_id;
+    $c->stash->{selection_pop_id} = $corre_pop_id if $pop_type =~ /selection/;
 
     if (-s $gebvs_file)
     {
@@ -386,7 +357,7 @@ sub download_phenotypic_correlation : Path('/download/phenotypic/correlation/pop
 sub temp_pheno_corre_output_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{corre_pop_id};
     $self->pheno_correlation_output_files($c);
 
     my $files = join ("\t",
@@ -407,11 +378,8 @@ sub temp_pheno_corre_output_file {
 sub temp_pheno_corre_input_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
-
+    my $pop_id = $c->stash->{corre_pop_id};
     $c->controller("solGS::Files")->phenotype_file_name($c, $pop_id);
-    #$self->create_correlation_phenodata_file($c);
-
     my $pheno_file = $c->stash->{phenotype_file_name};
 
     $c->controller("solGS::Files")->formatted_phenotype_file($c);
@@ -439,7 +407,7 @@ sub temp_pheno_corre_input_file {
 sub temp_geno_corre_output_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{corre_pop_id};
     $self->genetic_correlation_output_files($c);
 
     my $files = join ("\t",
@@ -460,9 +428,8 @@ sub temp_geno_corre_output_file {
 sub temp_geno_corre_input_file {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
-
-    my $gebvs_file = $c->stash->{gebvs_file}; #$c->stash->{data_input_file};
+    my $pop_id = $c->stash->{corre_pop_id};
+    my $gebvs_file = $c->stash->{gebvs_file};
     my $index_file = $c->stash->{selection_index_file};
 
     my $files = join ("\t",
@@ -483,15 +450,13 @@ sub temp_geno_corre_input_file {
 sub run_pheno_correlation_analysis {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{corre_pop_id};
 
     $self->temp_pheno_corre_input_file($c);
     $self->temp_pheno_corre_output_file($c);
 
     $c->stash->{corre_input_files}  = $c->stash->{temp_pheno_corre_input_file};
     $c->stash->{corre_output_files} = $c->stash->{temp_pheno_corre_output_file};
-
-    #$self->trait_acronyms($c);
 
     $c->stash->{correlation_type} = "pheno-correlation";
     $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
@@ -505,7 +470,7 @@ sub run_pheno_correlation_analysis {
 sub run_correlation_analysis {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{corre_pop_id};
     my $corre_type = $c->stash->{correlation_type};
     $self->corre_pheno_query_jobs_file($c);
     my $queries_file = $c->stash->{corre_pheno_query_jobs_file};
@@ -523,11 +488,9 @@ sub run_correlation_analysis {
 sub corre_pheno_r_jobs {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{trial_id} || $c->stash->{pop_id};
-
+    my $pop_id = $c->stash->{corre_pop_id};
     my $input_file = $c->stash->{corre_input_files};
     my $output_file = $c->stash->{corre_output_files};
-
     my $corre_type = $c->stash->{correlation_type};
 
     $c->stash->{input_files}  = $input_file;
@@ -570,7 +533,7 @@ sub corre_pheno_query_jobs {
     my ($self, $c) = @_;
 
 
-    my $trial_id = $c->stash->{pop_id} || $c->stash->{trial_id};
+    my $trial_id = $c->stash->{corre_pop_id};
     $c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, [$trial_id]);
     my $jobs = $c->stash->{cluster_phenotype_query_job_args};
 
