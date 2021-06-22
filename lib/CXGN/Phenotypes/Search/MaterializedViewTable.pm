@@ -112,6 +112,11 @@ has 'year_list' => (
     is => 'rw',
 );
 
+has 'observation_unit_names_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
 has 'exclude_phenotype_outlier' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -222,6 +227,13 @@ sub search {
         push @where_clause, "observationunit_type_name = '".$self->data_level."'"; #ONLY plot or plant or subplot or tissue_sample
     } else {
         push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample' OR observationunit_type_name = 'analysis_instance')"; #plots AND plants AND subplots AND tissue_samples AND analysis_instance
+    }
+    if ($self->observation_unit_names_list && scalar(@{$self->observation_unit_names_list})>0) {
+        my @arrayref;
+        for my $name (@{$self->observation_unit_names_list}) {push @arrayref, lc $name;}
+        my $sql = join ("','" , @arrayref);
+        my $ou_name_sql = "'" . $sql . "'";
+        push @where_clause, "LOWER(observationunit_uniquename) in ($ou_name_sql)";
     }
 
     my %trait_list_check;
