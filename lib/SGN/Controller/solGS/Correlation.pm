@@ -125,15 +125,6 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args() {
 }
 
 
-sub trait_acronyms {
-    my ($self, $c) = @_;
-
-    $c->controller('solGS::solGS')->get_all_traits($c);
-    my $acronyms = $c->controller('solGS::solGS')->get_acronym_pairs($c, $c->stash->{pop_id});
-    return $acronyms;
-}
-
-
 sub create_correlation_phenodata_file {
     my ($self, $c)  = @_;
 
@@ -168,7 +159,6 @@ sub create_correlation_phenodata_file {
 	$phenotype_file = $c->stash->{phenotype_file_name};
     }
 
-
     my $corre_cache_dir = $c->stash->{correlation_cache_dir};
 
     copy($phenotype_file, $corre_cache_dir)
@@ -180,20 +170,11 @@ sub create_correlation_phenodata_file {
 }
 
 
-sub create_correlation_dir {
-    my ($self, $c) = @_;
-
-    $c->controller('solGS::Files')->get_solgs_dirs($c);
-
-}
-
-
 sub pheno_correlation_output_files {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{corre_pop_id};
 
-    $self->create_correlation_dir($c);
     my $corre_cache_dir = $c->stash->{correlation_cache_dir};
 
     my $file_cache  = Cache::File->new(cache_root => $corre_cache_dir);
@@ -328,7 +309,6 @@ sub run_genetic_correlation_analysis {
 sub download_phenotypic_correlation : Path('/download/phenotypic/correlation/population') Args(1) {
     my ($self, $c, $id) = @_;
 
-    $self->create_correlation_dir($c);
     my $corr_dir = $c->stash->{correlation_cache_dir};
     my $corr_file = catfile($corr_dir,  "corre_coefficients_table_${id}");
 

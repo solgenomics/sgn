@@ -222,10 +222,6 @@ solGS.correlation = {
 
 		    jQuery("#correlation_canvas").append("<br />[ " + corrDownload + " ]").show();
 
-		    // if(document.URL.match('/breeders\/trial/')) {
-			// solGS.correlation.displayTraitAcronyms(response.acronyms);
-		    // }
-
 		    jQuery("#correlation_canvas .multi-spinner-container").hide();
                     jQuery("#correlation_message").empty();
 		    jQuery("#run_pheno_correlation").hide();
