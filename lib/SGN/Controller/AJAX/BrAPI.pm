@@ -245,7 +245,7 @@ sub _missing_field_response {
 	my $c = shift;
 	my $field_name = shift;
 	my $prefix = shift;
-	my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, $prefix ? sprintf("%s.%s required", $prefix, $field_name) : $field_name, 400);
+	my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, $prefix ? sprintf("%s.%s required", $prefix, $field_name) : sprintf("%s required", $field_name), 400);
 	_standard_response_construction($c, $response);
 }
 
