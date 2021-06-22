@@ -13,13 +13,13 @@ solGS.correlation = {
 
     checkPhenoCorreResult: function () {
 
-	var popDetails = this.getPopulationDetails();
-	var popId      = popDetails.population_id;
+	var popId =  jQuery("#corre_pop_id").val();
 
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            url: '/phenotype/correlation/check/result/' + popId,
+            url: '/phenotype/correlation/check/result',
+            data: {'corre_pop_id': popId},
             success: function (response) {
 		if (response.result) {
 		    solGS.correlation.phenotypicCorrelation();
@@ -104,26 +104,27 @@ solGS.correlation = {
     },
 
 
-    formatGenCorInputData: function (popId, type, indexFile) {
-	var modelDetail = this.getPopulationDetails();
+    formatGenCorInputData: function (correPopId, popType, sIndexFile) {
 
-
+    var trainingPoplId = jQuery('#training_pop_id').val();
 	var traitsIds = jQuery('#training_traits_ids').val();
     var traitsCode = jQuery('#training_traits_code').val();
-	if(traitsIds) {
+    var divPlace;
+	if (traitsIds) {
 	    traitsIds = traitsIds.split(',');
 	}
-	var modelId  = modelDetail.population_id;
 	var protocolId = jQuery('#genotyping_protocol_id').val();
 	var genArgs = {
-	    'model_id': modelId,
-	    'corr_population_id': popId,
-	    'traits_ids': traitsIds,
+	    'training_pop_id': trainingPopId,
+	    'corre_pop_id': correPopId,
+	    'training_traits_ids': traitsIds,
         'training_traits_code': traitsCode,
-	    'type' : type,
-	    'index_file': indexFile,
+	    'pop_type' : popType,
+	    'selection_index_file': sIndexFile,
 	    'genotyping_protocol_id': protocolId
 	};
+
+    genArgs = JSON.stringify(genArgs);
 
 	jQuery("#run_genetic_correlation").hide();
 	jQuery("#correlation_message")
@@ -135,38 +136,22 @@ solGS.correlation = {
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: genArgs ,
+            data: {'arguments': genArgs},
             url: '/correlation/genetic/data/',
             success: function (res) {
 
 		if (res.status) {
 
-                    var gebvsFile = res.gebvs_file;
-		    var indexFile = res.index_file;
-		    var protocolId = res.genotyping_protocol_id;
-                    var divPlace;
+            var genArgs = JSON.parse(res.corre_args);
 
-                    if (indexFile) {
-			divPlace = '#si_correlation_canvas';
-                    } else {
-			divPlace = '#correlation_canvas';
+            if (genArgs.selection_index_file) {
+			    divPlace = '#si_correlation_canvas';
+            } else {
+			    divPlace = '#correlation_canvas';
 		    }
 
-            var traitsCode = jQuery('#training_traits_code').val();
-
-                    var args = {
-			'model_id': modelDetail.population_id,
-			'corr_population_id': popId,
-			'type': type,
-			'traits_ids': traitsIds,
-			'gebvs_file': gebvsFile,
-			'index_file': indexFile,
-            'training_traits_code': traitsCode,
-			'div_place' : divPlace,
-			'genotyping_protocol_id': protocolId
-                    };
-
-                    solGS.correlation.runGenCorrelationAnalysis(args);
+            genArgs['div_place'] = divPlace;
+            solGS.correlation.runGenCorrelationAnalysis(genArgs);
 
 		} else {
                     jQuery(divPlace +" #correlation_message")
@@ -185,27 +170,9 @@ solGS.correlation = {
 	});
     },
 
-
-    getPopulationDetails: function () {
-
-	var populationId = jQuery("#population_id").val();
-	var populationName = jQuery("#population_name").val();
-
-	if (populationId == 'undefined') {
-            populationId = jQuery("#model_id").val();
-            populationName = jQuery("#model_name").val();
-	}
-
-	return {'population_id' : populationId,
-		'population_name' : populationName
-               };
-    },
-
-
     phenotypicCorrelation: function() {
 
-	var population = this.getPopulationDetails();
-
+    var correPopId = jQuery('#corre_pop_id').val();
 	jQuery("#run_pheno_correlation").hide();
 	jQuery("#correlation_canvas .multi-spinner-container").show();
 	jQuery("#correlation_message").html("Running correlation... please wait...");
@@ -213,7 +180,7 @@ solGS.correlation = {
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: {'population_id': population.population_id },
+            data: {'corre_pop_id': correPopId},
             url: '/correlation/phenotype/data/',
             success: function (response) {
 
@@ -239,13 +206,12 @@ solGS.correlation = {
 
 
     runPhenoCorrelationAnalysis: function () {
-	var population = this.getPopulationDetails();
-	var popId     = population.population_id;
+	var popId     = jQuery('#corre_pop_id').val();
 
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: {'population_id': popId },
+            data: {'corre_pop_id': popId},
             url: '/phenotypic/correlation/analysis/output',
             success: function (response) {
 		if (response.data) {
@@ -288,10 +254,11 @@ solGS.correlation = {
 
     runGenCorrelationAnalysis: function (args) {
   var divPlace = args.div_place;
+  args = JSON.stringify(args);
 	jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: args,
+            data: {'arguments': args} ,
             url: '/genetic/correlation/analysis/output',
             success: function (response) {
 		if (response.status == 'success') {
