@@ -178,7 +178,7 @@ sub redirect_if_only_one_possible : Private {
          ),
        );
 
-    if( @possible_urls == 1 ) {
+    if( @possible_urls == 1 && $possible_urls[0] ne '' ) {
         $c->log->debug("redirecting to only possible url: $possible_urls[0]") if $c->debug;
         $c->res->redirect( $possible_urls[0] );
         return;
