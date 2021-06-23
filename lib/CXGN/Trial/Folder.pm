@@ -533,7 +533,7 @@ sub rename_folder {
 	return 1;
 }
 
-sub get_folder_by_name { 
+sub get_folder_by_name {
     my $self= shift;
     my $name = shift;
     my $exists = $self->bcs_schema->resultset("Project::Project")->search( { name => $name } );
@@ -579,7 +579,7 @@ sub get_jstree_html {
     $html .= "<ul>";
 
     my %children = fast_children($self, $schema, $parent_type);
-    print STDERR Dumper \%children;
+    # print STDERR Dumper \%children;
     if (%children) {
         foreach my $child (sort keys %children) {
             #print STDERR "Working on child ".$children{$child}->{'name'}."\n";
