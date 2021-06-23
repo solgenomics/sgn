@@ -215,7 +215,8 @@ sub get_related_variants_of_mapped_marker_GET : Args(0) {
                 LEFT JOIN sgn.map ON (m2m.map_id = map.map_id)
                 LEFT JOIN public.stock ON (map.parent1_stock_id = stock.stock_id)
                 LEFT JOIN public.organism ON (stock.organism_id = organism.organism_id)
-                WHERE marker_alias.marker_id = ?;";
+                WHERE marker_alias.marker_id = ?
+                GROUP BY alias, species_name;";
     my $h = $dbh->prepare($query);
     $h->execute($marker_id);
     
