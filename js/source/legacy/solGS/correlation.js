@@ -106,7 +106,7 @@ solGS.correlation = {
 
     formatGenCorInputData: function (correPopId, popType, sIndexFile) {
 
-    var trainingPoplId = jQuery('#training_pop_id').val();
+    var trainingPopId = jQuery('#training_pop_id').val();
 	var traitsIds = jQuery('#training_traits_ids').val();
     var traitsCode = jQuery('#training_traits_code').val();
     var divPlace;
