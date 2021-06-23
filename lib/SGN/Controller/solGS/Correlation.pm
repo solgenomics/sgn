@@ -57,7 +57,7 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
     if ($referer =~ /qtl/)
     {
   	my $phenotype_dir = $c->stash->{solqtl_cache_dir};
-        $phenotype_file   = 'phenodata_' . $pop_id;
+        $phenotype_file   = 'phenodata_data_' . $pop_id;
         $phenotype_file   = $c->controller('solGS::Files')->grep_file($phenotype_dir, $phenotype_file);
     }
     else
@@ -131,17 +131,17 @@ sub create_correlation_phenodata_file {
     my $referer = $c->req->referer;
 
     my $phenotype_file;
-    my $pop_id = $c->stash->{pop_id};
+    my $pop_id = $c->stash->{corre_pop_id};
 
     if ($referer =~ /qtl/)
     {
-        my $pheno_exp = "phenodata_${pop_id}";
+        my $pheno_exp = "phenodata_data_${pop_id}";
         my $dir       = $c->stash->{solqtl_cache_dir};
 
         $phenotype_file = $c->controller('solGS::Files')->grep_file($dir, $pheno_exp);
 
         unless ($phenotype_file)
-	{
+	    {
             my $pop =  CXGN::Phenome::Population->new($c->dbc->dbh, $pop_id);
             $phenotype_file =  $pop->phenotype_file($c);
         }
