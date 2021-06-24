@@ -598,7 +598,7 @@ sub observationunits_store {
     my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $trial_id });
     my $design_prop =  $project->projectprops->find( { 'type.name' => 'design' },{ join => 'type'}); #there should be only one design prop.
     if (!$design_prop) {
-        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study doe not have a proper Study type.'));
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study does not have a proper Study type.'));
     }
     my $design_type = $design_prop->value;
 
