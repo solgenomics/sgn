@@ -188,7 +188,7 @@ sub search {
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'accession number'},
-            additionalInfo=>defined $_->{'stock_additional_info'} ? decode_json $_->{'stock_additional_info'} : undef,
+            additionalInfo=>defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne ''? decode_json $_->{'stock_additional_info'} : undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
             breedingMethodDbId=>$cross_type,
