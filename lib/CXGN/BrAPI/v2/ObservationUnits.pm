@@ -585,6 +585,10 @@ sub observationunits_store {
     my $user_name = $person->get_username;
     my %design;
     
+    if (!$user_name) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide a proper user_name.'));
+    }
+
     my %studies = map { $_->{studyDbId} => 1 } @$data; 
     if(keys %studies ne 1){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one study at the time.'));
