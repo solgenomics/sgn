@@ -188,7 +188,7 @@ sub search {
         push @data, {
             accessionNumber=>$_->{'accession number'},
             acquisitionDate=>$_->{'acquisition date'} eq '' ? undef : $_->{'accession number'},
-            additionalInfo=>defined $_->{'stock_additional_info'} ? decode_json $_->{'stock_additional_info'} : undef,
+            additionalInfo=>defined $_->{'stock_additional_info'} && $_->{'stock_additional_info'} ne ''? decode_json $_->{'stock_additional_info'} : undef,
             biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
             biologicalStatusOfAccessionDescription=>undef,
             breedingMethodDbId=>$cross_type,
@@ -756,15 +756,16 @@ sub store {
                 my $added_stock_id = $stock->store();
                 push @added_stocks, $added_stock_id;
 
-                my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-                    bcs_schema => $self->bcs_schema,
-                    table_name => 'stock',
-                    table_id_key => 'stock_id',
-                    external_references => $externalReferences,
-                    id => $added_stock_id
-                });
-                my $reference_result = $references->store();
-
+                if ($externalReferences && scalar $externalReferences > 0) {
+                    my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                        bcs_schema => $self->bcs_schema,
+                        table_name => 'stock',
+                        table_id_key => 'stock_id',
+                        external_references => $externalReferences,
+                        id => $added_stock_id
+                    });
+                    my $reference_result = $references->store();
+                }
             }
         }
     };
