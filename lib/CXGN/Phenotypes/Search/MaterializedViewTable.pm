@@ -283,7 +283,7 @@ sub search {
 
     my  $q = $select_clause . $where_clause . $or_clause . $order_clause . $limit_clause . $offset_clause;
 
-    print STDERR "QUERY: $q\n\n";
+    # print STDERR "QUERY: $q\n\n";
 
     my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
     my %location_id_lookup;
@@ -362,7 +362,7 @@ sub search {
         }
 
         no warnings 'uninitialized';
-        
+
         if ($notes) { $notes =~ s/\R//g; }
         if ($trial_description) { $trial_description =~ s/\R//g; }
         if ($breeding_program_description) { $breeding_program_description =~ s/\R//g };

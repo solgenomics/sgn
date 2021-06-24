@@ -236,7 +236,11 @@ sub BUILD {
         }
 
         my $analysis_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_experiment', 'experiment_type')->cvterm_id();
-        my $nd_protocol_q = "SELECT nd_protocol_id FROM nd_experiment_protocol JOIN nd_experiment ON (nd_experiment_protocol.nd_experiment_id = nd_experiment.nd_experiment_id) JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id) WHERE nd_experiment.type_id=$analysis_nd_experiment_type_id AND project_id=?;";
+        my $nd_protocol_q = "SELECT nd_protocol_id
+            FROM nd_experiment_protocol
+            JOIN nd_experiment ON (nd_experiment_protocol.nd_experiment_id = nd_experiment.nd_experiment_id)
+            JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
+            WHERE nd_experiment.type_id=$analysis_nd_experiment_type_id AND project_id=?;";
         my $nd_protocol_h = $schema->storage->dbh()->prepare($nd_protocol_q);
         $nd_protocol_h->execute($self->get_trial_id());
         my ($nd_protocol_id) = $nd_protocol_h->fetchrow_array();
@@ -424,6 +428,7 @@ sub create_and_store_analysis_design {
 		owner_id => $self->user_id(),
         chado_schema => $schema,
         dbh => $dbh,
+        owner_id => $self->user_id,
         operator => $user_name,
         design => $design,
         design_type => $analysis_experiment_type_id,
@@ -458,7 +463,6 @@ sub create_and_store_analysis_design {
         die "Error saving trial: $_";
     };
 
-    #Refresh layout cache
     $self->_get_layout()->get_design();
 
     print STDERR "Done with design create & store.\n";
@@ -533,14 +537,9 @@ sub store_analysis_values {
 sub _get_layout {
     my $self = shift;
 
-    # Load the design
-    #
     my $design = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema(), trial_id => $self->get_trial_id(), experiment_type=> 'analysis_experiment'});
 
     # print STDERR "_get_layout: design = ".Dumper($design->get_design);
-
-    #print STDERR "ERROR IN LAYOUT: ".Dumper($error)."\n";
-    #print STDERR "READ DESIGN: ".Dumper($design->get_design());
     return $design;
 }
 

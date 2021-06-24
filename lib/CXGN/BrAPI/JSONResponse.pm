@@ -12,7 +12,7 @@ sub return_error {
     push @$status, { 'ERROR' => $message };
     my $formatted_status = _convert_status_obj($status);
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,1,0);
-    my $response = { 
+    my $response = {
         'status' => $formatted_status,
         'pagination' => $pagination,
         'result' => undef,
