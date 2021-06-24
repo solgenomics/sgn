@@ -95,12 +95,12 @@ sub _write_cached_folder_tree {
     my $html = "";
     my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
 
-    print STDERR "Starting get trials $tree_type at time ".localtime()."\n";
+    print STDERR "Starting trial tree refresh for $tree_type at time ".localtime()."\n";
     foreach my $project (@$projects) {
         my %project = ( "id" => $project->[0], "name" => $project->[1]);
         $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', $tree_type);
     }
-    print STDERR "Finished get trials $tree_type at time ".localtime()."\n";
+    print STDERR "Finished trial tree refresh for $tree_type at time ".localtime()."\n";
 
     my $OUTFILE;
     open $OUTFILE, '> :encoding(UTF-8)', $filename or die "Error opening $filename: $!";
