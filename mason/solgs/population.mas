@@ -45,9 +45,9 @@ $training_pop_id = $pop_id;
   &>
 
  <& population/summary.mas,
-    pop_id   => $training_pop_id,
-    pop_name => $training_pop_name,
-    pop_desc => $training_pop_desc,
+    training_pop_id   => $training_pop_id,
+    training_pop_name => $training_pop_name,
+    training_pop_desc => $training_pop_desc,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
@@ -78,7 +78,7 @@ $training_pop_id = $pop_id;
 </&>
 
 
-  <& population/correlation.mas,
+  <& /solgs/population/correlation.mas,
      corre_pop_id  => $training_pop_id,
   &>
 
