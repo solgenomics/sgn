@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-population/correlation.mas - correlation output section
+/solgs/population/correlation.mas - correlation output section
 
 =AUTHOR
 
@@ -48,11 +48,15 @@ $data_str => undef
 
 
   <div id="correlation_canvas">
-    <& /solgs/spinner.mas &>
+
+      <& /solgs/spinner.mas &>
+
+      <div id="correlation_message"  class="message"></div>
       <input id="run_pheno_correlation" class="button" type="button" value="Run correlation" />
       <input type="hidden" id="corre_pop_id" value="<% $corre_pop_id %>" />
-        <input type="hidden" id="data_str" value="<% $data_str %>" />
-      <div id="correlation_message"  class="message"></div>
+      <input type="hidden" id="data_structure" value="<% $data_str %>" />
+      <input type="hidden" id="data_set_type" value="<% $data_set_type %>" />
+
 </div>
 
 </&>
