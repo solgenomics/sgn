@@ -69,7 +69,7 @@ sub search {
     if ($location_names_arrayref && scalar(@$location_names_arrayref)>0){
         %location_names_arrayref = map { $_ => 1} @$location_names_arrayref;
     }
-        
+
     my %location_types_arrayref;
     if ($location_types_arrayref && scalar(@$location_types_arrayref)>0){
         %location_types_arrayref = map { $_ => 1} @$location_types_arrayref;
@@ -202,7 +202,7 @@ sub get_response {
 		return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Locations list result constructed');
 	} else {
 		$pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
-		return CXGN::BrAPI::JSONResponse->return_success(@data[0], $pagination, \@data_files, $status, 'Locations object result constructed');
+		return CXGN::BrAPI::JSONResponse->return_success($data[0], $pagination, \@data_files, $status, 'Locations object result constructed');
 	}
 }
 

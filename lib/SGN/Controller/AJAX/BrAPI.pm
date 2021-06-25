@@ -136,8 +136,19 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->stash->{session_token} = $session_token;
 
 	if (defined $c->request->data){
-		if ($c->request->method ne "PUT"){
+		# All POST requests accept for search methods require a json array body
+		if ($c->request->method eq "POST" && index($c->request->env->{REQUEST_URI}, "search") == -1){
+			if (ref $c->request->data ne 'ARRAY') {
+				my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'JSON array body required', 400);
+				_standard_response_construction($c, $response);
+			}
 			$c->stash->{clean_inputs} = _clean_inputs($c->req->params,$c->request->data);
+		} elsif ($c->request->method eq "PUT") {
+			if (ref $c->request->data eq 'ARRAY') {
+				my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'JSON hash body required', 400);
+				_standard_response_construction($c, $response);
+			}
+			$c->stash->{clean_inputs} = $c->request->data;
 		} else {
 			$c->stash->{clean_inputs} = $c->request->data;
 		}
@@ -183,6 +194,60 @@ sub _clean_inputs {
 
 	}
 	return $params;
+}
+
+sub _validate_request {
+	my $c = shift;
+	my $data_type = shift;
+	my $data = shift;
+	my $required_fields = shift;
+	my $required_field_prefix = shift;
+
+	if ($required_fields) {
+		# Validate each array element
+		if ($data_type eq 'ARRAY') {
+			foreach my $object (values %{$data}) {
+				# Ignore the query params if they were passed in. Their included in the body
+				if (ref($object) eq 'HASH') {
+					_validate_request($c, 'HASH', $object, $required_fields);
+				}
+			}
+		}
+
+		# Check all of our fields
+		foreach my $required_field (@{$required_fields}) {
+			# Check if the required field has another level or not
+			if (ref($required_field) eq 'HASH') {
+				# Check the field keys and recurse
+				foreach my $sub_req_field (keys %{$required_field}) {
+					if ($data_type eq 'HASH') {
+						if (!$data->{$sub_req_field}) {
+							_missing_field_response($c, $sub_req_field, $required_field_prefix);
+						} else {
+							my $sub_data = $data->{$sub_req_field};
+							_validate_request($c, 'HASH', $sub_data, $required_field->{$sub_req_field},
+								$required_field_prefix ? sprintf("%s.%s", $required_field_prefix, $sub_req_field): $sub_req_field);
+						}
+					}
+				}
+				next;
+			}
+
+			if ($data_type eq 'HASH') {
+				if (!$data->{$required_field}) {
+					_missing_field_response($c, $required_field, $required_field_prefix);
+				}
+			}
+		}
+	}
+}
+
+sub _missing_field_response {
+	my $c = shift;
+	my $field_name = shift;
+	my $prefix = shift;
+	my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, $prefix ? sprintf("%s.%s required", $prefix, $field_name) : $field_name, 400);
+	_standard_response_construction($c, $response);
 }
 
 sub _authenticate_user {
@@ -248,7 +313,7 @@ sub _standard_response_construction {
 	my %response = (metadata=>\%metadata, result=>$result);
 	$c->stash->{rest} = \%response;
 	$c->response->status((!$return_status) ? 200 : $return_status);
-    $c->detach;
+	$c->detach;
 }
 
 =head2 /brapi/v1/token
@@ -2009,6 +2074,8 @@ sub studies_POST {
     my ($auth, $user_id) = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $data = $clean_inputs;
+	_validate_request($c, 'ARRAY', $data, ['trialDbId', 'studyName', 'studyType', 'locationDbId', {'experimentalDesign' => ['PUI']}]);
+
     my @all_studies;
 	foreach my $study (values %{$data}) {
 	    push @all_studies, $study;
@@ -2152,7 +2219,9 @@ sub studies_info_PUT {
 	my ($auth,$user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
+	_validate_request($c, 'HASH', $data, ['trialDbId', 'studyName', 'studyType', 'locationDbId', {'experimentalDesign' => ['PUI']}]);
 	$data->{studyDbId} = $c->stash->{study_id};
+
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->update($data,$user_id,$c);

@@ -8,7 +8,7 @@ use Data::Dumper;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 #use List::Util 'max';
-use List::MoreUtils ':all';
+use List::MoreUtils qw | :all !before !after |;
 use Bio::Chado::Schema;
 use CXGN::Stock;
 
