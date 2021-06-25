@@ -260,10 +260,12 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $box_name = $c->req->param("seedlot_box_name");
     my $accession_uniquename = $c->req->param("seedlot_accession_uniquename");
     my $cross_uniquename = $c->req->param("seedlot_cross_uniquename");
+    my $source = $c->req->param("seedlot_source");
     my $seedlot_quality = $c->req->param("seedlot_quality");
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $no_refresh = $c->req->param("no_refresh");
 
     my $previous_seedlot = $schema->resultset('Stock::Stock')->find({uniquename=>$seedlot_uniquename, type_id=>$seedlot_cvterm_id});
     if ($previous_seedlot){
@@ -346,6 +348,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $sl->organization_name($organization);
         $sl->population_name($population_name);
         $sl->breeding_program_id($breeding_program_id);
+        $sl->source($source) if $source;
 	$sl->quality($seedlot_quality);
         my $return = $sl->store();
         my $seedlot_id = $return->{seedlot_id};
@@ -381,9 +384,11 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
 	return;
     }
 
-    my $dbh = $c->dbc->dbh();
-    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+    if ( $no_refresh ne 1 ) {
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+    }
 
     $c->stash->{rest} = { success => 1, seedlot_id => $seedlot_id };
 }
