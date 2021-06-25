@@ -100,7 +100,7 @@ $mech->get_ok('http://localhost:3010/brapi/v2/observations?pageSize=2');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 #15
-is_deeply($response, {'result' => {'data' => [{'germplasmName' => 'IITA-TMS-IBA980581','value' => '601.518','germplasmDbId' => '41283','observationVariableName' => 'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013','season' => [{'year' => '2017','seasonDbId' => '2017','season' => '2017'}],'observationUnitDbId' => '41284','observationTimeStamp' => undef,'uploadedBy' => undef,'externalReferences' => undef,'collector' => 'johndoe','studyDbId' => '165','additionalInfo' => undef,'observationVariableDbId' => '77559','observationDbId' => '740336','observationUnitName' => 'CASS_6Genotypes_103'},{'germplasmName' => 'IITA-TMS-IBA980581','observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011','germplasmDbId' => '41283','value' => '39.84365','season' => [{'year' => '2017','seasonDbId' => '2017','season' => '2017'}],'observationUnitDbId' => '41284','observationTimeStamp' => undef,'uploadedBy' => undef,'externalReferences' => undef,'collector' => 'johndoe','studyDbId' => '165','additionalInfo' => undef,'observationVariableDbId' => '77557','observationDbId' => '740337','observationUnitName' => 'CASS_6Genotypes_103'}]},'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=2'},{'message' => 'Loading CXGN::BrAPI::v2::Observations','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Observations result constructed'}],'pagination' => {'currentPage' => 0,'totalPages' => 1391,'pageSize' => 2,'totalCount' => 2781},'datafiles' => []}});
+is_deeply($response, {'result' => {'data' => [{'germplasmName' => 'IITA-TMS-IBA980581','value' => '601.518','germplasmDbId' => '41283','observationVariableName' => 'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013','season' => [{'year' => '2017','seasonDbId' => '2017','season' => '2017'}],'observationUnitDbId' => '41284','observationTimeStamp' => undef,'uploadedBy' => undef,'externalReferences' => undef,'collector' => 'tester_operator','studyDbId' => '165','additionalInfo' => undef,'observationVariableDbId' => '77559','observationDbId' => '740336','observationUnitName' => 'CASS_6Genotypes_103'},{'germplasmName' => 'IITA-TMS-IBA980581','observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011','germplasmDbId' => '41283','value' => '39.84365','season' => [{'year' => '2017','seasonDbId' => '2017','season' => '2017'}],'observationUnitDbId' => '41284','observationTimeStamp' => undef,'uploadedBy' => undef,'externalReferences' => undef,'collector' => 'tester_operator','studyDbId' => '165','additionalInfo' => undef,'observationVariableDbId' => '77557','observationDbId' => '740337','observationUnitName' => 'CASS_6Genotypes_103'}]},'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=2'},{'message' => 'Loading CXGN::BrAPI::v2::Observations','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Observations result constructed'}],'pagination' => {'currentPage' => 0,'totalPages' => 1391,'pageSize' => 2,'totalCount' => 2781},'datafiles' => []}});
 
 $mech->get_ok('http://localhost:3010/brapi/v2/observations/740338');
 $response = decode_json $mech->content;
@@ -116,13 +116,13 @@ is_deeply($response, {'result' => {'observationVariables' => [{'observationVaria
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/observations', ['pageSize'=>'2', 'observationDbIds' => ['740337']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 print STDERR Dumper $response;
 $mech->get_ok('http://localhost:3010/brapi/v2/search/observations/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 #18
-is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'message' => 'search result constructed','messageType' => 'INFO'}],'pagination' => {'totalCount' => 1,'currentPage' => 0,'pageSize' => 10,'totalPages' => 1},'datafiles' => []},'result' => {'data' => [{'observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011','germplasmDbId' => '41283','studyDbId' => '165','observationTimeStamp' => undef,'collector' => 'johndoe','value' => '39.84365','observationVariableDbId' => '77557','observationDbId' => '740337','observationUnitName' => 'CASS_6Genotypes_103','externalReferences' => undef,'observationUnitDbId' => '41284','season' => [{'seasonDbId' => '2017','season' => '2017','year' => '2017'}],'uploadedBy' => undef,'germplasmName' => 'IITA-TMS-IBA980581','additionalInfo' => undef}]}});
+is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'message' => 'search result constructed','messageType' => 'INFO'}],'pagination' => {'totalCount' => 1,'currentPage' => 0,'pageSize' => 10,'totalPages' => 2},'datafiles' => []},'result' => {'data' => [{'observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011','germplasmDbId' => '41283','studyDbId' => '165','observationTimeStamp' => undef,'collector' => 'johndoe','value' => '39.84365','observationVariableDbId' => '77557','observationDbId' => '740337','observationUnitName' => 'CASS_6Genotypes_103','externalReferences' => undef,'observationUnitDbId' => '41284','season' => [{'seasonDbId' => '2017','season' => '2017','year' => '2017'}],'uploadedBy' => undef,'germplasmName' => 'IITA-TMS-IBA980581','additionalInfo' => undef}]}});
 
 $data = '{ "738292":  { "observationUnitDbId": 39467,  "collector": "Jane Doe", "observationTimeStamp": "2019-01-01T14:47:23-0700", "observationVariableDbId":"70773", "season": "2011",  "value": "555" }}';
 #it need same variable and unit, only updates values or collector
@@ -137,14 +137,14 @@ $resp = $ua->put("http://localhost:3010/brapi/v2/observations/737987", Content =
 $response = decode_json $resp->{_content};
 print STDERR Dumper $response;
 #20
-is_deeply($response, {'result' => {'data' => [{'observationVariableDbId' => '70741','uploadedBy' => 41,'observationUnitName' => 'KASESE_TP2013_1012','observationVariableName' => 'dry matter content percentage','value' => '500','germplasmDbId' => 39243,'observationUnitDbId' => 39548,'studyDbId' => 139,'observationLevel' => 'plot','collector' => 'John Doe','observationTimeStamp' => '2019-01-01T14:47:23-0610','germplasmName' => 'UG130133','observationDbId' => 737987}]},'metadata' => {'datafiles' => [],'pagination' => {'currentPage' => 0,'totalCount' => 1,'pageSize' => 10,'totalPages' => 1},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Observations'},{'messageType' => 'info','message' => 'Request structure is valid'},{'messageType' => 'info','message' => 'Request data is valid'},{'messageType' => 'info','message' => 'File for incoming brapi obserations saved in archive.'},{'messageType' => 'INFO','message' => 'All values in your file are now saved in the database! The following previously uploaded files are now obsolete because all values from them were overwritten by your upload:  '}]}} );
+is_deeply($response, {'result' => {'data' => [{'observationVariableDbId' => '70741','uploadedBy' => 41,'observationUnitName' => 'KASESE_TP2013_1012','observationVariableName' => 'dry matter content percentage','value' => '500','germplasmDbId' => 39243,'observationUnitDbId' => 39548,'studyDbId' => 139,'observationLevel' => 'plot','collector' => 'John Doe','observationTimeStamp' => '2019-01-01T14:47:23-0610','germplasmName' => 'UG130133','observationDbId' => 737987}]},'metadata' => {'datafiles' => [],'pagination' => {'currentPage' => 0,'totalCount' => 1,'pageSize' => 10,'totalPages' => 1},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Observations'},{'messageType' => 'info','message' => 'Request structure is valid'},{'messageType' => 'info','message' => 'Request data is valid'},{'messageType' => 'info','message' => 'File for incoming brapi obserations saved in archive.'},{'messageType' => 'INFO','message' => 'All values in your file have been successfully processed!<br><br>0 new values stored<br>1 previously stored values skipped<br>0 previously stored values overwritten<br><br>'}]}} );
 
 $data = '[ {"observationUnitDbId": 39546,  "uploadedBy": "Jane Doe", "observationTimeStamp": "2019-01-01T14:47:23-0530", "observationVariableDbId":"70741", "season": "2011",   "value": "15" } ]';
 $mech->post('http://localhost:3010/brapi/v2/observations/', Content => $data);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 #21
-is_deeply($response, {'result' => {'data' => [{'observationUnitName' => 'KASESE_TP2013_1593','observationDbId' => 740534,'observationUnitDbId' => 39546,'germplasmDbId' => 38978,'studyDbId' => 139,'value' => '15','observationVariableName' => 'dry matter content percentage','observationTimeStamp' => '2019-01-01T14:47:23-0530','observationVariableDbId' => '70741','germplasmName' => 'UG120115','uploadedBy' => 41,'observationLevel' => 'plot'}]},'metadata' => {'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Observations'},{'message' => 'Request structure is valid','messageType' => 'info'},{'messageType' => 'info','message' => 'Request data is valid'},{'messageType' => 'info','message' => 'File for incoming brapi obserations saved in archive.'},{'message' => 'All values in your file are now saved in the database!','messageType' => 'INFO'}],'pagination' => {'totalPages' => 1,'pageSize' => 10,'currentPage' => 0,'totalCount' => 1},'datafiles' => []}} );
+is_deeply($response, {'result' => {'data' => [{'observationUnitName' => 'KASESE_TP2013_1593','observationDbId' => 740534,'observationUnitDbId' => 39546,'germplasmDbId' => 38978,'studyDbId' => 139,'value' => '15','observationVariableName' => 'dry matter content percentage','observationTimeStamp' => '2019-01-01T14:47:23-0530','observationVariableDbId' => '70741','germplasmName' => 'UG120115','uploadedBy' => 41,'observationLevel' => 'plot'}]},'metadata' => {'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Observations'},{'message' => 'Request structure is valid','messageType' => 'info'},{'messageType' => 'info','message' => 'Request data is valid'},{'messageType' => 'info','message' => 'File for incoming brapi obserations saved in archive.'},{'message' => 'All values in your file have been successfully processed!<br><br>0 new values stored<br>1 previously stored values skipped<br>0 previously stored values overwritten<br><br>','messageType' => 'INFO'}],'pagination' => {'totalPages' => 1,'pageSize' => 10,'currentPage' => 0,'totalCount' => 1},'datafiles' => []}} );
 
 $mech->get_ok('http://localhost:3010/brapi/v2/variables?pageSize=2');
 $response = decode_json $mech->content;
@@ -158,7 +158,7 @@ is_deeply($response, {'result' => {'status' => 'Active','method' => {},'scale' =
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/variables', ['pageSize'=>'1', 'observationVariableDbIds' => ['70761']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 print STDERR Dumper $response;
 $mech->get_ok('http://localhost:3010/brapi/v2/search/variables/'. $searchId);
 $response = decode_json $mech->content;
@@ -208,7 +208,7 @@ is_deeply($response, {'metadata' => {'pagination' => {'currentPage' => 0,'pageSi
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/germplasm', ['germplasmDbIds' => ['40326']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 print STDERR Dumper $response;
 $mech->get_ok('http://localhost:3010/brapi/v2/search/germplasm/'. $searchId);
 $response = decode_json $mech->content;
@@ -277,7 +277,7 @@ is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','mess
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/calls', ['callSetDbIds' => ['38878']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 print STDERR Dumper $response;
 $mech->get_ok('http://localhost:3010/brapi/v2/search/calls/'. $searchId);
 $response = decode_json $mech->content;
@@ -301,7 +301,7 @@ is_deeply($response, {'result' => {'unknownString' => undef,'sepUnphased' => und
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/callsets', ['callSetDbIds' => ['38881']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 print STDERR Dumper $response;
 $mech->get_ok('http://localhost:3010/brapi/v2/search/callsets/'. $searchId);
 $response = decode_json $mech->content;
@@ -339,7 +339,7 @@ is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{'messageTyp
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/variantsets', ['variantSetDbIds' => ['143p1']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 $mech->get_ok('http://localhost:3010/brapi/v2/search/variantsets/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -374,7 +374,7 @@ is_deeply($response, {'result' => {},'metadata' => {'datafiles' => undef,'pagina
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/programs', ['programDbIds'=>'134']);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 $mech->get_ok('http://localhost:3010/brapi/v2/search/programs/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -393,7 +393,7 @@ is_deeply($response, {'result' => {'data' => [{'locationName' => 'test_location'
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/studies', ['pageSize'=>'2', 'page'=>'2']);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 $mech->get_ok('http://localhost:3010/brapi/v2/search/studies/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -429,7 +429,7 @@ is_deeply($response, { 'result'=> { 'environmentType'=> undef, 'externalReferenc
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/locations', ['locationDbIds'=>['25','27']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 $mech->get_ok('http://localhost:3010/brapi/v2/search/locations/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -447,7 +447,7 @@ is_deeply($response, {'result' => {'mailingAddress' => undef,'middleName' => und
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/people', ['personDbId'=>['40','41']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 $mech->get_ok('http://localhost:3010/brapi/v2/search/people/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -515,7 +515,7 @@ is_deeply($response, {'result' => '','metadata' => {'pagination' => {'currentPag
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/observationunits', ['observationUnitDbIds'=>['41300','41301']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 $mech->get_ok('http://localhost:3010/brapi/v2/search/observationunits/'. $searchId);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
@@ -584,7 +584,7 @@ is_deeply($response, {'metadata' => {'status' => [{'message' => 'BrAPI base call
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/trials', ['pageSize'=>'1', 'trialDbId' => ['168']]);
 $response = decode_json $mech->content;
-$searchId = $response->{result} ->{searchResultDbId};
+$searchId = $response->{result} ->{searchResultsDbId};
 print STDERR Dumper $response;
 $mech->get_ok('http://localhost:3010/brapi/v2/search/trials/'. $searchId);
 $response = decode_json $mech->content;
