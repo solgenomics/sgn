@@ -139,6 +139,7 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     $c->stash->{pop_id} = $combo_pops_id;
     $c->stash->{training_pop_id} = $combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
+    $c->stash->{data_set_type}     = 'combined populations';
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $self->get_combined_pops_list($c, $combo_pops_id);
