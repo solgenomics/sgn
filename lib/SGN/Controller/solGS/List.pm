@@ -927,12 +927,12 @@ sub submit_list_training_data_query {
     {
 	$self->get_list_trials_ids($c);
 	my $trials = $c->stash->{trials_ids};
-	$c->controller('solGS::Async')->get_training_pop_data_query_job_args_file($c, $trials, $protocol_id);
+	$c->controller('solGS::AsyncJob')->get_training_pop_data_query_job_args_file($c, $trials, $protocol_id);
 	$query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
     }
 
     $c->stash->{dependent_jobs} = $query_jobs_file;
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 }
 
 
