@@ -169,11 +169,6 @@ $crossing_trials
 
 <script>
 jQuery(document).ready(function(){
-
-    // TODO: REMOVE THIS!!!
-    jQuery('#create_seedlots_trial_dialog').modal('show');
-
-
     jQuery("#search_seedlot_form_seedlot_name").autocomplete({
        source: '/ajax/stock/seedlot_name_autocomplete',
 });

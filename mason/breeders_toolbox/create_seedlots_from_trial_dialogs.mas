@@ -31,7 +31,6 @@ $timestamp => localtime()
                             </center>
                         </&>
 
-
                         <!-- STEP 2: Select Trial -->
                         <&| /util/workflow.mas:step, title=> "Select Trial" &>
                             <& /page/page_title.mas, title=>"Select a Field Trial" &>
@@ -42,7 +41,7 @@ $timestamp => localtime()
                             <div class="form-group">
                                 <label class="col-sm-3 control-label" style="text-align: right">Trial: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="create_seedlots_trial_name" placeholder="Trial Name..." value="YR4_2018_Wooster">
+                                    <input class="form-control" id="create_seedlots_trial_name" placeholder="Trial Name..." value="">
                                 </div>
                             </div>
                             <br /><br /><br /><br />
@@ -212,7 +211,7 @@ $timestamp => localtime()
                             <div class="form-group">
                                 <label class="col-sm-3 control-label" style="text-align: right">Location: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control create_seedlots_trial_metadata_input" id="create_seedlots_trial_location" value="Wooster, OH" placeholder="Required">
+                                    <input class="form-control create_seedlots_trial_metadata_input" id="create_seedlots_trial_location" value="" placeholder="Required">
                                 </div>
                             </div>
 
@@ -221,7 +220,7 @@ $timestamp => localtime()
                             <div class="form-group">
                                 <label class="col-sm-3 control-label" style="text-align: right">Box Name: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control create_seedlots_trial_metadata_input" id="create_seedlots_trial_box_name" value="Test" placeholder="Required">
+                                    <input class="form-control create_seedlots_trial_metadata_input" id="create_seedlots_trial_box_name" value="" placeholder="Required">
                                 </div>
                             </div>
 
@@ -327,9 +326,7 @@ $timestamp => localtime()
                             <table id="create_seedlots_trial_results_table" class="table table-striped table-hover"></table>
                         </&>
 
-
                     </&>
-
 
                 </div>
             </div>
@@ -350,6 +347,7 @@ $timestamp => localtime()
     let PLOTS;
     let TRAITS;
     let SEEDLOTS;
+    const UPLOAD_BATCH_SIZE = 5;
 
     jQuery(document).ready(function() {
 
@@ -827,13 +825,16 @@ $timestamp => localtime()
 
 
     /**
-     * Upload each of the Seedlots to the Database
+     * Upload each of the Seedlots to the Database in batches of up to 
+     * UPLOAD_BATCH_SIZE seedlots per batch
      * @param {Function} callback Callback function(errors, success_count)
      */
     function startSeedlotUpload(callback) {
         let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
         let contents_type = jQuery("#create_seedlots_trial_contents_type").val();
+        jQuery("#create_seedlots_trial_status").html("<strong>Creating Seedlots...</strong>");
         jQuery("#create_seedlots_trial_progress").css('width', '0%').attr('aria-valuenow', 0);
+        jQuery("#create_seedlots_trial_results").empty();
 
         // Create Results table
         let html = "<thead><tr>";
@@ -841,28 +842,53 @@ $timestamp => localtime()
         html += "<th>Progress</th>";
         html += "</tr></thead>";
         html += "<tbody id='create_seedlots_trial_results_table_body'></tbody>";
+        for ( let i = 0; i < SEEDLOTS.length; i++ ) {
+            let status_id = "create_seedlots_trial_results_row_" + i;
+            html += "<tr><td>" + SEEDLOTS[i].name + "</td><td id='" + status_id + "'>Pending...</td>";
+            SEEDLOTS[i].status_id = status_id;
+        }
         jQuery("#create_seedlots_trial_results_table").html(html);
 
-        // Upload each Seedlot
-        let count = 0;
-        let total = SEEDLOTS.length;
-        let errors = [];
-        let upload_count = 0;
-        for ( let i = 0; i < SEEDLOTS.length; i++ ) {
-            _uploadSeedlot(SEEDLOTS[i], i, function() {
-                let p = ((count+1)/total)*100;
-                jQuery("#create_seedlots_trial_progress").css('width', p+'%').attr('aria-valuenow', p);
-                _finish();
-            });
+        // Information to return
+        let upload_count = 0;                                           // Count of successfully created/uploaded seedlots
+        let errors = [];                                                // Array of errors encountered during upload
+
+        // Set counts of seedlots and batches
+        let seedlot_count = 0;                                          // Count of completed seedlots
+        let seedlot_total = SEEDLOTS.length;                            // Total number of seedlots
+        let seedlot_batch_count;                                        // Count of completed seedlots, in current batch
+        let seedlot_batch_total;                                        // Total number of seedlots, in current batch
+        let batch_count = 0                                             // Count of completed batches
+        let batch_total = Math.ceil(seedlot_total/UPLOAD_BATCH_SIZE);   // Total number of batches
+
+        // Start the first batch
+        _uploadBatch();
+
+        /**
+         * Upload a batch of Seedlots (max set with UPLOAD_BATCH_SIZE)
+         * - when the seedlot is complete, call _finishSeedlot()
+         */
+        function _uploadBatch() {
+            let seedlot_batch_start = batch_count*UPLOAD_BATCH_SIZE;
+            let seedlot_batch_end = seedlot_batch_start+UPLOAD_BATCH_SIZE;
+            if ( seedlot_batch_end > seedlot_total ) seedlot_batch_end = seedlot_total;
+            seedlot_batch_count = 0;
+            seedlot_batch_total = seedlot_batch_end - seedlot_batch_start;
+            for ( let seedlot_index = seedlot_batch_start; seedlot_index < seedlot_batch_end; seedlot_index++ ) {
+                _uploadSeedlot(seedlot_index, function() {
+                    let p = ((seedlot_count+1)/seedlot_total)*100;
+                    jQuery("#create_seedlots_trial_progress").css('width', p+'%').attr('aria-valuenow', p);
+                    _finishSeedlot();
+                });
+            }
         }
 
         /**
          * Upload the specified seedlot
          */
-        function _uploadSeedlot(seedlot, index, callback) {
-            let status_id = "create_seedlots_trial_results_row_" + index;
-            let row = "<tr><td>" + seedlot.name + "</td><td id='" + status_id + "'>Creating...</td>";
-            jQuery("#create_seedlots_trial_results_table_body").append(row);
+        function _uploadSeedlot(seedlot_index, callback) {
+            let seedlot = SEEDLOTS[seedlot_index];
+            _setStatusInfo(seedlot.status_id, "Creating...");
 
             // Set seedlot request data
             let data = {
@@ -877,7 +903,7 @@ $timestamp => localtime()
                 'seedlot_quality': seedlot.metadata.quality_issues,
                 'no_refresh': 1
             };
-            if ( stock_type === 'plots' ) data['seedlot_source'] = seedlot.plot.name;
+            if ( stock_type === 'plots' ) data['seedlot_plot_uniquename'] = seedlot.plot.name;
             if ( contents_type === 'amount' ) data['seedlot_amount'] = seedlot.contents;
             if ( contents_type === 'weight' ) data['seedlot_weight'] = seedlot.contents;
 
@@ -888,30 +914,37 @@ $timestamp => localtime()
                     jQuery('#working_modal').modal('hide');
                     if (response.success === 1) {
                         upload_count++;
-                        _setStatusComplete(status_id);
+                        _setStatusComplete(seedlot.status_id);
                     }
                     if (response.error) {
                         errors.push({
-                            index: index,
+                            index: seedlot_index,
                             seedlot: seedlot,
                             error: response.error
                         });
-                        _setStatusError(status_id, response.error);
+                        _setStatusError(seedlot.status_id, response.error);
                     }
                 },
                 error: function(response){
                     let msg = "AJAX error";
                     errors.push({
-                        index: index,
+                        index: seedlot_index,
                         seedlot: seedlot,
                         error: msg
                     });
-                    _setStatusError(status_id, msg);
+                    _setStatusError(seedlot.status_id, msg);
                 },
                 complete: function() {
                     return callback();
                 }
             });
+        }
+
+        /**
+         * Display an info message for the specified seedlot
+         */
+        function _setStatusInfo(id, info) {
+            jQuery("#" + id).html(info);
         }
 
         /**
@@ -929,19 +962,32 @@ $timestamp => localtime()
         }
 
         /**
-         * When all seedlots have been processed:
-         * - request a matview refresh
-         * - return to the callback with the erros and upload count
+         * Finished uploading a seedlot
+         * - when all of the batch's seedlots have been uploaded, call _finishBatch()
          */
-        function _finish() {
-            count++;
-            if ( count >= total ) {
+        function _finishSeedlot() {
+            seedlot_count++;
+            seedlot_batch_count++;
+            if ( seedlot_batch_count >= seedlot_batch_total ) {
+                _finishBatch();
+            }
+        }
+
+        /**
+         * Finished uploading a batch of seedlots
+         * - when all of the batches are complete, refresh the matviews
+         * - if there are remaining batches, start the next batch
+         */
+        function _finishBatch() {
+            batch_count++;
+            if ( batch_count >= batch_total ) {
                 jQuery.ajax({
-                    url: '/ajax/breeder/refresh?matviews=stockprop',
-                    complete: function() {
-                        if ( callback ) return callback(errors, upload_count);
-                    }
+                    url: '/ajax/breeder/refresh?matviews=stockprop'
                 });
+                if ( callback ) return callback(errors, upload_count);
+            }
+            else {
+                _uploadBatch();
             }
         }
     }
