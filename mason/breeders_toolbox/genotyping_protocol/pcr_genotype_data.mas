@@ -29,7 +29,6 @@ $marker_names => []
 jQuery(document).ready(function () {
 
     var protocol_id = "<% $protocol_id %>";
-    alert(protocol_id);
 
     var pcr_genotypes_data_table = jQuery('#pcr_protocol_genotype_data').DataTable({
         'ajax': '/ajax/pcr_genotyping_data/search?protocol_id_list=<% $protocol_id %>',

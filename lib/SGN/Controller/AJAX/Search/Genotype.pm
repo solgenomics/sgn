@@ -20,6 +20,23 @@ use CXGN::Genotype::Search;
 use JSON;
 
 
+use utf8;
+use File::Slurp qw | read_file |;
+use File::Temp 'tempfile';
+use File::Basename;
+use File::Copy;
+
+use File::Spec::Functions;
+use Spreadsheet::WriteExcel;
+
+use File::Basename qw | basename dirname|;
+use Digest::MD5;
+use DateTime;
+
+
+
+
+
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -233,11 +250,33 @@ sub pcr_genotyping_data_download_POST : Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $clean_inputs = _clean_inputs($c->req->params);
     my $ssr_protocol_id = $clean_inputs->{ssr_protocol_id};
+    my $downloaded_protocol_id = $ssr_protocol_id->[0];
+    print STDERR "PROTOCOL ID = $downloaded_protocol_id\n";
 
-    my $dir = $c->tempfiles_subdir('/download');
-    my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
-    my $tempfile = $c->config->{basepath}."/".$rel_file.".csv";
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = $downloaded_protocol_id . "_" . "genotype_data" . "XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".csv";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
 
+    print STDERR "TEMPFILE : $tempfile\n";
+
+
+    if (!$c->user()) {
+        $c->stash->{rest} = {error => "You need to be logged in to download genotype data" };
+        return;
+    }
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $subdirectory_name = "ssr_download";
+    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".'genotype_data'.".csv");
+    my $archive_path = $c->config->{archive_path};
+    my $file_destination =  catfile($archive_path, $archived_file_name);
+    my $dbh = $c->dbc->dbh();
 
     my $genotypes = CXGN::Genotype::DownloadFactory->instantiate(
         'SSR',
@@ -249,7 +288,71 @@ sub pcr_genotyping_data_download_POST : Args(0) {
         }
     );
     my $file_handle = $genotypes->download();
+    print STDERR "FILE HANDLE =".Dumper($file_handle)."\n";
+
+#    my $file_name = $ssr_protocol_id . "_" . "ssr_genotype_data" . ".csv";
+#    $c->res->content_type('Application/'.'csv');
+#    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+#    my $output = read_file($tempfile);
+#    print STDERR "OUTPUT =".Dumper($output)."\n";
+#    $c->res->body($output);
+
+open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
+    binmode $F;
+    my $md5 = Digest::MD5->new();
+    $md5->addfile($F);
+close($F);
+
+if (!-d $archive_path) {
+  mkdir $archive_path;
+}
+
+if (! -d catfile($archive_path, $user_id)) {
+  mkdir (catfile($archive_path, $user_id));
+}
+
+if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
+  mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+}
+
+my $md_row = $metadata_schema->resultset("MdMetadata")->create({
+    create_person_id => $user_id,
+});
+$md_row->insert();
+my $file_row = $metadata_schema->resultset("MdFiles")->create({
+    basename => basename($file_destination),
+    dirname => dirname($file_destination),
+    filetype => 'ssr_genotype_data_csv',
+    md5checksum => $md5->hexdigest(),
+    metadata_id => $md_row->metadata_id(),
+});
+$file_row->insert();
+my $file_id = $file_row->file_id();
+print STDERR "FILE ID =".Dumper($file_id)."\n";
+print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
+
+move($tempfile,$file_destination);
+unlink $tempfile;
+
+my $result = $file_row->file_id;
+
+#    print STDERR "FILE =".Dumper($file_destination)."\n";
+#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+
+    $c->stash->{rest} = {
+        success => 1,
+        result => $result,
+        file => $file_destination,
+        file_id => $file_id,
+    };
+
+
+
 
 }
+
+
+
 
 1;
