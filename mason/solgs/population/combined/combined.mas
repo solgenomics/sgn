@@ -36,7 +36,7 @@ $data_set_type => ''
 </%perl>
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css',  '/static/css/solgs/spinner.css'] &>
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <br />
 <br />
