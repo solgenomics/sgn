@@ -63,11 +63,17 @@ sub validate_design {
     my %seen_stock_names;
     my %seen_source_names;
     my %seen_accession_names;
+    my %seen_plot_numbers;
+    my @plot_numbers;
 
     foreach my $stock (keys %design){
         if ($stock eq 'treatments'){
             next;
         }
+        if (!exists($design{$stock}->{plot_number})) {
+            $error .= "Property: plot_number is required for stock" . $stock;
+        }
+
         foreach my $property (keys %{$design{$stock}}){
             if (!exists($allowed_properties{$property})) {
                 $error .= "Property: $property not allowed! ";
@@ -100,6 +106,13 @@ sub validate_design {
                 foreach (@$subplot_names) {
                     $seen_stock_names{$_}++;
                 }
+            }
+
+            if ($property eq 'plot_number') {
+                my $plot_number = $design{$stock}->{$property};
+                if ($design{$stock}->{plant_names} && scalar $design{$stock}->{plant_names} > 0) { next; }
+                $seen_plot_numbers{$plot_number}++;
+                push @plot_numbers, $plot_number;
             }
         }
     }
@@ -155,17 +168,6 @@ sub validate_design {
         if (!$found_data{$_}){
             $error .= "The following name is not in the database: $_ .";
         }
-    }
-
-    my %seen_plot_numbers;
-    my @plot_numbers;
-    foreach my $stock (values %design){
-        my $plot_number = $stock->{plot_number};
-        if (! defined $plot_number) {
-            $error .= "Plot number must be defined.";
-        }
-        $seen_plot_numbers{$plot_number}++;
-        push @plot_numbers, $plot_number;
     }
 
     # Check that the plot numbers are unique in the db for the given study

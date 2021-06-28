@@ -2618,7 +2618,7 @@ sub observation_units_POST {
 		{
 		'observationUnitPosition' => [
 			{
-				'observationLevel' => ['levelName']
+				'observationLevel' => ['levelName', 'levelCode'],
 			}
 		]
 		}
