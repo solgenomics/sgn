@@ -514,7 +514,7 @@ sub rename_folder {
 	return 1;
 }
 
-sub get_folder_by_name { 
+sub get_folder_by_name {
     my $self= shift;
     my $name = shift;
     my $exists = $self->bcs_schema->resultset("Project::Project")->search( { name => $name } );
@@ -570,6 +570,9 @@ sub get_jstree_html {
             }
             elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'genotype_data_project'}) {
                 $html .= _jstree_li_html($schema, 'genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+            }
+			elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'pcr_genotype_data_project'}) {
+                $html .= _jstree_li_html($schema, 'pcr_genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
             elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'sampling_trial'}) {
                 $html .= _jstree_li_html($schema, 'sampling_trial', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
