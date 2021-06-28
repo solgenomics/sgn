@@ -7,6 +7,10 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Trial::Folder;
 use CXGN::Genotype::Protocol;
+use File::Basename qw | basename dirname|;
+use File::Spec::Functions;
+use File::Slurp qw | read_file |;
+
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -50,5 +54,22 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
 	$c->stash->{template} = '/breeders_toolbox/genotyping_protocol/index.mas';
     }
 }
+
+
+sub pcr_protocol_genotype_data_download : Path('/protocol_genotype_data/pcr_download/') Args(1) {
+    my $self  =shift;
+    my $c = shift;
+    my $file_id = shift;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+    my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
+    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    my $contents = read_file($file_destination);
+    my $file_name = $file_row->basename;
+
+    $c->res->content_type('Application/trt');
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    $c->res->body($contents);
+}
+
 
 1;

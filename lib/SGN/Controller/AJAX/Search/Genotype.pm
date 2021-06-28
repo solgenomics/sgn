@@ -19,23 +19,14 @@ use CXGN::People::Login;
 use CXGN::Genotype::Search;
 use JSON;
 
-
 use utf8;
 use File::Slurp qw | read_file |;
 use File::Temp 'tempfile';
-use File::Basename;
 use File::Copy;
-
 use File::Spec::Functions;
-use Spreadsheet::WriteExcel;
-
 use File::Basename qw | basename dirname|;
 use Digest::MD5;
 use DateTime;
-
-
-
-
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -261,7 +252,6 @@ sub pcr_genotyping_data_download_POST : Args(0) {
 
     print STDERR "TEMPFILE : $tempfile\n";
 
-
     if (!$c->user()) {
         $c->stash->{rest} = {error => "You need to be logged in to download genotype data" };
         return;
@@ -290,52 +280,46 @@ sub pcr_genotyping_data_download_POST : Args(0) {
     my $file_handle = $genotypes->download();
     print STDERR "FILE HANDLE =".Dumper($file_handle)."\n";
 
-#    my $file_name = $ssr_protocol_id . "_" . "ssr_genotype_data" . ".csv";
-#    $c->res->content_type('Application/'.'csv');
-#    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-
-#    my $output = read_file($tempfile);
-#    print STDERR "OUTPUT =".Dumper($output)."\n";
-#    $c->res->body($output);
-
-open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
+    open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
     binmode $F;
     my $md5 = Digest::MD5->new();
     $md5->addfile($F);
-close($F);
+    close($F);
 
-if (!-d $archive_path) {
-  mkdir $archive_path;
-}
+    if (!-d $archive_path) {
+        mkdir $archive_path;
+    }
 
-if (! -d catfile($archive_path, $user_id)) {
-  mkdir (catfile($archive_path, $user_id));
-}
+    if (! -d catfile($archive_path, $user_id)) {
+        mkdir (catfile($archive_path, $user_id));
+    }
 
-if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
-  mkdir (catfile($archive_path, $user_id, $subdirectory_name));
-}
+    if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
+        mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+    }
 
-my $md_row = $metadata_schema->resultset("MdMetadata")->create({
-    create_person_id => $user_id,
-});
-$md_row->insert();
-my $file_row = $metadata_schema->resultset("MdFiles")->create({
-    basename => basename($file_destination),
-    dirname => dirname($file_destination),
-    filetype => 'ssr_genotype_data_csv',
-    md5checksum => $md5->hexdigest(),
-    metadata_id => $md_row->metadata_id(),
-});
-$file_row->insert();
-my $file_id = $file_row->file_id();
-print STDERR "FILE ID =".Dumper($file_id)."\n";
-print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({
+        create_person_id => $user_id,
+    });
+    $md_row->insert();
 
-move($tempfile,$file_destination);
-unlink $tempfile;
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($file_destination),
+        dirname => dirname($file_destination),
+        filetype => 'ssr_genotype_data_csv',
+        md5checksum => $md5->hexdigest(),
+        metadata_id => $md_row->metadata_id(),
+    });
+    $file_row->insert();
 
-my $result = $file_row->file_id;
+    my $file_id = $file_row->file_id();
+    print STDERR "FILE ID =".Dumper($file_id)."\n";
+    print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
+
+    move($tempfile,$file_destination);
+    unlink $tempfile;
+
+    my $result = $file_row->file_id;
 
 #    print STDERR "FILE =".Dumper($file_destination)."\n";
 #    print STDERR "FILE ID =".Dumper($file_id)."\n";
@@ -346,9 +330,6 @@ my $result = $file_row->file_id;
         file => $file_destination,
         file_id => $file_id,
     };
-
-
-
 
 }
 
