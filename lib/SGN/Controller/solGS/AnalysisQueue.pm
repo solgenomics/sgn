@@ -93,7 +93,7 @@ sub check_analysis_name :Path('/solgs/check/analysis/name') Args() {
 
 	my $match = $self->check_analyses_names($c, $new_name);
 
-	my $ret->{match} = $match;
+	my $ret->{analysis_exists} = $match;
 	$ret = to_json($ret);
 
 	$c->res->content_type('application/json');
