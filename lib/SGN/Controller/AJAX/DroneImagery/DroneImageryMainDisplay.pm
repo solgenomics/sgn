@@ -55,8 +55,10 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
     my $processed_vi_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_vi_completed', 'project_property')->cvterm_id();
     my $phenotypes_processed_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_standard_process_phenotype_calculation_in_progress', 'project_property')->cvterm_id();
     my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
+    my $drone_run_camera_rig_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_camera_rig_description', 'project_property')->cvterm_id();
+    my $drone_run_base_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_base_date', 'project_property')->cvterm_id();
 
-    my $drone_run_q = "SELECT drone_run_band_project.project_id, drone_run_band_project.name, drone_run_band_project.description, drone_run_project.project_id, drone_run_project.name, drone_run_project.description, field_trial.project_id, field_trial.name, field_trial.description, drone_run_band_type.value, drone_run_date.value, drone_run_type.value, drone_run_averaged_temperature_gdd.value, drone_run_averaged_precipitation_sum.value, drone_run_related_time_cvterm_json.value, drone_run_indicator.value, drone_run_phenotypes_indicator.value, drone_run_processed.value, drone_run_processed_extended.value, drone_run_processed_vi.value, drone_run_is_raw_images.value, drone_run_ground_control_points.value
+    my $drone_run_q = "SELECT drone_run_band_project.project_id, drone_run_band_project.name, drone_run_band_project.description, drone_run_project.project_id, drone_run_project.name, drone_run_project.description, field_trial.project_id, field_trial.name, field_trial.description, drone_run_band_type.value, drone_run_date.value, drone_run_type.value, drone_run_averaged_temperature_gdd.value, drone_run_averaged_precipitation_sum.value, drone_run_related_time_cvterm_json.value, drone_run_indicator.value, drone_run_phenotypes_indicator.value, drone_run_processed.value, drone_run_processed_extended.value, drone_run_processed_vi.value, drone_run_is_raw_images.value, drone_run_ground_control_points.value, drone_run_camera_rig.value, drone_run_base_date.value
         FROM project AS drone_run_band_project
         JOIN projectprop AS drone_run_band_type ON(drone_run_band_project.project_id=drone_run_band_type.project_id AND drone_run_band_type.type_id=$drone_run_band_type_cvterm_id)
         JOIN project_relationship AS drone_run_band_rel ON (drone_run_band_rel.subject_project_id = drone_run_band_project.project_id AND drone_run_band_rel.type_id = $drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
@@ -73,21 +75,29 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
         LEFT JOIN projectprop AS drone_run_processed_extended ON(drone_run_processed_extended.project_id = drone_run_project.project_id AND drone_run_processed_extended.type_id = $processed_extended_cvterm_id)
         LEFT JOIN projectprop AS drone_run_processed_vi ON(drone_run_processed_vi.project_id = drone_run_project.project_id AND drone_run_processed_vi.type_id = $processed_vi_cvterm_id)
         LEFT JOIN projectprop AS drone_run_processed ON(drone_run_processed.project_id = drone_run_project.project_id AND drone_run_processed.type_id = $processed_cvterm_id)
+        LEFT JOIN projectprop AS drone_run_camera_rig ON(drone_run_camera_rig.project_id = drone_run_project.project_id AND drone_run_camera_rig.type_id = $drone_run_camera_rig_cvterm_id)
+        LEFT JOIN projectprop AS drone_run_base_date ON(drone_run_base_date.project_id = drone_run_project.project_id AND drone_run_base_date.type_id = $drone_run_base_date_cvterm_id)
         JOIN project_relationship AS field_trial_rel ON (drone_run_project.project_id = field_trial_rel.subject_project_id AND field_trial_rel.type_id=$drone_run_field_trial_project_relationship_type_id_cvterm_id)
         JOIN project AS field_trial ON (field_trial_rel.object_project_id = field_trial.project_id);";
     my $h = $schema->storage->dbh()->prepare($drone_run_q);
     $h->execute();
 
+    my $calendar_funcs = CXGN::Calendar->new({});
+
     my %unique_drone_runs;
+    my %unique_drone_run_dates;
+    my $epoch_seconds = 0;
     my %trial_id_hash;
-    while( my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_project_desc, $drone_run_project_id, $drone_run_project_name, $drone_run_project_desc, $field_trial_project_id, $field_trial_project_name, $field_trial_project_desc, $drone_run_band_project_type, $drone_run_date, $drone_run_type, $drone_run_averaged_temperature_gdd, $drone_run_averaged_precipitation_sum, $drone_run_related_time_cvterm_json, $drone_run_indicator, $drone_run_phenotypes_indicator, $drone_run_processed, $drone_run_processed_extended, $drone_run_processed_vi, $drone_run_is_raw_images, $drone_run_ground_control_points_json) = $h->fetchrow_array()) {
+    while( my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_project_desc, $drone_run_project_id, $drone_run_project_name, $drone_run_project_desc, $field_trial_project_id, $field_trial_project_name, $field_trial_project_desc, $drone_run_band_project_type, $drone_run_date, $drone_run_type, $drone_run_averaged_temperature_gdd, $drone_run_averaged_precipitation_sum, $drone_run_related_time_cvterm_json, $drone_run_indicator, $drone_run_phenotypes_indicator, $drone_run_processed, $drone_run_processed_extended, $drone_run_processed_vi, $drone_run_is_raw_images, $drone_run_ground_control_points_json, $drone_run_camera_rig, $drone_run_base_date) = $h->fetchrow_array()) {
+        my $drone_run_date_formatted = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
+
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_project_name} = $drone_run_band_project_name;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_project_description} = $drone_run_band_project_desc;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_project_type} = $drone_run_band_project_type;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{trial_id} = $field_trial_project_id;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{trial_name} = $field_trial_project_name;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_project_name} = $drone_run_project_name;
-        $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_date} = $drone_run_date;
+        $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_date} = $drone_run_date_formatted;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_type} = $drone_run_type;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_is_raw_images} = $drone_run_is_raw_images;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_indicator} = $drone_run_indicator;
@@ -98,22 +108,34 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_project_description} = $drone_run_project_desc;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_averaged_temperature_gdd} = $drone_run_averaged_temperature_gdd;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_averaged_precipitation_sum} = $drone_run_averaged_precipitation_sum;
+        $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_camera_rig} = $drone_run_camera_rig;
+        $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_base_date} = $drone_run_base_date ? $calendar_funcs->display_start_date($drone_run_base_date) : '';
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_related_time_cvterm_json} = decode_json $drone_run_related_time_cvterm_json;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_ground_control_points} = $drone_run_ground_control_points_json ? decode_json $drone_run_ground_control_points_json : undef;
+
         $trial_id_hash{$field_trial_project_name} = $field_trial_project_id;
+
+        if ($drone_run_date_formatted) {
+            my $date_obj = Time::Piece->strptime($drone_run_date_formatted, "%Y-%B-%d %H:%M:%S");
+            $epoch_seconds = $date_obj->epoch;
+        }
+        else {
+            $epoch_seconds++;
+        }
+        $unique_drone_run_dates{$field_trial_project_name}->{$epoch_seconds} = $drone_run_project_id;
     }
 
     my @return;
-    my $calendar_funcs = CXGN::Calendar->new({});
     foreach my $trial_name (sort keys %unique_drone_runs) {
         my %unique_drone_runs_k = %{$unique_drone_runs{$trial_name}};
 
         my $drone_run_html = '<div class="panel-group" id="drone_runs_trial_accordion_table_wrapper_'.$trial_id_hash{$trial_name}.'" ><div class="panel panel-default"><div class="panel-heading"><div class="row"><div class="col-sm-10"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_runs_trial_accordion_table_wrapper_'.$trial_id_hash{$trial_name}.'" href="#drone_runs_trial_accordion_table_wrapper_one_'.$trial_id_hash{$trial_name}.'" >Field Trial: '.$trial_name.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;('.scalar(keys %unique_drone_runs_k).' Imaging Events)</a></h4></div><div class="col-sm-2"><button class="btn btn-sm btn-default" name="drone_runs_trial_view_timeseries" data-field_trial_name='.$trial_name.' data-field_trial_id='.$trial_id_hash{$trial_name}.'>View TimeSeries</button></div></div></div><div id="drone_runs_trial_accordion_table_wrapper_one_'.$trial_id_hash{$trial_name}.'" class="panel-collapse collapse"><div class="panel-body">';
 
-        foreach my $k (sort keys %unique_drone_runs_k) {
+        foreach my $epoch_seconds (sort keys %{$unique_drone_run_dates{$trial_name}}) {
+            my $k = $unique_drone_run_dates{$trial_name}->{$epoch_seconds};
             my $v = $unique_drone_runs_k{$k};
             my $drone_run_bands = $v->{bands};
-            my $drone_run_date = $v->{drone_run_date} ? $calendar_funcs->display_start_date($v->{drone_run_date}) : '';
+            my $drone_run_date = $v->{drone_run_date};
 
             $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_drone_run_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_drone_run_wrapper_'.$k.'" href="#drone_run_band_accordion_drone_run_wrapper_one_'.$k.'" >'.$v->{drone_run_project_name}.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp'.$drone_run_date.'</a></h4></div><div id="drone_run_band_accordion_drone_run_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
 
@@ -124,6 +146,12 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Imaging Event Type</b>:</div><div class="col-sm-7">'.$v->{drone_run_type}.'</div></div>';
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Description</b>:</div><div class="col-sm-7">'.$v->{drone_run_project_description}.'</div></div>';
             $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Date</b>:</div><div class="col-sm-7">'.$drone_run_date.'</div></div>';
+            if ($v->{drone_run_base_date}) {
+                $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Base Date</b>:</div><div class="col-sm-7">'.$v->{drone_run_base_date}.'</div></div>';
+            }
+            if ($v->{drone_run_camera_rig}) {
+                $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Camera Rig</b>:</div><div class="col-sm-7">'.$v->{drone_run_camera_rig}.'</div></div>';
+            }
             if (defined($v->{drone_run_averaged_temperature_gdd})) {
                 $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Averaged Temperature Growing Degree Days</b>:</div><div class="col-sm-7">'.$v->{drone_run_averaged_temperature_gdd}.'&nbsp;&nbsp;&nbsp;<button class="btn btn-default btn-sm" name="drone_imagery_drone_run_calculate_gdd" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'">Recalculate GDD</button></div></div>';
             }
@@ -153,215 +181,32 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
 
             $drone_run_html .= '</div><div class="col-sm-3">';
             if (!$v->{drone_run_indicator}) {
-                if ($v->{drone_run_is_raw_images}) {
-                    $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_stadard_process_raw_images_add_images" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Upload More Raw Images <br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-
-                    #$drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process_raw_images" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Raw Image Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-
-                    $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process_raw_images_interactive" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Interactive Raw Image Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-
-                    $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-                }
-                else {
+                # if ($v->{drone_run_is_raw_images}) {
+                #     $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_stadard_process_raw_images_add_images" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Upload More Raw Images <br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+                #
+                #     #$drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process_raw_images" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Raw Image Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+                #
+                #     $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process_raw_images_interactive" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Interactive Raw Image Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+                #
+                #     $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+                # }
+                # else {
                     if (!$v->{drone_run_processed}) {
                         $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
                     } elsif (!$v->{drone_run_processed_minimal_vi}) {
                         $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_minimal_vi" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Minimal Vegetitative Index Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
                     } elsif (!$v->{drone_run_processed_extended}) {
-                        $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_extended" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Extended Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+                        #$drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_extended" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Extended Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
                     }
 
                     # if ($v->{drone_run_processed} && !$v->{drone_run_ground_control_points}) {
                     if ($v->{drone_run_processed}) {
                         $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_ground_control_points" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Save Ground Control Points For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
                     }
-                }
+                # }
             }
             $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_quality_control_check" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Quality Control Plot Images For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
 
-            $drone_run_html .= '<button class="btn btn-danger btn-sm" name="project_drone_imagery_delete_drone_run" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Delete Imaging Event</button>';
-
-            $drone_run_html .= '</div></div></div>';
-
-            $drone_run_html .= "<hr>";
-
-            $drone_run_html .= '<div name="drone_run_band_total_plot_image_div" id="drone_run_band_total_plot_image_count_div_'.$k.'">';
-            $drone_run_html .= '<div class="panel-group"><div class="panel panel-default panel-sm"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" >Loading Plot Image Summary...</a></h4></div></div></div>';
-            $drone_run_html .= '</div>';
-
-            my $drone_run_band_table_html = '<table class="table table-bordered"><thead><tr><th>Image Band(s)</th><th>Images/Actions</th></thead><tbody>';
-
-            foreach my $drone_run_band_project_id (sort keys %$drone_run_bands) {
-                my $d = $drone_run_bands->{$drone_run_band_project_id};
-
-                $drone_run_band_table_html .= '<tr><td><b>Name</b>: '.$d->{drone_run_band_project_name}.'<br/><b>Description</b>: '.$d->{drone_run_band_project_description}.'<br/><b>Type</b>: '.$d->{drone_run_band_project_type}.'</td><td>';
-
-                $drone_run_band_table_html .= '<div class="panel-group" id="drone_run_band_accordion_'.$drone_run_band_project_id.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_'.$drone_run_band_project_id.'" href="#drone_run_band_accordion_one_'.$drone_run_band_project_id.'" onclick="manageDroneImageryDroneRunBandDisplay('.$drone_run_band_project_id.')">View Images</a></h4></div><div id="drone_run_band_accordion_one_'.$drone_run_band_project_id.'" class="panel-collapse collapse"><div class="panel-body">';
-
-                $drone_run_band_table_html .= '<div id="drone_run_band_accordian_drone_run_band_div_'.$drone_run_band_project_id.'"></div>';
-
-                $drone_run_band_table_html .= '</div></div></div></div>';
-                $drone_run_band_table_html .= '</td></tr>';
-
-            }
-            $drone_run_band_table_html .= '</tbody></table>';
-
-            $drone_run_html .= $drone_run_band_table_html;
-
-            # $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_merge_channels" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Merge Drone Run Bands For '.$v->{drone_run_project_name}.'</button><br/><br/>';
-
-            $drone_run_html .= '</div></div></div></div>';
-
-            $drone_run_html .= '<br/>';
-        }
-        $drone_run_html .= '</div></div></div></div>';
-
-        push @return, [$drone_run_html];
-    }
-
-    $c->stash->{rest} = { data => \@return };
-}
-
-#OBSOLETED: Use raw_drone_imagery_top instead
-sub raw_drone_imagery_summary : Path('/api/drone_imagery/raw_drone_imagery') : ActionClass('REST') { }
-sub raw_drone_imagery_summary_GET : Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-    my $raw_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
-    my $stitched_drone_images_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
-
-    my $images_search = CXGN::DroneImagery::ImagesSearch->new({
-        bcs_schema=>$schema,
-        project_image_type_id_list=>[
-            $raw_drone_images_cvterm_id,
-            $stitched_drone_images_cvterm_id
-        ]
-    });
-    my ($result, $total_count) = $images_search->search();
-    #print STDERR Dumper $result;
-
-    my @return;
-    my %unique_drone_runs;
-    my %trial_id_hash;
-    foreach (@$result) {
-        my $image_id = $_->{image_id};
-        my $image = SGN::Image->new( $schema->storage->dbh, $image_id, $c );
-        my $image_source_tag_tiny = $image->get_img_src_tag("tiny");
-        my $image_source_tag_small = $image->get_img_src_tag("thumbnail");
-        my $image_original = $image->get_image_url("original");
-        if ($_->{project_image_type_name} eq 'raw_drone_imagery') {
-            push @{$unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{images}}, '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_tiny.'</a>';
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{usernames}->{$_->{username}}++;
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_name} = $_->{drone_run_band_project_name};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_description} = $_->{drone_run_band_project_description};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_type} = $_->{drone_run_band_project_type};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{project_image_type_name} = $_->{project_image_type_name};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{trial_id} = $_->{trial_id};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_date} = $_->{drone_run_date};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_type} = $_->{drone_run_type};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_indicator} = $_->{drone_run_indicator};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed} = $_->{drone_run_processed};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed_minimal_vi} = $_->{drone_run_processed_minimal_vi};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed_extended} = $_->{drone_run_processed_extended};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_phenotypes_indicator} = $_->{drone_run_phenotypes_indicator};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_averaged_temperature_gdd} = $_->{drone_run_averaged_temperature_gdd};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_related_time_cvterm_json} = $_->{drone_run_related_time_cvterm_json};
-            $trial_id_hash{$_->{trial_name}} = $_->{trial_id};
-        }
-        elsif ($_->{project_image_type_name} eq 'stitched_drone_imagery') {
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image} = '<a href="/image/view/'.$image_id.'" target="_blank">'.$image_source_tag_small.'</a>';
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_username} = $_->{username};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_modified_date} = $_->{image_modified_date};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_original} = $image_original;
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{stitched_image_id} = $image_id;
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_name} = $_->{drone_run_band_project_name};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_description} = $_->{drone_run_band_project_description};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{drone_run_band_project_type} = $_->{drone_run_band_project_type};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{usernames}->{$_->{username}}++;
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{project_image_type_name} = $_->{project_image_type_name};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{trial_id} = $_->{trial_id};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{trial_name} = $_->{trial_name};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_project_name} = $_->{drone_run_project_name};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_date} = $_->{drone_run_date};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_type} = $_->{drone_run_type};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_indicator} = $_->{drone_run_indicator};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed} = $_->{drone_run_processed};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed_minimal_vi} = $_->{drone_run_processed_minimal_vi};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_processed_extended} = $_->{drone_run_processed_extended};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_phenotypes_indicator} = $_->{drone_run_phenotypes_indicator};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_project_description} = $_->{drone_run_project_description};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_averaged_temperature_gdd} = $_->{drone_run_averaged_temperature_gdd};
-            $unique_drone_runs{$_->{trial_name}}->{$_->{drone_run_project_id}}->{drone_run_related_time_cvterm_json} = $_->{drone_run_related_time_cvterm_json};
-            $trial_id_hash{$_->{trial_name}} = $_->{trial_id};
-        }
-    }
-    # print STDERR Dumper \%unique_drone_runs;
-
-    my $calendar_funcs = CXGN::Calendar->new({});
-    foreach my $trial_name (sort keys %unique_drone_runs) {
-        my %unique_drone_runs_k = %{$unique_drone_runs{$trial_name}};
-
-        my $drone_run_html = '<div class="panel-group" id="drone_runs_trial_accordion_table_wrapper_'.$trial_id_hash{$trial_name}.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_runs_trial_accordion_table_wrapper_'.$trial_id_hash{$trial_name}.'" href="#drone_runs_trial_accordion_table_wrapper_one_'.$trial_id_hash{$trial_name}.'" >Field Trial: '.$trial_name.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;('.scalar(keys %unique_drone_runs_k).' Imaging Events)</a></h4></div><div id="drone_runs_trial_accordion_table_wrapper_one_'.$trial_id_hash{$trial_name}.'" class="panel-collapse collapse"><div class="panel-body">';
-
-        foreach my $k (sort keys %unique_drone_runs_k) {
-            my $v = $unique_drone_runs_k{$k};
-            my $drone_run_bands = $v->{bands};
-            my $drone_run_date = $v->{drone_run_date} ? $calendar_funcs->display_start_date($v->{drone_run_date}) : '';
-
-            $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_drone_run_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_drone_run_wrapper_'.$k.'" href="#drone_run_band_accordion_drone_run_wrapper_one_'.$k.'" >'.$v->{drone_run_project_name}.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp'.$drone_run_date.'</a></h4></div><div id="drone_run_band_accordion_drone_run_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
-
-            $drone_run_html .= '<div class="well well-sm">';
-
-            $drone_run_html .= '<div class="row"><div class="col-sm-6">';
-            $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Imaging Event Name</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$k.'" _target="blank">'.$v->{drone_run_project_name}.'</a></div></div>';
-            $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Imaging Event Type</b>:</div><div class="col-sm-7">'.$v->{drone_run_type}.'</div></div>';
-            $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Description</b>:</div><div class="col-sm-7">'.$v->{drone_run_project_description}.'</div></div>';
-            $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Date</b>:</div><div class="col-sm-7">'.$drone_run_date.'</div></div>';
-            if ($v->{drone_run_averaged_temperature_gdd}) {
-                $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Averaged Temperature Growing Degree Days</b>:</div><div class="col-sm-7">'.$v->{drone_run_averaged_temperature_gdd}.'</div></div>';
-            }
-            else {
-                $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Growing Degree Days</b>:</div><div class="col-sm-7"><button class="btn btn-default btn-sm" name="drone_imagery_drone_run_calculate_gdd" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'">Calculate</button></div></div>';
-            }
-            $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Growing Season Days</b>:</div><div class="col-sm-7">'.$v->{drone_run_related_time_cvterm_json}->{day}.'</div></div>';
-            $drone_run_html .= '<div class="row"><div class="col-sm-5"><b>Field Trial</b>:</div><div class="col-sm-7"><a href="/breeders_toolbox/trial/'.$v->{trial_id}.'" _target="blank">'.$v->{trial_name}.'</a></div></div>';
-            $drone_run_html .= '</div><div class="col-sm-3">';
-            if ($v->{drone_run_indicator}) {
-                $drone_run_html .= '<span class="label label-info" ><span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;&nbsp;Processing Images in Progress</span><br/><br/>';
-            }
-            if ($v->{drone_run_phenotypes_indicator}) {
-                $drone_run_html .= '<span class="label label-info" ><span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;&nbsp;Processing Phenotypes in Progress</span><br/><br/>';
-            } elsif ($v->{drone_run_processed}) {
-                # $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button>';
-            }
-            #$drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button>';
-
-            $drone_run_html .= '</div><div class="col-sm-3">';
-            if (!$v->{drone_run_indicator}) {
-                if ($v->{project_image_type_name} eq 'raw_drone_imagery') {
-                    $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_stadard_process_raw_images_add_images" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Upload More Raw Images <br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-
-                    #$drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process_raw_images" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Raw Image Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-
-                    $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process_raw_images_interactive" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Interactive Raw Image Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-
-                    $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-                }
-                else {
-                    if (!$v->{drone_run_processed}) {
-                        $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_standard_process" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-                    } elsif (!$v->{drone_run_processed_minimal_vi}) {
-                        $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_minimal_vi" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Minimal Vegetitative Index Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-                    } elsif (!$v->{drone_run_processed_extended}) {
-                        $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_standard_process_extended" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Run Extended Standard Process For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
-                    }
-                }
-            }
             $drone_run_html .= '<button class="btn btn-danger btn-sm" name="project_drone_imagery_delete_drone_run" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Delete Imaging Event</button>';
 
             $drone_run_html .= '</div></div></div>';

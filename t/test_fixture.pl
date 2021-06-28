@@ -117,6 +117,8 @@ if (! $ENV{TEST_DB_NAME}) {
     my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path;
     print STDERR "# Loading database fixture... $database_fixture_dump ... ";
     system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
+    # will emit an error if web_usr role already exists, but that's OK
+    system("psql -h $config->{dbhost} -U postgres $dbname -c \"CREATE USER web_usr PASSWORD '$db_user_password'\"");
     system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
 
     print STDERR "Done.\n";
@@ -218,7 +220,7 @@ unless( $prove_pid ) {
 
     # set up env vars for prove and the tests
     #
-    $ENV{SGN_TEST_SERVER} = "http://localhost:$catalyst_server_port";
+    $ENV{SGN_TEST_SERVER} ||= "http://localhost:$catalyst_server_port";
     if(! $noparallel ) {
         $ENV{SGN_PARALLEL_TESTING} = 1;
         $ENV{SGN_SKIP_LEAK_TEST}   = 1;
