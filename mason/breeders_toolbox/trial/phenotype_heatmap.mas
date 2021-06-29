@@ -920,97 +920,122 @@ jQuery(document).ready( function() {
     var checks = {};
     var data;
 
-
     function field_map_view() {
-        
+        checks = {};
         jQuery("#ctrldiv").css("display", "none");
-        jQuery.ajax({
-             //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
+        jQuery.ajax( {
+                //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-            url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&pageSize=10000',
-            // url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
-             beforeSend: function() {
-               jQuery("#working_modal").modal("show");
-             },
-             success: function(response) {
-                console.log(response.result.data);
-                data = response.result.data;
-                console.log('unordered: ',  data);
+                url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
+                beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+                },
+                success: function(response) {
+                var data = response.result.data;
+                console.log(data);
                 var data = data.sort(function(obj1, obj2) {
-	                  // Ascending: first plotNumber less than the previous
-	                return obj1.observationUnitPUI - obj2.observationUnitPUI;
+                        // Ascending: first plotNumber less than the previous
+                    return obj1.additionalInfo.plotNumber - obj2.additionalInfo.plotNumber;
                 });
-                FieldMap.set_data(data);
-
+                FieldMap.make_hash_map(data);
+                FieldMap.field_view();
+                console.log(data);
             },
-            error: function(reponse) {
+                error: function(reponse) {
                 alert('Error displaying traits assayed heatmap');   
-            }
-        })
-        .then(
-            function() {
-                return jQuery.each(FieldMap.data, function(key_obj, value_obj) {
-                    jQuery.ajax({
-                        headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},            
-                        url: '/brapi/v2/images?observationUnitDbId='+value_obj.observationUnitDbId,
-                        // url: '/brapi/v2/studies?studyDbId='+trial_id+'&pageSize=10000',
-                        success: function(response) {
-                            var image_list = [];
-                            jQuery.each(response.result.data, function(image_data) {
-                                image_list.push(image_data.imageDbId);
-                            });
-                            value_obj['plotImageDbIds'] = image_list;
-                            console.log(value_obj);
-                        },
-                        error: function(response) {
-                            alert('error retrieving plot images'); 
-                        }
-                    })
-                })
-            }
-        )
-        .then(
-            function() {
-                return jQuery.ajax({
-                    headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-                    url: '/brapi/v2/studies?studyDbId='+trial_id,
-                    success: function(response) {
-                        jQuery.each(FieldMap.data, function(key_obj, value_obj) {
-                            var design_type = (response.result.data[0].experimentalDesign.description);
-                            value_obj['designType'] = design_type; 
-                        });
-                    },
-                    error: function(response) {
-                        alert('error retrieving field design');
-                    }
-                })
-            }
-        )
-        .then(
-            function() {
-                return jQuery.each(FieldMap.data, function(key_obj, value_obj) {
-                    if (value_obj.seedLotDbId) {
-                        jQuery.ajax({
-                            headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-                            url: '/brapi/v2/seedlots?seedLotDbId='+value_obj.seedLotDbId,
-                            success: function(response) {
-                                value_obj['seedLotName'] = response.result.data[0].seedLotName;
-                            },
-                            error: function(response) {
-                                alert('error retrieving seedlot names');
-                            }
-                        })
-                    }
-                }) 
-            }
-        )
-        .then(
-            function() {
-                    FieldMap.make_hash_map();
-                    FieldMap.field_view();
-            }
-        )
+                }
+        });    
     }
+    // function field_map_view() {
+        
+    //     jQuery("#ctrldiv").css("display", "none");
+    //     jQuery.ajax({
+    //          //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
+    //         headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+    //         url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&pageSize=10000',
+    //         // url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
+    //          beforeSend: function() {
+    //            jQuery("#working_modal").modal("show");
+    //          },
+    //          success: function(response) {
+    //             console.log(response.result.data);
+    //             data = response.result.data;
+    //             console.log('unordered: ',  data);
+    //             var data = data.sort(function(obj1, obj2) {
+	//                   // Ascending: first plotNumber less than the previous
+	//                 return obj1.observationUnitPUI - obj2.observationUnitPUI;
+    //             });
+    //             FieldMap.set_data(data);
+
+    //         },
+    //         error: function(reponse) {
+    //             alert('Error displaying traits assayed heatmap');   
+    //         }
+    //     })
+    //     .then(
+    //         function() {
+    //             return jQuery.each(FieldMap.data, function(key_obj, value_obj) {
+    //                 jQuery.ajax({
+    //                     headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},            
+    //                     url: '/brapi/v2/images?observationUnitDbId='+value_obj.observationUnitDbId,
+    //                     // url: '/brapi/v2/studies?studyDbId='+trial_id+'&pageSize=10000',
+    //                     success: function(response) {
+    //                         var image_list = [];
+    //                         jQuery.each(response.result.data, function(image_data) {
+    //                             image_list.push(image_data.imageDbId);
+    //                         });
+    //                         value_obj['plotImageDbIds'] = image_list;
+    //                         console.log(value_obj);
+    //                     },
+    //                     error: function(response) {
+    //                         alert('error retrieving plot images'); 
+    //                     }
+    //                 })
+    //             })
+    //         }
+    //     )
+    //     .then(
+    //         function() {
+    //             return jQuery.ajax({
+    //                 headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+    //                 url: '/brapi/v2/studies?studyDbId='+trial_id,
+    //                 success: function(response) {
+    //                     jQuery.each(FieldMap.data, function(key_obj, value_obj) {
+    //                         var design_type = (response.result.data[0].experimentalDesign.description);
+    //                         value_obj['designType'] = design_type; 
+    //                     });
+    //                 },
+    //                 error: function(response) {
+    //                     alert('error retrieving field design');
+    //                 }
+    //             })
+    //         }
+    //     )
+    //     .then(
+    //         function() {
+    //             return jQuery.each(FieldMap.data, function(key_obj, value_obj) {
+    //                 if (value_obj.seedLotDbId) {
+    //                     jQuery.ajax({
+    //                         headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+    //                         url: '/brapi/v2/seedlots?seedLotDbId='+value_obj.seedLotDbId,
+    //                         success: function(response) {
+    //                             value_obj['seedLotName'] = response.result.data[0].seedLotName;
+    //                         },
+    //                         error: function(response) {
+    //                             alert('error retrieving seedlot names');
+    //                         }
+    //                     })
+    //                 }
+    //             }) 
+    //         }
+    //     )
+    //     .then(
+    //         function() {
+    //                 FieldMap.make_hash_map();
+    //                 FieldMap.field_view();
+    //         }
+    //     )
+    // }
 
     function geo_field_map_view(){
 
