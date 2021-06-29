@@ -114,6 +114,16 @@ $all_deleted_nirs_files => undef
 $locations => undef
 $sampling_facilities => ()
 
+#Specific to analytics detail page
+$analytics_protocol_id => undef
+$analytics_protocol_name => undef
+$analytics_protocol_description => undef
+$analytics_protocol_type_id => undef
+$analytics_protocol_type_name => undef
+$analytics_protocol_create_date => undef
+$analytics_protocol_properties => {}
+$analytics_protocol_result_summary => {}
+
 </%args>
 
 <& /util/import_javascript.mas,
@@ -200,12 +210,19 @@ $sampling_facilities => ()
                                     trial_id => $trial_id
                                 &>
 
+                                <& /solgs/population/trait_acronyms.mas,
+                                  trial_id => $trial_id
+                              &>
+
 % if ($c->req->base =~ /sweetpotatobase/) {
                                 <& /tools/qualityControl/qualityControl.mas,
                                     trial_id => $trial_id
                                 &>
 % }
 
+                                <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id &>
+                                <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
+                                <& /breeders_toolbox/trial/numerical_derivatives_row_and_column_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
 % if ($hidap_enabled) {
                                 <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
 % }
@@ -448,6 +465,12 @@ $sampling_facilities => ()
 % if ($info_section_id eq 'model_analyses'){
                                 <& /analyses/model_detail_page_analyses_section.mas, model_id => $model_id &>
 % } #End model_analyses
+% if ($info_section_id eq 'analytics_protocol_details'){
+                                <& /analytics_protocols/analytics_protocols_details.mas, analytics_protocol_id=>$analytics_protocol_id, analytics_protocol_name=>$analytics_protocol_name, analytics_protocol_description=>$analytics_protocol_description, analytics_protocol_type_id=>$analytics_protocol_type_id, analytics_protocol_type_name=>$analytics_protocol_type_name, analytics_protocol_create_date=>$analytics_protocol_create_date, analytics_protocol_properties=>$analytics_protocol_properties, analytics_protocol_result_summary=>$analytics_protocol_result_summary &>
+% } #End analytics_protocol_details
+% if ($info_section_id eq 'analytics_protocol_result_files'){
+                                <& /analytics_protocols/analytics_protocols_result_files.mas, analytics_protocol_id=>$analytics_protocol_id, analytics_protocol_name=>$analytics_protocol_name &>
+% } #End analytics_protocol_result_files
 % if ($info_section_id eq 'model_deletion_section'){
                                 <&| /page/info_section.mas, title=>'Delete model', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
                                     <& /analyses/model_deletion.mas, model_id => $model_id  &>

@@ -1,0 +1,984 @@
+analysis_calculate_statistics_select<%args>
+</%args>
+
+<!--button class='btn btn-primary' style='margin:3px;float:right' id='analysis_calculate_statistics_link'>Single/Multi Trial GEBV Analysis</button-->
+
+<div class="modal fade" id="analysis_calculate_statistics_dialog" name="analysis_calculate_statistics_dialog" tabindex="-1" role="dialog" aria-labelledby="analysisCalculateStatisticsDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="analysisCalculateStatisticsDialog">Calculate statistics</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "analysis_calculate_statistics_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Field Trial" &>
+                    <& /page/page_title.mas, title=>"Select the field trial(s) you are interested in." &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial(s): </label>
+                            <div class="col-sm-9" >
+                                <div id="analysis_calculate_statistics_trial_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_field_trial_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Trait Selection" &>
+                    <& /page/page_title.mas, title=>"Select the observation variable you are interested in" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Observation Variables Phenotyped in the Selected Field Trial(s): </label>
+                            <div class="col-sm-9" >
+                                <div id="analysis_calculate_statistics_trait_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_trait_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Statistics" &>
+                    <& /page/page_title.mas, title=>"Select statistics to calculate" &>
+
+                    <div id="analysis_calculate_statistics_model_select_div"></div>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-default" id="analysis_calculate_statistics_create_new_model_button">My Model is Not Shown, So Create New Model</button>
+                    </center>
+
+                    <div id="analysis_calculate_statistics_create_new_model_div" style="display:none">
+                        <hr>
+
+                        <div class="well well-sm">
+                            <select class="form-control" id="analysis_calculate_statistics_select_input">
+                                <option value="">Select A Model</option>
+                                <option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+location_year+1|Germplasm. Univariate genetic effects across location_years</option>
+                                <option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+location_year+GRM. Multivariate genetic effects using GRM across location_years</option>
+                                <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+location_year+GRM+spatial. Multivariate genetic + 2Dspl spatial effects across location_years</option>
+                            </select>
+
+                            <div id="analysis_calculate_statistics_relationship_matrix_type_div" style="display:none">
+                                <hr>
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Relationship Matrix Type: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="analysis_calculate_statistics_relationship_matrix_type_select_div">
+                                                <option value="">Identity</option>
+                                                <option value="htp_phenotypes">High-throughput Phenotyping Data</option>
+                                                <option value="genotypes">Genotyping Data</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="analysis_calculate_statistics_genotyping_protocol_div" style="display:none">
+                                <hr>
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Genotyping Protocol To Calculate Genomic Relationship Matrix (optional. If none selected, an identity matrix is used): </label>
+                                        <div class="col-sm-9" >
+                                            <div id="analysis_calculate_statistics_genotyping_protocol_select_div"></div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Compute Genotypes From Parents: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="analysis_calculate_statistics_genotyping_protocol_compute_from_parents_select">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_div" class="well well-sm" style="display:none">
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">How to calculate the relationship matrix with high-throughput phenotypes: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_select">
+                                                <option value="correlations">Correlations</option>
+                                                <option value="blues">BLUEs</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Time Points to Use: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_times_select">
+                                                <option value="all">All Available</option>
+                                                <option value="latest_trait">Up to latest days after planting selecting in traits</option>
+                                                <option value="vegetative" disabled>Vegetative Growth Stage</option>
+                                                <option value="reproductive" disabled>Reproductive Growth Stage</option>
+                                                <option value="mature" disabled>Mature Growth Stage</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select_div" style="display:none">
+                                        <label class="col-sm-3 control-label">HTP BLUEs Inversion Tolerance: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="analysis_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select">
+                                                <option value="0.00001">0.00001</option>
+                                                <option value="0.0001">0.0001</option>
+                                                <option value="0.001">0.001</option>
+                                                <option value="0.01">0.01</option>
+                                                <option value="0.1">0.1</option>
+                                                <option value="0.5">0.5</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Inversion Tolerance: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="analysis_calculate_statistics_tolparinv_select">
+                                            <option value="0.000001">0.000001</option>
+                                            <option value="0.00001">0.00001</option>
+                                            <option value="0.0001">0.0001</option>
+                                            <option value="0.001">0.001</option>
+                                            <option value="0.01">0.01</option>
+                                            <option value="0.05">0.05</option>
+                                            <option value="0.08">0.08</option>
+                                            <option value="0.1">0.1</option>
+                                            <option value="0.2">0.2</option>
+                                            <option value="0.5">0.5</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Fixed Effects: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="analysis_calculate_statistics_fixed_effect_select_div">
+                                            <option value="replicate">Replicate</option>
+                                            <option value="fixed_effect_trait">Select a continuous trait (e.g. soil elevation curvature)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="analysis_calculate_statistics_fixed_effect_select_trait_div" style="display:none">
+                                    <label class="col-sm-3 control-label">Fixed Effect Trait: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="analysis_calculate_statistics_fixed_effect_trait_select_div"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="analysis_calculate_statistics_fixed_effect_select_quantile_div" style="display:none">
+                                    <label class="col-sm-3 control-label">Fixed Effect Continuous Trait Quantile Binning: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="analysis_calculate_statistics_fixed_effect_select_quantile">
+                                            <option value="10">10% Quantiles</option>
+                                            <option value="5">20% Quantiles</option>
+                                            <option value="4">25% Quantiles</option>
+                                            <option value="3">33% Quantiles</option>
+                                            <option value="20">5% Quantiles</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_select_step">Submit</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Results" &>
+                    <& /page/page_title.mas, title=>"Statistics results" &>
+
+                    <hr>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_blups_genetic_pe_residual" style="display:none">Go To Save Analysis Results For Genetic and Environment BLUPS and Residuals</button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_blups_genetic" style="display:none">Go To Save Analysis Results For Genetic BLUPS</button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_blups_spatial" style="display:none">Go To Save Analysis Results For Spatial BLUPS</button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_residuals" style="display:none">Go To Save Analysis Results For Residuals</button>
+                    <button class="btn btn-primary" id="analysis_calculate_statistics_analysis_save_fitted" style="display:none">Go To Save Analysis Results For Fitted Values</button>
+                    <hr>
+
+                    <div id ="analysis_calculate_statistics_result_div">
+                    </div>
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+    //
+    // Calculate statistics
+    //
+
+    var analysis_calculate_statistics_field_trial_id_array = undefined;
+    var analysis_calculate_statistics_field_trial_id_string = "";
+    var analysis_calculate_statistics_trait_id = [];
+    var analysis_calculate_statistics_trait_names = [];
+    var analysis_calculate_statistics_accession_names = [];
+    var analysis_calculate_statistics_plot_names = [];
+    var analysis_calculate_statistics_select = '';
+    var analysis_calculate_statistics_phenotype_training_file;
+    var analysis_calculate_statistics_grm_training_file;
+    var analysis_calculate_statistics_response = {};
+
+    jQuery('#analysis_calculate_statistics_link').click(function(){
+        get_select_box('trials', 'analysis_calculate_statistics_trial_select_div', { 'name' : 'analysis_calculate_statistics_field_trial_id', 'id' : 'analysis_calculate_statistics_field_trial_id', 'empty':1, 'multiple':1, 'include_location_year':1 });
+
+        jQuery('#analysis_calculate_statistics_dialog').modal('show');
+    });
+
+    jQuery('#analysis_calculate_statistics_field_trial_select_step').click(function(){
+        analysis_calculate_statistics_field_trial_id_array = undefined;
+        analysis_calculate_statistics_field_trial_id_string = "";
+        analysis_calculate_statistics_field_trial_id_array = jQuery('#analysis_calculate_statistics_field_trial_id').val();
+
+        analysis_calculate_statistics_field_trial_id_string = analysis_calculate_statistics_field_trial_id_array.join(",");
+        if (analysis_calculate_statistics_field_trial_id_string == '') {
+            alert('Please select a field trial first!');
+        } else {
+            get_select_box('traits', 'analysis_calculate_statistics_trait_select_div', { 'name' : 'analysis_calculate_statistics_trait_id_select', 'id' : 'analysis_calculate_statistics_trait_id_select', 'empty':1, 'multiple':0, 'trial_ids':analysis_calculate_statistics_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('traits', 'analysis_calculate_statistics_permanent_env_structure_phenotype_correlation_select_div', { 'name' : 'analysis_calculate_statistics_permanent_env_structure_phenotype_correlation_select', 'id' : 'analysis_calculate_statistics_permanent_env_structure_phenotype_correlation_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':analysis_calculate_statistics_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('traits', 'analysis_calculate_statistics_permanent_env_structure_phenotype_select_div', { 'name' : 'analysis_calculate_statistics_permanent_env_structure_phenotype_select', 'id' : 'analysis_calculate_statistics_permanent_env_structure_phenotype_select', 'empty':1, 'multiple':1, 'size':20, 'trial_ids':analysis_calculate_statistics_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('traits', 'analysis_calculate_statistics_fixed_effect_trait_select_div', { 'name' : 'analysis_calculate_statistics_fixed_effect_trait_select', 'id' : 'analysis_calculate_statistics_fixed_effect_trait_select', 'empty':0, 'multiple':0, 'trial_ids':analysis_calculate_statistics_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('genotyping_protocol', 'analysis_calculate_statistics_genotyping_protocol_select_div', { 'name' : 'analysis_calculate_statistics_genotyping_protocol_select', 'id' : 'analysis_calculate_statistics_genotyping_protocol_select', 'empty':1 });
+
+            get_select_box('models', 'analysis_calculate_statistics_model_select_div', { 'name' : 'analysis_calculate_statistics_model_select', 'id' : 'analysis_calculate_statistics_model_select', 'empty':0, 'nd_protocol_type':'analysis_model_properties_multi_trial' });
+
+            Workflow.complete("#analysis_calculate_statistics_field_trial_select_step");
+            Workflow.focus('#analysis_calculate_statistics_workflow', 1);
+        }
+        return false;
+    });
+
+    jQuery('#analysis_calculate_statistics_trait_select_step').click(function(){
+        analysis_calculate_statistics_trait_id = undefined;
+
+        analysis_calculate_statistics_trait_id = jQuery('#analysis_calculate_statistics_trait_id_select').val();
+        if (analysis_calculate_statistics_trait_id == null || analysis_calculate_statistics_trait_id == undefined) {
+            alert('Please select one observation variable!');
+            return false;
+        }
+
+        Workflow.complete("#analysis_calculate_statistics_trait_select_step");
+        Workflow.focus('#analysis_calculate_statistics_workflow', 2);
+        return false;
+    });
+
+    jQuery('#analysis_calculate_statistics_create_new_model_button').click(function(){
+        jQuery('#analysis_calculate_statistics_create_new_model_div').show();
+    });
+
+    jQuery('#analysis_calculate_statistics_select_input').change(function(){
+        jQuery("#analysis_calculate_statistics_relationship_matrix_type_select_div").val('').change();
+        jQuery("#analysis_calculate_statistics_genotyping_protocol_compute_from_parents_select").val('no').change();
+
+        analysis_calculate_statistics_select = jQuery('#analysis_calculate_statistics_select_input').val();
+        if (analysis_calculate_statistics_select == 'lmer_germplasmname_replicate') {
+            jQuery('#analysis_calculate_statistics_relationship_matrix_type_div').hide();
+            jQuery('#analysis_calculate_statistics_genotyping_protocol_div').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_genetic_pe_residual').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_genetic').show();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_spatial').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_residuals').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_fitted').hide();
+            jQuery('#analysis_calculate_statistics_random_regression_pe_structure_div').hide();
+        }
+        else if (analysis_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
+            jQuery('#analysis_calculate_statistics_relationship_matrix_type_div').show();
+            jQuery('#analysis_calculate_statistics_genotyping_protocol_div').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_genetic_pe_residual').show();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_genetic').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_spatial').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_residuals').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_fitted').hide();
+            jQuery('#analysis_calculate_statistics_random_regression_pe_structure_div').hide();
+        }
+        else if (analysis_calculate_statistics_select == 'sommer_grm_genetic_blups') {
+            jQuery('#analysis_calculate_statistics_relationship_matrix_type_div').show();
+            jQuery('#analysis_calculate_statistics_genotyping_protocol_div').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_genetic_pe_residual').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_genetic').show();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_spatial').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_residuals').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_fitted').hide();
+            jQuery('#analysis_calculate_statistics_random_regression_pe_structure_div').hide();
+        }
+        else {
+            jQuery('#analysis_calculate_statistics_relationship_matrix_type_div').hide();
+            jQuery('#analysis_calculate_statistics_genotyping_protocol_div').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_genetic_pe_residual').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_genetic').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_blups_spatial').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_residuals').hide();
+            jQuery('#analysis_calculate_statistics_analysis_save_fitted').hide();
+            jQuery('#analysis_calculate_statistics_random_regression_pe_structure_div').hide();
+        }
+
+    });
+
+    jQuery('#analysis_calculate_statistics_relationship_matrix_type_select_div').change(function(){
+        if (jQuery(this).val() == 'genotypes') {
+            jQuery('#analysis_calculate_statistics_genotyping_protocol_div').show();
+            jQuery('#analysis_calculate_statistics_htp_phenotypes_rel_matrix_div').hide();
+        }
+        else if (jQuery(this).val() == 'htp_phenotypes') {
+            jQuery('#analysis_calculate_statistics_genotyping_protocol_div').hide();
+            jQuery('#analysis_calculate_statistics_htp_phenotypes_rel_matrix_div').show();
+        }
+        else {
+            jQuery('#analysis_calculate_statistics_genotyping_protocol_div').hide();
+            jQuery('#analysis_calculate_statistics_htp_phenotypes_rel_matrix_div').hide();
+        }
+    });
+
+    jQuery('#analysis_calculate_statistics_htp_phenotypes_rel_matrix_select').change(function(){
+        if (jQuery(this).val() == 'blues') {
+            jQuery('#analysis_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select_div').show();
+        }
+        else {
+            jQuery('#analysis_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select_div').hide();
+        }
+    });
+
+    jQuery('#analysis_calculate_statistics_fixed_effect_select_div').change(function(){
+        if (jQuery(this).val() == 'replicate') {
+            jQuery('#analysis_calculate_statistics_fixed_effect_select_trait_div').hide();
+            jQuery('#analysis_calculate_statistics_fixed_effect_select_quantile_div').hide();
+        }
+        if (jQuery(this).val() == 'fixed_effect_trait') {
+            jQuery('#analysis_calculate_statistics_fixed_effect_select_trait_div').show();
+            jQuery('#analysis_calculate_statistics_fixed_effect_select_quantile_div').show();
+        }
+    });
+
+    jQuery('#analysis_calculate_statistics_select_step').click(function(){
+
+        analysis_calculate_statistics_select = jQuery('#analysis_calculate_statistics_select_input').val();
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/calculate_statistics',
+            type : 'POST',
+            data : {
+                'observation_variable_id_list':analysis_calculate_statistics_trait_id,
+                'field_trial_id_list':JSON.stringify(analysis_calculate_statistics_field_trial_id_array),
+                'statistics_select':analysis_calculate_statistics_select,
+                'relationship_matrix_type':jQuery('#analysis_calculate_statistics_relationship_matrix_type_select_div').val(),
+                'protocol_id':jQuery('#analysis_calculate_statistics_genotyping_protocol_select').val(),
+                'compute_from_parents':jQuery('#analysis_calculate_statistics_genotyping_protocol_compute_from_parents_select').val(),
+                'htp_pheno_rel_matrix_type':jQuery('#analysis_calculate_statistics_htp_phenotypes_rel_matrix_select').val(),
+                'htp_pheno_rel_matrix_time_points':jQuery('#analysis_calculate_statistics_htp_phenotypes_rel_matrix_times_select').val(),
+                'htp_pheno_rel_matrix_blues_inversion':jQuery('#analysis_calculate_statistics_htp_phenotypes_rel_matrix_inversion_select').val(),
+                'tolparinv':jQuery('#analysis_calculate_statistics_tolparinv_select').val(),
+                'legendre_order_number':jQuery('#analysis_calculate_statistics_legendre_order_number_select').val(),
+                'fixed_effect_type':jQuery('#analysis_calculate_statistics_fixed_effect_select_div').val(),
+                'fixed_effect_trait_id':jQuery('#analysis_calculate_statistics_fixed_effect_trait_select').val(),
+                'fixed_effect_quantiles':jQuery('#analysis_calculate_statistics_fixed_effect_select_quantile').val()
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    analysis_calculate_statistics_response = response;
+
+                    var html = '';
+                    if (response.sum_square_residual) {
+                        html = html + '<h4>Sum square residual: '+response.sum_square_residual+'</h4><hr>';
+                    }
+                    if (response.genetic_effects_line_plot) {
+                        html = html + '<img src="'+response.genetic_effects_line_plot+'"><hr>';
+                    }
+                    if (response.env_effects_heatmap_plot) {
+                        html = html + '<img src="'+response.env_effects_heatmap_plot+'"><hr>';
+                    }
+                    if (response.unique_accessions.length > 0 && response.unique_traits.length > 0 && response.result_blup_genetic_data) {
+                        analysis_calculate_statistics_accession_names = response.unique_accessions;
+                        analysis_calculate_statistics_trait_names = response.unique_traits;
+                        analysis_calculate_statistics_phenotype_training_file = response.stats_tempfile;
+                        analysis_calculate_statistics_grm_training_file = response.grm_file;
+
+                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Accessions</th>';
+                        for (var i=0; i<analysis_calculate_statistics_trait_names.length; i++) {
+                            html = html + '<th>'+analysis_calculate_statistics_trait_names[i]+'</th>';
+                        }
+                        html = html + '</tr></thead><tbody>';
+                        for (var k=0; k<response.unique_accessions.length; k++) {
+                            var acc = response.unique_accessions[k];
+                            html = html + '<tr><td>'+acc+'</td>';
+                            for (var i=0; i<analysis_calculate_statistics_trait_names.length; i++) {
+                                if (response.result_blup_genetic_data[acc] && response.result_blup_genetic_data[acc][analysis_calculate_statistics_trait_names[i]]) {
+                                    html = html + '<td>'+response.result_blup_genetic_data[acc][analysis_calculate_statistics_trait_names[i]][0]+'</td>';
+                                }
+                                else {
+                                    html = html + '<td>NA</td>';
+                                }
+                            }
+                            html = html + '</tr>';
+                        }
+                        html = html + '</tbody></table>';
+                    }
+
+                    if (response.unique_plots.length > 0 && response.unique_traits.length > 0 && response.result_blup_spatial_data) {
+                        analysis_calculate_statistics_plot_names = response.unique_plots;
+                        analysis_calculate_statistics_trait_names = response.unique_traits;
+
+                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Plots</th>';
+                        for (var i=0; i<response.unique_traits.length; i++) {
+                            html = html + '<th>'+response.unique_traits[i]+'</th>';
+                        }
+                        html = html + '</tr></thead><tbody>';
+                        for (var k=0; k<response.unique_plots.length; k++) {
+                            var plot = response.unique_plots[k];
+                            html = html + '<tr><td>'+plot+'</td>';
+                            for (var i=0; i<response.unique_traits.length; i++) {
+                                html = html + '<td>'+response.result_blup_spatial_data[plot][response.unique_traits[i]][0]+'</td>';
+                            }
+                            html = html + '</tr>';
+                        }
+                        html = html + '</tbody></table>';
+                    }
+
+                    if (response.results.length > 0) {
+                        html = '<table class="table table-bordered table-hover"><thead><tr><th>Observation Variable</th><th>Statistics</th><th>Plot</th></tr></thead><tbody>';
+                        for (var i=0; i<response.results.length; i++) {
+                            html = html + '<tr><td>'+response.results[i][0]+'</td><td>'+response.results[i][1]+'</td><td><img src="'+response.results[i][2]+'"></td></tr>';
+                        }
+                        html = html + '</tbody></table>';
+                    }
+
+                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+'.log" target=_blank>Stats file or log</a>';
+
+                    if (jQuery('#analysis_calculate_statistics_relationship_matrix_type_select_div').val() == 'htp_phenotypes') {
+                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+'" target=_blank>HTP Relationship Matrix</a>';
+                    }
+
+                    jQuery('#analysis_calculate_statistics_result_div').html(html);
+
+                    Workflow.complete("#analysis_calculate_statistics_select_step");
+                    Workflow.focus('#analysis_calculate_statistics_workflow', 3);
+                }
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error calculating statistics!')
+            }
+        });
+    });
+
+    jQuery('#analysis_calculate_statistics_analysis_save_blups_genetic_pe_residual').click(function(){
+        jQuery('#generic_save_analysis_template_dialog').modal('show');
+    });
+
+    jQuery('#generic_save_analysis_template_submit_button').click(function(){
+        var generic_save_analysis_template_analysis_name = jQuery('#generic_save_analysis_template_analysis_name').val();
+        var generic_save_analysis_template_analysis_description = jQuery('#generic_save_analysis_template_analysis_description').val();
+        var generic_save_analysis_template_analysis_year = jQuery('#generic_save_analysis_template_analysis_year').val();
+        var generic_save_analysis_template_breeding_program_id = jQuery('#generic_save_analysis_template_breeding_program_id').val();
+
+        if (generic_save_analysis_template_analysis_name == '') {
+            alert('Please give an analysis template name');
+            return false;
+        }
+        if (generic_save_analysis_template_analysis_description == '') {
+            alert('Please give an analysis template description');
+            return false;
+        }
+        if (generic_save_analysis_template_analysis_year == '') {
+            alert('Please give an analysis template year');
+            return false;
+        }
+
+        var analysis_stats_parameters = {};
+        var analysis_stats_protocol = '';
+        var analysis_stats_auxiliary_files = [];
+        var analysis_stats_result_summary = {};
+        var analysis_statistical_ontology_term = '';
+        var analysis_stats_compose_trait_info;
+
+        var analysis_stats_tolparinv_param = jQuery('#analysis_calculate_statistics_tolparinv_select').val();
+        var analysis_stats_numbers_traits = analysis_calculate_statistics_response.unique_traits.length;
+        var analysis_legendre_order = jQuery('#analysis_calculate_statistics_legendre_order_number_select').val();
+        var analysis_genotyping_protocol_id = jQuery('#analysis_calculate_statistics_genotyping_protocol_select').val();
+        var analysis_compute_genotypes_from_parents = jQuery('#analysis_calculate_statistics_genotyping_protocol_compute_from_parents_select').val();
+
+        var analysis_stats_mv_traits = [];
+        for (var i=1; i<analysis_stats_numbers_traits+1; i++) {
+            analysis_stats_mv_traits.push('t'+i);
+        }
+        var analysis_stats_mv_traits_string = analysis_stats_mv_traits.join();
+
+        if (analysis_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
+
+            analysis_stats_protocol = 'mmer('+analysis_stats_mv_traits_string+'~1+replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('+analysis_stats_numbers_traits+')) +vs(rowNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')) +vs(colNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('+analysis_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+analysis_stats_numbers_traits+')), data=mat, tolparinv='+analysis_stats_tolparinv_param+');';
+
+            analysis_stats_parameters = {
+                'tolparinv':analysis_stats_tolparinv_param,
+                'genotyping_protocol_id':analysis_genotyping_protocol_id,
+                'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
+                'protocol':analysis_stats_protocol
+            };
+
+            analysis_stats_auxiliary_files = [{'auxiliary_model_file':analysis_calculate_statistics_response.grm_file, auxiliary_model_file_archive_type:'nickssinglemultitrialgebvanalyses_v1.01_sommer_grm_spatial_genetic_blups_grm_file'}];
+
+            analysis_stats_compose_trait_info = JSON.stringify(analysis_calculate_statistics_response.trait_composing_info);
+
+            analysis_statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001";
+        }
+        if (analysis_calculate_statistics_select == 'sommer_grm_genetic_blups') {
+
+            analysis_stats_protocol = 'mmer('+analysis_stats_mv_traits_string+'~1+replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('+analysis_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+analysis_stats_numbers_traits+')), data=mat, tolparinv='+analysis_stats_tolparinv_param+');';
+
+            analysis_stats_parameters = {
+                'tolparinv':analysis_stats_tolparinv_param,
+                'genotyping_protocol_id':analysis_genotyping_protocol_id,
+                'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
+                'protocol':analysis_stats_protocol
+            };
+
+            analysis_stats_auxiliary_files = [{'auxiliary_model_file':analysis_calculate_statistics_response.grm_file, auxiliary_model_file_archive_type:'nickssinglemultitrialgebvanalyses_v1.01_sommer_grm_genetic_blups_grm_file'}];
+
+            analysis_stats_compose_trait_info = JSON.stringify(analysis_calculate_statistics_response.trait_composing_info);
+
+            analysis_statistical_ontology_term = "Multivariate genetic BLUPs using genetic relationship matrix computed using Sommer R|SGNSTAT:0000024";
+        }
+
+        var training_data_file = analysis_calculate_statistics_response.stats_tempfile;
+
+        if (analysis_calculate_statistics_select == 'lmer_germplasmname_replicate') {
+            analysis_stats_protocol = 'lmer(t1~replicate + 1|germplasmName, data=mat, na.action = na.omit)';
+            analysis_stats_parameters = {
+                'protocol':analysis_stats_protocol
+            };
+            analysis_statistical_ontology_term = "Univariate linear mixed model genetic BLUPs using germplasmName computed using LMER R|SGNSTAT:0000002";
+        }
+
+        jQuery.ajax({
+            type: 'POST',
+            url : '/ajax/analysis/store/json',
+            data : {
+                'analysis_to_save_boolean':'yes',
+                'analysis_name':generic_save_analysis_template_analysis_name+'_GBLUPS',
+                'analysis_description':generic_save_analysis_template_analysis_description,
+                'analysis_year':generic_save_analysis_template_analysis_year,
+                'analysis_breeding_program_id':generic_save_analysis_template_breeding_program_id,
+                'analysis_protocol':analysis_stats_protocol,
+                'analysis_dataset_id':'',
+                'analysis_accession_names':JSON.stringify(analysis_calculate_statistics_response.unique_accessions),
+                'analysis_trait_names':JSON.stringify(analysis_calculate_statistics_response.unique_traits),
+                'analysis_analysis_statistical_ontology_term':analysis_statistical_ontology_term,
+                'analysis_precomputed_design_optional':'',
+                'analysis_result_values':JSON.stringify(analysis_calculate_statistics_response.result_blup_genetic_data),
+                'analysis_result_values_type':'analysis_result_values_match_accession_names',
+                'analysis_result_summary':JSON.stringify(analysis_stats_result_summary),
+                'analysis_result_trait_compose_info':analysis_stats_compose_trait_info,
+                'analysis_model_id':'',
+                'analysis_model_name':generic_save_analysis_template_analysis_name+'_GBLUPSandPEandResiduals_Model',
+                'analysis_model_description':generic_save_analysis_template_analysis_description,
+                'analysis_model_is_public':'yes',
+                'analysis_model_language':analysis_calculate_statistics_response.analysis_model_language,
+                'analysis_model_type':analysis_calculate_statistics_response.analysis_model_type,
+                'analysis_model_properties':JSON.stringify(analysis_stats_parameters),
+                'analysis_model_application_name':analysis_calculate_statistics_response.application_name,
+                'analysis_model_application_version':analysis_calculate_statistics_response.application_version,
+                'analysis_model_file':'',
+                'analysis_model_file_type':'',
+                'analysis_model_training_data_file':training_data_file,
+                'analysis_model_training_data_file_type':analysis_calculate_statistics_response.analysis_model_training_data_file_type,
+                'analysis_model_auxiliary_files':JSON.stringify(analysis_stats_auxiliary_files)
+            },
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                }
+                if (response.success) {
+                    var html = '<center>';
+                    if (response.model_id) {
+                        html = html + '<p>Go to saved <a href="/analyses_model/'+response.model_id+'" target=_blank >model</a></p>';
+                    }
+                    if (response.analysis_id) {
+                        html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >GBLUP analysis</a></p>';
+                    }
+                    html = html + '</center>';
+                    jQuery('#generic_save_analysis_template_response_div').html(html);
+
+                    var analysis_statistical_ontology_term;
+                    var analysis_stats_auxiliary_files;
+                    var analysis_stats_training_data_file;
+                    var generic_save_analysis_template_name_type = '_Spatial';
+                    var generic_save_analysis_template_env1_result_values = JSON.stringify(analysis_calculate_statistics_response.result_blup_spatial_data);
+
+                    if (analysis_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
+                        analysis_statistical_ontology_term = "Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003";
+
+                        analysis_stats_auxiliary_files = [{'auxiliary_model_file':analysis_calculate_statistics_response.grm_file, auxiliary_model_file_archive_type:'nickssinglemultitrialgebvanalyses_v1.01_sommer_grm_spatial_genetic_blups_grm_file'}];
+
+                        analysis_stats_training_data_file = analysis_calculate_statistics_response.stats_tempfile;
+                    }
+
+                    jQuery.ajax({
+                        type: 'POST',
+                        url : '/ajax/analysis/store/json',
+                        data : {
+                            'analysis_to_save_boolean':'yes',
+                            'analysis_name':generic_save_analysis_template_analysis_name+generic_save_analysis_template_name_type,
+                            'analysis_description':generic_save_analysis_template_analysis_description,
+                            'analysis_year':generic_save_analysis_template_analysis_year,
+                            'analysis_breeding_program_id':generic_save_analysis_template_breeding_program_id,
+                            'analysis_protocol':analysis_stats_protocol,
+                            'analysis_dataset_id':'',
+                            'analysis_accession_names':JSON.stringify(analysis_calculate_statistics_response.unique_accessions),
+                            'analysis_trait_names':JSON.stringify(analysis_calculate_statistics_response.unique_traits),
+                            'analysis_analysis_statistical_ontology_term':analysis_statistical_ontology_term,
+                            'analysis_precomputed_design_optional':JSON.stringify(analysis_calculate_statistics_response.field_trial_design),
+                            'analysis_result_values':generic_save_analysis_template_env1_result_values,
+                            'analysis_result_values_type':'analysis_result_values_match_precomputed_design',
+                            'analysis_result_summary':JSON.stringify(analysis_stats_result_summary),
+                            'analysis_result_trait_compose_info':'',
+                            'analysis_model_id':response.model_id,
+                            'analysis_model_name':'',
+                            'analysis_model_description':'',
+                            'analysis_model_is_public':'yes',
+                            'analysis_model_language':analysis_calculate_statistics_response.analysis_model_language,
+                            'analysis_model_type':analysis_calculate_statistics_response.analysis_model_type,
+                            'analysis_model_properties':JSON.stringify(analysis_stats_parameters),
+                            'analysis_model_application_name':analysis_calculate_statistics_response.application_name,
+                            'analysis_model_application_version':analysis_calculate_statistics_response.application_version,
+                            'analysis_model_file':'',
+                            'analysis_model_file_type':'',
+                            'analysis_model_training_data_file':analysis_stats_training_data_file,
+                            'analysis_model_training_data_file_type':analysis_calculate_statistics_response.analysis_model_training_data_file_type,
+                            'analysis_model_auxiliary_files':JSON.stringify(analysis_stats_auxiliary_files)
+                        },
+                        success: function(response){
+                            console.log(response);
+                            if (response.error) {
+                                alert(response.error);
+                            }
+                            if (response.success) {
+                                html = html + '<center>';
+                                if (response.analysis_id) {
+                                    if (analysis_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
+                                        html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >spatial BLUP analysis</a></p>';
+                                    }
+                                }
+                                html = html + '</center>';
+                                jQuery('#generic_save_analysis_template_response_div').html(html);
+
+                                var analysis_stats_auxiliary_files;
+                                var analysis_stats_training_data_file;
+
+                                if (analysis_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
+                                    jQuery('#working_modal').modal('hide');
+                                    alert('Analysis and/or model saved!');
+                                    return false;
+                                }
+
+                                jQuery.ajax({
+                                    type: 'POST',
+                                    url : '/ajax/analysis/store/json',
+                                    data : {
+                                        'analysis_to_save_boolean':'yes',
+                                        'analysis_name':generic_save_analysis_template_analysis_name+'_Residual',
+                                        'analysis_description':generic_save_analysis_template_analysis_description,
+                                        'analysis_year':generic_save_analysis_template_analysis_year,
+                                        'analysis_breeding_program_id':generic_save_analysis_template_breeding_program_id,
+                                        'analysis_protocol':analysis_stats_protocol,
+                                        'analysis_dataset_id':'',
+                                        'analysis_accession_names':JSON.stringify(analysis_calculate_statistics_response.unique_accessions),
+                                        'analysis_trait_names':JSON.stringify(analysis_calculate_statistics_response.unique_residual_traits),
+                                        'analysis_analysis_statistical_ontology_term':analysis_statistical_ontology_term,
+                                        'analysis_precomputed_design_optional':JSON.stringify(analysis_calculate_statistics_response.field_trial_design),
+                                        'analysis_result_values':JSON.stringify(analysis_calculate_statistics_response.result_residual_data),
+                                        'analysis_result_values_type':'analysis_result_values_match_precomputed_design',
+                                        'analysis_result_summary':JSON.stringify(analysis_stats_result_summary),
+                                        'analysis_result_trait_compose_info':JSON.stringify(analysis_calculate_statistics_response.trait_composing_info),
+                                        'analysis_model_id':response.model_id,
+                                        'analysis_model_name':'',
+                                        'analysis_model_description':'',
+                                        'analysis_model_is_public':'yes',
+                                        'analysis_model_language':analysis_calculate_statistics_response.analysis_model_language,
+                                        'analysis_model_type':analysis_calculate_statistics_response.analysis_model_type,
+                                        'analysis_model_properties':JSON.stringify(analysis_stats_parameters),
+                                        'analysis_model_application_name':analysis_calculate_statistics_response.application_name,
+                                        'analysis_model_application_version':analysis_calculate_statistics_response.application_version,
+                                        'analysis_model_file':'',
+                                        'analysis_model_file_type':'',
+                                        'analysis_model_training_data_file':analysis_stats_training_data_file,
+                                        'analysis_model_training_data_file_type':analysis_calculate_statistics_response.analysis_model_training_data_file_type,
+                                        'analysis_model_auxiliary_files':JSON.stringify(analysis_stats_auxiliary_files)
+                                    },
+                                    success: function(response){
+                                        jQuery('#working_modal').modal('hide');
+                                        console.log(response);
+                                        if (response.error) {
+                                            alert(response.error);
+                                        }
+                                        if (response.success) {
+                                            alert('Analysis and/or model saved!');
+                                            html = html + '<center>';
+                                            if (response.analysis_id) {
+                                                html = html + '<p>Go to saved <a href="/analyses/'+response.analysis_id+'" target=_blank >residuals analysis</a></p>';
+                                            }
+                                            html = html + '</center>';
+                                            jQuery('#generic_save_analysis_template_response_div').html(html);
+                                        }
+                                    },
+                                    error: function(response){
+                                        alert('Error saving analysis multiple!');
+                                    }
+                                });
+                            }
+                        },
+                        error: function(response){
+                            alert('Error saving analysis multiple!');
+                        }
+                    });
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('Error saving analysis multiple!');
+            }
+        });
+    });
+
+    jQuery('#analysis_calculate_statistics_analysis_save_blups_genetic').click(function(){
+        jQuery('#generic_save_analysis_dialog').modal('show');
+
+        var analysis_stats_parameters = {};
+        var analysis_stats_protocol = '';
+        var analysis_stats_auxiliary_files = [];
+        var analysis_stats_result_summary = {};
+        var analysis_statistical_ontology_term = '';
+
+        var analysis_stats_tolparinv_param = jQuery('#analysis_calculate_statistics_tolparinv_select').val();
+        var analysis_stats_numbers_traits = analysis_calculate_statistics_response.unique_traits.length;
+        var analysis_legendre_order = jQuery('#analysis_calculate_statistics_legendre_order_number_select').val();
+        var analysis_genotyping_protocol_id = jQuery('#analysis_calculate_statistics_genotyping_protocol_select').val();
+        var analysis_compute_genotypes_from_parents = jQuery('#analysis_calculate_statistics_genotyping_protocol_compute_from_parents_select').val();
+
+        var analysis_stats_mv_traits = [];
+        for (var i=1; i<analysis_stats_numbers_traits+1; i++) {
+            analysis_stats_mv_traits.push('t'+i);
+        }
+        var analysis_stats_mv_traits_string = analysis_stats_mv_traits.join();
+
+        if (analysis_calculate_statistics_select == 'sommer_grm_spatial_genetic_blups') {
+
+            analysis_stats_protocol = 'mmer('+analysis_stats_mv_traits_string+'~1+replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('+analysis_stats_numbers_traits+')) +vs(rowNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')) +vs(colNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')) +vs(spl2D(rowNumber, colNumber), Gtc=diag('+analysis_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+analysis_stats_numbers_traits+')), data=mat, tolparinv='+analysis_stats_tolparinv_param+');';
+
+            analysis_stats_parameters = {
+                'tolparinv':analysis_stats_tolparinv_param,
+                'genotyping_protocol_id':analysis_genotyping_protocol_id,
+                'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
+                'protocol':analysis_stats_protocol
+            };
+
+            analysis_stats_auxiliary_files = [{'auxiliary_model_file':analysis_calculate_statistics_response.grm_file, auxiliary_model_file_archive_type:'nickssinglemultitrialgebvanalyses_v1.01_sommer_grm_spatial_genetic_blups_grm_file'}];
+
+            jQuery('#generic_save_analysis_result_compose_trait_info').val(JSON.stringify(analysis_calculate_statistics_response.trait_composing_info));
+
+            analysis_statistical_ontology_term = "Multivariate linear mixed model genetic BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000001";
+        }
+        if (analysis_calculate_statistics_select == 'sommer_grm_genetic_blups') {
+
+            analysis_stats_protocol = 'mmer('+analysis_stats_mv_traits_string+'~1+replicate, random=~vs(id, Gu=geno_mat, Gtc=unsm('+analysis_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+analysis_stats_numbers_traits+')), data=mat, tolparinv='+analysis_stats_tolparinv_param+');';
+
+            analysis_stats_parameters = {
+                'tolparinv':analysis_stats_tolparinv_param,
+                'genotyping_protocol_id':analysis_genotyping_protocol_id,
+                'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
+                'protocol':analysis_stats_protocol
+            };
+
+            analysis_stats_auxiliary_files = [{'auxiliary_model_file':analysis_calculate_statistics_response.grm_file, auxiliary_model_file_archive_type:'nickssinglemultitrialgebvanalyses_v1.01_sommer_grm_genetic_blups_grm_file'}];
+
+            jQuery('#generic_save_analysis_result_compose_trait_info').val(JSON.stringify(analysis_calculate_statistics_response.trait_composing_info));
+
+            analysis_statistical_ontology_term = "Multivariate genetic BLUPs using genetic relationship matrix computed using Sommer R|SGNSTAT:0000024";
+        }
+
+        var training_data_file = analysis_calculate_statistics_response.stats_tempfile;
+
+        if (analysis_calculate_statistics_select == 'lmer_germplasmname_replicate') {
+            analysis_stats_protocol = 'lmer(t1~replicate + 1|germplasmName, data=mat, na.action = na.omit)';
+            analysis_stats_parameters = {
+                'protocol':analysis_stats_protocol
+            };
+            analysis_statistical_ontology_term = "Univariate linear mixed model genetic BLUPs using germplasmName computed using LMER R|SGNSTAT:0000002";
+        }
+
+        jQuery('#generic_save_analysis_protocol').val(analysis_stats_protocol);
+        jQuery('#generic_save_analysis_model_properties').val(JSON.stringify(analysis_stats_parameters));
+        //jQuery('#generic_save_analysis_dataset_id').val();
+        jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(analysis_calculate_statistics_response.unique_accessions));
+        jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(analysis_calculate_statistics_response.unique_traits));
+        jQuery('#generic_save_analysis_analysis_statistical_ontology_term').val(analysis_statistical_ontology_term);
+        //jQuery('#generic_save_analysis_design').val();
+        jQuery('#generic_save_analysis_result_values').val(JSON.stringify(analysis_calculate_statistics_response.result_blup_genetic_data));
+        jQuery('#generic_save_analysis_result_values_type').val(analysis_calculate_statistics_response.analysis_result_values_type);
+        jQuery('#generic_save_analysis_result_summary_values').val(JSON.stringify(analysis_stats_result_summary));
+        jQuery('#generic_save_analysis_model_language').val(analysis_calculate_statistics_response.analysis_model_language);
+        jQuery('#generic_save_analysis_model_type').val(analysis_calculate_statistics_response.analysis_model_type);
+        jQuery('#generic_save_analysis_model_application_name').val(analysis_calculate_statistics_response.application_name);
+        jQuery('#generic_save_analysis_model_application_version').val(analysis_calculate_statistics_response.application_version);
+        //jQuery('#generic_save_analysis_model_file').val();
+        //jQuery('#generic_save_analysis_model_archived_model_file_type').val();
+        jQuery('#generic_save_analysis_model_training_data_file').val(training_data_file);
+        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(analysis_calculate_statistics_response.analysis_model_training_data_file_type);
+        jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(analysis_stats_auxiliary_files));
+
+        return false;
+    });
+
+    jQuery('#analysis_calculate_statistics_analysis_save_blups_spatial').click(function(){
+        if (analysis_calculate_statistics_field_trial_id_array.length>1) {
+            alert('Saving spatial BLUPs currently only implemented for a single trial, so only select one field trial in your analysis');
+            return false;
+        }
+
+        jQuery('#generic_save_analysis_dialog').modal('show');
+
+        var analysis_stats_result_summary = {};
+
+        var analysis_stats_tolparinv_param = jQuery('#analysis_calculate_statistics_tolparinv_select').val();
+        var analysis_stats_numbers_traits = analysis_calculate_statistics_response.unique_traits.length;
+        var analysis_genotyping_protocol_id = jQuery('#analysis_calculate_statistics_genotyping_protocol_select').val();
+        var analysis_compute_genotypes_from_parents = jQuery('#analysis_calculate_statistics_genotyping_protocol_compute_from_parents_select').val();
+
+        var analysis_stats_mv_traits = [];
+        for (var i=1; i<analysis_stats_numbers_traits+1; i++) {
+            analysis_stats_mv_traits.push('t'+i);
+        }
+        var analysis_stats_mv_traits_string = analysis_stats_mv_traits.join();
+
+        var analysis_stats_protocol = 'mmer('+analysis_stats_mv_traits_string+'~1, random=~vs(id, Gu=geno_mat, Gtc=unsm('+analysis_stats_numbers_traits+')) +vs(rowNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')) +vs(colNumberFactor, Gtc=diag('+analysis_stats_numbers_traits+')), rcov=~vs(units, Gtc=unsm('+analysis_stats_numbers_traits+')), data=mat, tolparinv='+analysis_stats_tolparinv_param+');';
+
+        var analysis_stats_parameters = {
+            'tolparinv':analysis_stats_tolparinv_param,
+            'genotyping_protocol_id':analysis_genotyping_protocol_id,
+            'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
+            'protocol':analysis_stats_protocol
+        };
+
+        var analysis_statistical_ontology_term = "Multivariate linear mixed model 2D spline spatial BLUPs using genetic relationship matrix and row and column spatial effects computed using Sommer R|SGNSTAT:0000003";
+
+        jQuery('#generic_save_analysis_result_compose_trait_info').val(JSON.stringify(analysis_calculate_statistics_response.trait_composing_info));
+
+        var analysis_stats_auxiliary_files = [{'auxiliary_model_file':analysis_calculate_statistics_response.grm_file, auxiliary_model_file_archive_type:'nickssinglemultitrialgebvanalyses_v1.01_sommer_grm_spatial_genetic_blups_grm_file'}];
+
+        jQuery('#generic_save_analysis_protocol').val(analysis_stats_protocol);
+        jQuery('#generic_save_analysis_model_properties').val(JSON.stringify(analysis_stats_parameters));
+        //jQuery('#generic_save_analysis_dataset_id').val();
+        jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(analysis_calculate_statistics_response.unique_accessions));
+        jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(analysis_calculate_statistics_response.unique_traits));
+        jQuery('#generic_save_analysis_analysis_statistical_ontology_term').val(analysis_statistical_ontology_term);
+        jQuery('#generic_save_analysis_design').val(JSON.stringify(analysis_calculate_statistics_response.field_trial_design));
+        jQuery('#generic_save_analysis_result_values').val(JSON.stringify(analysis_calculate_statistics_response.result_blup_spatial_data));
+        jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_precomputed_design');
+        jQuery('#generic_save_analysis_result_summary_values').val(JSON.stringify(analysis_stats_result_summary));
+        jQuery('#generic_save_analysis_model_language').val(analysis_calculate_statistics_response.analysis_model_language);
+        jQuery('#generic_save_analysis_model_type').val(analysis_calculate_statistics_response.analysis_model_type);
+        jQuery('#generic_save_analysis_model_application_name').val(analysis_calculate_statistics_response.application_name);
+        jQuery('#generic_save_analysis_model_application_version').val(analysis_calculate_statistics_response.application_version);
+        //jQuery('#generic_save_analysis_model_file').val();
+        //jQuery('#generic_save_analysis_model_archived_model_file_type').val();
+        jQuery('#generic_save_analysis_model_training_data_file').val(analysis_calculate_statistics_response.stats_tempfile);
+        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(analysis_calculate_statistics_response.analysis_model_training_data_file_type);
+        jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(analysis_stats_auxiliary_files));
+
+        return false;
+    });
+
+    jQuery('#analysis_calculate_statistics_analysis_save_residuals').click(function(){
+        jQuery('#generic_save_analysis_dialog').modal('show');
+
+        var analysis_stats_result_summary = {};
+
+        jQuery('#generic_save_analysis_result_compose_trait_info').val(JSON.stringify(analysis_calculate_statistics_response.trait_composing_info));
+
+        var analysis_stats_tolparinv_param = jQuery('#analysis_calculate_statistics_tolparinv_select').val();
+        var analysis_legendre_order = jQuery('#analysis_calculate_statistics_legendre_order_number_select').val();
+        var analysis_permanent_env_structure = jQuery('#analysis_calculate_statistics_permanent_env_structure_select').val();
+        var analysis_genotyping_protocol_id = jQuery('#analysis_calculate_statistics_genotyping_protocol_select').val();
+        var analysis_compute_genotypes_from_parents = jQuery('#analysis_calculate_statistics_genotyping_protocol_compute_from_parents_select').val();
+
+        var analysis_stats_protocol = '';
+        var analysis_statistical_ontology_term;
+        var analysis_stats_auxiliary_files;
+        var analysis_stats_training_data_file;
+
+        var analysis_stats_parameters = {
+            'tolparinv':analysis_stats_tolparinv_param,
+            'genotyping_protocol_id':analysis_genotyping_protocol_id,
+            'compute_genotypes_from_parents':analysis_compute_genotypes_from_parents,
+            'legendre_polynomial_order':analysis_legendre_order,
+            'protocol':analysis_stats_protocol,
+            'permanent_environment_structure':analysis_permanent_env_structure
+        };
+
+        jQuery('#generic_save_analysis_protocol').val(analysis_stats_protocol);
+        jQuery('#generic_save_analysis_model_properties').val(JSON.stringify(analysis_stats_parameters));
+        //jQuery('#generic_save_analysis_dataset_id').val();
+        jQuery('#generic_save_analysis_accession_names').val(JSON.stringify(analysis_calculate_statistics_response.unique_accessions));
+        jQuery('#generic_save_analysis_trait_names').val(JSON.stringify(analysis_calculate_statistics_response.unique_residual_traits));
+        jQuery('#generic_save_analysis_analysis_statistical_ontology_term').val(analysis_statistical_ontology_term);
+        jQuery('#generic_save_analysis_design').val(JSON.stringify(analysis_calculate_statistics_response.field_trial_design));
+        jQuery('#generic_save_analysis_result_values').val(JSON.stringify(analysis_calculate_statistics_response.result_residual_data));
+        jQuery('#generic_save_analysis_result_values_type').val('analysis_result_values_match_precomputed_design');
+        jQuery('#generic_save_analysis_result_summary_values').val(JSON.stringify(analysis_stats_result_summary));
+        jQuery('#generic_save_analysis_model_language').val(analysis_calculate_statistics_response.analysis_model_language);
+        jQuery('#generic_save_analysis_model_type').val(analysis_calculate_statistics_response.analysis_model_type);
+        jQuery('#generic_save_analysis_model_application_name').val(analysis_calculate_statistics_response.application_name);
+        jQuery('#generic_save_analysis_model_application_version').val(analysis_calculate_statistics_response.application_version);
+        //jQuery('#generic_save_analysis_model_file').val();
+        //jQuery('#generic_save_analysis_model_archived_model_file_type').val();
+        jQuery('#generic_save_analysis_model_training_data_file').val(analysis_calculate_statistics_response.stats_tempfile);
+        jQuery('#generic_save_analysis_model_archived_training_data_file_type').val(analysis_calculate_statistics_response.analysis_model_training_data_file_type);
+        jQuery('#generic_save_analysis_model_auxiliary_files').val(JSON.stringify(analysis_stats_auxiliary_files));
+
+        return false;
+    });
+});
+
+</script>

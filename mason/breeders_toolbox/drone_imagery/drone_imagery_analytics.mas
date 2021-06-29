@@ -1,0 +1,931 @@
+<%args>
+</%args>
+
+<div class="modal fade" id="drone_imagery_analytics_dialog" name="drone_imagery_analytics_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryAnalyticsDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryAnalyticsDialog">Perform analytics on aerial image phenotypes</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "drone_imagery_analytics_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Field Trial" &>
+                    <& /page/page_title.mas, title=>"Select the field trial you are interested in. Select only one. Field trial MUST have row and column assigned and should be a rectangular design." &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Field Trial(s): </label>
+                            <div class="col-sm-9" >
+                                <div id="drone_imagery_analytics_trial_select_div"></div>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_analytics_field_trial_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Analytics Reporting" &>
+                    <& /page/page_title.mas, title=>"Select an Analytics Protocol to save the results to or create a new one" &>
+
+                    <div id="drone_imagery_analytics_analytics_protocols_select_div">Loading...</div>
+
+                    <& /page/page_title.mas, title=>"Select the type of analysis to run" &>
+
+                    <div class="well well-sm">
+                        <select class="form-control" id="drone_imagery_analytics_select_input">
+                            <!--option value="">Sommer Multi/Uni Spatial 2Dspl, REMLf90 RR Identiy/Env, ASREML Uni Spatial AR1xAR1</option-->
+                            <!--option value="lmer_germplasmname_replicate">LMER BLUPs y~replicate+1|Germplasm. Univariate genetic effects</option-->
+
+                            <!--option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+GRM. Multivariate genetic effects using GRM</option-->
+
+                            <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+Row+Col+2Dspline. Multivariate genetic + 2Dspl spatial effects</option>
+                            <option value="sommer_grm_spatial_pure_2dspl_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+2Dspline. Multivariate genetic + 2Dspl spatial effects</option>
+                            <option value="sommer_grm_univariate_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+Row+Col+2Dspline. Univariate genetic + 2Dspl spatial effects</option>
+                            <option value="sommer_grm_univariate_spatial_pure_2dspl_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+2Dspline. Univariate genetic + 2Dspl spatial effects</option>
+
+                            <!--option value="blupf90_grm_random_regression_dap_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
+                            <option value="blupf90_grm_random_regression_gdd_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using growing degree days. Multivariate genetic + permanent environment effects</option-->
+
+                            <option value="airemlf90_grm_random_regression_dap_blups">AIREMLf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
+
+                            <option value="asreml_grm_univariate_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+Row+Col+spatial. Univariate genetic + AR1xAR1 spatial effects</option>
+                            <option value="asreml_grm_univariate_pure_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+spatial. Univariate genetic + AR1xAR1 spatial effects</option>
+                            <option value="asreml_grm_multivariate_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic + AR1xAR1 spatial effects</option>
+
+                            <!--option value="airemlf90_grm_random_regression_gdd_blups">AIREMLf90 GBLUPs Y~replicate+GRM+temporal random regression using growing degree days. Multivariate genetic + permanent environment effects</option-->
+
+                            <!--option value="sommer_grm_temporal_random_regression_dap_genetic_blups">Sommer Temporal Random Regression GBLUPs Y~replicate+GRM+LegendrePoly. Multivariate genetic + permanent environment effects using days after planting</option>
+                            <option value="sommer_grm_temporal_random_regression_gdd_genetic_blups">Sommer Temporal Random Regression GBLUPs Y~replicate+GRM+LegendrePoly. Multivariate genetic + permanent environment effects using growing degree days</option>
+                            <option value="sommer_grm_genetic_only_random_regression_dap_genetic_blups">Sommer Random Regression GBLUPs Y~replicate+GRM+LegendrePoly. Multivariate genetic effects using days after planting</option>
+                            <option value="sommer_grm_genetic_only_random_regression_gdd_genetic_blups">Sommer Random Regression GBLUPs Y~replicate+GRM+LegendrePoly. Multivariate genetic effects using growing degree days</option-->
+
+                        </select>
+
+                        <br/><br/>
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">Simulated Environments (Linear, 1D-Normal, 2D-Normal, Random, AR1xAR1): </label>
+                                <div class="col-sm-7" >
+                                    <select class="form-control" id="drone_imagery_analytics_select_sim_env_change_over_time_type">
+                                        <option value="">Constant over timepoints</option>
+                                        <option value="changing_gradual">Gradual change over timepoints</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">Perform Cross Validation (Can take a long time): </label>
+                                <div class="col-sm-7" >
+                                    <select class="form-control" id="drone_imagery_analytics_select_perform_cv">
+                                        <option value="0">No</option>
+                                        <option value="1">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <center>
+                        <button class="btn btn-default" id="drone_imagery_analytics_analytics_project_new_button">Create a New Analytics Protocol</button>
+                    </center>
+
+                    <div id="drone_imagery_analytics_analytics_project_new_div" style="display:none">
+                        <br/><br/>
+                        <div class="well well-sm">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Analytics Name: </label>
+                                    <div class="col-sm-9" >
+                                        <input type="text" class="form-control" id="drone_imagery_analytics_select_analytics_name" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Analytics Type: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_select_analytics_type">
+                                            <option value="minimize_local_env_effect">Minimize Spatial or PE Effects</option>
+                                            <!--option value="minimize_genetic_effect">Minimize Genetic Effects</option-->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Analytics Description: </label>
+                                    <div class="col-sm-9" >
+                                        <input type="text" class="form-control" id="drone_imagery_analytics_select_analytics_desc" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Number Interations: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_number_iterations">
+                                            <option value="10">10</option>
+                                            <option value="2">2</option>
+                                            <option value="25">25</option>
+                                            <option value="1">1</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Env Variance: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_env_variance">
+                                            <option value="0.2">0.2</option>
+                                            <option value="0.1">0.1</option>
+                                            <option value="0.05">0.05</option>
+                                            <option value="0.01">0.01</option>
+                                            <option value="0.3">0.3</option>
+                                            <option value="0.2,0.1,0.05,0.01,0.3">0.2,0.1,0.05,0.01,0.3</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Simulated Environment Correlation Through Time: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_sim_env_change_over_time_correlation">
+                                            <option value="0.9">0.9</option>
+                                            <option value="0.75">0.75</option>
+                                            <option value="0.6">0.6</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <& /page/page_title.mas, title=>"Select the observation variable(s) you are interested in" &>
+
+                        <div class="well well-sm">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Observation Variable Type: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_select_observation_variable_type">
+                                            <option value="time_ontology">Time Series</option>
+                                            <option value="">Single Trait</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Observation Variables Phenotyped in the Selected Field Trial: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="drone_imagery_analytics_trait_select_div">Loading...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <& /page/page_title.mas, title=>"Statistics Parameters" &>
+
+                        <div class="well well-sm">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Relationship Matrix Type: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_relationship_matrix_type_select_div">
+                                            <option value="">Identity</option>
+                                            <option value="genotypes">Genotyping Data</option>
+                                            <option value="htp_phenotypes">High-throughput Phenotyping Data</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="drone_imagery_analytics_genotyping_protocol_div" class="well well-sm" style="display:none">
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Genotyping Protocol To Calculate Genomic Relationship Matrix (optional. If none selected, an identity matrix is used): </label>
+                                        <div class="col-sm-9" >
+                                            <div id="drone_imagery_analytics_genotyping_protocol_select_div"></div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Compute Genotypes From Parents: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="drone_image_analytics_genotyping_protocol_compute_from_parents_select">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" id="drone_image_analytics_genotyping_protocol_use_parental_grms_select_div" style="display:none">
+                                        <label class="col-sm-3 control-label">Use Parental Relationship Matrices: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="drone_image_analytics_genotyping_protocol_use_parental_grms_select">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" id="drone_image_analytics_genotyping_protocol_include_pedigree_select_div" style="display:none">
+                                        <label class="col-sm-3 control-label">Include Pedigree Info Into Relationship Matrix: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="drone_image_analytics_genotyping_protocol_include_pedigree_select">
+                                                <option value="no">No</option>
+                                                <option value="yes">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="drone_imagery_analytics_htp_phenotypes_rel_matrix_div" class="well well-sm" style="display:none">
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">How to calculate the relationship matrix with high-throughput phenotypes: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="drone_image_analytics_htp_phenotypes_rel_matrix_select">
+                                                <option value="correlations">Correlations</option>
+                                                <option value="blues">BLUEs</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Time Points to Use: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="drone_image_analytics_htp_phenotypes_rel_matrix_times_select">
+                                                <option value="all">All Available</option>
+                                                <option value="latest_trait">Up to latest days after planting selecting in traits</option>
+                                                <option value="vegetative" disabled>Vegetative Growth Stage</option>
+                                                <option value="reproductive" disabled>Reproductive Growth Stage</option>
+                                                <option value="mature" disabled>Mature Growth Stage</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" id="drone_image_analytics_htp_phenotypes_rel_matrix_inversion_select_div" style="display:none">
+                                        <label class="col-sm-3 control-label">HTP BLUEs Inversion Tolerance: </label>
+                                        <div class="col-sm-9" >
+                                            <select class="form-control" id="drone_image_analytics_htp_phenotypes_rel_matrix_inversion_select">
+                                                <option value="0.00001">0.00001</option>
+                                                <option value="0.0001">0.0001</option>
+                                                <option value="0.001">0.001</option>
+                                                <option value="0.01">0.01</option>
+                                                <option value="0.1">0.1</option>
+                                                <option value="0.5">0.5</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--hr>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Use Cumulative Area-Under-Curve Phenotype in Analysis: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_image_analytics_use_area_under_curve_select">
+                                            <option value="no">No</option>
+                                            <option value="yes">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div-->
+
+                            <hr>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Inversion Tolerance: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_image_analytics_tolparinv_select">
+                                            <option value="0.000001">0.000001</option>
+                                            <option value="0.00001">0.00001</option>
+                                            <option value="0.0001">0.0001</option>
+                                            <option value="0.001">0.001</option>
+                                            <option value="0.01">0.01</option>
+                                            <option value="0.05">0.05</option>
+                                            <option value="0.08">0.08</option>
+                                            <option value="0.1">0.1</option>
+                                            <option value="0.2">0.2</option>
+                                            <option value="0.5">0.5</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Legendre Polynomial Order: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_image_analytics_legendre_order_number_select">
+                                            <option value="3">3</option>
+                                            <!--option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option-->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">AIMREMLf90 Permanent Environment Structure: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_image_analytics_permanent_env_structure_select">
+                                            <option value="identity">Identity Matrix</option>
+                                            <option value="env_corr_structure">Simulated Phenotype Correlation Matrix</option>
+                                            <option value="phenotype_correlation">Phenotype Correlation Matrix</option>
+                                            <option value="phenotype_2dspline_effect">2D-Spline Effect of Phenotype</option>
+                                            <!--option value="phenotype_ar1xar1_effect">AR1xAR1 Effect of Phenotype</option-->
+                                            <option value="euclidean_rows_and_columns">Euclidean Distance From Rows and Columns Matrix</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div" style="display:none">
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Phenotypes For Correlation Matrix: </label>
+                                        <div class="col-sm-9" >
+                                            <div id="drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select_div"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div" style="display:none">
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Phenotype For 2D-spline of AR1xAR1 Effect in Permanent Environment Structure: </label>
+                                        <div class="col-sm-9" >
+                                            <div id="drone_imagery_analytics_permanent_env_structure_phenotype_select_div"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Simulated Environment Processes: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_simulated_environment_processes_select_div">
+                                            <option value="">Linear, 1D Normal, 2D Normal, AR1xAR1, Random, Real Data</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trait For Real Data Environment Simulation: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="drone_imagery_analytics_simulated_environment_real_data_trait_select_div"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Fixed Effects: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_fixed_effect_select_div">
+                                            <option value="replicate">Replicate</option>
+                                            <option value="fixed_effect_trait">Select a continuous trait (e.g. soil elevation curvature)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="drone_imagery_analytics_fixed_effect_select_trait_div" style="display:none">
+                                    <label class="col-sm-3 control-label">Fixed Effect Trait: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="drone_imagery_analytics_fixed_effect_trait_select_div"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="drone_imagery_analytics_fixed_effect_select_quantile_div" style="display:none">
+                                    <label class="col-sm-3 control-label">Fixed Effect Continuous Trait Quantile Binning: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="drone_imagery_analytics_fixed_effect_select_quantile">
+                                            <option value="4">25% Quantiles</option>
+                                            <option value="5">20% Quantiles</option>
+                                            <option value="10">10% Quantiles</option>
+                                            <option value="3">33% Quantiles</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_analytics_select_step">Submit</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Results" &>
+                    <& /page/page_title.mas, title=>"Statistics results" &>
+
+                    <hr>
+                    <button class="btn btn-primary" id="drone_imagery_analytics_analysis_save_blups_genetic_pe_residual" style="display:none">Go To Save Analysis Results For Genetic and Environment BLUPS and Residuals</button>
+                    <button class="btn btn-primary" id="drone_imagery_analytics_analysis_save_blups_genetic" style="display:none">Go To Save Analysis Results For Genetic BLUPS</button>
+                    <button class="btn btn-primary" id="drone_imagery_analytics_analysis_save_blups_spatial" style="display:none">Go To Save Analysis Results For Spatial BLUPS</button>
+                    <button class="btn btn-primary" id="drone_imagery_analytics_analysis_save_blups_pe" style="display:none">Go To Save Analysis Results For Permanent Environmental BLUPS</button>
+                    <button class="btn btn-primary" id="drone_imagery_analytics_analysis_save_residuals" style="display:none">Go To Save Analysis Results For Residuals</button>
+                    <button class="btn btn-primary" id="drone_imagery_analytics_analysis_save_fitted" style="display:none">Go To Save Analysis Results For Fitted Values</button>
+                    <hr>
+
+                    <div id ="drone_imagery_analytics_result_div">
+                    </div>
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+    jQuery('#drone_imagery_analytics_link').click(function(){
+        get_select_box('trials', 'drone_imagery_analytics_trial_select_div', { 'name' : 'drone_imagery_analytics_field_trial_id', 'id' : 'drone_imagery_analytics_field_trial_id', 'empty':1, 'multiple':1 });
+
+        jQuery('#drone_imagery_analytics_dialog').modal('show');
+    });
+
+    var manage_drone_imagery_analytics_field_trial_id_array = undefined;
+    var manage_drone_imagery_analytics_field_trial_id_string = "";
+    var manage_drone_imagery_analytics_observation_variable_type;
+    var manage_drone_imagery_analytics_trait_ids = [];
+    var manage_drone_imagery_analytics_trait_names = [];
+    var manage_drone_imagery_analytics_accession_names = [];
+    var manage_drone_imagery_analytics_plot_names = [];
+    var manage_drone_imagery_analytics_statistics_select = '';
+    var manage_drone_imagery_analytics_phenotype_training_file;
+    var manage_drone_imagery_analytics_grm_training_file;
+    var manage_drone_imagery_analytics_response = {};
+    var manage_drone_imagery_analytics_name = "";
+    var manage_drone_imagery_analytics_desc = "";
+    var manage_drone_imagery_analytics_type = "";
+    var manage_drone_imagery_analytics_protocol_id = undefined;
+
+    jQuery('#drone_imagery_analytics_field_trial_select_step').click(function(){
+        manage_drone_imagery_analytics_field_trial_id_array = undefined;
+        manage_drone_imagery_analytics_field_trial_id_string = "";
+        manage_drone_imagery_analytics_field_trial_id_array = jQuery('#drone_imagery_analytics_field_trial_id').val();
+
+        if (!manage_drone_imagery_analytics_field_trial_id_array || manage_drone_imagery_analytics_field_trial_id_array.length > 1) {
+            alert('Please only select a single field trial for now!');
+            return false;
+        }
+
+        manage_drone_imagery_analytics_field_trial_id_string = manage_drone_imagery_analytics_field_trial_id_array.join(",");
+        manage_drone_imagery_analytics_observation_variable_type = jQuery('#drone_imagery_analytics_select_observation_variable_type').val();
+        if (manage_drone_imagery_analytics_field_trial_id_string == '') {
+            alert('Please select a field trial first!');
+        } else {
+            if (manage_drone_imagery_analytics_observation_variable_type == 'time_ontology') {
+                get_select_box('traits', 'drone_imagery_analytics_trait_select_div', { 'name' : 'drone_imagery_analytics_trait_id_select', 'id' : 'drone_imagery_analytics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_analytics_observation_variable_type, 'select_format':'component_table_select' });
+            }
+            else {
+                get_select_box('traits', 'drone_imagery_analytics_trait_select_div', { 'name' : 'drone_imagery_analytics_trait_id_select', 'id' : 'drone_imagery_analytics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_analytics_observation_variable_type });
+            }
+
+            get_select_box('traits', 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select_div', { 'name' : 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select', 'id' : 'drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('traits', 'drone_imagery_analytics_permanent_env_structure_phenotype_select_div', { 'name' : 'drone_imagery_analytics_permanent_env_structure_phenotype_select', 'id' : 'drone_imagery_analytics_permanent_env_structure_phenotype_select', 'empty':1, 'multiple':1, 'size':20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':'time_ontology', 'select_format':'component_table_select' });
+
+            get_select_box('traits', 'drone_imagery_analytics_simulated_environment_real_data_trait_select_div', { 'name' : 'drone_imagery_analytics_simulated_environment_real_data_trait_select', 'id' : 'drone_imagery_analytics_simulated_environment_real_data_trait_select', 'empty':0, 'multiple':0, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('traits', 'drone_imagery_analytics_fixed_effect_trait_select_div', { 'name' : 'drone_imagery_analytics_fixed_effect_trait_select', 'id' : 'drone_imagery_analytics_fixed_effect_trait_select', 'empty':0, 'multiple':0, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot' });
+
+            get_select_box('analytics_protocols', 'drone_imagery_analytics_analytics_protocols_select_div', { 'checkbox_name' : 'drone_imagery_analytics_analytics_protocols_select_id', 'analytics_protocol_type' : 'drone_imagery_analytics_env_simulation_protocol' });
+
+            get_select_box('genotyping_protocol', 'drone_imagery_analytics_genotyping_protocol_select_div', { 'name' : 'drone_image_analytics_genotyping_protocol_select', 'id' : 'drone_image_analytics_genotyping_protocol_select', 'empty':1 });
+
+            Workflow.complete("#drone_imagery_analytics_field_trial_select_step");
+            Workflow.focus('#drone_imagery_analytics_workflow', 1);
+        }
+        return false;
+    });
+
+    jQuery('#drone_imagery_analytics_select_observation_variable_type').change(function(){
+        manage_drone_imagery_analytics_observation_variable_type = jQuery('#drone_imagery_analytics_select_observation_variable_type').val();
+        if (manage_drone_imagery_analytics_observation_variable_type == 'time_ontology') {
+            get_select_box('traits', 'drone_imagery_analytics_trait_select_div', { 'name' : 'drone_imagery_analytics_trait_id_select', 'id' : 'drone_imagery_analytics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_analytics_observation_variable_type, 'select_format':'component_table_select' });
+        }
+        else {
+            get_select_box('traits', 'drone_imagery_analytics_trait_select_div', { 'name' : 'drone_imagery_analytics_trait_id_select', 'id' : 'drone_imagery_analytics_trait_id_select', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':manage_drone_imagery_analytics_field_trial_id_string, 'stock_type':'plot', 'contains_composable_cv_type':manage_drone_imagery_analytics_observation_variable_type });
+        }
+    });
+
+    jQuery('#drone_imagery_analytics_analytics_project_new_button').click(function(){
+        jQuery('#drone_imagery_analytics_analytics_project_new_div').show();
+    });
+
+    jQuery('#drone_imagery_analytics_select_input').change(function(){
+        jQuery("#drone_imagery_analytics_relationship_matrix_type_select_div").val('').change();
+        jQuery("#drone_image_analytics_genotyping_protocol_compute_from_parents_select").val('no').change();
+
+        manage_drone_imagery_analytics_statistics_select = jQuery('#drone_imagery_analytics_select_input').val();
+
+        if (manage_drone_imagery_analytics_statistics_select == 'lmer_germplasmname_replicate') {
+            jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic_pe_residual').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic').show();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_spatial').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_residuals').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_fitted').hide();
+        }
+        else if (manage_drone_imagery_analytics_statistics_select == 'sommer_grm_spatial_genetic_blups' || manage_drone_imagery_analytics_statistics_select == 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
+            jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic_pe_residual').show();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_spatial').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_residuals').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_fitted').hide();
+        }
+        else if (manage_drone_imagery_analytics_statistics_select == 'sommer_grm_temporal_random_regression_dap_genetic_blups' || manage_drone_imagery_analytics_statistics_select == 'sommer_grm_temporal_random_regression_gdd_genetic_blups') {
+            jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic_pe_residual').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic').show();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_spatial').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_pe').show();
+            jQuery('#drone_imagery_analytics_analysis_save_residuals').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_fitted').hide();
+        }
+        else if (manage_drone_imagery_analytics_statistics_select == 'sommer_grm_genetic_only_random_regression_dap_genetic_blups' || manage_drone_imagery_analytics_statistics_select == 'sommer_grm_genetic_only_random_regression_gdd_genetic_blups') {
+            jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic_pe_residual').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic').show();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_spatial').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_residuals').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_fitted').hide();
+        }
+        else if (manage_drone_imagery_analytics_statistics_select == 'blupf90_grm_random_regression_dap_blups' || manage_drone_imagery_analytics_statistics_select == 'blupf90_grm_random_regression_gdd_blups' || manage_drone_imagery_analytics_statistics_select == 'airemlf90_grm_random_regression_dap_blups' || manage_drone_imagery_analytics_statistics_select == 'airemlf90_grm_random_regression_gdd_blups') {
+            jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic_pe_residual').show();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_spatial').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_residuals').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_fitted').hide();
+        }
+        else if (manage_drone_imagery_analytics_statistics_select == 'sommer_grm_genetic_blups') {
+            jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic_pe_residual').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic').show();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_spatial').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_residuals').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_fitted').hide();
+        }
+        else {
+            jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic_pe_residual').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_genetic').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_spatial').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_blups_pe').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_residuals').hide();
+            jQuery('#drone_imagery_analytics_analysis_save_fitted').hide();
+        }
+
+        jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_blups_genetic_pe_residual').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_blups_genetic').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_blups_spatial').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_blups_pe').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_residuals').hide();
+        jQuery('#drone_imagery_analytics_analysis_save_fitted').hide();
+    });
+
+    jQuery('#drone_imagery_analytics_relationship_matrix_type_select_div').change(function(){
+        if (jQuery(this).val() == 'genotypes') {
+            jQuery('#drone_imagery_analytics_genotyping_protocol_div').show();
+            jQuery('#drone_imagery_analytics_htp_phenotypes_rel_matrix_div').hide();
+        }
+        else if (jQuery(this).val() == 'htp_phenotypes') {
+            jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_analytics_htp_phenotypes_rel_matrix_div').show();
+        }
+        else {
+            jQuery('#drone_imagery_analytics_genotyping_protocol_div').hide();
+            jQuery('#drone_imagery_analytics_htp_phenotypes_rel_matrix_div').hide();
+        }
+    });
+
+    jQuery('#drone_image_analytics_htp_phenotypes_rel_matrix_select').change(function(){
+        if (jQuery(this).val() == 'blues') {
+            jQuery('#drone_image_analytics_htp_phenotypes_rel_matrix_inversion_select_div').show();
+        }
+        else {
+            jQuery('#drone_image_analytics_htp_phenotypes_rel_matrix_inversion_select_div').hide();
+        }
+    });
+
+    jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').change(function(){
+        if (jQuery(this).val() == 'yes') {
+            jQuery('#drone_image_analytics_genotyping_protocol_include_pedigree_select_div').show();
+            jQuery('#drone_image_analytics_genotyping_protocol_use_parental_grms_select_div').show();
+        }
+        if (jQuery(this).val() == 'no') {
+            jQuery('#drone_image_analytics_genotyping_protocol_include_pedigree_select_div').hide();
+            jQuery('#drone_image_analytics_genotyping_protocol_use_parental_grms_select_div').hide();
+            jQuery('#drone_image_analytics_genotyping_protocol_include_pedigree_select option[value=no]').attr('selected','selected');
+            jQuery('#drone_image_analytics_genotyping_protocol_use_parental_grms_select option[value=no]').attr('selected','selected');
+        }
+    });
+
+    jQuery('#drone_image_analytics_genotyping_protocol_use_parental_grms_select').change(function(){
+        if (jQuery(this).val() == 'yes') {
+            jQuery('#drone_image_analytics_genotyping_protocol_include_pedigree_select option[value=no]').attr('selected','selected');
+            jQuery('#drone_image_analytics_genotyping_protocol_include_pedigree_select_div').hide();
+        }
+        if (jQuery(this).val() == 'no') {
+            jQuery('#drone_image_analytics_genotyping_protocol_include_pedigree_select_div').show();
+        }
+    });
+
+    jQuery('#drone_image_analytics_permanent_env_structure_select').change(function(){
+        if (jQuery(this).val() == 'euclidean_rows_and_columns') {
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').hide();
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').hide();
+        }
+        else if (jQuery(this).val() == 'phenotype_correlation') {
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').show();
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').hide();
+        }
+        else if (jQuery(this).val() == 'phenotype_2dspline_effect') {
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').hide();
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').show();
+        }
+        else {
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').hide();
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').hide();
+        }
+    });
+
+    jQuery('#drone_imagery_analytics_fixed_effect_select_div').change(function(){
+        if (jQuery(this).val() == 'replicate') {
+            jQuery('#drone_imagery_analytics_fixed_effect_select_trait_div').hide();
+            jQuery('#drone_imagery_analytics_fixed_effect_select_quantile_div').hide();
+        }
+        if (jQuery(this).val() == 'fixed_effect_trait') {
+            jQuery('#drone_imagery_analytics_fixed_effect_select_trait_div').show();
+            jQuery('#drone_imagery_analytics_fixed_effect_select_quantile_div').show();
+        }
+    });
+
+    jQuery('#drone_imagery_analytics_select_step').click(function(){
+
+        manage_drone_imagery_analytics_statistics_select = jQuery('#drone_imagery_analytics_select_input').val();
+
+        var manage_drone_imagery_analytics_protocol_ids = [];
+        jQuery('input[name="drone_imagery_analytics_analytics_protocols_select_id"]').each(function() {
+            if (this.checked){
+                manage_drone_imagery_analytics_protocol_ids.push(jQuery(this).val());
+            }
+        });
+
+        if (manage_drone_imagery_analytics_protocol_ids.length > 1) {
+            alert('Please select only one protocol!');
+            return false;
+        }
+        if (manage_drone_imagery_analytics_protocol_ids.length == 1) {
+            manage_drone_imagery_analytics_protocol_id = manage_drone_imagery_analytics_protocol_ids[0];
+        }
+
+        manage_drone_imagery_analytics_name = jQuery('#drone_imagery_analytics_select_analytics_name').val();
+        manage_drone_imagery_analytics_desc = jQuery('#drone_imagery_analytics_select_analytics_desc').val();
+        manage_drone_imagery_analytics_type = jQuery('#drone_imagery_analytics_select_analytics_type').val();
+
+        if (!manage_drone_imagery_analytics_protocol_id && manage_drone_imagery_analytics_name == '') {
+            alert('Please give an analytics name or select a previously saved analytics report.');
+            return false;
+        }
+        if (!manage_drone_imagery_analytics_protocol_id && manage_drone_imagery_analytics_desc == '') {
+            alert('Please give an analytics description.');
+            return false;
+        }
+        if (manage_drone_imagery_analytics_protocol_id && manage_drone_imagery_analytics_name != '') {
+            alert('Please give an analytics name OR select a previously saved analytics report, not both!');
+            return false;
+        }
+
+        manage_drone_imagery_analytics_trait_ids = [];
+
+        if (manage_drone_imagery_analytics_observation_variable_type == 'time_ontology') {
+            jQuery('input[name="drone_imagery_analytics_trait_id_select"]').each(function() {
+                if (this.checked){
+                    manage_drone_imagery_analytics_trait_ids.push(jQuery(this).val());
+                }
+            });
+        }
+        else {
+            manage_drone_imagery_analytics_trait_ids = jQuery('#drone_imagery_analytics_trait_id_select').val();
+            if (manage_drone_imagery_analytics_trait_ids == null || manage_drone_imagery_analytics_trait_ids == undefined) {
+                alert('Please select at least one observation variable!');
+                return false;
+            }
+        }
+
+        if (!manage_drone_imagery_analytics_protocol_id && manage_drone_imagery_analytics_trait_ids.length < 1){
+            alert('Please select at least one observation variable!');
+            return false;
+        }
+
+        if (jQuery('#drone_image_analytics_genotyping_protocol_include_pedigree_select').val() == 'yes' && jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
+            alert('You can only use pedigree info in the relationship matrix if you will compute the genotypes from the parents!');
+            return false;
+        }
+        if (jQuery('#drone_image_analytics_genotyping_protocol_use_parental_grms_select').val() == 'yes' && jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').val() != 'yes') {
+            alert('You can only use parental relationship matrices if you will compute the genotypes from the parents!');
+            return false;
+        }
+
+        var manage_drone_imagery_analytics_rr_structure_phenotype_correlation = [];
+        if (jQuery('#drone_image_analytics_permanent_env_structure_select').val() == 'phenotype_correlation') {
+            manage_drone_imagery_analytics_rr_structure_phenotype_correlation = jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_select').val();
+            if (!manage_drone_imagery_analytics_rr_structure_phenotype_correlation || manage_drone_imagery_analytics_rr_structure_phenotype_correlation.length < 3) {
+                alert('Please select at least three phenotypes to use in random regression permanent environment phenotype correlation structure!');
+                return false;
+            }
+        }
+
+        var manage_drone_imagery_analytics_rr_env_structure_trait_ids = [];
+        jQuery('input[name="drone_imagery_analytics_permanent_env_structure_phenotype_select"]').each(function() {
+            if (this.checked){
+                manage_drone_imagery_analytics_rr_env_structure_trait_ids.push(jQuery(this).val());
+            }
+        });
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/calculate_analytics',
+            type : 'POST',
+            data : {
+                'observation_variable_id_list':JSON.stringify(manage_drone_imagery_analytics_trait_ids),
+                'field_trial_id_list':JSON.stringify(manage_drone_imagery_analytics_field_trial_id_array),
+                'statistics_select':manage_drone_imagery_analytics_statistics_select,
+                'analytics_protocol_id':manage_drone_imagery_analytics_protocol_id,
+                'analytics_protocol_name':manage_drone_imagery_analytics_name,
+                'analytics_protocol_desc':manage_drone_imagery_analytics_desc,
+                'analytics_select':manage_drone_imagery_analytics_type,
+                'number_iterations':jQuery('#drone_imagery_analytics_number_iterations').val(),
+                'relationship_matrix_type':jQuery('#drone_imagery_analytics_relationship_matrix_type_select_div').val(),
+                'protocol_id':jQuery('#drone_image_analytics_genotyping_protocol_select').val(),
+                'compute_from_parents':jQuery('#drone_image_analytics_genotyping_protocol_compute_from_parents_select').val(),
+                'use_parental_grms_if_compute_from_parents':jQuery('#drone_image_analytics_genotyping_protocol_use_parental_grms_select').val(),
+                'include_pedgiree_info_if_compute_from_parents':jQuery('#drone_image_analytics_genotyping_protocol_include_pedigree_select').val(),
+                'htp_pheno_rel_matrix_type':jQuery('#drone_image_analytics_htp_phenotypes_rel_matrix_select').val(),
+                'htp_pheno_rel_matrix_time_points':jQuery('#drone_image_analytics_htp_phenotypes_rel_matrix_times_select').val(),
+                'htp_pheno_rel_matrix_blues_inversion':jQuery('#drone_image_analytics_htp_phenotypes_rel_matrix_inversion_select').val(),
+                'tolparinv':jQuery('#drone_image_analytics_tolparinv_select').val(),
+                'legendre_order_number':jQuery('#drone_image_analytics_legendre_order_number_select').val(),
+                'use_area_under_curve':jQuery('#drone_image_analytics_use_area_under_curve_select').val(),
+                'permanent_environment_structure':jQuery('#drone_image_analytics_permanent_env_structure_select').val(),
+                'permanent_environment_structure_phenotype_correlation_traits':JSON.stringify(manage_drone_imagery_analytics_rr_structure_phenotype_correlation),
+                'permanent_environment_structure_phenotype_trait_ids':JSON.stringify(manage_drone_imagery_analytics_rr_env_structure_trait_ids),
+                'sim_env_change_over_time':jQuery('#drone_imagery_analytics_select_sim_env_change_over_time_type').val(),
+                'env_variance_percent':jQuery('#drone_imagery_analytics_env_variance').val(),
+                'simulated_environment_real_data_trait_id':jQuery('#drone_imagery_analytics_simulated_environment_real_data_trait_select').val(),
+                'sim_env_change_over_time_correlation':jQuery('#drone_imagery_analytics_sim_env_change_over_time_correlation').val(),
+                'fixed_effect_type':jQuery('#drone_imagery_analytics_fixed_effect_select_div').val(),
+                'fixed_effect_trait_id':jQuery('#drone_imagery_analytics_fixed_effect_trait_select').val(),
+                'fixed_effect_quantiles':jQuery('#drone_imagery_analytics_fixed_effect_select_quantile').val()
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    manage_drone_imagery_analytics_response = response;
+                    manage_drone_imagery_analytics_protocol_id = response.analytics_protocol_id;
+
+                    var html = '<h4>Summary :</h4><ul>';
+                    if (response.sum_square_residual_original) {
+                        html = html + '<li>Sum square residual original: '+response.sum_square_residual_original+'</li>';
+                    }
+                    if (response.sum_square_residual_altered) {
+                        html = html + '<li>Sum square residual altered: '+response.sum_square_residual_altered+'</li>';
+                    }
+                    if (response.genetic_effect_sum_original) {
+                        html = html + '<li>Genetic effect sum original: '+response.genetic_effect_sum_original+'</li>';
+                    }
+                    if (response.genetic_effect_sum_altered) {
+                        html = html + '<li>Genetic effect sum altered: '+response.genetic_effect_sum_altered+'</li>';
+                    }
+                    if (response.env_effect_sum_original) {
+                        html = html + '<li>Env effect sum original: '+response.env_effect_sum_original+'</li>';
+                    }
+                    if (response.env_effect_sum_altered) {
+                        html = html + '<li>Env effect sum altered: '+response.env_effect_sum_altered+'</li>';
+                    }
+                    html = html + '</ul>';
+
+                    if (response.simulated_environment_to_effect_correlations) {
+                        html = html + '<h4>Simulated Env to Effects Correlations:</h4><ul>';
+                        for(var i=0; i<response.simulated_environment_to_effect_correlations.length; i++) {
+                            html = html + '<li>' + response.simulated_environment_to_effect_correlations[i] + '</li>';
+                        }
+                        html = html + '</ul><hr>';
+                    }
+
+                    if (response.spatial_effects_plots) {
+                        for (i=0; i<response.spatial_effects_plots.length; i++) {
+                            html = html + '<p>'+response.spatial_effects_plots[i][1]+'</p><img src="'+response.spatial_effects_plots[i][0]+'"><hr>';
+                        }
+                    }
+
+                    if (response.unique_accessions.length > 0 && response.unique_traits.length > 0 && response.result_blup_genetic_data_altered) {
+                        manage_drone_imagery_analytics_accession_names = response.unique_accessions;
+                        manage_drone_imagery_analytics_trait_names = response.unique_traits;
+                        manage_drone_imagery_analytics_phenotype_training_file = response.stats_tempfile;
+                        manage_drone_imagery_analytics_grm_training_file = response.grm_file;
+
+                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Accessions</th>';
+                        for (var i=0; i<manage_drone_imagery_analytics_trait_names.length; i++) {
+                            html = html + '<th>'+manage_drone_imagery_analytics_trait_names[i]+'</th>';
+                        }
+                        html = html + '</tr></thead><tbody>';
+                        for (var k=0; k<response.unique_accessions.length; k++) {
+                            var acc = response.unique_accessions[k];
+                            html = html + '<tr><td>'+acc+'</td>';
+                            for (var i=0; i<manage_drone_imagery_analytics_trait_names.length; i++) {
+                                if (response.result_blup_genetic_data_altered[acc] && response.result_blup_genetic_data_altered[acc][manage_drone_imagery_analytics_trait_names[i]]) {
+                                    html = html + '<td>'+response.result_blup_genetic_data_altered[acc][manage_drone_imagery_analytics_trait_names[i]][0]+'</td>';
+                                }
+                                else {
+                                    html = html + '<td>NA</td>';
+                                }
+                            }
+                            html = html + '</tr>';
+                        }
+                        html = html + '</tbody></table>';
+                    }
+
+                    if (response.unique_plots.length > 0 && response.unique_traits.length > 0 && response.result_blup_spatial_data_altered) {
+                        manage_drone_imagery_analytics_plot_names = response.unique_plots;
+                        manage_drone_imagery_analytics_trait_names = response.unique_traits;
+
+                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Plots</th>';
+                        for (var i=0; i<response.unique_traits.length; i++) {
+                            html = html + '<th>'+response.unique_traits[i]+'</th>';
+                        }
+                        html = html + '</tr></thead><tbody>';
+                        for (var k=0; k<response.unique_plots.length; k++) {
+                            var plot = response.unique_plots[k];
+                            html = html + '<tr><td>'+plot+'</td>';
+                            for (var i=0; i<response.unique_traits.length; i++) {
+                                html = html + '<td>'+response.result_blup_spatial_data_altered[plot][response.unique_traits[i]][0]+'</td>';
+                            }
+                            html = html + '</tr>';
+                        }
+                        html = html + '</tbody></table>';
+                    }
+
+                    if (response.unique_plots.length > 0 && response.unique_traits.length > 0 && response.result_blup_pe_data_altered) {
+                        manage_drone_imagery_analytics_plot_names = response.unique_plots;
+                        manage_drone_imagery_analytics_trait_names = response.unique_traits;
+
+                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Plots</th>';
+                        for (var i=0; i<response.unique_traits.length; i++) {
+                            html = html + '<th>'+response.unique_traits[i]+'</th>';
+                        }
+                        html = html + '</tr></thead><tbody>';
+                        for (var k=0; k<response.unique_plots.length; k++) {
+                            var plot = response.unique_plots[k];
+                            html = html + '<tr><td>'+plot+'</td>';
+                            for (var i=0; i<response.unique_traits.length; i++) {
+                                if (response.result_blup_pe_data_altered[plot] && response.result_blup_pe_data_altered[plot][response.unique_traits[i]]) {
+                                    html = html + '<td>'+response.result_blup_pe_data_altered[plot][response.unique_traits[i]][0]+'</td>';
+                                }
+                                else {
+                                    html = html + '<td>NA</td>';
+                                }
+                            }
+                            html = html + '</tr>';
+                        }
+                        html = html + '</tbody></table>';
+                    }
+
+                    html = html + '<hr><a href="'+response.stats_out_tempfile_string+'.log" target=_blank>Stats file or log</a>';
+
+                    if (jQuery('#drone_imagery_analytics_relationship_matrix_type_select_div').val() == 'htp_phenotypes') {
+                        html = html + '<hr><a href="'+response.stats_out_htp_rel_tempfile_out_string+'" target=_blank>HTP Relationship Matrix</a>';
+                    }
+
+                    jQuery('#drone_imagery_analytics_result_div').html(html);
+
+                    Workflow.complete("#drone_imagery_analytics_select_step");
+                    Workflow.focus('#drone_imagery_analytics_workflow', 2);
+                }
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error calculating statistics analytics!')
+            }
+        });
+    });
+
+});
+</script>
