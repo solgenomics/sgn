@@ -88,7 +88,7 @@ sub population : Path('/solgs/population') Args() {
     else
     {
 		$c->controller('solGS::Utils')->save_metadata($c);
-	    $self->get_all_traits($c);
+	    $self->get_all_traits($c, $pop_id);
 
 		$c->controller('solGS::Search')->project_description($c, $pop_id);
 
@@ -96,9 +96,6 @@ sub population : Path('/solgs/population') Args() {
 		$c->stash->{training_pop_desc} = $c->stash->{project_desc};
 
 	    $c->stash->{template} = $c->controller('solGS::Files')->template('/population.mas');
-
-	    my $acronym = $self->get_acronym_pairs($c, $pop_id);
-	    $c->stash->{acronym} = $acronym;
     }
 
 }
@@ -400,7 +397,6 @@ sub build_single_trait_model {
 sub trait :Path('/solgs/trait') Args() {
     my ($self, $c, $trait_id, $key, $pop_id, $gp, $protocol_id) = @_;
 
-print STDERR "\n$trait_id, $key, $pop_id, $gp, $protocol_id\n ";
     if ($pop_id =~ /dataset/)
     {
 	$c->stash->{dataset_id} = $pop_id =~ s/\w+_//r;
@@ -419,8 +415,6 @@ print STDERR "\n$trait_id, $key, $pop_id, $gp, $protocol_id\n ";
 	my $pop_link;
     if ($pop_id && $trait_id)
     {
-	#$c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
-	#my $gebv_file = $c->stash->{rrblup_training_gebvs_file};
 	$c->controller('solGS::Search')->project_description($c, $pop_id);
 	$pop_name = $c->stash->{project_name};
 	$c->stash->{training_pop_name} = $pop_name;
@@ -452,9 +446,7 @@ print STDERR "\n$trait_id, $key, $pop_id, $gp, $protocol_id\n ";
 	{
 	    $self->get_trait_details($c, $trait_id);
 	    $self->gs_modeling_files($c);
-print STDERR "\n calling cross val stat: trait_id: $trait_id -- pop_id: $pop_id\n";
 	    $c->controller('solGS::modelAccuracy')->cross_validation_stat($c, $pop_id, $c->stash->{trait_abbr});
-        print STDERR "\n DONE calling cross val stat: trait_id: $trait_id -- pop_id: $pop_id\n";
 	    $c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
 	    my $acronym_file = $c->stash->{traits_acronym_file};
 
@@ -1416,6 +1408,7 @@ sub create_trait_data {
 
     my $acronym_pairs = $self->get_acronym_pairs($c, $pop_id);
 
+    my @pop_traits_details;
     if (@$acronym_pairs)
     {
 	my $table = 'trait_id' . "\t" . 'trait_name' . "\t" . 'acronym' . "\n";
@@ -1429,12 +1422,16 @@ sub create_trait_data {
 	    if ($trait_id)
 	    {
 		$table .= $trait_id . "\t" . $trait_name . "\t" . $_->[0] . "\n";
+
+        push @pop_traits_details, [$trait_id, $trait_name, $_->[0]];
 	    }
 	}
 
 	$c->controller('solGS::Files')->all_traits_file($c, $pop_id);
 	my $traits_file =  $c->stash->{all_traits_file};
 	write_file($traits_file, {binmode => ':utf8'}, $table);
+
+    $c->stash->{training_pop_traits_details} = \@pop_traits_details;
     }
 }
 
