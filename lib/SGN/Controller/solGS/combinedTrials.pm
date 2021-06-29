@@ -136,7 +136,6 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     my ($self, $c, $combo_pops_id, $gp, $protocol_id) = @_;
 
-    $c->stash->{pop_id} = $combo_pops_id;
     $c->stash->{training_pop_id} = $combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
     $c->stash->{data_set_type}     = 'combined populations';
