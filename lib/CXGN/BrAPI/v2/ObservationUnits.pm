@@ -493,6 +493,30 @@ sub observationunits_store {
     my $dbh = $self->bcs_schema()->storage()->dbh();
     my $person = CXGN::People::Person->new($dbh, $user_id);
     my $user_name = $person->get_username;
+    my %design;
+    
+    if (!$user_name) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide a proper user_name.'));
+    }
+
+    my %studies = map { $_->{studyDbId} => 1 } @$data; 
+    if(keys %studies ne 1){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one study at the time.'));
+    }
+    my $trial_id = join ',', keys %studies;
+
+    my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $trial_id });
+    my $design_prop =  $project->projectprops->find( { 'type.name' => 'design' },{ join => 'type'}); #there should be only one design prop.
+    if (!$design_prop) {
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Study does not have a proper Study type.'));
+    }
+    my $design_type = $design_prop->value;
+
+    my %locations = map { $_->{locationDbId} => 1 } @$data; 
+    if(keys %locations ne 1){
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Provide just one location at the time.'));
+    }
+    my $location_id = join ',', keys %locations;
 
     my %study_plots;
     my %seen_plot_numbers;

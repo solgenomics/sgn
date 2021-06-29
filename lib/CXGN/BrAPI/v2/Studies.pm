@@ -190,6 +190,12 @@ sub store {
 			}
 		}
 
+		# Check that a supported study design type was passed
+		my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","greenhouse","Westcott","Analysis");
+		if (!exists($supported_methods{$trial_design_method})) {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $trial_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','greenhouse','Westcott','Analysis'.", 400);
+		}
+
 		# Check the trial exists
 		my $brapi_trial = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=>$folder_id });
 		if (! defined $brapi_trial) {
@@ -390,6 +396,12 @@ sub update {
 	}
 	my $planting_date = $params->{startDate} ? $params->{startDate} : undef;
 	my $harvest_date = $params->{endDate} ? $params->{endDate} : undef;
+
+	# Check that a supported study design type was passed
+	my %supported_methods = map { $_ => 1 } ("CRD","Alpha","MAD","Lattice","Augmented","RCBD","p-rep","splitplot","greenhouse","Westcott","Analysis");
+	if (!exists($supported_methods{$study_design_method})) {
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, "Experimental Design, $study_design_method, must be one of the following: 'CRD','Alpha','MAD','Lattice','Augmented','RCBD','p-rep','splitplot','greenhouse','Westcott','Analysis'.", 400);
+	}
 
 	# Check the brapi trial exists
 	my $brapi_trial = $self->bcs_schema()->resultset('Project::Project')->find( { project_id=>$folder_id });

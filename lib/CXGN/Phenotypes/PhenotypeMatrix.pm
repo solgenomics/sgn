@@ -149,6 +149,7 @@ has 'offset' => (
 sub get_phenotype_matrix {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
+    my $include_timestamp = $self->include_timestamp;
 
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
 
@@ -165,7 +166,7 @@ sub get_phenotype_matrix {
             plot_list=>$self->plot_list,
             plant_list=>$self->plant_list,
             subplot_list=>$self->subplot_list,
-            include_timestamp=>$self->include_timestamp,
+            include_timestamp=>$include_timestamp,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
@@ -230,9 +231,14 @@ sub get_phenotype_matrix {
             my %trait_observations;
             foreach (@$observations){
                 my $collect_date = $_->{collect_date};
-                if ($include_timestamp && $collect_date) {
+                my $timestamp = $_->{timestamp};
+                if ($include_timestamp && $timestamp) {
+                    $trait_observations{$_->{trait_name}} = "$_->{value},$timestamp";
+                }
+                elsif ($include_timestamp && $collect_date) {
                     $trait_observations{$_->{trait_name}} = "$_->{value},$collect_date";
-                } else {
+                }
+                else {
                     $trait_observations{$_->{trait_name}} = $_->{value};
                 }
             }
@@ -248,7 +254,6 @@ sub get_phenotype_matrix {
 
         my %obsunit_data;
         my %traits;
-        my $include_timestamp = $self->include_timestamp;
 
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
@@ -277,11 +282,11 @@ sub get_phenotype_matrix {
                 my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
                 my $entry_type = $d->{is_a_control} ? 'check' : 'test';
 
-		my $trial_name = $d->{trial_name};
-		my $trial_desc = $d->{trial_description};
+                my $trial_name = $d->{trial_name};
+                my $trial_desc = $d->{trial_description};
 
-		$trial_name =~ s/\s+$//g;
-		$trial_desc =~ s/\s+$//g;
+                $trial_name =~ s/\s+$//g;
+                $trial_desc =~ s/\s+$//g;
 
                 $obsunit_data{$obsunit_id}->{metadata} = [
                     $d->{year},
