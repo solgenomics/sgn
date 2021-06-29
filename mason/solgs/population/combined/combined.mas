@@ -83,7 +83,7 @@ $data_set_type => ''
       title       => "Traits"
 &>
 
-<& /solgs/population/select_traits.mas,
+<& /solgs/population/traits_list.mas,
     training_pop_id => $training_pop_id,
     training_pop_traits_details => $training_pop_traits_details,
     data_set_type => $data_set_type,

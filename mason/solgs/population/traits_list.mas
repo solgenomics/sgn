@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-population/select_traits.mas - lists traits to select for GS analysis
+/solgs/population/traits_list.mas - displays training population traits available for GS modeling
 
 =AUTHOR
 
@@ -25,6 +25,7 @@ $data_set_type => ''
 
 <%perl>
 my $traits_list;
+
 foreach my $trait_detail (@$training_pop_traits_details)
 {
     my $id = $trait_detail->[0];
@@ -54,9 +55,6 @@ ROW
 }
 
 </%perl>
-
-
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 % if ($traits_list) {
  <div id="traits_selection_div">
