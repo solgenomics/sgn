@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME
- 
+
 population/select_traits.mas - lists traits to select for GS analysis
 
 =AUTHOR
@@ -15,36 +15,41 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 
-$traits_form => ''
 $training_pop_id
-$all_traits_file
+$training_pop_traits_details
 $genotyping_protocol_id
+$data_set_type => ''
+
 
 </%args>
 
 <%perl>
-
- open FH, "<", $all_traits_file or die "Can't open $all_traits_file: $!\n";
- my $headers = <FH>;
- my $trait_rows;
-
- while (<FH>)
+my $traits_list;
+foreach my $trait_detail (@$training_pop_traits_details)
 {
- my ($id, $trait, $acronym) = split (/\t/);
+    my $id = $trait_detail->[0];
+    my $trait = $trait_detail->[1];
+    my $acronym = $trait_detail->[2];
+    my $path;
+    if ($data_set_type =~ /combined/) {
+        $path = "/solgs/model/combined/trials/$training_pop_id/trait/$id/gp/$genotyping_protocol_id";
+    } else {
+        $path = "/solgs/trait/$id/population/$training_pop_id/gp/$genotyping_protocol_id";
+    }
 
- my $trait_link   = qq | <a href="/solgs/trait/$id/population/$training_pop_id/gp/$genotyping_protocol_id" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
- my $row          = <<ROW;
- <tr>
-   <td>
-     <input type  = "checkbox"
-       class      = "trait_id"
-       name       = "trait_id"
-       value      = $id > $trait_link
-   </td>
- </tr>
+     my $trait_link   = qq | <a href="$path" onclick="solGS.waitPage(this.href); return false;">$trait</a> |;
+     my $row          = <<ROW;
+     <tr>
+       <td>
+         <input type  = "checkbox"
+           class      = "trait_id"
+           name       = "trait_id"
+           value      = $id > $trait_link
+       </td>
+     </tr>
 ROW
 
-    $trait_rows .=  $row;
+        $traits_list .=  $row;
 
 }
 
@@ -53,30 +58,28 @@ ROW
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
-% if ($trait_rows) {
+% if ($traits_list) {
  <div id="traits_selection_div">
 
   <table  class="table-condensed" id="population_traits_list">
-   <% $trait_rows %>
+   <% $traits_list %>
      <tr>
        <td>
          <input class   = "button"
                 type    = "submit"
-		id      = "runGS"
+		        id      = "runGS"
                 value   = "Build model"
-                name    = "runGS"               
-                > 
-       </td> 
+                name    = "runGS"
+                >
+       </td>
      </tr>
-   </table> 
+   </table>
 
 </div>
 %} else {
 
-<div id="traits_list_message"  style="font-weight:bold;text-align:center;text-transform:uppercase;color:#A7C942">
+<div id="traits_list_message"  class="message">
 <p>There are no phenotyped traits for this population.</p>
 </div>
 
 %}
-
-<input type="hidden" id="population_id" value="<% $training_pop_id %>" />

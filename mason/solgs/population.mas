@@ -5,8 +5,7 @@ $training_pop_id
 $training_pop_name
 $training_pop_desc
 $show_data => 1;
-$traits_form => ''
-$all_traits_file
+$training_pop_traits_details =>''
 $stocks_no
 $markers_no
 $traits_no
@@ -69,8 +68,7 @@ $training_pop_id = $pop_id;
 
 <& population/select_traits.mas,
    training_pop_id    => $training_pop_id,
-  traits_form        => $traits_form,
-  all_traits_file    => $all_traits_file,
+  training_pop_traits_details => $training_pop_traits_details,
   genotyping_protocol_id => $genotyping_protocol_id,
 &>
 
