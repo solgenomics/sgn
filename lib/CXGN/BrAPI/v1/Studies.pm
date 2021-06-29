@@ -113,7 +113,7 @@ sub studies_search_save {
     });
 
     my $save_id = $search_object->save($search_params);
-    my $result = ( searchResultsDbId => $save_id );
+    my $result = { searchResultsDbId => $save_id };
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies search result constructed');

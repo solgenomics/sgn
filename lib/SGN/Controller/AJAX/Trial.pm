@@ -575,7 +575,6 @@ sub save_experimental_design_POST : Args(0) {
         my %trial_info_hash = (
             chado_schema => $chado_schema,
             dbh => $dbh,
-            owner_id => $user_id,
             design => $trial_location_design,
             program => $breeding_program,
             trial_year => $c->req->param('year'),
@@ -587,6 +586,7 @@ sub save_experimental_design_POST : Args(0) {
             trial_has_plant_entries => $c->req->param('has_plant_entries'),
             trial_has_subplot_entries => $c->req->param('has_subplot_entries'),
             operator => $user_name,
+            owner_id => $user_id,
             field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross,
             field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped,
             field_trial_from_field_trial => \@add_project_trial_source,
@@ -977,7 +977,8 @@ sub upload_trial_file_POST : Args(0) {
             design => $parsed_data,
             program => $program,
             upload_trial_file => $upload,
-            operator => $c->user()->get_object()->get_username(),
+            operator => $user_name,
+            owner_id => $user_id,
             field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross,
             field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped,
             field_trial_from_field_trial => \@add_project_trial_source,
@@ -1159,7 +1160,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             design => $trial_design->{'design_details'},
             program => $trial_design->{'breeding_program'},
             upload_trial_file => $upload,
-            operator => $c->user()->get_object()->get_username()
+            operator => $user_name,
+            owner_id => $user_id
         );
 
         if ($trial_design->{'trial_type'}){

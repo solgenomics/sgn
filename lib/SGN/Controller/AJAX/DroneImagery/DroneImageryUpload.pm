@@ -3,7 +3,7 @@
 
 SGN::Controller::AJAX::DroneImagery::DroneImageryUpload - a REST controller class to provide the
 functions for uploading drone imagery into the database. All other functions are
-controlled by SGN::Controller::AJAX::DroneImagery 
+controlled by SGN::Controller::AJAX::DroneImagery
 
 =head1 DESCRIPTION
 
@@ -20,6 +20,7 @@ use SGN::Model::Cvterm;
 use DateTime;
 use Math::Round;
 use Time::Piece;
+use Time::Seconds;
 use SGN::Image;
 use CXGN::DroneImagery::ImagesSearch;
 use File::Basename qw | basename dirname|;
@@ -27,6 +28,10 @@ use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Calendar;
 use Image::Size;
 use CXGN::DroneImagery::ImageTypes;
+use LWP::UserAgent;
+use CXGN::ZipFile;
+use Text::CSV;
+use SGN::Controller::AJAX::DroneImagery::DroneImagery;
 #use Inline::Python;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -77,7 +82,9 @@ sub upload_drone_imagery_POST : Args(0) {
     my $new_drone_run_name = $c->req->param('drone_run_name');
     my $new_drone_run_type = $c->req->param('drone_run_type');
     my $new_drone_run_date = $c->req->param('drone_run_date');
+    my $new_drone_base_date = $c->req->param('drone_run_base_date');
     my $new_drone_run_desc = $c->req->param('drone_run_description');
+    my $new_drone_rig_desc = $c->req->param('drone_run_camera_rig_description');
     my $new_drone_run_vehicle_id = $c->req->param('drone_run_imaging_vehicle_id');
     my $new_drone_run_battery_name = $c->req->param('drone_run_imaging_vehicle_battery_name');
 
@@ -87,7 +94,7 @@ sub upload_drone_imagery_POST : Args(0) {
     }
 
     if (!$selected_drone_run_id && !$new_drone_run_name) {
-        $c->stash->{rest} = { error => "Please select a drone run or create a new drone run!" };
+        $c->stash->{rest} = { error => "Please select an imaging event or create a new imaging event!" };
         $c->detach();
     }
     # if ($selected_drone_run_id && $new_drone_run_name){
@@ -95,25 +102,33 @@ sub upload_drone_imagery_POST : Args(0) {
     #     $c->detach();
     # }
     if ($new_drone_run_name && !$new_drone_run_type){
-        $c->stash->{rest} = { error => "Please give a new drone run type!" };
+        $c->stash->{rest} = { error => "Please give a new imaging event type!" };
         $c->detach();
     }
     if ($new_drone_run_name && !$new_drone_run_date){
-        $c->stash->{rest} = { error => "Please give a new drone run date!" };
+        $c->stash->{rest} = { error => "Please give a new imaging event date!" };
         $c->detach();
     }
     if ($new_drone_run_name && $new_drone_run_date !~ /^\d{4}\/\d{2}\/\d{2}\s\d\d:\d\d:\d\d$/){
-        $c->stash->{rest} = { error => "Please give a new drone run date in the format YYYY/MM/DD HH:mm:ss!" };
+        $c->stash->{rest} = { error => "Please give a new imaging event date in the format YYYY/MM/DD HH:mm:ss!" };
         $c->detach();
     }
+    if ($new_drone_run_name && $new_drone_base_date && $new_drone_run_date !~ /^\d{4}\/\d{2}\/\d{2}\s\d\d:\d\d:\d\d$/){
+        $c->stash->{rest} = { error => "Please give a new imaging event base date in the format YYYY/MM/DD HH:mm:ss!" };
+        $c->detach();
+    }
+
     if ($new_drone_run_name && !$new_drone_run_desc){
-        $c->stash->{rest} = { error => "Please give a new drone run description!" };
+        $c->stash->{rest} = { error => "Please give a new imaging event description!" };
         $c->detach();
     }
 
     my $new_drone_run_camera_info = $c->req->param('drone_image_upload_camera_info');
     my $new_drone_run_band_numbers = $c->req->param('drone_run_band_number');
     my $new_drone_run_band_stitching = $c->req->param('drone_image_upload_drone_run_band_stitching');
+    my $new_drone_run_band_stitching_odm_more_images = $c->req->param('drone_image_upload_drone_run_band_stitching_odm_more_images') || 'No';
+    my $new_drone_run_band_stitching_odm_current_image_count = $c->req->param('drone_image_upload_drone_run_band_stitching_odm_image_count') || 0;
+    my $new_drone_run_band_stitching_odm_radiocalibration = $c->req->param('drone_image_upload_drone_run_band_stitching_odm_radiocalibration') eq "Yes" ? 1 : 0;
 
     if (!$new_drone_run_camera_info) {
         $c->stash->{rest} = { error => "Please indicate the type of camera!" };
@@ -121,12 +136,35 @@ sub upload_drone_imagery_POST : Args(0) {
     }
 
     if ($new_drone_run_band_stitching eq 'no' && !$new_drone_run_band_numbers) {
-        $c->stash->{rest} = { error => "Please give the number of new drone run bands!" };
+        $c->stash->{rest} = { error => "Please give the number of new imaging event bands!" };
         $c->detach();
     }
     if (!$new_drone_run_band_stitching) {
         $c->stash->{rest} = { error => "Please indicate if the images are stitched!" };
         $c->detach();
+    }
+
+    my $odm_process_running_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_opendronemap_process_running', 'project_property')->cvterm_id();
+    if ($new_drone_run_band_stitching eq 'yes_open_data_map_stitch') {
+        my $upload_file = $c->req->upload('upload_drone_images_zipfile');
+        my $upload_panel_file = $c->req->upload('upload_drone_images_panel_zipfile');
+        if (!$upload_file) {
+            $c->stash->{rest} = { error => "Please provide a zipfile of raw images!" };
+            $c->detach();
+        }
+        if (!$upload_panel_file && $new_drone_run_camera_info eq 'micasense_5') {
+            $c->stash->{rest} = { error => "Please provide a zipfile of images of the Micasense radiometric calibration panels!" };
+            $c->detach();
+        }
+
+        my $q = "SELECT count(*) FROM projectprop WHERE type_id=$odm_process_running_cvterm_id AND value='1';";
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute();
+        my ($odm_running_count) = $h->fetchrow_array();
+        if ($odm_running_count >= $c->config->{opendronemap_max_processes}) {
+            $c->stash->{rest} = { error => "There are already the maximum number of OpenDroneMap processes running on this machine! Please check back later when those processes are complete." };
+            $c->detach();
+        }
     }
 
     # if ($selected_drone_run_id && ($new_drone_run_band_stitching eq 'yes' || $new_drone_run_band_stitching eq 'yes_raw' || $new_drone_run_band_stitching eq 'yes_automated')) {
@@ -141,12 +179,52 @@ sub upload_drone_imagery_POST : Args(0) {
 
     my $drone_run_nd_experiment_id;
     if (!$selected_drone_run_id) {
+        my $drone_run_field_trial_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+        my $drone_run_band_drone_run_project_relationship_type_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+        my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
+
+        my $calendar_funcs = CXGN::Calendar->new({});
+
+        my %seen_field_trial_drone_run_dates;
+        my $drone_run_date_q = "SELECT drone_run_date.value
+            FROM project AS drone_run_band_project
+            JOIN project_relationship AS drone_run_band_rel ON (drone_run_band_rel.subject_project_id = drone_run_band_project.project_id AND drone_run_band_rel.type_id = $drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
+            JOIN project AS drone_run_project ON (drone_run_band_rel.object_project_id = drone_run_project.project_id)
+            JOIN projectprop AS drone_run_date ON(drone_run_project.project_id=drone_run_date.project_id AND drone_run_date.type_id=$project_start_date_type_id)
+            JOIN project_relationship AS field_trial_rel ON (drone_run_project.project_id = field_trial_rel.subject_project_id AND field_trial_rel.type_id=$drone_run_field_trial_project_relationship_type_id_cvterm_id)
+            JOIN project AS field_trial ON (field_trial_rel.object_project_id = field_trial.project_id)
+            WHERE field_trial.project_id = ?;";
+        my $drone_run_date_h = $schema->storage->dbh()->prepare($drone_run_date_q);
+        $drone_run_date_h->execute($selected_trial_id);
+        while( my ($drone_run_date) = $drone_run_date_h->fetchrow_array()) {
+            my $drone_run_date_formatted = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
+            if ($drone_run_date_formatted) {
+                my $date_obj = Time::Piece->strptime($drone_run_date_formatted, "%Y-%B-%d %H:%M:%S");
+                my $epoch_seconds = $date_obj->epoch;
+                $seen_field_trial_drone_run_dates{$epoch_seconds}++;
+            }
+        }
+        my $drone_run_date_obj = Time::Piece->strptime($new_drone_run_date, "%Y/%m/%d %H:%M:%S");
+        if (exists($seen_field_trial_drone_run_dates{$drone_run_date_obj->epoch})) {
+            $c->stash->{rest} = { error => "An imaging event has already occured on this field trial at the same date and time! Please give a unique date/time for each imaging event!" };
+            $c->detach();
+        }
+
         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $selected_trial_id });
         my $trial_location_id = $trial->get_location()->[0];
         my $planting_date = $trial->get_planting_date();
         my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
         my $drone_run_date_time_object = Time::Piece->strptime($new_drone_run_date, "%Y/%m/%d %H:%M:%S");
-        my $time_diff = $drone_run_date_time_object - $planting_date_time_object;
+        my $time_diff;
+        my $base_date_event;
+        if ($new_drone_base_date) {
+            my $imaging_event_base_date_time_object = Time::Piece->strptime($new_drone_base_date, "%Y/%m/%d %H:%M:%S");
+            $time_diff = $drone_run_date_time_object - $imaging_event_base_date_time_object;
+            $base_date_event = $calendar_funcs->check_value_format($new_drone_base_date);
+        }
+        else {
+            $time_diff = $drone_run_date_time_object - $planting_date_time_object;
+        }
         my $time_diff_weeks = $time_diff->weeks;
         my $time_diff_days = $time_diff->days;
         my $time_diff_hours = $time_diff->hours;
@@ -189,19 +267,19 @@ sub upload_drone_imagery_POST : Args(0) {
             day => $day_term
         );
 
-        my $calendar_funcs = CXGN::Calendar->new({});
         my $drone_run_event = $calendar_funcs->check_value_format($new_drone_run_date);
         my $drone_run_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_experiment', 'experiment_type')->cvterm_id();
-        my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
         my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
         my $drone_run_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_project_type', 'project_property')->cvterm_id();
         my $drone_run_is_raw_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_is_raw_images', 'project_property')->cvterm_id();
         my $drone_run_camera_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_camera_type', 'project_property')->cvterm_id();
+        my $drone_run_base_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_base_date', 'project_property')->cvterm_id();
+        my $drone_run_rig_desc_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_camera_rig_description', 'project_property')->cvterm_id();
         my $drone_run_related_cvterms_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
         my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
         my $imaging_vehicle_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
         my $imaging_vehicle_properties_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle_json', 'stock_property')->cvterm_id();
-        
+
         my $drone_run_projectprops = [
             {type_id => $drone_run_type_cvterm_id, value => $new_drone_run_type},
             {type_id => $project_start_date_type_id, value => $drone_run_event},
@@ -212,6 +290,12 @@ sub upload_drone_imagery_POST : Args(0) {
 
         if ($new_drone_run_band_stitching ne 'no') {
             push @$drone_run_projectprops, {type_id => $drone_run_is_raw_cvterm_id, value => 1};
+        }
+        if ($new_drone_base_date) {
+            push @$drone_run_projectprops, {type_id => $drone_run_base_date_type_id, value => $base_date_event};
+        }
+        if ($new_drone_rig_desc) {
+            push @$drone_run_projectprops, {type_id => $drone_run_rig_desc_type_id, value => $new_drone_rig_desc};
         }
 
         my $nd_experiment_rs = $schema->resultset("NaturalDiversity::NdExperiment")->create({
@@ -266,30 +350,30 @@ sub upload_drone_imagery_POST : Args(0) {
             my $new_drone_run_band_desc = $c->req->param('drone_run_band_description_1');
             my $new_drone_run_band_type = $c->req->param('drone_run_band_type_1');
             if (!$new_drone_run_band_name) {
-                $c->stash->{rest} = { error => "Please give a new drone run band name!" };
+                $c->stash->{rest} = { error => "Please give a new imaging event band name!" };
                 $c->detach();
             }
             if (!$new_drone_run_band_desc){
-                $c->stash->{rest} = { error => "Please give a new drone run band description!" };
+                $c->stash->{rest} = { error => "Please give a new imaging event band description!" };
                 $c->detach();
             }
             if (!$new_drone_run_band_type){
-                $c->stash->{rest} = { error => "Please give a new drone run band type!" };
+                $c->stash->{rest} = { error => "Please give a new imaging event band type!" };
                 $c->detach();
             }
             if (!exists($image_types_allowed->{$new_drone_run_band_type})) {
-                $c->stash->{rest} = { error => "Drone run band type not supported: $new_drone_run_band_type!" };
+                $c->stash->{rest} = { error => "Imaging event band type not supported: $new_drone_run_band_type!" };
                 $c->detach();
             }
             if (exists($seen_image_types_upload{$new_drone_run_band_type})) {
-                $c->stash->{rest} = { error => "Drone run band type is repeated: $new_drone_run_band_type! Each drone run band in an imaging event should have a unique type!" };
+                $c->stash->{rest} = { error => "Imaging event band type is repeated: $new_drone_run_band_type! Each imaging event band in an imaging event should have a unique type!" };
                 $c->detach();
             }
             $seen_image_types_upload{$new_drone_run_band_type}++;
 
             my $upload_file = $c->req->upload('drone_run_band_stitched_ortho_image_1');
             if (!$upload_file) {
-                $c->stash->{rest} = { error => "Please provide a drone image zipfile OR a stitched ortho image!" };
+                $c->stash->{rest} = { error => "Please provide a zipfile OR a stitched ortho image!" };
                 $c->detach();
             }
 
@@ -305,30 +389,30 @@ sub upload_drone_imagery_POST : Args(0) {
                 my $new_drone_run_band_desc = $c->req->param('drone_run_band_description_'.$_);
                 my $new_drone_run_band_type = $c->req->param('drone_run_band_type_'.$_);
                 if (!$new_drone_run_band_name) {
-                    $c->stash->{rest} = { error => "Please give a new drone run band name!".$_ };
+                    $c->stash->{rest} = { error => "Please give a new imaging event band name!".$_ };
                     $c->detach();
                 }
                 if (!$new_drone_run_band_desc){
-                    $c->stash->{rest} = { error => "Please give a new drone run band description!" };
+                    $c->stash->{rest} = { error => "Please give a new imaging event band description!" };
                     $c->detach();
                 }
                 if (!$new_drone_run_band_type){
-                    $c->stash->{rest} = { error => "Please give a new drone run band type!" };
+                    $c->stash->{rest} = { error => "Please give a new imaging event band type!" };
                     $c->detach();
                 }
                 if (!exists($image_types_allowed->{$new_drone_run_band_type})) {
-                    $c->stash->{rest} = { error => "Drone run band type not supported: $new_drone_run_band_type!" };
+                    $c->stash->{rest} = { error => "Imaging event band type not supported: $new_drone_run_band_type!" };
                     $c->detach();
                 }
                 if (exists($seen_image_types_upload{$new_drone_run_band_type})) {
-                    $c->stash->{rest} = { error => "Drone run band type is repeated: $new_drone_run_band_type! Each drone run band in an imaging event should have a unique type!" };
+                    $c->stash->{rest} = { error => "Imaging event band type is repeated: $new_drone_run_band_type! Each imaging event band in an imaging event should have a unique type!" };
                     $c->detach();
                 }
                 $seen_image_types_upload{$new_drone_run_band_type}++;
 
                 my $upload_file = $c->req->upload('drone_run_band_stitched_ortho_image_'.$_);
                 if (!$upload_file) {
-                    $c->stash->{rest} = { error => "Please provide a drone image zipfile OR a stitched ortho image!" };
+                    $c->stash->{rest} = { error => "Please provide a zipfile OR a stitched ortho image!" };
                     $c->detach();
                 }
 
@@ -737,7 +821,7 @@ sub upload_drone_imagery_POST : Args(0) {
         }
         elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
             # $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/AlignImagesRGB.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --output_path '$dir' --final_rgb_output_path '$temp_file_stitched_result_rgb'";
-            # 
+            #
             # @stitched_bands = (
             #     ["Color Image", "RGB Color Image", "RGB Color Image", $temp_file_stitched_result_rgb],
             # );
@@ -1041,23 +1125,16 @@ sub upload_drone_imagery_POST : Args(0) {
         my $upload_file = $c->req->upload('upload_drone_images_zipfile');
         my $upload_panel_file = $c->req->upload('upload_drone_images_panel_zipfile');
 
-        if (!$upload_file) {
-            $c->stash->{rest} = { error => "Please provide a drone image zipfile of raw images!" };
-            $c->detach();
-        }
-        if (!$upload_panel_file && $new_drone_run_camera_info eq 'micasense_5') {
-            $c->stash->{rest} = { error => "Please provide a zipfile of images of the Micasense radiometric calibration panels!" };
-            $c->detach();
-        }
-
         my $upload_original_name = $upload_file->filename();
         my $upload_tempfile = $upload_file->tempname;
         my $time = DateTime->now();
         my $timestamp = $time->ymd()."_".$time->hms();
+        print STDERR Dumper [$upload_original_name, $upload_tempfile];
 
         my $uploader = CXGN::UploadFile->new({
             tempfile => $upload_tempfile,
-            subdirectory => "drone_imagery_upload",
+            subdirectory => "drone_imagery_upload_odm_zips",
+            second_subdirectory => "$selected_drone_run_id",
             archive_path => $c->config->{archive_path},
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
@@ -1071,683 +1148,207 @@ sub upload_drone_imagery_POST : Args(0) {
             $c->detach();
         }
         unlink $upload_tempfile;
-        print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
+        print STDERR "Archived Drone Image ODM Zip File: $archived_filename_with_path\n";
 
         my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
         my $zipfile_return = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_drone_run_id);
-        print STDERR Dumper $zipfile_return;
+        # print STDERR Dumper $zipfile_return;
         if ($zipfile_return->{error}) {
             $c->stash->{rest} = { error => "Problem saving images!".$zipfile_return->{error} };
             $c->detach();
         }
         my $image_paths = $zipfile_return->{image_files};
 
-        my @img_path_split = split '\/', $image_paths->[0];
+        my $example_archived_filename_with_path_odm_img;
+        foreach my $i (@$image_paths) {
+            my $uploader_odm_dir = CXGN::UploadFile->new({
+                tempfile => $i,
+                subdirectory => "drone_imagery_upload_odm_dir",
+                second_subdirectory => "$selected_drone_run_id",
+                third_subdirectory => 'images',
+                archive_path => $c->config->{archive_path},
+                archive_filename => basename($i),
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role,
+                include_timestamp => 0
+            });
+            my $archived_filename_with_path_odm_img = $uploader_odm_dir->archive();
+            my $md5 = $uploader_odm_dir->get_md5($archived_filename_with_path_odm_img);
+            if (!$archived_filename_with_path_odm_img) {
+                $c->stash->{rest} = { error => "Could not save file $i in archive." };
+                $c->detach();
+            }
+            print STDERR "Archived Drone Image ODM IMG File: $archived_filename_with_path_odm_img\n";
+            $example_archived_filename_with_path_odm_img = $archived_filename_with_path_odm_img;
+        }
+
+        my $current_odm_image_count = $new_drone_run_band_stitching_odm_current_image_count+scalar(@$image_paths);
+        if ($new_drone_run_band_stitching_odm_more_images eq 'Yes') {
+            $c->stash->{rest} = { drone_run_project_id => $selected_drone_run_id, current_image_count => $current_odm_image_count };
+            $c->detach();
+        }
+
+        if ($current_odm_image_count < 25) {
+            $c->stash->{rest} = { error => "Upload more than $current_odm_image_count images! Atleast 25 are required for OpenDroneMap to stitch. Upload now and try again!", drone_run_project_id => $selected_drone_run_id, current_image_count => $current_odm_image_count };
+            $c->detach();
+        }
+
+        print STDERR $example_archived_filename_with_path_odm_img."\n";
+        my @img_path_split = split '\/', $example_archived_filename_with_path_odm_img;
         my $image_path_img_name = pop(@img_path_split);
         my $image_path_project_name = pop(@img_path_split);
         my $image_path_remaining = join '/', @img_path_split;
-        print STDERR Dumper [$image_path_img_name, $image_path_project_name, $image_path_remaining];
+        # my $image_path_remaining_host = $image_path_remaining =~ s/cxgn\/sgn\/static\/documents\/tempfiles/tmp\/breedbase\-site/gr;
+        my $hostpath = $c->config->{hostpath_archive};
+        my $image_path_remaining_host = $image_path_remaining =~ s/\/home\/production/$hostpath/gr;
+        print STDERR Dumper [$image_path_img_name, $image_path_project_name, $image_path_remaining, $image_path_remaining_host];
 
         my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_images');
+        my $temp_file_docker_log = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
+
+        my $odm_check_prop = $schema->resultset("Project::Projectprop")->find_or_create({
+            project_id => $selected_drone_run_id,
+            type_id => $odm_process_running_cvterm_id
+        });
+        $odm_check_prop->value('1');
+        $odm_check_prop->update();
 
         my @stitched_bands;
         my %raw_image_bands;
-        if ($new_drone_run_camera_info eq 'micasense_5') {
-            my $upload_original_name_panel = $upload_panel_file->filename();
-            my $upload_tempfile_panel = $upload_panel_file->tempname;
-            $time = DateTime->now();
-            $timestamp = $time->ymd()."_".$time->hms();
+        eval {
+            if ($new_drone_run_camera_info eq 'micasense_5') {
+                my $upload_panel_original_name = $upload_panel_file->filename();
+                my $upload_panel_tempfile = $upload_panel_file->tempname;
 
-            my $uploader_panel = CXGN::UploadFile->new({
-                tempfile => $upload_tempfile_panel,
-                subdirectory => "drone_imagery_upload_panel",
-                archive_path => $c->config->{archive_path},
-                archive_filename => $upload_original_name_panel,
-                timestamp => $timestamp,
-                user_id => $user_id,
-                user_role => $user_role
-            });
-            my $archived_filename_with_path_panel = $uploader_panel->archive();
-            my $md5_panel = $uploader->get_md5($archived_filename_with_path_panel);
-            if (!$archived_filename_with_path_panel) {
-                $c->stash->{rest} = { error => "Could not save file $upload_original_name_panel in archive." };
-                $c->detach();
+                my $uploader_panel = CXGN::UploadFile->new({
+                    tempfile => $upload_panel_tempfile,
+                    subdirectory => "drone_imagery_upload_odm_panel_zips",
+                    second_subdirectory => "$selected_drone_run_id",
+                    archive_path => $c->config->{archive_path},
+                    archive_filename => $upload_panel_original_name,
+                    timestamp => $timestamp,
+                    user_id => $user_id,
+                    user_role => $user_role
+                });
+                my $archived_filename_panel_with_path = $uploader_panel->archive();
+                my $md5_panel = $uploader_panel->get_md5($archived_filename_panel_with_path);
+                if (!$archived_filename_panel_with_path) {
+                    $c->stash->{rest} = { error => "Could not save file $archived_filename_panel_with_path in archive." };
+                    $c->detach();
+                }
+                unlink $upload_panel_tempfile;
+                print STDERR "Archived Drone Image ODM Zip File: $archived_filename_panel_with_path\n";
+
+                # my $dtm_string = '';
+                # my $ua       = LWP::UserAgent->new();
+                # my $response = $ua->post( $c->config->{main_production_site_url}."/RunODMDocker.php", { 'file_path' => $image_path_remaining_host, 'dtm_string' => $dtm_string } );
+                # my $content  = $response->decoded_content();
+                # print STDERR Dumper $content;
+
+                my $odm_radiometric_calibration = $new_drone_run_band_stitching_odm_radiocalibration ? '--radiometric-calibration camera' : '';
+
+                my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm '.$odm_radiometric_calibration.' > '.$temp_file_docker_log;
+                print STDERR $odm_command."\n";
+                my $odm_status = system($odm_command);
+
+                my $odm_b1 = "$image_path_remaining/odm_orthophoto/b1.png";
+                my $odm_b2 = "$image_path_remaining/odm_orthophoto/b2.png";
+                my $odm_b3 = "$image_path_remaining/odm_orthophoto/b3.png";
+                my $odm_b4 = "$image_path_remaining/odm_orthophoto/b4.png";
+                my $odm_b5 = "$image_path_remaining/odm_orthophoto/b5.png";
+                my $odm_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path $image_path_remaining/odm_orthophoto/odm_orthophoto.tif --outfile_path_b1 $odm_b1 --outfile_path_b2 $odm_b2 --outfile_path_b3 $odm_b3 --outfile_path_b4 $odm_b4 --outfile_path_b5 $odm_b5 --odm_radiocalibrated True";
+                my $odm_open_status = system($odm_cmd);
+
+                my $odm_dsm_png = "$image_path_remaining/odm_dem/dsm.png";
+                my $odm_dtm_png = "$image_path_remaining/odm_dem/dtm.png";
+                my $odm_subtract_png = "$image_path_remaining/odm_dem/subtract.png";
+                my $odm_dem_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImageDSM.py --image_path_dsm $image_path_remaining/odm_dem/dsm.tif --image_path_dtm $image_path_remaining/odm_dem/dtm.tif --outfile_path_dsm $odm_dsm_png --outfile_path_dtm $odm_dtm_png --outfile_path_subtract $odm_subtract_png --band_number 1";
+                my $odm_dem_open_status = system($odm_dem_cmd);
+
+                @stitched_bands = (
+                    ["Band 1", "OpenDroneMap Blue", "Blue (450-520nm)", $odm_b1],
+                    ["Band 2", "OpenDroneMap Green", "Green (515-600nm)", $odm_b2],
+                    ["Band 3", "OpenDroneMap Red", "Red (600-690nm)", $odm_b3],
+                    ["Band 4", "OpenDroneMap NIR", "NIR (780-3000nm)", $odm_b4],
+                    ["Band 5", "OpenDroneMap RedEdge", "Red Edge (690-750nm)", $odm_b5],
+                    ["Band 6", "OpenDroneMap DSM", "Black and White Image", $odm_dsm_png]
+                );
             }
-            unlink $upload_tempfile_panel;
-            print STDERR "Archived Drone Image Panel File: $archived_filename_with_path_panel\n";
+            elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
+                my $odm_command = 'docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v '.$image_path_remaining_host.':/datasets/code opendronemap/odm --project-path /datasets --rerun-all --dsm --dtm > '.$temp_file_docker_log;
+                print STDERR $odm_command."\n";
+                my $odm_status = system($odm_command);
 
-            $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-            my $zipfile_return_panel = $image->upload_drone_imagery_zipfile($archived_filename_with_path_panel, $user_id, $selected_drone_run_id);
-            print STDERR Dumper $zipfile_return_panel;
-            if ($zipfile_return_panel->{error}) {
-                $c->stash->{rest} = { error => "Problem saving panel images!".$zipfile_return_panel->{error} };
-                $c->detach();
+                my $odm_dsm_png = "$image_path_remaining/odm_dem/dsm.png";
+                my $odm_dtm_png = "$image_path_remaining/odm_dem/dtm.png";
+                my $odm_subtract_png = "$image_path_remaining/odm_dem/subtract.png";
+                my $odm_dem_cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImageDSM.py --image_path_dsm $image_path_remaining/odm_dem/dsm.tif --image_path_dtm $image_path_remaining/odm_dem/dtm.tif --outfile_path_dsm $odm_dsm_png --outfile_path_dtm $odm_dtm_png --outfile_path_subtract $odm_subtract_png --band_number 1";
+                my $odm_dem_open_status = system($odm_dem_cmd);
+
+                @stitched_bands = (
+                    ["Color Image", "OpenDroneMap RGB Color Image", "RGB Color Image", "$image_path_remaining/odm_orthophoto/odm_orthophoto.tif"],
+                    ["DSM", "OpenDroneMap DSM", "Black and White Image", $odm_dsm_png]
+                );
             }
-            my $image_paths_panel = $zipfile_return_panel->{image_files};
-
-            $cmd = "docker run --rm -v $image_path_remaining:/datasets/code opendronemap/odm --project-path /$image_path_project_name";
-            print STDERR Dumper $cmd;
-            my $status = system($cmd);
-
-            my $temp_file_raw_image_blue = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
-            my $temp_file_raw_image_green = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
-            my $temp_file_raw_image_red = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
-            my $temp_file_raw_image_nir = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
-            my $temp_file_raw_image_red_edge = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
-
-            my $cmd_2 = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/ODMOpenImage.py --image_path '$image_path_remaining/$image_path_project_name/odm_orthophoto/odm_orthophoto_render.tif' --outfile_path_b1 '$temp_file_raw_image_blue' --outfile_path_b2 '$temp_file_raw_image_green' --outfile_path_b3 '$temp_file_raw_image_red' --outfile_path_b4 '$temp_file_raw_image_nir' --outfile_path_b5 '$temp_file_raw_image_red_edge' ";
-            system($cmd_2);
-
-            @stitched_bands = (
-                ["Band 1", "Blue", "Blue (450-520nm)", $temp_file_raw_image_blue],
-                ["Band 2", "Green", "Green (515-600nm)", $temp_file_raw_image_green],
-                ["Band 3", "Red", "Red (600-690nm)", $temp_file_raw_image_red],
-                ["Band 4", "NIR", "NIR (780-3000nm)", $temp_file_raw_image_nir],
-                ["Band 5", "RedEdge", "Red Edge (690-750nm)", $temp_file_raw_image_red_edge]
-            );
-        }
-        # elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
-        #     @stitched_bands = (
-        #         ["Color Image", "RGB Color Image", "RGB Color Image", 0],
-        #     );
-        #     $raw_image_bands{0} = $image_paths;
-        # }
-        else {
-            die "Camera info not supported for raw image upload: $new_drone_run_camera_info\n";
-        }
-
-        foreach my $m (@stitched_bands) {
-            my $project_rs = $schema->resultset("Project::Project")->create({
-                name => $new_drone_run_name."_".$m->[1],
-                description => $new_drone_run_desc.". ".$m->[0]." ".$m->[1].". Orthomosaic stitched by ImageBreed.",
-                projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $m->[2]}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
-                project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
-            });
-            my $selected_drone_run_band_id = $project_rs->project_id();
-
-            my $time = DateTime->now();
-            my $timestamp = $time->ymd()."_".$time->hms();
-            my $upload_original_name = $new_drone_run_name."_ImageBreed_stitched_".$m->[1].".png";
-
-            my $uploader = CXGN::UploadFile->new({
-                tempfile => $m->[3],
-                subdirectory => "drone_imagery_upload",
-                archive_path => $c->config->{archive_path},
-                archive_filename => $upload_original_name,
-                timestamp => $timestamp,
-                user_id => $user_id,
-                user_role => $user_role
-            });
-            my $archived_filename_with_path = $uploader->archive();
-            my $md5 = $uploader->get_md5($archived_filename_with_path);
-            if (!$archived_filename_with_path) {
-                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
-                $c->detach();
+            else {
+                die "Camera info not supported for raw image upload ODM stitch: $new_drone_run_camera_info\n";
             }
-            unlink $upload_tempfile;
-            print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
 
-            my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-            $image->set_sp_person_id($user_id);
-            my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
-            my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
-            push @return_drone_run_band_image_urls, $image->get_image_url('original');
-            push @return_drone_run_band_image_ids, $image->get_image_id();
-            push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
-        }
+            my $calibration_info = '';
+            if ($new_drone_run_band_stitching_odm_radiocalibration && $new_drone_run_camera_info eq 'micasense_5') {
+                $calibration_info = ' with radiocalibration';
+            }
+            elsif (!$new_drone_run_band_stitching_odm_radiocalibration && $new_drone_run_camera_info eq 'micasense_5') {
+                $calibration_info = ' without radiocalibration';
+            }
 
+            foreach my $m (@stitched_bands) {
+                my $project_rs = $schema->resultset("Project::Project")->create({
+                    name => $new_drone_run_name."_".$m->[1],
+                    description => $new_drone_run_desc.". ".$m->[0]." ".$m->[1].". Orthomosaic stitched by OpenDroneMap in ImageBreed".$calibration_info.".",
+                    projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $m->[2]}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
+                    project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
+                });
+                my $selected_drone_run_band_id = $project_rs->project_id();
+
+                my $time = DateTime->now();
+                my $timestamp = $time->ymd()."_".$time->hms();
+                my $upload_original_name = $new_drone_run_name."_ImageBreed_stitched_".$m->[1].".png";
+
+                my $uploader = CXGN::UploadFile->new({
+                    tempfile => $m->[3],
+                    subdirectory => "drone_imagery_upload",
+                    archive_path => $c->config->{archive_path},
+                    archive_filename => $upload_original_name,
+                    timestamp => $timestamp,
+                    user_id => $user_id,
+                    user_role => $user_role
+                });
+                my $archived_filename_with_path = $uploader->archive();
+                my $md5 = $uploader->get_md5($archived_filename_with_path);
+                if (!$archived_filename_with_path) {
+                    $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                    $c->detach();
+                }
+                unlink $upload_tempfile;
+                print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
+
+                my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
+                $image->set_sp_person_id($user_id);
+                my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stitched_drone_imagery', 'project_md_image')->cvterm_id();
+                my $ret = $image->process_image($archived_filename_with_path, 'project', $selected_drone_run_band_id, $linking_table_type_id);
+                push @return_drone_run_band_image_urls, $image->get_image_url('original');
+                push @return_drone_run_band_image_ids, $image->get_image_id();
+                push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
+            }
+        };
+
+        $odm_check_prop->value('0');
+        $odm_check_prop->update();
     }
 
     $c->stash->{rest} = { success => 1, drone_run_project_id => $selected_drone_run_id, drone_run_band_project_ids => \@return_drone_run_band_project_ids, drone_run_band_image_ids => \@return_drone_run_band_image_ids, drone_run_band_image_urls => \@return_drone_run_band_image_urls, drone_run_band_raw_image_boundaries_temp_images => \@raw_image_boundaries_temp_images, saved_image_stacks => \%saved_image_stacks };
-}
-
-sub upload_drone_imagery_additional_raw_images : Path('/api/drone_imagery/upload_drone_imagery_additional_raw_images') : ActionClass('REST') { }
-sub upload_drone_imagery_additional_raw_images_POST : Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
-    my $new_drone_run_camera_info = 'micasense_5';
-
-    my $selected_trial_id = $c->req->param('upload_drone_imagery_additional_raw_images_field_trial_id');
-    if (!$selected_trial_id) {
-        $c->stash->{rest} = { error => "Please select a field trial!" };
-        $c->detach();
-    }
-    my $selected_drone_run_id = $c->req->param('upload_drone_imagery_additional_raw_images_drone_run_id');
-
-    my $upload_file = $c->req->upload('upload_drone_imagery_additional_raw_images_zipfile');
-    my $upload_panel_file = $c->req->upload('upload_drone_imagery_additional_raw_images_calibration_zipfile');
-
-    if (!$upload_file) {
-        $c->stash->{rest} = { error => "Please provide a drone image zipfile of raw images!" };
-        $c->detach();
-    }
-    if (!$upload_panel_file && $new_drone_run_camera_info eq 'micasense_5') {
-        $c->stash->{rest} = { error => "Please provide a zipfile of images of the Micasense radiometric calibration panels!" };
-        $c->detach();
-    }
-
-    my $drone_run_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_experiment', 'experiment_type')->cvterm_id();
-
-    my $alignment_q = "SELECT basename, dirname, md.file_id, md.filetype
-        FROM metadata.md_files AS md
-        JOIN phenome.nd_experiment_md_files using(file_id)
-        JOIN nd_experiment using(nd_experiment_id)
-        JOIN nd_experiment_project using(nd_experiment_id)
-        WHERE nd_experiment.type_id=$drone_run_experiment_type_id AND nd_experiment_project.project_id=?;";
-    my $alignment_h = $schema->storage->dbh()->prepare($alignment_q);
-    $alignment_h->execute($selected_drone_run_id);
-    my ($basename, $filename, $file_id, $filetype) = $alignment_h->fetchrow_array();
-    my $alignment_file;
-    if ($basename && $filename) {
-        $alignment_file = $filename."/".$basename;
-    }
-
-    my @return_drone_run_band_project_ids;
-    my @return_drone_run_band_image_ids;
-    my @return_drone_run_band_image_urls;
-    my @raw_image_boundaries_temp_images;
-    my $output_path;
-    my $cmd;
-
-    my $log_file_path = '';
-    if ($c->config->{error_log}){
-        $log_file_path = "--log_file_path '".$c->config->{error_log}."'";
-    }
-
-    my $upload_original_name = $upload_file->filename();
-    my $upload_tempfile = $upload_file->tempname;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => "drone_imagery_upload",
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
-        $c->detach();
-    }
-    unlink $upload_tempfile;
-    print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
-
-    my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-    my $zipfile_return = $image->upload_drone_imagery_zipfile($archived_filename_with_path, $user_id, $selected_drone_run_id);
-    print STDERR Dumper $zipfile_return;
-    if ($zipfile_return->{error}) {
-        $c->stash->{rest} = { error => "Problem saving images!".$zipfile_return->{error} };
-        $c->detach();
-    }
-    my $image_paths = $zipfile_return->{image_files};
-
-    my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_images');
-    my $base_path = $c->config->{basepath}."/";
-    my $temp_file_image_file_names = $base_path.$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
-    open (my $fh, ">", $temp_file_image_file_names ) || die ("\nERROR: the file $temp_file_image_file_names could not be found\n" );
-        foreach (@$image_paths) {
-            my $temp_file_raw_image_blue = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
-            my $temp_file_raw_image_green = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
-            my $temp_file_raw_image_red = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
-            my $temp_file_raw_image_nir = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
-            my $temp_file_raw_image_red_edge = $c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX').".png";
-            print $fh "$_,$base_path,$temp_file_raw_image_blue,$temp_file_raw_image_green,$temp_file_raw_image_red,$temp_file_raw_image_nir,$temp_file_raw_image_red_edge\n";
-        }
-    close($fh);
-
-    my @stitched_bands;
-    my %raw_image_bands;
-    if ($new_drone_run_camera_info eq 'micasense_5') {
-        my $upload_original_name_panel = $upload_panel_file->filename();
-        my $upload_tempfile_panel = $upload_panel_file->tempname;
-        $time = DateTime->now();
-        $timestamp = $time->ymd()."_".$time->hms();
-
-        my $uploader_panel = CXGN::UploadFile->new({
-            tempfile => $upload_tempfile_panel,
-            subdirectory => "drone_imagery_upload_panel",
-            archive_path => $c->config->{archive_path},
-            archive_filename => $upload_original_name_panel,
-            timestamp => $timestamp,
-            user_id => $user_id,
-            user_role => $user_role
-        });
-        my $archived_filename_with_path_panel = $uploader_panel->archive();
-        my $md5_panel = $uploader->get_md5($archived_filename_with_path_panel);
-        if (!$archived_filename_with_path_panel) {
-            $c->stash->{rest} = { error => "Could not save file $upload_original_name_panel in archive." };
-            $c->detach();
-        }
-        unlink $upload_tempfile_panel;
-        print STDERR "Archived Drone Image Panel File: $archived_filename_with_path_panel\n";
-
-        $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-        my $zipfile_return_panel = $image->upload_drone_imagery_zipfile($archived_filename_with_path_panel, $user_id, $selected_drone_run_id);
-        print STDERR Dumper $zipfile_return_panel;
-        if ($zipfile_return_panel->{error}) {
-            $c->stash->{rest} = { error => "Problem saving panel images!".$zipfile_return_panel->{error} };
-            $c->detach();
-        }
-        my $image_paths_panel = $zipfile_return_panel->{image_files};
-
-        my $temp_file_image_file_names_panel = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
-        open ($fh, ">", $temp_file_image_file_names_panel ) || die ("\nERROR: the file $temp_file_image_file_names_panel could not be found\n" );
-            foreach (@$image_paths_panel) {
-                print $fh "$_\n";
-            }
-        close($fh);
-
-        $output_path = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_images/fileXXXX');
-
-        # $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' --temporary_development_path '/home/nmorales/Downloads'";
-        my $alignment = '';
-        if ($alignment_file) {
-            $alignment = "--infile_alignment_file '$alignment_file' ";
-        }
-        $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MicasenseRawImageAlign.py $log_file_path --file_with_image_paths '$temp_file_image_file_names' --file_with_panel_image_paths '$temp_file_image_file_names_panel' --output_path '$output_path' $alignment";
-
-        @stitched_bands = (
-            ["Band 1", "Blue", "Blue (450-520nm)", 0],
-            ["Band 2", "Green", "Green (515-600nm)", 1],
-            ["Band 3", "Red", "Red (600-690nm)", 2],
-            ["Band 4", "NIR", "NIR (780-3000nm)", 3],
-            ["Band 5", "RedEdge", "Red Edge (690-750nm)", 4]
-        );
-    }
-    # elsif ($new_drone_run_camera_info eq 'ccd_color' || $new_drone_run_camera_info eq 'cmos_color') {
-    #     @stitched_bands = (
-    #         ["Color Image", "RGB Color Image", "RGB Color Image", 0],
-    #     );
-    #     $raw_image_bands{0} = $image_paths;
-    # }
-    else {
-        die "Camera info not supported for raw image upload: $new_drone_run_camera_info\n";
-    }
-
-    print STDERR Dumper $cmd;
-    my $status = system($cmd);
-
-    my @aligned_images;
-    my $csv = Text::CSV->new({ sep_char => ',' });
-    open(my $fh_out, '<', $output_path) or die "Could not open file '$output_path' $!";
-        while ( my $row = <$fh_out> ) {
-            my @columns;
-            if ($csv->parse($row)) {
-                @columns = $csv->fields();
-            }
-            push @aligned_images, \@columns;
-        }
-    close($fh_out);
-
-    my $counter = 0;
-    my $total_images = scalar(@aligned_images);
-    my $total_captures = $total_images/5;
-    foreach (@aligned_images) {
-        push @{$raw_image_bands{$counter}}, $_;
-        $counter++;
-        if ($counter >= 5) {
-            $counter = 0;
-        }
-    }
-
-    my $drone_run_band_project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
-    my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
-
-    my $q_drone_run_bands = "SELECT drone_run_band.project_id, drone_run_band_project_type.value
-        FROM project AS drone_run
-        JOIN project_relationship ON (drone_run.project_id = project_relationship.object_project_id AND project_relationship.type_id=$project_relationship_type_id)
-        JOIN project as drone_run_band ON (drone_run_band.project_id=project_relationship.subject_project_id)
-        JOIN projectprop AS drone_run_band_project_type ON (drone_run_band_project_type.project_id=drone_run_band.project_id AND drone_run_band_project_type.type_id=$drone_run_band_project_type_cvterm_id)
-        WHERE drone_run.project_id=?;";
-    my $h_drone_run_bands = $schema->storage->dbh->prepare($q_drone_run_bands);
-    $h_drone_run_bands->execute($selected_drone_run_id);
-    my %drone_run_bands_all;
-    while (my ($drone_run_band_id, $drone_run_band_type) = $h_drone_run_bands->fetchrow_array()) {
-        $drone_run_bands_all{$drone_run_band_type} = $drone_run_band_id;
-    }
-    print STDERR Dumper \%drone_run_bands_all;
-
-    foreach my $m (@stitched_bands) {
-        my $selected_drone_run_band_id = $drone_run_bands_all{$m->[2]};
-
-        my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_drone_imagery', 'project_md_image')->cvterm_id();
-        foreach my $image_info (@{$raw_image_bands{$m->[3]}}) {
-            my $im = $image_info->[0];
-            my $image_id;
-            my $image_url;
-            if ($im ne 'NA') {
-                my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
-                $image->set_sp_person_id($user_id);
-                my $ret = $image->process_image($im, 'project', $selected_drone_run_band_id, $linking_table_type_id);
-                $image_id = $image->get_image_id();
-                $image_url = $image->get_image_url('original');
-            }
-            else {
-                $image_id = undef;
-                $image_url = undef;
-            }
-            push @return_drone_run_band_image_urls, $image_url;
-            push @return_drone_run_band_image_ids, {
-                image_id => $image_id,
-                latitude => $image_info->[1],
-                longitude => $image_info->[2],
-                altitude => $image_info->[3]
-            };
-        }
-        push @return_drone_run_band_project_ids, $selected_drone_run_band_id;
-    }
-
-    my $saved_image_stacks_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_raw_images_saved_micasense_stacks', 'project_property')->cvterm_id();
-    my $image_stack_projectprop_previous_rs = $schema->resultset("Project::Projectprop")->find({project_id => $selected_drone_run_id, type_id => $saved_image_stacks_type_id});
-    my $image_stack_projectprop_previous_value = decode_json $image_stack_projectprop_previous_rs->value();
-    my $image_stack_projectprop_previous_id = $image_stack_projectprop_previous_rs->projectprop_id();
-
-    my $image_stack_counter_start = scalar(keys %$image_stack_projectprop_previous_value);
-    my $image_stack_counter = $image_stack_counter_start;
-    foreach (@return_drone_run_band_image_ids) {
-        push @{$image_stack_projectprop_previous_value->{$image_stack_counter}}, $_;
-        $image_stack_counter++;
-        if ($image_stack_counter >= $total_captures + $image_stack_counter_start) {
-            $image_stack_counter = $image_stack_counter_start;
-        }
-    }
-    # print STDERR Dumper $image_stack_projectprop_previous_value;
-
-    my $q_update = "UPDATE projectprop SET value=? WHERE projectprop_id=?;";
-    my $h_update = $schema->storage->dbh->prepare($q_update);
-    $h_update->execute(encode_json($image_stack_projectprop_previous_value), $image_stack_projectprop_previous_id);
-
-    $c->stash->{rest} = {success => 1, drone_run_band_project_ids => \@return_drone_run_band_project_ids, drone_run_band_image_ids => \@return_drone_run_band_image_ids, drone_run_band_image_urls => \@return_drone_run_band_image_urls, drone_run_band_raw_image_boundaries_temp_images => \@raw_image_boundaries_temp_images, saved_image_stacks => $image_stack_projectprop_previous_value};
-}
-
-sub upload_drone_imagery_raw_images_automated_boundaries : Path('/api/drone_imagery/upload_drone_imagery_raw_images_automated_boundaries') : ActionClass('REST') { }
-sub upload_drone_imagery_raw_images_automated_boundaries_POST : Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
-
-    my $upload_file_top_left_image = $c->req->upload('upload_drone_images_top_left_image');
-    my $upload_file_top_right_image = $c->req->upload('upload_drone_images_top_right_image');
-    my $upload_file_bottom_left_image = $c->req->upload('upload_drone_images_bottom_left_image');
-    my $upload_file_bottom_right_image = $c->req->upload('upload_drone_images_bottom_right_image');
-
-    if (!$upload_file_top_left_image) {
-        $c->stash->{rest} = { error => "Please provide a north west image!" };
-        $c->detach();
-    }
-    if (!$upload_file_top_right_image) {
-        $c->stash->{rest} = { error => "Please provide a north east image!" };
-        $c->detach();
-    }
-    if (!$upload_file_bottom_left_image) {
-        $c->stash->{rest} = { error => "Please provide a south west image!" };
-        $c->detach();
-    }
-    if (!$upload_file_bottom_right_image) {
-        $c->stash->{rest} = { error => "Please provide a south east image!" };
-        $c->detach();
-    }
-
-    my $selected_trial_id = $c->req->param('drone_run_field_trial_id');
-    if (!$selected_trial_id) {
-        $c->stash->{rest} = { error => "Please select a field trial!" };
-        $c->detach();
-    }
-    my $new_drone_run_name = $c->req->param('drone_run_name');
-    my $new_drone_run_type = $c->req->param('drone_run_type');
-    my $new_drone_run_date = $c->req->param('drone_run_date');
-    my $new_drone_run_desc = $c->req->param('drone_run_description');
-    if (!$new_drone_run_name) {
-        $c->stash->{rest} = { error => "Please create a new drone run!" };
-        $c->detach();
-    }
-    if ($new_drone_run_name && !$new_drone_run_type){
-        $c->stash->{rest} = { error => "Please give a new drone run type!" };
-        $c->detach();
-    }
-    if ($new_drone_run_name && !$new_drone_run_date){
-        $c->stash->{rest} = { error => "Please give a new drone run date!" };
-        $c->detach();
-    }
-    if ($new_drone_run_name && $new_drone_run_date !~ /^\d{4}\/\d{2}\/\d{2}\s\d\d:\d\d:\d\d$/){
-        $c->stash->{rest} = { error => "Please give a new drone run date in the format YYYY/MM/DD HH:mm:ss!" };
-        $c->detach();
-    }
-    if ($new_drone_run_name && !$new_drone_run_desc){
-        $c->stash->{rest} = { error => "Please give a new drone run description!" };
-        $c->detach();
-    }
-
-    my $new_drone_run_camera_info = $c->req->param('drone_image_upload_camera_info');
-    my $new_drone_run_band_numbers = $c->req->param('drone_run_band_number');
-    my $new_drone_run_band_stitching = $c->req->param('drone_image_upload_drone_run_band_stitching');
-
-    if (!$new_drone_run_camera_info) {
-        $c->stash->{rest} = { error => "Please indicate the type of camera!" };
-        $c->detach();
-    }
-
-    if ($new_drone_run_band_stitching eq 'no' && !$new_drone_run_band_numbers) {
-        $c->stash->{rest} = { error => "Please give the number of new drone run bands!" };
-        $c->detach();
-    }
-    if (!$new_drone_run_band_stitching) {
-        $c->stash->{rest} = { error => "Please indicate if the images are stitched!" };
-        $c->detach();
-    }
-
-    my $log_file_path = '';
-    if ($c->config->{error_log}){
-        $log_file_path = "--log_file_path '".$c->config->{error_log}."'";
-    }
-
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $selected_trial_id });
-    my $planting_date = $trial->get_planting_date();
-    my $planting_date_time_object = Time::Piece->strptime($planting_date, "%Y-%B-%d");
-    my $drone_run_date_time_object = Time::Piece->strptime($new_drone_run_date, "%Y/%m/%d %H:%M:%S");
-    my $time_diff = $drone_run_date_time_object - $planting_date_time_object;
-    my $time_diff_weeks = $time_diff->weeks;
-    my $time_diff_days = $time_diff->days;
-    my $rounded_time_diff_weeks = round($time_diff_weeks);
-
-    my $q = "SELECT t.cvterm_id FROM cvterm as t JOIN cv ON(t.cv_id=cv.cv_id) WHERE t.name=? and cv.name=?;";
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute("week $rounded_time_diff_weeks", 'cxgn_time_ontology');
-    my ($week_cvterm_id) = $h->fetchrow_array();
-
-    $h->execute("day $time_diff_days", 'cxgn_time_ontology');
-    my ($day_cvterm_id) = $h->fetchrow_array();
-
-    my $week_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $week_cvterm_id, 'extended');
-    my $day_term = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $day_cvterm_id, 'extended');
-
-    my %related_cvterms = (
-        week => $week_term,
-        day => $day_term
-    );
-
-    my $calendar_funcs = CXGN::Calendar->new({});
-    my $drone_run_event = $calendar_funcs->check_value_format($new_drone_run_date);
-    my $project_start_date_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_start_date', 'project_property')->cvterm_id();
-    my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
-    my $drone_run_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_project_type', 'project_property')->cvterm_id();
-    my $drone_run_camera_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_camera_type', 'project_property')->cvterm_id();
-    my $drone_run_related_cvterms_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_related_time_cvterms_json', 'project_property')->cvterm_id();
-    my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
-    my $project_rs = $schema->resultset("Project::Project")->create({
-        name => $new_drone_run_name,
-        description => $new_drone_run_desc,
-        projectprops => [{type_id => $drone_run_type_cvterm_id, value => $new_drone_run_type},{type_id => $project_start_date_type_id, value => $drone_run_event}, {type_id => $design_cvterm_id, value => 'drone_run'}, {type_id => $drone_run_camera_type_cvterm_id, value => $new_drone_run_camera_info}, {type_id => $drone_run_related_cvterms_cvterm_id, value => encode_json \%related_cvterms}],
-        project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_trial_id}]
-    });
-    my $selected_drone_run_id = $project_rs->project_id();
-
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-
-    my $upload_original_name_tl = $upload_file_top_left_image->filename();
-    my $upload_tempfile_tl = $upload_file_top_left_image->tempname;
-
-    my $uploader_tl = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile_tl,
-        subdirectory => "drone_imagery_upload_boundary_images",
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name_tl,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path_tl = $uploader_tl->archive();
-    my $md5_tl = $uploader_tl->get_md5($archived_filename_with_path_tl);
-    if (!$archived_filename_with_path_tl) {
-        $c->stash->{rest} = { error => "Could not save file $upload_original_name_tl in archive." };
-        $c->detach();
-    }
-    
-    my $upload_original_name_tr = $upload_file_top_right_image->filename();
-    my $upload_tempfile_tr = $upload_file_top_right_image->tempname;
-
-    my $uploader_tr = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile_tr,
-        subdirectory => "drone_imagery_upload_boundary_images",
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name_tr,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path_tr = $uploader_tr->archive();
-    my $md5_tr = $uploader_tr->get_md5($archived_filename_with_path_tr);
-    if (!$archived_filename_with_path_tr) {
-        $c->stash->{rest} = { error => "Could not save file $upload_original_name_tr in archive." };
-        $c->detach();
-    }
-
-    my $upload_original_name_bl = $upload_file_bottom_left_image->filename();
-    my $upload_tempfile_bl = $upload_file_bottom_left_image->tempname;
-
-    my $uploader_bl = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile_bl,
-        subdirectory => "drone_imagery_upload_boundary_images",
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name_bl,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path_bl = $uploader_bl->archive();
-    my $md5_bl = $uploader_bl->get_md5($archived_filename_with_path_bl);
-    if (!$archived_filename_with_path_bl) {
-        $c->stash->{rest} = { error => "Could not save file $upload_original_name_bl in archive." };
-        $c->detach();
-    }
-
-    my $upload_original_name_br = $upload_file_bottom_right_image->filename();
-    my $upload_tempfile_br = $upload_file_bottom_right_image->tempname;
-
-    my $uploader_br = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile_br,
-        subdirectory => "drone_imagery_upload_boundary_images",
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name_br,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path_br = $uploader_br->archive();
-    my $md5_br = $uploader_br->get_md5($archived_filename_with_path_br);
-    if (!$archived_filename_with_path_br) {
-        $c->stash->{rest} = { error => "Could not save file $upload_original_name_br in archive." };
-        $c->detach();
-    }
-
-    my $dir = $c->tempfiles_subdir('/upload_drone_imagery_raw_image_boundaries');
-    my $temp_file_gps_tl = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_image_boundaries/fileXXXX');
-    my $temp_file_gps_tr = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_image_boundaries/fileXXXX');
-    my $temp_file_gps_bl = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_image_boundaries/fileXXXX');
-    my $temp_file_gps_br = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'upload_drone_imagery_raw_image_boundaries/fileXXXX');
-
-    my $status_tl = system($c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/GetMicasenseImageGPS.py $log_file_path --input_image_file '$upload_tempfile_tl' --outfile_path '$temp_file_gps_tl'");
-    my $status_tr = system($c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/GetMicasenseImageGPS.py $log_file_path --input_image_file '$upload_tempfile_tr' --outfile_path '$temp_file_gps_tr'");
-    my $status_bl = system($c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/GetMicasenseImageGPS.py $log_file_path --input_image_file '$upload_tempfile_bl' --outfile_path '$temp_file_gps_bl'");
-    my $status_br = system($c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/GetMicasenseImageGPS.py $log_file_path --input_image_file '$upload_tempfile_br' --outfile_path '$temp_file_gps_br'");
-
-    unlink $upload_tempfile_tl;
-    unlink $upload_tempfile_tr;
-    unlink $upload_tempfile_bl;
-    unlink $upload_tempfile_br;
-
-    my @tl_gps;
-    my @tr_gps;
-    my @bl_gps;
-    my @br_gps;
-    my $csv = Text::CSV->new({ sep_char => ',' });
-
-    open(my $fh_tl, '<', $temp_file_gps_tl) or die "Could not open file '$temp_file_gps_tl' $!";
-        if ($csv->parse(<$fh_tl>)) {
-            @tl_gps = $csv->fields();
-        }
-    close $fh_tl;
-    open(my $fh_tr, '<', $temp_file_gps_tr) or die "Could not open file '$temp_file_gps_tr' $!";
-        if ($csv->parse(<$fh_tr>)) {
-            @tr_gps = $csv->fields();
-        }
-    close $fh_tr;
-    open(my $fh_bl, '<', $temp_file_gps_bl) or die "Could not open file '$temp_file_gps_bl' $!";
-        if ($csv->parse(<$fh_bl>)) {
-            @bl_gps = $csv->fields();
-        }
-    close $fh_bl;
-    open(my $fh_br, '<', $temp_file_gps_br) or die "Could not open file '$temp_file_gps_br' $!";
-        if ($csv->parse(<$fh_br>)) {
-            @br_gps = $csv->fields();
-        }
-    close $fh_br;
-
-    print STDERR Dumper \@tl_gps;
-    print STDERR Dumper \@tr_gps;
-    print STDERR Dumper \@bl_gps;
-    print STDERR Dumper \@br_gps;
-
-    my %corners = (north_west => \@tl_gps, north_east => \@tr_gps, south_west => \@bl_gps, south_east => \@br_gps);
-
-    my $linking_table_tl_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_boundaries_top_left_drone_imagery', 'project_md_image')->cvterm_id();
-    my $image_tl = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image_tl->set_sp_person_id($user_id);
-    my $ret_tl = $image_tl->process_image($archived_filename_with_path_tl, 'project', $selected_drone_run_id, $linking_table_tl_type_id);
-    my $tl_url = $image_tl->get_image_url('original_converted');
-    my $tl_image_id = $image_tl->get_image_id();
-
-    my $linking_table_tr_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_boundaries_top_right_drone_imagery', 'project_md_image')->cvterm_id();
-    my $image_tr = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image_tr->set_sp_person_id($user_id);
-    my $ret_tr = $image_tr->process_image($archived_filename_with_path_tr, 'project', $selected_drone_run_id, $linking_table_tr_type_id);
-    my $tr_url = $image_tr->get_image_url('original_converted');
-    my $tr_image_id = $image_tr->get_image_id();
-
-    my $linking_table_bl_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_boundaries_bottom_left_drone_imagery', 'project_md_image')->cvterm_id();
-    my $image_bl = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image_bl->set_sp_person_id($user_id);
-    my $ret_bl = $image_bl->process_image($archived_filename_with_path_bl, 'project', $selected_drone_run_id, $linking_table_bl_type_id);
-    my $bl_url = $image_bl->get_image_url('original_converted');
-    my $bl_image_id = $image_bl->get_image_id();
-
-    my $linking_table_br_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'raw_boundaries_bottom_right_drone_imagery', 'project_md_image')->cvterm_id();
-    my $image_br = SGN::Image->new( $schema->storage->dbh, undef, $c );
-    $image_br->set_sp_person_id($user_id);
-    my $ret_br = $image_br->process_image($archived_filename_with_path_br, 'project', $selected_drone_run_id, $linking_table_br_type_id);
-    my $br_url = $image_br->get_image_url('original_converted');
-    my $br_image_id = $image_br->get_image_id();
-
-    $c->stash->{rest} = { success => 1, drone_run_project_id => $selected_drone_run_id, tl_url => $tl_url, tl_image_id => $tl_image_id, tr_url => $tr_url, tr_image_id => $tr_image_id, bl_url => $bl_url, bl_image_id => $bl_image_id, br_url => $br_url, br_image_id => $br_image_id, corners_gps => \%corners };
 }
 
 sub upload_drone_imagery_new_vehicle : Path('/api/drone_imagery/new_imaging_vehicle') : ActionClass('REST') { }
