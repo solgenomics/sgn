@@ -12,8 +12,11 @@ Options:
 
  -H the database host
  -D the database name
+ -U username
+ -P password
  -c flag; if present, run concurrent refresh
- -m materialized view select. can be either 'fullview' or 'stockprop'
+ -m materialized view select. can be either 'fullview' or 'stockprop' or 'phenotypes'
+ -t test mode
 
 All materialized views that are included in the refresh function will be refreshed
 If -c is used, the refresh will be done concurrently, a process that takes longer than a standard refresh but that is completed without locking the views.
@@ -21,81 +24,110 @@ If -c is used, the refresh will be done concurrently, a process that takes longe
 =head1 AUTHOR
 
 Bryan Ellerbrock <bje24@cornell.edu>
+Naama Menda <nm249@cornell.edu>
 
 =cut
 
 use strict;
 use warnings;
-use Getopt::Std;
 use DBI;
-#use CXGN::DB::InsertDBH;
+use Try::Tiny;
+use Getopt::Long;
 
-our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_m, $opt_c, $refresh, $status);
-getopts('H:D:U:P:m:c');
+my ( $dbhost, $dbname, $username, $password, $mode, $concurrent, $test);
+GetOptions(
+    'm=s'        => \$mode,
+    'c'          => \$concurrent,
+    'P=s'        => \$password,
+    'U=s'        => \$username,
+    't'          => \$test,
+    'dbname|D=s' => \$dbname,
+    'dbhost|H=s' => \$dbhost,
+);
+
+
+unless ($mode =~ m/^(fullview|stockprop|phenotypes)$/ ) { die "Option -m must be fullview, stockprop, or phenotypes. -m  = $mode\n"; }
 
 print STDERR "Connecting to database...\n";
-my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
-my $dbh = DBI->connect($dsn, $opt_U, $opt_P);
+my $dsn = 'dbi:Pg:database='.$dbname.";host=".$dbhost.";port=5432";
+my $dbh = DBI->connect($dsn, $username, $password, { RaiseError => 1, AutoCommit=>0 });
 
-eval {
+my $cur_refreshing_q =  "UPDATE public.matviews SET currently_refreshing=?";
+if ($mode eq 'stockprop'){
+    $cur_refreshing_q .= " WHERE mv_name = 'materialized_stockprop'";
+}
+if ($mode eq 'phenotypes') {
+    $cur_refreshing_q .= " WHERE mv_name = 'materialized_phenotype_jsonb_table'";
+}
+
+#set TRUE before the transaction begins
+my $state = 'TRUE';
+print STDERR "*Setting currently_refreshing = TRUE\n";
+my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
+$cur_refreshing_h->execute($state);
+$dbh->commit();
+
+try {
     print STDERR "Refreshing materialized views . . ." . localtime() . "\n";
+    my @mv_names = ();
 
-    if ($opt_m eq 'fullview'){
-        my $q = "UPDATE public.matviews SET currently_refreshing=?";
-        my $state = 'TRUE';
-        my $h = $dbh->prepare($q);
-        $h->execute($state);
-
-        if ($opt_c) {
-            $refresh = 'SELECT refresh_materialized_views_concurrently()';
-        } else {
-            $refresh = 'SELECT refresh_materialized_views()';
-        }
-
-        $h = $dbh->prepare($refresh);
-        $status = $h->execute();
-
-        if ($opt_c) {
-          $refresh = 'SELECT refresh_materialized_stockprop_concurrently()';
-        } else {
-          $refresh = 'SELECT refresh_materialized_stockprop()';
-        }
-
-        $h = $dbh->prepare($refresh);
-        $status = $h->execute();
-
-        if ($opt_c) {
-          $refresh = 'SELECT refresh_materialized_phenotype_jsonb_table_concurrently()';
-        } else {
-          $refresh = 'SELECT refresh_materialized_phenotype_jsonb_table()';
-        }
-
-        $h = $dbh->prepare($refresh);
-        $status = $h->execute();
-
-        $q = "UPDATE public.matviews SET currently_refreshing=?";
-        $state = 'FALSE';
-        $h = $dbh->prepare($q);
-        $h->execute($state);
+    if ($mode eq 'fullview') {
+        @mv_names = ('materialized_phenoview','materialized_genoview');
+    }
+    if ($mode eq 'stockprop'){
+       @mv_names = ('materialized_stockprop');
+    }
+    if ($mode eq 'phenotypes') {
+       @mv_names = ("materialized_phenotype_jsonb_table");
     }
 
-    if ($opt_m eq 'stockprop'){
-        if ($opt_c) {
-          $refresh = 'SELECT refresh_materialized_stockprop_concurrently()';
-        } else {
-          $refresh = 'SELECT refresh_materialized_stockprop()';
-        }
+    my $status = refresh_mvs($dbh, \@mv_names, $concurrent);
 
-        my $h = $dbh->prepare($refresh);
-        $status = $h->execute();
+    #rollback if running in test mode
+    if ($test) { die ; }
+}
+catch {
+    warn "Refresh failed: @_";
+    if ($test ) { print STDERR "TEST MODE\n" ; }
+    $dbh->rollback()
+}
+finally {
+    if (@_) {
+        print "The try block died. Rolling back.\n";
+    } else {
+        print STDERR "COMMITTING\n";
+        $dbh->commit();
     }
-
-    print STDERR "Materialized views refreshed! Status: $status" . localtime() . "\n";
+    #always set the refreshing status to FALSE at the end
+    $state = 'FALSE';
+    my $done_h = $dbh->prepare($cur_refreshing_q);
+    print STDERR "*Setting currently_refreshing = FALSE \n";
+    $done_h->execute($state);
+    $dbh->commit();
 };
 
-if ($@) {
-  $dbh->rollback();
-  print STDERR $@;
-} else {
-  print STDERR "Done, exiting refresh_matviews.pl \n";
+sub refresh_mvs {
+    my $dbh = shift;
+    my $mv_names_ref = shift;
+    $concurrent = shift;
+    my $start_q = "UPDATE matviews SET refresh_start = statement_timestamp() where mv_name = ?";
+    my $end_q =   "UPDATE matviews SET  last_refresh = statement_timestamp() where mv_name = ? ";
+    my $refresh_q = "REFRESH MATERIALIZED VIEW ";
+    if ($concurrent) { $refresh_q .= " CONCURRENTLY "; }
+    my $status;
+
+    foreach my $name ( @$mv_names_ref ) {
+        print STDERR "**Refreshing view $name ". localtime() . " \n";
+        my $start_h = $dbh->prepare($start_q);
+        $start_h->execute($name);
+        print STDERR "**QUERY = " . $refresh_q . $name . "\n";
+        my $refresh_h = $dbh->prepare($refresh_q . $name) ;
+        $status = $refresh_h->execute();
+
+        print STDERR "Materialized view $name refreshed! Status: $status " . localtime() . "\n\n";
+
+        my $end_h = $dbh->prepare($end_q);
+        $end_h->execute($name);
+    }
+    return $status;
 }

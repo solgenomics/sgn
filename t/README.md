@@ -10,6 +10,35 @@ perl t/test_fixture.pl t/unit/
 perl t/test_fixture.pl t/unit_fixture/
 perl t/test_fixture.pl t/selenium2/
 
+To run the tests in a given folder, run the following command from the `sgn` folder, changing the folder name depending on the tests you want to run:
+
+```$xslt
+perl t/test_fixture.pl --logfile logfile.testserver.txt t/unit_mech/ 2>test.results.txt
+```
+
+To run a single files test, run this command, changing the file path to the file you want:
+
+```$xslt
+perl t/test_fixture.pl --logfile logfile.testserver.txt t/unit_mech/AJAX/BrAPI_v2.t 2>test.results.txt
+```
+
+The variables in the calls for the following purposes:
+
+`logfile` - the output file for the server logs
+
+`2>test.result.txt` - the output file for the test results
+
+To determine which tests are failing, look in your output log file for the errors thrown from the test file. It will tell you the line number in the debug message. 
+
+-----------------------------------------------------------------------------
+#Testing Configuration
+-----------------------------------------------------------------------------
+
+The tests run on the dedicated `sgn_test.conf` file. Currently, the configuration file is
+setup to work with the breedbase docker compose build. The only variable that makes it
+specific to the docker build is the `dbhost` variable. Set this to `localhost` if you
+want to run the tests outside of the docker container. 
+
 -----------------------------------------------------------------------------
 #Active Tests
 -----------------------------------------------------------------------------

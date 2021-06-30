@@ -57,20 +57,21 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(15);
-
     my $sel_pred = $d->find_element('Model accuracy statistics', 'partial_link_text', 'scroll to accuracy');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(2);
     $d->find_element_ok('Download model accuracy', 'partial_link_text',  'download accuracy')->click();
     sleep(3);
+
     $d->driver->go_back();
     sleep(5);
 
     my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
     sleep(2);
-    $d->find_element_ok('Download all GEBVs', 'partial_link_text',  'download gebvs')->click();
+    $d->find_element_ok('Download GEBVs', 'partial_link_text',  'download gebvs')->click();
     sleep(3);
+
     $d->driver->go_back();
     sleep(5);
 
@@ -81,6 +82,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(120);
 	$d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
     sleep(20);
+
     $d->driver->go_back();
     sleep(15);
 
@@ -90,8 +92,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('Marker Effects', 'partial_link_text', 'expand marker effects')->click();
     sleep(2);
-    $d->find_element_ok('Download all marker', 'partial_link_text',  'build marker effects')->click();
+    $d->find_element_ok('Download marker', 'partial_link_text',  'build marker effects')->click();
     sleep(3);
+
     $d->driver->go_back();
     sleep(5);
 
@@ -101,7 +104,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
-    sleep(200);
+    sleep(30);
     $d->find_element_ok('//table[@id="selection_pops_list"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
@@ -249,7 +252,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
+    sleep(1);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
+    sleep(1);
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(5);
 
@@ -296,6 +301,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//table[@id="list_type_selection_pops_table"]//*[contains(text(), "FRW")]', 'xpath', 'click list sel pred')->click();
     sleep(5);
+
     $d->driver->go_back();
     sleep(5);
 

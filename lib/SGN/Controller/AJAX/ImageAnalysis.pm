@@ -333,7 +333,7 @@ sub image_analysis_group_POST : Args(0) {
             foreach my $trait (keys %{$uniquename_data}) {
                 my $details = $uniquename_data->{$trait};
                 my @values = map { $_->{'value'}} @{$uniquename_data->{$trait}};
-                @values= grep { $_ != 'NA' } @values; # remove NAs before calculating mean
+                @values= grep { $_ ne 'NA' } @values; # remove NAs before calculating mean
                 # print STDERR "\n\n\nVALUES ARE @values and length is ". scalar @values . "\n\n\n";
                 my $mean_value = @values ? sprintf("%.2f", sum(@values)/@values) : undef;
                 print STDERR "Mean value is $mean_value\n";

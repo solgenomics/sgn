@@ -108,5 +108,4 @@ $model_link
   <input type="hidden" id="trait_id" value="<% $trait_id %>" />
   <input type="hidden" id="selection_pop_id" value="<% $selection_pop_id %>" />
   <input type="hidden" id="selection_pop_name" value="<% $selection_pop_name %>" />
-  <input type="hidden" id="prediction_pop_id" value="<% $selection_pop_id %>" />
   <input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

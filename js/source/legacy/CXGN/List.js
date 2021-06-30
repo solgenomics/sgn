@@ -449,8 +449,26 @@ CXGN.List.prototype = {
         var items = list_data.elements;
         var list_type = list_data.type_name;
         var list_name = this.listNameById(list_id);
-
         var html = '';
+
+        if (list_type == 'catalog_items') {
+            html += '<div class="well well-sm"><table id="list_cart_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
+
+            for(var n=0; n<items.length; n++) {
+                html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
+            }
+            html += '</tbody></table></div>';
+            jQuery('#'+div+'_div').html(html);
+
+            jQuery('#list_cart_item_dialog_datatable').DataTable({
+                destroy: true,
+                ordering: false,
+                scrollY:        '30vh',
+                scrollCollapse: true,
+                paging:         false,
+            });
+
+        } else {
         html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
         html += '<tr><td>List name:<br/><input type="button" class="btn btn-primary btn-xs" id="updateNameButton" value="Update" /></td>';
         html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
@@ -476,6 +494,8 @@ CXGN.List.prototype = {
             scrollCollapse: true,
             paging:         false,
         });
+
+        }
 
         if (list_type == 'accessions' || list_type == 'crosses'){
             jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Available Seedlots</button>');

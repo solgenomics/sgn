@@ -64,8 +64,8 @@ sub search {
     my @trait_dbids = $inputs->{traitDbIds} ? @{$inputs->{traitDbIds}} : ();
     my @trait_ids = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
 
-    if (scalar(@classes)>0 || scalar(@method_ids)>0 || scalar(@scale_ids)>0 || scalar(@study_ids)>0){
-        push @$status, { 'error' => 'The following search parameters are not implemented yet: scaleDbId, studyDbId, traitClasses, methodDbId' };
+    if (scalar(@classes)>0 || scalar(@method_ids)>0 || scalar(@scale_ids)>0){
+        push @$status, { 'error' => 'The following search parameters are not implemented yet: scaleDbId, traitClasses, methodDbId' };
         my %result;
         my @data_files;
         my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
@@ -124,6 +124,31 @@ sub search {
         }
     }
 
+    if (scalar(@study_ids)>0){
+        my $trait_ids_sql;
+
+        foreach my $study_id (@study_ids){
+            my $study_check = $self->bcs_schema->resultset('Project::Project')->find({project_id=>$study_id});
+            if ($study_check) {
+                my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
+                my $traits_assayed = $t->get_traits_assayed();
+                
+                foreach (@$traits_assayed){
+                    $trait_ids_sql .= ',' . $_->[0] ;
+                }
+            }
+        }
+
+        $trait_ids_sql =~ s/^,//g;
+
+        if ($trait_ids_sql){
+            push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
+        } else {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Variables not found for the searched studyDbId'), 400);
+        }
+    }
+
+
     push @and_wheres, "reltype.name='VARIABLE_OF'";
 
     my $and_where_clause = join ' AND ', @and_wheres;
@@ -153,7 +178,14 @@ sub search {
 
         my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
         my $categories = $trait->categories;
-        my @brapi_categories = split '/', $categories;
+        my @categories = split '/', $categories;
+        my @brapi_categories;
+        foreach (@categories) {
+            push @brapi_categories, {
+                label => $_,
+                value => $_
+            };
+        }
 
         my @references;
         push @references, {

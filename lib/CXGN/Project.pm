@@ -31,6 +31,7 @@ use Data::Dumper;
 use Try::Tiny;
 use Data::Dumper;
 use CXGN::Trial::Folder;
+use CXGN::Stock;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial::TrialLayoutDownload;
 use SGN::Model::Cvterm;
@@ -94,6 +95,11 @@ has 'year' => (
     lazy => 1,
     );
 
+has 'additional_info' => (
+    is  => 'rw',
+    isa => 'Maybe[HashRef]'
+);
+
 sub BUILD {
     my $self = shift;
     my $args = shift;
@@ -101,42 +107,42 @@ sub BUILD {
     print STDERR "BUILD CXGN::Project... with ".$args->{trial_id}."\n";
 
     if (! $args->{description}) {
-	$args->{description} = "(No description provided)";
+	    $args->{description} = "(No description provided)";
     }
 
     my $row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $args->{trial_id} });
 
     # print STDERR "PROJECT ID = $args->{trial_id}\n";
     if ($row){
-	$self->name( $row->name() );
+	    $self->name( $row->name() );
     }
 
     if ($args->{trial_id} && ! $row) {
-	die "The trial ".$args->{trial_id}." does not exist - aborting.";
+	    die "The trial ".$args->{trial_id}." does not exist - aborting.";
     }
 
     $row = $self->bcs_schema()->resultset("Project::Project")->find( { name => $args->{name } } );
 
 
     if (! $args->{trial_id} && $row) {
-	die "A trial with the name $args->{name} already exists. Please choose another name.";
+	    die "A trial with the name $args->{name} already exists. Please choose another name.";
     }
 
     if (! $args->{trial_id} && ! $row) {
-	print STDERR "INSERTING A NEW ROW...\n";
+        print STDERR "INSERTING A NEW ROW...\n";
 
         my $new_row = $args->{bcs_schema}->resultset("Project::Project")->create( { name => $args->{name}, description => $args->{description} });
-	my $project_id = $new_row->project_id();
-	print STDERR "new project object has project id $project_id\n";
+        my $project_id = $new_row->project_id();
+        print STDERR "new project object has project id $project_id\n";
 
-	$self->set_trial_id($project_id);
+        $self->set_trial_id($project_id);
     }
 
     if ($args->{trial_id} && $row) {
-	# print STDERR "Existing project... populating object.\n";
-	$self->set_trial_id($args->{trial_id});
-	$self->name($args->{name});
-	$self->description($args->{description});
+        # print STDERR "Existing project... populating object.\n";
+        $self->set_trial_id($args->{trial_id});
+        $self->name($args->{name});
+        $self->description($args->{description});
     }
 }
 
@@ -924,30 +930,35 @@ sub get_project_type {
 sub set_project_type {
     my $self = shift;
     my $type_id = shift;
-		my $project_id = $self->get_trial_id();
-		my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
-		my $type;
+    my $type_value = shift;
+    my $project_id = $self->get_trial_id();
+    my @project_type_ids = CXGN::Trial::get_all_project_types($self->bcs_schema());
+    my $type;
 
-		foreach my $pt (@project_type_ids) {
-			if ($pt->[0] eq $type_id) {
-				$type = $pt->[1];
-			}
+    foreach my $pt (@project_type_ids) {
+        if ($pt->[0] eq $type_id) {
+            $type = $pt->[1];
+        }
     }
 
-		my @ids = map { $_->[0] } @project_type_ids;
+    if ($type eq 'misc_trial' && defined $type_value) {
+        $type = $type_value;
+    }
+
+    my @ids = map { $_->[0] } @project_type_ids;
     my $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search({
-			type_id => { -in => [ @ids ] },
-			project_id => $project_id
-		});
+        type_id => { -in => [ @ids ] },
+        project_id => $project_id
+    });
     if (my $row = $rs->next()) {
-			$row->delete();
+        $row->delete();
     }
 
-		my $row = $self->bcs_schema()->resultset('Project::Projectprop')->create({
-				project_id => $project_id,
-				type_id => $type_id,
-				value => $type,
-		});
+    my $row = $self->bcs_schema()->resultset('Project::Projectprop')->create({
+            project_id => $project_id,
+            type_id => $type_id,
+            value => $type,
+    });
 }
 
 
@@ -1841,6 +1852,28 @@ sub set_field_size {
     $self->_set_projectprop('field_size', $value);
 }
 
+=head2 accessors get_additional_info(), set_additional_info()
+
+ Usage: For field trials, this stores brapi additional information
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_additional_info {
+    my $self = shift;
+    my $additional_info = $self->_get_projectprop('project_additional_info');
+    return $additional_info ? decode_json($additional_info) : undef;
+}
+
+sub set_additional_info {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('project_additional_info', encode_json($value));
+}
 
 sub _get_projectprop {
     my $self = shift;
@@ -2390,8 +2423,8 @@ sub delete_project_entry {
         {
             on_connect_do => ['SET search_path TO public,phenome;']
         });
-    my $project_owner_rs = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
-    $project_owner_rs->delete();
+    my $project_owner_row = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
+    if ($project_owner_row) { $project_owner_row->delete(); }
     eval {
 	    my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
 	    $row->delete();
@@ -2902,9 +2935,9 @@ sub get_project_start_date_cvterm_id {
 
 =head2 function create_plant_entities()
 
- Usage:        $trial->create_plant_entries($plants_per_plot);
+ Usage:        $trial->create_plant_entities($plants_per_plot);
  Desc:         Some trials require plant-level data. This function will
-               add an additional layer of plant entries for each plot.
+               add an additional layer of plant entities for each plot.
  Ret:
  Args:         the number of plants per plot to add.
  Side Effects:
@@ -2916,6 +2949,8 @@ sub create_plant_entities {
     my $self = shift;
     my $plants_per_plot = shift || 30;
     my $inherits_plot_treatments = shift;
+    my $plant_owner = shift;
+    my $plant_owner_username = shift;
 
     my $create_plant_entities_txn = sub {
         my $chado_schema = $self->bcs_schema();
@@ -2987,7 +3022,10 @@ sub create_plant_entities {
                 my $plant_name = $parent_plot_name."_plant_$plant_index_number";
                 #print STDERR "... ... creating plant $plant_name...\n";
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm);
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, 
+                $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, 
+                $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, 
+                $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username);
             }
         }
 
@@ -3149,6 +3187,8 @@ sub _save_plant_entry {
     my $treatment_plots_ref = shift;
     my $treatment_experiments_ref = shift;
     my $treatment_cvterm = shift;
+    my $plant_owner = shift;
+    my $plant_owner_username = shift;
     my %treatment_plots = %$treatment_plots_ref;
     my %treatment_experiments = %$treatment_experiments_ref;
 
@@ -3158,6 +3198,11 @@ sub _save_plant_entry {
         uniquename => $plant_name,
         type_id => $plant_cvterm,
     });
+
+    if ($plant_owner){
+        my $stock = CXGN::Stock->new({schema=>$chado_schema,stock_id=>$plant->stock_id()});
+        $stock->associate_owner($plant_owner,$plant_owner,$plant_owner_username, "");
+    }
 
     my $plantprop = $chado_schema->resultset("Stock::Stockprop")->create( {
         stock_id => $plant->stock_id(),
@@ -3263,6 +3308,8 @@ sub create_tissue_samples {
     my $tissue_names = shift;
     my $inherits_plot_treatments = shift;
     my $tissue_sample_owner = shift;
+    my $username = shift;
+
 
     my $create_tissue_sample_entries_txn = sub {
         my $chado_schema = $self->bcs_schema();
@@ -3357,9 +3404,8 @@ sub create_tissue_samples {
                     });
 
                     if ($tissue_sample_owner) {
-                        my $q = "INSERT INTO phenome.stock_owner(stock_id, sp_person_id) values(?,?)";
-                        my $h = $chado_schema->storage->dbh->prepare($q);
-                        $h->execute($tissue->stock_id, $tissue_sample_owner);
+                        my $stock = CXGN::Stock->new({schema=>$chado_schema,stock_id=>$tissue->stock_id()});
+                        $stock->associate_owner($tissue_sample_owner,$tissue_sample_owner,$username, "");
                     }
 
                     my $tissueprop = $chado_schema->resultset("Stock::Stockprop")->create( {
