@@ -4,7 +4,7 @@ $trial_id
 $trial_stock_type => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
 <style>
 
 .bar rect {
@@ -69,6 +69,21 @@ $trial_stock_type => undef
         <tbody>
         </tbody>
         </table>
+        <button type="button" class="selectAll-dt">Select All</button>
+        <button type="button" class="deselectAll-dt">Deselect All</button>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+
+            <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trait names currently selected in the search results table to a new or exisiting list</i>'&>
+            <br>
+            <p><em><span id="selected_row_count">0</span> row(s) selected.</em></p>
+            <div style="text-align:right" id="stocks_to_list_menu"></div>
+            <div id="selected_names" style="display: none;"></div>
+            </&>
+
+        </div>
     </div>
 </div>
 
@@ -194,14 +209,56 @@ jQuery(document).ready(function () {
 });
 
 function datatables_display_phenosummary(type) {
-    jQuery('#phenotype_summary_data').DataTable( {
-        "lengthMenu": [ 10, 25, 50, 100, 500, 1000 ],
+    var summary_table = jQuery('#phenotype_summary_data').DataTable( {
+        "lengthMenu": [ 10, 20, 50, 100, 500, 1000 ],
         "retrieve": true,
         "dom": 'Bfrtip',
+        'columnDefs': [ {
+            'orderable': false,
+            'className': 'select-checkbox',
+            'targets':   0
+        } ],
+        'select': {
+            'style':    'multi'
+        },
         "buttons":  [
             'pageLength','copy', 'excel', 'csv', 'pdf'
         ],
         "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type,
+    });
+
+    var selection_changed = function () {
+        var selected_rows = summary_table.rows({'selected':true});
+        jQuery("#selected_row_count").text(selected_rows.count());
+        console.log(selected_rows.data());
+
+        var names = selected_rows.data().map(function(row){
+            return row[2];
+        });
+
+        console.log(names);
+        //
+        // var names = [];
+        //     for (var i = 0; i < name_links.length; i++) { //extract and combine trait name and id from anchor tags
+        //     names.push(name_links[i][0] + '|' + name_links[i][1] + '\n');
+        // }
+
+        jQuery('#selected_names').html(names);
+        addToListMenu('stocks_to_list_menu', 'selected_names', {
+            listType: 'accessions'
+        });
+    };
+
+    summary_table.on( 'deselect', selection_changed);
+    summary_table.on( 'select', selection_changed);
+
+    jQuery('.selectAll-dt').click(function(){
+      summary_table.rows().select();
+      return false;
+    });
+    jQuery('.deselectAll-dt').click(function(){
+      summary_table.rows().deselect();
+      return false;
     });
 }
 
