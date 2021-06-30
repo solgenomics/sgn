@@ -14,7 +14,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This is a patch to update cvterm_relationships for composed traits to include VARIABLE_OF relationships
+This patch updates cvterm_relationships for composed traits to include VARIABLE_OF relationships
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -38,13 +38,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-Description of this patch goes here
-
-has '+prereq' => (
-    default => sub {
-        ['MyPrevPatch'],
-    },
-  );
+This patch updates cvterm_relationships for composed traits to include VARIABLE_OF relationships
 
 sub patch {
     my $self=shift;
