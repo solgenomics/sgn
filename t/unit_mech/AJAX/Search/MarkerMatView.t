@@ -2,7 +2,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More tests => 14;
+use Test::More tests => 15;
 
 use Data::Dumper;
 use JSON;
@@ -25,10 +25,10 @@ my $vcf_file_pos = 158861;
 
 # Add Test Organism
 my $reference_genome = "TestRefMap";
-my $genus_name = "Test";
-my $species_name = "test";
+my $genus_name = "MMVTestGenus";
+my $species_name = "MMVTestSpecies";
 my $species = $genus_name . ' ' . $species_name;
-my ($organism_rs) = $schema->resultset("Organism::Organism")->find_or_create({genus => $genus_name, species => $species});
+my ($organism_rs) = $schema->resultset("Organism::Organism")->create({genus => $genus_name, species => $species});
 
 # Get Location
 my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search({description => 'Cornell Biotech'});
@@ -75,6 +75,8 @@ $response = $ua->post(
 );
 ok($response->is_success);
 my $message = decode_json($response->decoded_content);
+my $vcf_protocol_id = $message->{nd_protocol_id};
+my $vcf_project_id = $message->{project_id};
 is($message->{success}, 1);
 
 
@@ -139,5 +141,18 @@ my $position_query_results = decode_json($mech->content)->{'results'};
 is($position_query_results->{'counts'}->{'markers'}, 1, "Query position count");
 is(scalar keys %{$position_query_results->{'variants'}}, 1, "Query position variants");
 
+
+##
+## CLEANUP
+## tests = 1
+##
+
+# Delete test organism
+$organism_rs->delete();
+
+# Delete genotype protocol of uploaded vcf file
+$mech->get("/ajax/genotyping_protocol/delete/$vcf_protocol_id");
+my $delete_results = decode_json($mech->content);
+is($delete_results->{'success'}, 1, "Delete genotype protocol");
 
 done_testing();
