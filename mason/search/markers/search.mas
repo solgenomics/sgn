@@ -537,9 +537,14 @@ function updatePositions() {
     let chrom = jQuery("#marker-chromosome").val();
     let units = jQuery("#marker-refmap option:selected").data("units");
 
+    let pos_disabled = refmap === '' || chrom === null || ['', 'Loading...'].includes(chrom);
     jQuery(".marker-position-units").html(units ? units : '&nbsp;&nbsp;');
-    jQuery("#marker-position-start").attr("disabled", refmap === '' || chrom === null || ['', 'Loading...'].includes(chrom));
-    jQuery("#marker-position-end").attr("disabled", refmap === '' || chrom === null || ['', 'Loading...'].includes(chrom));
+    jQuery("#marker-position-start").attr("disabled", pos_disabled);
+    jQuery("#marker-position-end").attr("disabled", pos_disabled);
+    if ( pos_disabled ) { 
+        jQuery("#marker-position-start").val("");
+        jQuery("#marker-position-end").val("");
+    }
 }
 
 
