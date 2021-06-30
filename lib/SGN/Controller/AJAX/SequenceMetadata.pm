@@ -329,6 +329,7 @@ sub sequence_metadata_upload_verify_POST : Args(0) {
 #   - error: error message
 #   - results: store results
 #       - stored: 0 if storing failed, 1 if it succeeds
+#       - nd_protocol_id: the id of the (new or existing) nd_protocol
 #       - chunks: the number of chunks stored
 #
 sub sequence_metadata_store : Path('/ajax/sequence_metadata/store') : ActionClass('REST') { }
@@ -444,6 +445,7 @@ sub sequence_metadata_store_POST : Args(0) {
             $c->stash->{rest} = {error => 'Could not create sequence metadata protocol: ' . $protocol_results->{'error'}};
             $c->detach();
         }
+        $protocol_id = $protocol_results->{'nd_protocol_id'};
 
         $type_id = $protocol_sequence_metadata_type_id;
         $species = $protocol_species;
@@ -481,6 +483,7 @@ sub sequence_metadata_store_POST : Args(0) {
 
     # Run the store script
     my $store_results = $smd->store($processed_filepath, $species);
+    $store_results->{'nd_protocol_id'} = $protocol_id;
     
 
     $c->stash->{rest} = { results => $store_results };
