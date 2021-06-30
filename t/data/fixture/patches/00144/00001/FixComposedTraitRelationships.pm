@@ -51,11 +51,9 @@ sub patch {
 
     $self->dbh->do(<<EOSQL);
 
-    BEGIN;
     UPDATE cvterm_relationship
     SET type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF')
     WHERE subject_id IN (SELECT cvterm_id FROM cvterm WHERE name LIKE '%|%');
-    COMMIT;
 
 EOSQL
 
