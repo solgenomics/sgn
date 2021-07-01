@@ -74,9 +74,9 @@ $data_set_type => ''
   &>
 
  <& summary.mas,
-    pop_id   => $selection_pop_id,
-    pop_name => $selection_pop_name,
-    pop_desc => $selection_pop_desc,
+    selection_pop_id   => $selection_pop_id,
+    selection_pop_name => $selection_pop_name,
+    selection_pop_desc => $selection_pop_desc,
     model_page_url   => $model_page_url,
 	training_pop_url => $training_pop_url,
     stocks_no    => $selection_stocks_cnt,
