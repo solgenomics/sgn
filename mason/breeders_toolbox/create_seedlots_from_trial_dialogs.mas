@@ -714,10 +714,6 @@ $timestamp => localtime()
         let trait_id = jQuery("#create_seedlots_trial_contents_trait").val();
         let formula = jQuery("#create_seedlots_trial_contents_computed_formula").val();
 
-        console.log("UPDATE SEEDLOT CONTENTS");
-        console.log(TRAITS);
-        console.log(TRAIT_DATA);
-
         let html = "<thead></tr>";
         html += "<th>Seedlot Name</th>";
         html += "<th>Contents</th>";
