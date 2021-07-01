@@ -81,6 +81,37 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->detach();
     }
 
+    my $project_id = $c->req->param('upload_genotype_project_id') || undef;
+    my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
+    my $organism_species = $c->req->param('upload_genotypes_species_name_input');
+    my $protocol_description = $c->req->param('upload_genotypes_protocol_description_input');
+    my $project_name = $c->req->param('upload_genotype_vcf_project_name');
+    my $location_id = $c->req->param('upload_genotype_location_select');
+    my $year = $c->req->param('upload_genotype_year_select');
+    my $breeding_program_id = $c->req->param('upload_genotype_breeding_program_select');
+    my $obs_type = $c->req->param('upload_genotype_vcf_observation_type');
+    my $genotyping_facility = $c->req->param('upload_genotype_vcf_facility_select');
+    my $description = $c->req->param('upload_genotype_vcf_project_description');
+    my $protocol_name = $c->req->param('upload_genotype_vcf_protocol_name');
+    my $contains_igd = $c->req->param('upload_genotype_vcf_include_igd_numbers');
+    my $reference_genome_name = $c->req->param('upload_genotype_vcf_reference_genome_name');
+    my $add_new_accessions = $c->req->param('upload_genotype_add_new_accessions');
+    my $add_accessions;
+    if ($add_new_accessions){
+        $add_accessions = 1;
+        $obs_type = 'accession';
+    }
+    my $include_igd_numbers;
+    if ($contains_igd){
+        $include_igd_numbers = 1;
+    }
+    my $include_lab_numbers;
+    my $accept_warnings_input = $c->req->param('upload_genotype_accept_warnings');
+    my $accept_warnings;
+    if ($accept_warnings_input){
+        $accept_warnings = 1;
+    }
+
     #archive uploaded file
     my $upload_vcf = $c->req->upload('upload_genotype_vcf_file_input');
     my $upload_tassel_hdf5 = $c->req->upload('upload_genotype_tassel_hdf5_file_input');
@@ -233,6 +264,10 @@ sub upload_genotype_verify_POST : Args(0) {
         $subdirectory = "genotype_intertek_upload";
         $parser_plugin = 'IntertekCSV';
 
+        if ($obs_type eq 'accession') {
+            $include_lab_numbers = 1;
+        }
+
         my $upload_inteterk_marker_info_original_name = $upload_inteterk_marker_info->filename();
         my $upload_inteterk_marker_info_tempfile = $upload_inteterk_marker_info->tempname();
 
@@ -275,41 +310,6 @@ sub upload_genotype_verify_POST : Args(0) {
     }
     unlink $upload_tempfile;
 
-    my $project_id = $c->req->param('upload_genotype_project_id') || undef;
-    my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
-    my $organism_species = $c->req->param('upload_genotypes_species_name_input');
-    my $protocol_description = $c->req->param('upload_genotypes_protocol_description_input');
-    my $project_name = $c->req->param('upload_genotype_vcf_project_name');
-    my $location_id = $c->req->param('upload_genotype_location_select');
-    my $year = $c->req->param('upload_genotype_year_select');
-    my $breeding_program_id = $c->req->param('upload_genotype_breeding_program_select');
-    my $obs_type = $c->req->param('upload_genotype_vcf_observation_type');
-    my $genotyping_facility = $c->req->param('upload_genotype_vcf_facility_select');
-    my $description = $c->req->param('upload_genotype_vcf_project_description');
-    my $protocol_name = $c->req->param('upload_genotype_vcf_protocol_name');
-    my $contains_igd = $c->req->param('upload_genotype_vcf_include_igd_numbers');
-    my $contains_lab_numbers = $c->req->param('upload_genotype_vcf_include_lab_numbers');
-    my $reference_genome_name = $c->req->param('upload_genotype_vcf_reference_genome_name');
-    my $add_new_accessions = $c->req->param('upload_genotype_add_new_accessions');
-    my $add_accessions;
-    if ($add_new_accessions){
-        $add_accessions = 1;
-        $obs_type = 'accession';
-    }
-    my $include_igd_numbers;
-    if ($contains_igd){
-        $include_igd_numbers = 1;
-    }
-    my $include_lab_numbers;
-    if ($contains_lab_numbers){
-        $include_lab_numbers = 1;
-    }
-    my $accept_warnings_input = $c->req->param('upload_genotype_accept_warnings');
-    my $accept_warnings;
-    if ($accept_warnings_input){
-        $accept_warnings = 1;
-    }
-
     #if protocol_id provided, a new one will not be created
     if ($protocol_id){
         my $protocol = CXGN::Genotype::Protocol->new({
@@ -345,7 +345,7 @@ sub upload_genotype_verify_POST : Args(0) {
         organism_id => $organism_id,
         create_missing_observation_units_as_accessions => $add_accessions,
         igd_numbers_included => $include_igd_numbers,
-        lab_numbers_included => $include_lab_numbers
+        # lab_numbers_included => $include_lab_numbers
     });
     $parser->load_plugin($parser_plugin);
 
@@ -458,7 +458,7 @@ sub upload_genotype_verify_POST : Args(0) {
             $store_genotypes->store_identifiers();
         }
 
-        print STDERR "Done loading first line, moving on...\n";    
+        print STDERR "Done loading first line, moving on...\n";
 
         my $continue_iterate = 1;
         while ($continue_iterate == 1) {
@@ -556,8 +556,17 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->detach();
     }
 
-    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    my $basepath = $c->config->{basepath};
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$dbname, } );
+    my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'fullview', 'concurrent', $basepath);
+
+    # Rebuild and refresh the materialized_markerview table
+    my $async_refresh = CXGN::Tools::Run->new();
+    $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
 
     $c->stash->{rest} = $return;
 }

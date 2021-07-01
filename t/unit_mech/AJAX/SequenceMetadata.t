@@ -21,17 +21,22 @@ my $t = SGN::Test::Fixture->new();
 my $mech = SGN::Test::WWW::Mechanize->new;
 my $ua = LWP::UserAgent->new;
 my $schema = $t->bcs_schema;
+my $dbh = $mech->context->dbc->dbh;
 
 my $smd = CXGN::Genotype::SequenceMetadata->new(bcs_schema => $schema);
 my $smd_script_dir = $t->config->{basepath} . $smd->shell_script_dir;
 my $test_file = $t->config->{basepath} . "/t/data/sequence_metadata/gwas_sgn.gff3";
 
-my ($organism_rs) = $schema->resultset("Organism::Organism")->find_or_create({genus => 'Test', species => 'test'});
+my $genus_name = "SMDTest";
+my $species_name = "SMDtest";
+my $species = $genus_name . ' ' . $species_name;
+my ($organism_rs) = $schema->resultset("Organism::Organism")->create({genus => $genus_name, species => $species_name});
 my $feature_organism_id = $organism_rs->organism_id;
 my $feature_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'chromosome', 'sequence')->cvterm_id();
 my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'GWAS Results', 'sequence_metadata_types')->cvterm_id();
 
-my $query_feature_name = "chr1A";
+my $query_reference_genome_name = "Test Reference Genome";
+my $query_feature_name = "SMD_TEST_CHR_1A";
 my $query_feature_id;
 my $query_type_name = "GWAS Results";
 my $query_type_id;
@@ -48,7 +53,7 @@ chomp(@features);
 # Add features to database
 foreach my $feature (@features) {
     if ( $feature !~ /^#/ ) {
-        my ($feature_rs) = $schema->resultset("Sequence::Feature")->find_or_create({
+        my ($feature_rs) = $schema->resultset("Sequence::Feature")->create({
             organism_id => $feature_organism_id,
             name => $feature,
             uniquename => $feature,
@@ -85,6 +90,7 @@ isnt($sgn_session_id, '', "SGN Session Token");
 ##
 my %verification_body = (
     file => [ $test_file, 'sequence_metadata_upload' ],
+    species => $species,
     "use_existing_protocol" => "false",
     "new_protocol_attribute_count" => scalar @attributes
 );
@@ -117,7 +123,8 @@ my %store_body = (
     "new_protocol_name" => $query_protocol_name,
     "new_protocol_description" => "Protocol used for testing the sequence metadata storage",
     "new_protocol_sequence_metadata_type" => $type_id,
-    "new_protocol_reference_genome" => "Test Reference Genome",
+    "new_protocol_reference_genome" => $query_reference_genome_name,
+    "new_protocol_species" => $species,
     "new_protocol_score_description" => "score description",
     "new_protocol_attribute_count" => scalar @attributes
 );
@@ -134,6 +141,7 @@ my $store_response = $ua->post(
     Content => \%store_body
 );
 my $store_message = decode_json $store_response->decoded_content;
+my $nd_protocol_id = $store_message->{'results'}->{'nd_protocol_id'};
 is($store_message->{'results'}->{'stored'}, 1, "Store GFF File");
 cmp_ok($store_message->{'results'}->{'chunks'}, 'gt', 0, "Stored Chunks");
 
@@ -190,8 +198,10 @@ my $protocols_response = decode_json($mech->content)->{'protocols'};
 my $found_protocol = 0;
 foreach my $protocol (@$protocols_response) {
     if ( $protocol->{'nd_protocol_name'} eq $query_protocol_name ) {
-        $found_protocol = 1;
-        $query_protocol_id = $protocol->{'nd_protocol_id'};
+        if ( $protocol->{'nd_protocol_id'} == $nd_protocol_id ) {
+            $found_protocol = 1;
+            $query_protocol_id = $protocol->{'nd_protocol_id'};
+        }
     }
 }
 is($found_protocol, 1, "Stored and Retrieved Protocol");
@@ -207,7 +217,7 @@ isnt($query_type_id, undef, "Query Type ID Defined");
 isnt($query_protocol_id, undef, "Query Protocol ID Defined");
 
 my $params = "feature_id=$query_feature_id&type_id=$query_type_id&nd_protocol_id=$query_protocol_id&";
-$params .= "start=20000000&end=22000000&";
+$params .= "reference_genome=$query_reference_genome_name&start=20000000&end=22000000&";
 $params .= "attribute=score|$query_protocol_id|gt|0.03,Locus|$query_protocol_id|eq|TraesCS1A02G038400";
 
 # JSON Format
@@ -235,7 +245,8 @@ is_deeply($json_response, {
             'feature_id' => $query_feature_id,
             'nd_protocol_name' => $query_protocol_name,
             'feature_name' => $query_feature_name,
-            'score' => '0.0455793811186712'
+            'score' => '0.0455793811186712',
+            'links' => {}
         }
     ]
 }, 'Query JSON Response');
@@ -308,6 +319,30 @@ like(
     qr/$query_feature_name\t\.\t\.\t21040550\t21040550\t0\.0455793811186712\t\.\t\.\t.*/,
     "Query GFF Response"
 );
+
+
+
+##
+## CLEANUP
+##
+
+# Remove the SMD feature props
+$dbh->do("DELETE FROM public.featureprop_json WHERE nd_protocol_id = ?", undef, $nd_protocol_id);
+
+# Remove the features
+foreach my $feature (@features) {
+    if ( $feature !~ /^#/ ) {
+        $dbh->do("DELETE FROM public.feature WHERE uniquename = ?", undef, $feature);
+    }
+}
+
+# Delete test organism
+$organism_rs->delete();
+
+# Remove the SMD nd_protocol
+$dbh->do("DELETE FROM public.nd_protocolprop WHERE nd_protocol_id = ?", undef, $nd_protocol_id);
+$dbh->do("DELETE FROM public.nd_protocol WHERE nd_protocol_id = ?", undef, $nd_protocol_id);
+
 
 
 

@@ -222,7 +222,7 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     bcs_schema=>$schema,
     people_schema=>$people_schema,
     protocol_id_list=>[$protocol_id],
-    
+
 });
 my ($total_count, $data) = $genotypes_search->get_genotype_info();
 is($total_count, 63);
@@ -311,7 +311,6 @@ $response = $ua->post(
             "upload_genotype_vcf_facility_select"=>"IGD",
             "upload_genotype_vcf_project_description"=>"Intertek SNP project 1",
             "upload_genotype_vcf_protocol_name"=>"Intertek SNP protocol 1",
-            "upload_genotype_vcf_include_lab_numbers"=>1,
             "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
             "upload_genotype_add_new_accessions"=>1, #IDEALLY THIS is set to 0
         ]
@@ -391,7 +390,7 @@ my $vcf_response_string_expected = '##INFO=<ID=VCFDownload, Description=\'VCFv4.
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
 ##INFO=<ID=AF,Number=.,Type=Float,Description="Allele Frequency">
 ##FORMAT=<ID=DS,Number=1,Type=Float,Description="estimated ALT dose [P(RA) + P(AA)]">
-## Synonyms of accessions: 
+## Synonyms of accessions:
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	KBH2014_076	KBH2014_1155
 1 	21594 	S1_21594	G	A	.	PASS	AR2=0.29;DR2=0.342;AF=0.375	GT:AD:DP:GQ:DS:PL:NT	./.:0,0:0:.:1:.:	0/0:1,0:1:66:0:0,3,36:G,G
 1 	21597 	S1_21597	G	A	.	PASS	AR2=0;DR2=0.065;AF=0.001	GT:AD:DP:GQ:DS:PL:NT	0/0:6,0:6:98:0:0,18,216:G,G	0/0:5,0:5:96:0:0,15,180:G,G
@@ -484,7 +483,7 @@ my $vcf_response_string_expected = '##INFO=<ID=VCFDownload, Description=\'VCFv4.
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
 ##INFO=<ID=AF,Number=.,Type=Float,Description="Allele Frequency">
 ##FORMAT=<ID=DS,Number=1,Type=Float,Description="estimated ALT dose [P(RA) + P(AA)]">
-## Synonyms of accessions: 
+## Synonyms of accessions:
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	KBH2014_076	KBH2014_1155
 1 	21594 	S1_21594	G	A	.	PASS	AR2=0.29;DR2=0.342;AF=0.375	GT:AD:DP:GQ:DS:PL:NT	./.:0,0:0:.:1:.:	0/0:1,0:1:66:0:0,3,36:G,G
 1 	21597 	S1_21597	G	A	.	PASS	AR2=0;DR2=0.065;AF=0.001	GT:AD:DP:GQ:DS:PL:NT	0/0:6,0:6:98:0:0,18,216:G,G	0/0:5,0:5:96:0:0,15,180:G,G
