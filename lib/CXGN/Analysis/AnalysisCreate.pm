@@ -581,7 +581,7 @@ sub store {
         }
 
         my $bs = CXGN::BreederSearch->new( { dbh=>$bcs_schema->storage->dbh, dbname=>$dbname } );
-        my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'fullview', 'concurrent', $basepath);
+        my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'phenotypes', 'concurrent', $basepath);
     }
 
     my $analysis_model = CXGN::AnalysisModel::GetModel->new({
