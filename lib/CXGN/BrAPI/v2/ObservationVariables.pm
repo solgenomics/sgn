@@ -178,7 +178,14 @@ sub search {
 
         my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
         my $categories = $trait->categories;
-        my @brapi_categories = split '/', $categories;
+        my @categories = split '/', $categories;
+        my @brapi_categories;
+        foreach (@categories) {
+            push @brapi_categories, {
+                label => $_,
+                value => $_
+            };
+        }
 
         my @references;
         push @references, {
