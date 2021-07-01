@@ -180,7 +180,6 @@ sub create_dataset_pheno_data_query_jobs {
     my ($self, $c) = @_;
 
     my $dataset_id = $c->stash->{dataset_id};
-
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
 
@@ -199,7 +198,7 @@ sub create_dataset_pheno_data_query_jobs {
 	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
 	$c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
 
-	$c->controller('solGS::Async')->get_cluster_phenotype_query_job_args($c, $trials_ids);
+	$c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, $trials_ids);
 	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
     }
 }
