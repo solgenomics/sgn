@@ -1149,6 +1149,7 @@ jQuery(document).ready( function() {
 
     function submit_fieldmap_metadata() {
         invert_rows = document.getElementById("invert_row_checkmark").checked ? "yes" : "no";
+        console.log(auth_token);
         
         var data = [
 		        {
@@ -1156,8 +1157,8 @@ jQuery(document).ready( function() {
 					    "invertRows": "invert_rows"
 				    },
 			        "observationUnitName": "test ou",
-			        "studyDbId": "302",
-			        "germplasmDbId": "163150",
+			        "studyDbId": trial_id,
+			        "germplasmDbId": "38840",
 			        "observationUnitPosition": {
 				        "observationLevel": {
 				            "levelName": "plot"
@@ -1170,7 +1171,7 @@ jQuery(document).ready( function() {
         new jQuery.ajax({
             type: 'POST',
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-            url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&pageSize=10000',
+            url: '/brapi/v2/observationunits',
             body: stringifiedData,
 
             success: function(response) {
