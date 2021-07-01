@@ -128,11 +128,12 @@ $timestamp => localtime()
 
                             <p>
                                 Each seedlot needs to have its initial contents (either a count or a weight) set.  You 
-                                can either set the same initial value for each seedlot or use the value from one of the 
-                                traits recorded for this trial.  If you are creating a seedlot for each accession and 
-                                select a trait as their initial value, then the sum of the trait values for each of the 
-                                accession's plots will be used.  The contents of each seedlot can be modified in the 
-                                table below before its creation.
+                                can either set the same initial value for each seedlot, use the value from one of the 
+                                traits recorded for this trial, or compute a new value from the recorded traits for this 
+                                trial.  If you are creating a seedlot for each accession and select a trait or a computed 
+                                value as their initial value, then the sum of the trait values for each of the accession's 
+                                plots will be used.  The contents of each seedlot can be modified in the table below 
+                                before its creation.
                             </p>
 
                             <br /><br />
@@ -155,6 +156,7 @@ $timestamp => localtime()
                                     <select class="form-control" id="create_seedlots_trial_contents_value">
                                         <option value="constant">Constant Value</option>
                                         <option value="trait">Trait Value</option>
+                                        <option value="computed">Computed Value from Traits</option>
                                     </select>
                                 </div>
                             </div>
@@ -172,6 +174,41 @@ $timestamp => localtime()
                                 <label class="col-sm-3 control-label" style="text-align: right">Trait: </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="create_seedlots_trial_contents_trait"></select>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="create_seedlots_trial_contents_computed_form" style="display: none">
+                                <label class="col-sm-3 control-label" style="text-align: right">Trait Variables: </label>
+                                <div class="col-sm-9">
+                                    <p>
+                                        Use the following variables as substitutions for the trait values to compute a new value 
+                                        for the initial seedlot contents.  If you are creating one seedlot <strong>per plot</strong>, then 
+                                        the single plot trait value will be used in the computation.  If you are creating one seedlot 
+                                        <strong>per accession</strong>, then the sum of the trait values for each plot of that accession 
+                                        will be used in the computation.
+                                    </p>
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Variable</th>
+                                                <th>Trait</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="create_seedlots_trial_contents_computed_table"></tbody>
+                                    </table>
+                                </div>
+
+                                <label class="col-sm-3 control-label" style="text-align: right">Contents Formula: </label>
+                                <div class="col-sm-9">
+                                    <input class="form-control" id="create_seedlots_trial_contents_computed_formula" value="" placeholder="{trait_1}/10">
+                                    <p>
+                                        <strong>NOTE:</strong> The formula is evaluated using javascript, so any basic operators (+-*/) or 
+                                        javascript Math functions (Math.abs(x)) can be used.
+                                    </p>
+                                </div>
+
+                                <div class="col-sm-12" style="text-align: center; margin: 25px 0">
+                                    <button id="create_seedlots_trial_complete_computed_compute" class="btn btn-primary" disabled>Compute</button>
                                 </div>
                             </div>
 
@@ -346,6 +383,7 @@ $timestamp => localtime()
     let ACCESSIONS;
     let PLOTS;
     let TRAITS;
+    let TRAIT_DATA;
     let SEEDLOTS;
     const UPLOAD_BATCH_SIZE = 5;
 
@@ -373,6 +411,8 @@ $timestamp => localtime()
             let val = jQuery("#create_seedlots_trial_contents_value").val();
             jQuery("#create_seedlots_trial_contents_constant_form").css("display", val === "constant" ? "block" : "none");
             jQuery("#create_seedlots_trial_contents_trait_form").css("display", val === "trait" ? "block" : "none");
+            jQuery("#create_seedlots_trial_contents_computed_form").css("display", val === "computed" ? "block" : "none");
+            jQuery("#create_seedlots_trial_complete_set_contents").attr("disabled", val === "computed");
         });
         jQuery("#create_seedlots_trial_contents_value").change(updateSeedlotContents);
         jQuery("#create_seedlots_trial_contents_constant").keyup(updateSeedlotContents);
@@ -380,13 +420,14 @@ $timestamp => localtime()
             let id = jQuery("#create_seedlots_trial_contents_trait").val();
             let name = jQuery("#create_seedlots_trial_contents_trait option:selected").text();
             if ( id && name ) {
-                jQuery('#working_modal').modal("show");
-                getTraitData(id, name, function(trait_data) {
-                    updateSeedlotContents(trait_data);
-                    jQuery('#working_modal').modal("hide");
-                });
+                updateSeedlotContents();
             }
         });
+        jQuery("#create_seedlots_trial_contents_computed_formula").keyup(function() {
+            jQuery("#create_seedlots_trial_complete_computed_compute").attr("disabled", false);
+            jQuery("#create_seedlots_trial_complete_set_contents").attr("disabled", true);
+        });
+        jQuery("#create_seedlots_trial_complete_computed_compute").click(updateSeedlotContents);
         jQuery(document).on('keyup', '.create_seedlots_trial_contents_seedlot', function() {
             let el = jQuery(this);
             let index = el.data("index");
@@ -469,7 +510,14 @@ $timestamp => localtime()
                         ACCESSIONS = accessions;
                         PLOTS = plots;
                         TRAITS = traits ? traits : [];
-                        _finish(true);
+                        if ( traits ) {
+                            getTraitData(function() {
+                                _finish(true);
+                            });
+                        }
+                        else {
+                            _finish(true);
+                        }
                     }
                     else {
                         _finish();
@@ -657,14 +705,18 @@ $timestamp => localtime()
 
     /**
      * Calculate the seedlot contents and update the table displaying the results
-     * @param {Object[]} [trait_data] Trait data to be used for calculating contents from a trait
      */
-    function updateSeedlotContents(trait_data) {
+    function updateSeedlotContents() {
         let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
         let contents_type = jQuery("#create_seedlots_trial_contents_type").val();
         let value = jQuery("#create_seedlots_trial_contents_value").val();
         let constant = jQuery("#create_seedlots_trial_contents_constant").val();
-        let trait = jQuery("#create_seedlots_trial_contents_trait").val();
+        let trait_id = jQuery("#create_seedlots_trial_contents_trait").val();
+        let formula = jQuery("#create_seedlots_trial_contents_computed_formula").val();
+
+        console.log("UPDATE SEEDLOT CONTENTS");
+        console.log(TRAITS);
+        console.log(TRAIT_DATA);
 
         let html = "<thead></tr>";
         html += "<th>Seedlot Name</th>";
@@ -678,27 +730,24 @@ $timestamp => localtime()
             if ( value === 'constant' ) {
                 contents = constant;
             }
-            else if ( value === 'trait' && trait_data ) {
-                for ( let j = 0; j < trait_data.length; j++ ) {
-                    
-                    // Sum plots of the same accession
-                    if ( stock_type === 'accessions' ) {
-                        if ( SEEDLOTS[i].accession.id === trait_data[j].accession_id ) {
-                            try {
-                                contents = contents + parseFloat(trait_data[j].trait_value);
-                            }
-                            catch (e) {}
-                        }
+            else if ( value === 'trait' && TRAIT_DATA ) {
+                contents = _getTraitData(i, trait_id);
+            }
+            else if ( value === 'computed' && TRAIT_DATA && formula && formula !== "" ) {
+                let seedlot_formula = formula;
+                for ( let j = 0; j < TRAITS.length; j++ ) {
+                    let variable = TRAITS[j].variable;
+                    let variable_trait_id = TRAITS[j].id;
+                    if ( formula.includes('{' + variable + '}') ) {
+                        let variable_value = _getTraitData(i, variable_trait_id);
+                        seedlot_formula = seedlot_formula.replaceAll('{' + variable + '}', variable_value);
                     }
-
-                    // Use the plot value
-                    else if ( stock_type === 'plots' ) {
-                        if ( SEEDLOTS[i].plot.id === trait_data[j].plot_id ) {
-                            contents = trait_data[j].trait_value;
-                        }
-                    }
-
                 }
+                try {
+                    let eval_value = eval(seedlot_formula);
+                    if ( eval_value ) contents = eval_value;
+                } 
+                catch (e) {}
             }
         
             html += "<tr>";
@@ -710,6 +759,40 @@ $timestamp => localtime()
         }
 
         jQuery("#create_seedlots_trial_contents_table").html(html);
+        jQuery("#create_seedlots_trial_complete_computed_compute").attr("disabled", true);
+        jQuery("#create_seedlots_trial_complete_set_contents").attr("disabled", false);
+
+
+        /**
+         * Get the value of the specified trait for the specified seedlot
+         * If 'stock_type' == 'accessions', then the sum of the plots is returned
+         */
+        function _getTraitData(seedlot_index, trait_id) {
+            let contents = 0;
+            for ( let j = 0; j < TRAIT_DATA.length; j++ ) {
+                if ( TRAIT_DATA[j].trait_id + '' === trait_id + '' ) {
+                
+                    // Sum plots of the same accession
+                    if ( stock_type === 'accessions' ) {
+                        if ( SEEDLOTS[seedlot_index].accession.id === TRAIT_DATA[j].accession_id ) {
+                            try {
+                                contents = contents + parseFloat(TRAIT_DATA[j].trait_value);
+                            }
+                            catch (e) {}
+                        }
+                    }
+
+                    // Use the plot value
+                    else if ( stock_type === 'plots' ) {
+                        if ( SEEDLOTS[seedlot_index].plot.id === TRAIT_DATA[j].plot_id ) {
+                            contents = TRAIT_DATA[j].trait_value;
+                        }
+                    }
+                    
+                }
+            }
+            return contents;
+        }
     }
 
     /**
@@ -1180,12 +1263,20 @@ $timestamp => localtime()
                     }
                     else if ( response.traits_assayed ) {
                         traits = [];
+                        let html = "";
                         for ( let i = 0; i < response.traits_assayed[0].length; i++ ) {
+                            let id = response.traits_assayed[0][i][0];
+                            let name = response.traits_assayed[0][i][1];
+                            let variable = "trait_" + parseInt(i+1);
                             traits.push({
-                                id: response.traits_assayed[0][i][0],
-                                name: response.traits_assayed[0][i][1]
+                                id: id,
+                                name: name,
+                                variable: variable
                             });
+                            html += "<tr><td><code>{" + variable + "}</code></td>";
+                            html += "<td>" + name + "</td></tr>";
                         }
+                        jQuery("#create_seedlots_trial_contents_computed_table").html(html);
                     }
                     else {
                         alert('Could not lookup trial traits');
@@ -1209,37 +1300,43 @@ $timestamp => localtime()
     }
 
     /**
-     * Get the plot-level trait data for the specified trait
-     * @param {int} trait_id Cvterm of trait
-     * @param {string} trait_name Trait name / identifier
-     * @param {function} callback Callback function(trait_data)
+     * Set the plot-level trait data for all of the traits
+     * @param {function} callback Callback function()
      */
-    function getTraitData(trait_id, trait_name, callback) {
-        let trait_data = [];
+    function getTraitData(callback) {
+        TRAIT_DATA = [];
+        
+        let count = 0;
+        let total = TRAITS.length;
+        for ( let i = 0; i < TRAITS.length; i++ ) {
+            _getTraitData(TRAITS[i].id, TRAITS[i].name);
+        }
 
-        jQuery.ajax({
-            type: "GET",
-            url: '/ajax/breeders/trial/' + TRIAL_ID + '/trait_phenotypes/?trait=' + trait_id + '&display=plot',
-            success: function(response) {
-                if (response.error) {
-                    alert(response.error);
-                }
-                else if ( response.status && response.status === 'success' && response.data ) {
-                    _parseData(response.data);
-                }
-                else {
+        function _getTraitData(trait_id, trait_name) {
+            jQuery.ajax({
+                type: "GET",
+                url: '/ajax/breeders/trial/' + TRIAL_ID + '/trait_phenotypes/?trait=' + trait_id + '&display=plot',
+                success: function(response) {
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else if ( response.status && response.status === 'success' && response.data ) {
+                        _parseTraitData(response.data, trait_id, trait_name);
+                    }
+                    else {
+                        alert('Could not get trait data');
+                    }
+                },
+                error: function(response){
                     alert('Could not get trait data');
+                },
+                complete: function() {
+                    _finish();
                 }
-            },
-            error: function(response){
-                alert('Could not get trait data');
-            },
-            complete: function() {
-                return callback(trait_data);
-            }
-        });
+            });
+        }
 
-        function _parseData(data) {
+        function _parseTraitData(data, trait_id, trait_name) {
             let accession_id_col, plot_id_col, trait_col;
             let headers = data[0];
             for ( let i = 0; i < headers.length; i++ ) {
@@ -1248,12 +1345,19 @@ $timestamp => localtime()
                 if ( headers[i] === trait_name ) trait_col = i;
             }
             for ( let i = 1; i < data.length; i++ ) {
-                trait_data.push({
+                TRAIT_DATA.push({
                     accession_id: data[i][accession_id_col],
                     plot_id: data[i][plot_id_col],
                     trait_id: trait_id,
                     trait_value: data[i][trait_col]
                 });
+            }
+        }
+
+        function _finish() {
+            count++;
+            if ( count >= total ) {
+                return callback();
             }
         }
     }
