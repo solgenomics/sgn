@@ -136,7 +136,8 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->stash->{session_token} = $session_token;
 
 	if (defined $c->request->data){
-		if ($c->request->method eq "POST"){
+		# All POST requests accept for search methods require a json array body
+		if ($c->request->method eq "POST" && index($c->request->env->{REQUEST_URI}, "search") == -1){
 			if (ref $c->request->data ne 'ARRAY') {
 				my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'JSON array body required', 400);
 				_standard_response_construction($c, $response);
