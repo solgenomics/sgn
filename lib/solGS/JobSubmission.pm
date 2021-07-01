@@ -51,48 +51,49 @@ sub run_prerequisite_jobs {
 
     my @jobs;
     my $jobs = $self->prerequisite_jobs;
-
     if ($jobs !~ /none/)
     {
-	$jobs = retrieve($jobs);
+    	$jobs = retrieve($jobs);
+        my $type = reftype $jobs;
 
-	if (reftype $jobs eq 'HASH')
-	{
-	    my @priority_jobs;
-	    foreach my $rank (sort keys %$jobs)
-	    {
-		my $js = $jobs->{$rank};
-		foreach my $jb (@$js)
-		{
-		    my $sj = $self->submit_job($jb);
-		    push @priority_jobs, $sj;
-		}
-	    }
+    	if (reftype $jobs eq 'HASH')
+    	{
+    	    my @priority_jobs;
+    	    foreach my $rank (sort keys %$jobs)
+    	    {
+        		my $js = $jobs->{$rank};
+        		foreach my $jb (@$js)
+        		{
+        		    my $sj = $self->submit_job($jb);
+        		    push @priority_jobs, $sj;
+        		}
+    	    }
 
-	    foreach my $priority_job (@priority_jobs)
-	    {
-		while (1)
-		{
-		    last if !$priority_job->alive();
-		    sleep 30 if $priority_job->alive();
-		}
-	    }
-	}
-	else
-	{
-	    if (reftype $jobs ne 'ARRAY' && reftype $jobs ne 'HASH')
-	    {
-		$jobs = [$jobs];
-	    }
+    	    foreach my $priority_job (@priority_jobs)
+    	    {
+    		while (1)
+    		{
+    		    last if !$priority_job->alive();
+    		    sleep 30 if $priority_job->alive();
+    		}
+    	    }
+    	}
+    	else
+    	{
+    	    if (reftype $jobs eq 'SCALAR' )
+    	    {
+    		    $jobs = [$jobs];
+    	    }
 
-	    foreach my $job (@$jobs)
-	    {
-		my $job = $self->submit_job($job);
-		push @jobs, $job;
-	    }
-
-	}
-
+            if ($jobs->[0])
+            {
+        	    foreach my $job (@$jobs)
+        	    {
+        		my $job = $self->submit_job($job);
+        		push @jobs, $job;
+        	    }
+            }
+    	}
     }
 
     return \@jobs;
@@ -104,28 +105,30 @@ sub run_dependent_jobs {
     my $self = shift;
     my $pre_jobs = shift;
 
-    my @jobs;
-    foreach my $pre_job (@$pre_jobs)
-    {
-	while (1)
-	{
-	    last if !$pre_job->alive();
-	    sleep 30 if $pre_job->alive();
-	}
+    if ($pre_jobs->[0]) {
+        foreach my $pre_job (@$pre_jobs)
+        {
+        	while (1)
+        	{
+        	    last if !$pre_job->alive();
+        	    sleep 30 if $pre_job->alive();
+        	}
+        }
     }
 
+    my @jobs;
     my $jobs_file = $self->dependent_jobs;
     my $jobs = retrieve($jobs_file);
 
     if (reftype $jobs ne 'ARRAY')
     {
-	$jobs = [$jobs];
+	    $jobs = [$jobs];
     }
 
     foreach my $job (@$jobs)
     {
-	my $job = $self->submit_job($job);
-	push @jobs, $job;
+	   my $job = $self->submit_job($job);
+	   push @jobs, $job;
     }
 
     return \@jobs;
