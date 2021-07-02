@@ -53,6 +53,9 @@ CXGN.List = function () {
 };
 
 
+
+    
+
 CXGN.List.prototype = {
 
     // Return the data as a straight list
@@ -474,7 +477,7 @@ CXGN.List.prototype = {
         html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
         html += '<tr><td>Description:<br/><input type="button" class="btn btn-primary btn-xs" id="updateListDescButton" value="Update" /></td>';
         html += '<td><input class="form-control" type="text" id="updateListDescField" size="10" value="'+list_description+'" /></td></tr>';
-        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" title="Will determine whther the items in your list are saved in the database as valid entries. The validation depends on the list type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
+        html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" title="Validate list. Checks if elements exist with the selected type."/><div id="fuzzySearchStockListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
         html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item(s) To List. Separate items using a new line to add many items at once." /></textarea></td></tr></table>';
 
         html += '<hr><div class="well well-sm"><div class="row"><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'ASC\')" title="Sort items in list in ascending order (e.g. A->Z and/or 0->9)">Sort Ascending <span class="glyphicon glyphicon-sort-by-alphabet"></span></button></center></div><div class="col-sm-6"><center><button class="btn btn-default" onclick="(new CXGN.List()).sortItems('+list_id+', \'DESC\')" title="Sort items in list in descending order (e.g. Z->A and/or 9->0)">Sort Descending <span class="glyphicon glyphicon-sort-by-alphabet-alt"></span></button></center></div></div></div>';
@@ -508,7 +511,7 @@ CXGN.List.prototype = {
             if (jQuery('#type_select').val() == 'accessions' || jQuery('#type_select').val() == 'crosses'){
                 jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')" title="Will display seedlots that have contents of an item in your list.">See Available Seedlots</button>');
             } else {
-                jQuery('#availableSeedlotButtonDiv').html('')
+                jQuery('#availableSeedlotButtonDiv').html('');
             }
 
             if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants', 'tissue_samples', 'family_names'].indexOf(jQuery('#type_select').val()) >= 0){
@@ -710,7 +713,7 @@ CXGN.List.prototype = {
         }
 
         if (refresh) {
-            if (types.length > 1) { types = types.join(',') };
+            if (types.length > 1) { types = types.join(',') }
             html = '<div class="input-group" id="'+div_name+'_list_select_div">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" type="button" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'\',\''+types+'\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
             return html;
         }
@@ -776,6 +779,11 @@ CXGN.List.prototype = {
 
     validate: function(list_id, type, non_interactive) {
         var missing = new Array();
+	var wrong_case = new Array();
+	var multiple_wrong_case = new Array();
+	var synonym_matches = new Array();
+	var multiple_synonyms = new Array();
+	
         var error = 0;
         jQuery.ajax( {
             url: '/list/validate/'+list_id+'/'+type,
@@ -785,7 +793,12 @@ CXGN.List.prototype = {
                 if (response.error) {
                     alert(response.error);
                 } else {
+		    //alert(JSON.stringify(response));
                     missing = response.missing;
+		    wrong_case = response.wrong_case;
+		    multiple_wrong_case = response.multiple_wrong_case;
+		    synonym_matches = response.synonyms;
+		    multiple_synonyms = response.multiple_synonyms;
                 }
             },
             error: function(response) {
@@ -796,7 +809,8 @@ CXGN.List.prototype = {
 
         if (error === 1 ) { return; }
 
-        if (missing.length==0) {
+
+        if (missing.length==0 && wrong_case.length==0) {
             if (!non_interactive) { alert("This list passed validation."); }
             return 1;
         } else {
@@ -804,36 +818,181 @@ CXGN.List.prototype = {
                 if (type == 'accessions') {
                     jQuery("#validate_accession_error_display tbody").html('');
 
-                    var missing_accessions_html = "<div class='well well-sm'><h3>List of Accessions Not Valid!</h3><div id='validate_stock_missing_accessions' style='display:none'></div></div><div id='validate_stock_add_missing_accessions_for_list' style='display:none'></div><button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br/><br/><div class='well well-sm'><h3>Optional: Add Missing Accessions to A List</h3><div id='validate_stock_add_missing_accessions_for_list_div'></div></div>";
+                    var missing_accessions_link = "<button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br /><br />";
 
-
-                    jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
-
+                    jQuery("#validate_stock_add_missing_accessions").html(missing_accessions_link);
+		    
                     var missing_accessions_vals = '';
                     var missing_accessions_vals_for_list = '';
+		    var missing_accessions_for_table = new Array();
+		    
                     for(var i=0; i<missing.length; i++) {
+			missing_accessions_for_table.push( [ missing[i], '(not&nbsp;present)' ] );
                         missing_accessions_vals = missing_accessions_vals + missing[i] + '<br/>';
                         missing_accessions_vals_for_list = missing_accessions_vals_for_list + missing[i] + '\n';
                     }
 
-                    jQuery("#validate_stock_missing_accessions").html(missing_accessions_vals);
+		    jQuery('#missing_accessions_table').DataTable( {
+			    destroy: true,
+			    data: missing_accessions_for_table,
+			    sDom: 'lrtip',
+			    bInfo: false,
+			    paging: false,
+			    columns: [
+				{ title: 'List' },
+				{ title: 'DB' },
+			    ]
+			});
+		    
+		    
                     jQuery("#validate_stock_add_missing_accessions_for_list").html(missing_accessions_vals_for_list);
+
                     addToListMenu('validate_stock_add_missing_accessions_for_list_div', 'validate_stock_add_missing_accessions_for_list', {
                         selectText: true,
                         listType: 'accessions'
                     });
+		    
+		    
+		    var wrong_case_accessions_for_list = '';
 
-                    jQuery("#validate_accession_error_display tbody").append(missing_accessions_vals);
+		    jQuery('#wrong_case_message_div').html('');
+		    
+		    if (wrong_case.length > 0) {
+			//alert(JSON.stringify(wrong_case));
+			jQuery('#wrong_case_table').DataTable( {
+			    destroy: true,
+			    data: wrong_case,
+			    sDom: 'lrtip',
+			    bInfo: false,
+			    paging: false,
+			    columns: [
+				{ title: 'List' },
+				{ title: 'DB'   }
+			    ]
+			});
+
+			
+			jQuery('#adjust_case_action_button').prop('disabled', false);
+
+		    }
+		    else {
+			jQuery('#wrong_case_message_div').html('No mismatched cases found.');
+		    }
+
+		    if (multiple_wrong_case.length > 0) {
+			//alert(JSON.stringify(multiple_wrong_case));
+			jQuery('#multiple_wrong_case_table').DataTable( {
+			    destroy: true,
+			    data: multiple_wrong_case,
+			    sDom: 'lrtip',
+			    bInfo: false,
+			    paging: false,
+			    columns: [
+				{ title : 'List' },
+				{ title : 'DB' }
+			    ]
+			});
+		    }
+		    else {
+			jQuery('#multiple_case_match_message_div').html('');
+		    }
+
+		     jQuery('#adjust_case_action_button').click( function() {
+		    	 jQuery.ajax( {
+		    	     url : '/ajax/list/adjust_case',
+			     data: { 'list_id' : list_id },
+		    	     error: function() { alert('An error occurred'); },
+		    	     success: function(r) {
+
+				 if (r.error) { alert(r.error); }
+
+				 else {
+				     alert('Converted the following ids: '+JSON.stringify(r.mapping));
+				     var lo = new CXGN.List();
+				     lo.renderItems('list_item_dialog', list_id);
+
+				     jQuery('#adjust_case_div').html("<br /><br /><h3>Mismatched case</h3><b>The case has been successfully adjusted.</b>");
+				     jQuery('#adjust_case_action_button').prop('disabled', true);    
+				 }
+			     }
+		    	 });
+		     });
+		    
+		    var synonym_matches_table = new Array();
+		    
+		    for(var i=0; i<synonym_matches.length; i++) {
+			synonym_matches_table.push( [ synonym_matches[i]['synonym'], synonym_matches[i]['uniquename'] ] );
+		    }
+
+		    //alert(JSON.stringify(synonym_matches_table));
+
+		    jQuery('#replace_synonyms_with_uniquenames_button').click( function() {
+		    	jQuery.ajax( {
+		    	    url : '/ajax/list/adjust_synonyms',
+			    data: { 'list_id' : list_id },
+		    	    error: function() { alert('An error occurred'); },
+		    	    success: function(r) {
+
+				if (r.error) { alert(r.error); }
+				else {
+				    var lo = new CXGN.List();
+				    lo.renderItems('list_item_dialog', list_id);
+				    
+				    jQuery('#synonym_matches_div').hide();
+				    jQuery('#synonym_message').show();
+				    jQuery('#synonym_message').html("<br /><br /><h3>Synonyms</h3><b>Synonyms have been successfully replaced with uniquenames.</b>");
+				    jQuery('#replace_synonyms_with_uniquenames_button').prop('disabled', true);    
+				}
+			    }
+		    	});
+		    });
+		    
+		    if (synonym_matches.length > 0) {
+			jQuery('#synonym_matches_div').show();
+			jQuery('#synonym_message').html('');
+
+			jQuery('#element_matches_synonym').DataTable( {
+			    destroy: true,
+			    data: synonym_matches_table,
+			    sDom: 'lrtip',
+			    bInfo: false,
+			    paging: false,
+			    columns: [
+				
+				{ title : 'List elements matching synonym' },
+				{ title : 'Corresponding db names' } 
+			    ]
+			});
+		    }
+		    else {
+			jQuery('#synonym_matches_div').hide();
+			jQuery('#synonym_message').html('No synonym matches found.');
+		    }
+
+		    if (multiple_synonyms.count > 0) {
+			jQuery('#element_matches_multiple_synonyms_table').DataTable( {
+			    destroy: true,
+			    data: multiple_synonyms,
+			    sDom: 'lrtip',
+			    bInfo: false,
+			    paging: false,
+			    columns: [
+				{title : 'Item' },
+				{title: 'Synonym'}
+			    ]
+			});
+		    }
+		    
                     jQuery('#validate_accession_error_display').modal("show");
-
                     //alert("List validation failed. Elements not found: "+ missing.join(","));
                     //return 0;
-                } else {
+		}
+		else {
                     alert('List did not pass validation because of these items: '+missing.join(", "));
-                }
+		}
             }
             return;
-        }
+	}
     },
 
     seedlotSearch: function(list_id){
@@ -1053,7 +1212,7 @@ CXGN.List.prototype = {
                 new_type = 'plots_2_plot_ids';
                 break;
             default:
-                return { 'error' : "cannot convert the list because of unknown type" };
+            return { 'error' : "cannot convert the list because of unknown type" };
         }
         //if (window.console) console.log("new type = "+new_type);
         var transformed = this.transform(list_id, new_type);
@@ -1622,3 +1781,6 @@ jQuery(document).ready(function() {
     jQuery("#list_dialog").draggable();
     jQuery("#public_list_dialog").draggable();
 });
+
+
+

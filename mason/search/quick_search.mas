@@ -51,6 +51,7 @@
       <dt>Identifiers - Genomic Data</dt>
       <dd >
 	<div style="float: left; width: 50%">
+          <% $search{marker} %>
           <% $search{clone} %>
           <% $search{est} %>
 	</div>
@@ -81,7 +82,6 @@
     </dt>
     <dd>
       <div style="float: left; width: 50%">
-        <% $search{marker} %>
         <% $search{bac} %>
         <% $search{phenotype} %>
       </div>

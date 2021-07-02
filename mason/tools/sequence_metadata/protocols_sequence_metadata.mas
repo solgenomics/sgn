@@ -1,0 +1,97 @@
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ],  &>
+
+<p>View sequence metadata protocols associated with each sequence metadata data type.  Click the name of the sequence 
+metadata protocol to query data from that protocol.</p>
+
+<div id="sequence_metadata_protocol_types"></div>
+
+
+<script type="text/javascript">
+
+var data_types = [];            // List of available sequence metadata data types fetched from the database
+
+
+jQuery(document).ready(function() {
+
+    // Get the data types and then display the protocols
+    get_types(function() {
+        get_protocols();
+    });
+
+});
+
+
+/**
+ * Get the types associated with stored sequence metadata
+ * - build the sections for each data typ
+ */
+function get_types(callback) {
+    jQuery.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: '/ajax/sequence_metadata/types',
+        success: function(data) {
+            if ( data && data.types ) {
+                data_types = data.types;
+                
+                // Add Type Sections
+                let html = "";
+                for ( let i = 0; i < data.types.length; i++ ) {
+                    html += "<div class='sequence_metadata_protocol_type sequence_metadata_protocol_type_" + i + "' data-type='" + data.types[i].type_name + "'>";
+                    html += "<div class='sequence_metadata_protocol_type_header'>";
+                    html += "<h4 class='sequence_metdata_protocol_type_name'>" + data.types[i].type_name.replaceAll(' ', '&nbsp;') + "</h4>";
+                    html += "<p class='sequence_metadata_protocol_type_definition'>" + data.types[i].type_definition + "</p>";
+                    html += "</div>";
+                    html += "<div id='sequence_metadata_protocols_" + i + "'></div>";
+                    html += "</div>";
+                }
+                jQuery('#sequence_metadata_protocol_types').html(html);
+
+                if ( callback ) return callback();
+            }
+            else {
+                alert("ERROR: Could not load types!");
+            }
+        },
+        error: function() {
+            alert("ERROR: Could not load types");
+        }
+    });
+}
+
+/**
+ * Get and display the Protocol Tables for each data type
+ */
+function get_protocols() {
+    for ( let i = 0; i < data_types.length; i++ ) {
+        get_select_box('sequence_metadata_protocols', 'sequence_metadata_protocols_' + i,  {
+            'sequence_metadata_data_type_id': data_types[i].type_id,
+            'include_query_link': 1
+        });
+    }
+}
+
+
+</script>
+
+
+
+<style>
+    .sequence_metadata_protocol_type_header {
+        display: flex;
+        margin: 50px 0 15px 0;
+        border-bottom: 1px solid #ccc;
+        align-items: center;
+    }
+    .sequence_metdata_protocol_type_name {
+        margin: 0;
+    }
+    .sequence_metadata_protocol_type_definition {
+        flex-grow: 1;
+        text-align: right;
+        margin: 0 0 0 10px;
+        font-size: 90%;
+        color: #333;
+    }
+</style>

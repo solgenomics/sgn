@@ -409,7 +409,8 @@ jQuery(document).ready(function () {
         _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
     });
 
-    _load_stock_search_results('accession', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+    parseArgs();
+    _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
       var name_links = stock_table.column(0).data();
@@ -497,6 +498,14 @@ jQuery(document).ready(function () {
 
 
 });
+
+function parseArgs() {
+  const params = new URLSearchParams(window.location.search);
+  if ( params.has('any_name') ) {
+    jQuery('#any_name').val(params.get('any_name'));
+    jQuery('#stock_type_select').val(0);
+  }
+}
 
 function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array){
     console.log(stock_type);

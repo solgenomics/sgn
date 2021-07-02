@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# This shell script is called by the verify_featureprop_json.pl script and 
+# This shell script is called by the CXGN::Genotype::SequenceMetadata verify function and 
 # is used to preprocess the gff3 file for the featureprop_json table.  It will:
 # 1) remove comment lines from the file
 # 2) sort the gff3 file by the seqid and start columns (1, 4)
