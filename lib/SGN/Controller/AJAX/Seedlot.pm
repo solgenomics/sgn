@@ -1176,6 +1176,39 @@ sub seedlot_maintenance_event_search_POST {
 }
 
 
+#
+# Find Seedlots with overdue events
+# PATH: POST /ajax/breeders/seedlot/maintenance/overdue
+# PARAMS:
+#   seedlots = array of the names of seedlots to check
+#   event = cvterm_id of maintenance event
+#   date = find seedlots that have not had the specified event performed on or after this date (YYYY-MM-DD format)
+# RETURNS: an array with the status of the requested seedlots:
+#   seedlot = seedlot name
+#   overdue = 1 if the seedlot is overdue
+#   timestamp = timestamp of the last time the event was performed, if the seedlot is not overdue
+#
+sub seedlot_maintenance_event_overdue : Path('/ajax/breeders/seedlot/maintenance/overdue') : ActionClass('REST') { }
+sub seedlot_maintenance_event_overdue_POST {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    # Get search parameters
+    my $body = $c->request->data;
+    my $seedlots = $body->{seedlots};
+    my $event = $body->{event};
+    my $date = $body->{date};
+
+    # Find overdue events
+    my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
+    my $results = $m->overdue_events($seedlots, $event, $date);
+
+    # Return seedlots
+    $c->stash->{rest} = { results => $results };
+}
+
+
 
 #
 # List all of the Maintenance Events for the specified Seedlot

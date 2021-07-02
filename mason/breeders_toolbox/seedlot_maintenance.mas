@@ -26,6 +26,9 @@
     </div>
 </&>
 
+<!-- Additional crop-specific seedlot maintenance tools -->
+<& /breeders_toolbox/seedlot_maintenance_tools.mas &>
+
 <%perl>
     my $seedlot_subtitle = '';
     if ( !$c->user() ) {

@@ -76,7 +76,7 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label">Date: </label>
                 <div class="col-sm-4">
-                    <input class="form-control" id="event_filter_date" type="text" placeholder="YYYY-MM-DD" value="">
+                    <input class="form-control" id="event_filter_date" type="date">
                 </div>
                 <div class="col-sm-4">
                     <select class="form-control" id="event_filter_date_type">
@@ -355,7 +355,7 @@ function getEvents() {
             if ( f.comp === '=' ) {
                 dates.push({
                     date: f.value + "%",
-                    comp: f.comp
+                    comp: 'LIKE'
                 });
             }
             else if ( f.comp === '<=' ) {

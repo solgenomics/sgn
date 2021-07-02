@@ -72,6 +72,7 @@ sub BUILD {
                     - types: an arrayref of hashes containing type/value filter options:
                         - cvterm_id: cvterm_id of maintenance event type
                         - values: (optional, default=any value) array of allowed values
+                        - ignore: (optional, default=none) array of not allowed values
                     - operators: arrayref of operator names
                 - page (optional): the page number of results to return
                 - pageSize (optional): the number of results per page to return
@@ -123,6 +124,13 @@ sub filter_events {
                 );
                 push(@or, { "-and" => \@c });
             }
+            elsif ( $f->{ignore} ) {
+                my @c = (
+                    { "value::json->>'cvterm_id'" => $f->{cvterm_id} },
+                    { "value::json->>'value'" => { "!=" => $f->{ignore} } }
+                );
+                push(@or, { "-and" => \@c });
+            }
             else {
                 push(@or, { "value::json->>'cvterm_id'" => $f->{cvterm_id} });
             }
@@ -153,6 +161,62 @@ sub filter_events {
 
     return $filtered_props;
 
+}
+
+
+=head2 Class method: overdue_events()
+
+ Usage:         my $event_obj = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
+                my @seedlots = $event_obj->overdue_events($seedlots, $event, $date);
+ Desc:          return the seedlots (from the specified list) that have not had the specified event performed
+                on or after the selected date
+ Args:          - seedlots: an arrayref of seedlot names to check
+                - event: cvterm_id of event that should have been performed
+                - date: find seedlots that have not had the specified event performed after this date (YYYY-MM-DD format)
+ Ret:           an arrayref with the status of each of the requested seedlots
+                - seedlot: seedlot name
+                - overdue: 1 if overdue, 0 if not
+                - timestamp: the timestamp of the last time the event was performed, if not overdue
+
+=cut
+
+sub overdue_events {
+    my $class = shift;
+    my $seedlots = shift;
+    my $event = shift;
+    my $date = shift;
+    my $schema = $class->bcs_schema();
+
+    # Find Seedlots that are not overdue
+    my %filters = (
+        names => $seedlots,
+        types => [ { cvterm_id => $event, ignore => 'Unsuccessful' } ],
+        dates => [ { date => $date . "00:00:00", comp => '>=' } ] 
+    );
+    my $results = $class->filter_events(\%filters);
+
+    # Get the timestamps of the not overdue seedlots
+    my %not_overdue_seedlots;
+    foreach my $s (@{$results->{'results'}}) {
+        my $n = $s->{'uniquename'};
+        my $t = $s->{'timestamp'};
+        my $e = $not_overdue_seedlots{$n};
+        if ( !$e || $t > $e ) {
+            $not_overdue_seedlots{$n} = $t;
+        }
+    }
+
+    # Get the status of each of the requested seedlots
+    my @results = ();
+    foreach my $n (@$seedlots) {
+        my $t = $not_overdue_seedlots{$n};
+        my $o = $t ? 0 : 1;
+        push(@results, { seedlot => $n, overdue => $o, timestamp => $t });
+    }
+
+    # Sort so overdue seedlots are displayed first
+    my @sorted = sort { $b->{overdue} <=> $a->{overdue} } @results;
+    return \@sorted;
 }
 
 1;
