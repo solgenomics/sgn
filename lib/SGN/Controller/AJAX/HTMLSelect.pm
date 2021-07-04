@@ -784,7 +784,8 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
     my $c = shift;
     my $checkbox_name = $c->req->param('checkbox_name');
     my $data_type_cvterm_id = $c->req->param('sequence_metadata_data_type_id');
-
+    my $include_query_link = $c->req->param('include_query_link');
+    
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol', 'protocol_type')->cvterm_id();
@@ -799,27 +800,57 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
-    my $html = '<table class="table table-bordered table-hover" id="html-select-sdmprotocol-table"><thead><tr><th>Select</th><th>Protocol Name</th><th>Description</th><th>Properties</th></tr></thead><tbody>';
+    my $html = '<table class="table table-bordered table-hover" id="html-select-sdmprotocol-table-' . $data_type_cvterm_id . '">';
+    my $select_th = defined $checkbox_name ? "<th>Select</th>" : "";
+    $html .= '<thead><tr>' . $select_th . '<th>Protocol&nbsp;Name</th><th>Description</th><th>Properties</th></tr></thead>';
+    $html .= '<tbody>';
 
     while (my ($nd_protocol_id, $name, $description, $props_json) = $h->fetchrow_array()) {
+
+        # Decode the json props
         my $props = decode_json $props_json;
-        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>';
-        while (my($k,$v) = each %$props) {
-            if (ref $v eq ref {}) {
-                $html .= "$k:<br />";
-                while (my($k2,$v2) = each %$v) {
-                    $html .= "&nbsp;&nbsp;$k2: $v2<br />";
-                }
-            }
-            else {
-                $html .= "$k: $v<br />";
+
+        # Add link to protocol name, if requested
+        if ( $include_query_link ) {
+            $name = "<a href='/search/sequence_metadata?nd_protocol_id=$nd_protocol_id&reference_genome=" . $props->{'reference_genome'} . "'>$name</a>";
+        }
+
+        # Build the row of the table
+        my $select_td = defined $checkbox_name ? '<td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td>' : '';
+        $html .= '<tr>' . $select_td . '<td>'.$name.'</td><td>'.$description.'</td><td>';
+
+        my $type = $props->{'sequence_metadata_type'};
+        $type =~ s/ /&nbsp;/;
+        $html .= "<strong>Data&nbsp;Type:</strong>&nbsp;" . $type . "<br />";
+        $html .= "<strong>Reference&nbsp;Genome:</strong>&nbsp;" . $props->{'reference_genome'} . "<br />";
+        $html .= "<strong>Score:</strong>&nbsp;" . $props->{'score_description'} . "<br />";
+        $html .= "<strong>Attributes:</strong><br />";
+
+        my $attributes = $props->{'attribute_descriptions'};
+        $html .= "<table class='table table-striped' style='min-width: 300px'>";
+        $html .= "<thead><tr><th>Key</th><th>Description</th></tr></thead>";
+        while (my($k,$v) = each %$attributes) {
+            $html .= "<tr><td>$k</td><td>$v</td></tr>";
+        }
+        $html .= "</table>";
+
+        my $links = $props->{'links'};
+        if ( defined $links ) {
+            $html .= "<strong>Links:</strong><br />";
+            $html .= "<table class='table table-striped' style='min-width: 300px'>";
+            $html .= "<thead><tr><th>Title</th><th>URL&nbsp;Template</th></tr></thead>";
+            while (my($k,$v) = each %$links) {
+                $html .= "<tr><td>$k</td><td>$v</td></tr>";
             }
         }
+        $html .= "</table>";
+
         $html .= '</td></tr>';
+
     }
     $html .= "</tbody></table>";
 
-    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-sdmprotocol-table').DataTable({ }); } );</script>";
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-sdmprotocol-table-" . $data_type_cvterm_id . "').DataTable({ }); } );</script>";
 
     $c->stash->{rest} = { select => $html };
 }

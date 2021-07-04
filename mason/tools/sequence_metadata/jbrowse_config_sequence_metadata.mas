@@ -7,6 +7,7 @@
  * data_dir: JBRowse data directory to include
  * tracks: list of track names to include with the sequence metadata
  * location_name: function to convert sequence metadata feature name into JBrowse location name
+ * query_params: additional query parameters to add to the sequence metadata gff query api
  */
 const JBROWSE_CONFIG_SEQUENCE_METADATA = {
     "enabled": false,
@@ -15,7 +16,8 @@ const JBROWSE_CONFIG_SEQUENCE_METADATA = {
     "tracks": [],
     "location_name": function(feature) {
         return feature;
-    }
+    },
+    "query_params": {}
 }
 
 </script>
