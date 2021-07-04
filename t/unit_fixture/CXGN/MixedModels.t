@@ -19,6 +19,8 @@ my ($fh, $tempfile) = tempfile( "mixedmodelsXXXXXX", DIR => $dir."/static/docume
 
 print STDERR "Using tempfile $tempfile\n";
 
+
+
 # create dataset
 my $ds = CXGN::Dataset->new( { people_schema => $f->people_schema(), schema => $f->bcs_schema() });
 
@@ -27,7 +29,7 @@ $ds->years( [ "2016", "2017" ]);
 $ds->store();
 
 
-my $dsf = CXGN::Dataset::File->new( { people_schema => $f->people_schema(), schema => $f->bcs_schema(), sp_dataset_id => 1 });
+my $dsf = CXGN::Dataset::File->new( { people_schema => $f->people_schema(), schema => $f->bcs_schema(), sp_dataset_id => $ds->sp_dataset_id() });
 
 $dsf->file_name($tempfile);
 $dsf->retrieve_phenotypes();
@@ -81,5 +83,6 @@ unlink($mm->tempfile().".BLUPs");
 unlink($mm->tempfile().".adjustedBLUEs");
 unlink($mm->tempfile().".BLUEs");
 
+$ds->delete();
 
 done_testing();
