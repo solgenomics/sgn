@@ -559,6 +559,8 @@ my %plot_trait_value = ( $trial_design->{11}->{plot_name} => { 'root number|CO_3
 
 my %metadata = ( operator => 'johndoe', date => '20141223' );
 
+my $total_phenotypes_before_store = $trial->total_phenotypes();
+
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     basepath=>$f->config->{basepath},
     dbhost=>$f->config->{dbhost},
@@ -586,7 +588,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 #print STDERR "Total phentoypes: $total_phenotypes\n";
 #print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3508, "total phenotype data");
+is($total_phenotypes, $total_phenotypes_before_store + 6, "total phenotype data");
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -726,6 +728,8 @@ my %plant_trait_value = ( $trial_design->{11}->{plot_name}.'_plant_2' => { 'root
 
 my %metadata = ( operator => 'johndoe', date => '20141225' );
 
+my $total_phenotype_count_before_save2 = $trial->total_phenotypes();
+
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     basepath=>$f->config->{basepath},
     dbhost=>$f->config->{dbhost},
@@ -752,7 +756,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 print STDERR "Total phentoypes: $total_phenotypes\n";
 print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3517, "total phenotype data");
+is($total_phenotypes, $total_phenotype_count_before_save2 + 9, "total phenotype data");
 is($trial_phenotype_count, 15, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
