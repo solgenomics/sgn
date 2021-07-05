@@ -14,6 +14,10 @@ use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
 use Bio::GeneticRelationships::Individual;
 use CXGN::List;
+use DateTime;
+use CXGN::Genotype::ParseUpload;
+use CXGN::Genotype::StoreVCFGenotypes;
+use SimulateC;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -21,9 +25,13 @@ use JSON;
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
-my $schema = $f->bcs_schema;
-my $dbh = $schema->storage->dbh;
-my $people_schema = $f->people_schema;
+my $schema = $f->bcs_schema();
+my $dbh = $schema->storage->dbh();
+my $people_schema = $f->people_schema();
+my $metadata_schema = $f->metadata_schema();
+my $phenome_schema = $f->phenome_schema();
+
+
 
 my $mech = Test::WWW::Mechanize->new;
 
@@ -33,6 +41,12 @@ print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 print STDERR $sgn_session_id."\n";
+
+my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search({description => 'Cornell Biotech'});
+my $location_id = $location_rs->first->nd_geolocation_id;
+
+my $bp_rs = $schema->resultset('Project::Project')->search({name => 'test'});
+my $breeding_program_id = $bp_rs->first->project_id;
 
 #test uploading SSR marker info
 my $file = $f->config->{basepath}."/t/data/genotype_data/ssr_marker_info.xls";
@@ -54,6 +68,93 @@ $response = $ua->post(
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
-is_deeply($message_hash, {'success' => 1});
+is($message_hash->{'success'}, '1');
+
+my $ssr_protocol_id = $message_hash->{'protocol_id'};
+
+#test uploading SSR data
+my %upload_metadata;
+my $file_name = 't/data/genotype_data/ssr_data.xls';
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+
+#Test archive upload file
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $file_name,
+  subdirectory => 'ssr_data_upload',
+  archive_path => '/tmp',
+  archive_filename => 'ssr_data.xls',
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $archived_filename_with_path = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path);
+ok($archived_filename_with_path);
+ok($md5);
+
+my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
+my @found_organisms;
+my $h = $schema->storage->dbh()->prepare($organism_q);
+$h->execute('Manihot esculenta');
+while (my ($organism_id) = $h->fetchrow_array()){
+    push @found_organisms, $organism_id;
+}
+my $organism_id = $found_organisms[0];
+
+my $parser = CXGN::Genotype::ParseUpload->new({
+    chado_schema => $schema,
+    filename => $archived_filename_with_path,
+    organism_id => $organism_id,
+    observation_unit_type_name => 'accession'
+});
+$parser->load_plugin('SSRExcel');
+my $parsed_data = $parser->parse();
+ok($parsed_data, "Check if parse validate excel file works");
+
+my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
+my $genotype_info = $parsed_data->{genotypes_info};
+
+my $temp_file_sql_copy = "/tmp/temp_file_sql_copy";
+
+my $store_args = {
+    bcs_schema=>$schema,
+    metadata_schema=>$metadata_schema,
+    phenome_schema=>$phenome_schema,
+    observation_unit_type_name=>'accession',
+    protocol_id=>$ssr_protocol_id,
+    genotyping_facility=>"IGD",
+    breeding_program_id=>$breeding_program_id,
+    project_year=>'2021',
+    project_location_id=>$location_id,
+    project_name=>'ssr_project',
+    project_description=>'test_ssr_upload',
+    user_id=>'41',
+    archived_filename=>$archived_filename_with_path,
+    archived_file_type=>'ssr',
+    genotyping_data_type=>'ssr',
+    organism_id => $organism_id,
+    temp_file_sql_copy=>$temp_file_sql_copy
+
+};
+
+$store_args->{genotype_info} = $genotype_info;
+$store_args->{observation_unit_uniquenames} = $observation_unit_uniquenames;
+
+my %protocolprop_info;
+$protocolprop_info{'sample_observation_unit_type_name'} = 'accession';
+$store_args->{protocol_info} = \%protocolprop_info;
+
+#$store_args->{protocol_info} = \%protocolprop_info;
+
+my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
+
+ok($store_genotypes->validate());
+ok($store_genotypes->store_metadata());
+ok($store_genotypes->store_identifiers());
+
+
 
 done_testing();
