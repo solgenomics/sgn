@@ -181,5 +181,11 @@ is_deeply($ssr_genotype_data, [
     [38881,'UG120004','accession','SSR genotypes for stock (name = UG120004, id = 38881)',1067,'{"m01": {"126": "0", "184": "0"}, "m02": {"237": "1", "267": "0"}, "m03": {"157": "1"}, "m04": {"110": "0", "190": "1"}}']
 ]);
 
+#deleting protocol and ssr genotyping data
+$ua = LWP::UserAgent->new;
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$ssr_protocol_id?sgn_session_id=$sgn_session_id");
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {success=>1});
 
 done_testing();
