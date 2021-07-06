@@ -126,7 +126,7 @@ AS \$function\$
 
 		-- Refresh materialzied view, if requested with function argument
 		IF \$1 THEN
-			REFRESH MATERIALIZED VIEW public.materialized_markerview;
+			EXECUTE 'REFRESH MATERIALIZED VIEW public.materialized_markerview';
 		END IF;
 
 		-- Return true if the materialized view is refreshed
