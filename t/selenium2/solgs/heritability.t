@@ -37,10 +37,10 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(15);
 
-    my $heri = $d->find_element('heritability', 'partial_link_text', 'scroll to anova');
+    my $heri = $d->find_element('heritability', 'partial_link_text', 'scroll to heritability');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $heri);
     sleep(2);
-    $d->find_element_ok('run_pheno_heritability', 'id', 'run anova')->click();
+    $d->find_element_ok('run_pheno_heritability', 'id', 'run heritability')->click();
     sleep(30);
     $d->find_element_ok('//div[@id="heritability_canvas"]//*[contains(., "DMCP")]', 'xpath', 'heritability result')->get_text();
     sleep(3);
