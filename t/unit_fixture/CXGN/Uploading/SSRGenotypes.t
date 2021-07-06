@@ -147,14 +147,39 @@ my %protocolprop_info;
 $protocolprop_info{'sample_observation_unit_type_name'} = 'accession';
 $store_args->{protocol_info} = \%protocolprop_info;
 
-#$store_args->{protocol_info} = \%protocolprop_info;
-
 my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
 
 ok($store_genotypes->validate());
 ok($store_genotypes->store_metadata());
-ok($store_genotypes->store_identifiers());
 
+my $stored_data = $store_genotypes->store_identifiers();
+is($stored_data->{'success'}, '1');
+is($stored_data->{'nd_protocol_id'}, $ssr_protocol_id);
+
+#test retrieving data
+my @protocol_id_list;
+push @protocol_id_list, $ssr_protocol_id;
+
+my $genotypes_search = CXGN::Genotype::Search->new({
+	bcs_schema=>$schema,
+	people_schema=>$people_schema,
+	protocol_id_list=>\@protocol_id_list,
+});
+my $result = $genotypes_search->get_pcr_genotype_info();
+my $protocol_marker_names = $result->{'marker_names'};
+my $ssr_genotype_data = $result->{'protocol_genotype_data'};
+
+my $protocol_marker_names_ref = decode_json $protocol_marker_names;
+my @marker_name_arrays = sort @$protocol_marker_names_ref;
+
+is_deeply(\@marker_name_arrays, ['m01','m02','m03','m04']);
+
+is_deeply($ssr_genotype_data, [
+    [38878,'UG120001','accession','SSR genotypes for stock (name = UG120001, id = 38878)',1064,'{"m01": {"126": "0", "184": "0"}, "m02": {"237": "1", "267": "0"}, "m03": {"157": "0"}, "m04": {"110": "0", "190": "1"}}'],
+    [38879,'UG120002','accession','SSR genotypes for stock (name = UG120002, id = 38879)',1065,'{"m01": {"126": "1", "184": "1"}, "m02": {"237": "0", "267": "0"}, "m03": {"157": "0"}, "m04": {"110": "1", "190": "1"}}'],
+    [38880,'UG120003','accession','SSR genotypes for stock (name = UG120003, id = 38880)',1066,'{"m01": {"126": "1", "184": "1"}, "m02": {"237": "0", "267": "0"}, "m03": {"157": "1"}, "m04": {"110": "1", "190": "1"}}'],
+    [38881,'UG120004','accession','SSR genotypes for stock (name = UG120004, id = 38881)',1067,'{"m01": {"126": "0", "184": "0"}, "m02": {"237": "1", "267": "0"}, "m03": {"157": "1"}, "m04": {"110": "0", "190": "1"}}']
+]);
 
 
 done_testing();

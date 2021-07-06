@@ -145,7 +145,7 @@ sub pcr_genotyping_data_search_GET : Args(0) {
         protocol_id_list=>$protocol_id,
     });
     my $result = $genotypes_search->get_pcr_genotype_info();
-    print STDERR "PCR RESULTS =".Dumper($result)."\n";
+#    print STDERR "PCR RESULTS =".Dumper($result)."\n";
     my $protocol_marker_names = $result->{'marker_names'};
     my $protocol_genotype_data = $result->{'protocol_genotype_data'};
 
@@ -207,7 +207,7 @@ sub pcr_genotyping_data_summary_search_GET : Args(0) {
         protocol_id_list=>$protocol_id,
     });
     my $result = $genotypes_search->get_pcr_genotype_info();
-    print STDERR "PCR RESULTS =".Dumper($result)."\n";
+#    print STDERR "PCR RESULTS =".Dumper($result)."\n";
     my $protocol_marker_names = $result->{'marker_names'};
     my $protocol_genotype_data = $result->{'protocol_genotype_data'};
 

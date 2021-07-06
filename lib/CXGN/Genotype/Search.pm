@@ -2184,7 +2184,7 @@ sub get_pcr_genotype_info {
         JOIN nd_experiment_stock ON (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
         JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
-        $where_clause";
+        $where_clause ORDER BY stock.uniquename ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($pcr_genotyping_cvterm_id);
