@@ -546,6 +546,7 @@ var changed_dim_rows;
 var changed_dim_cols;
 var num_real_plots;
 var invert_rows;
+var borders;
 
 
 jQuery(document).ready( function() {
@@ -942,6 +943,8 @@ jQuery(document).ready( function() {
                 FieldMap.make_hash_map(data);
                 FieldMap.field_view();
                 console.log(data);
+                borders = FieldMap.get_borders();
+
             },
                 error: function(reponse) {
                 alert('Error displaying traits assayed heatmap');   
@@ -1148,24 +1151,9 @@ jQuery(document).ready( function() {
     });
 
     function submit_fieldmap_metadata() {
-        invert_rows = document.getElementById("invert_row_checkmark").checked ? "yes" : "no";
-        console.log(auth_token);
-        
         var data = [
-		        {
-			        "additionalInfo": {
-					    "invertRows": "invert_rows"
-				    },
-			        "observationUnitName": "test ou",
-			        "studyDbId": trial_id,
-			        "germplasmDbId": "38840",
-			        "observationUnitPosition": {
-				        "observationLevel": {
-				            "levelName": "plot"
-				        }
-			        }
-		        }
-            ]
+            borders;
+        ]
         var stringifiedData = JSON.stringify(data);
 
         new jQuery.ajax({
@@ -1178,7 +1166,7 @@ jQuery(document).ready( function() {
                 console.log(response);
             }
 
-        })
+        });
         // new jQuery.ajax({
         //     type: 'POST',
         //     url: '/ajax/breeders/trial/<% $trial_id %>/submit_fieldmap_layout',

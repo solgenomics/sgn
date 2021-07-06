@@ -8,14 +8,22 @@ export function init() {
         constructor (trial_id) {
             this.trial_id = String;
             this.field_map_hash = Object;
+            this.brapi_borders = Array;
         }
 
         set_id(trial_id) {
             this.trial_id = trial_id;
         }
 
+        get_borders() {
+            return this.brapi_borders;
+        }
+
         make_hash_map(data) {
+            var brapi_borders = [];
             var field_map_hash;
+            var entryType;
+            var studyName;
             var checks = {};
             var rows = [];
             var cols = [];
@@ -143,6 +151,7 @@ export function init() {
                 'highest_row': highest_row,
                 'lowest_col': lowest_col,
                 'highest_col': highest_col,
+                'brapi_borders': brapi_borders,
             }
         
             this.field_map_hash = field_map_hash;
@@ -184,6 +193,7 @@ export function init() {
             var highest_col = field_map_hash['highest_col'];
             var lowest_row = field_map_hash['lowest_row'];
             var highest_row = field_map_hash['highest_row'];
+            var brapi_borders = field_map_hash['brapi_borders'];
             var list_of_checks;
             invert_rows = document.getElementById("invert_row_checkmark").checked ? "yes" : "no";
             var psudo_rows = [];
@@ -409,6 +419,22 @@ export function init() {
                         for (let i = lowest_col; i <= highest_col; i++) {
                             datasets.push({plotname:plot_names[i] + "_top_border", plot_id:plot_ids[i] + plot_ids[i], stock:border_accession_name,
                             blkn:blocks[i], row:lowest_row, plot_image_ids:plotImageDbIds[lowest_col], col:i, plot_msg:plot_popUp});
+                            brapi_borders.push({
+                                "observationUnitName": plot_names[i] + "_top_border",
+                                "observationUnitDbId": plot_ids[i] + plot_ids[i],
+                                "studyDbId": trial_id,
+                                "germplasmDbId": "00001",
+                                "observationUnitPosition": {
+                                    "positionCoordinateXType": "GRID_COL",
+                                    "positionCoordinateYType": "GRID_ROW",
+                                    "positionCoordinateX": i,
+                                    "positionCoordinateY": lowest_row,
+                                    "observationLevel": {
+                                        "levelName": "plot",
+                                        "levelCode": "0",
+                                    }
+                                }  
+                            });
                         }
                         highest_row += 1;
 
@@ -426,7 +452,23 @@ export function init() {
                         }
                         for (let i = lowest_row; i <= highest_row; i++) {
                             datasets.push({plotname:plot_names[i] + "_left_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:border_accession_name,
-                            blkn:blocks[i], row:i, plot_image_ids:plotImageDbIds[lowest_row], col:lowest_col, plot_msg:plot_popUp})
+                            blkn:blocks[i], row:i, plot_image_ids:plotImageDbIds[lowest_row], col:lowest_col, plot_msg:plot_popUp});
+                            brapi_borders.push({
+                                "observationUnitName": plot_names[i] + "_left_border",
+                                "observationUnitDbId": plot_ids[i] + plot_ids[i],
+                                "studyDbId": trial_id,
+                                "germplasmDbId": "00001",
+                                "observationUnitPosition": {
+                                    "positionCoordinateXType": "GRID_COL",
+                                    "positionCoordinateYType": "GRID_ROW",
+                                    "positionCoordinateX": lowest_col,
+                                    "positionCoordinateY": i,
+                                    "observationLevel": {
+                                        "levelName": "plot",
+                                        "levelCode": "0",
+                                    }
+                                }  
+                            });
                         }
                         lowest_col += 1;
                         modifiedColLabels = svg.selectAll(".columnLabel");
@@ -441,7 +483,23 @@ export function init() {
                         }
                         for (let i = lowest_row; i <= highest_row; i++) {
                             datasets.push({plotname:plot_names[i] + "_right_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:border_accession_name,
-                            blkn:blocks[i], row:i, plot_image_ids:plotImageDbIds[lowest_row], col:highest_col + 1, plot_msg:plot_popUp})
+                            blkn:blocks[i], row:i, plot_image_ids:plotImageDbIds[lowest_row], col:highest_col + 1, plot_msg:plot_popUp});
+                            brapi_borders.push({
+                                "observationUnitName": plot_names[i] + "_right_border",
+                                "observationUnitDbId": plot_ids[i] + plot_ids[i],
+                                "studyDbId": trial_id,
+                                "germplasmDbId": "00001",
+                                "observationUnitPosition": {
+                                    "positionCoordinateXType": "GRID_COL",
+                                    "positionCoordinateYType": "GRID_ROW",
+                                    "positionCoordinateX": highest_col,
+                                    "positionCoordinateY": i,
+                                    "observationLevel": {
+                                        "levelName": "plot",
+                                        "levelCode": "0",
+                                    }
+                                }  
+                            });
                         }
                     }
 
@@ -457,7 +515,23 @@ export function init() {
                         }
                         for (let i = lowest_col; i <= highest_col; i++) {
                             datasets.push({plotname:plot_names[i] + "_bottom_border", plot_id:plot_ids[i] + 2 * plot_ids[i], stock:border_accession_name,
-                            blkn:blocks[i], row:highest_row + 1, plot_image_ids:plotImageDbIds[lowest_row], col:i, plot_msg:plot_popUp})
+                            blkn:blocks[i], row:highest_row + 1, plot_image_ids:plotImageDbIds[lowest_row], col:i, plot_msg:plot_popUp});
+                            brapi_borders.push({
+                                "observationUnitName": plot_names[i] + "_bottom_border",
+                                "observationUnitDbId": plot_ids[i] + plot_ids[i],
+                                "studyDbId": trial_id,
+                                "germplasmDbId": "00001",
+                                "observationUnitPosition": {
+                                    "positionCoordinateXType": "GRID_COL",
+                                    "positionCoordinateYType": "GRID_ROW",
+                                    "positionCoordinateX": i,
+                                    "positionCoordinateY": highest_row,
+                                    "observationLevel": {
+                                        "levelName": "plot",
+                                        "levelCode": "0",
+                                    }
+                                }  
+                            });
                         }
                     }
                     
@@ -704,6 +778,9 @@ export function init() {
                 jQuery("#trait_heatmap").css("display", "none");
                 jQuery("#trial_no_rowColMSG").css("display", "inline-block");
             }
+
+            console.log('borders ', brapi_borders);
+            this.brapi_borders = brapi_borders;
         }
     }
 
