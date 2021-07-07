@@ -76,7 +76,7 @@ $trial_stock_type => undef
     <div class="panel panel-default">
         <div class="panel-body">
 
-            <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trait names currently selected in the search results table to a new or exisiting list</i>'&>
+            <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the names currently selected in the first column of the summary table to a new or exisiting list</i>'&>
             <br>
             <p><em><span id="selected_row_count">0</span> row(s) selected.</em></p>
             <div style="text-align:right" id="stocks_to_list_menu"></div>
