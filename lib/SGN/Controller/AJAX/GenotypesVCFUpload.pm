@@ -30,6 +30,7 @@ use CXGN::Login;
 use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
 use File::Basename qw | basename dirname|;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -46,6 +47,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $transpose_vcf_for_loading = 1;
     my @error_status;
     my @success_status;
@@ -581,8 +583,20 @@ sub upload_genotype_verify_POST : Args(0) {
         my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
         my $genotype_info = $parsed_data->{genotypes_info};
 
+        my @protocol_id_list;
+        push @protocol_id_list, $protocol_id;
+        my $genotypes_search = CXGN::Genotype::Search->new({
+        	bcs_schema=>$schema,
+        	people_schema=>$people_schema,
+        	protocol_id_list=>\@protocol_id_list,
+        });
+        my $result = $genotypes_search->get_pcr_genotype_info();
+        my $protocol_marker_names = $result->{'marker_names'};
+        my $previous_protocol_marker_names = decode_json $protocol_marker_names;
+
         my %protocolprop_info;
         $protocolprop_info{'sample_observation_unit_type_name'} = 'accession';
+        $protocolprop_info{'marker_names'} = $previous_protocol_marker_names;
 
         $store_args->{genotype_info} = $genotype_info;
         $store_args->{observation_unit_uniquenames} = $observation_unit_uniquenames;

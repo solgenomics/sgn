@@ -262,6 +262,7 @@ use JSON;
 use CXGN::Trial;
 use Text::CSV;
 use Hash::Case::Preserve;
+use Array::Utils qw(:all);
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -690,6 +691,25 @@ sub validate {
             }
         }
     }
+
+    if ($genotyping_data_type eq 'ssr') {
+        my @stock_keys = keys %{$genotype_info};
+        my @marker_keys = sort keys %{$genotype_info->{$stock_keys[0]}};
+#        print STDERR "MARKER KEYS =".Dumper(\@marker_keys)."\n";
+
+        my $protocol_marker_names = $protocol_info->{'marker_names'};
+        my @protocol_marker_array =  sort @$protocol_marker_names;
+#        print STDERR "PROTOCOL MARKER ARRAY =".Dumper(\@protocol_marker_array)."\n";
+
+        my @diff_markers = array_diff(@marker_keys, @protocol_marker_array);
+        print STDERR "DIFF MARKERS =".Dumper(\@diff_markers)."\n";
+
+        if (scalar(@diff_markers) > 0) {
+            my $mismatch_markers = join(",", @diff_markers);
+            push @error_messages, "Markers in SSR genotyping data and the selected protocol are not the same. Mismatch markers: $mismatch_markers";
+        }
+    }
+
     #check if genotype_info is correct
     #print STDERR Dumper($genotype_info);
 
@@ -898,7 +918,7 @@ sub store_metadata {
         $h_protocolprop->execute($protocol_id, $vcf_map_details_id, 0, $nd_protocol_json_string);
 
         foreach  my $chr_name (sort keys %unique_chromosomes) {
-            print STDERR "Chromosome: $chr_name\n";
+#            print STDERR "Chromosome: $chr_name\n";
             $new_protocol_info->{chromosomes} = $chr_name;
 
             my $rank = $chromosomes{$chr_name}->{rank};
@@ -954,7 +974,7 @@ sub store_metadata {
         }
     }
     $self->stock_lookup(\%stock_lookup);
-    print STDERR "Generated lookup table with ".scalar(keys(%stock_lookup))." entries.\n";
+#    print STDERR "Generated lookup table with ".scalar(keys(%stock_lookup))." entries.\n";
 
     print STDERR "Generating md_file entry...\n";
     #create relationship between nd_experiment and originating archived file
@@ -1008,7 +1028,7 @@ sub store_identifiers {
     my $observation_unit_uniquenames = $self->observation_unit_uniquenames();
     foreach (@$observation_unit_uniquenames) {
         $_ =~ s/^\s+|\s+$//g;
-        print STDERR "EACH NAME =".Dumper($_)."\n";
+#        print STDERR "EACH NAME =".Dumper($_)."\n";
         my $observation_unit_name_with_accession_name;
         my $observation_unit_name;
         my $accession_name;
@@ -1025,14 +1045,14 @@ sub store_identifiers {
         } else {
             ($observation_unit_name, $accession_name) = split(/\|\|\|/, $_);
         }
-        print STDERR "OBSERVATION UNIT NAME =".Dumper($observation_unit_name)."\n";
+#        print STDERR "OBSERVATION UNIT NAME =".Dumper($observation_unit_name)."\n";
         #print STDERR "SAVING GENOTYPEPROP FOR $observation_unit_name \n";
         my $stock_lookup_obj = $self->stock_lookup()->{$observation_unit_name};
         my $stock_id = $stock_lookup_obj->{stock_id};
         my $genotype_id = $stock_lookup_obj->{genotype_id};
-        print STDERR "STOCK ID =".Dumper($stock_id)."\n";
+#        print STDERR "STOCK ID =".Dumper($stock_id)."\n";
         my $genotypeprop_json = $genotypeprop_observation_units->{$_};
-        print STDERR "GENOTYPEPROP JSON =".Dumper($genotypeprop_json)."\n";
+#        print STDERR "GENOTYPEPROP JSON =".Dumper($genotypeprop_json)."\n";
         if ($genotypeprop_json) {
 
             if ($self->accession_population_name){
@@ -1087,7 +1107,7 @@ sub store_identifiers {
                 my $json_string = encode_json $genotypeprop_json;
                 $h_new_genotypeprop->execute($genotype_id, $self->pcr_marker_genotyping_type_id(), $chromosome_counter, $json_string);
                 my $genotypeprop_id = $h_new_genotypeprop->fetchrow_array();
-                print STDERR "GENOTYPEPROP ID =".Dumper($genotypeprop_id)."\n";
+#                print STDERR "GENOTYPEPROP ID =".Dumper($genotypeprop_id)."\n";
             } else {
                 foreach my $chromosome (sort keys %$genotypeprop_json) {
                     my $genotypeprop_id = $stock_lookup_obj->{chrom}->{$chromosome_counter};
