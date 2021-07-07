@@ -239,20 +239,24 @@ sub get_query {
     my $limit = $page_size;
     my $offset = $page*$page_size;
     my $total_count = 0;
+
+    my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cvterm_additional_info', 'trait_property')->cvterm_id();
+
     #TODO: Can try a pivot to speed up this function so we retrieve all at once;
-    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.dbxref_id, dbxref.accession, array_agg(cvtermsynonym.synonym) filter (where cvtermsynonym.synonym is not null), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
+    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.dbxref_id, dbxref.accession, array_agg(cvtermsynonym.synonym) filter (where cvtermsynonym.synonym is not null), cvterm.is_obsolete, additional_info.value, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
         "JOIN dbxref USING(dbxref_id) ".
         "JOIN db using(db_id) ".
         "LEFT JOIN cvtermsynonym using(cvterm_id) ". # left join to include non-synoynm variables, may break field book due to bug
         "JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) ".
         "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join ".
+        "JOIN cvtermprop as additional_info on (cvterm.cvterm_id = additional_info.cvterm_id and additional_info.type_id = $additional_info_type_id) ".
         "WHERE $and_where " .
-        "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.dbxref_id, dbxref.accession ".
+        "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.dbxref_id, dbxref.accession, additional_info.value ".
         "ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset; "  ;
 
     my $sth = $self->bcs_schema->storage->dbh->prepare($q);
     $sth->execute();
-    while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $dbxref_id, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
+    while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $dbxref_id, $accession, $synonym, $obsolete, $additional_info_string, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
 
         # Get the external references
@@ -264,6 +268,10 @@ sub get_query {
             id => \@references_cvterms
         });
 
+        my $additional_info;
+        if (defined $additional_info_string) {
+            $additional_info = decode_json $additional_info_string;
+        }
         #TODO: This is running many queries each time, can make one big query above if need be
         # Retrieve the trait, which retrieves its scales and methods
         my $trait = CXGN::Trait->new({
@@ -273,7 +281,8 @@ sub get_query {
             db_id               => $db_id,
             db                  => $db_name,
             accession           => $accession,
-            external_references => $references
+            external_references => $references,
+            additional_info     => $additional_info
         });
 
         push @variables, $self->_construct_variable_response($c, $trait);
@@ -318,6 +327,7 @@ sub store {
             my $description = $params->{trait}{traitDescription};
             my $synonyms = $params->{synonyms};
             my $active = $params->{status} ne "archived";
+            my $additional_info = $params->{additionalInfo} || undef;
 
             #TODO: Parse this when it initially comes into the brapi controller
             my $scale = CXGN::BrAPI::v2::Scales->new({
@@ -343,7 +353,8 @@ sub store {
                 synonyms                              => $synonyms,
                 external_references                   => $external_references,
                 method                                => $method,
-                scale                                 => $scale
+                scale                                 => $scale,
+                additional_info                       => $additional_info
             });
             $trait->{active} = $active;
 
@@ -389,6 +400,7 @@ sub update {
     my $description = $data->{trait}{traitDescription};
     my $synonyms = $data->{synonyms};
     my $active = $data->{status} ne "archived";
+    my $additional_info = $data->{additionalInfo} || undef;
 
     my $scale = CXGN::BrAPI::v2::Scales->new({
         bcs_schema => $self->bcs_schema,
@@ -413,7 +425,8 @@ sub update {
         synonyms                              => $synonyms,
         external_references                   => $external_references,
         method                                => $method,
-        scale                                 => $scale
+        scale                                 => $scale,
+        additional_info                      => $additional_info
     });
     $trait->{active} = $active;
 
@@ -490,7 +503,7 @@ sub _construct_variable_response {
     my @synonyms = $variable->synonyms;
 
     return {
-        additionalInfo => undef,
+        additionalInfo => $variable->additional_info,
         commonCropName => $c->config->{'supportedCrop'},
         contextOfUse => undef,
         defaultValue => $variable->default_value,
