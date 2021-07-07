@@ -21,7 +21,7 @@ $facilities
                                 <& /page/page_title.mas, title=>"This workflow will guide you through uploading genotypes into the database" &>
                                 <p>Select a genotyping project on the next screen. This project can represent a series of genotyping plates sent to a genotyping facilty.</p>
                                 <p>Ideally the sample names in your VCF file will match sample names in genotyping plates in the database; however, the sample names in your file can also match accession names in the database.</p>
-                                <p>Curently we support the VCF format, the Tassel HDF5 format, and the Intertek CSV format for upload.</p>
+                                <p>Curently we support the VCF format, the Tassel HDF5 format, the Intertek CSV format and SSR for upload.</p>
                                 <p>If you are uploading many files that used the same genotyping protocol, you can do so, and the database will ensure that the marker information is consistent across the genotyping data (e.g. the same reference, alternate, position, etc.).</p>
 
                                 <br/><br/>
