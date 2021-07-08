@@ -249,7 +249,7 @@ sub get_query {
         "LEFT JOIN cvtermsynonym using(cvterm_id) ". # left join to include non-synoynm variables, may break field book due to bug
         "JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) ".
         "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join ".
-        "JOIN cvtermprop as additional_info on (cvterm.cvterm_id = additional_info.cvterm_id and additional_info.type_id = $additional_info_type_id) ".
+        "LEFT JOIN cvtermprop as additional_info on (cvterm.cvterm_id = additional_info.cvterm_id and additional_info.type_id = $additional_info_type_id) ".
         "WHERE $and_where " .
         "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.dbxref_id, dbxref.accession, additional_info.value ".
         "ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset; "  ;
