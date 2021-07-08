@@ -152,15 +152,15 @@ sub _validate_with_plugin {
         if (!$product_sizes || $product_sizes eq '') {
             push @error_messages, "Cell E$row_name: product_sizes missing";
         }
-        if (!$sequence_motif || $sequence_motif eq '') {
-            push @error_messages, "Cell F$row_name: sequence_motif missing";
-        }
-        if (!$sequence_source || $sequence_source eq '') {
-            push @error_messages, "Cell G$row_name: sequence_source missing";
-        }
-        if (!$linkage_group || $linkage_group eq '') {
-            push @error_messages, "Cell H$row_name: linkage_group missing";
-        }
+#        if (!$sequence_motif || $sequence_motif eq '') {
+#            push @error_messages, "Cell F$row_name: sequence_motif missing";
+#        }
+#        if (!$sequence_source || $sequence_source eq '') {
+#            push @error_messages, "Cell G$row_name: sequence_source missing";
+#        }
+#        if (!$linkage_group || $linkage_group eq '') {
+#            push @error_messages, "Cell H$row_name: linkage_group missing";
+#        }
 
     }
 

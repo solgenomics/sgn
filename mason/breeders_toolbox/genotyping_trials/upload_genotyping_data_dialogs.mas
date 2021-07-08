@@ -619,9 +619,26 @@ $facilities
                                 <td>reverse_primer</td>
                                 <td>annealing_temperature</td>
                                 <td>product_sizes</td>
+                                <td>sequence_motif</td>
+                                <td>sequence_source</td>
+                                <td>linkage_group</td>
                             </tr>
                         </tbody>
                     </table>
+                    <b>Required columns:</b>
+                    <ul>
+                        <li>marker_name</li>
+                        <li>forward_primer</li>
+                        <li>reverse_primer</li>
+                        <li>annealing_temperature</li>
+                        <li>product_sizes</li>
+                    </ul>
+                    <b>Optional columns (required in the header, but value may be left blank)</b>
+                    <ul>
+                        <li>sequence_motif</li>
+                        <li>sequence_source</li>
+                        <li>linkage_group</li>
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
@@ -994,6 +1011,7 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_ssr_protocol_format').click(function(){
         jQuery('#upload_ssr_protocol_format_dialog').modal('show');
+        jQuery('#upload_ssr_protocol_dialog').modal('hide');
     });
 
     jQuery("#upload_ssr_protocol_submit").click(function(){
