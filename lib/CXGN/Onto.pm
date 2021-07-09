@@ -494,6 +494,7 @@ sub store_observation_variable_trait_method_scale {
 #   - name = name of the child cvterm
 #   - definition = definition of the child cvterm
 #   - children = children of the child cvterm
+#   - accession = dbxref accession of the child cvterm
 # 
 sub get_children {
     my $self = shift;
@@ -508,11 +509,13 @@ sub get_children {
             my $child = $r->subject();
             if ( !$child->is_obsolete() ) {
                 my $gc = $self->get_children($child->cvterm_id);
+                my $dbxref_rs = $schema->resultset('General::Dbxref')->find({ dbxref_id => $child->dbxref_id() });
                 my %c = (
                     cvterm_id => $child->cvterm_id(),
                     name => $child->name(),
                     definition => $child->definition(),
-                    children => scalar(@$gc) > 0 ? $gc : undef
+                    children => scalar(@$gc) > 0 ? $gc : undef,
+                    accession => $dbxref_rs->accession()
                 );
                 push(@children, \%c);
             }
