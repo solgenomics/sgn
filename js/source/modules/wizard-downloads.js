@@ -1,4 +1,4 @@
-import "../legacy/d3/d3v4Min.js";
+import "../legacy/d3/d3v5Min.js";
 import "../legacy/CXGN/Dataset.js";
 
 /**
