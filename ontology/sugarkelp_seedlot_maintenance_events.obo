@@ -130,7 +130,7 @@ is_a: SEEDLOT_MAINTENANCE:0000002
 
 [Term]
 id: SEEDLOT_MAINTENANCE:0002011
-name: Notes
+name: Additional Notes
 def: "any notes, usually concerning culture termination of partial use for an experiment" []
 is_a: SEEDLOT_MAINTENANCE:0000002
 

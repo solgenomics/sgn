@@ -138,8 +138,8 @@
             MESSAGES = [];
             jQuery('#seedlot_modal').modal('hide');
         });
-        jQuery(document).on('click', '.seedlot_event_value', updateEventValue);
-        jQuery(document).on('click', '.seedlot_event_comments_btn', toggleEventComments);
+        jQuery(document).on('click', '.seedlot_event_value_btn', updateEventValue);
+        jQuery(document).on('click', '.seedlot_event_notes_btn', toggleEventNotes);
 
         // Autocomplete for Seedlot Name input
         jQuery("#seedlot_event_name").autocomplete({
@@ -186,22 +186,20 @@
         let contents = "";
         let location = "";
         let box = "";
+        SEEDLOT_NAME = undefined;
+        SEEDLOT_ID = undefined;
         jQuery.ajax({
             type: 'GET',
             dataType: 'json',
             url: '/ajax/breeders/seedlots?seedlot_name=' + name,
             success: function(response) {
-                if ( response && response.data ) {
-                    for ( let i = 0; i < response.data.length; i++ ) {
-                        if ( response.data[i].seedlot_stock_uniquename.toUpperCase() === name.toUpperCase() ) {
-                            let sl = response.data[i];
-                            contents = sl.contents_html;
-                            location = sl.location;
-                            box = sl.box;
-                            SEEDLOT_NAME = name;
-                            SEEDLOT_ID = sl.seedlot_stock_id;
-                        }
-                    }
+                if ( response && response.recordsFiltered && response.recordsFiltered === 1 && response.data ) {
+                    let sl = response.data[0];
+                    contents = sl.contents_html;
+                    location = sl.location;
+                    box = sl.box;
+                    SEEDLOT_NAME = name;
+                    SEEDLOT_ID = sl.seedlot_stock_id;
                 }
             },
             complete: function() {
@@ -238,21 +236,19 @@
     function setEvents() {
         let html = "";
         if ( ONTOLOGY ) {
-            let categories = ONTOLOGY.sort(_comp);
 
             // Parse each category
             for ( let i = 0; i < ONTOLOGY.length; i++ ) {
                 let category = ONTOLOGY[i];
                 let events = category.children ? category.children : [];
-                events.sort(_comp);
 
+                // Category Title
                 html += "<p class='seedlot_event_category'>" + category.name + "</p>";
 
                 // Parse each event
                 for ( let j = 0; j < events.length; j++ ) {
                     let event = events[j];
                     let values = event.children ? event.children : [];
-                    values.sort(_comp);
 
                     // Event Well
                     html += "<div class='well seedlot_event_well'>";
@@ -261,41 +257,39 @@
                     html += "<p class='seedlot_event_title'>" + event.name + "</p>";
 
                     // Container Div
-                    html += "<div class='seedlot_event_div'>";
+                    html += "<div class='seedlot_event_values_div'>";
 
                     // Event Values (Buttons/Text) Div
-                    html += "<div class='seedlot_event_values_div'>";
+                    html += "<div class='btn-group seedlot_event_values' data-cvterm='" + event.cvterm_id + "' role='group'>";
 
                     // Values: Add buttons for pre-determined values
                     if ( values && values.length > 0 ) {
-                        html += "<div class='btn-group' role='group'>";
-                        html += "<button type='button' class='btn btn-primary seedlot_event_value_not_recorded seedlot_event_value'>Not Recorded</button>";
+                        html += "<button type='button' class='btn btn-primary seedlot_event_value seedlot_event_value_btn'>Not Recorded</button>";
                         for ( let k = 0; k < values.length; k++ ) {
                             let value = values[k];
-                            html += "<button type='button' class='btn btn-default seedlot_event_value'>" + value.name + "</button>";
+                            html += "<button type='button' class='btn btn-default seedlot_event_value seedlot_event_value_btn'>" + value.name + "</button>";
                         }
-                        html += "</div>";
                     }
 
                     // Values: Add input text field
                     else {
-                        html += "<input type='text' class='form-control' value=''>";
+                        html += "<input type='text' class='form-control seedlot_event_value seedlot_event_value_input' value=''>";
                     }
 
                     // End Values Div
                     html += "</div>";
 
-                    // Comments Button
-                    html += "<div class='seedlot_event_comments_btn_div'>";
-                    html += "<button type='button' class='btn btn-default seedlot_event_comments_btn' data-cvterm='" + event.cvterm_id + "'>&nbsp;<span class='glyphicon glyphicon-comment'></span>&nbsp;</button>";
+                    // Notes Button
+                    html += "<div class='seedlot_event_notes_btn_div'>";
+                    html += "<button type='button' class='btn btn-default seedlot_event_notes_btn' data-cvterm='" + event.cvterm_id + "'>&nbsp;<span class='glyphicon glyphicon-comment'></span>&nbsp;</button>";
                     html += "</div>";
 
                     // End Container Div
                     html += "</div>";
 
-                    // Comments Input
-                    html += "<div id='seedlot_event_comments_input_div_" + event.cvterm_id + "' class='seedlot_event_comments_input_div'>";
-                    html += "<textarea id='seedlot_event_comments_input_" + event.cvterm_id + "' class='form-control' rows='3' placeholder='Comments/Notes about the Event'></textarea>";
+                    // Notes Input
+                    html += "<div id='seedlot_event_notes_input_div_" + event.cvterm_id + "' class='seedlot_event_notes_input_div'>";
+                    html += "<textarea class='form-control seedlot_event_notes_input' rows='3' placeholder='Notes about the Event'></textarea>";
                     html += "</div>";
 
                     // End Event Well
@@ -305,11 +299,6 @@
         }
 
         jQuery("#seedlot_event_container").html(html);
-
-        function _comp(a,b) {
-            return a.accession < b.accession ? -1 : 
-                a.accession > b.accession ? 1 : 0;
-        }
     }
 
     /**
@@ -317,22 +306,25 @@
      */
     function updateEventValue() {
         let el = jQuery(this);
-        let group = el.parent('.btn-group');
+        let group = el.parent('.seedlot_event_values');
         
-        group.find(".seedlot_event_value").removeClass("btn-primary").addClass("btn-default");
-        el.addClass("btn-primary");
+        group.find(".seedlot_event_value_btn").removeClass("btn-primary").addClass("btn-default");
+        el.removeClass("btn-default").addClass("btn-primary");
         
         PENDING_CHANGES = true;
         jQuery("#seedlot_event_submit").attr('disabled', false);
     }
 
-    function toggleEventComments() {
+    /**
+     * Toggle the display of the event notes
+     */
+    function toggleEventNotes() {
         let el = jQuery(this);
         let cvterm = el.data("cvterm");
-        let displayed = jQuery("#seedlot_event_comments_input_div_" + cvterm).css("display") !== 'none';
+        let displayed = jQuery("#seedlot_event_notes_input_div_" + cvterm).css("display") !== 'none';
 
-        jQuery("#seedlot_event_comments_input_div_" + cvterm).css("display", displayed ? 'none' : 'block');
-        if ( displayed ) jQuery("#seedlot_event_comments_input_" + cvterm).val("");
+        jQuery("#seedlot_event_notes_input_div_" + cvterm).css("display", displayed ? 'none' : 'block');
+        if ( displayed ) jQuery("#seedlot_event_notes_input_" + cvterm).val("");
         el.removeClass(displayed ? 'btn-primary' : 'btn-default');
         el.addClass(displayed ? 'btn-default' : 'btn-primary');
     }
@@ -371,8 +363,82 @@
      * - If submitted, remove the events from PENDING_EVENTS
      */
     function submitEvents() {
-        console.log("SUBMIT EVENTS");
-        resetUI();
+
+        // Check for Seedlot ID
+        if ( !SEEDLOT_ID ) {
+            displayError("Please enter a valid Seedlot name");
+            return;
+        }
+
+        // Build the event info to submit
+        let events = [];
+        let event_groups = jQuery(".seedlot_event_values");
+        let operator = jQuery("#seedlot_event_operator").val();
+        let timestamp = jQuery("#seedlot_event_timestamp").val();
+        for ( let i = 0; i < event_groups.length; i++ ) {
+            let event_group = jQuery(event_groups[i]);
+            let cvterm_id = event_group.data("cvterm");
+            let event_value = event_group.find('.seedlot_event_value_btn.btn-primary,.seedlot_event_value_input');
+            let value = event_value.hasClass('seedlot_event_value_btn') ? event_value.html() : event_value.val();
+            let notes = jQuery("#seedlot_event_notes_input_div_" + cvterm_id).find(".seedlot_event_notes_input").val();
+
+            if ( value && value !== "" && value !== "Not Recorded" ) {
+                let event = {
+                    cvterm_id: cvterm_id,
+                    value: value,
+                    notes: notes !== "" ? notes : undefined,
+                    operator: operator !== "" ? operator : undefined,
+                    timestamp: timestamp !== "" ? timestamp : undefined
+                }
+                events.push(event);
+            }
+        }
+
+        // Make sure there's at least one recorded event
+        if ( !events || events.length === 0 ) {
+            displayError("One or more Events must be recorded");
+            return;
+        }
+
+        // Disable Submit Button
+        jQuery("#seedlot_event_submit").attr('disabled', true);
+        jQuery("#seedlot_event_submit").html("Submitting...");
+
+        // Submit the events
+        jQuery.ajax({
+            type: "POST",
+            url: "/ajax/breeders/seedlot/" + SEEDLOT_ID + "/maintenance",
+            data: JSON.stringify({events: events}),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function(data) {
+                if ( data && data.events && data.events.length === events.length ) {
+                    displaySuccess(data.events.length + " events successfully stored for Seedlot " + SEEDLOT_NAME);
+                    return _finish(true);
+                }
+                else if ( data && data.error ) {
+                    displayError("The events could not be submitted due to a database error:<br /><br /><pre><code>" + data.error + "</code></pre>");
+                    return _finish();
+                }
+                else {
+                    displayError("The events could not be submitted due to an unknown database error");
+                    return _finish();
+                }
+            },
+            error: function(msg) {
+                displayError("The events could not be submitted due to a database error:<br /><br /><pre><code>" + msg + "</code></pre>");
+                return _finish();
+            }
+        });
+
+        function _finish(complete) {
+            jQuery("#seedlot_event_submit").attr('disabled', false);
+            jQuery("#seedlot_event_submit").html("Submit");
+            if ( complete ) {
+                window.scrollTo(0, 0);
+                resetUI();
+            }
+        }
     }
 
     /**
@@ -438,20 +504,20 @@
         font-size: 110%;
         margin: 0 0 10px 0;
     }
-    .seedlot_event_div {
+    .seedlot_event_values_div {
         display: flex;
     }
-    .seedlot_event_values_div {
+    .seedlot_event_values {
         flex-grow: 1;
     }
-    .seedlot_event_comments_btn_div {
+    .seedlot_event_notes_btn_div {
         margin-left: 10px;
     }
-    .seedlot_event_comments_input_div {
+    .seedlot_event_notes_input_div {
         margin-top: 10px;
         display: none;
     }
-    .seedlot_event_value {
+    .seedlot_event_value_btn {
         min-width: 80px;
     }
     .center {

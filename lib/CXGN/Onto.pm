@@ -522,7 +522,8 @@ sub get_children {
         }
     }
     
-    return \@children;
+    my @sorted =  sort { $a->{accession} <=> $b->{accession} } @children;
+    return \@sorted;
 }
 
 1;
