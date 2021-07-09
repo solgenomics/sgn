@@ -1097,6 +1097,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
 #       - name = name of the child cvterm
 #       - definition = definition of the child cvterm
 #       - children = children of the child cvterm
+#       - accession = dbxref accession of the child cvterm
 #
 sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/ontology') :Args(0) {
     my $self = shift;
@@ -1113,12 +1114,12 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
     # Get cvterm of root term
     my ($db_name, $accession) = split ":", $c->config->{seedlot_maintenance_event_ontology_root};
     my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
-    my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
-    my $root_cvterm = $dbxref->cvterm;
-    my $root_cvterm_id = $root_cvterm->cvterm_id;
+    my $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
+    my $root_cvterm = $dbxref->cvterm if $dbxref;
+    my $root_cvterm_id = $root_cvterm->cvterm_id if $root_cvterm;
 
     # Get children (recursively) of root cvterm
-    my $ontology = $onto->get_children($root_cvterm_id);
+    my $ontology = $onto->get_children($root_cvterm_id) if $root_cvterm_id;
 
     $c->stash->{rest} = { ontology => $ontology };
 }

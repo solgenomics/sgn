@@ -6,6 +6,7 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller'; }
 
 use CXGN::Stock::Seedlot;
+use CXGN::Onto;
 use Data::Dumper;
 use JSON::XS;
 
@@ -113,6 +114,8 @@ sub seedlot_maintenance : Path('/breeders/seedlot/maintenance') {
 sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $onto = CXGN::Onto->new({ schema => $schema });
 
     # Make sure the user is logged in
     if (!$c->user()) {
@@ -135,6 +138,14 @@ sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
         return;
     }
 
+    # Get cvterm id of event ontology
+    my ($db_name, $accession) = split ":", $c->config->{seedlot_maintenance_event_ontology_root};
+    my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
+    my $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
+    my $root_cvterm = $dbxref->cvterm if $dbxref;
+    my $root_cvterm_id = $root_cvterm->cvterm_id if $root_cvterm;
+        
+    $c->stash->{ontology} = $onto->get_children($root_cvterm_id) if $root_cvterm_id;
     $c->stash->{operator} = $c->user()->get_object()->get_username();
     $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance_record.mas';
 }
