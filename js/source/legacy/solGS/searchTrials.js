@@ -110,14 +110,15 @@ function listAllTrials (trials)  {
 }
 
 
-function checkTrainingPopulation (popId) {
+function checkTrainingPopulation (popIds) {
 
     var protocolId = jQuery('#genotyping_protocol_id').val();
 
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
-        url: '/solgs/check/training/population/' + popId + '/gp/' + protocolId,
+        url: '/solgs/check/training/population',
+        data: {'population_ids' : popIds, 'genotyping_protocol_id': protocolId},
         success: function(response) {
             if (response.is_training_population) {
 			jQuery("#searched_trials_message").hide();
@@ -232,9 +233,9 @@ function checkPopulationExists (name) {
             url: '/solgs/check/population/exists/',
             success: function(res) {
 
-		if (res.population_id) {
+		if (res.population_ids) {
 
-		    checkTrainingPopulation(res.population_id);
+		    checkTrainingPopulation(res.population_ids);
 
 		    jQuery('#searched_trials_message').html(
 			'<p>Checking if the trial or population can be used <br />'

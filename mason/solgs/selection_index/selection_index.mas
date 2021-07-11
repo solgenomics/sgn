@@ -16,8 +16,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $training_pop_id
 $selection_pop_id => ''
-$analyzed_traits
-$prediction_pop_analyzed_traits => ''
+$training_pop_analyzed_traits
+$selection_pop_analyzed_traits => ''
 $selection_pop_name => ''
 $training_pop_name
 

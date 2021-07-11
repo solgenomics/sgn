@@ -1,8 +1,8 @@
 <%doc>
 
 =head1 NAME
- 
-population/correlation.mas - correlation output section
+
+/solgs/population/correlation.mas - correlation output section
 
 =AUTHOR
 
@@ -14,15 +14,13 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$training_pop_id   => undef
-$trial_id => undef
+$corre_pop_id
+$data_set_type => undef
+$data_str => undef
 
 </%args>
 
 <%perl>
-
-$training_pop_id = $trial_id if $trial_id;
-
 </%perl>
 
 <style>
@@ -42,18 +40,23 @@ $training_pop_id = $trial_id if $trial_id;
 
 
 <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.correlation"] &>
-<&| /page/info_section.mas, 
-      collapsible => 1, 
-      collapsed   => 1, 
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 1,
       title       => "Phenotypic correlation analysis (Pearson)"
 &>
 
 
   <div id="correlation_canvas">
-    <& /solgs/spinner.mas &>
-      <input id="run_pheno_correlation" class="button" type="button" value="Run correlation" /> 
-      <input type="hidden" id="population_id" value="<% $training_pop_id %>" />
+
+      <& /solgs/spinner.mas &>
+
       <div id="correlation_message"  class="message"></div>
+      <input id="run_pheno_correlation" class="button" type="button" value="Run correlation" />
+      <input type="hidden" id="corre_pop_id" value="<% $corre_pop_id %>" />
+      <input type="hidden" id="data_structure" value="<% $data_str %>" />
+      <input type="hidden" id="data_set_type" value="<% $data_set_type %>" />
+
 </div>
 
 </&>

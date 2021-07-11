@@ -16,8 +16,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $training_pop_id
 $selection_pop_id => ''
-$analyzed_traits
-$prediction_pop_analyzed_traits => ''
+$training_pop_analyzed_traits
+$selection_pop_analyzed_traits => ''
 $selection_pop_name => ''
 $training_pop_name
 
@@ -57,7 +57,7 @@ $training_pop_name
 
     <div class="row">
       <div class="form-group col-sm-3" id="corre_select_a_population_div" style="margin-right:35px"></div>
-      <input class="button" type="submit" value="Run correlation" id="run_genetic_correlation"/>
+      <input class="button" type="submit" value="Run correlation" id="run_genetic_correlation" />
     </div>
 
     <& /solgs/spinner.mas &>

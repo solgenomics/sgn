@@ -1,8 +1,8 @@
 <%doc>
 
 =head1 NAME
- 
-/solgs/cluster/index.mas - a template with menu for selecting list or dataset to run the cluster. 
+
+/solgs/cluster/index.mas - a template with menu for selecting list or dataset to run the cluster.
 
 =AUTHOR
 
@@ -34,7 +34,7 @@ my $url = $c->req->path;
 
 </%perl>
 
-<& /util/import_css.mas, paths => [ '/static/css/solgs/spinner.css', '/static/css/solgs/solgs.css'] &>
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.cluster", "solGS.Dataset", "CXGN.List"] &>
 
 
@@ -44,7 +44,7 @@ my $url = $c->req->path;
 <!-- <& /solgs/genotyping_protocol.mas &> -->
 
 <!-- %} -->
-  
+
 <!-- <&| /page/info_section.mas,  -->
 <!--     collapsible => 0,  -->
 <!--     collapsed   => 0, -->
@@ -53,7 +53,6 @@ my $url = $c->req->path;
 
 <& /solgs/cluster/select_menu.mas &>
     <!-- <& plot.mas &> -->
- 
+
 
 <!-- </&> -->
-    

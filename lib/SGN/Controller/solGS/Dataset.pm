@@ -140,12 +140,12 @@ sub submit_dataset_training_data_query {
     {
 	my $trials = $data->{categories}->{trials};
 
-	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials, $geno_protocol);
+	$c->controller('solGS::AsyncJob')->get_training_pop_data_query_job_args_file($c, $trials, $geno_protocol);
 	$query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
     }
 
     $c->stash->{dependent_jobs} = $query_jobs_file;
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 }
 
 
@@ -180,7 +180,6 @@ sub create_dataset_pheno_data_query_jobs {
     my ($self, $c) = @_;
 
     my $dataset_id = $c->stash->{dataset_id};
-
     my $model = $self->get_model();
     my $data = $model->get_dataset_data($dataset_id);
 
@@ -199,7 +198,7 @@ sub create_dataset_pheno_data_query_jobs {
 	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
 	$c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
 
-	$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials_ids);
+	$c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, $trials_ids);
 	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
     }
 }
@@ -225,7 +224,7 @@ sub create_dataset_geno_data_query_jobs {
     	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
     	$c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
 
-    	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids, $geno_protocol);
+    	$c->controller('solGS::AsyncJob')->get_cluster_genotype_query_job_args($c, $trials_ids, $geno_protocol);
     	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
 }
@@ -253,7 +252,7 @@ sub dataset_genotype_query_jobs {
     };
 
     $c->stash->{r_temp_file} = $args->{r_temp_file};
-    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+    $c->controller('solGS::AsyncJob')->create_cluster_accessible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
@@ -270,7 +269,7 @@ sub dataset_genotype_query_jobs {
 	'cluster_host' => 'localhost'
      };
 
-    my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+    my $config = $c->controller('solGS::AsyncJob')->create_cluster_config($c, $config_args);
 
     my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-query-job-args-file-${pop_id}");
 

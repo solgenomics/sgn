@@ -435,6 +435,10 @@ sub has_genotype {
 sub project_details {
     my ($self, $pr_id) = @_;
 
+   if (ref $pr_id eq 'SCALAR') {
+        $pr_id = [$pr_id];
+   }
+
     my $pr_rs = $self->schema->resultset("Project::Project")
         ->search( {'me.project_id' => {-in => $pr_id} });
 

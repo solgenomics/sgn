@@ -376,7 +376,7 @@ sub run_boxplot {
     $c->stash->{r_temp_file}  = "boxplot-${boxplot_id}";
     $c->stash->{r_script}     = 'R/solGS/genetic_gain.r';
 
-    $c->controller("solGS::solGS")->run_r_script($c);
+    $c->controller("solGS::AsyncJob")->run_r_script($c);
 
 }
 

@@ -143,9 +143,9 @@ sub filtered_selection_genotype_file {
 
 
 sub formatted_phenotype_file {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    $pop_id = $c->stash->{pop_id} if $pop_id;
     $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
 
     my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id,

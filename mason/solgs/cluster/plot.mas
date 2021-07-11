@@ -1,8 +1,8 @@
 <%doc>
 
 =head1 NAME
- 
-/solgs/cluster/plot.mas - cluster analysis plot template  
+
+/solgs/cluster/plot.mas - cluster analysis plot template
 
 =AUTHOR
 
@@ -38,8 +38,8 @@ $pop_id = undef if $list_id || $combo_pops_id;
 
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.cluster"] &>
-<& /util/import_css.mas, paths => [ '/static/css/solgs/spinner.css', '/static/css/solgs/solgs.css'] &>
-    
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
+
 <style>
 
 .axis path, .axis line {
@@ -50,13 +50,13 @@ $pop_id = undef if $list_id || $combo_pops_id;
 </style>
 
 <div id="cluster_canvas">
-  
+
   <& /solgs/spinner.mas &>
-    
+
 <div id="cluster_message" class="message"> </div>
 
 <div id="cluster_plot">
-   
+
     <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
     <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />
     <input type="hidden"  id="cluster_type" value="" />

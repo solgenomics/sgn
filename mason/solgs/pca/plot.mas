@@ -1,8 +1,8 @@
 <%doc>
 
 =head1 NAME
- 
-/solgs/pca/plot.mas - pca analysis plot template  
+
+/solgs/pca/plot.mas - pca analysis plot template
 
 =AUTHOR
 
@@ -37,7 +37,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
 </%perl>
 
 <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS", "solGS.pca"] &>
-<& /util/import_css.mas, paths => [ '/static/css/solgs/spinner.css', '/static/css/solgs/solgs.css'] &>
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 
 <style>
@@ -53,7 +53,7 @@ $pop_id = undef if $list_id || $combo_pops_id;
 <div id="pca_canvas">
 
   <& /solgs/spinner.mas &>
-    
+
     <div id="pca_message"  class="message"> </div>
 
     <div id="pca_plot">
@@ -64,4 +64,3 @@ $pop_id = undef if $list_id || $combo_pops_id;
       <input type="hidden"  id="data_structure" value="<% $data_structure %>" />
     </div>
 </div>
-

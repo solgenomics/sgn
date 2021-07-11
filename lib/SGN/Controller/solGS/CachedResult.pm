@@ -271,8 +271,8 @@ sub _check_combined_trials_model_all_traits_output {
 sub _check_selection_pop_all_traits_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id) = @_;
 
-    $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id);
-    my $sel_traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids};
+    $c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id);
+    my $sel_traits_ids = $c->stash->{selection_pop_analyzed_traits_ids};
 
     $c->stash->{training_pop_id} = $tr_pop_id;
     $c->controller("solGS::solGS")->traits_with_valid_models($c);
@@ -462,8 +462,8 @@ sub check_selection_pop_output {
 sub check_selection_pop_all_traits_output {
     my ($self, $c, $tr_pop_id, $sel_pop_id) = @_;
 
-    $c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id);
-    my $traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids};
+    $c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $tr_pop_id, $sel_pop_id);
+    my $traits_ids = $c->stash->{selection_pop_analyzed_traits_ids};
 
     foreach my $tr (@$traits_ids)
     {

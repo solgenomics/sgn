@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME
- 
+
 /solgs/population/combined/select_traits.mas - lists traits to select for GS analysis
 
 =AUTHOR
@@ -50,10 +50,6 @@ ROW
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
-
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-
 <div id="traits_selection_div">
 
   <table class="table-condensed" id="population_traits_list">
@@ -62,12 +58,12 @@ ROW
        <td>
          <input class   = "button"
                 type    = "submit"
-		id      = "runGS"
+		        id      = "runGS"
                 value   = "Build model"
-                name    = "runGS"               
-                > 
-       </td> 
+                name    = "runGS"
+                >
+       </td>
      </tr>
-   </table> 
+   </table>
 
 </div>

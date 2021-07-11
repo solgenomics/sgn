@@ -26,7 +26,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('Test Kasese Tr pop');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(90);
@@ -48,7 +48,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP model Kasese');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -67,7 +67,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('Download GEBVs', 'partial_link_text',  'download gebvs')->click();
     sleep(3);
@@ -76,7 +76,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
 	my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(120);
@@ -88,7 +88,7 @@ $d->while_logged_in_as("submitter", sub {
 
 
     my $sel_pred = $d->find_element('Marker Effects', 'partial_link_text', 'scroll to marker effects');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('Marker Effects', 'partial_link_text', 'expand marker effects')->click();
     sleep(2);
@@ -111,7 +111,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('Test DMCP selection pred Kasese');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(180);
@@ -151,7 +151,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('clones list sel pred');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -198,7 +198,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('dataset clones sel pred');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -245,7 +245,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('Test DMCP-FRW modeling  Kasese');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -268,7 +268,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('Test DMCP-FRW selection pred naccri');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -290,7 +290,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('clones list dmc-frw sel pred');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -315,7 +315,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('dataset clones sel pred2');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
