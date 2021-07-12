@@ -461,7 +461,13 @@ sub generate_experimental_design_POST : Args(0) {
     };
 }
 
-
+sub test_controller : Path('ajax/trial/test_controller/') : ActionClass('REST') {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{rest} = {success => $c};
+    $c->stash->{rest} = {error => $c};
+    return $c;
+}
 
 sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { }
 
@@ -471,6 +477,7 @@ sub save_experimental_design_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
+    my $save;
 
     print STDERR "Saving trial... :-)\n";
 
@@ -611,7 +618,6 @@ sub save_experimental_design_POST : Args(0) {
             return;
         }
 
-        my $save;
         try {
             $save = $trial_create->save_trial();
         } catch {
@@ -642,11 +648,11 @@ sub save_experimental_design_POST : Args(0) {
             }
         }
     }
-
+    
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = {success => "1",};
+    $c->stash->{rest} = {success => "1", trial_id => $save->{'trial_id'}};
     return;
 }
 

@@ -1151,45 +1151,36 @@ jQuery(document).ready( function() {
     });
 
     function submit_fieldmap_metadata() {
-        var data = [
-            borders;
-        ]
-        var stringifiedData = JSON.stringify(data);
+        // var data = [
+        //     borders;
+        // ]
+        // var stringifiedData = JSON.stringify(data);
 
-        new jQuery.ajax({
-            type: 'POST',
-            headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-            url: '/brapi/v2/observationunits',
-            body: stringifiedData,
-
-            success: function(response) {
-                console.log(response);
-            }
-
-        });
         // new jQuery.ajax({
         //     type: 'POST',
-        //     url: '/ajax/breeders/trial/<% $trial_id %>/submit_fieldmap_layout',
-        //     dataType: "json",
-        //     data: {
-        //         'invert_rows': invert_rows,
-        //         'changed_dim_rows': changed_dim_rows,
-        //         'changed_dim_cols': changed_dim_cols,
-        //         'top_border': top_border_selection,
-        //         'left_border': left_border_selection,
-        //         'right_border': right_border_selection,
-        //         'bottom_border': bottom_border_selection
-        //     },
+        //     headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+        //     url: '/brapi/v2/observationunits',
+        //     body: stringifiedData,
+        // var data = [
+        //     borders;
+        // ]
+        // var stringifiedData = JSON.stringify(data);
 
-        //     success: function (response) {
-        //         if (response.error) {
-        //             alert(response.error);
-        //         }
-        //     },
+        // new jQuery.ajax({
+        //     type: 'POST',
+        //     headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+        //     url: '/brapi/v2/observationunits',
+        //     body: stringifiedData,
 
-        //     error: function (response) {
-        //         alert('Error2');
+
+        //     success: function(response) {
+        //         console.log(response);
         //     }
+
+
+        // });
+
+
         // });
     }
 

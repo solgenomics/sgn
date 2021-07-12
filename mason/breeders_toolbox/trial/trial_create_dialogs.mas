@@ -251,6 +251,12 @@ rect.bordered {
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Plants per Plot: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_plant_entries" name="add_plant_entries" type="text" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Description: </label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="add_project_description" name="add_project_description" maxlength="250"></textarea>

@@ -23,6 +23,7 @@ jQuery(document).ready(function ($) {
     var list = new CXGN.List();
 
     var design_json;
+    var trial_id;
     var stock_list_id;
     var stock_list;
     var check_stock_list_id;
@@ -40,6 +41,7 @@ jQuery(document).ready(function ($) {
     var crbd_checks_list_seedlot_hash = {};
     var unrep_list_seedlot_hash = {};
     var rep_list_seedlot_hash = {};
+    var plants_per_plot;
 
     jQuery('#create_trial_validate_form_button').click(function(){
         create_trial_validate_form();
@@ -51,11 +53,11 @@ jQuery(document).ready(function ($) {
         var location = $("#add_project_location").val().toString().trim(); // remove whitespace
         var trial_year = $("#add_project_year").val();
         var description = $("#add_project_description").val();
-        var design_type = $("#select_design_method").val();
+        var design_type = $("#select_design_method").val(); 
         var stock_type = $("#select_stock_type").val();
         var plot_width = $("#add_project_plot_width").val();
         var plot_length = $("#add_project_plot_length").val();
-
+        plants_per_plot = $("#add_plant_entries").val();
         
         if (trial_name === '') {
             alert("Please supply a trial name");
@@ -81,8 +83,11 @@ jQuery(document).ready(function ($) {
         else if (plot_length > 13){
             alert("Please check the plot length is too high");
         }
+        else if (plants_per_plot > 500) {
+            alert("Please no more than 500 plants per plot.");
+        }
         else if (description === '') {
-            alert("Please suplly a description!");
+            alert("Please suply a description!");
         }
         else if (design_type === '') {
             alert("Please select a design type");
@@ -1898,6 +1903,32 @@ jQuery(document).ready(function ($) {
       }
     });
 
+
+    function add_plants_per_plot() {
+        if (plants_per_plot && plants_per_plot != 0) {
+            jQuery.ajax( {
+                url: '/ajax/breeders/trial/'+trial_id+'/create_plant_entries/',
+                type: 'POST',
+                data: {
+                  'plants_per_plot' : plants_per_plot,
+                  'inherits_plot_treatments' : 1,
+                },
+                success: function(response) {
+                    console.log(response);
+                  if (response.error) {
+                    alert(response.error);
+                  }
+                  else {
+                    jQuery('#add_plants_dialog').modal("hide");
+                  }
+                },
+                error: function(response) {
+                  alert(response);
+                },
+              });
+        }
+    }
+
     function save_experimental_design(design_json) {
         var list = new CXGN.List();
         var name = jQuery('#new_trial_name').val();
@@ -2018,6 +2049,8 @@ jQuery(document).ready(function ($) {
                 'use_same_layout' : use_same_layout
             },
             success: function (response) {
+                console.log('TRIAL ID', response.trial_id);
+                trial_id = response.trial_id;
                 jQuery('#working_modal').modal("hide");
                 if (response.error) {
                     alert(response.error);
@@ -2027,6 +2060,7 @@ jQuery(document).ready(function ($) {
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
                     Workflow.check_complete("#trial_design_workflow");
+                    add_plants_per_plot();
                 }
             },
             error: function () {
@@ -2043,7 +2077,7 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery('#new_trial_confirm_submit').click(function () {
-            save_experimental_design(design_json);
+        save_experimental_design(design_json);
     });
 
     $('#redo_trial_layout_button').click(function () {
