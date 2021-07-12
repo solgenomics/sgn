@@ -883,6 +883,7 @@ sub upload_trial_file_POST : Args(0) {
     my $user_id;
     my $user_name;
     my $error;
+    my $save;
 
     print STDERR "Check 2: ".localtime()."\n";
 
@@ -967,7 +968,6 @@ sub upload_trial_file_POST : Args(0) {
 
     #print STDERR Dumper $parsed_data;
 
-    my $save;
     my $coderef = sub {
 
         my %trial_info_hash = (
@@ -1031,7 +1031,7 @@ sub upload_trial_file_POST : Args(0) {
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-        $c->stash->{rest} = {warnings => $return_warnings, success => "1"};
+        $c->stash->{rest} = {warnings => $return_warnings, success => "1", trial_id => $save->{'trial_id'}};
         return;
     }
 
@@ -1219,7 +1219,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-        $c->stash->{rest} = {success => "1"};
+        $c->stash->{rest} = {success => "1",};
         return;
     }
 
