@@ -4,7 +4,7 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
 
-<p>Filter the sequence metadata by feature, start, and end position and optionally by the sequence metadata type and/or protocol.</p>
+<p>Filter the sequence metadata by position, sequence metadata type and/or protocol, and/or by protocol attribute value(s).</p>
 
 <br />
 <a id="sequence_metadata_anchor"></a>
@@ -14,172 +14,216 @@
 
     <form class="form-horizontal" id="sequence_metadata_filter_form" name="sequence_metadata_filter_form">
 
-        <h4>Query Range</h4>
+        <!-- QUERY RANGE -->
+        <&| /page/info_section.mas, title => 'Query Range', collapsible=>1, collapsed=>0 &>
+            <div class="well">
+            
+                <!-- Refence Genome -->
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Reference Genome: </label>
+                    <div class="col-sm-10">
+                        <select class="form-control" id="sequence_metadata_filter_reference_genome" disabled>
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Feature -->
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Feature: </label>
+                    <div class="col-sm-10">
+                        <select class="form-control" id="sequence_metadata_filter_feature" disabled>
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Start / End -->
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Start: </label>
+                    <div class="col-sm-4">
+                        <input class="form-control" id="sequence_metadata_filter_start" type="text" value="">
+                    </div>
+                    <label class="col-sm-2 control-label">End: </label>
+                    <div class="col-sm-4">
+                        <input class="form-control" id="sequence_metadata_filter_end" type="text" value="">
+                    </div>
+                </div>
+
+            </div>
+        </&>
+        <!-- END QUERY RANGE -->
+
+
+        <!-- DATA TYPE / PROTOCOL -->
+        <&| /page/info_section.mas, title => 'Protocol', collapsible=>1, collapsed=>0 &>
+            <div class="well">
+
+                <!-- User Selected Type / Protocol -->
+                <div id="sequence_metadata_filter_type_protocol_user_selection">
+
+                    <!-- Data Type -->
+                    <div class="form-group">
+                        <div class="col-sm-2" style="text-align: right">
+                            <label class="control-label">Protocol: </label><br /><br /><br />
+                            <a id="sequence_metadata_filter_type_info_btn" href="#"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;Data Type Info</a>
+                            <br /><br />
+                            <a id="sequence_metadata_filter_protocol_info_btn" href="#"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;Protocol Info</a>
+                        </div>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="sequence_metadata_filter_protocol" size="10" multiple disabled>
+                                <option value="">Loading...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <br />
+                
+                </div>
+
+                <!-- URL Selected Protocol -->
+                <div id="sequence_metadata_filter_type_protocol_url_selection">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Selected Protocols: </label>
+                        <div class="col-sm-9">
+                            <p id="sequence_metadata_filter_type_protocol_url_selection_names">Loading...</p>
+                        </div>
+                        <div class="col-sm-1" style="margin-top: 10px;">
+                            <button id='sequence_metadata_filter_type_protocol_url_selection_remove' class='btn btn-danger btn-xs'><span class='glyphicon glyphicon-remove'></span></button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </&>
+        <!-- END DATA TYPE / PROTOCOL -->
+
+
+        <!-- ADVANCED SEARCH -->
+        <&| /page/info_section.mas, title=>'Advanced Search', subtitle=>'Filter by attribute values', collapsible=>1, collapsed=>1 &>
+            <div class="well">
+
+                <p>Return only sequence metadata features that have attribute values that match the added comparisons.  If more than one attribute 
+                filter is added, the sequence metadata feature must match all of the filters.</p>
+
+                <br />
+
+                <!-- Score Min / Max -->
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Score: </label>
+                    <div class="col-sm-3">
+                        <label class="control-label">Protocol</label><br />
+                        <select class="form-control" id="sequence_metadata_filter_score_protocol" disabled>
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-3">
+                        <label class="control-label">Comparison</label><br />
+                        <select class="form-control" id="sequence_metadata_filter_score_comparison">
+                            <option value="eq">Equal</option>
+                            <option value="lte">Less Than or Equal</option>
+                            <option value="lt">Less Than</option>
+                            <option value="gte">Greater Than or Equal</option>
+                            <option value="gt">Greater Than</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-3">
+                        <label class="control-label">Value</label><br />
+                        <input class="form-control" id="sequence_metadata_filter_score_value" type="text" value="">
+                    </div>
+                    <div class="col-sm-1">
+                        <br />
+                        <button id="sequence_metadata_filter_score_add" class="btn btn-info">Add</button>
+                    </div>
+                </div>
+                <br /><br />
+
+                <!-- Attribute Value -->
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Attribute: </label>
+                    <div class="col-sm-3">
+                        <label class="control-label">Protocol</label><br />
+                        <select class="form-control" id="sequence_metadata_filter_attribute_protocol" disabled>
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="control-label">Key</label><br />
+                        <select class="form-control" id="sequence_metadata_filter_attribute_key" disabled>
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="control-label">Comparison</label><br />
+                        <select class="form-control" id="sequence_metadata_filter_attribute_comparison">
+                            <option value="con">Contains</option>
+                            <option value="eq">Equal</option>
+                            <option value="lte">Less Than or Equal</option>
+                            <option value="lt">Less Than</option>
+                            <option value="gte">Greater Than or Equal</option>
+                            <option value="gt">Greater Than</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="control-label">Value</label><br />
+                        <input class="form-control" id="sequence_metadata_filter_attribute_value" type="text" value="">
+                    </div>
+                    <div class="col-sm-1">
+                        <br />
+                        <button id="sequence_metadata_filter_attribute_add" class="btn btn-info">Add</button>
+                    </div>
+                </div>
+                <br />
+
+                <!-- Attribute Table -->
+                <div>
+                    <p><strong>Attribute Filters:</strong></p>
+                    <table id="sequence_metadata_filter_attributes_table" class="table table-striped table-hover">
+                        <tr>
+                            <th>Protocol</th>
+                            <th>Attribute</th>
+                            <th>Comparison</th>
+                            <th>Value</th>
+                            <th></th>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+        </&>
+        <!-- END ADVANCED SEARCH -->
         
-        <!-- Feature -->
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Feature: </label>
-            <div class="col-sm-10">
-                <select class="form-control" id="sequence_metadata_filter_feature" disabled>
-                    <option value="">Loading...</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Start / End -->
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Start: </label>
-            <div class="col-sm-4">
-                <input class="form-control" id="sequence_metadata_filter_start" type="text" value="">
-            </div>
-            <label class="col-sm-2 control-label">End: </label>
-            <div class="col-sm-4">
-                <input class="form-control" id="sequence_metadata_filter_end" type="text" value="">
-            </div>
-        </div>
-
-        <h4>Date Type &amp; Protocol</h4>
-
-        <!-- Data Type -->
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Type: </label>
-            <div class="col-sm-10">
-                <select class="form-control" id="sequence_metadata_filter_type" multiple disabled>
-                    <option value="">Loading...</option>
-                </select>
-            </div>
-        </div>
-        <div class="col-sm-2"></div>
-        <div class="col-sm-10">
-            <p><a id="sequence_metadata_filter_type_info_btn" href="#"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;Data Type Info</a></p>
-            <div id="sequence_metadata_filter_type_info" class="" style="display:none">
-                <p>Loading...</p>
-            </div>
-        </div>
-        <br /><br />
-
-        <!-- Protocol -->
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Protocol: </label>
-            <div class="col-sm-10">
-                <select class="form-control" id="sequence_metadata_filter_protocol" multiple disabled>
-                    <option value="">Loading...</option>
-                </select>
-            </div>
-        </div>
-        <div class="col-sm-2"></div>
-        <div class="col-sm-10">
-            <p><a id="sequence_metadata_filter_protocol_info_btn" href="#"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;Protocol Info</a></p>
-            <div id="sequence_metadata_filter_protocol_info" class="" style="display:none">
-                <p>Loading...</p>
-            </div>
-        </div>
-        <br /><br />
-
-        <h4>Attributes</h4>
-
-        <!-- Score Min / Max -->
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Score: </label>
-            <div class="col-sm-3">
-                <label class="control-label">Protocol</label><br />
-                <select class="form-control" id="sequence_metadata_filter_score_protocol" disabled>
-                    <option value="">Loading...</option>
-                </select>
-            </div>
-            <div class="col-sm-3">
-                <label class="control-label">Comparison</label><br />
-                <select class="form-control" id="sequence_metadata_filter_score_comparison">
-                    <option value="eq">Equal</option>
-                    <option value="lte">Less Than or Equal</option>
-                    <option value="lt">Less Than</option>
-                    <option value="gte">Greater Than or Equal</option>
-                    <option value="gt">Greater Than</option>
-                </select>
-            </div>
-            <div class="col-sm-3">
-                <label class="control-label">Value</label><br />
-                <input class="form-control" id="sequence_metadata_filter_score_value" type="text" value="">
-            </div>
-            <div class="col-sm-1">
-                <br />
-                <button id="sequence_metadata_filter_score_add" class="btn btn-info">Add</button>
-            </div>
-        </div>
-        <br /><br />
-
-        <!-- Attribute Value -->
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Attribute: </label>
-            <div class="col-sm-3">
-                <label class="control-label">Protocol</label><br />
-                <select class="form-control" id="sequence_metadata_filter_attribute_protocol" disabled>
-                    <option value="">Loading...</option>
-                </select>
-            </div>
-            <div class="col-sm-2">
-                <label class="control-label">Key</label><br />
-                <select class="form-control" id="sequence_metadata_filter_attribute_key" disabled>
-                    <option value="">Loading...</option>
-                </select>
-            </div>
-            <div class="col-sm-2">
-                <label class="control-label">Comparison</label><br />
-                <select class="form-control" id="sequence_metadata_filter_attribute_comparison">
-                    <option value="con">Contains</option>
-                    <option value="eq">Equal</option>
-                    <option value="lte">Less Than or Equal</option>
-                    <option value="lt">Less Than</option>
-                    <option value="gte">Greater Than or Equal</option>
-                    <option value="gt">Greater Than</option>
-                </select>
-            </div>
-            <div class="col-sm-2">
-                <label class="control-label">Value</label><br />
-                <input class="form-control" id="sequence_metadata_filter_attribute_value" type="text" value="">
-            </div>
-            <div class="col-sm-1">
-                <br />
-                <button id="sequence_metadata_filter_attribute_add" class="btn btn-info">Add</button>
-            </div>
-        </div>
-        <br />
-
-        <!-- Attribute Table -->
-        <div>
-            <p><strong>Attribute Filters:</strong></p>
-            <table id="sequence_metadata_filter_attributes_table" class="table table-striped table-hover">
-                <tr>
-                    <th>Protocol</th>
-                    <th>Attribute</th>
-                    <th>Comparison</th>
-                    <th>Value</th>
-                    <th></th>
-                </tr>
-            </table>
-        </div>
-
         <br /><br /><br />
-        
 
         <!-- QUERY -->
         <div class="center">
-            <button id="sequence_metadata_filter_query" class="btn btn-primary btn-block" style="max-width: 400px; margin: auto">Query</button>
+            <button id="sequence_metadata_filter_query" class="btn btn-primary btn-block" style="max-width: 400px; margin: auto" disabled>Search</button>
         </div>
+
         <br /><br /><br />
 
 
     </form>
 
-    <br />
-
-    <!-- Error Message -->
-    <div id="sequence_metadata_filter_error" class="alert alert-danger" role="alert" style="display:none"></div>
-
-    <br />
-
 </div>
 <!-- END QUERY SECTION -->
+
+
+<!-- START AUTO SEARCH SECTION -->
+<div id="sequence_metadata_section_auto_search" style="display: none">
+    <div class="well" style="max-width: 500px; margin: 50px auto">
+        <h1>Searching...</h1>
+        <br /><br />
+        <p>Querying the database for the requested sequence metadata...</p>
+        <br /><br />
+    </div>
+</div>
+<!-- END AUTO SEARCH SECTION -->
+
+
+<!-- Error Message -->
+<br />
+<div id="sequence_metadata_filter_error" class="alert alert-danger" role="alert" style="display:none"></div>
+<br />
 
 
 <!-- START RESULTS SECTION -->
@@ -193,7 +237,7 @@
     <!-- Return -->
     <div class="center">
         <button id="sequence_metadata_filter_return" class="btn btn-primary btn-block" style="max-width: 400px; margin: auto">
-            <span class="glyphicon glyphicon-chevron-left">&nbsp;</span>Back to Query
+            <span class="glyphicon glyphicon-chevron-left">&nbsp;</span>Back to Search
         </button>
     </div>
 
@@ -202,6 +246,31 @@
 </div>
 
 
+<!-- DATA TYPE INFO MODAL -->
+<div id="sequence_metadata_filter_type_info" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Data Type Information</h4>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
+
+<!-- PROTOCOL INFO MODAL -->
+<div id="sequence_metadata_filter_protocol_info" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Protocol Information</h4>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
 
 <!-- JBROWSE CONFIGURATION -->
 <!-- OVERWRITE THIS FILE IN THE INSTANCE-SPECIFIC MASON REPO TO CONFIGURE -->
@@ -210,31 +279,43 @@
 
 <script type="text/javascript">
 
-var features = [];
-var data_types = [];
-var protocols = [];
-var attribute_filter_count = 0;
+var selected_reference_genome = false;      // Selected reference genome via URL param
+var selected_feature = false;               // Selected feature name via URL param
+var selected_protocols = [];                // List of protocol ids selected via URL params
+var auto_search = false;                    // Flag for automatically performing the search via URL param
+var reference_genomes = [];                 // List of reference genomes / species fetched from the database
+var features = {};                          // Object of features (key = species) fetched from the database
+var protocols = {};                         // Object of sequence metadata protocols (key = reference) fetched from the database
+var attribute_filter_count = 0;             // Current count of attribute filters added by user
+var markers;                                // Object of queried markers from the database for specific ranges
 
 jQuery(document).ready(function() {
 
-    // Get the filter features, types, and protocols
-    get_features();
-    get_types();
-    get_protocols();
+    // Parse URL Arguments
+    parse_args();
+
+    // Get and setup the initial query data types
+    setup();
+
+    //
+    // CLICK AND CHANGE LISTENERS
+    //
+
+    // Reference Genome Change Listener
+    jQuery('#sequence_metadata_filter_reference_genome').change(set_features).change(set_protocols).change(set_attribute_protocols);
 
     // Toggle info boxes
     jQuery('#sequence_metadata_filter_type_info_btn').click(function() {
-        jQuery('#sequence_metadata_filter_type_info').toggle();
+        jQuery('#sequence_metadata_filter_type_info').modal();
         return false;
     });
     jQuery('#sequence_metadata_filter_protocol_info_btn').click(function() {
-        jQuery('#sequence_metadata_filter_protocol_info').toggle();
+        jQuery('#sequence_metadata_filter_protocol_info').modal();
         return false;
     });
 
-    // Type and Protocol Change Listeners
-    jQuery('#sequence_metadata_filter_type').change(set_protocols).change(set_attribute_protocols);
-    jQuery('#sequence_metadata_filter_protocol').change(set_types).change(set_attribute_protocols);
+    // Protocol Change Listeners
+    jQuery('#sequence_metadata_filter_protocol').change(set_attribute_protocols);
 
     // Attribute Protocol Listener
     jQuery('#sequence_metadata_filter_attribute_protocol').change(set_attribute_keys);
@@ -243,11 +324,24 @@ jQuery(document).ready(function() {
     jQuery('#sequence_metadata_filter_score_add').click(function() { add_attribute_filter('score'); return false });
     jQuery('#sequence_metadata_filter_attribute_add').click(function() { add_attribute_filter('attribute'); return false });
 
+    // Remove URL-selected Protocol Button
+    jQuery('#sequence_metadata_filter_type_protocol_url_selection_remove').click(reset_selected_protocols)
+
     // Query Data
     jQuery('#sequence_metadata_filter_query').click(query);
 
     // Return to Query
     jQuery('#sequence_metadata_filter_return').click(toggle_sections);
+
+    // Toggle Sections on history/state change
+    if (window.history && window.history.pushState) {
+        jQuery(window).on('popstate', toggle_sections);
+    }
+
+
+    //
+    // DATATABLES SETUP
+    //
 
     // Set DataTables Buttons
     let DT_BUTTONS = [
@@ -299,64 +393,188 @@ jQuery(document).ready(function() {
         autoWidth: false,
         data: [],
         columns: [
-            { title: "Type", data: "type_name" },
             { title: "Protocol", data: "nd_protocol_name" },
             { title: "Feature", data: "feature_name" },
             { title: "Start", data: "start" },
             { title: "End", data: "end" },
             { title: "Score", data: "score" },
-            { 
-                title: "Attributes", 
-                data: "attributes", 
-                render: function(data, type, row) {
-                    let rtn = [];
-                    let sep = type === 'export' ? ';' : '<br />';
-                    if ( data ) {
-                        var keys = Object.keys(data);
-                        keys.sort();
-                        for ( var i=0; i<keys.length; ++i ) {
-                            let key = keys[i];
-                            let value = data[keys[i]];
-                            if ( type === 'export' ) {
-                                rtn.push(key + '=' + value);
-                            }
-                            else {
-                                rtn.push("<strong>" + key + ":</strong>&nbsp;" + value);
-                            }
-                        }
-                    }
-                    return rtn.join(sep);
-                } 
-            }
+            { title: "Attributes", data: "attributes", render: renderAttributesColumn },
+            { title: "External&nbsp;Links", data: "links", render: renderLinksColumn },
+            { title: "Markers", data: renderMarkersColumn }
         ],
+        order: [[ 2, "asc" ]],
         buttons: DT_BUTTONS
+    });
+
+    // Update the Marker Search display when the table is redrawn (on page change, etc...)
+    jQuery('#sequence_metadata_filter_results').DataTable().on('draw.dt', function() {
+        updateMarkers();
     });
 
 });
 
 
+//
+// SETUP FUNCTIONS
+//
+
+/**
+ * Parse the URL query parameters for pre-defined filter attributes
+ */
+function parse_args() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if ( urlParams.has('nd_protocol_id') ) {
+        selected_protocols = urlParams.getAll('nd_protocol_id');
+        jQuery('#sequence_metadata_filter_type_protocol_user_selection').css('display', 'none');
+        jQuery('#sequence_metadata_filter_type_protocol_url_selection').css('display', 'block');
+    }
+    if ( urlParams.has('reference_genome') ) {
+        selected_reference_genome = urlParams.get('reference_genome');
+    }
+    if ( urlParams.has('feature') ) {
+        selected_feature = urlParams.get('feature');
+    }
+    if ( urlParams.has('start') ) {
+        jQuery('#sequence_metadata_filter_start').val(urlParams.get('start'));
+    }
+    if ( urlParams.has('end') ) {
+        jQuery('#sequence_metadata_filter_end').val(urlParams.get('end'));
+    }
+    if ( urlParams.has('results') && selected_feature ) {
+        auto_search = true;
+    }
+}
+
+
+/**
+ * Setup the initial query data types
+ * - Call get_reference_genomes()
+ * - Then, call get_features(), get_types(), and get_protocols()
+ * - Enable the search once all are complete
+ * - If auto_search is enabled, start the query and display feedback
+ */
+function setup() {
+    let completed = [];
+
+    // Show the auto search section, if enabled
+    if ( auto_search ) {
+        display_auto_search_loading();
+    }
+
+    // Setup the reference genomes...
+    get_reference_genomes(function() {
+        _complete("reference_genomes")
+    });
+
+    function _complete(type) {
+        completed.push(type);
+
+        // Setup the remaining data types...
+        if ( type === "reference_genomes" ) {
+            get_features(function() {
+                _complete("features")
+            });
+            get_types(function() {
+                _complete("types")
+            });
+            get_protocols(function() {
+                _complete("protocols")
+            });
+        }
+
+        // Finish the setup
+        if ( completed.length === 4 ) {
+            jQuery('#sequence_metadata_filter_query').attr('disabled', false);
+            if ( auto_search ) {
+                query();
+            }
+        }
+    }
+}
+
+
+/**
+ * Remove the pre-defined selected protocols and display the 
+ * user-selectable type and protocol options
+ */
+function reset_selected_protocols() {
+    selected_protocols = [];
+    set_protocols();
+    jQuery('#sequence_metadata_filter_type_protocol_user_selection').css('display', 'block');
+    jQuery('#sequence_metadata_filter_type_protocol_url_selection').css('display', 'none');
+    return false;
+}
+
+
+
+//
+// DATABASE QUERIES AND RESPONSE HANDLERS
+//
+
+/**
+ * Get the reference genomes / species associated with the stored genotype protocols
+ * - populate the options for the reference genome select box
+ * @param {Function} [callback] Callback function() (only called if successful)
+ */
+function get_reference_genomes(callback) {
+    jQuery.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: '/ajax/markers/genotyped/reference_genomes',
+        success: function(data) {
+            if ( data && data.reference_genomes ) {
+                reference_genomes = data.reference_genomes;
+                let options = "";
+                for ( let i = 0; i < reference_genomes.length; i++ ) {
+                    let reference = reference_genomes[i].reference_genome_name;
+                    let species = reference_genomes[i].species_name;
+                    let label = reference + " (" + species + ")";
+                    let selected = selected_reference_genome && reference_genomes[i].reference_genome_name === selected_reference_genome ? 'selected' : '';
+                    options += "<option value='" + reference + "' data-species='" + species + "' " + selected + ">" + label + "</option>";
+                }
+                jQuery('#sequence_metadata_filter_reference_genome').html(options);
+                jQuery('#sequence_metadata_filter_reference_genome').prop('disabled', false);
+                if ( callback ) return callback();
+            }
+            else {
+                alert("ERROR: Could not load reference genomes!");
+            }
+        },
+        error: function() {
+            alert("ERROR: Could not load reference genomes!");
+        }
+    });
+}
+
 /**
  * Get the features associated with stored sequence metadata
- * - populate the options for the feature select box
+ * - call set_features() to populate the options for the feature select box
+ * @param {Function} [callback] Callback function() (only called if successful)
  */
-function get_features() {
+function get_features(callback) {
     jQuery.ajax({
         type: 'GET',
         dataType: 'json',
         url: '/ajax/sequence_metadata/features',
         success: function(data) {
-            features = data.features;
             if ( data && data.features ) {
-                let options = "";
+
+                // Save features by species
+                features = {};
                 for ( let i = 0; i < data.features.length; i++ ) {
-                    let f_id = data.features[i].feature_id;
-                    let f_name = data.features[i].feature_name;
-                    let o_name = data.features[i].organism_name;
-                    let f_label = f_name + " (" + o_name + ")";
-                    options += "<option value='" + f_id + "'>" + f_label + "</option>";
+                    let s = data.features[i].organism_name;
+                    if ( !features.hasOwnProperty(s) ) {
+                        features[s] = [];
+                    }
+                    features[s].push(data.features[i]);
                 }
-                jQuery('#sequence_metadata_filter_feature').html(options);
-                jQuery('#sequence_metadata_filter_feature').prop('disabled', false);
+
+                // Set feature options
+                set_features();
+
+                // Return to callback, if provided
+                if ( callback ) return callback();
+
             }
             else {
                 alert("ERROR: Could not load features!");
@@ -369,30 +587,49 @@ function get_features() {
 }
 
 /**
- * Get the types associated with stored sequence metadata
- * - populate the options for the type select box
+ * Set the options for the features select box based on the currently selected reference genome
  */
-function get_types() {
+function set_features() {
+    let s = jQuery("#sequence_metadata_filter_reference_genome option:selected").data("species");
+    let f = features[s];
+    let options = "";
+    if ( f ) {
+        for ( let i = 0; i < f.length; i++ ) {
+            let f_id = f[i].feature_id;
+            let f_name = f[i].feature_name;
+            let selected = selected_feature && selected_feature === f_name ? 'selected' : '';
+            options += "<option value='" + f_id + "' " + selected + ">" + f_name + "</option>";
+        }
+    }
+    jQuery('#sequence_metadata_filter_feature').html(options);
+    jQuery('#sequence_metadata_filter_feature').prop('disabled', false);
+}
+
+/**
+ * Get the types associated with stored sequence metadata
+ * - build the data type info table
+ * @param {Function} [callback] Callback function() (only called if successful)
+ */
+function get_types(callback) {
     jQuery.ajax({
         type: 'GET',
         dataType: 'json',
         url: '/ajax/sequence_metadata/types',
         success: function(data) {
             if ( data && data.types ) {
-                data_types = data.types;
-                
-                // Set Select Options
-                set_types();
 
                 // Build Info Table
-                let info = "<table class='table table-striped'><thead><tr><th>Data Type</th><th>Definition</th></tr></thead>";
+                let info = "<table class='table table-striped'><thead><tr><th>Data&nbsp;Type</th><th>Definition</th></tr></thead>";
                 info += "<tbody>";
                 for ( let i = 0; i < data.types.length; i++ ) {
                     info += "<tr><td>" + data.types[i].type_name + "</td><td>" + data.types[i].type_definition + "</td></tr>";
                 }
                 info += "</tbody>";
                 info += "</table>";
-                jQuery('#sequence_metadata_filter_type_info').html(info);
+                jQuery('#sequence_metadata_filter_type_info .modal-body').html(info);
+
+                // Return to callback, if provided
+                if ( callback ) return callback();
 
             }
             else {
@@ -406,62 +643,28 @@ function get_types() {
 }
 
 /**
- * Set the options for the Data Types select box
- */
-function set_types() {
-    let sel_types = jQuery('#sequence_metadata_filter_type').val();
-    let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
-
-    let options = "";
-    for ( let i = 0; i < data_types.length; i++ ) {
-        let t_id = data_types[i].type_id;
-        let t_name = data_types[i].type_name;
-
-        // Reselect previosuly selected items
-        let selected = false;
-        if ( sel_types ) {
-            for ( let j = 0; j < sel_types.length; j++ ) {
-                if ( parseInt(sel_types[j]) === parseInt(t_id) ) {
-                    selected = true;
-                }
-            }
-        }
-
-        // Disable data types based on selected protocols
-        let disabled = false;
-        if ( sel_protocols && sel_protocols.length > 0 ) {
-            disabled = true;
-            for ( let j = 0; j < protocols.length; j++ ) {
-                for ( let k = 0; k < sel_protocols.length; k++ ) {
-                    if ( parseInt(protocols[j].nd_protocol_id) === parseInt(sel_protocols[k]) ) {
-                        if ( parseInt(protocols[j].nd_protocol_properties.sequence_metadata_type_id) === parseInt(t_id) ) {
-                            disabled = false;
-                        }
-                    }
-                }
-            }
-        }
-        let d = disabled ? 'disabled' : '';
-        let s = disabled ? '' : selected ? 'selected' : '';
-        options += "<option value='" + t_id + "' " + d + " " + s + ">" + t_name + "</option>";
-    }
-
-    jQuery('#sequence_metadata_filter_type').html(options);
-    jQuery('#sequence_metadata_filter_type').prop('disabled', false);
-}
-
-/**
  * Get the protocols associated with stored sequence metadata
- * - populate the options for the protocol select box
+ * - call set_protocols() to populate the options for the protocol select box'
+ * - call set_attribute_protocols() to set the options for the protocol lists for the attributes
+ * - build the protocol info table
  */
-function get_protocols() {
+function get_protocols(callback) {
     jQuery.ajax({
         type: 'GET',
         dataType: 'json',
         url: '/ajax/sequence_metadata/protocols',
         success: function(data) {
             if ( data && data.protocols ) {
-                protocols = data.protocols;
+                
+                // Save protocols by reference genome
+                protocols = {};
+                for ( let i = 0; i < data.protocols.length; i++ ) {
+                    let g = data.protocols[i].nd_protocol_properties.reference_genome;
+                    if ( !protocols.hasOwnProperty(g) ) {
+                        protocols[g] = [];
+                    }
+                    protocols[g].push(data.protocols[i]);
+                }
 
                 // Set Select Options
                 set_protocols();
@@ -475,25 +678,50 @@ function get_protocols() {
                     props += "<strong>Reference Genome:</strong>&nbsp;" + data.protocols[i].nd_protocol_properties.reference_genome + "<br />";
                     props += "<strong>Score:</strong>&nbsp;" + data.protocols[i].nd_protocol_properties.score_description + "<br />";
                     props += "<strong>Attributes:</strong><br />";
-                    let attributes = [];
+                    
                     var keys = Object.keys(data.protocols[i].nd_protocol_properties.attribute_descriptions);
                     keys.sort();
+                    let t = "<table class='table' style='background: transparent !important'>";
+                    t += "<thead><tr><th>Key</th><th>Definition</th></tr></thead>";
+                    t += "<tbody>";
                     for ( let j = 0; j < keys.length; j++ ) {
                         let key = keys[j];
                         let description = data.protocols[i].nd_protocol_properties.attribute_descriptions[key];
-                        attributes.push("&nbsp;&nbsp;<strong>" + key + ":</strong>&nbsp;" + description);
+                        t += "<tr><td class='col-md-4'><strong>" + key + "</strong></td><td class='col-md-8'>" + description + "</td></tr>";
                     }
-                    props += attributes.join('<br />');
+                    t += "</tbody>";
+                    t += "</table>";
+                    props += t;
+
+                    var links = data.protocols[i].nd_protocol_properties.links;
+                    if ( links ) {
+                        props += "<strong>Links:</strong><br />";
+                        var titles = Object.keys(links);
+                        titles.sort();
+                        let t = "<table class='table' style='background: transparent !important'>";
+                        t += "<thead><tr><th>Title</th><th>URL&nbsp;Template</th></tr></thead>";
+                        t += "<tbody>";
+                        for ( let j = 0; j < titles.length; j++ ) {
+                            let title = titles[j];
+                            let url = data.protocols[i].nd_protocol_properties.links[title];
+                            t += "<tr><td class='col-md-4'><strong>" + title + "</strong></td><td class='col-md-8'>" + url + "</td></tr>";
+                        }
+                        t += "</tbody>";
+                        t += "</table>";
+                        props += t;
+                    }
 
                     info += "<tr>";
-                    info += "<td>" + data.protocols[i].nd_protocol_name + "</td>";
-                    info += "<td>" + data.protocols[i].nd_protocol_description + "</td>";
-                    info += "<td>" + props + "</td>";
+                    info += "<td class='col-md-2'>" + data.protocols[i].nd_protocol_name + "</td>";
+                    info += "<td class='col-md-5'>" + data.protocols[i].nd_protocol_description + "</td>";
+                    info += "<td class='col-md-5'>" + props + "</td>";
                     info += "</tr>";
                 }
                 info += "</tbody>";
                 info += "</table>";
-                jQuery('#sequence_metadata_filter_protocol_info').html(info);
+                jQuery('#sequence_metadata_filter_protocol_info .modal-body').html(info);
+
+                if ( callback ) return callback();
 
             }
             else {
@@ -510,84 +738,99 @@ function get_protocols() {
  * Set the options for the Protocol select box
  */
 function set_protocols() {
+    let sel_reference_genome = jQuery('#sequence_metadata_filter_reference_genome').val();
     let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
-    let sel_types = jQuery('#sequence_metadata_filter_type').val();
 
-    let options = "";
-    for ( let i = 0; i < protocols.length; i++ ) {
-        let p_id = protocols[i].nd_protocol_id;
-        let p_name = protocols[i].nd_protocol_name;
-        let p_type_id = protocols[i].nd_protocol_properties.sequence_metadata_type_id;
-        
-        // Reselect previosuly selected items
-        let selected = false;
-        if ( sel_protocols ) {
-            for ( let j = 0; j < sel_protocols.length; j++ ) {
-                if ( parseInt(sel_protocols[j]) === parseInt(p_id) ) {
-                    selected = true;
-                }
-            }
-        }
+    // Add URL selected protocols
+    if ( !sel_protocols ) sel_protocols = [];
+    sel_protocols = sel_protocols.concat(selected_protocols);
+    let sel_protocol_names = [];
 
-        // Disable protocols based on selected data types
-        let disabled = false;
-        if ( sel_types && sel_types.length > 0 ) {
-            disabled = true;
-            for ( let j = 0; j < data_types.length; j++ ) {
-                for ( let k = 0; k < sel_types.length; k++ ) {
-                    if ( parseInt(data_types[j].type_id) === parseInt(sel_types[k]) ) {
-                        if ( parseInt(data_types[j].type_id) === parseInt(p_type_id) ) {
-                            disabled = false;
-                        }
+    // Get protocols for the selected reference genome
+    let p = protocols[sel_reference_genome];
+
+    // Group protocols by type
+    let grouped = {};
+    if ( p ) {
+        for ( let i = 0; i < p.length; i++ ) {
+            let p_id = p[i].nd_protocol_id;
+            let p_name = p[i].nd_protocol_name;
+            let p_type = p[i].nd_protocol_properties.sequence_metadata_type;
+            
+            // Reselect previosuly selected items
+            let selected = false;
+            if ( sel_protocols ) {
+                for ( let j = 0; j < sel_protocols.length; j++ ) {
+                    if ( parseInt(sel_protocols[j]) === parseInt(p_id) ) {
+                        selected = true;
+                        sel_protocol_names.push(p_name);
                     }
                 }
             }
+
+            // Add protocol info to group of type
+            if ( !grouped[p_type] ) grouped[p_type] = [];
+            grouped[p_type].push({
+                id: p_id,
+                name: p_name,
+                selected: selected ? 'selected' : ''
+            });
         }
-        let d = disabled ? 'disabled' : '';
-        let s = disabled ? '' : selected ? 'selected' : '';
-        options += "<option value='" + p_id + "' " + d + " " + s + ">" + p_name + "</option>";
+    }
+
+    // Build options, grouped by type
+    let options = "";
+    let sorted_types = Object.keys(grouped).sort(function(x, y) {
+        if (x.toUpperCase() < y.toUpperCase()) return -1;
+        if (x.toUpperCase() > y.toUpperCase()) return 1;
+        return 0;
+    });
+    for ( let i = 0; i < sorted_types.length; i++ ) {
+        options += "<optgroup label='" + sorted_types[i] + "'>";
+        for ( let j = 0; j < grouped[sorted_types[i]].length; j++ ) {
+            let prot = grouped[sorted_types[i]][j];
+            options += "<option value='" + prot.id + "' " + prot.selected + ">" + prot.name + "</option>";
+        }
+        options += "</optgroup>";
     }
 
     // Set protocol selection options
     jQuery('#sequence_metadata_filter_protocol').html(options);
     jQuery('#sequence_metadata_filter_protocol').prop('disabled', false);
-}
 
+    // Set selected protocol names
+    jQuery('#sequence_metadata_filter_type_protocol_url_selection_names').html(sel_protocol_names.join(', '));
+}
 
 /**
  * Set the protocol lists for the score and attribute select menus
  */
 function set_attribute_protocols() {
+    let sel_reference_genome = jQuery('#sequence_metadata_filter_reference_genome').val();
     let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
-    let sel_types = jQuery('#sequence_metadata_filter_type').val();
 
     let options = "";
-    for ( let i = 0; i < protocols.length; i++ ) {
-        let p_id = protocols[i].nd_protocol_id;
-        let p_name = protocols[i].nd_protocol_name;
-        let p_type_id = protocols[i].nd_protocol_properties.sequence_metadata_type_id;
+    let p = protocols[sel_reference_genome];
+    if ( p ) {
+        for ( let i = 0; i < p.length; i++ ) {
+            let p_id = p[i].nd_protocol_id;
+            let p_name = p[i].nd_protocol_name;
+            let p_type_id = p[i].nd_protocol_properties.sequence_metadata_type_id;
 
-        // Only enable selected protocols or selected data types
-        let enabled = true;
-        if ( sel_protocols ) {
-            enabled = false;
-            for ( let j = 0; j < sel_protocols.length; j++ ) {
-                if ( parseInt(sel_protocols[j]) === parseInt(p_id) ) {
-                    enabled = true;
+            // Only enable selected protocols or selected data types
+            let enabled = true;
+            if ( sel_protocols ) {
+                enabled = false;
+                for ( let j = 0; j < sel_protocols.length; j++ ) {
+                    if ( parseInt(sel_protocols[j]) === parseInt(p_id) ) {
+                        enabled = true;
+                    }
                 }
             }
-        }
-        else if ( sel_types ) {
-            enabled = false;
-            for ( let j = 0; j < sel_types.length; j++ ) {
-                if ( parseInt(sel_types[j]) === parseInt(p_type_id) ) {
-                    enabled = true;
-                }
-            }
-        }
 
-        let d = !enabled ? 'disabled' : '';
-        options += "<option value='" + p_id + "' " + d + ">" + p_name + "</option>";
+            let d = !enabled ? 'disabled' : '';
+            options += "<option value='" + p_id + "' " + d + ">" + p_name + "</option>";
+        }
     }
 
     // Set protocol selection options
@@ -605,14 +848,18 @@ function set_attribute_protocols() {
  * Set the attribute keys for the currently selected attribute protocol
  */
 function set_attribute_keys() {
+    let sel_reference_genome = jQuery('#sequence_metadata_filter_reference_genome').val();
     let sel_attribute_protocol = jQuery('#sequence_metadata_filter_attribute_protocol').val();
     
     let options = "";
-    for ( let i = 0; i < protocols.length; i++ ) {
-        if ( parseInt(sel_attribute_protocol) === parseInt(protocols[i].nd_protocol_id) ) {
-            let attrs = Object.keys(protocols[i].nd_protocol_properties.attribute_descriptions);
-            for ( let j = 0; j < attrs.length; j++ ) {
-                options += "<option val='" + attrs[j] + "'>" + attrs[j] + "</option>";
+    let p = protocols[sel_reference_genome];
+    if ( p ) {
+        for ( let i = 0; i < p.length; i++ ) {
+            if ( parseInt(sel_attribute_protocol) === parseInt(p[i].nd_protocol_id) ) {
+                let attrs = Object.keys(p[i].nd_protocol_properties.attribute_descriptions);
+                for ( let j = 0; j < attrs.length; j++ ) {
+                    options += "<option val='" + attrs[j] + "'>" + attrs[j] + "</option>";
+                }
             }
         }
     }
@@ -658,6 +905,12 @@ function add_attribute_filter(type) {
 }
 
 
+
+//
+// QUERY FUNCTIONS
+//
+
+
 /**
  * Build the Query URL using the current filter properties
  * @param {string} [format] Output format (default: JSON)
@@ -665,10 +918,10 @@ function add_attribute_filter(type) {
  * @returns {string} relative URL to query endpoint
  */
 function getQueryURL(format, nd_protocol_id) {
+    let reference_genome = jQuery('#sequence_metadata_filter_reference_genome').val();
     let feature_id = jQuery('#sequence_metadata_filter_feature option:selected').val();
     let start = jQuery('#sequence_metadata_filter_start').val();
     let end = jQuery('#sequence_metadata_filter_end').val();
-    let type_ids = jQuery('#sequence_metadata_filter_type').val();
     let sel_nd_protocol_ids = jQuery('#sequence_metadata_filter_protocol').val();
 
     let params = {
@@ -677,7 +930,7 @@ function getQueryURL(format, nd_protocol_id) {
     }
     if ( start && start !== '' ) params.start = start;
     if ( end && end !== '' ) params.end = end;
-    if ( type_ids && type_ids.length > 0 ) params.type_id = type_ids;
+    if ( reference_genome && reference_genome !== '' ) params.reference_genome = reference_genome;
     if ( nd_protocol_id ) {
         params.nd_protocol_id = nd_protocol_id;
     }
@@ -708,7 +961,7 @@ function getQueryURL(format, nd_protocol_id) {
  */
 function query() {
     hide_error();
-    jQuery('#sequence_metadata_filter_query').html('Querying...');
+    jQuery('#sequence_metadata_filter_query').html('Searching...');
     jQuery('#sequence_metadata_filter_query').attr('disabled', true);
 
     jQuery.ajax({
@@ -718,7 +971,7 @@ function query() {
         success: handle_query_results,
         error: function() {
             alert("ERROR: Could query database!");
-            jQuery('#sequence_metadata_filter_query').html('Query');
+            jQuery('#sequence_metadata_filter_query').html('Search');
             jQuery('#sequence_metadata_filter_query').attr('disabled', false);
         }
     });
@@ -735,6 +988,8 @@ function query() {
  *                 response.results array of sequence metadata objects
  */
 function handle_query_results(response) {
+
+    // Update DataTable
     let dt = jQuery('#sequence_metadata_filter_results').DataTable();
     dt.clear();
     if ( response && response.error ) {
@@ -742,14 +997,26 @@ function handle_query_results(response) {
     }
     else if ( response && response.results && response.results.length > 0) {
         dt.rows.add(response.results);
-        toggle_sections();
+        if ( auto_search ) {
+            display_auto_search_results();
+        }
+        else {
+            toggle_sections();
+        }
+        if (window.history && window.history.pushState) {
+            window.history.pushState('results', null, null);
+        }
     }
     else {
         display_error("No results found - try modifying your filter criteria");
     }
     dt.draw();
 
-    jQuery('#sequence_metadata_filter_query').html('Query');
+    // Reset Markers
+    markers = undefined;
+
+    // Reset Query Button
+    jQuery('#sequence_metadata_filter_query').html('Search');
     jQuery('#sequence_metadata_filter_query').attr('disabled', false);
 }
 
@@ -762,42 +1029,40 @@ function handle_query_results(response) {
  */
 function getJBrowseURL(config) {
     // Get Selected Types
-    let sel_types = jQuery('#sequence_metadata_filter_type').val();
+    let sel_reference_genome = jQuery('#sequence_metadata_filter_reference_genome').val();
+    let p = protocols[sel_reference_genome];
     
     // Get Selected Protocols (or all enabled protocols, if none selected)
     let sel_protocols = jQuery('#sequence_metadata_filter_protocol').val();
     if ( !sel_protocols ) {
         sel_protocols = [];
-        for ( let i = 0; i < protocols.length; i++ ) {
-            if ( sel_types && sel_types.length > 0 ) {
-                for ( let j = 0; j < sel_types.length; j++ ) {
-                    if ( parseInt(protocols[i].nd_protocol_properties.sequence_metadata_type_id) === parseInt(sel_types[j]) ) {
-                        sel_protocols.push(protocols[i].nd_protocol_id);
-                    }
-                }
-            }
-            else {
-                sel_protocols.push(protocols[i].nd_protocol_id);
+        if ( p ) {
+            for ( let i = 0; i < p.length; i++ ) {
+                sel_protocols.push(p[i].nd_protocol_id);
             }
         }
     }
 
     // Get Selected Protocol names (for track labels)
     let sel_protocol_names = {};
-    for ( let i = 0; i < sel_protocols.length; i++ ) {
-        for ( let j = 0; j < protocols.length; j++ ) {
-            if ( parseInt(sel_protocols[i]) === parseInt(protocols[j].nd_protocol_id) ) {
-                sel_protocol_names[sel_protocols[i].toString()] = protocols[j].nd_protocol_name.replaceAll(" ", "&nbsp;");
+    if ( p ) {
+        for ( let i = 0; i < sel_protocols.length; i++ ) {
+            for ( let j = 0; j < p.length; j++ ) {
+                if ( parseInt(sel_protocols[i]) === parseInt(p[j].nd_protocol_id) ) {
+                    sel_protocol_names[sel_protocols[i].toString()] = p[j].nd_protocol_name.replaceAll(" ", "&nbsp;");
+                }
             }
         }
     }
     
     // Get Selected Feature (for jBrowse chromosome name)
+    let sel_species = jQuery("#sequence_metadata_filter_reference_genome option:selected").data("species");
     let sel_feature = jQuery('#sequence_metadata_filter_feature').val();
     let sel_feature_name = '';
-    for ( let i = 0; i < features.length; i++ ) {
-        if ( parseInt(features[i].feature_id) === parseInt(sel_feature) ) {
-            sel_feature_name = features[i].feature_name;
+    let f = features[sel_species];
+    for ( let i = 0; i < f.length; i++ ) {
+        if ( parseInt(f[i].feature_id) === parseInt(sel_feature) ) {
+            sel_feature_name = f[i].feature_name;
         }
     }
 
@@ -813,9 +1078,14 @@ function getJBrowseURL(config) {
     let stores = {};
     let tracks = [];
     for ( let i = 0; i < sel_protocols.length; i++ ) {
+        let query_url = window.location.protocol + "//" + window.location.host + getQueryURL("gff", sel_protocols[i]);
+        if ( config.query_params ) {
+            let q = new URLSearchParams(config.query_params).toString();
+            query_url += "&" + q;
+        }
         stores["url" + i] = {
             type: "JBrowse/Store/SeqFeature/GFF3",
-            urlTemplate: window.location.protocol + "//" + window.location.host + getQueryURL("gff", sel_protocols[i])
+            urlTemplate: query_url
         }
         tracks.push({
             label: sel_protocol_names[sel_protocols[i].toString()],
@@ -840,6 +1110,252 @@ function getJBrowseURL(config) {
 }
 
 
+
+//
+// MARKER SEARCH FUNCTIONS
+//
+
+
+/**
+ * Update the contents of the marker column in the results table
+ * for the currently displayed rows of results
+ */
+function updateMarkers() {
+    let containers = jQuery('.sequence_metadata_marker_search_markers');
+    for ( let i = 0; i < containers.length; i++ ) {
+        let container = jQuery(containers[i]);
+        let species = container.data("species");
+        let reference_genome = container.data("reference-genome");
+        let feature_name = container.data("feature-name");
+        let start = container.data("start");
+        let end = container.data("end");
+        let key = [species, reference_genome, feature_name, start, end].join("-").replaceAll(' ', '');
+        if ( markers && markers[key] ) {
+            displayMarkers(key, species, reference_genome, feature_name, start, end);
+        }
+        else {
+            getMarkers(key, species, reference_genome, feature_name, start, end);
+        }
+    }
+
+}
+
+/**
+ * Get markers matching the specified sequence metadata
+ * - Query the DB for matching markers
+ * - Update the display of the markers
+ * @param {string} key Sequence Metadata results key (species-reference_genome-feature_name-start-end)
+ * @param {string} species Name of the species
+ * @param {string} reference_genome Name of the reference genome
+ * @param {string} feature_name Name of the sequence metadata's associated feature
+ * @param {int} start Start position of the sequence metadata
+ * @param {int} end End position of the sequence metadata
+ */
+function getMarkers(key, species, reference_genome, feature_name, start, end) {
+
+    // Display searching
+    if ( !markers ) markers = {};
+    markers[key] = "Searching...";
+    displayMarkers(key);
+
+    // Query the Database for Markers
+    jQuery.ajax({
+        type: 'GET',
+        url: '/ajax/markers/genotyped/query',
+        data: {
+            species: species,
+            reference_genome: reference_genome,
+            chrom: feature_name,
+            start: start,
+            end: end,
+            limit: 50
+        },
+        dataType: 'json',
+        success: function(data) {
+
+            // Save the markers and update the DataTables
+            if ( data && data.results ) {
+                if ( !markers ) markers = {};
+                markers[key] = data.results;
+                displayMarkers(key, species, reference_genome, feature_name, start, end);
+            }
+
+        },
+        error: function() {
+            alert("ERROR: Could not perform marker search");
+        }
+    });
+}
+
+
+/**
+ * Display the marker info for the specified sequence metadata row
+ * @param {string} key Sequence Metadata results key (species-reference_genome-feature_name-start-end)
+ * @param {string} species Species name
+ * @param {string} reference_genome Reference genome name
+ * @param {string} feature_name Feature / chromosome name
+ * @param {int} start Start position
+ * @param {int} end End position
+ */
+function displayMarkers(key, species, reference_genome, feature_name, start, end) {
+    let marker_info = markers[key];
+    let container = jQuery('.sequence_metadata_marker_search_markers_' + key);
+    if ( typeof marker_info === 'string' ) {
+        container.html(marker_info);
+    }
+    else if ( typeof marker_info === 'object' ) {
+        let html = "";
+        let marker_count = marker_info.counts.markers;
+        let variants = marker_info.variants;
+        let markers_displayed = 0;
+        if ( marker_count > 0 ) {
+            let m = marker_count === 1 ? "marker" : "markers";
+            html += "<strong>" + marker_count + " " + m + " found:</strong>";
+            html += "<div class='sequence_metadata_marker_search_markers_list'>";
+            let sorted_variants = Object.keys(variants).sort();
+            for ( let i = 0; i < sorted_variants.length; i++ ) {
+                let variant_name = sorted_variants[i];
+                if ( variants.hasOwnProperty(variant_name) ) {
+                    let m = variants[variant_name][0];
+                    let url = "/variant/" + variant_name + "/details";
+                    let label = m.chrom + " @ " + m.pos + " (" + m.ref + "/" + m.alt + ")";
+                    html += "<a href='" + url + "' target='_blank'>" + label + "</a>";
+                    html += "<ul style='padding-left: 25px'>";
+                    for ( let i = 0; i < variants[variant_name].length; i++ ) {
+                        let m = variants[variant_name][i];
+                        markers_displayed++;
+                        html += "<li>" + m.marker_name + " (" + m.nd_protocol_name + ")</li>";
+                    }
+                    html += "</ul>";
+                }        
+            }
+            if ( markers_displayed < marker_count ) {
+                let diff = marker_count - markers_displayed;
+                html += "<em>" + diff + " more not displayed...</em>";
+                if ( species && reference_genome && feature_name ) {
+                    let url = "/search/variants/results?type=genotyped&refmap=" + reference_genome + "&species=" + species + "&chrom=" + feature_name + "&start=" + start + "&end=" + end;
+                    html += "<br /><a href='" + url + "' target='_blank'>View All Markers</a>";
+                }
+            }
+            html += "</div>";
+        }
+        else {
+            html += "<em>No markers found</em>";
+        }
+        container.html(html);
+    }
+}
+
+
+//
+// DATA TABLE RENDER FUNCTIONS
+//
+
+/**
+ * Render the Markers column
+ * @param {Object} row The current row's data
+ * @param {String} type The display type
+ * @returns {String} The text/html to display in the table
+ */
+function renderMarkersColumn(row, type) {
+    
+    // Get reference genome by protocol
+    let reference_genome = "";
+    for ( let ref in protocols ) {
+        if ( protocols.hasOwnProperty(ref) ) {
+            let ps = protocols[ref];
+            for ( let i = 0; i < ps.length; i++ ) {
+                if ( ps[i].nd_protocol_id === row.nd_protocol_id ) {
+                    reference_genome = ref;
+                }
+            }
+        }
+    }
+
+    // Get species by feature
+    let species = "";
+    for ( let sp in features ) {
+        if ( features.hasOwnProperty(sp) ) {
+            let fs = features[sp];
+            for ( let i = 0; i < fs.length; i++ ) {
+                if ( fs[i].feature_id === row.feature_id ) {
+                    species = sp;
+                }
+            }
+        }
+    }
+
+    // Set data properties for marker search
+    let data = "data-reference-genome='" + reference_genome + "' data-species='" + species + "' data-feature-name='" + row.feature_name + "' data-start='" + row.start + "' data-end='" + row.end + "'";
+    let key = [species, reference_genome, row.feature_name, row.start, row.end].join("-").replaceAll(' ', '');
+    
+    let html = "<div class='sequence_metadata_marker_search'>";
+    html += "<div class='sequence_metadata_marker_search_markers sequence_metadata_marker_search_markers_" + key + "' " + data + "></div>";
+    html += "</div>";
+
+    return html;
+}
+
+/**
+ * Render the Attributes column
+ * @param data The column's data for the current row
+ * @param {String} type The display type
+ * @param {Object} row The current row's data
+ * @returns {String} The text/html to display in the table
+ */
+function renderAttributesColumn(data, type, row) {
+    let rtn = [];
+    let sep = type === 'export' ? ';' : '<br />';
+    if ( data ) {
+        var keys = Object.keys(data);
+        keys.sort();
+        for ( var i=0; i<keys.length; ++i ) {
+            let key = keys[i];
+            let value = data[key];
+            if ( type === 'export' ) {
+                rtn.push(key + '=' + value);
+            }
+            else {
+                rtn.push("<strong>" + key + ":</strong>&nbsp;" + value);
+            }
+        }
+    }
+    return rtn.join(sep);
+} 
+
+/**
+ * Render the Links column
+ * @param data The column's data for the current row
+ * @param {String} type The display type
+ * @param {Object} row The current row's data
+ * @returns {String} The text/html to display in the table
+ */
+function renderLinksColumn(data, type, row) {
+    let rtn = [];
+    let sep = type === 'export' ? ';' : '<br /><br />';
+    if ( data ) {
+        var titles = Object.keys(data);
+        titles.sort();
+        for ( var i=0; i<titles.length; i++ ) {
+            let title = titles[i];
+            let url = data[title];
+            if ( type === 'export' ) {
+                rtn.push(title + '=' + url);
+            }
+            else {
+                rtn.push("<a href='" + url + "' target='_blank'>" + title + "</a>");
+            }
+        }
+    }
+    return rtn.join(sep);
+}
+
+
+//
+// HELPER FUNCTIONS
+//
+
+
 /**
  * Toggle the display of the query and results sections
  */
@@ -848,6 +1364,24 @@ function toggle_sections() {
     jQuery("#sequence_metadata_section_results").toggle();
     let anchor = jQuery('#sequence_metadata_anchor');
     jQuery('html,body').animate({scrollTop: anchor.offset().top-150}, 'fast');
+}
+
+/**
+ * Display the auto search loading section
+ */
+function display_auto_search_loading() {
+    jQuery("#sequence_metadata_section_query").hide();
+    jQuery("#sequence_metadata_section_results").hide();
+    jQuery("#sequence_metadata_section_auto_search").show();
+}
+
+/**
+ * Display the auto search results
+ */
+function display_auto_search_results() {
+    jQuery("#sequence_metadata_section_query").hide();
+    jQuery("#sequence_metadata_section_auto_search").hide();
+    jQuery("#sequence_metadata_section_results").show();
 }
 
 /**
@@ -888,5 +1422,21 @@ function download(url, name) {
         font-weight: 200;
         font-style: italic;
         color: #DCDCDC;
+    }
+    #sequence_metadata_filter_type_protocol_url_selection {
+        display: none;
+    }
+    #sequence_metadata_filter_type_protocol_url_selection_names {
+        margin: 0;
+        padding-top: 7px;
+    }
+    .sequence_metadata_marker_search_markers_list {
+        max-height: 250px;
+        overflow-y: auto;
+    }
+    #sequence_metadata_filter_results {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin: 5px 0;
     }
 </style>

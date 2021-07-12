@@ -1,0 +1,7 @@
+<div class="container-fluid">
+
+    <& /page/page_title.mas, title=>'Search Sequence Metadata' &>
+
+    <& /tools/sequence_metadata/query_sequence_metadata.mas &>
+
+</div>

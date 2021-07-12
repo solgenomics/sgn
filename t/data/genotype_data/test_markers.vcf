@@ -1,0 +1,21 @@
+##fileformat=VCFv4.0
+##Tassel=<ID=GenotypeTable,Version=5,Description="Reference allele is not known. The major allele was used as reference allele">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the reference and alternate alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth (only filtered reads used for calling)">
+##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality">
+##FORMAT=<ID=PL,Number=.,Type=Float,Description="Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic">
+##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=AF,Number=.,Type=Float,Description="Allele Frequency">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1	test_accession2	test_accession3	test_accession4	test_accession5
+1	142369	test_marker_1	A	G	.	PASS	.	GT	0/0	0/0	0/0	0/0	0/0
+1	145558	test_marker_2	C	G	.	PASS	.	GT	0/0	0/0	0/0	0/0	0/0
+1	146097	test_marker_3	A	G	.	PASS	.	GT	0/0	0/0	0/0	0/0	0/0
+1	146155	test_marker_4	G	A	.	PASS	.	GT	0/0	0/0	0/0	0/0	0/0
+1	146218	test_marker_5	G	A	.	PASS	.	GT	0/0	0/0	0/0	0/0	1/1
+1	147494	test_marker_6	A	G	.	PASS	.	GT	0/0	0/0	0/0	0/0	1/1
+1	158861	test_marker_7	C	A	.	PASS	.	GT	0/0	0/0	0/0	0/0	0/0
+1	159936	test_marker_8	A	C	.	PASS	.	GT	0/0	0/0	0/0	0/0	1/1
+1	162979	test_marker_9	A	C	.	PASS	.	GT	0/0	0/0	0/0	0/0	0/0
+1	164176	test_marker_10	A	C	.	PASS	.	GT	0/0	0/0	0/0	0/0	1/1
