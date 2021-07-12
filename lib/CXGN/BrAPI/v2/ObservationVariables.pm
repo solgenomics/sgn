@@ -3,6 +3,7 @@ package CXGN::BrAPI::v2::ObservationVariables;
 use Moose;
 use Data::Dumper;
 use JSON;
+use Try::Tiny;
 use CXGN::Trait;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
@@ -308,45 +309,53 @@ sub store {
 
     my @result;
 
-    foreach my $params (@{$data}) {
-        my $cvterm_id = $params->{observationVariableDbId} || undef;
-        my $name = $params->{observationVariableName};
-        my $ontology_id = $params->{ontologyReference}{ontologyDbId};
-        my $description = $params->{trait}{traitDescription};
-        my $synonyms = $params->{synonyms};
-        my $active = $params->{status} ne "archived";
+    my $coderef = sub {
+        foreach my $params (@{$data}) {
+            my $cvterm_id = $params->{observationVariableDbId} || undef;
+            my $name = $params->{observationVariableName};
+            my $ontology_id = $params->{ontologyReference}{ontologyDbId};
+            my $description = $params->{trait}{traitDescription};
+            my $synonyms = $params->{synonyms};
+            my $active = $params->{status} ne "archived";
 
-        #TODO: Parse this when it initially comes into the brapi controller
-        my $scale = CXGN::BrAPI::v2::Scales->new({
-            bcs_schema => $self->bcs_schema,
-            scale => $params->{scale}
-        });
-        my $method = CXGN::BrAPI::v2::Methods->new({
-            bcs_schema => $self->bcs_schema,
-            method => $params->{method}
-        });
-        my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
-            bcs_schema          => $self->bcs_schema,
-            external_references => $params->{externalReferences} || [],
-            table_name          => "cvterm",
-            table_id_key        => "cvterm_id",
-            id                  => $cvterm_id
-        });
-        my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
-            cvterm_id                             => $cvterm_id,
-            name                                  => $name,
-            ontology_id                           => $ontology_id,
-            definition                            => $description,
-            synonyms                              => $synonyms,
-            external_references                   => $external_references,
-            method                                => $method,
-            scale                                 => $scale
-        });
-        $trait->{active} = $active;
+            #TODO: Parse this when it initially comes into the brapi controller
+            my $scale = CXGN::BrAPI::v2::Scales->new({
+                bcs_schema => $self->bcs_schema,
+                scale      => $params->{scale}
+            });
+            my $method = CXGN::BrAPI::v2::Methods->new({
+                bcs_schema => $self->bcs_schema,
+                method     => $params->{method}
+            });
+            my $external_references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema          => $self->bcs_schema,
+                external_references => $params->{externalReferences} || [],
+                table_name          => "cvterm",
+                table_id_key        => "cvterm_id",
+                id                  => $cvterm_id
+            });
+            my $trait = CXGN::Trait->new({ bcs_schema => $self->bcs_schema,
+                cvterm_id                             => $cvterm_id,
+                name                                  => $name,
+                ontology_id                           => $ontology_id,
+                definition                            => $description,
+                synonyms                              => $synonyms,
+                external_references                   => $external_references,
+                method                                => $method,
+                scale                                 => $scale
+            });
+            $trait->{active} = $active;
 
-        my $variable = $trait->store();
-        push @result, $self->_construct_variable_response($c, $variable);
-    }
+            my $variable = $trait->store();
+            push @result, $self->_construct_variable_response($c, $variable);
+        }
+    };
+
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        throw $_;
+    };
 
     my $count = scalar @variable_ids;
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);

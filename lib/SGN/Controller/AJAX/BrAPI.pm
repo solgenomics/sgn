@@ -3367,10 +3367,17 @@ sub observationvariable_list_POST {
 	my $c = shift;
 	my ($auth,$user_id) = _authenticate_user($c);
 
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $data = $clean_inputs;
+	_validate_request($c, 'ARRAY', $data, [
+		'observationVariableName',
+		{'scale' => ['dataType', 'scaleName']},
+		{'method' => ['methodName', 'methodClass', 'description']},
+		{'trait' => ['traitName', 'status']}
+	]);
+
 	my $response;
 	try {
-		my $clean_inputs = $c->stash->{clean_inputs};
-		my $data = $clean_inputs;
 		my @all_variables;
 		foreach my $variable (values %{$data}) {
 			push @all_variables, $variable;
