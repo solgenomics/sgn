@@ -919,7 +919,7 @@ sub init_genotype_iterator {
         $limit_clause
         $offset_clause;";
 
-    print STDERR Dumper $q;
+    #print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my @genotypeprop_infos;
@@ -974,6 +974,7 @@ sub init_genotype_iterator {
     my %protocolprop_top_key_select_hash = map {$_ => 1} @protocolprop_top_key_select_arr;
     my %selected_protocol_marker_info;
     my %selected_protocol_top_key_info;
+    my $val;
 
     foreach my $protocol_id (@seen_protocol_ids){
         $protocolprop_h->execute($protocol_id);
@@ -988,7 +989,6 @@ sub init_genotype_iterator {
         while (my ($protocol_id, @protocolprop_top_key_return) = $protocolprop_top_key_h->fetchrow_array()) {
             for my $s (0 .. scalar(@protocolprop_top_key_select_arr)-1){
                 my $protocolprop_i = $protocolprop_top_key_select->[$s];
-                my $val;
                 if ($protocolprop_i eq 'header_information_lines' || $protocolprop_i eq 'marker_names') {
                     $val = decode_json $protocolprop_top_key_return[$s];
                 } else {
@@ -1123,7 +1123,7 @@ sub get_next_genotype_info {
             $genotypeprop_h->execute($genotypeprop_id);
             while (my ($marker_name, @genotypeprop_info_return) = $genotypeprop_h->fetchrow_array()) {
                 for my $s (0 .. scalar(@$genotypeprop_hash_select_arr)-1){
-                    $genotypeprop_info{selected_genotype_hash}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
+		    $genotypeprop_info{selected_genotype_hash}->{$marker_name}->{$genotypeprop_hash_select->[$s]} = $genotypeprop_info_return[$s];
                 }
             }
 
@@ -1148,7 +1148,6 @@ sub key {
     my $self = shift;
     my $datatype = shift;
 
-    #print STDERR Dumper($self->_get_dataref());
     my $json = JSON->new();
     #preserve order of hash keys to get same text
     $json = $json->canonical();
@@ -1167,6 +1166,7 @@ sub key {
     my $end = $self->end_position() || '';
     my $prevent_transpose = $self->prevent_transpose() || '';
     my $key = md5_hex($accessions.$tissues.$trials.$protocols.$markerprofiles.$genotypedataprojects.$markernames.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$chromosomes.$start.$end.$self->return_only_first_genotypeprop_for_stock().$prevent_transpose.$self->limit().$self->offset()."_$datatype");
+    #print STDERR Dumper($genotypeprophash);
     return $key;
 }
 
@@ -1194,10 +1194,10 @@ sub get_cached_file_search_json {
     my $file_handle;
     if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
-    }
-    else {
+    } else {
         # Set the temp dir and temp output file
         my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_json";
+	print STDERR "creating cached json file in $tmp_output_dir\n";
         mkdir $tmp_output_dir if ! -d $tmp_output_dir;
         my ($tmp_fh, $tempfile) = tempfile(
             "wizard_download_XXXXX",
@@ -1600,10 +1600,10 @@ sub get_cached_file_VCF {
     my $file_handle;
     if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
-    }
-    else {
+    } else {
         # Set the temp dir and temp output file
         my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_VCF";
+	print STDERR "creating cached VCF file in $tmp_output_dir\n";
         mkdir $tmp_output_dir if ! -d $tmp_output_dir;
         my ($tmp_fh, $tempfile) = tempfile(
             "wizard_download_XXXXX",
@@ -1641,7 +1641,7 @@ sub get_cached_file_VCF {
 
         #VCF should be sorted by chromosome and position
         no warnings 'uninitialized';
-        @all_marker_objects = sort { $a->{chrom} cmp $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
+	@all_marker_objects = sort { $a->{chrom} cmp $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
         @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
         my $counter = 0;
@@ -1706,8 +1706,12 @@ sub get_cached_file_VCF {
                     #In case of old genotyping protocols where there was no protocolprop marker info
                     if (!$format) {
                         my $first_g = $geno->{selected_genotype_hash}->{$m->{name}};
+			if (defined($first_g->{'GT'})) {
+			    push @format_array, 'GT';
+			}
                         foreach my $k (sort keys %$first_g) {
-                            if (defined($first_g->{$k})) {
+		            if ($k eq 'GT') {
+			    } elsif (defined($first_g->{$k})) {
                                 push @format_array, $k;
                             }
                         }
@@ -1755,12 +1759,20 @@ sub get_cached_file_VCF {
                     @format = split ':', $format;
                 }
 
-                foreach my $format_key (@format) {
-                    my $val = $geno->{selected_genotype_hash}->{$m->{name}}->{$format_key};
-                    if ($format_key eq 'GT' && $val eq '') {
+		#VCF requires the GT field to be first
+		if (defined($geno->{selected_genotype_hash}->{$m->{name}}->{'GT'})) {
+		    my $val = $geno->{selected_genotype_hash}->{$m->{name}}->{'GT'};
+		    if ($val eq '') {
                         $val = './.';
                     }
-                    push @current_geno, $val;
+		    push @current_geno, $val;
+		}
+                foreach my $format_key (@format) {
+                    my $val = $geno->{selected_genotype_hash}->{$m->{name}}->{$format_key};
+                    if ($format_key eq 'GT') {
+                    } else {
+                        push @current_geno, $val;
+		    }
                 }
                 my $current_g = join ':', @current_geno;
                 $genotype_data_string .= $current_g."\t";

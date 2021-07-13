@@ -4,6 +4,7 @@ use Test::More 'no_plan';
 use Data::Dumper;
 use lib 't/lib';
 use SGN::Test::Fixture;
+use CXGN::Dataset;
 use CXGN::Analysis;
 use CXGN::Analysis::AnalysisCreate;
 use CXGN::AnalysisModel::GetModel;
@@ -19,7 +20,26 @@ my $people_schema = $t->people_schema();
 my $metadata_schema = $t->metadata_schema();
 my $phenome_schema = $t->phenome_schema();
 
+$dbh->begin_work();
+
 my $mech = Test::WWW::Mechanize->new;
+
+my $ds = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema());
+$ds->accessions( [ 38913, 38914, 38915 ]);
+$ds->years(['2012', '2013']);
+$ds->traits([ 70666, 70741 ]);
+$ds->trials([ 139, 144 ]);
+$ds->plots( [ 40034, 40035 ]);
+$ds->name("test");
+$ds->description("test description");
+
+$ds->name("test");
+$ds->description("test description");
+$ds->sp_person_id(41);
+
+my $sp_dataset_id = $ds->store();
+
+print STDERR "Dataset_id = $sp_dataset_id\n";
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = decode_json $mech->content;
@@ -246,7 +266,8 @@ print STDERR Dumper $stored_analysis_phenotypes;
 is(scalar(@$stored_analysis_phenotypes), 6);
 
 print STDERR "Rolling back...\n";
-#$dbh->rollback();
+$dbh->rollback();
+
 
 done_testing();
 

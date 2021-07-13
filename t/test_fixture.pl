@@ -71,7 +71,7 @@ my $cfg = Config::Any->load_files({files=> [$conf_file_base, $template_file], us
 my $config = $cfg->[0]->{$conf_file_base};
 my $template = $cfg->[1]->{$template_file};
 
-if ($list_config) { 
+if ($list_config) {
     print STDERR Dumper($cfg);
 }
 
@@ -96,7 +96,7 @@ my $dbname;
 
 if ($ENV{TEST_DB_NAME}) { $dbname = $ENV{TEST_DB_NAME}; }
 
-else { 
+else {
     my $now = DateTime->now();
     $dbname = join "_", map { $now->$_ } (qw | year month day hour minute |);
     $dbname = 'test_db_'.$dbname;
@@ -138,7 +138,7 @@ print $NEWCONF $new_conf;
 close($NEWCONF);
 
 #run fixture and db patches.
-system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $dbhost -d $dbname -e janedoe -s 117");
+system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $dbhost -d $dbname -e janedoe -s 145");
 
 # run the materialized views creation script
 #
@@ -179,7 +179,7 @@ else {
 
 	if (!$nocleanup) {
 	    print STDERR "# Removing test database ($dbname)... ";
-	    
+
 	    if ($noserver) {
 		print STDERR "# [ --noserver option: No logfile to remove]\n";
 	    }
@@ -231,7 +231,7 @@ unless( $prove_pid ) {
     my $app = App::Prove->new;
 
     my $v = $verbose ? 'v' : '';
-    
+
     $app->process_args(
         '-lr'.$v,
         ( map { -I => $_ } @INC ),
@@ -257,7 +257,7 @@ if (!$nocleanup) {
     if ($ENV{TEST_DB_NAME}) {
 	print STDERR "Not removing test database (TEST_DB_NAME = $ENV{TEST_DB_NAME} is set.\n";
     }
-    else { 
+    else {
 	print STDERR "# Removing test database ($dbname)... ";
 	system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
 	print STDERR "Done.\n";
