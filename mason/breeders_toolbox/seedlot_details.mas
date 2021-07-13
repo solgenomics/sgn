@@ -61,7 +61,7 @@ $maintenance_enabled => undef
     <& /page/page_title.mas, title => 'Maintenance Events' &>
 
     <&| /page/info_section.mas, title=>"Events Table",  collapsible=>1, collapsed=>0, subtitle=>"[<a href='/breeders/seedlot/maintenance/record?seedlot_name=$uniquename' id='add_seedlot_maintenance_button' >Record Maintenance</a>]" &>
-        <& /breeders_toolbox/seedlot_maintenance_table.mas, seedlot_id => $seedlot_id, seedlot_name => $uniquename &>
+        <& /breeders_toolbox/seedlot_maintenance/table.mas, seedlot_id => $seedlot_id, seedlot_name => $uniquename &>
     </&>
 % }
 

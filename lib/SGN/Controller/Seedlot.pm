@@ -107,7 +107,7 @@ sub seedlot_maintenance : Path('/breeders/seedlot/maintenance') {
         return;
     }
 
-    $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance.mas';
+    $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance/main.mas';
 }
 
 
@@ -147,7 +147,7 @@ sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
         
     $c->stash->{ontology} = $onto->get_children($root_cvterm_id) if $root_cvterm_id;
     $c->stash->{operator} = $c->user()->get_object()->get_username();
-    $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance_record.mas';
+    $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance/record.mas';
 }
 
 1;

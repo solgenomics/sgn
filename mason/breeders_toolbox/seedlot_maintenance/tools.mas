@@ -1,0 +1,13 @@
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'jquery' ] &>
+
+
+<&| /page/info_section.mas, title=>"Seedlot Maintenance Tools",  collapsible => 1, collapsed=>1 &>
+    
+    <br />
+
+    <& /breeders_toolbox/seedlot_maintenance/tools/overdue_events.mas &>
+
+    <br />
+
+</&>

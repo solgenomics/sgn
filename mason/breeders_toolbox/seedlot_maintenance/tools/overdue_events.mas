@@ -3,101 +3,88 @@
     my $datestr = strftime("%Y-%m-%d", localtime());
 </%perl>
 
-
-<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'jquery' ] &>
-
-
-<&| /page/info_section.mas, title=>"Seedlot Maintenance Tools",  collapsible => 1, collapsed=>1 &>
-    
-    <br />
-
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <h5 class="panel-title">Overdue Events</h5>
-        </div>
-        <div class="panel-body">
-
-            <p>This search will return any Seedlots from the selected list that have not had the specified 
-            event performed on or after the selected date.</p>
-
-            <br />
-            
-            <!-- Seedlots -->
-            <div class="form-group">
-                <label class="col-sm-3 control-label" style="text-align: right">Seedlots</label>
-                <div class="col-sm-9">
-                    <div id="overdue_events_seedlot_list"></div>
-                </div>
-            </div>
-
-            <br /><br />
-
-            <!-- Event -->
-            <div class="form-group">
-                <label class="col-sm-3 control-label" style="text-align: right">Event</label>
-                <div class="col-sm-9">
-                    <select class="form-control input-sm" id="overdue_events_event_select" disabled>
-                        <option value="">Loading...</option>
-                    </select>
-                </div>
-            </div>
-
-            <br /><br />
-
-            <!-- Date -->
-            <div class="form-group">
-                <label class="col-sm-3 control-label" style="text-align: right">Date</label>
-                <div class="col-sm-9">
-                    <input class="form-control input-sm" type="date" id="overdue_events_date" name="overdue_events_date" value="<% $datestr %>" max="<% $datestr %>">
-                </div>
-            </div>
-
-            <br /><br />
-
-            <div style="margin: 0 auto; max-width: 400px">
-                <button id="overdue_events_find_seedlots" class="btn btn-primary btn-block">Find Seedlots</button>
-            </div>
-
-
-            <!-- RESULTS -->
-
-            <div id="overdue_events_results" style="display: none">
-
-                <br /><br />
-                
-                <h4>Overdue Seedlots</h4>
-                <table class="table table-striped" style="width: 100%">
-                    <thead>
-                        <tr>
-                            <th style="width: 50%">Seedlot</th>
-                            <th style="width: 50%">Record</th>
-                        </tr>
-                    </thead>
-                    <tbody id="overdue_events_results_overdue"></tbody>
-                </table>
-
-                <br /><br />
-
-                <h4>Not Overdue Seedlots</h4>
-                <table class="table table-striped" style="width: 100%">
-                    <thead>
-                        <tr>
-                            <th style="width: 50%">Seedlot</th>
-                            <th style="width: 50%">Last Recorded Event</th>
-                        </tr>
-                    </thead>
-                    <tbody id="overdue_events_results_not_overdue"></tbody>
-                </table>
-
-            </div>
-
-        </div>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h5 class="panel-title">Overdue Events</h5>
     </div>
+    <div class="panel-body">
 
-    <br />
+        <p>This search will return any Seedlots from the selected list that have not had the specified 
+        event performed on or after the selected date.</p>
 
-</&>
+        <br />
+        
+        <!-- Seedlots -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label" style="text-align: right">Seedlots</label>
+            <div class="col-sm-9">
+                <div id="overdue_events_seedlot_list"></div>
+            </div>
+        </div>
 
+        <br /><br />
+
+        <!-- Event -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label" style="text-align: right">Event</label>
+            <div class="col-sm-9">
+                <select class="form-control input-sm" id="overdue_events_event_select" disabled>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+        </div>
+
+        <br /><br />
+
+        <!-- Date -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label" style="text-align: right">Date</label>
+            <div class="col-sm-9">
+                <input class="form-control input-sm" type="date" id="overdue_events_date" name="overdue_events_date" value="<% $datestr %>" max="<% $datestr %>">
+            </div>
+        </div>
+
+        <br /><br />
+
+        <div style="margin: 0 auto; max-width: 400px">
+            <button id="overdue_events_find_seedlots" class="btn btn-primary btn-block">Find Seedlots</button>
+        </div>
+
+
+        <!-- RESULTS -->
+
+        <div id="overdue_events_results" style="display: none">
+
+            <br /><br />
+            
+            <h4>Overdue Seedlots</h4>
+            <table class="table table-striped" style="width: 100%">
+                <thead>
+                    <tr>
+                        <th style="width: 50%">Seedlot</th>
+                        <th style="width: 50%">Record</th>
+                    </tr>
+                </thead>
+                <tbody id="overdue_events_results_overdue"></tbody>
+            </table>
+
+            <br /><br />
+
+            <h4>Not Overdue Seedlots</h4>
+            <table class="table table-striped" style="width: 100%">
+                <thead>
+                    <tr>
+                        <th style="width: 50%">Seedlot</th>
+                        <th style="width: 50%">Last Recorded Event</th>
+                    </tr>
+                </thead>
+                <tbody id="overdue_events_results_not_overdue"></tbody>
+            </table>
+
+        </div>
+
+    </div>
+</div>
 
 
 <script type="text/javascript">

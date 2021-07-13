@@ -27,7 +27,7 @@
 </&>
 
 <!-- Additional crop-specific seedlot maintenance tools -->
-<& /breeders_toolbox/seedlot_maintenance_tools.mas &>
+<& /breeders_toolbox/seedlot_maintenance/tools.mas &>
 
 <%perl>
     my $seedlot_subtitle = '';
@@ -40,13 +40,13 @@
 </%perl>
 <&| /page/info_section.mas, title=>"Seedlot Maintenance Events",  collapsible => 1, collapsed=>0, subtitle => $seedlot_subtitle &>
     
-    <& /breeders_toolbox/seedlot_maintenance_table.mas &>
+    <& /breeders_toolbox/seedlot_maintenance/table.mas &>
 
 </&>
 
 
 <!-- Upload Workflow Dialog -->
-<& /breeders_toolbox/seedlot_maintenance_upload_dialog.mas &>
+<& /breeders_toolbox/seedlot_maintenance/upload_dialog.mas &>
 
 
 <script type="text/javascript">
