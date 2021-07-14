@@ -28,34 +28,35 @@ my ($result, $total_count) = $trial_search->search();
 print STDERR "ALL TRIAL =".Dumper($result)."\n";
 is_deeply($result, [
           {
-              'design'                        => 'RCBD',
-              'breeding_program_id'           => 134,
-              'genotyping_facility_status'    => undef,
-              'genotyping_plate_sample_type'  => undef,
-              'genotyping_facility_submitted' => undef,
-              'project_harvest_date'          => '',
-              'location_id'                   => '23',
-              'breeding_program_description'  => 'test',
-              'location_name'                 => 'test_location',
-              'breeding_program_name'         => 'test',
-              'genotyping_plate_format'       => undef,
-              'year'                          => '2017',
-              'description'                   => 'Copy of trial with postcomposed phenotypes from cassbase.',
-              'trial_name'                    => 'CASS_6Genotypes_Sampling_2015',
-              'trial_type'                    => 'Preliminary Yield Trial',
-              'trial_type_name'               => 'Preliminary Yield Trial',
-              'trial_type_value'              => 'Preliminary Yield Trial',
-              'trial_type_id'                 => 76515,
-              'folder_description'            => undef,
-              'genotyping_facility_plate_id'  => undef,
-              'folder_id'                     => undef,
-              'genotyping_facility'           => undef,
-              'project_planting_date'         => '',
-              'folder_name'                   => undef,
-              'trial_id'                      => 165,
-              'sampling_facility'             => undef,
-              'sampling_trial_sample_type'    => undef,
-              'additional_info'               => undef
+            'design' => 'RCBD',
+            'breeding_program_id' => 134,
+            'genotyping_facility_status' => undef,
+            'genotyping_plate_sample_type' => undef,
+            'genotyping_facility_submitted' => undef,
+            'project_harvest_date' => '',
+            'location_id' => '23',
+            'breeding_program_description' => 'test',
+            'location_name' => 'test_location',
+            'breeding_program_name' => 'test',
+            'genotyping_plate_format' => undef,
+            'year' => '2017',
+            'description' => 'Copy of trial with postcomposed phenotypes from cassbase.',
+            'trial_name' => 'CASS_6Genotypes_Sampling_2015',
+		'trial_type' => 'Preliminary Yield Trial',
+		'trial_type_value' => 'Preliminary Yield Trial',
+            'trial_type_name' => 'Preliminary Yield Trial',
+            'trial_type_id' => 76515,
+            'folder_description' => undef,
+            'genotyping_facility_plate_id' => undef,
+            'folder_id' => undef,
+            'genotyping_facility' => undef,
+            'project_planting_date' => '',
+            'folder_name' => undef,
+            'trial_id' => 165,
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
             'genotyping_facility_status' => undef,
@@ -67,9 +68,9 @@ is_deeply($result, [
             'year' => '2014',
             'genotyping_plate_format' => undef,
             'trial_type_name' => 'Clonal Evaluation',
-            'trial_type_value' => '1',
             'trial_name' => 'Kasese solgs trial',
-            'trial_type' => 'Clonal Evaluation',
+		'trial_type' => 'Clonal Evaluation',
+		'trial_type_value' => '1',
             'folder_description' => undef,
             'trial_type_id' => 77106,
             'project_planting_date' => '',
@@ -84,16 +85,17 @@ is_deeply($result, [
             'project_harvest_date' => '',
             'breeding_program_name' => 'test',
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
-            'additional_info'               => undef
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
             'description' => 'new_test_cross',
             'year' => undef,
             'genotyping_plate_format' => undef,
             'trial_type_name' => undef,
-            'trial_type_value' => undef,
-            'trial_type' => undef,
+		'trial_type' => undef,
+		'trial_type_value' => undef,
             'trial_name' => 'new_test_cross',
             'folder_description' => undef,
             'trial_type_id' => undef,
@@ -114,8 +116,9 @@ is_deeply($result, [
             'breeding_program_id' => 134,
             'design' => undef,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
-            'additional_info'               => undef
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
             'genotyping_facility_plate_id' => undef,
@@ -127,9 +130,9 @@ is_deeply($result, [
             'trial_type_id' => undef,
             'folder_description' => undef,
             'trial_name' => 'test_t',
-            'trial_type' => undef,
+		'trial_type' => undef,
+		'trial_type_value' => undef,
             'trial_type_name' => undef,
-            'trial_type_value' => undef,
             'year' => '2016',
             'genotyping_plate_format' => undef,
             'description' => 'test tets',
@@ -144,8 +147,9 @@ is_deeply($result, [
             'design' => 'CRD',
             'breeding_program_id' => 134,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
-            'additional_info'               => undef
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
             'genotyping_facility_status' => undef,
@@ -154,9 +158,9 @@ is_deeply($result, [
             'breeding_program_id' => 134,
             'design' => 'CRD',
             'trial_type_name' => undef,
-            'trial_type_value' => undef,
             'trial_name' => 'test_trial',
-            'trial_type' => undef,
+		'trial_type' => undef,
+		'trial_type_value' => undef,
             'description' => 'test trial',
             'year' => '2014',
             'genotyping_plate_format' => undef,
@@ -174,8 +178,9 @@ is_deeply($result, [
             'project_harvest_date' => '2017-July-21',
             'location_id' => '23',
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
-            'additional_info'               => undef
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
             'genotyping_facility_submitted' => undef,
@@ -184,7 +189,8 @@ is_deeply($result, [
             'breeding_program_id' => 134,
             'design' => 'CRD',
             'folder_description' => undef,
-            'trial_type_id' => undef,
+		'trial_type_id' => undef,
+		'trial_type_value' => undef,
             'folder_name' => undef,
             'genotyping_facility' => undef,
             'project_planting_date' => '',
@@ -195,7 +201,6 @@ is_deeply($result, [
             'genotyping_plate_format' => undef,
             'year' => '2014',
             'trial_type_name' => undef,
-            'trial_type_value' => undef,
             'trial_name' => 'trial2 NaCRRI',
             'trial_type' => undef,
             'breeding_program_description' => 'test',
@@ -204,8 +209,9 @@ is_deeply($result, [
             'project_harvest_date' => '',
             'breeding_program_name' => 'test',
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
-            'additional_info'               => undef
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           }
         ], 'trial search test 1');
 
@@ -215,37 +221,37 @@ $trial_search = CXGN::Trial::Search->new({
     program_list=>['test'],
 });
 ($result, $total_count) = $trial_search->search();
-# print STDERR "SELECTED TRIAL =".Dumper($result)."\n";
+print STDERR "SELECTED TRIAL =".Dumper($result)."\n";
 is_deeply($result, [
           {
-              'genotyping_facility_status'    => undef,
-              'genotyping_plate_sample_type'  => undef,
-              'genotyping_facility_submitted' => undef,
-              'design'                        => 'RCBD',
-              'breeding_program_id'           => 134,
-              'trial_type_name'               => 'Preliminary Yield Trial',
-              'trial_type_value'              => 'Preliminary Yield Trial',
-              'trial_type'                    => 'Preliminary Yield Trial',
-              'trial_name'                    => 'CASS_6Genotypes_Sampling_2015',
-              'description'                   => 'Copy of trial with postcomposed phenotypes from cassbase.',
-              'year'                          => '2017',
-              'genotyping_plate_format'       => undef,
-              'project_planting_date'         => '',
-              'genotyping_facility'           => undef,
-              'folder_id'                     => undef,
-              'folder_name'                   => undef,
-              'trial_id'                      => 165,
-              'genotyping_facility_plate_id'  => undef,
-              'folder_description'            => undef,
-              'trial_type_id'                 => 76515,
-              'breeding_program_name'         => 'test',
-              'breeding_program_description'  => 'test',
-              'location_name'                 => 'test_location',
-              'location_id'                   => '23',
-              'project_harvest_date'          => '',
-              'sampling_facility'             => undef,
-              'sampling_trial_sample_type'    => undef,
-              'additional_info'               => undef
+            'genotyping_facility_status' => undef,
+            'genotyping_plate_sample_type' => undef,
+            'genotyping_facility_submitted' => undef,
+            'design' => 'RCBD',
+            'breeding_program_id' => 134,
+            'trial_type_name' => 'Preliminary Yield Trial',
+            'trial_type' => 'Preliminary Yield Trial',
+            'trial_name' => 'CASS_6Genotypes_Sampling_2015',
+            'description' => 'Copy of trial with postcomposed phenotypes from cassbase.',
+            'year' => '2017',
+            'genotyping_plate_format' => undef,
+            'project_planting_date' => '',
+            'genotyping_facility' => undef,
+            'folder_id' => undef,
+            'folder_name' => undef,
+            'trial_id' => 165,
+            'genotyping_facility_plate_id' => undef,
+            'folder_description' => undef,
+            'trial_type_id' => 76515,
+            'breeding_program_name' => 'test',
+            'breeding_program_description' => 'test',
+		'location_name' => 'test_location',
+		'trial_type_value' => 'Preliminary Yield Trial',
+            'location_id' => '23',
+            'project_harvest_date' => '',
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           },
           {
             'project_harvest_date' => '',
@@ -258,8 +264,8 @@ is_deeply($result, [
             'description' => 'This trial was loaded into the fixture to test solgs.',
             'trial_type' => 'Clonal Evaluation',
             'trial_name' => 'Kasese solgs trial',
-            'trial_type_name' => 'Clonal Evaluation',
-            'trial_type_value' => '1',
+		'trial_type_name' => 'Clonal Evaluation',
+		'trial_type_value' => '1',
             'trial_type_id' => 77106,
             'folder_description' => undef,
             'genotyping_facility_plate_id' => undef,
@@ -274,8 +280,8 @@ is_deeply($result, [
             'genotyping_plate_sample_type' => undef,
             'genotyping_facility_submitted' => undef,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
-            'additional_info'               => undef
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           },
           {
             'genotyping_facility_plate_id' => undef,
@@ -289,7 +295,6 @@ is_deeply($result, [
             'trial_type' => undef,
             'trial_name' => 'new_test_cross',
             'trial_type_name' => undef,
-            'trial_type_value' => undef,
             'year' => undef,
             'genotyping_plate_format' => undef,
             'description' => 'new_test_cross',
@@ -304,8 +309,9 @@ is_deeply($result, [
             'breeding_program_id' => 134,
             'design' => undef,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
-            'additional_info'               => undef
+		'sampling_trial_sample_type' => undef,
+		'trial_type_value' => undef,
+		'additional_info' => undef
           },
           {
             'design' => 'CRD',
@@ -320,8 +326,8 @@ is_deeply($result, [
             'location_name' => 'test_location',
             'trial_type' => undef,
             'trial_name' => 'test_t',
-            'trial_type_name' => undef,
-            'trial_type_value' => undef,
+		'trial_type_name' => undef,
+		'trial_type_value' => undef,
             'genotyping_plate_format' => undef,
             'year' => '2016',
             'description' => 'test tets',
@@ -334,8 +340,8 @@ is_deeply($result, [
             'trial_type_id' => undef,
             'folder_description' => undef,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
-            'additional_info'               => undef
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           },
           {
             'design' => 'CRD',
@@ -343,7 +349,8 @@ is_deeply($result, [
             'genotyping_facility_submitted' => undef,
             'genotyping_facility_status' => undef,
             'genotyping_plate_sample_type' => undef,
-            'breeding_program_name' => 'test',
+		'breeding_program_name' => 'test',
+		'trial_type_value' => undef,
             'breeding_program_description' => 'test',
             'location_name' => 'test_location',
             'location_id' => '23',
@@ -357,27 +364,26 @@ is_deeply($result, [
             'folder_description' => undef,
             'trial_type_id' => undef,
             'trial_type_name' => undef,
-            'trial_type_value' => undef,
             'trial_name' => 'test_trial',
             'trial_type' => undef,
             'description' => 'test trial',
             'genotyping_plate_format' => undef,
             'year' => '2014',
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
-            'additional_info'               => undef
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           },
           {
             'breeding_program_description' => 'test',
             'location_name' => 'test_location',
             'location_id' => '23',
             'project_harvest_date' => '',
-            'breeding_program_name' => 'test',
+		'breeding_program_name' => 'test',
+		 'trial_type_value' => undef,
             'description' => 'another trial for solGS',
             'year' => '2014',
             'genotyping_plate_format' => undef,
             'trial_type_name' => undef,
-            'trial_type_value' => undef,
             'trial_name' => 'trial2 NaCRRI',
             'trial_type' => undef,
             'folder_description' => undef,
@@ -394,8 +400,8 @@ is_deeply($result, [
             'genotyping_plate_sample_type' => undef,
             'genotyping_facility_submitted' => undef,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
-            'additional_info'               => undef
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           }
         ], 'trial search test 2');
 
@@ -422,26 +428,27 @@ foreach (@project_types) {
 @all_project_types = sort @all_project_types;
 print STDERR Dumper \@all_project_types;
 is_deeply(\@all_project_types, [
-            'Advanced Yield Trial',
-            'Clonal Evaluation',
-            'Preliminary Yield Trial',
-            'Screen House',
-            'Seed Multiplication',
-            'Seedling Nursery',
-            'Specialty Trial',
-            'Uniform Yield Trial',
-            'Variety Release Trial',
-            'crossing_block_trial',
-            'crossing_trial',
-            'genetic_gain_trial',
-            'genotyping_trial',
-            'grafting_trial',
-            'health_status_trial',
-            'heterosis_trial',
-            'misc_trial',
-            'phenotyping_trial',
-            'pollinating_trial',
-            'storage_trial',
+          'Advanced Yield Trial',
+          'Clonal Evaluation',
+          'Preliminary Yield Trial',
+          'Screen House',
+          'Seed Multiplication',
+          'Seedling Nursery',
+          'Specialty Trial',
+          'Uniform Yield Trial',
+          'Variety Release Trial',
+          'crossing_block_trial',
+          'crossing_trial',
+          'genetic_gain_trial',
+          'genotyping_trial',
+          'grafting_trial',
+          'health_status_trial',
+	      'heterosis_trial',
+	      	      'misc_trial',
+	      'phenotyping_trial',
+
+          'pollinating_trial',
+          'storage_trial'
         ], "check get_all_project_types");
 
 
@@ -552,6 +559,8 @@ my %plot_trait_value = ( $trial_design->{11}->{plot_name} => { 'root number|CO_3
 
 my %metadata = ( operator => 'johndoe', date => '20141223' );
 
+my $total_phenotypes_before_store = $trial->total_phenotypes();
+
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     basepath=>$f->config->{basepath},
     dbhost=>$f->config->{dbhost},
@@ -579,7 +588,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 #print STDERR "Total phentoypes: $total_phenotypes\n";
 #print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3508, "total phenotype data");
+is($total_phenotypes, $total_phenotypes_before_store + 6, "total phenotype data");
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -719,6 +728,8 @@ my %plant_trait_value = ( $trial_design->{11}->{plot_name}.'_plant_2' => { 'root
 
 my %metadata = ( operator => 'johndoe', date => '20141225' );
 
+my $total_phenotype_count_before_save2 = $trial->total_phenotypes();
+
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     basepath=>$f->config->{basepath},
     dbhost=>$f->config->{dbhost},
@@ -745,7 +756,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 print STDERR "Total phentoypes: $total_phenotypes\n";
 print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3517, "total phenotype data");
+is($total_phenotypes, $total_phenotype_count_before_save2 + 9, "total phenotype data");
 is($trial_phenotype_count, 15, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -906,7 +917,9 @@ my $error = $trial->set_project_type("77106");
 
 is($trial->get_project_type()->[1], "Clonal Evaluation", "set type test");
 
+print STDERR "DELETING PROJECT ENTRY... ";
 $trial->delete_project_entry();
+print STDERR "Done.\n";
 
 my $deleted_trial;
 eval {

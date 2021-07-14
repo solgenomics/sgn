@@ -134,3 +134,32 @@ sub trial_autocomplete_GET :Args(0) {
     print STDERR "Returning...\n";
     $c->stash->{rest} = \@response_list;
 }
+
+
+sub trial_lookup : Path('/ajax/breeders/trial_lookup') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_name = $c->req->param('name');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if ( !$trial_name || $trial_name eq '' ) {
+        $c->stash->{rest} = {error => "Trial name required"};
+        $c->detach();
+    }
+
+    # Get trial id by name
+    my $trial_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "phenotyping_trial", "project_type")->cvterm_id();
+    my $rs = $schema->resultset("Project::Project")->find(
+        { 'name' => $trial_name, 'projectprops.type_id' => $trial_type_id },
+        { join => 'projectprops' }
+    );
+    my $trial_id = $rs->project_id() if $rs;
+
+    # Trial not found
+    if ( !$trial_id || $trial_id eq '' ) {
+        $c->stash->{rest} = {error => "Trial not found"};
+        $c->detach();
+    }
+
+    $c->stash->{rest} = { trial_id => $trial_id };
+}

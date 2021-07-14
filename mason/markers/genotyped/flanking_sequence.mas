@@ -1,0 +1,24 @@
+<%args>
+    $blast_db => undef
+    $chrom => undef
+    $pos => undef
+</%args>
+
+<%init>
+    if ( !$blast_db ) {
+        print "<p><strong>ERROR: </strong>Missing blast_db id!</p>";
+    }
+    if ( !$chrom ) {
+        print "<p><strong>ERROR: </strong>Missing chrom name!</p>";
+    }
+    if ( !$pos ) {
+        print "<p><strong>ERROR: </strong>Missing pos!</p>";
+    }
+</%init>
+
+
+<p>
+    <a href="/tools/blast/match/show?blast_db_id=<% $blast_db %>;id=<% $chrom %>;hilite_coords=<% $pos %>-<% $pos %>" target="_blank">
+        View the marker flanking sequence
+    </a>
+</p>
