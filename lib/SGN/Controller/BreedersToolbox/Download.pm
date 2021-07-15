@@ -231,6 +231,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $trait_contains = $c->req->param("trait_contains");
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
+    my $search_type = $c->req->param("search_type") || 'Native';
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') { print STDERR "trait_list: ".Dumper $trait_list."\n"; @trait_list = @{_parse_list_from_json($trait_list)}; }
@@ -372,7 +373,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
-        has_header=>$has_header
+        has_header => $has_header,
+        search_type => $search_type
     });
 
     my $error = $download->download();
