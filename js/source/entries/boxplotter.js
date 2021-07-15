@@ -53,13 +53,14 @@ export function init(main_div){
       dataType:'json',
       success : function(data) {    
         //console.log(data);
-        var obsUnits = BrAPI(document.location.origin+"/brapi/v1",'v1.3',auth_token).phenotypes_search({
+        var obsUnits = BrAPI(document.location.origin+"/brapi/v2","",auth_token).search_observationunits({
           "germplasmDbIds" : data["categories"]["accessions"],
           "observationVariableDbIds" : data["categories"]["traits"],
           "studyDbIds" : data["categories"]["trials"],
           "locationDbIds" : data["categories"]["locations"],
           "programDbIds" : data["categories"]["breeding_programs"],
-          "observationLevel" : ou, 
+          "observationLevelName" : ou,
+          "includeObservations" : "true",
           "pageSize" : 1000
         })
         boxplot.setData(obsUnits);

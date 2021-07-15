@@ -36,7 +36,7 @@ sub search {
     my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
     my $end_time = $params->{observationTimeStampRangeEnd}->[0] || undef;
     my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
-    my $include_observations = $params->{includeObservations}->[0] || "False";
+    my $include_observations = $params->{includeObservations} || "False";
     my $level_order_arrayref = $params->{observationUnitLevelOrder} || ($params->{observationUnitLevelOrders} || ());
     my $level_code_arrayref = $params->{observationUnitLevelCode} || ($params->{observationUnitLevelCodes} || ());
     my $levels_relation_arrayref = $params->{observationLevelRelationships} || ();
