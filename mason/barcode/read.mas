@@ -138,7 +138,7 @@ function stopReader() {
  */
 function processCode(data) {
     jQuery(".panel-footer").html("<strong>Barcode Found:</strong> " + data);
-    if ( RETURN_URL && RETURN_URL !== "" && RETURN_PARAM && RETURN_PARAM !== "" ) {
+    if ( data && data !== "" && RETURN_URL && RETURN_URL !== "" && RETURN_PARAM && RETURN_PARAM !== "" ) {
         let q = RETURN_URL.includes('?') ? '&' : '?';
         window.location = RETURN_URL + q + RETURN_PARAM + '=' + encodeURIComponent(data);
     }

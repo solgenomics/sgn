@@ -1,11 +1,12 @@
 <%args>
+    $tool => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery' ] &>
 
 <& /page/page_title.mas, title => 'Seedlot Maintenance' &>
 
-<&| /page/info_section.mas, title=>"About Seedlot Maintenance",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"About Seedlot Maintenance",  collapsible => 1, collapsed => 1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -27,7 +28,9 @@
 </&>
 
 <!-- Additional crop-specific seedlot maintenance tools -->
-<& /breeders_toolbox/seedlot_maintenance/tools.mas &>
+<&| /page/info_section.mas, title=>"Seedlot Maintenance Tools",  collapsible => 1, collapsed => !$tool &>
+    <& /breeders_toolbox/seedlot_maintenance/tools.mas, collapsed => !$tool &>
+</&>
 
 <%perl>
     my $seedlot_subtitle = '';
@@ -38,7 +41,7 @@
         $seedlot_subtitle = '<button class="btn btn-sm btn-primary" style="margin:3px" id="record_events">Record Maintenace</button> <button class="btn btn-sm btn-primary" style="margin:3px" id="upload_events">Upload Maintenance</button>'
     }
 </%perl>
-<&| /page/info_section.mas, title=>"Seedlot Maintenance Events",  collapsible => 1, collapsed=>0, subtitle => $seedlot_subtitle &>
+<&| /page/info_section.mas, title=>"Seedlot Maintenance Events",  collapsible => 1, collapsed => !!$tool, subtitle => $seedlot_subtitle &>
     
     <& /breeders_toolbox/seedlot_maintenance/table.mas &>
 

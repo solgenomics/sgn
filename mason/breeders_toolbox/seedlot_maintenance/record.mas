@@ -193,13 +193,17 @@
             dataType: 'json',
             url: '/ajax/breeders/seedlots?seedlot_name=' + name,
             success: function(response) {
-                if ( response && response.recordsFiltered && response.recordsFiltered === 1 && response.data ) {
-                    let sl = response.data[0];
-                    contents = sl.contents_html;
-                    location = sl.location;
-                    box = sl.box;
-                    SEEDLOT_NAME = name;
-                    SEEDLOT_ID = sl.seedlot_stock_id;
+                if ( response && response.data ) {
+                    for ( let i = 0; i < response.data.length; i++ ) {
+                        if ( response.data[i].seedlot_stock_uniquename.toUpperCase() === name.toUpperCase() ) {
+                            let sl = response.data[i];
+                            contents = sl.contents_html;
+                            location = sl.location;
+                            box = sl.box;
+                            SEEDLOT_NAME = name;
+                            SEEDLOT_ID = sl.seedlot_stock_id;
+                        }
+                    }
                 }
             },
             complete: function() {

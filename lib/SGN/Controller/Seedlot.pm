@@ -107,6 +107,7 @@ sub seedlot_maintenance : Path('/breeders/seedlot/maintenance') {
         return;
     }
 
+    $c->stash->{tool} = $c->req->param('tool');
     $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance/main.mas';
 }
 
