@@ -6,11 +6,11 @@ use File::Temp;
 use lib 't/lib';
 
 use SGN::Test;
-use SGN::Context;
+#use SGN::Context;
 use SGN::Test::Data qw/create_test/;
 use Test::Most tests => 5;
 use Data::Dumper;
-
+use SGN::Test::Fixture;
 use Test::MockObject;
 
 use_ok 'SGN::Image';
@@ -51,7 +51,8 @@ can_ok( $image, qw/get_organisms get_stocks get_experiments get_loci process_ima
 # have permissions to delete images
 
 END {
-    my $dbh = SGN::Context->new->dbc('sgn_test')->dbh;
+    #my $dbh = SGN::Context->new->dbc('sgn_test')->dbh;
+    my $dbh = SGN::Test::Fixture->new()->dbh();
     my $oid = $organism->organism_id;
     my $iid = $image->get_image_id;
     $dbh->do("delete from metadata.md_image_organism where organism_id = ?", undef, $organism->organism_id ) if $organism;

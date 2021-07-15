@@ -7,8 +7,13 @@ use Test::Most;
 #use Carp::Always;
 
 use_ok('SGN::Test::Data', qw/ create_test /);
+use SGN::Test::Fixture;
 
-my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
+#my $schema = SGN::Context->new->dbic_schema('Bio::Chado::Schema', 'sgn_test');
+my $f = SGN::Test::Fixture->new();
+
+my $schema = $f->bcs_schema(); 
+
 
 {
     my $db = create_test('General::Db', {
