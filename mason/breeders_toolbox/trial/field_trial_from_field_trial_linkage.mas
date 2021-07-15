@@ -1,9 +1,11 @@
 
 <%args>
 $trial_id
+$trial_type
+$trial_name
 </%args>
 
-<& /util/import_javascript.mas, classes => [  ] &>
+<!-- <& /util/import_javascript.mas, legacy => [ "d3/d3-shape/dist/d3-shape.js", "d3/d3-pedigree-tree.js", "d3/d3Min.js", "d3/d3-sankey/dist/d3-sankey.js", "d3/d3-sankey/src/sankey.js", "d3/d3-array/dist/d3-array.js", "d3/d3-path/dist/d3-path.js" ]  &> -->
 
 
 <div id="field_trial_to_field_trial_html">
@@ -13,33 +15,315 @@ $trial_id
 
 jQuery(document).ready(function () {
 
+
     jQuery('#field_trial_from_field_trial_section_onswitch').one("click",  function() {
-        jQuery.ajax ({
-            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_from_field_trial',
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                //console.log(response);
-                jQuery("#working_modal").modal("hide");
-                var html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Source Field Trial(s) For This Field Trial</th></tr></thead><tbody>';
-                var html2 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) Sourced From This Field Trial</th></tr></thead><tbody>';
-                for (var i=0; i<response.source_field_trials.length; i++){
-                    html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.source_field_trials[i][0]+'">'+response.source_field_trials[i][1]+'</a></td></tr>';
+      var trial_id = "<% $trial_id %>";
+      var trial_name = "<% $trial_name %>";
+      jQuery.ajax({
+        url : '/ajax/breeders/trial/'+<% $trial_id %>+'/field_trial_from_field_trial',
+        beforeSend: function() {
+                     jQuery("#working_modal").modal("show");
+        },
+        success: function(r){
+          jQuery('#working_modal').modal("hide");
+
+          var html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Source Field Trial(s) For This Field Trial</th></tr></thead><tbody>';
+          var html2 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) Sourced From This Field Trial</th></tr></thead><tbody>';
+          for (var i=0; i<r.source_field_trials.length; i++){
+              html1 = html1 + '<tr><td><a href="/breeders/trial/'+r.source_field_trials[i][0]+'">'+r.source_field_trials[i][1]+'</a></td></tr>';
+          }
+          for (var i=0; i<r.field_trials_sourced.length; i++){
+              html2 = html2 + '<tr><td><a href="/breeders/trial/'+r.field_trials_sourced[i][0]+'">'+r.field_trials_sourced[i][1]+'</a></td></tr>';
+          }
+          html1 = html1 + '</tbody></table>';
+          html2 = html2 + '</tbody></table>';
+          jQuery('#field_trial_to_field_trial_html').html(html1+html2);
+
+
+          // BEGIN: Code for sankey visualizer
+
+
+          var nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
+          var nodes = [];
+          var primitiveLinks = [];
+          var linkMap = {};
+          var links = []; //List to be used for all connections at the accession level
+          var linkAjaxCallsMap = {}; // Map of ajax calls for links
+          var nodeAjaxCallsMap = {}; // Map of ajax calls for nodes
+
+          var graph;
+          var sankey;
+          var svgnodes;
+          var svglinks;
+          var svglabels;
+          var data;
+
+          //Need to check that there's actually data to render before making a big svg canvas
+          if (!(r.source_field_trials.length == 0 && r.field_trials_sourced.length == 0)){
+
+            //Set margins and set up svg area
+            var margin = {top: 100, right: 100, bottom: 100, left: 100};
+            var width = 800//document.querySelector('#field_trial_to_field_trial_html').offsetWidth*0.90;
+            var height = 400;//document.querySelector('#field_trial_to_field_trial_html').offsetHeight*0.90;
+
+            var svg = d3.select("#field_trial_to_field_trial_html").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .attr("style","overflow-x: auto;")
+            .append("g")
+            .attr("transform","translate(" + (margin.left + 0) + "," + (margin.top + 0) + ")")
+            .attr("id", "sankeycanvas");
+
+
+            // The primitive graph is the graph with the nodes and just the links between nodes but without any information regarding accessions
+            construct_primitive_graph(parseInt("<% $trial_id %>"),trial_name, r);
+
+            receive_JSONs(parseInt("<% $trial_id %>"));
+
+          }
+
+
+          function construct_primitive_graph(base_node_id, base_trial_name, response){
+
+            nodeMap[base_node_id] = {"name": base_node_id, "id": base_trial_name, "trialType":null}; //Initialize the node hash
+
+            linkAjaxCallsMap[base_node_id] = jQuery.ajax({
+              url:'/brapi/v2/germplasm?studyDbId='+base_node_id,
+              success: function(re){
+              },
+              error: function(re){
+                console.log("Failed to retrieve trial germplasm.");
+              }
+            });
+            nodeAjaxCallsMap[base_node_id] = jQuery.ajax({
+              url: '/brapi/v2/studies/'+base_node_id,
+              success: function(re){
+              },
+              error: function(re){
+                console.log("Failed to retrieve study.");
+              }
+            });
+
+            //Send ajax calls for studies that are the source of this study
+            for (var i = 0; i < response.source_field_trials.length; i++){
+
+              linkAjaxCallsMap[ response.source_field_trials[i][0] ] = jQuery.ajax({
+                url: '/brapi/v2/germplasm?studyDbId='+response.source_field_trials[i][0],
+                success: function(re){
+                },
+                error: function(re){
+                  console.log("Failed to retrieve trial germplasm.");
                 }
-                for (var i=0; i<response.field_trials_sourced.length; i++){
-                    html2 = html2 + '<tr><td><a href="/breeders/trial/'+response.field_trials_sourced[i][0]+'">'+response.field_trials_sourced[i][1]+'</a></td></tr>';
+              });
+              nodeAjaxCallsMap[response.source_field_trials[i][0]] = jQuery.ajax({
+                url: '/brapi/v2/studies/'+response.source_field_trials[i][0],
+                success: function(re){
+                },
+                error: function(re){
+                  console.log("Failed to retrieve study.");
                 }
-                html1 = html1 + '</tbody></table>';
-                html2 = html2 + '</tbody></table>';
-                jQuery('#field_trial_to_field_trial_html').html(html1+html2);
-            },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert("Error retrieving field trial to field trial linkage.");
+              });
+
+              nodeMap[response.source_field_trials[i][0]] = {"name":response.source_field_trials[i][0], "id":response.source_field_trials[i][1], "trialType":null};
+              primitiveLinks.push({"source":nodeMap[response.source_field_trials[i][0]], "target": nodeMap[base_node_id], "value":1});
             }
-        });
+
+            //Send ajax calls for studies that are sourced from this trial
+            for (var i = 0; i < response.field_trials_sourced.length; i++){
+
+              linkAjaxCallsMap[ response.field_trials_sourced[i][0] ] = jQuery.ajax({
+                url: '/brapi/v2/germplasm?studyDbId='+response.field_trials_sourced[i][0],
+                success: function(re){
+                },
+                error: function(re){
+                  console.log("Failed to retrieve trial germplasm.");
+                }
+              });
+              nodeAjaxCallsMap[response.field_trials_sourced[i][0]] = jQuery.ajax({
+                url: '/brapi/v2/studies/'+response.field_trials_sourced[i][0],
+                success: function(re){
+                },
+                error: function(re){
+                  console.log("Failed to retrieve study.");
+                }
+              });
+
+              nodeMap[response.field_trials_sourced[i][0]] = {"name":response.field_trials_sourced[i][0], "id":response.field_trials_sourced[i][1], "trialType":null};
+              primitiveLinks.push({"source":nodeMap[base_node_id], "target": nodeMap[response.field_trials_sourced[i][0]], "value":1});
+            }
+
+          }//end of construct_primitive_graph
+
+          function receive_JSONs(base_node_id){
+
+            //Wait for all study JSONs to be collected, then construct the nodes with them.
+            Promise.all(Object.values(nodeAjaxCallsMap)).then((values1) => {
+
+              for (var i = 0; i < values1.length; i++){
+                nodeMap[values1[i].result.studyDbId].trialType = values1[i].result.studyType;
+                nodeMap[values1[i].result.studyDbId].id = values1[i].result.studyName;
+              }
+
+              nodes = Object.values(nodeMap);
+
+              //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
+              Promise.all(Object.values(linkAjaxCallsMap)).then((values2) => {
+
+                //These for loops look pretty scary, so let me explain what's happening. The outer for loop iterates through every broad, overarching link between
+                //The source trials for this trial and this trial. The first inner loop then looks at the ajax call for that source trial. Finally, the inner loop
+                //compares each accession/germplasm in the target node with each accession in the source node and then adds a link with that germplasm's name to the
+                //sankey if there is a match.
+
+                for (var i = 0; i < primitiveLinks.length; i++){
+
+                  for (var j = 0; j < linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data.length; j++){
+
+                    for (var k = 0; k < linkAjaxCallsMap[base_node_id].responseJSON.result.data.length; k++){
+                      if (linkAjaxCallsMap[base_node_id].responseJSON.result.data[k].germplasmName == linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName){
+                        linkMap[primitiveLinks[i].source.name+","+primitiveLinks[i].target.name+","+linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName] = {"source": primitiveLinks[i].source, "target":primitiveLinks[i].target, "value":1, "name": linkAjaxCallsMap[primitiveLinks[i].target.name].responseJSON.result.data[j].germplasmName};
+                      }
+                    }
+                  }
+                }
+
+                console.log("linkMap:");
+                console.log(linkMap);
+
+                links = Object.values(linkMap);
+
+                data={nodes, links};
+                console.log("Here is the sankey data: ");
+                console.log(data);
+
+                sankey = d3
+                  .sankey()
+                  .size([width-100, height-100])
+                  .nodeId(d => d.id)
+                  .nodeWidth(20)
+                  .nodePadding(10)
+                  .nodeAlign(d3.sankeyCenter);
+                var graph = sankey(data);
+
+                svglinks = svg
+                  .append("g")
+                  .classed("links", true)
+                  .selectAll("path")
+                  .data(graph.links)
+                  .enter()
+                  .append("path")
+                  .classed("link", true)
+                  .attr("d", d3.sankeyLinkHorizontal())
+                  .attr("fill", "none")
+                  .attr("stroke", "#D3D3D3")
+                  .attr("stroke-width", d => d.width)
+                  .attr("marker-end", "url(#triangle)")
+                  .attr("stoke-opacity", 0.3)
+                  .on("mouseover", function(d){
+                    d3.select(this).attr("stroke", "#808080");
+                  })
+                  .on("mouseout", function(d){
+                    d3.select(this).attr("stroke", "#D3D3D3");
+                  });
+
+
+                  svgnodes = svg
+                   .append("g")
+                   .classed("nodes", true)
+                   .selectAll("rect")
+                   .data(graph.nodes)
+                   .enter()
+                   .append("rect")
+                   .classed("node", true)
+                   .attr("x", d => d.x0)
+                   .attr("y", d => d.y0)
+                   .attr("width", d => d.x1 - d.x0)
+                   .attr("height", d => d.y1 - d.y0)
+                   .attr("fill", "#add8e6")
+                   .attr("opacity", 0.8)
+                   .on("mouseover", function(d){
+                     d3.select(this).attr("fill", "#6699cc");
+                     tooltip_region.selectAll("*").remove();
+                     tooltip_region.attr("transform", "translate("+ ((d.x1+d.x0)/2 - 5 - 110) +", "+ (d.y0 - 5 - 70) +")" );
+                     var tooltip = tooltip_region
+                       .append("path")
+                       .attr('fill', 'white')
+                       .attr('stroke', 'black')
+                       .attr('stroke-width', '1.5');
+                     var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -40 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 40 c 0 10 0 10 10 10 h 90 l 10 10 z";
+                     tooltip.attr("d", pathString);
+                     var tooltip_text1 = tooltip_region.append("text")
+                     .attr("text-anchor", "middle")
+                     .attr("transform", "translate(110,20)");
+                     tooltip_text1.text("Trial: "+d.id);
+                     var tooltip_text2 = tooltip_region.append("text")
+                     .attr("text-anchor", "middle")
+                     .attr("transform", "translate(110,40)");
+                     tooltip_text2.text("Trial Type: "+d.trialType);
+                   })
+                   .on("mouseout", function(d){
+                     d3.select(this).attr("fill", "#add8e6");
+                     tooltip_region.selectAll("*").remove();
+                   })
+                   .on("click", function(d){
+                     jQuery.ajax({
+                       url : '/ajax/breeders/trial/'+d.name+'/field_trial_from_field_trial',
+                       success: function(res){
+
+                         jQuery("#sankeycanvas").empty();
+
+                         nodeMap = {}; //Hash of nodes, runs parallel to array of nodes
+                         nodes = [];
+                         primitiveLinks = [];
+                         linkMap = {};
+                         links = []; //List to be used for all connections at the accession level
+                         linkAjaxCallsMap = {}; // Map of ajax calls for links
+                         nodeAjaxCallsMap = {}; // Map of ajax calls for nodes
+
+                         construct_primitive_graph(d.name, d.id, res);
+
+                         receive_JSONs(d.name);
+
+                       }
+                     });
+                   })
+                   .on("dblclick",function(d){
+                     if (d.name == "<% $trial_id %>"){
+
+                     } else {
+                       window.open("/breeders/trial/"+d.name);
+                     }
+                   });
+
+
+                svglabels = svg
+                  .append("g")
+                  .classed("text", true)
+                  .selectAll("text")
+                  .data(graph.links)
+                  .enter()
+                  .append("text")
+                  .classed("link", true)
+                  .attr("x", d => d.source.x1 + 5)
+                  .attr("y", d => d.y0 + 5)
+                  .text(d => d.name);
+
+
+                //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
+                var tooltip_region = svg.append("g").attr("id", "tooltip_region_g");
+
+
+              });
+            });
+          }//End of receive_JSONs
+
+        },
+        error: function(r){
+          jQuery("#working_modal").modal("hide");
+          alert("Error retrieving field trial to field trial linkage.");
+        }
+      });
     });
+
 
 });
 
