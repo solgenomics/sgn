@@ -152,7 +152,7 @@ has 'trial_location' => (isa => 'Maybe[Str]', is => 'rw', predicate => 'has_tria
 has 'design_type' => (isa => 'Maybe[Str]', is => 'rw', predicate => 'has_design_type', required => 0);
 has 'design' => (isa => 'HashRef[HashRef]|Undef', is => 'rw', predicate => 'has_design', required => 0);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 1);
-has 'trial_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_type', required => 1);
+has 'trial_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_type', required => 0);
 has 'trial_type_value' => (isa => 'Str', is => 'rw', predicate => 'has_trial_type_value', required => 0);
 has 'trial_has_plant_entries' => (isa => 'Int', is => 'rw', predicate => 'has_trial_has_plant_entries', required => 0);
 has 'trial_has_subplot_entries' => (isa => 'Int', is => 'rw', predicate => 'has_trial_has_subplot_entries', required => 0);
