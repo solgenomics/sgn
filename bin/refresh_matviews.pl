@@ -78,7 +78,7 @@ try {
        @mv_names = ('materialized_stockprop');
     }
     if ($mode eq 'phenotypes') {
-       @mv_names = ("materialized_phenotype_jsonb_table");
+       @mv_names = ("materialized_phenoview", "materialized_phenotype_jsonb_table");
     }
 
     my $status = refresh_mvs($dbh, \@mv_names, $concurrent);

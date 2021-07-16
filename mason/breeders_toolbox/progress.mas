@@ -1,0 +1,132 @@
+
+<%args>
+
+</%args>
+
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+
+<& /page/page_title.mas, title => "Breeding Progress" &>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+  
+  <table class="table">
+    <tr>
+      <th width="100">Select Trait</th>
+
+    </tr>
+
+    <tr>
+      <td>
+	<div id="trait_selector_div">[loading...]</div>
+      </td>
+
+
+    </tr>
+  </table>
+
+  <button class="btn" id="display_stats_button">Show Stats</button>
+  
+  <table id="progress_stats_datatable">
+  </table>
+  <br />
+  <button class="btn" id="display_graph_button">Show Graph</button>
+  <div id="trait_averages_bargraph"></div>
+  <script>
+jQuery(window).ready(function () {
+    get_select_box('traits', 'trait_selector_div', { 'name': 'trait_progress', 'id': 'trait_progress_select', 'empty': 1 });
+
+});
+
+
+jQuery('#display_stats_button').click(function () {
+    var trait_id = jQuery('#trait_progress_select').val();
+    jQuery('#progress_stats_datatable').DataTable({
+        ajax: '/ajax/progress?trait_id=' + trait_id,
+        destroy: true,
+        columns: [
+            { "title": "year" },
+            { "title": "average" },
+            { "title": "std dev" },
+            { "title": "observations [count]" }
+        ]
+    });
+});
+
+jQuery('#display_graph_button').click(function () {
+    //alert('success!');
+    var trait_id = jQuery('#trait_progress_select').val();
+    jQuery.ajax({
+        url: '/ajax/progress?trait_id=' + trait_id,
+        success: function (r) {
+            var years = [];
+            var averages = [];
+            var errorUp = [];
+            var errorDown = [];
+            for (var i = 0; i < r.data.length; i++) {
+                years.push(r.data[i][0]);
+                averages.push(r.data[i][1]);
+                errorUp.push(r.data[i][1] / 1.0 + r.data[i][2] / 1.0); // im aware
+                errorDown.push(r.data[i][1] / 1.0 - r.data[i][2] / 1.0);
+            }
+            var graphData = [];
+            for (var i = 0; i < r.data.length; i++) {
+                graphData.push({ "Year": years[i], "Average": averages[i], "mean + stddev": errorUp[i], "mean - stddev": errorDown[i] })
+            }
+            var v = {
+                "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+                "width": 600,
+                "height": 600,
+                "padding": 5,
+                "data": {
+                    "values": graphData
+                },
+                "encoding": {
+                    "x": {
+                        //"bin": true,
+                        "field": "Year",
+                        "type": "ordinal",
+                        "axis": { "labelAngle": 0 },
+                    },
+                },
+                "layer": [
+                    {
+                        "mark": {
+                            "type": "bar",
+                            "fill": "#4C78A8",
+                            "stroke": "black",
+                        },
+                        "encoding": {
+                            "y": {
+                                "field": "Average",
+                                "type": "quantitative",
+                            },
+                        },
+                    },
+                    {
+                        "mark": { "type": "errorband" },
+                        "encoding": {
+                            "y": {
+                                "field": "mean + stddev",
+                                "type": "quantitative",
+                                "scale": { "zero": false },
+                                "title": "Average"
+                            },
+                            "y2": { "field": "mean - stddev" },
+                            "color": {"value": "navy"}
+                        },
+                    },
+
+                ]
+            }
+            vegaEmbed("#trait_averages_bargraph", v);
+        },
+
+        error: function (e) {
+            alert('cannot show graph');
+
+        }
+    });
+});
+  </script>
