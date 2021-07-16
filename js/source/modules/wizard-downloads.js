@@ -123,6 +123,7 @@ export function WizardDownloads(main_id,wizard){
         var location_ids = JSON.stringify(locations.map(d=>d.id));
         var year_ids = JSON.stringify(years.map(d=>d.id));
 
+        var speed = d3.select(".wizard-download-phenotypes-speed").node().value;
         var format = d3.select(".wizard-download-phenotypes-format").node().value;
         var level = d3.select(".wizard-download-phenotypes-level").node().value;
         var timestamp = d3.selectAll('.wizard-download-phenotypes-timestamp').property('checked')?1:0;
@@ -133,7 +134,7 @@ export function WizardDownloads(main_id,wizard){
 
         var url = document.location.origin+
         `/breeders/trials/phenotype/download?trial_list=${trial_ids}`+
-        `&format=${format}&trait_list=${trait_ids}&trait_component_list=${comp_ids}`+
+        `&speed=${speed}&format=${format}&trait_list=${trait_ids}&trait_component_list=${comp_ids}`+
         `&accession_list=${accession_ids}&plot_list=${plot_ids}&plant_list=${plant_ids}&location_list=${location_ids}`+
         `&year_list=${year_ids}&dataLevel=${level}&phenotype_min_value=${min}&phenotype_max_value=${max}`+
         `&timestamp=${timestamp}&trait_contains=${names}`+
