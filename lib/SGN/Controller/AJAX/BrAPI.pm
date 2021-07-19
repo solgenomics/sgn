@@ -275,6 +275,7 @@ sub _authenticate_user {
 	# Will still throw error if auth is required
 	if ($c->config->{brapi_default_user} && $c->config->{brapi_require_login} == 0) {
 		$user_id = CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
+		$user_type = 'curator';
 		if (! defined $user_id) {
 			my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'Default brapi user was not found');
 			_standard_response_construction($c, $brapi_package_result, 500);
