@@ -2621,7 +2621,7 @@ sub observation_units_POST {
 	my $self = shift;
 	my $c = shift;
 	# The observation units need an operator, so login required
-	my $force_authenticate = 1;
+	my $force_authenticate = 0;
 	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
