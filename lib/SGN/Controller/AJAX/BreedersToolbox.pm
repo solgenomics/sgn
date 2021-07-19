@@ -322,4 +322,36 @@ sub delete_uploaded_phenotype_files : Path('/ajax/breeders/phenotyping/delete/')
     $c->stash->{rest} = {success => 1};
 }
 
+sub progress : Path('/ajax/progress') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $trait_id = $c->req->param("trait_id");
+
+    print STDERR "Trait id = $trait_id\n";
+    
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh();
+
+    my $q = "select projectprop.value, avg(phenotype.value::REAL), stddev(phenotype.value::REAL),count(*) from phenotype join cvterm on(cvalue_id=cvterm_id) join nd_experiment_phenotype using(phenotype_id) join nd_experiment_project using(nd_experiment_id) join projectprop using(project_id)  where cvterm.cvterm_id=? and phenotype.value not in ('-', 'miss','#VALUE!','..') and projectprop.type_id=(SELECT cvterm_id FROM cvterm where name='project year') group by projectprop.type_id, projectprop.value order by projectprop.value";
+
+    my $h = $dbh->prepare($q);
+
+    $h->execute($trait_id);
+    
+    my $data = [];
+
+    while (my ($year, $mean, $stddev, $count) = $h->fetchrow_array()) {
+	push @$data, [ $year, sprintf("%.2f", $mean), sprintf("%.2f", $stddev), $count ];
+    }
+
+    print STDERR "Data = ".Dumper($data);
+    
+    $c->stash->{rest} = { data => $data };
+
+
+}
+
+
+
 1;
