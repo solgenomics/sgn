@@ -260,6 +260,11 @@
                     // Event Title
                     html += "<p class='seedlot_event_title'>" + event.name + "</p>";
 
+                    // Event Definition
+                    if ( event.definition ) {
+                        html += "<p class='seedlot_event_definition'>" + jQuery('<div>').html(event.definition).text() + "</p>";
+                    }
+
                     // Container Div
                     html += "<div class='seedlot_event_values_div'>";
 
@@ -506,10 +511,16 @@
     .seedlot_event_title {
         font-weight: 500;
         font-size: 110%;
-        margin: 0 0 10px 0;
+        margin: 0;
+    }
+    .seedlot_event_definition {
+        font-size: 90%;
+        color: #999;
+        margin: 0;
     }
     .seedlot_event_values_div {
         display: flex;
+        margin-top: 10px;
     }
     .seedlot_event_values {
         flex-grow: 1;

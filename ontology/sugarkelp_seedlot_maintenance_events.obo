@@ -101,7 +101,7 @@ is_a: SEEDLOT_MAINTENANCE:0000002
 [Term]
 id: SEEDLOT_MAINTENANCE:0002006
 name: Health
-def: "" []
+def: "General health assessment for GP culture. Take into account color (1,2, or 3 = unhealthy; 4,5,6, or 7 = healthy) and contaminants." []
 is_a: SEEDLOT_MAINTENANCE:0000002
 
 [Term]
@@ -113,13 +113,13 @@ is_a: SEEDLOT_MAINTENANCE:0000002
 [Term]
 id: SEEDLOT_MAINTENANCE:0002008
 name: Stickiness
-def: "" []
+def: "General stickiness assessment of GP culture. Sticky GPs will remain attached to glass even after swirling the culture." []
 is_a: SEEDLOT_MAINTENANCE:0000002
 
 [Term]
 id: SEEDLOT_MAINTENANCE:0002009
 name: Clumping
-def: "" []
+def: "General clumping assessment of GP culture. GPs that exhibit clumping will appear to be “grouped” in the bottom of the flask." []
 is_a: SEEDLOT_MAINTENANCE:0000002
 
 [Term]
@@ -131,7 +131,7 @@ is_a: SEEDLOT_MAINTENANCE:0000002
 [Term]
 id: SEEDLOT_MAINTENANCE:0002011
 name: Additional Notes
-def: "any notes, usually concerning culture termination of partial use for an experiment" []
+def: "any notes, usually concerning culture termination or partial use for an experiment" []
 is_a: SEEDLOT_MAINTENANCE:0000002
 
 
