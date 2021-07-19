@@ -5082,9 +5082,9 @@ sub nirs_GET {
 sub nirs_single  : Chained('brapi') PathPart('nirs') CaptureArgs(1) {
 	my $self = shift;
 	my $c = shift;
-	my $stock_id = shift;
+	my $nd_protocol_id= shift;
 
-	$c->stash->{stock_id} = $stock_id;
+	$c->stash->{nd_protocol_id} = $nd_protocol_id;
 }
 
 sub nirs_detail  : Chained('nirs_single') PathPart('') Args(0) : ActionClass('REST') { }
@@ -5112,7 +5112,7 @@ sub nirs_matrix_GET {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Nirs');
 	my $brapi_package_result = $brapi_module->nirs_matrix(
-		$c->stash->{stock_id}
+		$c->stash->{nd_protocol_id}
 	);
 	_standard_response_construction($c, $brapi_package_result);
 }

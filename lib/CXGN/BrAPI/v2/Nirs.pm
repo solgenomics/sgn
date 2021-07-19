@@ -75,7 +75,7 @@ sub search {
 
 sub nirs_matrix {
 	my $self = shift;
-	my $stock_id = shift;
+	my $nd_protocol_id = shift;
 
 	my $status = $self->status;
 	my $page_size = $self->page_size;
@@ -85,9 +85,9 @@ sub nirs_matrix {
 	my @nirs_protocol_ids;
 	my @data;
 
-	my @stock_id_array;
-	@stock_id_array[0] = $stock_id;
-	my $stock_id_arrayref = \@stock_id_array;
+	my @protocol_id_array;
+	@protocol_id_array[0] = $nd_protocol_id;
+	my $protocol_id_arrayref = \@protocol_id_array;
 
 	my $verify_id = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$stock_id});
 	if (!$verify_id) {
@@ -107,10 +107,10 @@ sub nirs_matrix {
 	my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
 		bcs_schema=>$schema,
 #	        nd_protocol_id=>$_,
-		nd_protocol_id=>'6',
+		nd_protocol_id=>$protocol_id_arrayref,
 		high_dimensional_phenotype_type=>'NIRS',
-		query_associated_stocks=>0,
-		accession_list=>$stock_id_arrayref,
+		query_associated_stocks=>1,
+		accession_list=>undef,
 		plot_list=>undef,
 		plant_list=>undef
 	});
