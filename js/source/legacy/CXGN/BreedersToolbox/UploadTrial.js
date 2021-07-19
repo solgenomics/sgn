@@ -21,6 +21,7 @@ jQuery(document).ready(function ($) {
 
     var trial_id; 
     var plants_per_plot;
+    var inherits_plot_treatments;
     jQuery('#upload_trial_trial_sourced').change(function(){
         if(jQuery(this).val() == 'yes'){
             jQuery('#upload_trial_source_trial_section').show();
@@ -49,6 +50,8 @@ jQuery(document).ready(function ($) {
         var plot_width = $("#trial_upload_plot_width").val();
         var plot_length = $("#trial_upload_plot_length").val();
         plants_per_plot = $("#trial_upload_plant_entries").val();
+        inherits_plot_treatments = $('#trial_upload_plants_per_plot_inherit_treatments').val();
+
 
         if (trial_name === '') {
             alert("Please give a trial name");
@@ -156,7 +159,7 @@ jQuery(document).ready(function ($) {
                 type: 'POST',
                 data: {
                     'plants_per_plot' : plants_per_plot,
-                    'inherits_plot_treatments' : 1,
+                    'inherits_plot_treatments' : inherits_plot_treatments,
                 },
                 success: function(response) {
                     console.log(response);

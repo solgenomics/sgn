@@ -42,6 +42,7 @@ jQuery(document).ready(function ($) {
     var unrep_list_seedlot_hash = {};
     var rep_list_seedlot_hash = {};
     var plants_per_plot;
+    var inherits_plot_treatments;
 
     jQuery('#create_trial_validate_form_button').click(function(){
         create_trial_validate_form();
@@ -58,6 +59,7 @@ jQuery(document).ready(function ($) {
         var plot_width = $("#add_project_plot_width").val();
         var plot_length = $("#add_project_plot_length").val();
         plants_per_plot = $("#add_plant_entries").val();
+        inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
         
         if (trial_name === '') {
             alert("Please supply a trial name");
@@ -1911,7 +1913,7 @@ jQuery(document).ready(function ($) {
                 type: 'POST',
                 data: {
                   'plants_per_plot' : plants_per_plot,
-                  'inherits_plot_treatments' : 1,
+                  'inherits_plot_treatments' : inherits_plot_treatments,
                 },
                 success: function(response) {
                     console.log(response);
