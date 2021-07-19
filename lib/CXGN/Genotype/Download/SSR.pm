@@ -85,7 +85,7 @@ sub download {
     push @headers, 'sample_names';
 
     my $marker_info = $protocol_genotype_data->[0];
-    my $marker_genotype_json = $marker_info->[5];
+    my $marker_genotype_json = $marker_info->[6];
     my $marker_genotype_ref = decode_json $marker_genotype_json;
     my %marker_genotype_hash = %{$marker_genotype_ref};
     foreach my $marker_name ( sort keys %marker_genotype_hash) {
@@ -102,7 +102,7 @@ sub download {
         my @each_result = ();
         my $stock_name = $genotype_data->[1];
         push @each_result, $stock_name;
-        my $marker_genotype_json = $genotype_data->[5];
+        my $marker_genotype_json = $genotype_data->[6];
         my $marker_genotype_ref = decode_json $marker_genotype_json;
         my %marker_genotype_hash = %{$marker_genotype_ref};
         foreach my $marker_name ( sort keys %marker_genotype_hash) {

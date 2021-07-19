@@ -9,6 +9,8 @@ $marker_names => []
         <thead>
             <tr>
                 <th>Sample Name</th>
+                <th>Sample Type</th>
+                <th>Ploidy</th>
 % foreach my $column_header(sort @$marker_names){
                 <th><%$column_header%></th>
 %}

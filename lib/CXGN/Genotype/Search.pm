@@ -2181,13 +2181,14 @@ sub get_pcr_genotype_info {
     my $pcr_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
     my $pcr_protocolprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_details', 'protocol_property')->cvterm_id();
     my $pcr_protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_protocol', 'protocol_type')->cvterm_id();
+    my $ploidy_level_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "ploidy_level", "stock_property")->cvterm_id();
 
     my $q1 = "SELECT nd_protocolprop.value->>'marker_names' FROM nd_protocolprop WHERE nd_protocol_id = ? AND nd_protocolprop.type_id = ?";
     my $h1 = $schema->storage->dbh()->prepare($q1);
     $h1->execute($protocol_id, $pcr_protocolprop_cvterm_id);
     my $marker_names = $h1->fetchrow_array();
 
-    my $q = "SELECT stock.stock_id, stock.uniquename,cvterm.name, genotype.genotype_id, genotype.description, genotypeprop.value
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, cvterm.name, genotype.genotype_id, genotype.description, genotypeprop.value
         FROM nd_protocol
         JOIN nd_experiment_protocol ON (nd_protocol.nd_protocol_id = nd_experiment_protocol.nd_protocol_id)
         JOIN nd_experiment_genotype ON (nd_experiment_protocol.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
@@ -2195,15 +2196,16 @@ sub get_pcr_genotype_info {
         JOIN genotypeprop ON (genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.type_id = ?
         JOIN nd_experiment_stock ON (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
+        LEFT JOIN stockprop ON (stockprop.stock_id = stock.stock_id) AND stockprop.type_id = ?
         JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
         $where_clause ORDER BY stock.uniquename ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($pcr_genotyping_cvterm_id);
+    $h->execute($pcr_genotyping_cvterm_id, $ploidy_level_cvterm_id);
 
     my @pcr_genotype_data = ();
-    while (my ($stock_id, $stock_name, $stock_type, $genotype_id, $genotype_description, $genotype_data, $protocol_id) = $h->fetchrow_array()){
-        push @pcr_genotype_data, [$stock_id, $stock_name, $stock_type, $genotype_description, $genotype_id, $genotype_data]
+    while (my ($stock_id, $stock_name, $ploidy_level, $stock_type, $genotype_id, $genotype_description, $genotype_data, $protocol_id) = $h->fetchrow_array()){
+        push @pcr_genotype_data, [$stock_id, $stock_name, $stock_type, $ploidy_level, $genotype_description, $genotype_id, $genotype_data]
     }
 
     my %protocol_genotype_data = (

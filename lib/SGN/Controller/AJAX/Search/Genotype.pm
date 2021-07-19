@@ -158,9 +158,12 @@ sub pcr_genotyping_data_search_GET : Args(0) {
         my @each_genotype = ();
         my $stock_id = $genotype_data->[0];
         my $stock_name = $genotype_data->[1];
-        push @each_genotype, qq{<a href="/stock/$stock_id/view">$stock_name</a>} ;
+        my $stock_type = $genotype_data->[2];
+        my $ploidy_level = $genotype_data->[3];
+        push @each_genotype, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
+        push @each_genotype, ($stock_type, $ploidy_level);
 
-        my $marker_genotype_json = $genotype_data->[5];
+        my $marker_genotype_json = $genotype_data->[6];
         my $marker_genotype_ref = decode_json $marker_genotype_json;
         my %marker_genotype_hash = %$marker_genotype_ref;
         foreach my $marker (@marker_name_arrays) {
