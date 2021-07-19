@@ -187,11 +187,12 @@ sub search {
         }
 
         $trait_ids_sql =~ s/^,//g;
-
         if ($trait_ids_sql){
             push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
         } else {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Variables not found for the searched studyDbId'), 400);
+            my @data_files;
+            my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
+            return CXGN::BrAPI::JSONResponse->return_success({data => []}, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
         }
     }
 
