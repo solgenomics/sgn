@@ -2051,7 +2051,6 @@ jQuery(document).ready(function ($) {
                 'use_same_layout' : use_same_layout
             },
             success: function (response) {
-                console.log('TRIAL ID', response.trial_id);
                 trial_id = response.trial_id;
                 jQuery('#working_modal').modal("hide");
                 if (response.error) {
