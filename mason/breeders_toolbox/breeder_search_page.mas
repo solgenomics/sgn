@@ -329,7 +329,7 @@ $dataset_id => undef
             <td colspan="1">
               <select class="wizard-download-phenotypes-speed form-control input-sm">
                 <option value="" disabled>Download Type</option>
-                <option selected value="Native">Basic</option>
+                <option selected value="Native">Default</option>
                 <option value="MaterializedViewTable">Fast (Improves speed but may miss recent changes)</option>
               </select>
             </td>
