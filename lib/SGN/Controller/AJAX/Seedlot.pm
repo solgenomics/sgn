@@ -393,6 +393,12 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $sl_new->set_current_count_property();
         $sl_new->set_current_weight_property();
 
+        if ( $origin_seedlot_id ) {
+            my $sl_origin = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $origin_seedlot_id);
+            $sl_origin->set_current_count_property();
+            $sl_origin->set_current_weight_property();
+        }
+
         $phenome_schema->resultset("StockOwner")->find_or_create({
             stock_id     => $seedlot_id,
             sp_person_id =>  $user_id,
