@@ -89,7 +89,7 @@ jQuery(document).ready(function ($) {
             alert("Please no more than 500 plants per plot.");
         }
         else if (description === '') {
-            alert("Please suply a description!");
+            alert("Please supply a description!");
         }
         else if (design_type === '') {
             alert("Please select a design type");
