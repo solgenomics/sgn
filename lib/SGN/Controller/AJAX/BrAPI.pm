@@ -3799,7 +3799,7 @@ sub observations_PUT {
 	my $version = $c->request->captures->[0];
 	my $brapi_package_result;
 	if ($version eq 'v2'){
-		my $force_authenticate = 1;
+		my $force_authenticate = 0;
 		my ($auth,$user_id,$user_type) = _authenticate_user($c,$force_authenticate);
 	    my $clean_inputs = $c->stash->{clean_inputs};
 	    my %observations = %$clean_inputs;
@@ -3958,7 +3958,7 @@ sub save_observation_results {
     my $version = shift;
 
 	# Check that the user is a user. We don't check other permissions for now.
-	my $force_authenticate = 1;
+	my $force_authenticate = 0;
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
 	my $dbh = $c->dbc->dbh;
