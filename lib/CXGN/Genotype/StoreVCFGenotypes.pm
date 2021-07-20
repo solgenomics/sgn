@@ -604,6 +604,8 @@ sub validate {
         $self->stock_type_id($stock_type_id);
     } elsif ($stock_type eq 'stocks'){
         @missing_stocks = @{$validator->validate($schema,'stocks',\@observation_unit_uniquenames_stripped)->{'missing'}};
+    } elsif ($stock_type eq 'tissue_sample_or_accession'){
+        @missing_stocks = @{$validator->validate($schema,'tissue_samples_or_accessions',\@observation_unit_uniquenames_stripped)->{'missing'}};
     } elsif ($stock_type eq 'accession'){
         @missing_stocks = @{$validator->validate($schema,'accessions',\@observation_unit_uniquenames_stripped)->{'missing'}};
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
