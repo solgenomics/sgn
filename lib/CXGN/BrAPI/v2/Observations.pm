@@ -105,7 +105,7 @@ sub search {
                         season => \@season,
                         collector => $_->{operator},
                         studyDbId => qq|$obs_unit->{trial_id}|,
-                        uploadedBy=>undef,
+                        uploadedBy=> $_->{operator},
                         value => qq|$_->{value}|,
                     };
                 }
@@ -200,7 +200,7 @@ sub detail {
                 season => \@season,
                 collector => $_->{operator},
                 studyDbId => qq|$obs_unit->{trial_id}|,
-                uploadedBy=>undef,
+                uploadedBy=> $_->{operator},
                 value => qq|$_->{value}|,
             };
         }
@@ -247,6 +247,9 @@ sub observations_store {
         return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!', 403);
     }
 
+    my $p = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->find({sp_person_id=>$user_id});
+    my $user_name = $p->username;
+
     ## Validate request structure and parse data
     my $timestamp_included = 1;
     my $data_level = 'stocks';
@@ -263,7 +266,7 @@ sub observations_store {
     }
 
 
-    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema, undef, $user_id, undef, undef);
+    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema, undef, $user_name, undef, undef);
     my %parsed_data;
     my @units;
     my @variables;
@@ -310,6 +313,7 @@ sub observations_store {
     my $timestamp = $time->ymd()."_".$time->hms();
     $phenotype_metadata{'archived_file'} = $file;
     $phenotype_metadata{'archived_file_type'} = 'brapi observations';
+    $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
     ## Store observations and return details for response
@@ -331,6 +335,15 @@ sub observations_store {
         metadata_hash=>\%phenotype_metadata,
         #image_zipfile_path=>$image_zip,
     );
+    my ($verified_warning, $verified_error) = $store_observations->verify();
+
+    if ($verified_error) {
+        print STDERR "Error: $verified_error\n";
+        return CXGN::BrAPI::JSONResponse->return_error($status, $verified_error, 500);
+    }
+    if ($verified_warning) {
+        print STDERR "\nWarning: $verified_warning\n";
+    }
 
     my ($stored_observation_error, $stored_observation_success, $stored_observation_details) = $store_observations->store();
 
