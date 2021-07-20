@@ -33,7 +33,7 @@ has 'nd_protocol_id' => (
 has 'observation_unit_type_name' => ( #Can be accession, plot, plant, tissue_sample, or stocks
     isa => 'Str',
     is => 'ro',
-#    required => 1,
+    required => 1,
 );
 
 has 'organism_id' => (

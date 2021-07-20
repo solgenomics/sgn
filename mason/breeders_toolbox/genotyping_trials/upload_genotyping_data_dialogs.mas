@@ -719,6 +719,7 @@ $facilities
                                 <input class="form-control" id="upload_ssr_protocol_description_input" name="upload_ssr_protocol_description_input" type="text" />
                             </div>
                         </div>
+<!--
                         <div class="form-group">
                             <label class="col-sm-5 control-label">Sample Type: </label>
                             <div class="col-sm-7">
@@ -729,6 +730,7 @@ $facilities
                                 </select>
                             </div>
                         </div>
+-->
                         <div class="row">
                             <div class="col-sm-5">
                                 <&| /page/explanation.mas, title=>'Template information' &>

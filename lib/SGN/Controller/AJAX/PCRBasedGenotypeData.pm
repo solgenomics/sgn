@@ -112,7 +112,8 @@ sub upload_ssr_protocol_POST : Args(0) {
     my $protocol_name = $c->req->param('upload_ssr_protocol_name');
     my $protocol_description = $c->req->param('upload_ssr_protocol_description_input');
     my $species_name = $c->req->param('upload_ssr_species_name_input');
-    my $sample_type = $c->req->param('upload_ssr_sample_type_select');
+#    my $sample_type = $c->req->param('upload_ssr_sample_type_select');
+    my $sample_type = 'tissue_sample_or_accession';
 
     my $organism_check = "SELECT organism_id FROM organism WHERE species = ?";
     my @found_organisms;
@@ -141,7 +142,7 @@ sub upload_ssr_protocol_POST : Args(0) {
     $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Genotype::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser = CXGN::Genotype::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, observation_unit_type_name => $sample_type);
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse();
 #    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
