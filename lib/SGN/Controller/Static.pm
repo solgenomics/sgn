@@ -73,6 +73,13 @@ sub test_authentication :Path('/test_authentication/') :Args(0) {
     $c->stash->{template} = '/test/test_authenticate.mas';
 }
 
+sub progress :Path('/progress') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/breeders_toolbox/progress.mas';
+}
+
+
 sub solanaceae_project_afri :Path('/solanaceae-project/afri-sol/') {
     my ($self, $c) = @_;
     $c->stash->{template} = '/links/afri_sol.mas';
