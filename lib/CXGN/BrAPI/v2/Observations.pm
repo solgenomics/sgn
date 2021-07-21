@@ -222,6 +222,7 @@ sub observations_store {
     my $dbh = $self->bcs_schema()->storage()->dbh();
 
     my $observations = $params->{observations};
+    my $overwrite_values = $params->{overwrite} ? $params->{overwrite} : 0;
     my $user_id = $params->{user_id};
     my $user_type = $params->{user_type};
     my $archive_path = $c->config->{archive_path};
@@ -333,6 +334,7 @@ sub observations_store {
         values_hash=>\%parsed_data,
         has_timestamps=>1,
         metadata_hash=>\%phenotype_metadata,
+        overwrite_values=>$overwrite_values,
         #image_zipfile_path=>$image_zip,
     );
     my ($verified_warning, $verified_error) = $store_observations->verify();
