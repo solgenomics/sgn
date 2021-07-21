@@ -192,6 +192,9 @@
             type: 'GET',
             dataType: 'json',
             url: '/ajax/breeders/seedlots?seedlot_name=' + name,
+            beforeSend: function() {
+                jQuery(".seedlot_event_info").html("Loading...");
+            },
             success: function(response) {
                 if ( response && response.data ) {
                     for ( let i = 0; i < response.data.length; i++ ) {
