@@ -69,17 +69,19 @@ $trial_stock_type => undef
         <tbody>
         </tbody>
         </table>
+    </div>
+    <div>
         <button type="button" class="selectAll-dt">Select All</button>
         <button type="button" class="deselectAll-dt">Deselect All</button>
     </div>
-
+    <br>
     <div class="panel panel-default">
         <div class="panel-body">
 
             <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the names currently selected in the first column of the summary table to a new or exisiting list</i>'&>
             <br>
             <p><em><span id="selected_row_count">0</span> row(s) selected.</em></p>
-            <div style="text-align:right" id="stocks_to_list_menu"></div>
+            <div style="text-align:right" id="names_to_list_menu"></div>
             <div id="selected_names" style="display: none;"></div>
             </&>
 
@@ -229,26 +231,23 @@ function datatables_display_phenosummary(type) {
 
     var selection_changed = function () {
         var selected_rows = summary_table.rows({'selected':true});
+        var table_type = jQuery('#display_trial_phenosummary').val();
+        var list_type = table_type.match('accession') ? 'accessions' : 'traits';
         jQuery("#selected_row_count").text(selected_rows.count());
-        console.log(selected_rows.data());
+        // console.log(selected_rows.data());
 
-        var names = selected_rows.data().map(function(row){
-            return row[2];
+        var selected_names = [];
+        selected_rows.data().map(function(row){
+            selected_names.push(row[0].match(/<a [^>]+>([^<]+)<\/a>/)[1] + '\n');
         });
 
-        console.log(names);
-        //
-        // var names = [];
-        //     for (var i = 0; i < name_links.length; i++) { //extract and combine trait name and id from anchor tags
-        //     names.push(name_links[i][0] + '|' + name_links[i][1] + '\n');
-        // }
-
-        jQuery('#selected_names').html(names);
-        addToListMenu('stocks_to_list_menu', 'selected_names', {
-            listType: 'accessions'
+        jQuery('#selected_names').html(selected_names);
+        addToListMenu('names_to_list_menu', 'selected_names', {
+            listType: list_type
         });
     };
 
+    summary_table.on( 'draw', selection_changed);
     summary_table.on( 'deselect', selection_changed);
     summary_table.on( 'select', selection_changed);
 
