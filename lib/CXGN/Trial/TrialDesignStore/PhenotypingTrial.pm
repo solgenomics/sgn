@@ -3,6 +3,8 @@ package CXGN::Trial::TrialDesignStore::PhenotypingTrial;
 
 use Moose;
 use Try::Tiny;
+use JSON;
+use Data::Dumper;
 
 extends 'CXGN::Trial::TrialDesignStore::AbstractTrial';
 
@@ -17,23 +19,24 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
 
     $self->set_valid_properties(
 	[
-	 'seedlot_name',
-	 'num_seed_per_plot',
-	 'weight_gram_seed_per_plot',
-	 'stock_name',
-	 'plot_name',
-	 'plot_number',
-	 'block_number',
-	 'rep_number',
-	 'is_a_control',
-	 'range_number',
-	 'row_number',
-	 'col_number',
-	 'plant_names',
-	 'plot_num_per_block',
-	 'subplots_names', #For splotplot
-	 'treatments', #For splitplot
-	 'subplots_plant_names', #For splitplot
+        'seedlot_name',
+        'num_seed_per_plot',
+        'weight_gram_seed_per_plot',
+        'stock_name',
+        'plot_name',
+        'plot_number',
+        'block_number',
+        'rep_number',
+        'is_a_control',
+        'range_number',
+        'row_number',
+        'col_number',
+        'plant_names',
+        'plot_num_per_block',
+        'subplots_names', #For splotplot
+        'treatments', #For splitplot
+        'subplots_plant_names', #For splitplot
+        'additional_info' # For brapi additional info storage
 	]);
 
 }
@@ -47,26 +50,30 @@ sub validate_design {
     my %design = %{$self->get_design};
     my $error = '';
 
-    if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
-        $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, Westcott or splitplot";
-        return $error;
+    if (defined $design_type){
+        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
+            $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, Westcott or splitplot";
+            return $error;
+        }
     }
-    my @valid_properties;
 
-    if ($design_type eq 'CRD' || $design_type eq 'Alpha' || $design_type eq 'Augmented' || $design_type eq 'RCBD' || $design_type eq 'p-rep' || $design_type eq 'splitplot' || $design_type eq 'Lattice' || $design_type eq 'MAD' || $design_type eq 'greenhouse' || $design_type eq 'Westcott' || $design_type eq 'Analysis'){
-        # valid plot's properties
-        @valid_properties = @{$self->get_valid_properties()};
-    }
+    my @valid_properties = @{$self->get_valid_properties()};
     my %allowed_properties = map {$_ => 1} @valid_properties;
 
     my %seen_stock_names;
     my %seen_source_names;
     my %seen_accession_names;
+    my %seen_plot_numbers;
+    my @plot_numbers;
 
     foreach my $stock (keys %design){
         if ($stock eq 'treatments'){
             next;
         }
+        if (!exists($design{$stock}->{plot_number})) {
+            $error .= "Property: plot_number is required for stock" . $stock;
+        }
+
         foreach my $property (keys %{$design{$stock}}){
             if (!exists($allowed_properties{$property})) {
                 $error .= "Property: $property not allowed! ";
@@ -83,6 +90,9 @@ sub validate_design {
             }
             if ($property eq 'plot_name') {
                 my $plot_name = $design{$stock}->{$property};
+                # Check that there are no plant names, if so, this could be a lookup value for an existing plot
+                # So, we don't validate that the plot name is unique
+                if ($design{$stock}->{plant_names} && scalar $design{$stock}->{plant_names} > 0) { next; }
                 $seen_stock_names{$plot_name}++;
             }
             if ($property eq 'plant_names') {
@@ -96,6 +106,13 @@ sub validate_design {
                 foreach (@$subplot_names) {
                     $seen_stock_names{$_}++;
                 }
+            }
+
+            if ($property eq 'plot_number') {
+                my $plot_number = $design{$stock}->{$property};
+                if ($design{$stock}->{plant_names} && scalar $design{$stock}->{plant_names} > 0) { next; }
+                $seen_plot_numbers{$plot_number}++;
+                push @plot_numbers, $plot_number;
             }
         }
     }
@@ -121,7 +138,7 @@ sub validate_design {
         uniquename=>{-in=>\@stock_names}
     });
     while (my $s = $stocks->next()) {
-        $error .= "Name $s->uniquename already exists in the database.";
+        $error .= sprintf("Name %s already exists in the database.", $s->uniquename);
     }
 
     my $seedlot_validator = CXGN::List::Validate->new();
@@ -137,19 +154,35 @@ sub validate_design {
 
     my %found_data;
     foreach my $a (@accession_names) {
-	my $rs = $chado_schema->resultset('Stock::Stock')->search({
-	    'is_obsolete' => { '!=' => 't' },
-	    'type_id' => { -in => \@source_stock_types },
-	    'uniquename' => { ilike => $a } });
+        my $rs = $chado_schema->resultset('Stock::Stock')->search({
+            'is_obsolete' => { '!=' => 't' },
+            'type_id' => { -in => \@source_stock_types },
+            'uniquename' => { ilike => $a } });
 
-	while (my $s = $rs->next()) {
-	    print STDERR "FOUND ".$s->uniquename()."\n";
-	    $found_data{$s->uniquename} = 1;
-	}
+        while (my $s = $rs->next()) {
+            print STDERR "FOUND ".$s->uniquename()."\n";
+            $found_data{$s->uniquename} = 1;
+        }
     }
     foreach (@accession_names){
         if (!$found_data{$_}){
             $error .= "The following name is not in the database: $_ .";
+        }
+    }
+
+    # Check that the plot numbers are unique in the db for the given study
+    my $trial_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_layout_json', 'project_property')->cvterm_id();
+    my $plot_number_select = "select projectprop.value from project " .
+        "join projectprop on projectprop.project_id = project.project_id " .
+        "where type_id = $trial_layout_cvterm_id and project.project_id = ?";
+    my $sth = $chado_schema->storage->dbh->prepare($plot_number_select);
+    $sth->execute($self->get_trial_id());
+    while (my ($trial_layout_json) = $sth->fetchrow_array()) {
+        my $trial_layout_json = decode_json($trial_layout_json);
+        foreach my $key (keys %{$trial_layout_json}) {
+            if (defined %seen_plot_numbers{$key}) {
+                $error .= "Plot number '$key' already exists in the database for that study. Plot number must be unique.";
+            }
         }
     }
 

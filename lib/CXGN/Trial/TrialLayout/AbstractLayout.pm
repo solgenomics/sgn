@@ -167,11 +167,12 @@ sub _lookup_trial_id {
   }
 
     if (!$self->_get_trial_year_from_project()) {
-	print STDERR "Trial has no associated trial year... quitting!\n";
-      return;
-  }
+        print STDERR "Trial has no associated trial year... quitting!\n";
+      #return;
+  } else {
+        $self->_set_trial_year($self->_get_trial_year_from_project());
+    }
 
-  $self->_set_trial_year($self->_get_trial_year_from_project());
   $self->_set_trial_name($self->get_project->name());
   $self->_set_trial_description($self->get_project->description());
 
