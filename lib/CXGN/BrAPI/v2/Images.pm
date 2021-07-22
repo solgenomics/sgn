@@ -125,7 +125,7 @@ sub search {
                 additionalInfo => {
                     observationLevel => $_->{'stock_type_name'},
                     observationUnitName => $_->{'stock_uniquename'},
-                    tags =>  $_->{'tags_array'},
+                    #tags =>  $_->{'tags_array'},
                 },
                 copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
                 description => $_->{'image_description'},
@@ -142,13 +142,13 @@ sub search {
                 mimeType => _get_mimetype($_->{'image_file_ext'}),
                 observationUnitDbId => qq|$_->{'stock_id'}|,
                 # location and linked phenotypes are not yet available for images in the db
-                imageLocation => {
-                    geometry => {
-                        coordinates => [],
-                        type=> '',
-                    },
-                    type => '',
-                },
+                #imageLocation => {
+                #    geometry => {
+                #        coordinates => [],
+                #        type=> '',
+                #    },
+                #    type => '',
+                #},
                 observationDbIds => [@observationDbIds],
             };
         }
@@ -211,7 +211,7 @@ sub detail {
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
                 observationUnitName => $_->{'stock_uniquename'},
-                tags =>  $_->{'tags_array'},
+                #tags =>  $_->{'tags_array'},
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
@@ -228,13 +228,13 @@ sub detail {
             mimeType => _get_mimetype($_->{'image_file_ext'}),
             observationUnitDbId => qq|$_->{'stock_id'}|,
             # location and linked phenotypes are not yet available for images in the db
-            imageLocation => {
-                geometry => {
-                    coordinates => [],
-                    type=> '',
-                },
-                type => '',
-            },
+            #imageLocation => {
+            #    geometry => {
+            #        coordinates => [],
+            #        type=> '',
+            #    },
+            #    type => '',
+            #},
             observationDbIds => [@observationDbIds],
         );
     }
@@ -428,7 +428,7 @@ sub image_metadata_store {
             additionalInfo => {
                 observationLevel => $_->{'stock_type_name'},
                 observationUnitName => $_->{'stock_uniquename'},
-                tags =>  $_->{'tags_array'},
+                #tags =>  $_->{'tags_array'},
             },
             copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
             description => $_->{'image_description'},
@@ -445,13 +445,13 @@ sub image_metadata_store {
             mimeType => _get_mimetype($_->{'image_file_ext'}),
             observationUnitDbId => qq|$_->{'stock_id'}|,
             # location and linked phenotypes are not yet available for images in the db
-            imageLocation => {
-                geometry => {
-                    coordinates => [],
-                    type=> '',
-                },
-                type => '',
-            },
+            #imageLocation => {
+            #    geometry => {
+            #        coordinates => [],
+            #        type=> '',
+            #    },
+            #    type => '',
+            #},
             observationDbIds => [@observationDbIds],
         };
 
@@ -548,13 +548,13 @@ sub image_data_store {
          mimeType => _get_mimetype($_->{'image_file_ext'}),
          observationUnitDbId => $_->{'stock_id'},
          # location and linked phenotypes are not yet available for images in the db
-         imageLocation => {
-             geometry => {
-                 coordinates => [],
-                 type=> '',
-             },
-             type => '',
-         },
+         #imageLocation => {
+         #    geometry => {
+         #        coordinates => [],
+         #        type=> '',
+         #    },
+         #    type => '',
+         #},
          observationDbIds => [@observationDbIds],
      );
     }
