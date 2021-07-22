@@ -326,14 +326,21 @@ $dataset_id => undef
               </td>
             </tr>
             <tr>
-              <td colspan="2">
+            <td colspan="1">
+              <select class="wizard-download-phenotypes-speed form-control input-sm">
+                <option value="" disabled>Download Type</option>
+                <option selected value="Native">Default</option>
+                <option value="MaterializedViewTable">Fast (Improves speed but may miss recent changes)</option>
+              </select>
+            </td>
+              <td colspan="1">
                 <select class="wizard-download-phenotypes-format form-control input-sm">
-                  <option value="" disabled>Format</option>
+                  <option value="" disabled>Download Format</option>
                   <option selected value="csv">CSV</option>
                   <option value="xls">XLS</option>
                 </select>
               </td>
-              <td>
+              <td colspan="1">
                 <select class="wizard-download-phenotypes-level form-control input-sm">
                   <option value="" disabled>Data Level</option>
                   <option selected value="all">All</option>

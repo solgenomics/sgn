@@ -27,7 +27,6 @@
 </div>
 
 
-<& /instance/external_link_sources.mas &>
 <script defer>
 
     /**
