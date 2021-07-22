@@ -4334,7 +4334,7 @@ sub images_single_PUT {
 
 	# Check user auth. This matches observations PUT observations endpoint authorization.
 	# No specific roles are check, just that the user has an account.
-	my $force_authenticate = 1;
+	my $force_authenticate = 0;
 	my ($auth_success, $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, $force_authenticate);
 
     my $clean_inputs = $c->stash->{clean_inputs};
