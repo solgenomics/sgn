@@ -254,6 +254,7 @@ rect.bordered {
                                     <label class="col-sm-3 control-label">Plants per Plot: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="add_plant_entries" name="add_plant_entries" type="text" />
+                                        <p><i>Creates plant entries for each plot. Ignore if not adding plant entries.</i></p>
                                     </div>
                                     <label style="font-size: 80%;" class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
                                         <div class="col-sm-8" >
