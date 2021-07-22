@@ -161,7 +161,7 @@ solGS.sIndex = {
 
 	var protocolId = jQuery('#genotyping_protocol_id').val();
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
-
+    var traitsCode = jQuery('#training_traits_code').val();
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
 	}
@@ -170,14 +170,17 @@ solGS.sIndex = {
 	    'selection_pop_id': selectedPopId,
 	    'training_pop_id': modelId,
 	    'training_traits_ids': trainingTraitsIds,
+        'training_traits_code': traitsCode,
 	    'genotyping_protocol_id': protocolId
 	};
+
+    args = JSON.stringify(args);
 
 	jQuery.ajax({
             type: 'POST',
             dataType: "json",
             url: '/solgs/selection/index/form',
-            data: args,
+            data: {'arguments': args},
             success: function(res) {
 
 		if (res.status == 'success') {
@@ -237,6 +240,7 @@ solGS.sIndex = {
 		trainingTraitsIds = trainingTraitsIds.split(',');
 	    }
 	    var protocolId = jQuery('#genotyping_protocol_id').val();
+        var traitsCode = jQuery('#training_traits_code').val();
 
 	    if (trainingPopId == selectionPopId) { selectionPopId = "";}
 
@@ -245,13 +249,16 @@ solGS.sIndex = {
 		'selection_pop_id': selectionPopId,
 		'rel_wts': params,
 		'training_traits_ids': trainingTraitsIds,
+        'training_traits_code': traitsCode,
 		'genotyping_protocol_id': protocolId
 	    };
+
+        siArgs = JSON.stringify(siArgs);
 
             jQuery.ajax({
 		type: 'POST',
 		dataType: "json",
-		data: siArgs,
+		data: {'arguments': siArgs},
 		url: '/solgs/calculate/selection/index/',
 		success: function(res){
                     var table;
@@ -291,7 +298,7 @@ solGS.sIndex = {
 
 		    var popType = jQuery("#si_canvas #selected_population_type").val();
 		    var popId   = jQuery("#si_canvas #selected_population_id").val();
-                    solGS.correlation.formatGenCorInputData(popId, popType, indexFile);
+            solGS.correlation.formatGenCorInputData(popId, popType, indexFile);
 
 		    jQuery('#si_canvas #selected_pop').val('');
 
