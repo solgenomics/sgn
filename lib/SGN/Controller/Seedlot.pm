@@ -145,8 +145,16 @@ sub seedlot_maintenance_record : Path('/breeders/seedlot/maintenance/record') {
     my $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
     my $root_cvterm = $dbxref->cvterm if $dbxref;
     my $root_cvterm_id = $root_cvterm->cvterm_id if $root_cvterm;
+
+    # Get cvterm id(s) of events for seedlot info
+    my @info_event_cvterms = ();
+    my $info_event_cvterms_str = $c->config->{seedlot_maintenance_info_cvterms};
+    if ( $info_event_cvterms_str && $info_event_cvterms_str ne '' ) {
+        @info_event_cvterms = split(',', $info_event_cvterms_str);
+    }
         
     $c->stash->{ontology} = $onto->get_children($root_cvterm_id) if $root_cvterm_id;
+    $c->stash->{info_event_cvterms} = \@info_event_cvterms;
     $c->stash->{operator} = $c->user()->get_object()->get_username();
     $c->stash->{template} = '/breeders_toolbox/seedlot_maintenance/record.mas';
 }
