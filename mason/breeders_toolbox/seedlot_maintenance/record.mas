@@ -58,7 +58,7 @@
                 </div>
             </div>
 
-% if ( scalar(@{$info_event_cvterms}) > 0 ) {
+% if ( defined $info_event_cvterms && scalar(@{$info_event_cvterms}) > 0 ) {
             <!-- Seedlot Events -->
             <div class="form-group">
                 <label class="col-sm-3 control-label">Recent Events: </label>
