@@ -1,7 +1,7 @@
  #SNOPSIS
 
  #runs phenotypic correlation analysis.
- #Correlation coeffiecients are stored in tabular and json formats 
+ #Correlation coeffiecients are stored in tabular and json formats
 
  #AUTHOR
  # Isaak Y Tecle (iyt2@cornell.edu)
@@ -13,7 +13,7 @@ library(ltm)
 #library(rjson)
 library(jsonlite)
 library(data.table)
-#library(phenoAnalysis)
+library(phenoAnalysis)
 library(dplyr)
 #library(rbenchmark)
 library(methods)
@@ -27,13 +27,14 @@ outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
 inputFiles  <- scan(grep("input_files", allArgs, value = TRUE),
                     what = "character")
 
+message('inputFiles: ', inputFiles)
 
 refererQtl <- grep("qtl", inputFiles, value=TRUE)
 
 phenoDataFile      <- grep("\\/phenotype_data", inputFiles, value=TRUE)
 formattedPhenoFile <- grep("formatted_phenotype_data", inputFiles, fixed = FALSE, value = TRUE)
-metadataFile       <-  grep("metadata", inputFiles, value=TRUE)
-
+metaFile       <-  grep("metadata", inputFiles, value=TRUE)
+message('metaFiles: ', metaFile)
 correCoefficientsFile     <- grep("corre_coefficients_table", outputFiles, value=TRUE)
 correCoefficientsJsonFile <- grep("corre_coefficients_json", outputFiles, value=TRUE)
 
@@ -42,23 +43,24 @@ phenoData          <- c()
 
 
 if ( length(refererQtl) != 0 ) {
-   phenoDataFile      <- grep("\\/phenodata", inputFiles, value=TRUE)    
+   phenoDataFile      <- grep("\\/phenodata", inputFiles, value=TRUE)
 
    phenoData <- data.frame(fread(phenoDataFile,
 				header=TRUE,
                                    sep=",",
                                    na.strings=c("NA", "-", " ", ".", "..")
                                    ))
-} else {
-
-    phenoData <- data.frame(fread(phenoDataFile,
-                                     header = TRUE,
-                                     sep="\t",
-                                     na.strings = c("NA", "", "--", "-", ".", "..")
-                                   ))
 }
+# else {
+#
+#     phenoData <- data.frame(fread(phenoDataFile,
+#                                      header = TRUE,
+#                                      sep="\t",
+#                                      na.strings = c("NA", "", "--", "-", ".", "..")
+#                                    ))
+# }
 
-metaData <- scan(metadataFile, what="character")
+metaData <- scan(metaFile, what="character")
 
 allTraitNames <- c()
 nonTraitNames <- c()
@@ -70,59 +72,52 @@ if (length(refererQtl) != 0) {
   nonTraitNames <- c("ID")
   allTraitNames <- allNames[! allNames %in% nonTraitNames]
 
-} else {
-  allNames <- names(phenoData)
-  nonTraitNames <- metaData
-
-  allTraitNames <- allNames[! allNames %in% nonTraitNames]
 }
 
-print(allTraitNames)
+correPhenoData <- c(0)
 
-if (!is.null(phenoData) && length(refererQtl) == 0) {
-  
+if (length(refererQtl) == 0  ) {
+    averagedPhenoData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
+
+    allNames <- names(averagedPhenoData)
+    nonTraitNames <- metaData
+    allTraitNames <- allNames[! allNames %in% nonTraitNames]
+
+  rownames(averagedPhenoData) <- NULL
+  correPhenoData <- averagedPhenoData
+} else {
+  message("qtl stuff")
+  correPhenoData <- phenoData %>%
+                        group_by(ID) %>%
+                        summarise_if(is.numeric, mean, na.rm=TRUE) %>%
+                        select(-ID) %>%
+                        round(., 2) %>%
+                        data.frame
+
+}
+
+if (!is.null(correPhenoData) && length(refererQtl) == 0) {
+
     for (i in allTraitNames) {
-      if (class(phenoData[, i]) != 'numeric') {
-          phenoData[, i] <- as.numeric(as.character(phenoData[, i]))
+      if (class(correPhenoData[, i]) != 'numeric') {
+          correPhenoData[, i] <- as.numeric(as.character(correPhenoData[, i]))
       }
 
-      if (all(is.nan(phenoData[, i]))) {
-          phenoData[, i] <- sapply(phenoData[, i], function(x) ifelse(is.numeric(x), x, NA))        
+      if (all(is.nan(correPhenoData[, i]))) {
+          correPhenoData[, i] <- sapply(correPhenoData[, i], function(x) ifelse(is.numeric(x), x, NA))
       }
 
-      if (sum(is.na(phenoData[,i])) > (0.5 * nrow(phenoData))) { 
-          phenoData$i <- NULL
+      if (sum(is.na(correPhenoData[,i])) > (0.5 * nrow(correPhenoData))) {
+          correPhenoData$i <- NULL
           naTraitNames <- c(naTraitNames, i)
-          message('dropped trait ', i, ' no of missing values: ', sum(is.na(phenoData[,i])))
+          message('dropped trait ', i, ' no of missing values: ', sum(is.na(correPhenoData[,i])))
       }
   }
 }
 
 filteredTraits <- allTraitNames[!allTraitNames %in% naTraitNames]
 
-###############################
-if (length(refererQtl) == 0  ) {
- 
-  formattedPhenoData <- phenoData %>%
-                        select(germplasmName, allTraitNames) %>%
-                        group_by(germplasmName) %>%
-                        summarise_at(allTraitNames, mean, na.rm=TRUE) %>%
-                        select(-germplasmName) %>%
-                        round(., 2) %>%
-                        data.frame
-
-} else {
-  message("qtl stuff")
-  formattedPhenoData <- phenoData %>%
-                        group_by(ID) %>%
-                        summarise_if(is.numeric, mean, na.rm=TRUE) %>%
-                        select(-ID) %>%
-                        round(., 2) %>%
-                        data.frame
-                             
-}
-
-coefpvalues <- rcor.test(formattedPhenoData,
+coefpvalues <- rcor.test(correPhenoData,
                          method="pearson",
                          use="pairwise"
                          )
@@ -143,7 +138,7 @@ allcordata   <- round(allcordata, 3)
 if (apply(coefficients, 1, function(x)any(is.na(x))) ||
     apply(coefficients, 2, function(x)any(is.na(x))))
   {
-                                                            
+
     coefficients<-coefficients[-which(apply(coefficients, 1, function(x)all(is.na(x)))),
                                -which(apply(coefficients, 2, function(x)all(is.na(x))))]
   }

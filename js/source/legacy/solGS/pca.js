@@ -598,8 +598,8 @@ solGS.pca = {
                     .attr("id", "dLabel")
                     .style("fill", "#86B404")
                     .text( d[0].name + "(" + d[0].pc1 + "," + d[0].pc2 + ")")
-                    .attr("x", pad.left + 1)
-                    .attr("y", pad.top + 80);
+                    .attr("x", width + pad.left + 5)
+                    .attr("y", height / 2);
             })
             .on("mouseout", function(d) {
 		d3.select(this)

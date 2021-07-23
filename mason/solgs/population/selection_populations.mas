@@ -8,13 +8,13 @@ displays list of prediction populations and their GS output.
 
 $result => ''
 $selection_prediction_download
-$analyzed_traits
+$training_pop_analyzed_traits
 $training_pop_id
 $training_pop_name
 $selection_pop_id
 $selection_pop_name => ''
 $list_of_prediction_pops => ''
-$prediction_pop_analyzed_traits => ''
+$selection_pop_analyzed_traits => ''
 
 </%args>
 

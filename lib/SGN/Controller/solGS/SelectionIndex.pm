@@ -17,6 +17,7 @@ BEGIN { extends 'Catalyst::Controller' }
 sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     my ($self, $c) = @_;
 
+
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
     my $selection_pop_id = $c->stash->{'selection_pop_id'};
@@ -25,12 +26,12 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     my $traits;
     if ($selection_pop_id)
     {
-	$c->controller('solGS::solGS')->prediction_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
-        $traits = $c->stash->{prediction_pop_analyzed_traits};
+	$c->controller('solGS::solGS')->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
+        $traits = $c->stash->{selection_pop_analyzed_traits};
     }
     else
     {
-	$c->controller('solGS::solGS')->analyzed_traits($c);
+	$c->controller('solGS::Gebvs')->training_pop_analyzed_traits($c);
         $traits = $c->stash->{selection_index_traits};
     }
 
@@ -65,7 +66,7 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
     my $ret->{status} = 'Selection index failed.';
     if (@values)
     {
-        $c->controller('solGS::TraitsGebvs')->get_gebv_files_of_traits($c);
+        $c->controller('solGS::Gebvs')->get_gebv_files_of_traits($c);
 
         $self->gebv_rel_weights($c, $rel_wts);
         $self->calc_selection_index($c);
@@ -153,7 +154,7 @@ sub calc_selection_index {
     $c->stash->{r_temp_file}  = "selection_index_${file_id}";
     $c->stash->{r_script}     = 'R/solGS/selection_index.r';
 
-    $c->controller('solGS::solGS')->run_r_script($c);
+    $c->controller('solGS::AsyncJob')->run_r_script($c);
     $self->download_sindex_url($c);
     $self->get_top_10_selection_indices($c);
 }
