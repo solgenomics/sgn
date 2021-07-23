@@ -40,6 +40,15 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
 	    bcs_schema => $self->schema,
 	    nd_protocol_id => $protocol_id
 						     });
+
+    my $display_observation_unit_type;
+    my $observation_unit_type = $protocol->sample_observation_unit_type_name;
+    if ($observation_unit_type eq 'tissue_sample_or_accession') {
+        $display_observation_unit_type = 'tissue sample or accession';
+    } else {
+        $display_observation_unit_type = $observation_unit_type;
+    }
+
 	$c->stash->{protocol_id} = $protocol_id;
 	$c->stash->{protocol_name} = $protocol->protocol_name;
 	$c->stash->{protocol_description} = $protocol->protocol_description;
@@ -49,7 +58,7 @@ sub protocol_page :Path("/breeders_toolbox/protocol") Args(1) {
 	$c->stash->{reference_genome_name} = $protocol->reference_genome_name;
 	$c->stash->{species_name} = $protocol->species_name;
 	$c->stash->{create_date} = $protocol->create_date;
-	$c->stash->{sample_observation_unit_type_name} = $protocol->sample_observation_unit_type_name;
+	$c->stash->{sample_observation_unit_type_name} = $display_observation_unit_type;
     $c->stash->{marker_type} = $protocol->marker_type;
 	$c->stash->{template} = '/breeders_toolbox/genotyping_protocol/index.mas';
     }
