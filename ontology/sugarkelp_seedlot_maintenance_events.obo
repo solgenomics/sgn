@@ -95,7 +95,7 @@ is_a: SEEDLOT_MAINTENANCE:0000002
 [Term]
 id: SEEDLOT_MAINTENANCE:0002005
 name: Biomass
-def: "relative to container size" []
+def: "Biomass rating relative to container size.  &lt;a href=\"/static_content/references/biomass.pdf\" target=\"_blank\"&gt;Biomass Reference Sheet.&lt;/a&gt;" []
 is_a: SEEDLOT_MAINTENANCE:0000002
 
 [Term]
@@ -107,7 +107,7 @@ is_a: SEEDLOT_MAINTENANCE:0000002
 [Term]
 id: SEEDLOT_MAINTENANCE:0002007
 name: Color
-def: "" []
+def: "Gametophyte color rating on a 1-7 scale.  &lt;a href=\"/static_content/references/color.pdf\" target=\"_blank\"&gt;Culture Color Reference Sheet.&lt;/a&gt;" []
 is_a: SEEDLOT_MAINTENANCE:0000002
 
 [Term]
@@ -131,7 +131,7 @@ is_a: SEEDLOT_MAINTENANCE:0000002
 [Term]
 id: SEEDLOT_MAINTENANCE:0002011
 name: Additional Notes
-def: "any notes, usually concerning culture termination or partial use for an experiment" []
+def: "Any additional notes, usually concerning culture termination or partial use for an experiment" []
 is_a: SEEDLOT_MAINTENANCE:0000002
 
 
