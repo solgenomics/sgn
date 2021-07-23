@@ -341,7 +341,7 @@ sub observations_store {
 
     if ($verified_error) {
         print STDERR "Error: $verified_error\n";
-        return CXGN::BrAPI::JSONResponse->return_error($status, $verified_error, 500);
+        return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request did not pass the checks.", 500);
     }
     if ($verified_warning) {
         print STDERR "\nWarning: $verified_warning\n";
@@ -351,7 +351,7 @@ sub observations_store {
 
     if ($stored_observation_error) {
         print STDERR "Error: $stored_observation_error\n";
-        return CXGN::BrAPI::JSONResponse->return_error($status, $stored_observation_error, 500);
+        return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request could not be processed correctly.", 500);
     }
     if ($stored_observation_success) {
         #if no error refresh matviews 

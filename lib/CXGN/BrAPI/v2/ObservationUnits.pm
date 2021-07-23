@@ -57,6 +57,8 @@ sub search {
             $data_level = ['all'];
         }
     }
+    my $page_obj = CXGN::Page->new();
+    my $main_production_site_url = $page_obj->get_hostname();
 
     my $references = CXGN::BrAPI::v2::ExternalReferences->new({
         bcs_schema => $self->bcs_schema,
@@ -290,6 +292,7 @@ sub search {
             observations => \@brapi_observations,
             observationUnitName => $obs_unit->{observationunit_uniquename},
             observationUnitPosition => $brapi_observationUnitPosition,
+            observationUnitPUI => $main_production_site_url . "/stock/" . $obs_unit->{observationunit_stock_id} . "/view",
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
             seedLotDbId => $obs_unit->{seedlot_stock_id} ? qq|$obs_unit->{seedlot_stock_id}| : undef,
