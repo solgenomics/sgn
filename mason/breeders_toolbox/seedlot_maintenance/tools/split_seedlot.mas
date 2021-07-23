@@ -226,7 +226,6 @@
             window.location = "/barcode/read?return=/breeders/seedlot/maintenance?tool=split_seedlot&param=seedlot_name";
             return false;
         });
-        jQuery('#seedlot_split_name').keyup(getSeedlotInfo);
         jQuery('#seedlot_split_name').change(getSeedlotInfo);
         jQuery('#seedlot_split_new_create').click(createNewSeedlot);
         jQuery('#seedlot_split_modal_close').click(function() {
@@ -295,14 +294,6 @@
                 }
             },
             complete: function() {
-                let new_name = name.replace(/-[A-Ya-y]{1}$/, function(a){
-                    var c = a.charCodeAt(1);
-                    return "-" + String.fromCharCode(++c);
-                });
-                if ( new_name && new_name !== "" && new_name === name ) {
-                    new_name = name + "-A";
-                }
-                jQuery("#seedlot_split_new_name").val(new_name);
                 jQuery("#seedlot_split_new_contents").val(contents);
                 jQuery("#seedlot_split_new_breeding_program_id").val(breeding_program_id);
                 jQuery("#seedlot_split_new_location").val(location);
@@ -312,8 +303,82 @@
                 jQuery("#seedlot_split_new_description").val(description);
                 jQuery("#seedlot_split_original_contents_count").html(original_count);
                 jQuery("#seedlot_split_original_contents_weight").html(original_weight);
+                setNewSeedlotName();
             }
         });
+    }
+
+    /**
+     * Generate and Set the new Seedlot name
+     * - Get the origin seedlot name
+     * - keep incrementing the ...-LOT{X} suffix until an unused name is found
+     * - popualte the input field for the new Seedlot name
+     */
+    function setNewSeedlotName() {
+        let origin_name = jQuery("#seedlot_split_name").val();
+        _setNewName("Generating...", false)
+        _generateSeedlotName(origin_name);
+
+        /**
+         * Generate the new seedlot name (based on the origin seedlot name)
+         */
+        function _generateSeedlotName(origin_name) {
+            let new_name = _getNextName(origin_name);
+            _seedlotExsists(new_name, function(exists) {
+                if ( exists ) {
+                    _generateSeedlotName(new_name);
+                }
+                else {
+                    _setNewName(new_name);
+                }
+            });
+        }
+
+        /**
+         * Get the next name of the seedlot (increment ...-LOT{X} to the next letter)
+         */
+        function _getNextName(name) {
+            let new_name = name.replace(/-LOT[A-Ya-y]{1}$/, function(a){
+                var c = a.charCodeAt(4);
+                return "-LOT" + String.fromCharCode(++c);
+            });
+            if ( new_name && new_name !== "" && new_name === name ) {
+                new_name = name + "-LOTA";
+            }
+            return new_name;
+        }
+
+        /**
+         * Check if the seedlot name exists (return boolean to callback)
+         */
+        function _seedlotExsists(new_name, callback) {
+            let exists = false;
+            jQuery.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: '/ajax/breeders/seedlots?seedlot_name=' + new_name,
+                success: function(response) {
+                    if ( response && response.data ) {
+                        for ( let i = 0; i < response.data.length; i++ ) {
+                            if ( response.data[i].seedlot_stock_uniquename.toUpperCase() === new_name.toUpperCase() ) {
+                                exists = true;
+                            }
+                        }
+                    }
+                },
+                complete: function() {
+                    return callback(exists);
+                }
+            });
+        }
+
+        /**
+         * Set the new name input field (optionally disable the field)
+         */
+        function _setNewName(new_name, enabled=true) {
+            jQuery("#seedlot_split_new_name").val(new_name);
+            jQuery("#seedlot_split_new_name").prop("disabled", !enabled);
+        }
     }
 
     /**
