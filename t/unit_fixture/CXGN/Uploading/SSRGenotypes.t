@@ -6,18 +6,11 @@ use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
-use CXGN::Dataset;
-use CXGN::Dataset::Cache;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::Search;
-use Bio::GeneticRelationships::Pedigree;
-use CXGN::Pedigree::AddPedigrees;
-use Bio::GeneticRelationships::Individual;
-use CXGN::List;
 use DateTime;
 use CXGN::Genotype::ParseUpload;
 use CXGN::Genotype::StoreVCFGenotypes;
-use SimulateC;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -61,7 +54,6 @@ $response = $ua->post(
         "upload_ssr_protocol_name" => "SSR_protocol_1",
         "upload_ssr_protocol_description_input" => "test SSR marker info upload",
         "upload_ssr_species_name_input" => "Manihot esculenta",
-        "upload_ssr_sample_type_select" => "accession"
     ]
 );
 
