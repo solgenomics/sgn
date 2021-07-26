@@ -78,11 +78,14 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
         my $index_file = $c->stash->{selection_index_only_file};
 	my $sindex_name = $c->stash->{file_id};
 
+        my $si_data = $c->controller("solGS::Utils")->read_file_data($index_file);
+
         $ret->{status} = 'No GEBV values to rank.';
 
         if (@$top_10_si)
         {
             $ret->{status} = 'success';
+            $ret->{indices} = $si_data;
             $ret->{top_10_genotypes} = $top_10_genos;
             $ret->{download_link} = $link;
             $ret->{index_file} = $index_file;
