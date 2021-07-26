@@ -76,7 +76,6 @@ solGS.histogram =  {
     },
 
     displayBinElements: function(data, canvas) {
-
         var table;
         if (!jQuery(canvas + ' .bin_elements').length) {
             table = this.createBinElementsTable();
@@ -294,9 +293,12 @@ solGS.histogram =  {
             .attr("fill", barClr)
             .style("fill", barClr)
             .attr("transform", "rotate(-90)");
+
+    if (histo.caption) {
+        jQuery(canvas).append('<br/>' + histo.caption);
+    }
     },
 
 
-//////
 }
 //////
