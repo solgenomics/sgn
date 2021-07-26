@@ -3,18 +3,32 @@
 </%args>
 
 <style>
-body {
-  padding: 10px;
+
+.button {
+  background-color: #555555;
+  border: none;
+  color: white;
+  padding: 16px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  transition-duration: 0.4s;
+  cursor: pointer;
 }
-.radar-chart .area {
-  fill-opacity: 0.7;
+
+.button1 {
+  background-color: white; 
+  color: black; 
+  border: 2px solid #555555;
 }
-.radar-chart.focus .area {
-  fill-opacity: 0.3;
+
+.button1:hover {
+  background-color: #555555;
+  color: white;
 }
-.radar-chart.focus .area.focused {
-  fill-opacity: 0.5;
-}
+
 </style>
 
 <script type="text/javascript" src="http://d3js.org/d3.v3.js"></script>
@@ -26,10 +40,7 @@ body {
 
 <div id="dataset_select_div">[loading...]</div>
 
-//<button class="btn" id="add_to_graph">Add</button>
-//<button class="btn" id="clear_graph_ids">Clear</button>
-//<button class="btn" id="load_data">Load</button>
-
+<button class="button button1" id="load_data">Render Graph</button>
 <br></br>
 
 <div id="current_selected_traits"></div>
@@ -39,44 +50,12 @@ body {
 
 <script>
 var ctx = document.getElementById('radar_chart').getContext('2d');
-const test_data = {
-    labels: [
-        'trait1',
-        'trait2',
-        'trait3',
-        'trait4',
-        'trait5',
-        'trait6',
-        'trait7'
-    ],
-    datasets: [{
-        label: 'My First Dataset',
-        data: [65, 59, 90, 81, 56, 55, 40],
-        fill: true,
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        borderColor: 'rgb(255, 99, 132)',
-        pointHoverRadius: 15,
-        pointBackgroundColor: 'rgb(255, 99, 132)',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgb(255, 99, 132)'
-    }, {
-        label: 'My Second Dataset',
-        data: [28, 48, 40, 19, 96, 27, 100],
-        fill: true,
-        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-        borderColor: 'rgb(54, 162, 235)',
-        pointHoverRadius: 15,
-        pointBackgroundColor: 'rgb(54, 162, 235)',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgb(54, 162, 235)'
-    }]
-};
+var radar_data = { labels: [], datasets: [] };
+var labeled;
 
 var radar_chart = new Chart(ctx, {
     type: 'radar',
-    data: test_data,
+    data: radar_data,
     options: {
         elements: {
             line: {
@@ -91,7 +70,7 @@ var radar_chart = new Chart(ctx, {
                 pointLabels: {
                     font: {
                         family: 'sans-serif',
-                        size: 20,
+                        size: 15,
                     },
                     color: 'black'
                 },
@@ -99,68 +78,72 @@ var radar_chart = new Chart(ctx, {
                     color: 'black',
                     font: {
                         family: 'sans-serif',
-                        size: 15
-                    }
+                        size: 10
+                    },
+                    beginAtZero: true
                 }
             }
         },
-        plugins: {
-            legend: {
-                display: true,
-            }
-        }
-
     },
 });
 
-var dataset_ids = [];
 jQuery(window).ready(function () {
-    //get_select_box('traits', 'trait_selector_div', { 'name': 'radargraph_traits', 'id': 'cvterm_ids', 'empty': 1 });
     get_select_box("datasets", "dataset_select_div", { "checkbox_name": "dataset_select_checkbox" });
 });
 
-//jQuery('#add_to_graph').click(function () {
-//    var cvterm_id = jQuery('#radargraph_traits').val();
-//    trait_ids.push(cvterm_id);
-//    document.getElementById("current_selected_traits").innerHTML += trait_ids[trait_ids.length - 1] + " ,   ";
-//})
-
-//jQuery('#clear_graph_ids').click(function () {
-//    trait_ids = [];
-//    document.getElementById("current_selected_traits").innerHTML = "";
-//})
-
 jQuery('#load_data').click(function () {
+    labeled = false;
     var dataset_ids = get_dataset_id();
+    radar_chart.data.datasets = [];
+    radar_chart.data.labels = [];
+
     for (var i = 0; i < dataset_ids.length; i++) {
         jQuery.ajax({
-            url: '/ajax/radargraph?dataset_id' + dataset_ids[i],
+            url: '/ajax/radargraph?dataset_id=' + dataset_ids[i],
             success: function (r) {
-                alert(r.data);
+                get_labels(r.data); //change this once loops are added
+                format_data(r.data);
             }
         })
     }
-    /*
-    jQuery.ajax({
-        //url: '/ajax/radargraph?cvterm_id=' + trait_ids[i] + '&stock_id=65043',
-        url: '/ajax/radargraph?dataset_id='+0,
-        success: function (r) {
-            //alert(typeof r.data);
-            var data = [];
-            data[i]=r.data;
-            //data[0] = {"axis" : r.data[1], "value" : r.data[4]};
-            //alert(data[0]);
-            //RadarChart.draw(".chart-container", data);
-            alert(data);
-        },
-
-        error: function (e) {
-            alert("....");
-        }
-    })
-*/
-
 })
+
+function format_data(input) {
+    var data = [];
+    var trait_indices = input[0].indexOf("availableGermplasmSeedlotUniquenames") + 1;
+
+    for (var i = trait_indices; i < trait_indices + (input[0].length - trait_indices - 1); i++) {
+        var temp = [];
+        for (var j = 1; j < input.length; j++) {
+            temp.push(input[j][i] / 1.0);
+        }
+        data.push(Math.round((get_avg(temp)) * 10) / 10);
+    }
+
+    var rgb_col = colors[Math.floor(Math.random() * colors.length)]
+    var rgba_col = colors_alpha[colors.indexOf(rgb_col)]
+
+    var set = {
+        label: Math.round(Math.random() * 100),
+        data: data,
+        fill: true,
+        backgroundColor: rgba_col,
+        borderColor: rgb_col,
+        pointHoverRadius: 13,
+        pointBackgroundColor: rgb_col,
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: rgb_col
+    }
+
+    radar_chart.data.datasets.push(set);
+    radar_chart.update();
+}
+
+function get_avg(data) {
+    const total = data.reduce((acc, c) => acc + c, 0);
+    return total * 1.0 / data.length * 1.0;
+}
 
 function get_dataset_id() {
     var selected_ids = [];
@@ -174,9 +157,18 @@ function get_dataset_id() {
     return selected_ids;
 }
 
-function random_color_generator() {
-    var randomColor = Math.floor(Math.random()*16777215).toString(16);
-    return randomColor;
+function get_labels(input) {
+    if (!labeled) {
+        var trait_indices = input[0].indexOf("availableGermplasmSeedlotUniquenames") + 1;
+
+        for (var i = trait_indices; i < trait_indices + (input[0].length - trait_indices - 1); i++) {
+            radar_chart.data.labels.push(input[0][i]);
+        }
+        radar_chart.update();
+        labeled = true;
+    }
 }
 
+var colors = ['rgb(0,0,0)','rgb(255, 99, 132)','rgb(34,139,34)','rgb(30,144,255)'];
+var colors_alpha = ['rgba(0,0,0,0.2)','rgba(255, 99, 132,0.2)','rgba(34,139,34,0.2)','rgba(30,144,255,0.2)'];
 </script>
