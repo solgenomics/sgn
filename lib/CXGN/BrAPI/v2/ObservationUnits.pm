@@ -12,6 +12,7 @@ use CXGN::BrAPI::v2::ExternalReferences;
 use Try::Tiny;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::List::Transform;
+use Scalar::Util qw(looks_like_number);
 use JSON;
 
 
@@ -56,6 +57,8 @@ sub search {
             $data_level = ['all'];
         }
     }
+    my $page_obj = CXGN::Page->new();
+    my $main_production_site_url = $page_obj->get_hostname();
 
     my $references = CXGN::BrAPI::v2::ExternalReferences->new({
         bcs_schema => $self->bcs_schema,
@@ -190,8 +193,8 @@ sub search {
         my $plant;
         if ($obs_unit->{observationunit_type_name} eq 'plant') {
             $plant = $obs_unit->{obsunit_plant_number};
-            if (%plant_parents{$obs_unit->{observationunit_stock_id}}) {
-                my $plot_object = %plant_parents{$obs_unit->{observationunit_stock_id}};
+            if ($plant_parents{$obs_unit->{observationunit_stock_id}}) {
+                my $plot_object = $plant_parents{$obs_unit->{observationunit_stock_id}};
                 $plot = $plot_object->{plot_number};
                 $additional_info->{observationUnitParent} = $plot_object->{id};
             }
@@ -289,6 +292,7 @@ sub search {
             observations => \@brapi_observations,
             observationUnitName => $obs_unit->{observationunit_uniquename},
             observationUnitPosition => $brapi_observationUnitPosition,
+            observationUnitPUI => $main_production_site_url . "/stock/" . $obs_unit->{observationunit_stock_id} . "/view",
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
             seedLotDbId => $obs_unit->{seedlot_stock_id} ? qq|$obs_unit->{seedlot_stock_id}| : undef,
@@ -333,7 +337,7 @@ sub detail {
 
     my $search_params = {
         observationUnitDbIds => [ $observation_unit_db_id ],
-        includeObservations  => [ 'true' ]
+        includeObservations  => 'true' 
     };
     my $response = $self->search($search_params);
     $response->{result} = scalar $response->{result}->{data} > 0 ? $response->{result}->{data}->[0] : {};
@@ -351,26 +355,75 @@ sub observationunits_update {
 
     my $dbh = $self->bcs_schema()->storage()->dbh();
     my $schema = $self->bcs_schema;
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type')->cvterm_id();
     my $stock_geo_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_geo_json', 'stock_property');
+    my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property');
+    my $plant_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant number', 'stock_property');
+    my $block_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property');
+    my $is_a_control_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'is a control', 'stock_property');
+    my $rep_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property');
+    my $range_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'range', 'stock_property');
+    my $row_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property');
+    my $col_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property');
+    my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_additional_info', 'stock_property');
 
     foreach my $params (@$data) {
         my $observation_unit_db_id = $params->{observationUnitDbId} ? $params->{observationUnitDbId} : undef;
-        my $data_level = $params->{observationLevel}->[0] || 'all';
-        my $years_arrayref = $params->{seasonDbId} || ($params->{seasonDbIds} || ());
-        my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
-        my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
-        my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
+        my $data_level = $params->{observationUnitLevelName}->[0] || 'all';
+        my $years_arrayref = $params->{seasonDbId} ? $params->{seasonDbId} : undef;
+        my $location_ids_arrayref = $params->{locationDbId} ? $params->{locationDbId} : undef;
+        my $study_ids_arrayref = $params->{studyDbId} ? $params->{studyDbId} : undef;
         my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
-        my $accession_name = $params->{germplasmName} ? $params->{germplasmNames}: undef;
-        my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
-        my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
-        my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
+        my $accession_name = $params->{germplasmName} ? $params->{germplasmName}: undef;
+        my $trait_list_arrayref = $params->{observationVariableDbId} ? $params->{observationVariableDbId} : undef;
+        my $program_ids_arrayref = $params->{programDbId} ? $params->{programDbId} : undef;
+        my $folder_ids_arrayref = $params->{trialDbId} ? $params->{trialDbId} : undef;
         my $observationUnit_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef; 
         my $observationUnit_position_arrayref = $params->{observationUnitPosition} ? $params->{observationUnitPosition} : undef;
         my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
         my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
         my $treatments = $params->{treatments} || ""; #not implemented yet
 
+        my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
+        my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
+        my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates} ? $params->{observationUnitPosition}->{geoCoordinates} : undef;
+        my $level_relations = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
+        my $level_name = $params->{observationUnitPosition}->{observationLevel}->{levelName} || undef;
+        my $level_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode} ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
+        my $raw_additional_info = $params->{additionalInfo} || undef;
+        my $is_a_control = $raw_additional_info->{control} ? $raw_additional_info->{control} : undef;
+        my $range_number = $raw_additional_info->{range} ? $raw_additional_info->{range} : undef;
+        my %specific_keys = map { $_ => 1 } ("observationUnitParent","control","range");
+        my %additional_info;
+        my $block_number;
+        my $rep_number;
+
+        foreach (@$level_relations){
+            if($_->{levelName} eq 'block'){
+                $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
+            }
+            if($_->{levelName} eq 'replicate'){
+                $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
+            }
+        }
+        if (defined $raw_additional_info) {
+            foreach my $key (keys %$raw_additional_info) {
+                if (!exists($specific_keys{$key})) {
+                    $additional_info{$key} = $raw_additional_info->{$key};
+                }
+            }
+        }
+
+        #Check if observation_unit_db_id is plot or plant and not other stock type
+        my $stock = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$observation_unit_db_id});
+        my $stock_type = $stock->type_id;
+
+        if (( $stock_type ne $plot_cvterm_id && $stock_type ne $plant_cvterm_id ) || ($level_name ne 'plant' && $level_name ne 'plot')){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("Only 'plot' or 'plant' allowed for observation level and observationUnitDbId."), 400);
+        }
+
+        #Update: accession
         if (! defined $accession_id && ! defined $accession_name) {
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
         }
@@ -389,10 +442,38 @@ sub observationunits_update {
         });
         my ($data, $unique_traits) = $phenotypes_search->search();
         my $old_accession;
+        my $old_accession_id;
         foreach my $obs_unit (@$data){
             $old_accession = $obs_unit->{germplasm_uniquename};
+            $old_accession_id = $obs_unit->{germplasm_stock_id};
         }
 
+        #update accession
+        if ($old_accession && $accession_id && $old_accession_id ne $accession_id) {
+            my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
+                bcs_schema => $schema,
+                trial_id => $study_ids_arrayref,
+                new_accession => $accession_name,
+                old_accession => $old_accession,
+                old_plot_id => $observation_unit_db_id,
+                old_plot_name => $observationUnit_name,
+                experiment_type => 'field_layout'
+            });
+
+            my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
+            if ($return_error) { 
+                print STDERR Dumper $return_error;
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
+            }
+
+            my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
+            if ($replace_return_error) {
+                print STDERR Dumper $replace_return_error;
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
+            }
+        }
+
+        #Update: geo coordinates
         my $geo_coordinates = $observationUnit_position_arrayref->{geoCoordinates} || "";
         my $geno_json_string = encode_json $geo_coordinates;
 
@@ -415,28 +496,20 @@ sub observationunits_update {
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to upload trial plot GPS coordinates. ($@)'));
         }
 
-        #update accession
-        if ($old_accession && $accession_ids_arrayref && $old_accession ne $accession_ids_arrayref) {
-            my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
-                bcs_schema => $schema,
-                trial_id => $study_ids_arrayref,
-                new_accession => $accession_name,
-                old_accession => $old_accession,
-                old_plot_id => $observation_unit_db_id,
-                old_plot_name => $observationUnit_name,
-                experiment_type => 'field_layout'
-            });
 
-            my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
-            if ($return_error) {
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
-            }
-
-            my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
-            if ($replace_return_error) {
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
-            }
+        #update stockprops
+        if ($level_number){
+            if ($level_name eq 'plot'){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$plot_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$level_number }, { key=>'stockprop_c1' }); }
+            if ($level_name eq 'plant'){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$plant_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$level_number }, { key=>'stockprop_c1' }); } 
         }
+        if ($block_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$block_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$block_number },{ key=>'stockprop_c1' }); }
+        if ($is_a_control){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$is_a_control_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$is_a_control },{ key=>'stockprop_c1' }); }
+        if ($rep_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$rep_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$rep_number },{ key=>'stockprop_c1' }); }
+        if ($range_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$range_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$range_number },{ key=>'stockprop_c1' }); }
+        if ($row_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$row_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$row_number },{ key=>'stockprop_c1' }); }
+        if ($col_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$col_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$col_number },{ key=>'stockprop_c1' }); }      
+        if (%additional_info){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$additional_info_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>encode_json \%additional_info },{ key=>'stockprop_c1' }); }      
+
 
         #store/update external references
         if ($observationUnit_x_ref){
@@ -464,6 +537,10 @@ sub _get_existing_germplasm {
     my $schema = shift;
     my $accession_id = shift;
     my $accession_name = shift;
+
+    if (!looks_like_number($accession_id)) {
+        return {error => CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Verify Germplasm Id.'), 404)};
+    }
 
     # Get the germplasm name from germplasmDbId. Check if a germplasm name passed exists
     my $rs = $schema->resultset("Stock::Stock")->search({stock_id=>$accession_id});
@@ -504,7 +581,7 @@ sub observationunits_store {
         my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
         my $accession_name = $params->{germplasmName} ? $params->{germplasmName} : undef;
         my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
-        my $range_number = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
+        my $range_number = $params->{additionalInfo}->{range}  ? $params->{additionalInfo}->{range}  : undef;
         my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
         my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
         my $seedlot_id = $params->{seedLotDbId} ? $params->{seedLotDbId} : undef;

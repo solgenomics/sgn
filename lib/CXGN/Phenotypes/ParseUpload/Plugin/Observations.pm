@@ -117,7 +117,7 @@ sub parse {
     my $data_level = shift;
     my $schema = shift;
     my $zipfile = shift; #not relevant for this plugin
-    my $user_id = shift; #not relevant for this plugin
+    my $user_name = shift;
     my $c = shift; #not relevant for this plugin
     my $nd_protocol_id = shift; #not relevant for this plugin
     my $nd_protocol_filename = shift; #not relevant for this plugin
@@ -134,7 +134,7 @@ sub parse {
         my $obsunit_db_id = $obs->{'observationUnitDbId'};
         my $variable_db_id = $obs->{'observationVariableDbId'};
         my $timestamp = $obs->{'observationTimeStamp'} ? $obs->{'observationTimeStamp'} : undef;
-        my $collector = $obs->{'collector'} ? $obs->{'collector'} : '';
+        my $collector = $obs->{'collector'} ? $obs->{'collector'} : $user_name;
         my $obs_db_id = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
         my $value = $obs->{'value'};
         my $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $variable_db_id,"extended");
