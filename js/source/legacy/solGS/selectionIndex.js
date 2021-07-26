@@ -261,54 +261,33 @@ solGS.sIndex = {
 		data: {'arguments': siArgs},
 		url: '/solgs/calculate/selection/index/',
 		success: function(res){
-                    var table;
+
                     if (res.status == 'success' ) {
+                       let caption = `<br/>${res.download_link}<strong>Index Name:</strong> ${res.sindex_name} ${legend}`;
+                       let histo = {
+                           canvas: '#si_canvas',
+                           plot_id: '#si_output',
+                           namedValues: res.indices,
+                           caption: indexName
+                       };
 
-			var genos = res.top_10_genotypes;
-			var indexFile = res.index_file;
+                        solGS.histogram.plotHistogram(histo);
 
-			table = '<br /><table class="table table-condensed">';
-			table += '<tr><th>Genotypes</th><th>Selection indices</th></tr>';
+                        var popType = jQuery("#si_canvas #selected_population_type").val();
+                        var popId   = jQuery("#si_canvas #selected_population_id").val();
 
-			var sorted = [];
+                        solGS.correlation.formatGenCorInputData(popId, popType,  res.index_file);
 
-			for (var geno in genos) {
-                            sorted.push([geno, genos[geno]]);
-                            sorted = sorted.sort(function(a, b) {return b[1] - a[1]});
-			}
+        		    jQuery('#si_canvas #selected_pop').val('');
 
-			for (var i=0; i<sorted.length; i++) {
-                            table += '<tr>';
-                            table += '<td>'
-				+ sorted[i][0] + '</td>' + '<td>'
-				+ sorted[i][1] + '</td>';
-                            table += '</tr>';
-			}
+        		    var sIndexed = {
+        			'sindex_id': popId,
+        			'sindex_name': res.sindex_name
+        		    };
 
-			table += '</table>';
-
-			table += res.download_link;
-			table += ' <strong>| Index Name:</strong> ' + res.sindex_name;
-			table += legend;
-                    } else {
-			table = res.status + ' Ranking the genotypes failed..Please report the problem.';
-                    }
-
-                    jQuery('#si_canvas #si_top_genotypes').append(table).show();
-
-		    var popType = jQuery("#si_canvas #selected_population_type").val();
-		    var popId   = jQuery("#si_canvas #selected_population_id").val();
-            solGS.correlation.formatGenCorInputData(popId, popType, indexFile);
-
-		    jQuery('#si_canvas #selected_pop').val('');
-
-		    var sIndexed = {
-			'sindex_id': popId,
-			'sindex_name': res.sindex_name
-		    };
-
-		    solGS.sIndex.saveIndexedPops(sIndexed);
-		    solGS.cluster.listClusterPopulations();
+        		    solGS.sIndex.saveIndexedPops(sIndexed);
+        		    solGS.cluster.listClusterPopulations();
+            }
 		},
 		error: function(res){
                     alert('error occured calculating selection index.');
