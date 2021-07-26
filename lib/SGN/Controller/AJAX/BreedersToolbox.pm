@@ -357,9 +357,11 @@ sub progress : Path('/ajax/progress') Args(0) {
 sub radarGraph : Path('/ajax/radargraph') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dataset_id = $c->req->param('dataset_id');
+    
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $dbh = $schema->storage->dbh();
-    my @trait_info;
 
 =pod
     my $stock_id = $c->req->param("stock_id");
@@ -378,22 +380,35 @@ sub radarGraph : Path('/ajax/radargraph') Args(0) {
     my $h = $dbh->prepare($q);
 =cut
 
-    my $dataset_id = $c->req->param('dataset_id');
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
-    my $trait_list = $ds->retrieve_traits();
+    my $trait_list = $ds->retrieve_phenotypes();
 
-#    $h->execute($stock_id,$cvterm_id);
-#    my $data = [];
+    #my $accessions_count = scalar @$trait_list;
+    #foreach(@$trait_list)
+    #{
+    #    for(my $i = 39;$i < $accessions_count-2; $i++)
+    #    {
+    #        print STDERR "Trait List = ".Dumper(@$_[i]);
+    #    }
+    #}
+
+    print STDERR "Dataset Id = $dataset_id\n";
+    print STDERR "Trait List = ".Dumper($trait_list);
+
+
+
+#   $h->execute($stock_id,$cvterm_id);
+#   my $data = [];
 
 #   while (my ($name, $cvterm_id, $stock_id, $uniquename, $avg, $stddev, $count) = $h->fetchrow_array()) {
 #	push @$data, [ $name, $cvterm_id, $stock_id, $uniquename, sprintf("%.2f", $avg), sprintf("%.2f", $stddev), $count ];
 #    }
-
-#   print STDERR "Data = ".Dumper($data);
-    
-    $c->stash->{rest} = { traits => \@trait_info };
+    $c->stash->{rest} = {
+        data => \@$trait_list,
+    };
 }
 
 1;
+
+
 
