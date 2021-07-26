@@ -646,7 +646,7 @@ sub store {
                         "observationVariableDbId"=> qq|$observationVariableDbId|,
                         "observationVariableName"=> $trait_cvterm->name,
                         "studyDbId"=> $project_id,
-                        "uploadedBy"=> $user_id,
+                        "uploadedBy"=> $operator ? $operator : "",
                         "value" => $trait_value
                     );
 

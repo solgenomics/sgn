@@ -211,7 +211,7 @@ sub search {
         [
             { type_id => $breeding_program_cvterm_id },
             { type_id => $trial_folder_cvterm_id },
-            { type_id => $cross_cvterm_id }, 
+            { type_id => $cross_cvterm_id },
             { type_id => $analysis_cvterm_id}
         ]
     );
@@ -361,7 +361,7 @@ sub search {
             next;
         }
         if ($self->field_trials_only){
-            if ($design && ($design eq 'treatment' || $design eq 'genotype_data_project' || $design eq 'genotyping_plate' || $design eq 'sampling_trial' || $design eq 'drone_run' || $design eq 'drone_run_band')) {
+            if ($design && ($design eq 'treatment' || $design eq 'genotype_data_project' || $design eq 'pcr_genotype_data_project' || $design eq 'genotyping_plate' || $design eq 'sampling_trial' || $design eq 'drone_run' || $design eq 'drone_run_band')) {
                 $subtract_count++;
                 next();
             }
@@ -417,7 +417,7 @@ sub search {
     } else {
         @data_window = @result;
     }
-    
+
     #print STDERR "TOTAL: $total_count SUBTRACT: $subtract_count \n";
     $total_count = $total_count-$subtract_count;
     #print STDERR Dumper \@result;
