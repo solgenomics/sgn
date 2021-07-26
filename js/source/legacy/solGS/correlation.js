@@ -144,7 +144,7 @@ solGS.correlation = {
             var genArgs = JSON.parse(res.corre_args);
 
             if (genArgs.selection_index_file) {
-			    divPlace = '#si_correlation_canvas';
+			    divPlace = '#si_canvas';
             } else {
 			    divPlace = '#correlation_canvas';
 		    }
@@ -279,15 +279,15 @@ solGS.correlation = {
                 success: function (response) {
     		if (response.status == 'success') {
 
-                        if (divPlace == '#si_correlation_canvas') {
+                        if (divPlace == '#si_canvas') {
     			jQuery("#si_correlation_message").empty();
-    			jQuery("#si_correlation_section").show();
+    			jQuery("#si_canvas").show();
                         }
 
                         solGS.correlation.plotCorrelation(response.data, divPlace);
                         jQuery("#correlation_message").empty();
 
-                        if (divPlace === '#si_correlation_canvas') {
+                        if (divPlace ==  '#si_canvas') {
 
     			var popName   = jQuery("#selected_population_name").val();
     			var corLegDiv = "<div id=\"si_correlation_"
@@ -297,7 +297,7 @@ solGS.correlation = {
     			var legendValues = solGS.sIndex.legendParams();
     			var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
 
-    			jQuery("#si_correlation_canvas").append(corLegDivVal).show();
+    			jQuery("#si_canvas").append(corLegDivVal).show();
 
                         } else {
 
