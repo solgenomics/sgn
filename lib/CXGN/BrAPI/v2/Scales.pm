@@ -272,7 +272,7 @@ sub store {
                 {
                     cvterm_id => $cvterm_id,
                     type_id   => $scale_categories_label_id,
-                    value     => $label || $label_counter,
+                    value     => defined $label ? $label : $label_counter,
                     rank      => $rank
                 }
             );
