@@ -565,14 +565,8 @@ sub store {
                             $new_count++;
                         }
                         $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
-                    }
-                    if ($ignore_new_values) {
-                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                            $skip_count++;
-                            next;
-                        } else {
-                            $new_count++;
-                        }
+                    } else {
+                        $new_count++;
                     }
 
                     my $phenotype;
