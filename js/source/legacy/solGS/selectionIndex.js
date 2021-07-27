@@ -268,7 +268,7 @@ solGS.sIndex = {
                            canvas: '#si_canvas',
                            plot_id: '#si_output',
                            namedValues: res.indices,
-                           caption: indexName
+                           caption: caption
                        };
 
                         solGS.histogram.plotHistogram(histo);
