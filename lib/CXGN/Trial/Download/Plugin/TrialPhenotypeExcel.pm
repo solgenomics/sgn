@@ -91,7 +91,7 @@ sub download {
     my $phenotype_min_value = $self->phenotype_min_value();
     my $phenotype_max_value = $self->phenotype_max_value();
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
-
+    my $search_type = $self->search_type();
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my @data;
@@ -100,14 +100,14 @@ sub download {
             bcs_schema=>$schema,
             search_type=>'MetaData',
             data_level=>$data_level,
-            trial_list=>$trial_list,    		
+            trial_list=>$trial_list,
         );
         @data = $metadata_search->get_metadata_matrix();
     }
     else {
         my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
             bcs_schema=>$schema,
-            search_type=>'MaterializedViewTable',
+            search_type=>$search_type,
             data_level=>$data_level,
             trait_list=>$trait_list,
             trial_list=>$trial_list,

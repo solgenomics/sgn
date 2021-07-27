@@ -225,7 +225,7 @@ sub get_cxgn_project_type {
                 if ($propvalue eq "treatment") {
                     $cxgn_project_type = 'management_factor_project';
                 }
-                if ($propvalue eq "genotype_data_project") {
+                if (($propvalue eq "genotype_data_project") || ($propvalue eq "pcr_genotype_data_project")) {
                     $cxgn_project_type = 'genotyping_data_project';
                 }
                 if ($propvalue eq "drone_run") {
@@ -467,7 +467,7 @@ sub get_location_noaa_station_id {
 
 sub get_location_country_name {
     my $self = shift;
-    
+
     my $country_name;
 
     eval {
@@ -477,7 +477,7 @@ sub get_location_country_name {
         if ( $nd_geolocation_id && $country_name_cvterm_id ) {
             my $q = "SELECT value FROM nd_geolocationprop WHERE nd_geolocation_id = ? AND type_id = ?;";
             my $h = $self->bcs_schema->storage->dbh()->prepare($q);
-                    
+
             $h->execute($nd_geolocation_id, $country_name_cvterm_id);
             ($country_name) = $h->fetchrow_array();
         }
@@ -2026,7 +2026,7 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
             push @nd_experiment_ids, $nd_experiment_id;
         }
 
-        if (scalar(@nd_experiment_ids)>0) { 
+        if (scalar(@nd_experiment_ids)>0) {
             $nd_experiment_id_sql = join(",", @nd_experiment_ids);
 
             my $q_nd_exp_files_delete = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN ($nd_experiment_id_sql);";
