@@ -86,6 +86,8 @@ sub _validate_with_plugin {
 
         if (!$columns[0] || $columns[0] eq ''){
             push @error_messages, 'The first column must contain a date on row: '.$row;
+        } elsif (!$columns[0] =~ m/(\d{4})-(\d{2})-(\d{2})/) {
+            push @error_messages, "Date must be YYYY-MM-DD format";
         }
         if (!$columns[1] || $columns[1] eq ''){
             push @error_messages, 'The second column must contain a plate_id on row: '.$row;

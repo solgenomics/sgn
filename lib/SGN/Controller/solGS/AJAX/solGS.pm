@@ -31,7 +31,7 @@ sub solgs_trait_search_autocomplete_GET :Args(0) {
     my ( $self, $c ) = @_;
 
     my $term = $c->req->param('term');
-    
+
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
 
@@ -44,27 +44,26 @@ sub solgs_trait_search_autocomplete_GET :Args(0) {
 
 sub solgs_population_search_autocomplete :  Path('/solgs/ajax/population/search') : ActionClass('REST') { }
 
-sub solgs_population_search_autocomplete_GET :Args(0) {
+sub solgs_population_search_autocomplete_GET :Args() {
     my ( $self, $c ) = @_;
 
     my $term = $c->req->param('term');
-   
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
-    my @response_list;
 
+    my @response_list;
     my $rs = $c->model("solGS::solGS")->project_details_by_name($term);
 
-    while (my $row = $rs->next) {
+    while (my $row = $rs->next)
+    {
+        my $pop_id = $row->id;
+	    my $location = $c->model('solGS::solGS')->project_location($pop_id);
 
-	$c->stash->{pop_id} = $row->id;
+		if ($location && $location !~ /computation/i)
+		{
+            push @response_list, $row->name;
+		}
 
-	$c->controller('solGS::solGS')->check_population_is_training_population($c);
-
-	if ($c->stash->{is_training_population})
-	{
-	    push @response_list, $row->name;
-	}
     }
 
     $c->{stash}->{rest} = \@response_list;
@@ -75,7 +74,7 @@ sub begin : Private {
     my ($self, $c) = @_;
 
     $c->controller('solGS::Files')->get_solgs_dirs($c);
-  
+
 }
 
 ###

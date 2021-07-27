@@ -6,71 +6,254 @@ $goto_url => ''
 </%args>
 
 <div class="modal fade" id="site_login_dialog" name="site_login_dialog" tabindex="-1" role="dialog" aria-labelledby="site_login_dialog_title">
-  <div class="modal-dialog modal-sm" role="document">
-    <div class="modal-content">
-      <div class="modal-header" style="text-align:center">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h3 class="modal-title" id="site_login_dialog_title">Login</h3>
-      </div>
-      <div class="modal-body">
-	<form id="login_form" name="login_form">
-	<div class="container-fluid">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align:center">
+%  if (!$c->config->{require_login}) {
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+%  }
+                <h3 class="modal-title" id="site_login_dialog_title">Login</h3>
+            </div>
+            <div class="modal-body">
+                <form id="login_form" name="login_form">
+                    <div class="container-fluid">
 
-	    <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" />
-	    <br />
-	    <div>
-	      <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" />
-	    </div>	    
-	    <br />
-	    <div style="margin-bottom:40px">
-	      <a href="/user/reset_password" style="float:left">Forgot password?</a>
-	      <a href="/user/new" style="float:right">New User</a>
-	    </div>
-	    
-	    <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
-	    
-	    <div>
-	      <button class="btn btn-secondary" id="cancel_login" type="reset" style="float:left" >Reset</button>
-	      <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right">Login</button>
-	    </div>	    
-	</div>
-	</form>
-      </div>
-      <div class="modal-footer">
-        <button id="close_site_login_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
-      </div>
+% if ($c->config->{default_login_janedoe}) {
+                        <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" value="janedoe"/>
+                        <br />
+                        <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" value="secretpw"/>
+% } else {
+                        <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" />
+                        <br />
+                        <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" />
+% }
+                        <br />
+                        <div style="margin-bottom:40px">
+                            <a class="btn btn-default btn-sm" id="reset_password_modal_show" style="float:left">Forgot password?</a>
+                            <a class="btn btn-default btn-sm" id="new_user_modal_show" style="float:right">New User</a>
+                        </div>
+
+                        <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
+
+                        <div>
+                            <button class="btn btn-secondary" id="cancel_login" type="reset" style="float:left" >Reset</button>
+                            <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right">Login</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+%  if (!$c->config->{require_login}) {
+                <button id="close_site_login_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+%  }
+            </div>
+        </div>
     </div>
-  </div>
+</div>
+
+<div class="modal fade" id="site_login_reset_password_dialog" name="site_login_reset_password_dialog" tabindex="-1" role="dialog" aria-labelledby="site_login_reset_password_dialog_title">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align:center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h3 class="modal-title" id="site_login_reset_password_dialog_title">Reset Password</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    To reset your password, please enter your email address. A link will be sent to that address with a link that will enable you to reset your password.
+                </div>
+                <br />
+                <div style="white-space:nowrap">
+                    <form id="password_reset_form" name="password_reset_form" style="white-space:nowrap">
+                        <div style="white-space:nowrap; align:center">
+                            <label class="textlabel">Email Address</label>
+                            <input class="form-control" style="width:200px; white-space:nowrap; float:center" id="password_reset_email" name="password_reset_email" /><br />
+                            <button type="submit" class="btn btn-primary" id="submit_password_reset_email" style="float:center" >Get link</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_site_login_reset_password_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="site_login_new_user_dialog" name="site_login_new_user_dialog" tabindex="-1" role="dialog" aria-labelledby="site_login_new_user_dialog_title">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align:center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h3 class="modal-title" id="site_login_new_user_dialog_title">Create New User</h3>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-10 col-sm-offset-1">
+
+                        <form id="new_account_form">
+                            <div class="container-fluid">
+                                <div class="panel panel-danger">
+                                    <div class="panel-heading">Notice</div>
+                                    <div class="panel-body">
+                                        <ul>
+                                            <li><b>Before</b> creating a new account, please check if you <b>already have an account</b> using the <a href="/search/direct_search.pl?search=directory">directory search</a>. </li>
+                                            <li>A link will be emailed to you. Please click on it to activate the account.</li>
+                                            <li><b>All fields are required.</b></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">First Name: </label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" type="text" name="first_name" value="" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Last Name: </label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" type="text" name="last_name" value="" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Organization: </label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" type="text" name="organization" value="" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Username: </label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" type="text" name="username" value="" />
+                                            <p class="help-block">Username must be at least 7 characters long.</p>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Password: </label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" type="password" name="password" value="" />
+                                            <p class="help-block">Password must be at least 7 characters long and different from your username.</p>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Confirm Password: </label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" type="password" name="confirm_password" value="" />
+                                            <p class="help-block">Password must be at least 7 characters long and different from your username.</p>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Email Address: </label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" type="text" name="email_address" value="" />
+                                            <p class="help-block">An email will be sent to this address requiring you to confirm its receipt to activate your account.</p>
+                                        </div>
+                                    </div>
+
+                                    <div align="right">
+                                        <button class="btn btn-default btn-lg" type="reset" >Reset</button>
+                                        <button class="btn btn-primary btn-lg" type="submit" name="create_account" >Create Account</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_site_login_new_user_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-  jQuery(document).ready( function() { 
-    jQuery('#login_form').submit( function(event) { 
-       event.preventDefault();
-       var form_data = jQuery('#login_form').serialize();
-       if (!jQuery('#username').val() || !jQuery('#password').val()) { 
-         alert('Please enter a username and password');
-         return;
-       }
-       jQuery.ajax( { 
-         url: '/ajax/user/login',
-         data: form_data,
-         error: function(r) { alert('An error occurred! Sorry!');  },
-         success: function(r) {
-           if (r.error) { 
-             alert(r.error); 
-             return;
-           }
-           if (r.goto_url) { 
-             location.href=r.goto_url;
-           }
-           else {      
-             location.reload();
-           }
-         }
-       });
+jQuery(document).ready( function() { 
+
+    jQuery('#reset_password_modal_show').click(function(){
+        event.preventDefault();
+        jQuery('#site_login_reset_password_dialog').modal('show');
     });
- });
+
+    jQuery('#password_reset_form').submit( function(event) {
+        event.preventDefault();
+        var form_data = jQuery('#password_reset_form').serialize();
+        jQuery.ajax( {
+            url: '/ajax/user/reset_password',
+            data: form_data,
+            error: function(r) { alert('An error occurred! Sorry!');  },
+            success: function(r) {
+                if (r.error) { alert(r.error); }
+                else { 
+                    alert(r.message);
+                    window.history.back();
+                }
+            }
+        });
+    });
+
+    jQuery('#new_user_modal_show').click(function(){
+        event.preventDefault();
+        jQuery('#site_login_new_user_dialog').modal('show');
+    });
+
+    jQuery('#new_account_form').submit(function(event) {
+        event.preventDefault();
+        var form_data = jQuery('#new_account_form').serialize();
+        //alert(JSON.stringify(form_data));
+        jQuery.ajax({
+            url: '/ajax/user/new',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            data: form_data,
+            success: function(r) {
+                jQuery('#working_modal').modal('hide');
+                console.log(r);
+                if (r.error) { alert(r.error); }
+                else {
+                    alert('New account added. Check your email.');
+                    history.back();
+                }
+            }
+        });
+   });
+
+    jQuery('#login_form').submit( function(event) { 
+        event.preventDefault();
+        var form_data = jQuery('#login_form').serialize();
+        if (!jQuery('#username').val() || !jQuery('#password').val()) { 
+            alert('Please enter a username and password');
+            return;
+        }
+        jQuery.ajax( { 
+            url: '/ajax/user/login',
+            data: form_data,
+            error: function(r) { alert('An error occurred! Sorry!');  },
+            success: function(r) {
+                if (r.error) { 
+                    alert(r.error);
+                    return;
+                }
+                if (r.goto_url) { 
+                    location.href=r.goto_url;
+                }
+                else {
+                    location.reload();
+                }
+            }
+        });
+    });
+
+    // Display New User Dialog if `new_user` query param set
+    url = new URL(window.location.href);
+    if ( url.searchParams.get('new_user') ) {
+        jQuery('#site_login_new_user_dialog').modal('show');
+    }
+});
 </script>
 
 

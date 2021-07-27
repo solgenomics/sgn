@@ -30,7 +30,7 @@ BEGIN { extends 'Catalyst::Controller::REST'; };
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 sub run : Path('/tools/blast/run') Args(0) {
@@ -130,7 +130,7 @@ sub run : Path('/tools/blast/run') Args(0) {
 		     -format   => 'fasta',
 		     -file       => $seqfile,
 		     );
-
+		 
 		 try {
 		     while ( my $s = $i->next_seq ) {
 			 $s->length or $c->throw(
@@ -151,51 +151,57 @@ sub run : Path('/tools/blast/run') Args(0) {
 				developer_message => $full_error,
 			 );
 		 };
-
+		 
 		 $seq_count >= 1 or $c->throw( message => 'no sequence submitted, cannot run BLAST',
 					       is_error => 0,
 					       developer_message => Data::Dumper::Dumper({
 						   '$seq_count' => $seq_count,
 						   '$seq_filename' => $seqfile,
-							}),
-		);
-
-		return -i => $seqfile;
+											 }),
+		     );
+		 
+		 return -query => $seqfile;
+		 
 	      }
-	 },
-
-	 matrix =>
-	 sub {
-	     my $m = $params->{matrix};
-	     $m =~ /^(BLOSUM|PAM)\d+$/
-		 or $c->throw( is_error => 0, message => "invalid matrix '$m'" );
-	     return -M => $m;
 	 },
 
 
 	 expect =>
 	 sub {
 	     $params->{evalue} =~ s/[^\d\.e\-\+]//gi; #can only be these characters
-	     return -e =>  $params->{evalue} ? $params->{evalue} : 1;
+	     return -evalue =>  $params->{evalue} ? $params->{evalue} : 1;
+	 },
+
+	 word_size =>
+	 sub {
+	     print STDERR "WORD SIZE = $params->{word_size}\n";
+	     $params->{word_size} =~ s/[^\d]//gi; # filter numbers only
+	     return -word_size => $params->{word_size} ? $params->{word_size} : 11;
 	 },
 
 	 maxhits =>
 	 sub {
 	     my $h = $params->{maxhits} || 20;
 	     $h =~ s/\D//g; #only digits allowed
-	     return -b => $h;
+	     return -max_hsps => $h;
 	 },
 
-	 hits_list =>
-	 sub {
-	     my $h = $params->{maxhits} || 20;
-	     $h =~ s/\D//g; #only digits allowed
-	     return -v => $h;
-	 },
+	 # hits_list =>
+	 # sub {
+	 #     my $h = $params->{maxhits} || 20;
+	 #     $h =~ s/\D//g; #only digits allowed
+	 #     return -v => $h;
+	 # },
 
 	 filterq =>
 	 sub {
-	     return -F => $params->{filterq} ? 'T' : 'F';
+	     if ($params->{program} eq "blastn") { 
+		 return -dust  => $params->{filterq} ? 'yes' : 'no';
+	     }
+	     else { 
+		 return ""; 
+	     }
+	     
 	 },
 
 	 # outformat =>
@@ -214,22 +220,32 @@ sub run : Path('/tools/blast/run') Args(0) {
 	     #returns '/data/shared/blast/databases/genbank/nr'
 	     #remember the ID of the blast db the user just blasted with
 
-	     return -d => $basename;
+	     return -db => $basename;
 	 },
 
-	 program =>
-	 sub {
-	     $params->{program} =~ s/[^a-z]//g; #only lower-case letters
-	     return -p => $params->{program};
-	 },
+	 # program =>
+	 # sub {
+	 #     $params->{program} =~ s/[^a-z]//g; #only lower-case letters
+	 #     return -p => $params->{program};
+	 # },
 	);
 
+
+    if (! $params->{program} eq "blastn") { 
+	$arg_handlers{matrix} = sub {
+	    my $m = $params->{matrix};
+	    $m =~ /^(BLOSUM|PAM)\d+$/
+		or $c->throw( is_error => 0, message => "invalid matrix '$m'" );
+	    return -M => $m;
+	};
+    }
+    
     print STDERR "BUILDING COMMAND...\n";
 
 
     # build our command with our arg handlers
     #
-    my @command = ('blastall');
+    my @command = ($params->{program});
     foreach my $k (keys %arg_handlers) {
 
       print STDERR "evaluating $k...";
@@ -240,8 +256,8 @@ sub run : Path('/tools/blast/run') Args(0) {
     }
 
     # To get the proper format for gi sequences (CitrusGreening.org case)
-    push(@command, '-I');
-    push(@command, 'T');
+    push(@command, '-show_gis');
+#    push(@command, 'T');  # show_gis is a flag, no parameter needed
 
     print STDERR "COMMAND: ".join(" ", @command);
     print STDERR "\n";
@@ -258,6 +274,7 @@ sub run : Path('/tools/blast/run') Args(0) {
     eval {
 	my $config = { 
 	    backend => $c->config->{backend},
+	    submit_host => $c->config->{cluster_host},
 	    temp_base => $blast_tmp_output,
 	    queue => $c->config->{'web_cluster_queue'},
 	    do_cleanup => 0,
@@ -312,7 +329,12 @@ sub check : Path('/tools/blast/check') Args(1) {
     #my $jobid =~ s/\.\.//g; # prevent hacks
     my $job_file = File::Spec->catfile($cluster_tmp_dir, $jobid, "job");
 
-    my $job = CXGN::Tools::Run->new( { job_file => $job_file} );
+    my $job = CXGN::Tools::Run->new( 
+	{ 
+	    job_file => $job_file, 
+	    submit_host => $c->config->{cluster_host},
+	    backend => $c->config->{backend},
+	});
 
     if ( $job->alive()) {
       # my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
@@ -496,14 +518,18 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
     while (my $line = <$blast_fh>) {
       chomp($line);
 
+      $line =~ s/lcl\|//g;
+      
       if ($line =~ /Query\=\s*(\S+)/) {
         $query = $1;
         unshift(@res_html, "<center><h3>".$query." vs ".$bdb->title()."</h3></center>");
         $query_line_on = 1;
       }
 
-      if ($query_line_on && $line =~ /\((\d+)\s+letters/) {
-        $query_length = $1;
+      if ($query_line_on && $line =~ /Length=(\d+)/) {
+	  $query_length = $1;
+	  print STDERR "Query length = $query_length\n";
+
       }
 
       if ($append_desc) {
@@ -520,7 +546,8 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
       if ($line =~ /^>/) {
         $start_aln = 1;
         $append_desc = 1;
-
+	$query_line_on = 0;
+	
         if ($subject) {
           my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
           ($sstart,$send) = _check_coordinates($sstart,$send);
@@ -539,6 +566,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
           $description_hash{"description"} = $desc;
           $description_hash{"qstart"} = $qstart;
           $description_hash{"qend"} = $qend;
+	  print STDERR "HSPS: ".Dumper(\%description_hash);
           push(@json_array, \%description_hash);
 
         }
@@ -557,7 +585,6 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         if ($line =~ /^>(\S+)\s*(.*)/) {
           $subject = $1;
           $desc = $2;
-
           # print STDERR "subject: $subject\n";
         }
       }
@@ -581,6 +608,9 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         $description_hash{"description"} = $desc;
         $description_hash{"qstart"} = $qstart;
         $description_hash{"qend"} = $qend;
+
+	print STDERR "FOUND HSP: ".Dumper(\%description_hash);
+	
         push(@json_array, \%description_hash);
 
         $id = 0.0;
@@ -611,17 +641,17 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         $id = sprintf("%.2f", $aln_matched*100/$aln_total);
       }
 
-      if (($line =~ /^Query:\s+(\d+)/) && ($qstart == 0)) {
+      if (($line =~ /^Query\:?\s+(\d+)/) && ($qstart == 0)) {
         $qstart = $1;
       }
-      if (($line =~ /^Sbjct:\s+(\d+)/) && ($sstart == 0)) {
+      if (($line =~ /^Sbjct\:?\s+(\d+)/) && ($sstart == 0)) {
         $sstart = $1;
       }
 
-      if (($line =~ /^Query:/) && ($line =~ /(\d+)\s*$/)) {
+      if (($line =~ /^Query\:?/) && ($line =~ /(\d+)\s*$/)) {
         $qend = $1;
       }
-      if (($line =~ /^Sbjct:/) && ($line =~ /(\d+)\s*$/)) {
+      if (($line =~ /^Sbjct\:?/) && ($line =~ /(\d+)\s*$/)) {
         $send = $1;
       }
 
@@ -671,12 +701,17 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
                 <h4 id="match_name" class="modal-title">Match Information</h4>
               </div>
               <div class="modal-body">
-                <dl>
+	      <dl>
+	      <dt>Sequence match</dt>
                     <dd>
-                      <div style="margin: 0.5em 0"><a class="match_details" href="" target="_blank">View matched sequence</a></div>
+		    <div style="margin: 0.5em 0"><a class="match_details" href="" target="_blank">View matched sequence</a></div>
+		    </dd>
+	      <dt> JBrowse match </dt>
+		   <dd>
                       <div id="jbrowse_div" style="display:none"><a id="jbrowse_link" href="" target="_blank">View in genome context</a></div>
                     </dd>
-                    <dd class="subject_sequence_xrefs">
+		    <dt>Genome Feature match</dt>
+		    <dd class="subject_sequence_xrefs">
                     </dd>
                 </dl>
               </div>
@@ -789,7 +824,7 @@ sub search_gene_ids {
 	my @ids = @{$ids_array};
 	my @output_seqs;
 
-	my $fs = Bio::BLAST::Database->open(full_file_basename => "$blastdb_path",);
+	my $fs = Bio::BLAST2::Database->open(full_file_basename => "$blastdb_path",);
 
 	foreach my $input_string (@ids) {
 

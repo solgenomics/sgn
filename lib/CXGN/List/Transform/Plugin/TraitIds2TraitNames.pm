@@ -44,10 +44,10 @@ sub transform {
 	else { 
 	    my $db_rs = $schema->resultset("General::Db")->search( 
 		{
-		    db_id => $rs->first()->db()->name()
+		    db_id => $rs->first()->dbxref->db()->db_id()
 		});
 	    if ($db_rs->count()> 0) { 
-		push @transform, $db_rs->first()->name().":".$rs->first()->name();
+		push @transform, $rs->first()->name()."|".$db_rs->first()->name().":".$rs->first()->dbxref()->accession();
 	    }
 	    else { 
 		push @missing, $l;

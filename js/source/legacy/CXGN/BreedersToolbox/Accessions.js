@@ -62,8 +62,8 @@ jQuery(document).ready(function ($) {
                     alert(response.success);
                 }
             },
-            error: function () {
-                alert('An error occurred in adding population. sorry');
+            error: function (r) {
+                alert('An error occurred in adding population. sorry '+r.responseText);
             }
         });
     });
@@ -239,7 +239,7 @@ jQuery(document).ready(function ($) {
     });
 
     function add_accessions(full_info, species_names) {
-        //console.log(full_info);
+        console.log(full_info);
         $.ajax({
             type: 'POST',
             url: '/ajax/accession_list/add',
@@ -254,6 +254,7 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 enable_ui();
+		//alert("ADD ACCESSIONS: "+JSON.stringify(response));
                 if (response.error) {
                     alert(response.error);
                 } else {
@@ -265,8 +266,8 @@ jQuery(document).ready(function ($) {
                     jQuery('#add_accessions_saved_message_modal').modal('show');
                 }
             },
-            error: function () {
-                alert('An error occurred in processing. sorry');
+            error: function (response) {
+                alert('An error occurred in processing. sorry'+response.responseText);
             }
         });
     }
@@ -289,8 +290,8 @@ jQuery(document).ready(function ($) {
                     validSpecies = 1;
                 }
             },
-            error: function () {
-                alert('An error occurred verifying species name. sorry');
+            error: function (response) {
+                alert('An error occurred verifying species name. sorry'+response.responseText);
                 validSpecies = 0;
             }
         });
@@ -352,27 +353,34 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery('#upload_new_accessions_form').iframePostForm({
-        json: true,
+        json: false,
         post: function () {
             var uploadedSeedlotFile = jQuery("#new_accessions_upload_file").val();
             jQuery('#working_modal').modal("show");
             if (uploadedSeedlotFile === '') {
                 jQuery('#working_modal').modal("hide");
-                alert("No file selected");
             }
         },
-        complete: function (response) {
+        complete: function (r) {
+	    //alert("DONE WITH UPLOAD "+r);
+	    var clean_r = r.replace('<pre>', '');
+	    clean_r = clean_r.replace('</pre>', '');
+	    response = JSON.parse(clean_r); //decodeURIComponent(clean_r));
             console.log(response);
             jQuery('#working_modal').modal("hide");
 
-            if (response.error_string) {
+            if (response.error || response.error_string) {
                 fullParsedData = undefined;
-                alert(response.error_string);
+                alert(response.error || response.error_string);
             }
-            if (response.success) {
+            else if (response.success) {
                 fullParsedData = response.full_data;
-                doFuzzySearch = 1;
+                doFuzzySearch = jQuery('#fuzzy_check_upload_accessions').attr('checked');;
                 review_verification_results(doFuzzySearch, response, response.list_id);
+            }
+            else {
+                fullParsedData = undefined;
+                alert("An unknown error occurred.  Please try again later or contact us for help.");
             }
         }
     });
@@ -411,7 +419,7 @@ jQuery(document).ready(function ($) {
 	});
 
     $('#review_fuzzy_matches_download').click(function(){
-        //console.log(fuzzyResponse);
+        console.log(fuzzyResponse);
         openWindowWithPost(JSON.stringify(fuzzyResponse));
         //window.open('/ajax/accession_list/fuzzy_download?fuzzy_response='+JSON.stringify(fuzzyResponse));
     });
@@ -433,9 +441,7 @@ function openWindowWithPost(fuzzyResponse) {
 function verify_accession_list(accession_list_id) {
     accession_list = JSON.stringify(list.getList(accession_list_id));
     doFuzzySearch = jQuery('#fuzzy_check').attr('checked');
-    //alert("should be disabled");
-    //alert(accession_list);
-
+    
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/accession_list/verify',
@@ -456,9 +462,11 @@ function verify_accession_list(accession_list_id) {
             }
             review_verification_results(doFuzzySearch, response, accession_list_id);
         },
-        error: function () {
+        error: function (response) {
             enable_ui();
-            alert('An error occurred in processing. sorry');
+	    console.log(response.responseText);
+
+            alert('An error occurred in processing. sorry'+response.responseText);
         }
     });
 }
@@ -529,6 +537,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
     }
 
     jQuery('#review_found_matches_hide').click(function(){
+	
         if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
             jQuery('#review_fuzzy_matches_dialog').modal('show');
         } else {
@@ -572,8 +581,13 @@ function populate_review_absent_dialog(absent, infoToAdd){
                 infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
                 var infoToAdd_properties_html = '';
                 for (key in infoToAdd[i]){
-                    if (key != 'uniquename'){
+                    if (key != 'uniquename' && key != 'other_editable_stock_props'){
                         infoToAdd_properties_html = infoToAdd_properties_html + key+':'+infoToAdd[i][key]+'   ';
+                    }
+                    else if (key == 'other_editable_stock_props') {
+                        for (key_other in infoToAdd[i][key]) {
+                            infoToAdd_properties_html = infoToAdd_properties_html + key_other+':'+infoToAdd[i][key][key_other]+'   ';
+                        }
                     }
                 }
                 infoToAdd_html = infoToAdd_html + '<td>'+infoToAdd_properties_html+'</td></tr>';
@@ -586,8 +600,13 @@ function populate_review_absent_dialog(absent, infoToAdd){
                 infoToAdd_html = infoToAdd_html + '<tr><td>'+infoToAdd[i]['germplasmName']+'</td>';
                 var infoToAdd_properties_html = '';
                 for (key in infoToAdd[i]){
-                    if (key != 'uniquename'){
+                    if (key != 'uniquename' && key != 'other_editable_stock_props') {
                         infoToAdd_properties_html = infoToAdd_properties_html + key+':'+infoToAdd[i][key]+'   ';
+                    }
+                    else if (key == 'other_editable_stock_props') {
+                        for (key_other in infoToAdd[i][key]) {
+                            infoToAdd_properties_html = infoToAdd_properties_html + key_other+':'+infoToAdd[i][key][key_other]+'   ';
+                        }
                     }
                 }
                 infoToAdd_html = infoToAdd_html + '<td>'+infoToAdd_properties_html+'</td></tr>';
@@ -622,8 +641,7 @@ function process_fuzzy_options(accession_list_id) {
             data[id]=row;
         }
     });
-    //console.log(data);
-
+    console.log(data);
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/accession_list/fuzzy_options',
@@ -646,13 +664,13 @@ function process_fuzzy_options(accession_list_id) {
                         infoToAdd.push(fullParsedData[accession_name]);
                         speciesNames.push(fullParsedData[accession_name]['species']);
                     }
-                    for (var i=0; i<accessionListFound.length; i++){
-                        var accession_name = accessionListFound[i];
-                        infoToAdd.push(fullParsedData[accession_name]);
-                        speciesNames.push(fullParsedData[accession_name]['species']);
+                    for (var accession_name in accessionListFound) {
+                        if (accessionListFound.hasOwnProperty(accession_name)) {
+                            infoToAdd.push(fullParsedData[accession_name]);
+                            speciesNames.push(fullParsedData[accession_name]['species']);
+                        }
                     }
                 }
-
                 populate_review_absent_dialog(accessionList, infoToAdd);
                 jQuery('#review_absent_dialog').modal('show');
             } else {

@@ -8,7 +8,6 @@ $username
 $first_name
 $last_name
 $populations_list => undef
-$solgs_jobs_list => undef
 $loci_editor_privileges => undef
 $loci_annotations => undef
 $user_status => undef
@@ -28,7 +27,7 @@ $user_status => undef
     <&| /page/info_section.mas, title=>'General Tools', collapsible=>0, collapsed=>0 &>
         <div class="well">
             <a href="/solpeople/personal-info.pl?action=edit&sp_person_id=<% $sp_person_id %>">View or update personal (contact and research) information</a><br />
-            <a href="/solpeople/change-account.pl?action=edit&sp_person_id=<% $sp_person_id %>">Update account information</a><br />
+            <a href="/user/update">Update account information</a><br />
             <a href="/forum/topics.pl">Post to SGN forum</a><br />
         </div>
     </&>
@@ -52,7 +51,7 @@ $user_status => undef
                     <div style="margin-top: 1em">
                         <center><h4>Upload Accessioned Golden Path (AGP) File</h4></center>
                         <hr>
-                        
+
                         <form class="form-horizontal" action="/sequencing/agp.pl" method="post" enctype="multipart/form-data">
                             <div class="row">
                                 <div class="col-sm-6">
@@ -74,7 +73,7 @@ $user_status => undef
                                 </div>
                             </div>
                         </form>
-                        
+
                         <center><h4>Upload Tiling Path Format (TPF) File</h4></center>
                         <hr>
 
@@ -99,7 +98,7 @@ $user_status => undef
                                 </div>
                             </div>
                         </form>
-                        
+
                     </div>
 
                 </div>
@@ -108,23 +107,25 @@ $user_status => undef
 %       }
 
     </&>
+%   }
 
+%   if (exists($user_roles->{'curator'}) || exists($user_roles->{'sequencer'}) || exists($user_roles->{'submitter'})) {
 
-    <&| /page/info_section.mas, title=>'QTL Data Submission', collapsible=>0, collapsed=>0, subtitle=>'For Curators and Sequencers' &>
+    <&| /page/info_section.mas, title=>'QTL Data Submission', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
         <div class="well">
             <a href="/phenome/qtl_form.pl">Upload and analyse your QTL data</a><br/>
         </div>
     </&>
 
-    <&| /page/info_section.mas, title=>'Populations', collapsible=>0, collapsed=>0, subtitle=>'For Curators and Sequencers' &>
+    <&| /page/info_section.mas, title=>'Populations', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
         <div class="well">
             <% $populations_list %>
         </div>
     </&>
 
-    <&| /page/info_section.mas, title=>'solGS Submitted Analysis Jobs', collapsible=>0, collapsed=>0, subtitle=>'For Curators and Sequencers' &>
+    <&| /page/info_section.mas, title=>'solGS analyses jobs', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
         <div class="well">
-            <% $solgs_jobs_list %>
+            <& /solgs/log/analysis_log.mas &>
         </div>
     </&>
 
@@ -161,14 +162,14 @@ $user_status => undef
 
     <div class="row">
         <div class="col-sm-6">
-            <&| /page/info_section.mas, title=>'Loci Editor', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and Up' &>
+            <&| /page/info_section.mas, title=>'Loci Editor', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
                 <div class="well">
                     <% $loci_editor_privileges %>
                 </div>
             </&>
         </div>
         <div class="col-sm-6">
-            <&| /page/info_section.mas, title=>'Annotated Loci', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and Up' &>
+            <&| /page/info_section.mas, title=>'Annotated Loci', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
                 <div class="well">
                     <% $loci_annotations %>
                 </div>

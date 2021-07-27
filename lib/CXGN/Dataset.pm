@@ -29,12 +29,12 @@ Returns output like CXGN::Dataset, but uses a disk-cache for the response data
 
 =head1 SYNOPSYS
 
- my $ds = CXGN::Dataset->new( people_schema => $p, schema => $s);
+ my $ds = CXGN::Dataset->new( { people_schema => $p, schema => $s } );
  $ds->accessions([ 'a', 'b', 'c' ]);
  my $trials = $ds->retrieve_trials();
  my $sp_dataset_id = $ds->store();
  #...
- my $restored_ds = CXGN::Dataset( people_schema => $p, schema => $s, sp_dataset_id => $sp_dataset_id );
+ my $restored_ds = CXGN::Dataset( {  people_schema => $p, schema => $s, sp_dataset_id => $sp_dataset_id } );
  my $years = $restored_ds->retrieve_years();
  #...
 
@@ -58,6 +58,7 @@ use CXGN::BreederSearch;
 use CXGN::People::Schema;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
+use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 
 =head2 people_schema()
 
@@ -247,13 +248,14 @@ has 'category_order' => ( isa => 'Maybe[ArrayRef]',
 			  predicate => 'has_category_order',
     );
 
-
-
-
-
 has 'is_live' =>     ( isa => 'Bool',
 		       is => 'rw',
 		       default => 0,
+    );
+
+has 'is_public' => ( isa => 'Bool',
+			is => 'rw',
+			default => 0,
     );
 
 
@@ -279,15 +281,14 @@ has 'exclude_phenotype_outlier' => (
 
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
-
 sub BUILD {
     my $self = shift;
 
-    print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
     my $bs = CXGN::BreederSearch->new(dbh => $self->schema->storage->dbh());
     $self->breeder_search($bs);
 
     if ($self->has_sp_dataset_id()) {
+        print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
 	my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
 	if (!$row) { die "The dataset with id ".$self->sp_dataset_id()." does not exist"; }
 	my $dataset = JSON::Any->decode($row->dataset());
@@ -308,11 +309,10 @@ sub BUILD {
 	$self->trial_types($dataset->{categories}->{trial_types});
 	$self->category_order($dataset->{category_order});
 	$self->is_live($dataset->{is_live});
+	$self->is_public($dataset->{is_public});
     }
 
-
     else { print STDERR "Creating empty dataset object\n"; }
-
 
 }
 
@@ -328,15 +328,101 @@ sub get_datasets_by_user {
     my $class = shift;
     my $people_schema = shift;
     my $sp_person_id = shift;
+    my $found;
 
     my $rs = $people_schema->resultset("SpDataset")->search( { sp_person_id => $sp_person_id });
 
     my @datasets;
+    my @datasets_id;
     while (my $row = $rs->next()) {
 	push @datasets,  [ $row->sp_dataset_id(), $row->name(), $row->description() ];
+	push @datasets_id, $row->sp_dataset_id();
+    }
+
+    $rs = $people_schema->resultset("SpDataset")->search( { is_public => 1 });
+
+    while (my $row = $rs->next()) {
+	$found = 0;
+	for (@datasets_id) {
+	    if ( $_ == $row->sp_dataset_id() ) { 
+	        $found = 1; 
+	    }
+	}
+        if (!$found) {
+            push @datasets,  [ $row->sp_dataset_id(), 'public - ' . $row->name(), $row->description() ];
+        }
+    }
+    return \@datasets;
+}
+
+=head2 datasets_public()
+
+=cut
+
+sub get_datasets_public {
+    my $class = shift;
+    my $people_schema = shift;
+
+    my $rs = $people_schema->resultset("SpDataset")->search( { is_public => 1 });
+
+    my @datasets;
+    while (my $row = $rs->next()) {
+        push @datasets,  [ $row->sp_dataset_id(), $row->name(), $row->description() ];
     }
 
     return \@datasets;
+}
+
+=head2 datasets_public()
+
+=cut
+
+sub set_dataset_public {
+    my $self = shift;
+
+    my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
+
+    if (! $row) {
+        return "The specified dataset does not exist";
+    } else {
+        eval {
+	   $row->is_public(1);
+	   $row->sp_person_id($self->sp_person_id());
+	   $row->sp_dataset_id($self->sp_dataset_id());
+	   $row->update();
+        };
+        if ($@) {
+            return "An error occurred, $@";
+        } else {
+            return undef;
+        }
+    }
+}
+
+=head2 datasets_public()
+
+=cut
+
+sub set_dataset_private {
+    my $self = shift;
+    
+    my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
+    
+    if (! $row) {
+        return "The specified dataset does not exist";
+    } else { 
+        eval {
+           $row->is_public(0);
+           $row->sp_person_id($self->sp_person_id());
+           $row->sp_dataset_id($self->sp_dataset_id());
+           $row->update();
+        }; 
+        if ($@) {
+            return "An error occurred, $@";
+        } else {
+            return undef;
+        }
+    }
 }
 
 =head2 exists_dataset_name
@@ -368,6 +454,31 @@ sub exists_dataset_name {
 
 =head1 METHODS
 
+
+=head2 to_hashref() 
+
+
+=cut
+ 
+sub to_hashref { 
+    my $self = shift;
+
+    my $dataref = $self->get_dataset_data();
+
+    my $json = JSON::Any->encode($dataref);
+    
+    my $data = { 
+	name => $self->name(),
+	description => $self->description(),
+	sp_person_id => $self->sp_person_id(),
+	dataset => $json,
+    };
+
+    return $data;
+
+
+}
+
 =head2 store()
 
 =cut
@@ -375,22 +486,10 @@ sub exists_dataset_name {
 sub store {
     my $self = shift;
 
-    my $dataref = $self->get_dataset_data();
-
-    my $json = JSON::Any->encode($dataref);
-
-    my $data = { name => $self->name(),
-		 description => $self->description(),
-		 sp_person_id => $self->sp_person_id(),
-		 dataset => $json,
-	};
-
-
-
     print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
     if (!$self->has_sp_dataset_id()) {
 	print STDERR "Creating new dataset row... ".$self->sp_dataset_id()."\n";
-	my $row = $self->people_schema()->resultset("SpDataset")->create($data);
+	my $row = $self->people_schema()->resultset("SpDataset")->create($self->to_hashref());
 	$self->sp_dataset_id($row->sp_dataset_id());
 	return $row->sp_dataset_id();
     }
@@ -400,7 +499,7 @@ sub store {
 	if ($row) {
 	    $row->name($self->name());
 	    $row->description($self->description());
-	    $row->dataset($json);
+	    $row->dataset(JSON::Any->encode($self->to_hashref()));
 	    $row->sp_person_id($self->sp_person_id());
 	    $row->update();
 	    return $row->sp_dataset_id();
@@ -431,18 +530,18 @@ sub get_dataset_data {
 
 sub _get_dataref {
     my $self = shift;
-     my $dataref;
+    my $dataref;
 
     $dataref->{accessions} = join(",", @{$self->accessions()}) if $self->has_accessions();
     $dataref->{plots} = join(",", @{$self->plots()}) if $self->has_plots();
-		$dataref->{plants} = join(",", @{$self->plants()}) if $self->has_plants();
+    $dataref->{plants} = join(",", @{$self->plants()}) if $self->has_plants();
     $dataref->{trials} = join(",", @{$self->trials()}) if $self->has_trials();
     $dataref->{traits} = join(",", @{$self->traits()}) if $self->has_traits();
     $dataref->{years} = join(",", @{$self->years()}) if $self->has_years();
     $dataref->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->has_breeding_programs();
-		$dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->has_genotyping_protocols();
-		$dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->has_trial_designs();
-		$dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->has_trial_types();
+    $dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->has_genotyping_protocols();
+    $dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->has_trial_designs();
+    $dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->has_trial_types();
     $dataref->{locations} = join(",", @{$self->locations()}) if $self->has_locations();
     return $dataref;
 }
@@ -471,12 +570,21 @@ sub retrieve_genotypes {
     my $protocolprop_top_key_select = shift || [];
     my $protocolprop_marker_hash_select = shift || [];
     my $return_only_first_genotypeprop_for_stock = shift || 1;
+    my $chromosome_list = shift || [];
+    my $start_position = shift;
+    my $end_position = shift;
+    my $marker_name_list = shift || [];
 
     my $genotypes_search = CXGN::Genotype::Search->new(
         bcs_schema => $self->schema(),
+        people_schema=>$self->people_schema,
         accession_list => $self->accessions(),
         trial_list => $self->trials(),
         protocol_id_list => [$protocol_id],
+        chromosome_list => $chromosome_list,
+        start_position => $start_position,
+        end_position => $end_position,
+        marker_name_list => $marker_name_list,
         genotypeprop_hash_select=>$genotypeprop_hash_select, #THESE ARE THE KEYS IN THE GENOTYPEPROP OBJECT
         protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
         protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
@@ -505,6 +613,66 @@ sub retrieve_phenotypes {
 	);
 	my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;
+}
+
+=head2 retrieve_phenotypes_ref()
+
+retrieves phenotypes as a hashref representation
+
+=cut
+
+sub retrieve_phenotypes_ref {
+    my $self = shift;
+
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        'MaterializedViewTable',
+        {
+            bcs_schema=>$self->schema(),
+            data_level=>$self->data_level(),
+            trait_list=>$self->traits(),
+            trial_list=>$self->trials(),
+            accession_list=>$self->accessions(),
+            exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
+        }
+    );
+    my ($data, $unique_traits) = $phenotypes_search->search();
+
+    return ($data, $unique_traits);
+}
+
+=head2 retrieve_high_dimensional_phenotypes()
+
+retrieves high-dimensional phenotypes (NIRS, transcriptomics, and metabolomics) as a hashref representation. Will return both the data-matrix and the identifier metadata (transcripts and metabolites)
+
+=cut
+
+sub retrieve_high_dimensional_phenotypes {
+    my $self = shift;
+    my $nd_protocol_id = shift;
+    my $high_dimensional_phenotype_type = shift; #NIRS, Transcriptomics, or Metabolomics
+    my $query_associated_stocks = shift || 1;
+    my $high_dimensional_phenotype_identifier_list = shift || [];
+
+    if (!$nd_protocol_id) {
+        die "Must provide the protocol id!\n";
+    }
+    if (!$high_dimensional_phenotype_type) {
+        die "Must provide the high dimensional phenotype type!\n";
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
+        bcs_schema=>$self->schema(),
+        nd_protocol_id=>$nd_protocol_id,
+        high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
+        query_associated_stocks=>$query_associated_stocks,
+        high_dimensional_phenotype_identifier_list=>$high_dimensional_phenotype_identifier_list,
+        accession_list=>$self->accessions(),
+        plot_list=>$self->plots(),
+        plant_list=>$self->plants(),
+    });
+    my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+
+    return ($data_matrix, $identifier_metadata, $identifier_names);
 }
 
 =head2 retrieve_accessions()

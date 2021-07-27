@@ -35,29 +35,34 @@ sub transform {
 
     my $synonym_type_id = $schema->resultset("Cv::Cvterm")->search({name=>"stock_synonym", cv_id=> $stock_property_cv_id })->first->cvterm_id();
 
-    my %items = ();
     my @transform = ();
-
+    my @missing_uniquenames;
+    
     # check uniquename
     #
     foreach my $item (@$list) {
-	my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => { ilike =>  $item} });
+	my $rs = $schema->resultset("Stock::Stock")->search( { 'uniquename' => $item });
 
-	if ($rs->count > 0) { $items{$item}++ }
+	if ($rs->count() == 0) { push @missing_uniquenames, $item; }
+	else {
+	    push @transform, $item;
+	}
     }
 
     print STDERR "synonym type id = $synonym_type_id\n";
 
     my @missing;
+    my %mapping;
+    my @duplicates;
+    
+    foreach my $item (@missing_uniquenames) { 
+	my $rs = $schema->resultset("Stock::Stock")->search( { 'upper(stockprops.value)' =>  uc($item), 'stockprops.type_id' => $synonym_type_id }, { join => { 'stockprops'   } });
 
-    foreach my $item (@$list) {
-	my $rs = $schema->resultset("Stock::Stock")->search( { 'stockprops.value' => { ilike =>  $item }, 'stockprops.type_id' => $synonym_type_id }, { join => { 'stockprops'   } });
-
-	if ($items{$item} > 0) { # matched the uniquename
-	    push @transform, $item;
+	if ($rs->count == 1) {
+	    $mapping{$item} = $rs->first->uniquename();
 	}
-	elsif ($rs->count > 0) {
-	    push @transform, $rs->first->uniquename();
+	elsif( $rs->count() > 1) {
+	    push @duplicates, $item;
 	}
 	else {
 	    push @missing, $item;
@@ -66,9 +71,11 @@ sub transform {
 
 
 
-	my $data =  {
+    my $data =  {
+	mapping => \%mapping,
 	transform => \@transform,
-        missing => \@missing
+        missing => \@missing,
+	duplicate => \@duplicates,
     };
 
     #print STDERR Dumper($data);

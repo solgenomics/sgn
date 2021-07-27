@@ -50,6 +50,8 @@ sub _validate_with_plugin {
     my $weight_head;
     my $description_head;
     my $box_name_head;
+    my $seedlot_quality;
+    my $seedlot_source;
 
     if ($worksheet->get_cell(0,0)) {
         $seedlot_name_head  = $worksheet->get_cell(0,0)->value();
@@ -71,6 +73,12 @@ sub _validate_with_plugin {
     }
     if ($worksheet->get_cell(0,6)) {
         $box_name_head  = $worksheet->get_cell(0,6)->value();
+    }
+    if ($worksheet->get_cell(0,7)) {
+	$seedlot_quality = $worksheet->get_cell(0,7)->value();
+    }
+    if ($worksheet->get_cell(0,8)) {
+	$seedlot_source = $worksheet->get_cell(0, 8)->value();
     }
 
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
@@ -95,8 +103,12 @@ sub _validate_with_plugin {
         push @error_messages, "Cell G1: box_name is missing from the header";
     }
 
+    # (seedlot quality and seedlot source are not required fields)
+
     my %seen_seedlot_names;
     my %seen_accession_names;
+    my %seen_source_names;
+
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $seedlot_name;
@@ -106,6 +118,8 @@ sub _validate_with_plugin {
         my $weight = 'NA';
         my $description;
         my $box_name;
+	my $quality;
+	my $source;
 
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
@@ -128,7 +142,12 @@ sub _validate_with_plugin {
         if ($worksheet->get_cell($row,6)) {
             $box_name =  $worksheet->get_cell($row,6)->value();
         }
-
+	if ($seedlot_quality && $worksheet->get_cell($row, 7)) {
+	    $quality = $worksheet->get_cell($row, 7)-> value();
+	}
+	if ($seedlot_source && $worksheet->get_cell($row, 8)) {
+	    $source = $worksheet->get_cell($row, 8)->value();
+	}
         if (!$seedlot_name || $seedlot_name eq '' ) {
             push @error_messages, "Cell A$row_name: seedlot_name missing.";
         }
@@ -170,6 +189,10 @@ sub _validate_with_plugin {
         if (!defined($box_name) || $box_name eq '') {
             push @error_messages, "Cell G$row_name: box_name missing";
         }
+
+	if ($source) {
+	    $seen_source_names{$source}++;
+	}
     }
 
     my @accessions = keys %seen_accession_names;
@@ -181,6 +204,19 @@ sub _validate_with_plugin {
         $errors{'missing_accessions'} = \@accessions_missing;
     }
 
+    if (scalar(@accessions_missing) > 0) {
+        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+        $errors{'missing_accessions'} = \@accessions_missing;
+    }
+
+    my @sources = keys %seen_source_names;
+    my $source_validator = CXGN::List::Validate->new();
+    my @sources_missing = @{$source_validator->validate($schema,'seedlots_or_plots_or_crosses_or_accessions',\@sources)->{'missing'}};
+
+    if (scalar(@sources_missing) > 0) {
+	push @error_messages, "The following source seedlots could not be found in the database: ".join(',',@sources_missing);
+	$errors{'missing_sources'} = \@sources_missing;
+    }
     # Not checking if seedlot name already exists because the database will just update the seedlot entries
     # my @seedlots = keys %seen_seedlot_names;
     # my $rs = $schema->resultset("Stock::Stock")->search({
@@ -279,6 +315,8 @@ sub _parse_with_plugin {
         my $weight = 'NA';
         my $description;
         my $box_name;
+	my $quality;
+	my $source;
 
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
@@ -301,9 +339,16 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,6)) {
             $box_name =  $worksheet->get_cell($row,6)->value();
         }
+	if ($worksheet->get_cell($row,7)) {
+	    $quality = $worksheet->get_cell($row,7)->value();
+	}
+	if ($worksheet->get_cell($row,8)) {
+	    $source = $worksheet->get_cell($row, 8)->value();
+	}
 
         $seedlot_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
         $accession_name =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
+	$source =~ s/^\s+|\s+$//g; # also trim
 
         #skip blank lines
         if (!$seedlot_name && !$accession_name && !$description) {
@@ -322,6 +367,15 @@ sub _parse_with_plugin {
             $accession_stock_id = $accession_lookup{$accession_name};
         }
 
+	my $source_id;
+
+	if ($source) {
+	    my $source_row = $self->get_chado_schema->resultset("Stock::Stock")->find( { uniquename => $source });
+	    if ($source_row) {
+		$source_id = $source_row->stock_id();
+	    }
+	}
+
         $parsed_seedlots{$seedlot_name} = {
             seedlot_id => $seedlot_lookup{$seedlot_name}, #If seedlot name already exists, this will allow us to update information for the seedlot
             accession => $accession_name,
@@ -332,8 +386,12 @@ sub _parse_with_plugin {
             weight_gram => $weight,
             description => $description,
             box_name => $box_name,
-            operator_name => $operator_name
+            operator_name => $operator_name,
+	    quality => $quality,
+	    source => $source,
+	    source_id => $source_id,
         };
+
     }
     #print STDERR Dumper \%parsed_seedlots;
 

@@ -27,7 +27,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 sub sync_cass_constructs : Path('/ajax/cass_vector_construct/sync') Args(0) ActionClass('REST') { }

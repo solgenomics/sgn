@@ -1,0 +1,151 @@
+<%args>
+$analytics_protocol_id
+$analytics_protocol_name
+$analytics_protocol_description
+$analytics_protocol_type_id
+$analytics_protocol_type_name
+$analytics_protocol_create_date
+$analytics_protocol_properties
+$analytics_protocol_result_summary
+</%args>
+
+<div class="row">
+    <div class="col-sm-12">
+
+        <table class="table table-hover table-bordered" >
+
+            <tr>
+                <td><b>Analytics Protocol Name</b></td>
+                <td>
+                    <div id="analytics_protocol_name">
+% if ($analytics_protocol_name) {
+%   print "$analytics_protocol_name";
+% } else {
+%   print "<span class='text-danger'>[No Analytics Protocol Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Description</b></td>
+                <td>
+                    <div id="analytics_protocol_description">
+% if ($analytics_protocol_description) {
+%  print "$analytics_protocol_description";
+% } else {
+%  print "<span class='text-danger'>[No Description]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Type</b></td>
+                <td>
+                    <div id="analytics_protocol_type_name">
+%  print "$analytics_protocol_type_name";
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Created</b></td>
+                <td>
+                    <div id="analytics_protocol_create_date">
+%  print "$analytics_protocol_create_date";
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Properties</b></td>
+                <td>
+                    <div id="analytics_protocol_properties">
+%  if ($analytics_protocol_properties) {
+%    foreach my $k (sort keys %{$analytics_protocol_properties}) {
+%       print $k." : ".$analytics_protocol_properties->{$k}."<br/>";
+%    }
+%  }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Result Summary</b></td>
+                <td>
+                    <div id="analytics_protocol_result_summary">
+%  if ($analytics_protocol_result_summary) {
+%       foreach my $s (@$analytics_protocol_result_summary) {
+%           print "<div class='well well-sm'>";
+%           my $analytics_result_type = $s->{statistics_select_original};
+%           my $env_corr_results = $s->{env_correlation_results};
+%           my $env_iterations = $s->{env_iterations};
+%           my $number_iterations = $s->{number_iterations};
+%           my $varcomps = $s->{env_varcomps};
+%           my $avg_varcomps_display = $s->{avg_varcomps_display};
+%           my $avg_cross_validation_display = $s->{avg_cross_validation_display};
+%           if ($analytics_result_type) {
+%               print "<h4>Type: ".$analytics_result_type."</h4>";
+%           }
+%           if ($env_corr_results) {
+%               print "<strong>Simulated Environment Correlation Results</strong><br/>";
+%               print $number_iterations." iterations<br/>";
+%               foreach my $env_type (sort keys %$env_corr_results) {
+%                   my $mean = $env_corr_results->{$env_type}->{mean};
+%                   my $std = $env_corr_results->{$env_type}->{std};
+%                   print $env_type." : ".$mean." +- ".$std."<br/>";
+%               }
+%           }
+%           if ($env_iterations) {
+%               print "<br/><strong>Simulated Environment Parameters</strong><br/>";
+%               foreach my $iteration (sort keys %$env_iterations) {
+%                   print $iteration." : ";
+%                   foreach my $param (sort keys %{$env_iterations->{$iteration}}) {
+%                       print " ".$param." : ".$env_iterations->{$iteration}->{$param}." ";
+%                   }
+%                   print "<br/>";
+%               }
+%           }
+%           my @types = ('original', 'altered', 'env_linear', 'env_1DN', 'env_2DN', 'env_ar1xar1', 'env_random', 'env_realdata');
+%           #if ($varcomps) {
+%           #    print "<br/><strong>Variance Components</strong>";
+%           #    foreach my $i (@$varcomps) {
+%           #       print "<br/>$i->{type}<br/>";
+%           #        foreach my $t (@types) {
+%           #            if ($i->{$t}->{covariance}) {
+%           #                my $string = " $t: ";
+%           #                foreach my $i (@{$i->{$t}->{covariance}}) {
+%           #                    $string .= $i->[0]." : ".$i->[1]." ";
+%           #                }
+%           #                print " ".$string."<br/>";
+%           #            }
+%           #            if ($i->{$t}->{genetic_covariance}) {
+%           #                my $string = " $t: Genetic: ". join(',', @{$i->{$t}->{genetic_covariance}} );
+%           #                $string .= " Env: ". join(',', @{$i->{$t}->{env_covariance}} );
+%           #                $string .= " Residual: ".$i->{$t}->{residual};
+%           #                print " ".$string."<br/>";
+%           #            }
+%           #        }
+%           #    }
+%           #}
+%           if ($avg_varcomps_display) {
+%               print "<br/><strong>Variance Components</strong><br/>";
+%               foreach my $i (@$avg_varcomps_display) {
+%                   if (defined($i->{mean})) {
+%                       print "$i->{type}: $i->{type_scenario}: $i->{level}: $i->{mean} +- $i->{std}<br/>";
+%                   }
+%               }
+%           }
+%           if ($avg_cross_validation_display) {
+%               print "<br/><strong>Cross Validation</strong><br/>";
+%               foreach my $i (@$avg_cross_validation_display) {
+%                   print "$i->{type}: $i->{type_scenario}: CV1: $i->{cv1_mean} +- $i->{cv1_std} CV2: $i->{cv2_mean} +- $i->{cv2_std}<br/>";
+%               }
+%           }
+%           print "</div>";
+%       }
+%  }
+                    </div>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+</div>

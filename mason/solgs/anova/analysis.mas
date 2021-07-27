@@ -15,7 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $trial_id => undef,
-$pop_id   => undef,
+$training_pop_id   => undef,
 
 </%args>
 

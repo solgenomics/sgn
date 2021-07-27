@@ -1,6 +1,6 @@
 <%doc>
 
-=head1 NAME 
+=head1 NAME
 
 /solgs/population/combined/summary.mas - displays combined trials descriptive data.
 
@@ -14,20 +14,20 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$project_id
-$project_name
-$project_desc
+$training_pop_id
+$training_pop_name
+$training_pop_desc
 $markers_no
 $traits_no
 $stocks_no
 $owner => ''
-$protocol
+$protocol_url
 
 </%args>
 
 <%perl>
 
-if (!$owner) {$owner = 'NextGen Cassava Project'; } 
+if (!$owner) {$owner = 'NextGen Cassava Project'; }
 $traits_no = 1 if !$traits_no;
 
 
@@ -38,20 +38,20 @@ $traits_no = 1 if !$traits_no;
   <tr>
     <td>
       <& /page/columnar_table.mas,
-         data         => [['Name', $project_name],
-                          ['Description', $project_desc],
+         data         => [['Name', $training_pop_name],
+                          ['Description', $training_pop_desc],
                           ['Owner', $owner],
                          ],
          __alt_freq   => 0,
          __align      => "l",
         &>
-    </td>    
+    </td>
     <td>
-      <& /page/columnar_table.mas,        
+      <& /page/columnar_table.mas,
          data       => [['No. of lines ',  $stocks_no],
                         ['No. of traits', $traits_no],
                         ['No. of markers', $markers_no],
-			['Genotyping version', $protocol],
+			['Genotyping version', $protocol_url],
                        ],
         __alt_freq  => 1,
         __align     => "l",
@@ -59,8 +59,3 @@ $traits_no = 1 if !$traits_no;
     </td>
   </tr>
 </table>
-    
-
- 
-
-

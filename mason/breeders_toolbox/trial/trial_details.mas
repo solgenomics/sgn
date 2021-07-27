@@ -4,6 +4,7 @@ $trial_name
 $breeding_program_name
 $breeding_program_id
 $location_name
+$country_name
 $year
 $trial_type
 $planting_date
@@ -17,6 +18,10 @@ $plot_length
 $field_size
 $field_trial_is_planned_to_be_genotyped
 $field_trial_is_planned_to_cross
+$trial_stock_type
+$trial_stock_count
+$trial_owner
+
 </%args>
 
 <div class="row">
@@ -56,7 +61,7 @@ $field_trial_is_planned_to_cross
                 <td>
                     <div id="trial_location">
 % if ($location_name) {
-%  print "$location_name";
+%  print "$location_name ( $country_name )";
 % } else {
 %  print "<span class='text-danger'>[No Location]</span>";
 % }
@@ -72,6 +77,32 @@ $field_trial_is_planned_to_cross
 %  print "$year";
 % } else {
 %  print "<span class='text-danger'>[No Year]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Stock Type Being Evaluated in This Trial</b></td>
+                <td>
+                    <div id="stock_type_in_trial">
+% if ($trial_stock_type) {
+%     print "$trial_stock_type";
+% } else {
+%     print "accession";
+% }
+                    </div>
+                </td>
+            </tr>
+	    
+	    <tr>
+                <td><b>Number of Stocks in This Trial</b></td>
+                <td>
+                    <div id="stock_number_in_trial">
+% if ($trial_stock_count) {
+%     print "$trial_stock_count";
+% } else {
+% print "<span class='text-danger'>[No Stocks in Trial]</span>";
 % }
                     </div>
                 </td>
@@ -134,6 +165,18 @@ $field_trial_is_planned_to_cross
                     <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
                     <br/><br/>
                     <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
+                </td>
+            </tr>
+
+	    <tr><td><b>Created by</b></td>
+                <td>
+                    <div id="trial_owner">
+% if ($trial_owner) {
+%  print "$trial_owner";
+% } else {
+%  print "<span class='text-danger'>[N/A]</span>";
+% }
+                    </div>
                 </td>
             </tr>
 

@@ -1,0 +1,55 @@
+<%args>
+$trial_id
+$trial_name
+$trial_description
+$identifier_prefix
+$drone_run_date => undef
+</%args>
+
+<div class="row">
+    <div class="col-sm-12">
+
+        <table class="table table-hover table-bordered" >
+
+            <tr>
+                <td><b>Imaging Event Name</b></td>
+                <td>
+                    <div id="trial_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "<span class='text-danger'>[No Imaging Event Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Imaging Event Date</b></td>
+                <td>
+                    <div id="drone_run_date">
+% if ($drone_run_date) {
+<a href="/breeders/trial/<% $trial_id %>?currentDate=<% $drone_run_date %>" ><% $drone_run_date %></a>
+% } else {
+%  print "<span class='text-danger'>[No Imaging Event Date]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Description</b></td>
+                <td>
+                    <div id="trial_description">
+% if ($trial_description) {
+%  print "$trial_description";
+% } else {
+%  print "<span class='text-danger'>[No Description]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+</div>

@@ -46,8 +46,16 @@ ok(my $male_parent3 = Bio::GeneticRelationships::Individual->new(name => 'XG1202
 ok($pedigree3->set_female_parent($female_parent3), "Set a female parent for a pedigree");
 ###ok($pedigree3->set_male_parent(''), "Set an empty male parent for a pedigree");
 
+# sib
+#
+ok(my $pedigree4 = Bio::GeneticRelationships::Pedigree->new(name => "XG120261", cross_type => "sib"),"Create pedigree object");
+ok(my $female_parent4 = Bio::GeneticRelationships::Individual->new(name => 'XG120287'),"Create individual for pedigree");
+ok(my $male_parent4 = Bio::GeneticRelationships::Individual->new(name => 'XG120287'),"Create individual for pedigree");
+ok($pedigree4->set_female_parent($female_parent4), "Set a female parent for a pedigree");
+ok($pedigree4->set_male_parent($male_parent4), "Set a male parent for a pedigree");
+
 my @pedigrees;
-for my $p ($pedigree, $pedigree2, $pedigree3) { 
+for my $p ($pedigree, $pedigree2, $pedigree3, $pedigree4) {
     push (@pedigrees, $p);
 }
 
@@ -61,8 +69,8 @@ print STDERR "Now trying a population as a parent... \n";
 
 my $population_type_id = $test->bcs_schema()->resultset("Cv::Cvterm")->find( { name => 'population' })->cvterm_id();
 
-my $population_row = $test->bcs_schema()->resultset("Stock::Stock")->create( 
-    { 
+my $population_row = $test->bcs_schema()->resultset("Stock::Stock")->create(
+    {
 	name => 'test_population',
 	uniquename => 'test_population',
 	type_id => $population_type_id,
@@ -71,17 +79,27 @@ my $population_row = $test->bcs_schema()->resultset("Stock::Stock")->create(
 #my $open_parent = Bio::GeneticRelationships::Population->new(name => 'test_population');
 #my @members = ( 'test_accession3', 'test_accession4');
 #$open_parent->set_members(\@members);
-ok(my $open_parent = Bio::GeneticRelationships::Individual->new(name => 'test_population'),"Create individual for pop");
+ok(my $population_parents = Bio::GeneticRelationships::Individual->new(name => 'test_population'),"Create individual for pop");
 
 my $open_pedigree = Bio::GeneticRelationships::Pedigree->new(name => 'XG120198', cross_type => 'open');
 $open_pedigree->set_female_parent($female_parent3);
-$open_pedigree->set_male_parent($open_parent);
-my $add_open_pedigree = CXGN::Pedigree::AddPedigrees->new(schema=>$schema, pedigrees => [ $open_pedigree ]);
-my $validate_return = $add_open_pedigree->validate_pedigrees();
+$open_pedigree->set_male_parent($population_parents);
+
+my $polycross_pedigree = Bio::GeneticRelationships::Pedigree->new(name => 'UG120080', cross_type => 'polycross');
+$polycross_pedigree->set_female_parent($female_parent4);
+$polycross_pedigree->set_male_parent($population_parents);
+
+my @male_population_pedigrees;
+for my $pop ($open_pedigree, $polycross_pedigree) {
+    push (@male_population_pedigrees, $pop);
+}
+
+my $add_open_polycross_pedigree = CXGN::Pedigree::AddPedigrees->new(schema=>$schema, pedigrees => \@male_population_pedigrees);
+my $validate_return = $add_open_polycross_pedigree->validate_pedigrees();
 print STDERR Dumper $validate_return;
 ok($validate_return);
 ok(!exists($validate_return->{error}));
-my $add_return = $add_open_pedigree->add_pedigrees();
+my $add_return = $add_open_polycross_pedigree->add_pedigrees();
 print STDERR Dumper $add_return;
 ok($add_return);
 ok(!exists($add_return->{error}));

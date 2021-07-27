@@ -74,7 +74,9 @@ sub get_cvterm_row_from_trait_name {
     my $full_accession = substr $trait_name, rindex( $trait_name, $delim ) + length($delim);
     my $full_accession_length = length($full_accession) + length($delim);
     my $full_cvterm_name = substr($trait_name, 0, -$full_accession_length);
-    my ( $db_name , $accession ) = split (/:/ , $full_accession);
+    my @db_comps = split (/:/ , $full_accession);
+    my $db_name = shift @db_comps;
+    my $accession = join ':', @db_comps;
 
     #check if the trait name string does have
     $accession =~ s/\s+$//;
@@ -96,6 +98,67 @@ sub get_cvterm_row_from_trait_name {
         );
     }
     return $trait_cvterm;
+}
+
+# Checks for an ontology trait that has either the short name or matching full name
+sub find_trait_by_name {
+    my $self = shift;
+    my $schema = shift;
+    my $name = shift;
+
+    # Checks the cvterm table for traits that match the short name, long name, or id.
+    my $query = "select cvterm.cvterm_id from
+                cvterm
+                join
+                dbxref using (dbxref_id)
+                join
+                db using (db_id)
+                join
+                cvterm_relationship as rel on rel.subject_id=cvterm.cvterm_id
+                JOIN
+                cvterm as reltype on (rel.type_id = reltype.cvterm_id)
+                where
+                reltype.name = 'VARIABLE_OF'
+                and
+                (
+                cvterm.name ilike ?
+                or
+                (cvterm.name || '|' || db.name || ':' || dbxref.accession) ilike ?
+                )";
+    my $h = $schema->storage->dbh->prepare($query);
+    $h->execute($name, $name);
+    my $cvterm_id = $h->fetchrow();
+
+    return $cvterm_id;
+}
+
+# Get the ontology trait if there is an id for that trait
+sub find_trait_by_id {
+
+    my $self = shift;
+    my $schema = shift;
+    my $cvterm_id = shift;
+
+    # Checks the cvterm table for traits that match the short name, long name, or id.
+    my $query = "select cvterm.cvterm_id from
+                cvterm
+                join
+                dbxref using (dbxref_id)
+                join
+                db using (db_id)
+                join
+                cvterm_relationship as rel on rel.subject_id=cvterm.cvterm_id
+                JOIN
+                cvterm as reltype on (rel.type_id = reltype.cvterm_id)
+                where
+                reltype.name = 'VARIABLE_OF'
+                and
+                cvterm.cvterm_id=?;";
+    my $h = $schema->storage->dbh->prepare($query);
+    $h->execute($cvterm_id);
+    my $cvterm_id = $h->fetchrow();
+
+    return $cvterm_id;
 }
 
 sub get_trait_from_exact_components {
@@ -169,6 +232,10 @@ sub get_traits_from_component_categories {
     my $composable_cvterm_delimiter = shift;
     my $composable_cvterm_format = shift;
     my $cvterm_id_hash = shift;
+    #print STDERR Dumper $cvterm_id_hash;
+    #print STDERR Dumper $allowed_composed_cvs;
+    #print STDERR Dumper $composable_cvterm_format;
+
     my %id_hash = %$cvterm_id_hash;
     delete @id_hash{ grep { scalar @{$id_hash{$_}} < 1 } keys %id_hash }; #remove cvtypes with no ids
 

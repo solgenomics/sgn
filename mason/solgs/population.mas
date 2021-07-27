@@ -1,18 +1,19 @@
 <%args>
 
-$pop_id
+$pop_id => ''
+$training_pop_id
+$training_pop_name
+$training_pop_desc
 $show_data => 1;
 $traits_form => ''
 $all_traits_file
-$project_name
-$project_desc
 $stocks_no
 $markers_no
 $traits_no
-$list_reference=>''
 $owner=>''
-$protocol
+$protocol_url => ''
 $acronym
+$genotyping_protocol_id
 
 </%args>
 
@@ -20,7 +21,12 @@ $acronym
 
 #my $submit_new = qq | <a href="/submit/intro">Submit GS population</a> |;
 
+if ($pop_id && !$training_pop_id) {
+$training_pop_id = $pop_id;
+}
+
 </%perl>
+
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
 
@@ -28,91 +34,88 @@ $acronym
 <br />
 <br />
 
-<& /page/page_title.mas, 
-   title => "Select one or more traits from training population \"$project_name\" to build a GS model and predict GEBVs for."
+<& /page/page_title.mas,
+   title => "Select one or more traits from training population \"$training_pop_name\" to build a GS model and predict GEBVs for."
 &>
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
     title       => "Training population summary",
   &>
 
  <& population/summary.mas,
-    project_id   => $pop_id,
-    project_name => $project_name,
-    project_desc => $project_desc,
+    pop_id   => $training_pop_id,
+    pop_name => $training_pop_name,
+    pop_desc => $training_pop_desc,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
     owner        => $owner,
-    protocol     => $protocol,
-    list_reference => $list_reference
+    protocol_url => $protocol_url,
  &>
 
 </&>
 
-% if ($show_data) 
-% {
-% if ($markers_no > 1)
-% {
- 
+% if ($show_data) {
+% if ($markers_no > 1) {
 
-<&| /page/info_section.mas, 
-      collapsible => 1, 
-      collapsed   => 0, 
+
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 0,
       title       => "Train model"
 &>
-       
-<& population/select_traits.mas, 
-     pop_id             => $pop_id,
-     traits_form        => $traits_form,
-     all_traits_file    => $all_traits_file,
-     list_reference => $list_reference
+
+<& population/select_traits.mas,
+   training_pop_id    => $training_pop_id,
+  traits_form        => $traits_form,
+  all_traits_file    => $all_traits_file,
+  genotyping_protocol_id => $genotyping_protocol_id,
 &>
+
 
 </&>
 
-% if ($pop_id !~ /list/)
-% {
 
-<& /solgs/anova/analysis.mas,
-   pop_id => $pop_id,
-&>
+  <& population/correlation.mas,
+     training_pop_id  => $training_pop_id,
+  &>
 
-% }
-     
-<& population/correlation.mas, 
-     pop_id  => $pop_id,
-&>
+% if ($training_pop_id !~ /list|dataset/) {
 
-<& population/acronym.mas,
-   acronym => $acronym,
-&>
+    <& /solgs/anova/analysis.mas,
+   training_pop_id => $training_pop_id,
+  &>
 
-%} 
-% else
-% {
 
-<&| /page/info_section.mas, 
-      collapsible => 1, 
-      collapsed   => 0, 
+  <& /tools/heritability/heritability.mas,
+     pop_id  => $training_pop_id,
+    &>
+
+%}
+
+  <& /solgs/population/trait_acronyms.mas &>
+
+%} else {
+
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 0,
       title       => "Genotype Data"
 &>
 
-  <div id="traits_list_message"  style="font-weight:bold;text-align:center;text-transform:uppercase;color:#A7C942">
+  <div id="traits_list_message"  class="message">
     <p>There is no genotype data for this population.</p>
   </div>
 
 </&>
 %}
-%}
-% else
-%{
+%} else {
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
     title       => "Data Accessibility",
   &>
 
@@ -121,6 +124,10 @@ $acronym
 </&>
 %}
 
+ <& /solgs/population/hidden_input.mas,
+      training_pop_id  => $training_pop_id,
+     training_pop_name => $training_pop_name,
+     training_pop_desc => $training_pop_desc,
+     genotyping_protocol_id => $genotyping_protocol_id,
 
-<input type="hidden" id="population_id" value="<% $pop_id %>" />
-
+   &>

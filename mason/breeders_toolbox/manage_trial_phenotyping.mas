@@ -1,6 +1,7 @@
 <%args>
 $trial_id
 $trial_name
+$trial_stock_type => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Manage Phenotyping for $trial_name" &>
@@ -20,7 +21,7 @@ $trial_name
                 </div>
             </div>
             <div class="form-group form-group-sm">
-                <label class="col-sm-4 control-label">Accession Name: </label>
+                <label id = "manage_phenotyping_stock_type" class="col-sm-4 control-label"></label>
                 <div class="col-sm-8" id="accession_name">
 
                 </div>
@@ -128,7 +129,7 @@ $trial_name
 </div>-->
 <&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]" &>
 
-    <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
+    <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 
 
 </&>
@@ -236,7 +237,7 @@ var trial_info_object = [];
         plot_focusin = jQuery("#plot_name").val();
         trait_focusin = jQuery("#select_traits_for_trait_file").val();
         //var trait_list_option = '';
-        if ($('#use_trait_list').is(':checked')) {
+        if (jQuery('#use_trait_list').is(':checked')) {
            //trait_list_option = jQuery('#use_trait_list').val();
            trait_list_option_focusin = jQuery('#use_trait_list').val();
         }
@@ -368,5 +369,19 @@ var trial_info_object = [];
       }
 
   });
+
+    var trial_stock_type = "<% $trial_stock_type %>";
+    var manage_phenotyping_label = '';
+
+    if (trial_stock_type == 'family_name') {
+        manage_phenotyping_label = 'Family Name :';
+    } else if (trial_stock_type == 'cross') {
+        manage_phenotyping_label = 'Cross Unique ID :';
+    } else {
+        manage_phenotyping_label = 'Accession Name :';
+    }
+
+    jQuery('#manage_phenotyping_stock_type').text(manage_phenotyping_label);
+
 });
 </script>

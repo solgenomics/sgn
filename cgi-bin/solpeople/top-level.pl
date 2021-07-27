@@ -167,7 +167,7 @@ if (@pops) {
 }
 
 #### solGS submitted jobs list ##########
-my $solgs_jobs = SGN::Controller::solGS::AnalysisProfile->solgs_analysis_status_log($c);
+my $solgs_jobs = SGN::Controller::solGS::AnalysisQueue->solgs_analysis_status_log($c);
 
 my $solgs_jobs_table;
 

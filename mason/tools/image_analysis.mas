@@ -1,0 +1,521 @@
+
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.cookie', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+
+<style>
+td.details-control {
+    text-align:center;
+    color:forestgreen;
+    cursor: pointer;
+}
+tr.shown td.details-control {
+    text-align:center;
+    color:red;
+}
+</style>
+
+<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+<& /page/page_title.mas, title=>"Image Analysis" &>
+<hr>
+
+<div class="well well-sm">
+    <center>
+    <h4>The Necrosis Image Analysis is explained in the paper here: <a href="https://csce.ucmss.com/cr/books/2018/LFS/CSREA2018/IPC3638.pdf">Necrosis Image Analysis</a>.</h4>
+    </center>
+</div>
+
+<div class="well well-sm">
+    <center>
+    <button class="btn btn-primary" id="upload_spreadsheet_phenotypes_link">Upload New Phenotypes and Associated Images</button>
+    </center>
+</div>
+<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
+<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
+
+<&| /page/info_section.mas, title=>"Image Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "All images may not have names, descriptions, or tags associated with them."&>
+
+    <div id="image_search_form" class="well well-sm">
+        <div class="form-horizontal" >
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Select a Field Trial: </label>
+                <div class="col-sm-9" >
+                    <div id ="image_analysis_trial_select">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Image descriptors (name, description, or filename): </label>
+                <div class="col-sm-6" >
+                    <input class="form-control" type="text" id="image_description_filename_composite" name="image_description_filename_composite" placeholder="e.g. MyImageName" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Submitter: </label>
+                <div class="col-sm-6" >
+                    <input class="form-control" type="text" id="image_submitter" name="image_submitter" placeholder="e.g. JaneDoe" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Image tag: </label>
+                <div class="col-sm-6" >
+                    <input class="form-control" type="text" id="image_tag" name="image_tag" placeholder="e.g. ImageTagName" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Associated stock: </label>
+                <div class="col-sm-6" >
+                    <input class="form-control" type="text" id="image_stock_uniquename" name="image_stock_uniquename" placeholder="e.g. FieldPlot100" />
+                </div>
+            </div>
+        </div>
+
+        <center>
+        <button class="btn btn-primary" id="image_search_submit" >Search</button>
+        </center>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title=>"Image Search Results",  collapsible => 1, collapsed=>0 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table id="image_analysis_image_search_results" class="table table-hover table-striped">
+                <thead>
+                  <tr>
+                    <th>Select</th>
+                    <th>Image Thumbnail</th>
+                    <th>Filename</th>
+                    <th>Description</th>
+                    <th>Submitter</th>
+                    <th>Associations</th>
+                    <th>Observations</th>
+                    <th>Tags</th>
+                </tr>
+                </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title=>"Image Analysis", collapsible => 1, collapsed=>0 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="form-group">
+                    <label class="col-sm-6 control-label">Image Analysis Service: </label>
+                    <div class="col-sm-6" >
+                        <select class="form-control" id="image_analysis_service_select" name="image_analysis_service_select">
+                            <option value="">Select An Analysis Service</option>
+                            <option value="necrosis">Necrosis(Makerere AIR Lab)</option>
+                            <option value="largest_contour_percent">Necrosis Largest Contour Mask Percent</option>
+                            <option value="count_contours">Count Contours</option>
+                            <option value="count_sift">SIFT Feature Count</option>
+                            <option value="whitefly_count">Whitefly Count (Makerere AIR Lab)</option>
+                        </select>
+                    </div>
+                </div>
+                <br/>
+                <div class="form-group" id="image_analysis_trait_group" style="display: none;">
+                    <label class="col-sm-6 control-label">Trait to be Analyzed: </label>
+                    <div class="col-sm-6" >
+                        <select class="form-control" id="image_analysis_trait_select" name="image_analysis_service_select"></select>
+                    </div>
+                </div>
+                <br/><br/><br/>
+
+                <hr>
+                <center>
+                <button class="btn btn-primary" id="image_analysis_submit" disabled>Submit for Analysis</button>
+                </center>
+                <hr>
+                <div id="image_analysis_result" style="display: none;">
+                    <table class="display" style="width:100%" id="image_analysis_result_table">
+                        <thead>
+                           <tr>
+                               <th></th>
+                               <th>Stock</th>
+                               <th>Trait</th>
+                               <th># Analyzed Images</th>
+                               <th>Mean Value</th>
+                           </tr>
+                       </thead>
+                    </table>
+                    <hr>
+                    <center><button class="btn btn-primary" id="image_analysis_save_results">Save Results</button></center>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="saveResultModal" tabindex="-1" role="dialog" aria-labelledby="saveResultModal" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="saveResultModalTitle">Image Analysis Save Status</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="saveResultModalBody">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</&>
+
+<script>
+
+var service_traits = {
+    'necrosis': {
+        "CBSDpct|CO_334:0002078" : "Cassava",
+    },
+    'largest_contour_percent': {},
+    'count_contours': {},
+    'count_sift': {},
+    'whitefly_count': {},
+}
+
+jQuery(document).ready(function(){
+
+    var values_hash;
+
+    get_select_box('trials', 'image_analysis_trial_select', { 'name' : 'html_image_analysis_trial_select', 'id' : 'html_image_analysis_trial_select', 'multiple':0, 'size':10, 'trial_name_values':1 });
+
+    _load_image_search_results();
+
+    jQuery('#image_search_submit').click(function(){
+        if (jQuery('#html_image_analysis_trial_select').val() == '') {
+            alert("Please select a Field Trial first!");
+            return false;
+        }
+        _load_image_search_results();
+    });
+
+    jQuery("#image_submitter").autocomplete({
+        source: '/ajax/people/autocomplete'
+    });
+
+    jQuery('#image_search_form').keypress( function( e ) {
+        var code = e.keyCode || e.which;
+        if( code == 13 ) {
+            jQuery('#image_search_submit').click();
+        }
+    });
+
+    jQuery('#image_analysis_image_search_results').on( 'draw.dt', function () {
+        jQuery('a.image_search_group').colorbox();
+    });$
+
+    jQuery('#image_analysis_service_select').change(function() {
+        var service = jQuery('#image_analysis_service_select').val();
+        jQuery('#image_analysis_trait_select').html('<option value="">Select A Trait</option>');
+        if (service) {
+            jQuery('#working_modal').modal('show');
+            // add crop and service specific trait options
+            var all_traits = service_traits[service];
+            var trait_names = Object.keys(all_traits);
+            var options =  [];
+
+            jQuery.ajax({
+                url: '/brapi/v2/commoncropnames/',
+                method: 'GET',
+                success: function(response) {
+                    // console.log("Retrieved crop names and they are: "+response.result.data);
+                    var supportedcrops = response.result.data;
+                    supportedcrops.forEach(function(crop) {
+                        trait_names.forEach(function(name) {
+                            if (all_traits[name] == crop) {
+                                // console.log("Id is "+id);
+                                options.push('<option value="'+ name +'">'+ name +'</option>');
+                            }
+                        });
+                    });
+                    jQuery('#image_analysis_trait_select').append(options);
+                    jQuery('#image_analysis_trait_group').show();
+                    jQuery('#working_modal').modal('hide');
+                },
+                error: function(response) {
+                    console.log("error retrieving crop names: "+response);
+                    // just add all traits regardless of crop
+                    trait_names.forEach(function(name) {
+                        // console.log("Id is "+id);
+                        options.push('<option value="'+ name +'">'+ name +'</option>');
+
+                    });
+                    jQuery('#image_analysis_trait_select').append(options);
+                    jQuery('#image_analysis_trait_group').show();
+                    jQuery('#working_modal').modal('hide');
+                }
+            });
+      }
+      else {
+          // hide trait select
+          jQuery('#image_analysis_trait_group').hide();
+      }
+    });
+
+    jQuery('#image_analysis_trait_select').change(function() {
+        if (jQuery('#image_analysis_trait_select').val()) {
+            jQuery('#image_analysis_submit').prop('disabled', false);
+        }
+        else {
+            jQuery('#image_analysis_submit').prop('disabled', true);
+        }
+    });
+
+    jQuery('#image_analysis_submit').click(function(){
+        var selected_image_ids = [];
+        jQuery('input[name="image_analysis_select"]').each(function() {
+            if (this.checked){
+                selected_image_ids.push(this.value);
+            }
+        });
+
+        if (selected_image_ids.length < 1) {
+            alert('Please select at least one image first!');
+            return false;
+        }
+
+        var results = [];
+        var progress_modal = jQuery('#progress_modal');
+        var progress_bar = jQuery('#progress_bar');
+        var image_total = selected_image_ids.length;
+        var images_finished = 0;
+        var current_progress = 0;
+        progress_modal.modal('show');
+        jQuery('#progress_msg').text('Submitting images for analysis');
+
+        var deferred_calls = selected_image_ids.map(function(image_id, index) {
+            jQuery('#progress_msg').text('Submitting image '+index+' out of '+image_total+' images');
+            current_progress += (1 / image_total) * 10;
+            progress_bar.css("width", current_progress + "%")
+            .attr("aria-valuenow", current_progress)
+            .text(Math.round(current_progress) + "%");
+
+            var call = jQuery.ajax({
+                url: '/ajax/image_analysis/submit',
+                method: 'POST',
+                data: {
+                    'selected_image_ids': image_id,
+                    'service': jQuery('#image_analysis_service_select').val(),
+                    'trait': jQuery('#image_analysis_trait_select').val(),
+                },
+                dataType:'json',
+                success: function(response) {
+                    images_finished++;
+                    // console.log(response);
+                    jQuery('#progress_msg').text('Responses received for '+images_finished+' out of '+image_total+' images');
+                    current_progress += (1 / image_total) * 90;
+                    progress_bar.css("width", current_progress + "%")
+                    .attr("aria-valuenow", current_progress)
+                    .text(Math.round(current_progress) + "%");
+                    response.results.map(function(item) {
+                        if (item.result.error) {
+                            progress_modal.find('.modal-footer').append(
+                                '<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error analyzing image number '+index+': '+item.result.error+'</li></ul>'
+                            );
+                        }
+                        else {
+                            // results.push(item);
+                        }
+                        results.push(item);
+                    });
+                },
+                error: function(response) {
+                    images_finished++;
+                    // console.log(response);
+                    jQuery('#progress_msg').text('Finished analyzing '+images_finished+' out of '+image_total+' images');
+                    current_progress += (1 / image_total) * 90
+                    progress_modal.find('.modal-footer').append(
+                        '<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error analyzing image number '+index+': '+response+'</li></ul>'
+                    );
+                }
+            });
+            return call;
+        });
+
+        jQuery('#progress_msg').text('All '+image_total+' images submitted, waiting for responses.');
+
+        jQuery.when.apply(jQuery, deferred_calls).then(function() {
+            // console.log("Results are:");
+            // console.log(results);
+            if (results.length > 0) {
+                jQuery.ajax({
+                    url: '/ajax/image_analysis/group',
+                    method: 'POST',
+                    data: { 'result': JSON.stringify(results) },
+                    success: function(response) {
+                        // console.log("Grouped Results are:");
+                        // console.log(response);
+                        current_progress = 100;
+                        progress_bar.css("width", current_progress + "%")
+                        .attr("aria-valuenow", current_progress)
+                        .text(Math.round(current_progress) + "%");
+                        jQuery('#progress_msg').text('Building results table.');
+                        jQuery('#image_analysis_result').show();
+
+                        var table = jQuery('#image_analysis_result_table').DataTable( {
+                            "destroy" : true,
+                            "data": response.results,
+                            "dom": 'Bfrtip',
+                            "buttons":  [
+                                'copy', 'excel', 'csv', 'pdf'
+                            ],
+                            "columns": [
+                                {
+                                    "className":      'details-control',
+                                    "orderable":      false,
+                                    "data":           null,
+                                    "defaultContent": '',
+                                    "render": function () {
+                                         return '<i class="fa fa-plus-square" aria-hidden="true"></i>';
+                                     },
+                                     width:"15px"
+                                },
+                                { "data": "observationUnitName" },
+                                { "data": "observationVariableName" },
+                                { "data": "numberAnalyzed" },
+                                { "data": "value" }
+                            ],
+                            "order": [[1, 'asc']]
+                        } );
+
+                        // Add event listener for opening and closing details
+                        jQuery('#image_analysis_result_table tbody').on('click', 'td.details-control', function () {
+                            var tr = jQuery(this).closest('tr');
+                            var tdi = tr.find("i.fa");
+                            var row = table.row( tr );
+
+                            if ( row.child.isShown() ) {
+                                // This row is already open - close it
+                                row.child.hide();
+                                tr.removeClass('shown');
+                                tdi.first().removeClass('fa-minus-square');
+                                tdi.first().addClass('fa-plus-square');
+                            }
+                            else {
+                                // Open this row
+                                row.child( format(row.data()) ).show();
+                                tr.addClass('shown');
+                                tdi.first().removeClass('fa-plus-square');
+                                tdi.first().addClass('fa-minus-square');
+                            }
+                        } );
+
+                        setTimeout(function(){
+                            progress_modal.find('.modal-footer').html('');
+                            progress_modal.modal('hide');
+                        }, 1000);
+
+                    },
+                    error: function(response) {
+                        // jQuery('#working_modal').modal('hide');
+                        progress_modal.modal('hide');
+                        console.log('Error: '+response);
+                        // jQuery('#'+image_id).text('Error analyzing image number '+index+'. '+response);
+                        alert("An error occurred while displaying image analysis results.");
+                    }
+                });
+            }
+            else {
+                progress_modal.find('.modal-footer').html('');
+                progress_modal.modal('hide');
+                alert("No usable results returned from the service, aborting analysis.");                 // alert("No usable results returned from the service, aborting analysis.");
+            }
+        });
+    });
+
+    jQuery('#image_analysis_save_results').click(function(){
+
+        var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
+        // console.log(table_data);
+        jQuery.ajax({
+            url: '/brapi/v2/observations/',
+            method: 'POST',
+            headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
+            data: JSON.stringify(table_data),
+            contentType: "application/json; charset=utf-8",
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                // console.log(response);
+                jQuery('#working_modal').modal('hide');
+                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
+                jQuery('#saveResultModal').modal('show');
+            },
+            error: function(response) {
+                // console.log(response);
+                jQuery('#working_modal').modal('hide');
+                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results.</li></ul>');
+                jQuery('#saveResultModal').modal('show');
+            }
+        });
+
+
+    });
+
+});
+
+function _load_image_search_results() {
+    images_table = jQuery('#image_analysis_image_search_results').DataTable({
+        'destroy' : true,
+        'searching' : false,
+        'ordering'  : false,
+        'processing': true,
+        'serverSide': true,
+        'scrollX': true,
+        'lengthMenu': [10,20,50,100,1000,5000],
+        'ajax': { 'url':  '/ajax/search/images',
+            'data': function(d) {
+              d.html_select_box = "image_analysis_select";
+              d.image_description_filename_composite = jQuery('#image_description_filename_composite').val();
+              d.image_person = jQuery('#image_submitter').val();
+              d.image_tag = jQuery('#image_tag').val();
+              d.image_stock_uniquename = jQuery('#image_stock_uniquename').val();
+              d.image_project_name = jQuery('#html_image_analysis_trial_select').val();
+            }
+        }
+    });
+}
+
+function format ( d ) {
+    var detail_rows = '';
+    d.details.forEach(function (image, index) {
+        var result = image.analyzed_link;
+        var text;
+        if (result.startsWith("Error: ")) {
+            text = result;
+        } else {
+            text = '<img src="'+result+'">';
+        }
+        detail_rows +=
+        `<tr>
+          <td>`+image.image_name+`</td>
+          <td>`+text+`</td>
+          <td>`+image.value+`</td>
+        </tr>`
+    });
+
+return `<table class="table">
+            <thead>
+                <tr>
+                  <th scope="col">Image Name</th>
+                  <th scope="col">Analyzed Image</th>
+                  <th scope="col">Value</th>
+                </tr>
+             </thead>
+             <tbody>` + detail_rows + `</tbody>
+        </table>`;
+
+}
+
+</script>

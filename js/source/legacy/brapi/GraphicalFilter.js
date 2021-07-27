@@ -48,7 +48,8 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
   
   if (group_key_accessor!=undefined){
     tableCols.push({title:"Count",data:"count"});
-    data_node = data_node.reduce().fork(function(all){
+    const reduce_func = function(a,d){ return a.concat(d)};
+    data_node = data_node.reduce(reduce_func).fork(function(all){
       var key_map = {};
       all.forEach(function(d){
         var key = group_key_accessor(d.data);
@@ -540,7 +541,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       var v = frself.valueAccessor(d);
       return v!=null && !isNaN(v);
     });
-    console.log(visible_data);
+    // console.log(visible_data);
     var negate = (this.operator.indexOf("not", this.operator.length - 3) != -1);
     var extent = d3.extent(visible_data, this.valueAccessor);
     if (visible_data.length<2) extent = [-1,1];
@@ -696,7 +697,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
           brushExtent[0]-=1;
         }
       }
-      console.log(brushExtent);
+      // console.log(brushExtent);
       this.brush.move(transition,brushExtent);
     } else {
       status.text("Nothing");

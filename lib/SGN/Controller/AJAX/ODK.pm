@@ -34,7 +34,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -265,7 +265,7 @@ sub schedule_get_crossing_data_GET {
     my $crontab_line = $timing.$perl_command."\n";
     #print STDERR $crontab_line;
     my $crontab_file = $c->config->{crontab_file};
-    open (my $F, ">", $crontab_file) || die "Could not open $crontab_file: $!\n";
+    open (my $F, "> :encoding(UTF-8)", $crontab_file) || die "Could not open $crontab_file: $!\n";
         if ($timing){
             print $F $crontab_line;
         }
@@ -311,7 +311,7 @@ sub get_crossing_data_cronjobs_GET {
     my @entries;
     my $crontab_file = $c->config->{crontab_file};
     if ($crontab_file ne 'NULL') {
-        open(my $fh, '<:encoding(UTF-8)', $crontab_file)
+        open(my $fh, '< :encoding(UTF-8)', $crontab_file)
             or die "Could not open file '$crontab_file' $!";
      
         while (my $row = <$fh>) {
@@ -410,7 +410,7 @@ sub get_odk_cross_progress_cached_GET {
     my $filename = $dir."/ona_odk_cross_progress_top_level_json_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
     my $json;
-    open(my $fh, '<', $filename) or warn "cannot open file $filename";
+    open(my $fh, '< ":encoding(UTF-8)', $filename) or warn "cannot open file $filename";
     {
         local $/;
         my $line = <$fh>;
@@ -427,7 +427,7 @@ sub get_odk_cross_progress_cached_GET {
         $filename = $dir."/ona_odk_cross_progress_top_level_contents_html_".$ona_form_id.".txt";
         print STDERR "Opening $filename \n";
         my $top_level_contents;
-        open(my $fh, '<', $filename) or warn "cannot open file $filename";
+        open(my $fh, '< :encoding(UTF-8)', $filename) or warn "cannot open file $filename";
         {
             local $/;
             my $line = <$fh>;
@@ -481,7 +481,7 @@ sub get_odk_cross_summary_cached_GET {
     my $filename = $dir."/ona_odk_cross_progress_summary_info_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
     my $summary;
-    open(my $fh, '<', $filename) or warn "cannot open file $filename";
+    open(my $fh, '< :encoding(UTF-8)', $filename) or warn "cannot open file $filename";
     {
         local $/;
         my $line = <$fh>;
@@ -491,7 +491,7 @@ sub get_odk_cross_summary_cached_GET {
     $filename = $dir."/ona_odk_cross_progress_summary_plant_status_info_html_".$ona_form_id.".txt";
     print STDERR "Opening $filename \n";
     my $plant_status_summary;
-    open($fh, '<', $filename) or warn "cannot open file $filename";
+    open($fh, '< :encoding(UTF-8)', $filename) or warn "cannot open file $filename";
     {
         local $/;
         my $line = <$fh>;

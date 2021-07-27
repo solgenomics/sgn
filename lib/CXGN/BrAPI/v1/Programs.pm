@@ -7,37 +7,15 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
+extends 'CXGN::BrAPI::v1::Common';
 
-has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
-
-sub programs_list {
+sub search {
 	my $self = shift;
 	my $inputs = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
-	my $program_names = $inputs->{program_names};
+	my $program_names = $inputs->{programName};
 	my %program_names_q = map { $_ => 1 } @$program_names;
 
 	my $ps = CXGN::BreedersToolbox::Projects->new({ schema => $self->bcs_schema });
@@ -75,7 +53,7 @@ sub programs_list {
         my $names = join ',', @sp_person_names;
 		push @data, {
 			programDbId=>qq|$_->[0]|,
-			name=>$_->[1],
+			programName=>$_->[1],
 			abbreviation=>$prop_hash->{breeding_program_abbreviation} ? join ',', @{$prop_hash->{breeding_program_abbreviation}} : '',,
 			objective=>$_->[2],
 			leadPerson=> $names,

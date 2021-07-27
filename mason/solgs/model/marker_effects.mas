@@ -22,7 +22,7 @@ $marker_effects_download_url =>''
 
 <&| /page/info_section.mas, 
   collapsible => 1, 
-  collapsed   => 0, 
+  collapsed   => 1, 
   title       => "Marker Effects" 
 &>
  

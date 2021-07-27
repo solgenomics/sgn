@@ -1,7 +1,15 @@
 <%args>
 $preferred_species => ""
-$editable_stock_props => {}
+$editable_stock_props
+$editable_stock_props_definitions
 </%args>
+
+<%perl>
+    my $user_role = '';
+    if ($c->user) {
+        $user_role = $c->user->get_object()->get_user_type();
+    }
+</%perl>
 
 <div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-lg" role="document">
@@ -37,9 +45,13 @@ $editable_stock_props => {}
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
                             <div class="col-sm-8">
+% if ( $user_role eq 'curator' ) {
                                 <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked></input>
+% } else { 
+                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
+% }
                                 <br/>
-                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search.</small>
+                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
                             </div>
                         </div>
                     </form>
@@ -57,9 +69,21 @@ $editable_stock_props => {}
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_new_accessions_form" name="upload_new_accessions_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File: </label>
-                            <div class="col-sm-9" >
+                            <label class="col-sm-4 control-label">Upload File: </label>
+                            <div class="col-sm-8" >
                                 <input type="file" name="new_accessions_upload_file" id="new_accessions_upload_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
+                            <div class="col-sm-8">
+% if ( $user_role eq 'curator' ) {
+                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked></input>
+% } else {
+                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked disabled></input>
+% }
+                                <br/>
+                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
                             </div>
                         </div>
                     </form>
@@ -103,172 +127,41 @@ $editable_stock_props => {}
                                 <td>accession_name</td>
                                 <td>species_name</td>
                                 <td>population_name</td>
-                                <td>organization_name(s)</td>
-                                <td>synonym(s)</td>
-% if (exists($editable_stock_props->{'location_code'})){
-                                <td>location_code(s)</td>
-% }
-% if (exists($editable_stock_props->{'ploidy_level'})){
-                                <td>ploidy_level(s)</td>
-% }
-% if (exists($editable_stock_props->{'genome_structure'})){
-                                <td>genome_structure(s)</td>
-% }
-% if (exists($editable_stock_props->{'variety'})){
-                                <td>variety(s)</td>
-% }
-% if (exists($editable_stock_props->{'donor'})){
-                                <td>donor(s)</td>
-% }
-% if (exists($editable_stock_props->{'donor institute'})){
-                                <td>donor_institute(s)</td>
-% }
-% if (exists($editable_stock_props->{'donor PUI'})){
-                                <td>donor_PUI(s)</td>
-% }
-% if (exists($editable_stock_props->{'country of origin'})){
-                                <td>country_of_origin(s)</td>
-% }
-% if (exists($editable_stock_props->{'state'})){
-                                <td>state(s)</td>
-% }
-% if (exists($editable_stock_props->{'institute code'})){
-                                <td>institute_code(s)</td>
-% }
-% if (exists($editable_stock_props->{'institute name'})){
-                                <td>institute_name(s)</td>
-% }
-% if (exists($editable_stock_props->{'biological status of accession code'})){
-                                <td>biological_status_of_accession_code(s)</td>
-% }
-% if (exists($editable_stock_props->{'notes'})){
-                                <td>notes(s)</td>
-% }
-% if (exists($editable_stock_props->{'accession number'})){
-                                <td>accession_number(s)</td>
-% }
-% if (exists($editable_stock_props->{'PUI'})){
-                                <td>PUI(s)</td>
-% }
-% if (exists($editable_stock_props->{'seed source'})){
-                                <td>seed_source(s)</td>
-% }
-% if (exists($editable_stock_props->{'type of germplasm storage code'})){
-                                <td>type_of_germplasm_storage_code(s)</td>
-% }
-% if (exists($editable_stock_props->{'acquisition date'})){
-                                <td>acquisition_date(s)</td>
-% }
-% if (exists($editable_stock_props->{'transgenic'})){
-                                <td>transgenic</td>
-% }
-% if (exists($editable_stock_props->{'introgression_parent'})){
-                                <td>introgression_parent</td>
-% }
-% if (exists($editable_stock_props->{'introgression_backcross_parent'})){
-                                <td>introgression_backcross_parent</td>
-% }
-% if (exists($editable_stock_props->{'introgression_map_version'})){
-                                <td>introgression_map_version</td>
-% }
-% if (exists($editable_stock_props->{'introgression_chromosome'})){
-                                <td>introgression_chromosome</td>
-% }
-% if (exists($editable_stock_props->{'introgression_start_position_bp'})){
-                                <td>introgression_start_position_bp</td>
-% }
-% if (exists($editable_stock_props->{'introgression_end_position_bp'})){
-                                <td>introgression_end_position_bp</td>
+                                <td>organization_name</td>
+                                <td>synonym</td>
+%  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
+%                               print "<td>$editable_stockprop</td>";
 % }
                             </tr>
                         </tbody>
                     </table>
 
-                    <b>Required fields:</b>
+                    <b>Comma Separated Fields:</b>
+                    <ul>
+                    <li>The following fields can take comma-separated values to indicate there are several values for the accession: organization_name, synonym
+%  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
+%                   print ", $editable_stockprop";
+%  }
+                    </li>
+                    </ul>
+
+                    <b>Required Fields:</b>
                     <ul>
                     <li>accession_name (must be unique)</li>
                     <li>species_name (must exist in the database)</li>
                     </ul>
-                    <b>Optional fields:</b>
+                    <b>Optional Fields:</b>
                     <ul>
                     <li>population_name (a population is a grouping of accessions. if the population already exists in the database, the accession will be added into it, otherwise, the new population will be created.)</li>
-                    <li>organization_names (the name(s) of the organization(s) which use this accession. multiple organizations can be given with comma separation (e.g. NARO,IITA))</li>
-                    <li>synonyms (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. multiple synonyms can be given with comma separation (e.g. accession_synonym1,accession_synonym001))</li>
-% if (exists($editable_stock_props->{'location_code'})){
-                    <li>location_code(s) (location code(s) for the accession. many can be uploaded at once in comma separated list)</li>
-% }
-% if (exists($editable_stock_props->{'ploidy_level'})){
-                    <li>ploidy_level(s) (a number indicating the ploidy (e.g. 2 for diploid, 3 for triploid), numeric. many values can be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'genome_structure'})){
-                    <li>genome_structure(s) (genome structure(s) for accession which take into account ploidy and ancestral genome info e.g. AAA, AB. many can be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'variety'})){
-                    <li>variety(s) (variety can be defined as a group of individuals or plants having similar traits that can be reproduced "true to type" from generation to generation. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'donor'})){
-                    <li>donor(s) (the accession_name of the donor accession. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'donor institute'})){
-                    <li>donor_institute(s) (the institute of the donor accession. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'donor PUI'})){
-                    <li>donor_PUI(s) (the permanent unique identifier of the donor accession. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'country of origin'})){
-                    <li>country_of_origin(s) (the country of origin. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'state'})){
-                    <li>state(s) (the state of origin. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'institute code'})){
-                    <li>institute_code(s) (the institute code of origin. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'institute name'})){
-                    <li>institute_name(s) (the institute name of origin. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'biological status of accession code'})){
-                    <li>biological_status_of_accession_code(s) (code indicating the state of accession. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'notes'})){
-                    <li>notes(s) (free text for notes. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'accession number'})){
-                    <li>accession_number(s) (accession number for accession from germplasm bank. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'PUI'})){
-                    <li>PUI(s) (permanent unique identifier of the accession. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'seed source'})){
-                    <li>seed_source(s) (origin of seed source. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'type of germplasm storage code'})){
-                    <li>type_of_germplasm_storage_code(s) (code indicating the type of germplasm storage. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'acquisition date'})){
-                    <li>acquisition_date(s) (date(s) of acquisition YYYYMMDD for accession. may be uploaded as comma separated list.)</li>
-% }
-% if (exists($editable_stock_props->{'transgenic'})){
-                    <li>transgenic (indicates if accession is transgenic. Please indicate 1 if transgenic and empty if otherwise.)</li>
-% }
-% if (exists($editable_stock_props->{'introgression_parent'})){
-                    <li>introgression_parent (if the accession you are adding has an introgression that originated from one of the parents, you can specify the parent here)</li>
-% }
-% if (exists($editable_stock_props->{'introgression_backcross_parent'})){
-                    <li>introgression_backcross_parent (the backcross parent for introducing an introgression into the accession being added)</li>
-% }
-% if (exists($editable_stock_props->{'introgression_map_version'})){
-                    <li>introgression_map_version (the map version for identifying the start and stop position of the introgression. e.g. AGPv2)</li>
-% }
-% if (exists($editable_stock_props->{'introgression_chromosome'})){
-                    <li>introgression_chromosome (the chromosome number that the introgression is on.)</li>
-% }
-% if (exists($editable_stock_props->{'introgression_start_position_bp'})){
-                    <li>introgression_start_position_bp (the start position of the introgression in base pairs)</li>
-% }
-% if (exists($editable_stock_props->{'introgression_end_position_bp'})){
-                    <li>introgression_start_position_bp (the end position of the introgression in base pairs)</li>
-% }
+                    <li>organization_name (the name(s) of the organization(s) which use this accession e.g. NARO,IITA)</li>
+                    <li>synonym (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. e.g. accession_synonym1,accession_synonym001)</li>
+%  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
+%    if (exists($editable_stock_props_definitions->{$editable_stockprop})) {
+%                   print "<li>$editable_stockprop (".$editable_stock_props_definitions->{$editable_stockprop}.")</li>";
+%    } else {
+%                   print "<li>$editable_stockprop (no definition available)</li>";
+%    }
+%  }
                     </ul>
                 </div>
             </div>

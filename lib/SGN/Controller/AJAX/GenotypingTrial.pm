@@ -10,13 +10,14 @@ use List::MoreUtils qw /any /;
 use CXGN::People::Person;
 use CXGN::Login;
 use CXGN::Genotype::Protocol;
+use CXGN::Genotype::CreatePlateOrder;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
 );
 
 sub generate_genotype_trial : Path('/ajax/breeders/generategenotypetrial') ActionClass('REST') {}
@@ -354,7 +355,7 @@ sub store_genotype_trial_POST : Args(0) {
         my $ct = CXGN::Trial::TrialCreate->new( {
             chado_schema => $schema,
             dbh => $c->dbc->dbh(),
-            user_name => $user_name, #not implemented,
+            owner_id => $user_id,
             operator => $user_name,
             trial_year => $plate_info->{year},
             trial_location => $location->description(),
@@ -436,21 +437,21 @@ sub store_genotype_trial_POST : Args(0) {
     };
 }
 
-sub get_genotypingserver_credentials : Path('/ajax/breeders/genotyping_credentials') Args(0) { 
+sub get_genotypingserver_credentials : Path('/ajax/breeders/genotyping_credentials') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if ($c->user && ($c->user->check_roles("submitter") || $c->user->check_roles("curator"))) { 
-        $c->stash->{rest} = { 
+    if ($c->user && ($c->user->check_roles("submitter") || $c->user->check_roles("curator"))) {
+        $c->stash->{rest} = {
             host => $c->config->{genotyping_server_host},
             username => $c->config->{genotyping_server_username},
             password => $c->config->{genotyping_server_password},
             token => $c->config->{genotyping_server_token},
         };
     }
-    else { 
-        $c->stash->{rest} = { 
-            error => "Insufficient privileges for this operation." 
+    else {
+        $c->stash->{rest} = {
+            error => "Insufficient privileges for this operation."
         };
     }
 }
@@ -465,7 +466,7 @@ sub get_genotyping_data_projects_GET : Args(0) {
 
     my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$bcs_schema,
-        trial_design_list=>['genotype_data_project']
+        trial_design_list=>['genotype_data_project', 'pcr_genotype_data_project']
     });
     my ($data, $total_count) = $trial_search->search();
     my @result;
@@ -532,6 +533,83 @@ sub get_genotyping_data_protocols_GET : Args(0) {
     #print STDERR Dumper \@result;
 
     $c->stash->{rest} = { data => \@result };
+}
+
+sub create_plate_order : Path('/ajax/breeders/createplateorder') ActionClass('REST') {}
+sub create_plate_order_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $plate_info = decode_json $c->req->param("order_info");
+
+    my $plate_id = $plate_info->{plate_id};
+    my $client_id = $plate_info->{client_id};
+    my $service_id_list = $plate_info->{service_ids};
+    my $facility_id = $plate_info->{facility_id};
+    my $organism_name = $plate_info->{organism_name};
+    my $add_requirements = $plate_info->{requeriments};
+
+    print STDERR Dumper $plate_info;
+
+    my $submit_samples = CXGN::Genotype::CreatePlateOrder->new({
+        bcs_schema=>$schema,
+        client_id=>$client_id,
+        service_id_list=>$service_id_list,
+        plate_id => $plate_id,
+        facility_id => $facility_id,
+        requeriments => $add_requirements,
+        organism_name => $organism_name
+    });
+    # my $errors = $submit_samples->validate();
+    my $order = $submit_samples->create();
+
+    print Dumper $order;
+
+    if($order){
+        $c->stash->{rest} = {
+            message => "Successfully order created.",
+            trial_id => $plate_id,
+            order => $order
+        };
+    }
+}
+
+sub store_plate_order : Path('/ajax/breeders/storeplateorder') ActionClass('REST') {}
+sub store_plate_order_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $order_info = decode_json $c->req->param("order");
+
+    my $plate_id = $c->req->param("plate_id");
+    my $order_id = $order_info->{orderId} || undef;
+    my $submission_id = $order_info->{submissionId} || undef;
+    my $shipment = $order_info->{shipmentForms};
+
+    my $genotyping_trial;
+    my $message;
+    if ($plate_id && $order_id) {
+        $genotyping_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $plate_id });
+        $genotyping_trial->set_genotyping_vendor_order_id(encode_json $order_info);
+        $message = "Successfully stored.";
+    } elsif ($plate_id && $submission_id) {
+        $genotyping_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $plate_id });
+        $genotyping_trial->set_genotyping_vendor_submission_id(encode_json $order_info);
+        $message = "Successfully stored.";
+    } else {
+        my $error = "There was an error trying to store submission order";
+        $c->stash->{rest} = {
+            message => $error
+        };
+    }
+
+    $c->stash->{rest} = {
+        message => $message,
+        order_id => $order_id
+    };
+
 }
 
 1;

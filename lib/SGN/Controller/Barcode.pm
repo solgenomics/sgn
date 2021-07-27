@@ -36,13 +36,6 @@ sub index : Path('/barcode') Args(0) {
 	push @locations,  [ $row->nd_geolocation_id,$row->description ];
     }
 
-    # get tool description info
-    #
-    my @tools_def = read_file($c->path_to("../cassava/documents/barcode/tools.def"));
-
-    print STDERR join "\n", @tools_def;
-
-    $c->stash->{tools_def} = \@tools_def;
     $c->stash->{locations} = \@locations;
     $c->stash->{template} = '/barcode/index.mas';
 }
@@ -149,7 +142,7 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
     if ($field_info eq "trial"){
        $text =  "TrialID:".$stock_id."\n TrialName:".$stock_name;
     }
-    
+
     $c->tempfiles_subdir('barcode');
     my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 

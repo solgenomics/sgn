@@ -1,0 +1,76 @@
+<%args>
+$program_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Location Info", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+                <table class="table table-hover table-bordered" id="program_location_table">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Name</th>
+                            <th>Abbreviation</th>
+                            <th>Country</th>
+                            <th>Type</th>
+                            <th>Altitude(m)</th>
+                            <th>Trials</th>
+                            <th>Nearest NOAA Station ID</th>
+                        </tr>
+                    </thead>
+                </table>
+            </&>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function (){
+
+    jQuery.ajax( {
+        url: '/ajax/breeders/program/'+ <% $program_id %> + '/locations',
+        beforeSend: function() {
+            // put working animation handling here
+        },
+        success: function(response){
+            var export_message = window.location.href + ' location data.';
+            locationJSON = JSON.parse(response.data);
+            //console.log("Data is "+JSON.stringify(locationJSON, null, 2));
+
+            var table = jQuery('#program_location_table').DataTable({
+                'autoWidth': false,
+                data: locationJSON,
+                dom: 'Bfrtip',
+                select: true,
+                rowId: 'properties.Id',
+                "columns": [
+                    { "data": "properties.Id" },
+                    { "data": "properties.Name" },
+                    { "data": "properties.Abbreviation" },
+                    { "data": "properties.Code",
+                        "render":function(data, type, full, meta){
+                            return full.properties.Code + ' ' + full.properties.Country;
+                        }
+                    },
+                    { "data": "properties.Type" },
+                    { "data": "properties.Altitude" },
+                    { "data": "properties.Trials" },
+                    { "data": "properties.NOAAStationID",
+                        "render":function(data, type, full, meta) {
+                            return full.properties.NOAAStationID ? "<a href='https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/" + full.properties.NOAAStationID + "/detail' target=_blank>"+ full.properties.NOAAStationID + "</a>" : "";
+                        }
+                    }
+                ],
+            });
+        }
+    });
+});
+
+
+</script>

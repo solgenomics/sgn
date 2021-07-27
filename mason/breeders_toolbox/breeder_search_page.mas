@@ -15,30 +15,32 @@ $dataset_id => undef
   </div>
 </div>
 
+<& /breeders_toolbox/breeder_search_page_dataset_overlay.mas &>
+
 <div id="wizard" class="row">
   <span class="wizard-main">
     <span class="wizard-columns"></span>
     <div class="templates" style="display: none !important;">
-      
+
       <div class="wizard-unselected">
         <div class="btn-group wizard-list-item">
           <button type="button" class="btn btn-xs btn-success wizard-list-add">&#x2b;</button>
           <a target="_blank" class="btn btn-xs btn-default wizard-list-name"></a>
         </div>
       </div>
-      
+
       <div class="wizard-selected">
         <div class="btn-group wizard-list-item">
           <button type="button" class="btn btn-xs btn-danger wizard-list-rem">&#10005;</button>
           <a target="_blank" class="btn btn-xs btn-default wizard-list-name"></a>
         </div>
       </div>
-      
+
       <div class="wizard-column">
         <div class="wizard-panel panel panel-default">
-          
+
           <span class="wizard-loader glyphicon glyphicon-refresh" aria-hidden="true"></span>
-          
+
           <div class="panel-heading">
             <select class="wizard-type-select form-control input-sm form-inline">
               <option value="" disabled selected>Select Column Type</option>
@@ -46,15 +48,15 @@ $dataset_id => undef
               <optgroup class="wizard-lists-group" label="Load Selection from List:"></optgroup>
             </select>
           </div>
-          
+
           <div class="panel-heading">
             <input type="text" class="wizard-search form-control input-sm" placeholder="Search">
           </div>
-          
+
           <div class="panel-body">
-            
+
             <div class="wizard-btn-center">
-              <div class="btn-group"> 
+              <div class="btn-group">
                 <button class="wizard-select-all btn btn-default btn-xs">Select All</button
                 ><button class="wizard-btn-tag btn btn-primary btn-xs">
                   <span class="wizard-count-selected">0</span>/<span class="wizard-count-all">0</span>
@@ -62,20 +64,20 @@ $dataset_id => undef
                 ><button class="wizard-select-clear btn btn-default btn-xs">Clear</button>
               </div>
             </div>
-            
+
             <ul class="wizard-list-unselected wizard-list well"></ul>
             <ul class="wizard-list-selected wizard-list well"></ul>
-            
+
             <div class="wizard-btn-center wizard-union-toggle">
-              <div class="btn-group"> 
+              <div class="btn-group">
                 <button class="wizard-btn-tag btn btn-xs btn-default disabled">Match</button
                 ><button class="btn btn-xs btn-primary active">ANY</button
                 ><button class="btn btn-default btn-xs">ALL</button>
               </div>
             </div>
-            
+
           </div>
-          
+
           <table class="wizard-save-to-list table panel-footer">
             <&| /util/user.mas:logged_in &>
               <tr>
@@ -103,16 +105,16 @@ $dataset_id => undef
                 <td><button class="btn btn-xs btn-primary" name="site_login_button">Log In</button> to save lists.</td>
               </tr>
             </&>
-          </table>  
-          
+          </table>
+
         </div>
       </div>
-      
+
     </div>
   </span>
-  
+
   <div class="clearfix col-xs-12"></div>
-  
+
   <div class="wizard-datasets panel-group col-sm-12 col-md-6">
     <div class="panel panel-default wizard-panel">
       <div class="panel-heading">
@@ -128,6 +130,8 @@ $dataset_id => undef
             </select>
             <span class="input-group-btn">
               <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-load">Load</button></span>
+              <span><button style="width:9em;margin-left:4px;" class="btn btn-sm btn-primary wizard-dataset-public">Make Public</button></span>
+              <span><button style="width:5em;margin-left:4px;" class="btn btn-sm btn-danger wizard-dataset-delete">Delete</button></span>
             </span>
           </div>
         </div>
@@ -142,8 +146,8 @@ $dataset_id => undef
       </&>
     </div>
   </div>
-  
-  <div class="wizard-downloads panel-group col-sm-12 col-md-6" id="wiz-down-group" role="tablist" aria-multiselectable="true">  
+
+  <div class="wizard-downloads panel-group col-sm-12 col-md-6" id="wiz-down-group" role="tablist" aria-multiselectable="true">
     <&| /util/user.mas:logged_out &>
       <div class="panel panel-default">
         <div class="panel-heading">
@@ -159,18 +163,129 @@ $dataset_id => undef
         <div id="wiz-down-1-c" class="panel-collapse collapse" role="tabpanel">
           <table class="table">
             <tr>
-              <td><input class="wizard-download-genotypes-info form-control input-sm" type="text" disabled></input></td>
+              <td colspan="4">
+                <span class="glyphicon glyphicon-info-sign" title="To download related genotype data, select 1 or more Accessions and optionally no more than 1 Genotyping Protocol in the wizard. If no genotyping protocol is selected, the database default protocol will be used. Click the checkbox here to compute genotypes for the selected accessions from genotypes of parents; this works for downloading genotypes, downloading the GRM, and performing GWAS."></span>
+                <span>Download Genotype Data</span>
+                <input class="wizard-download-genotypes-info form-control input-sm" type="text" disabled></input>
+              </td>
+              <td colspan="4">
+                  <span>Compute From Parents</span><br/>
+                  <input type="checkbox" class="wizard-download-genotypes-parents-compute">
+              </td>
+              <td colspan="4">
+                  <span>Include Duplicate Genotypes</span><br/>
+                  <input type="checkbox" class="wizard-download-genotypes-duplicates-include">
+              </td>
             </tr>
           </table>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
-            <button class="wizard-download-genotypes btn btn-sm btn-primary">
-                <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                Genotypes
-            </button>
+            <table class="table">
+                <tr>
+                  <td colspan="4">
+                    <span>Chromosome</span>
+                    <select class="wizard-download-genotypes-chromosome-number form-control input-sm"></select>
+                  </td>
+                  <td colspan="4">
+                    <span>Start Position</span>
+                    <input placeholder="" type="number" class="wizard-download-genotypes-start-position form-control input-sm">
+                  </td>
+                  <td colspan="4">
+                    <span>End Position</span>
+                    <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control input-sm">
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="6">
+                    <span>Genotypes Download Format</span>
+                    <select class="wizard-download-genotypes-format form-control input-sm" >
+                        <option value="VCF">VCF File Format</option>
+                        <option value="DosageMatrix">Dosage Matrix File Format (.tsv)</option>
+                    </select>
+                  </td>
+                  <td colspan="6">
+                    <span>Marker Set Filter</span>
+                    <select class="wizard-download-genotypes-marker-set-list-id form-control input-sm" id="wizard-download-genotypes-marker-set-list-id"></select>
+                  </td>
+                </tr>
+                <tr>
+                    <td colspan="6">
+                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, use the chromosome, start position, end position, and marker set options. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats."></span>
+                        <span>Download Genotypes</span><br/>
+                        <button class="wizard-download-genotypes btn btn-sm btn-primary">
+                            <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                            Download Genotypes
+                        </button>
+                    </td>
+                    <td colspan="6">
+                        <span>Marker Set Filter</span><br/>
+                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">
+                            Manage Marker Sets
+                        </button>
+                    </td>
+                </tr>
+            </table>
+          </div>
+          <div class="panel-footer" style="border-top: 1px solid #ddd;">
+            <table class="table">
+                <tr>
+                    <td colspan="6">
+                      <span>Minor Allele Frequency</span>
+                      <input placeholder="0.05" value="0.05" type="number" class="wizard-download-genotypes-grm-maf form-control input-sm">
+                    </td>
+                    <td colspan="3">
+                      <span>Marker Filter</span>
+                      <input placeholder="0.60" value="0.60" type="number" class="wizard-download-genotypes-grm-marker-filter form-control input-sm">
+                    </td>
+                    <td colspan="3">
+                      <span>Individuals Filter</span>
+                      <input placeholder="0.80" value="0.80" type="number" class="wizard-download-genotypes-grm-individuals-filter form-control input-sm">
+                    </td>
+                </tr>
+              <tr>
+                <td colspan="12">
+                  <span>Genomic Relationship Matrix (GRM) Download Format</span>
+                  <select class="wizard-download-genotypes-grm-format form-control input-sm" >
+                      <!--option value="heatmap">Heatmap (.pdf)</option-->
+                      <option value="matrix">Matrix (.tsv)</option>
+                      <option value="three_column">3-Column Format (.tsv)</option>
+                  </select>
+                  <br/>
+                    <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GRM can be downloaded in a matrix format (.tsv) and a three column format."></span>
+                    <span>Download GRM</span><br/>
+                    <button class="wizard-download-genetic-relationship-matrix btn btn-sm btn-primary">
+                        <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                        Download GRM
+                    </button>
+                </td>
+              </tr>
+              <tr>
+                  <td colspan="12">
+                    <span>Genome Wide Association Study (GWAS) Download Format</span>
+                    <select class="wizard-download-genotypes-gwas-format form-control input-sm" >
+                        <option value="manhattan_qq_plots">Manhattan + QQ Plots (.pdf)</option>
+                        <option value="results_tsv">GWAS Results (.tsv)</option>
+                    </select>
+                    <br/>
+                    <span>Selected Traits Are All Repeated Measurements</span>
+                    <select class="wizard-download-genotypes-gwas-repeated-measurements form-control input-sm" >
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+                    <br/>
+                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, traits, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. When many traits are selected and these traits are not treated as repeated measurements, the traits are treated separately and distinct results are returned e.g. several Manhattan plots are returned. If the selected traits are in fact repeated measurements, then select 'yes'; a single GWAS will be run against all of the phenotypes e.g. a single Manhattan plot is returned. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GWAS uses a fixed effect for different field trials and a fixed effect for replicate. GWAS uses Kinship matrix calculated from the genotype data. MAF and missing data used to filter prior to GWAS and Kinship matrix calculation. Can select whether to return results in Manhattan and QQ Plot (.pdf) form or as the tabular results (.tsv)."></span>
+                        <span>Run GWAS</span><br/>
+                      <button class="wizard-download-gwas btn btn-sm btn-primary">
+                          <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                          Download GWAS
+                      </button>
+                  </td>
+              </tr>
+            </table>
+
           </div>
         </div>
       </div>
-      
+
       <div class="panel panel-default">
         <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-2-c" aria-controls="wiz-down-2-c">
           <span class="btnn btn-link">Related Trial Metadata</span>
@@ -192,13 +307,13 @@ $dataset_id => undef
           </table>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <button class="wizard-download-tmetadata btn btn-sm btn-primary">
-                <span class="glyphicon glyphicon-download" aria-hidden="true"></span> 
+                <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                 Metadata
             </button>
           </div>
         </div>
       </div>
-      
+
       <div class="panel panel-default">
         <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-3-c" aria-controls="wiz-down-3-c">
           <span class="btnn btn-link">Related Trial Phenotypes</span>
@@ -211,18 +326,25 @@ $dataset_id => undef
               </td>
             </tr>
             <tr>
-              <td colspan="2">
+            <td colspan="1">
+              <select class="wizard-download-phenotypes-speed form-control input-sm">
+                <option value="" disabled>Download Type</option>
+                <option selected value="Native">Default</option>
+                <option value="MaterializedViewTable">Fast (Improves speed but may miss recent changes)</option>
+              </select>
+            </td>
+              <td colspan="1">
                 <select class="wizard-download-phenotypes-format form-control input-sm">
-                  <option value="" disabled>Format</option>
+                  <option value="" disabled>Download Format</option>
                   <option selected value="csv">CSV</option>
                   <option value="xls">XLS</option>
                 </select>
               </td>
-              <td>
+              <td colspan="1">
                 <select class="wizard-download-phenotypes-level form-control input-sm">
                   <option value="" disabled>Data Level</option>
-                  <option value="all">All</option>
-                  <option selected value="plot">Plots</option>
+                  <option selected value="all">All</option>
+                  <option value="plot">Plots</option>
                   <option value="plant">Plants</option>
                 </select>
               </td>
@@ -263,17 +385,17 @@ $dataset_id => undef
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <button class="wizard-download-phenotypes btn btn-sm btn-primary">
                 <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                Phenotypes
+                Download Phenotypes
             </button>
           </div>
         </div>
       </div>
     </&>
   </div>
-  
+
 </div>
 
-<script type="text/javascript">
+<script>
   window.sWizard = jsMod['wizard'].WizardSetup("#wizard");
 </script>
 
@@ -300,7 +422,15 @@ $dataset_id => undef
   </div>
 </div>
 
-<script type="text/javascript">
+<script>
+
+  jQuery(document).ready(function (){
+%  if ($dataset_id){
+      document.getElementsByClassName("wizard-dataset-select")[0].value = <% $dataset_id %>;
+      document.getElementsByClassName("wizard-dataset-load")[0].click();
+%  }
+  });
+
   d3.select('#update_wizard_show').on('click', function () {
     $('#update_wizard_dialog').modal("show");
     jsMod['wizard'].updateStatus("#wizard_status")
@@ -317,7 +447,7 @@ $dataset_id => undef
         }
       });
   });
-  
+
   d3.select("#update_wizard").on('click',function(){
     jsMod['wizard'].refreshMatviews("fullview",this);
   });
@@ -325,5 +455,55 @@ $dataset_id => undef
   d3.select("#update_wizard_lists").on('click',function(){
     window.sWizard.reload_lists();
   });
+
+
+  // Wizard Callback: get chromosome names for a single selected genotyping protocol
+  var SELECTED_GENOTYPING_PROTOCOL = undefined;
+  window.sWizard.wizard.on_change(function(categories, selections, operations) {
+    var selected_genotyping_protocols = selections.hasOwnProperty('genotyping_protocols') ? selections.genotyping_protocols : [];
+    if ( selected_genotyping_protocols.length <= 1 ) {
+      var selected_genotyping_protocol = selected_genotyping_protocols.length === 1 ? selected_genotyping_protocols[0].id : "";
+      if ( selected_genotyping_protocol !== SELECTED_GENOTYPING_PROTOCOL ) {
+        SELECTED_GENOTYPING_PROTOCOL = selected_genotyping_protocol;
+        jQuery.ajax({
+          url: '/ajax/breeder/search/genotyping_protocol_chromosomes',
+          method: "GET",
+          data: { 'genotyping_protocol': SELECTED_GENOTYPING_PROTOCOL },
+          error: function(response) {
+            console.log("ERROR: Could not get chromosome names for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
+            console.log(response);
+            updateChromosomeNames();
+          },
+          success: function(response) {
+            if (response.error) {
+              console.log("ERROR: Server returned an error trying to get the chromosome names for genotyping protocol #" + SELECTED_GENOTYPING_PROTOCOL);
+              console.log(repsonse.error);
+              updateChromosomeNames();
+            }
+            else {
+              updateChromosomeNames(response.chromosome_names);
+            }
+          }
+        });
+      }
+    }
+    else {
+      SELECTED_GENOTYPING_PROTOCOL = "";
+      updateChromosomeNames();
+    }
+  });
+  updateChromosomeNames();
+
+  // Set the chromosome names for the select dropdown menu
+  function updateChromosomeNames(names) {
+    var html = "";
+    if ( names )  {
+      html += "<option value=''>All</option>";
+      for ( var i = 0; i < names.length; i++ ) {
+        html += "<option value='" + names[i] + "'>" + names[i] + "</option>";
+      }
+    }
+    $(".wizard-download-genotypes-chromosome-number").html(html);
+  }
 
 </script>

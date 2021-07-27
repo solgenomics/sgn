@@ -4,7 +4,6 @@
 </%doc>
 
 <%args>
-@tools_def => ()
 @projects => ()   # [ id, name, description ]
 @locations => ()  # [ id, description ]
 </%args>
@@ -16,78 +15,6 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 </%perl>
 
 <& /page/page_title.mas, title=>"Barcode Tools" &>
-
-
-
-%#<&| /page/info_section.mas, title=>'Generate Metadata Barcode', collapsible=>1, %#collapsed=>0 &>
-
-%#<form action="/barcode/metadata" >
-%#  <table>
-%#    <tr><td>Operator name</td><td><input name="operator" /></td></tr>
-%#    <tr><td>Date</td><td><input name="date" value="<% $date %>" /> (FORMAT: YYYY/MM/DD)</td></tr>
-%#    <tr><td>Location</td><td><& /page/html_select.mas, name=>'location', choices=>\@locations &> [<a href="/breeders/home">Add new location</a>]</td></tr>
-%#    <tr><td>Project</td><td><& /page/html_select.mas, name=>'project', choices=>\@projects &> [<a href="/breeders/home">Add new project</a>]</td></tr>
-
-%#  </table>
-
-%#  <input type="radio" name="image_size" value="small" checked="1" /> small<br />
-%#  <input type="radio" name="image_size" value="large" /> large<br />
-
-%#  <input type="submit" value="Generate barcode" />
-%#  </form>
-
-%#</&>
-
-%#<&| /page/info_section.mas, title=>'Excel Sheet Download',  collapsible=>1, collapsed=>0 &>
-
-%#<div class="well well-sm">
-%#<div class="row">
-%#  <div class="col-md-1 col-lg-1">
-%#  </div>
-%#  <div class="col-md-10 col-lg-10">
-%#<& /barcode/excel_download.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def  &>
-%#  </div>
-%#  <div class="col-md-1 col-lg-1">
-%#  </div>
-%#</div>
-%#</div>
-
-%#</&>
-
-
-%#<&| /page/info_section.mas, title=>'Metadata &amp; Multibarcode Tool', collapsible=>1, collapsed=>0 &>
-
-%#<div class="well well-sm">
-%#<div class="row">
-%#  <div class="col-md-1 col-lg-1">
-%#  </div>
-%#  <div class="col-md-10 col-lg-10">
-%#  <& /barcode/multi_tool_input.mas, locations=>\@locations, projects=>\@projects, available_cvterms => \@tools_def &>
-%#  </div>
-%#  <div class="col-md-1 col-lg-1">
-%#  </div>
-%#</div>
-%#</div>
-
-%#</&>
-
-
-%#<&| /page/info_section.mas, title=>'Generate Continuous Barcode', collapsible=>1, collapsed=>1 &>
-
-%#<h3>Note: This tool is experimental</h3>
-%#<form action="/barcode/continuous_scale" >
-%#<table>
-%#<tr><td>Start value</td><td> <input name="start" value="0" size="4" /></td></tr>
-%#<tr><td>End value</td><td><input name="end" value="1000" size="4"  /></td></tr>
-%#<tr><td>Step</td><td><input name="step" value="10" size="4" /></td></tr>
-%#<tr><td>Step height&nbsp;&nbsp;&nbsp;</td><td><input name="height" value="10" size="4" /></td></tr>
-%#</table>
-%#<input type="submit" value="Create continuous barcode" />
-
-%#</form>
-%#<br />
-%#<br />
-%#</&>
 
 <&| /page/info_section.mas, title=>'Generate Barcode', collapsible=>1, collapsed=>1 &>
 
@@ -159,27 +86,27 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
               jQuery("#2D_fieldbook_option").show();
           }
           else if (barcode_type == "1D") {
-            jQuery("#2D_fieldbook_option").hide(); 
+            jQuery("#2D_fieldbook_option").hide();
           }
       });
-      
+
       jQuery('#custom_barcode_link').click(function () {
           location.href = '/tools/label_designer';
       });
-      
+
       $(document).on('change', '#select_print_format', function () {
           var format = jQuery("#select_print_format").val();
           if (format == "32A4") {
             var label_row = 10;
-            var label_cols = 4; 
+            var label_cols = 4;
             var tops_margin = 12;
             var left_margin = 17;
             var bottom_margin = 12;
-            var right_margin = 10;            
+            var right_margin = 10;
           }
           if (format == "32_unique") {
             var label_row = 10;
-            var label_cols = 4; 
+            var label_cols = 4;
             var tops_margin = 12;
             var left_margin = 17;
             var bottom_margin = 12;
@@ -187,7 +114,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           }
           else if (format == "CASS") {
           var label_row = 10;
-          var label_cols = 2; 
+          var label_cols = 2;
           var tops_margin = 10;
           var left_margin = 112;
           var bottom_margin = 13;
@@ -195,7 +122,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           }
           else if (format == "MUSA") {
           var label_row = 10;
-          var label_cols = 2; 
+          var label_cols = 2;
           var tops_margin = 10;
           var left_margin = 112;
           var bottom_margin = 13;
@@ -203,16 +130,16 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           }
           else if (format == "NCSU") {
           var label_row = 10;
-          var label_cols = 3; 
+          var label_cols = 3;
           var tops_margin = 12;
           var left_margin = 10;
           var bottom_margin = 12;
           var right_margin = 10;
-          var text = 'year,location'; 
+          var text = 'year,location';
           }
           else if (format == "20A4") {
           var label_row = 10;
-          var label_cols = 2; 
+          var label_cols = 2;
           var tops_margin = 12;
           var left_margin = 10;
           var bottom_margin = 12;
@@ -220,7 +147,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           }
           else if (format == "IITA-3") {
           var label_row = 20;
-          var label_cols = 3; 
+          var label_cols = 3;
           var tops_margin = 13;
           var left_margin = 130;
           var bottom_margin = 11;
@@ -228,7 +155,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           }
           else if (format == "IITA-2") {
           var label_row = 20;
-          var label_cols = 2; 
+          var label_cols = 2;
           var tops_margin = 13;
           var left_margin = 130;
           var bottom_margin = 11;
@@ -236,7 +163,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           }
           else if (format == "crossing") {
           var label_row = 1;
-          var label_cols = 1; 
+          var label_cols = 1;
           var tops_margin = 5;
           var left_margin = 2;
           var bottom_margin = 0;
@@ -313,7 +240,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
     <div class="col-sm-8">
       <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" />
     </div>
-  </div> 
+  </div>
     <!--<div class="form-group form-group-sm">
     <label class="col-sm-4 control-label">Print Field Information For Plots: </label>
     <div class="col-sm-8">

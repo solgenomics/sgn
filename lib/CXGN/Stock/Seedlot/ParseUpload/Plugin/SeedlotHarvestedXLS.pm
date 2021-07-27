@@ -76,8 +76,8 @@ sub _validate_with_plugin {
     if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name' ) {
         push @error_messages, "Cell A1: seedlot_name is missing from the header";
     }
-    if (!$cross_name_head || $cross_name_head ne 'cross_name') {
-        push @error_messages, "Cell B1: cross_name is missing from the header";
+    if (!$cross_name_head || $cross_name_head ne 'cross_unique_id') {
+        push @error_messages, "Cell B1: cross_unique_id is missing from the header";
     }
     if (!$operator_name_head || $operator_name_head ne 'operator_name') {
         push @error_messages, "Cell C1: operator_name is missing from the header";
@@ -136,6 +136,7 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_name: seedlot_name must not contain spaces or slashes.";
         }
         else {
+            $seedlot_name =~ s/^\s+|\s+$//g;
             #file must not contain duplicate plot names
             if ($seen_seedlot_names{$seedlot_name}) {
                 push @error_messages, "Cell A$row_name: duplicate seedlot_name at cell A".$seen_seedlot_names{$seedlot_name}.": $seedlot_name";
@@ -144,11 +145,10 @@ sub _validate_with_plugin {
         }
 
         if (!$cross_name || $cross_name eq '') {
-            push @error_messages, "Cell B:$row_name: you must provide a cross_name for the contents of the seedlot.";
+            push @error_messages, "Cell B:$row_name: you must provide a cross_unique_id for the contents of the seedlot.";
         } else {
-            if ($cross_name){
-                $seen_cross_names{$cross_name}++;
-            }
+            $cross_name =~ s/^\s+|\s+$//g;
+            $seen_cross_names{$cross_name}++;
         }
 
         if (!defined($operator_name) || $operator_name eq '') {
@@ -224,10 +224,12 @@ sub _parse_with_plugin {
         my $cross_name;
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
+            $seedlot_name =~ s/^\s+|\s+$//g;
             $seen_seedlot_names{$seedlot_name}++;
         }
         if ($worksheet->get_cell($row,1)) {
             $cross_name = $worksheet->get_cell($row,1)->value();
+            $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
     }
@@ -266,9 +268,11 @@ sub _parse_with_plugin {
 
         if ($worksheet->get_cell($row,0)) {
             $seedlot_name = $worksheet->get_cell($row,0)->value();
+            $seedlot_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,1)) {
             $cross_name = $worksheet->get_cell($row,1)->value();
+            $cross_name =~ s/^\s+|\s+$//g;
         }
         if ($worksheet->get_cell($row,2)) {
             $operator_name =  $worksheet->get_cell($row,2)->value();

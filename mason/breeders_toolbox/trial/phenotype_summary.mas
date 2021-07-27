@@ -1,10 +1,10 @@
 
 <%args>
 $trial_id
+$trial_stock_type => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
-
+<& /util/import_javascript.mas, classes => [ 'jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
 <style>
 
 .bar rect {
@@ -34,13 +34,17 @@ $trial_id
             <label class="col-sm-3 control-label">Display: </label>
             <div class="col-sm-9" >
                 <select class="form-control" id="display_trial_phenosummary">
+%  if ($trial_stock_type eq 'analysis_instance') {
+                    <option value="analysis_instance">Values for Analysis</option>
+%  } else {
                     <option value="plots">Trait Values for Plots in this Trial</option>
                     <option value="plants">Trait Values for Plants in this Trial</option>
                     <option value="subplots">Trait Values for Subplots in this Trial</option>
                     <option value="tissue_samples">Trait Values for Tissue Samples in this Trial</option>
-                    <option value="plots_accession">Trait Values for Plots in this Trial grouped by Accession</option>
-                    <option value="plants_accession">Trait Values for Plants in this Trial grouped by Accession</option>
-                    <option value="tissue_samples_accession">Trait Values for Tissue Samples in this Trial grouped by Accession</option>
+                    <option id = "plots_stock_option" value="plots_accession"></option>
+                    <option id = "plants_stock_option" value="plants_accession"></option>
+                    <option id = "tissue_samples_stock_option" value="tissue_samples_accession"></option>
+%  }
                 </select>
             </div>
         </div>
@@ -66,6 +70,23 @@ $trial_id
         </tbody>
         </table>
     </div>
+    <div>
+        <button type="button" class="selectAll-dt">Select All</button>
+        <button type="button" class="deselectAll-dt">Deselect All</button>
+    </div>
+    <br>
+    <div class="panel panel-default">
+        <div class="panel-body">
+
+            <&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the names currently selected in the first column of the summary table to a new or exisiting list</i>'&>
+            <br>
+            <p><em><span id="selected_row_count">0</span> row(s) selected.</em></p>
+            <div style="text-align:right" id="names_to_list_menu"></div>
+            <div id="selected_names" style="display: none;"></div>
+            </&>
+
+        </div>
+    </div>
 </div>
 
 <div class="well well-sm" id="raw_data_histogram_well">
@@ -85,10 +106,14 @@ $trial_id
                         <label class="col-sm-2 control-label">Display: </label>
                         <div class="col-sm-10" >
                             <select class="form-control" id="display_trial_phenosummary_hist">
+%  if ($trial_stock_type eq 'analysis_instance') {
+                                <option value="analysis_instance">Values for Analysis</option>
+%  } else {
                                 <option value="plot">Values for Plots in this Trial</option>
                                 <option value="plant">Values for Plants in this Trial</option>
                                 <option value="subplot">Values for Subplots in this Trial</option>
                                 <option value="tissue_sample">Values for Tissue Samples in this Trial</option>
+%  }
                             </select>
                         </div>
                     </div>
@@ -115,12 +140,13 @@ $trial_id
 var d3 = d3v4;
 var draw_histogram = stackedObservationPhenotypeHistogram.draw;
 jQuery(document).ready(function () {
+    var type = "<% $trial_stock_type %>";
     jQuery("#display_trial_phenosummary_hist").change(function(){
       trait_summary_hist_display_change(this.value);
     });
     jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
 
-        datatables_display_phenosummary();
+        datatables_display_phenosummary(type);
 
         jQuery(document).on('change', '#display_trial_phenosummary', function() {
             var html = '';
@@ -129,13 +155,23 @@ jQuery(document).ready(function () {
                 html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             }
             if (display == 'plots_accession' || display == 'plants_accession' || display == 'tissue_samples_accession') {
-                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                if (type == 'family_name') {
+                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Family Name</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                } else if (type == 'cross') {
+                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Cross Unique ID</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                } else {
+                    html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                }
             }
             jQuery('#pheno_summary_table_div').empty().html(html);
-            datatables_display_phenosummary();
+            datatables_display_phenosummary(type);
         });
 
+%  if ($trial_stock_type eq 'analysis_instance') {
+        trait_summary_hist_display_change('analysis_instance');
+%  } else {
         trait_summary_hist_display_change('plot');
+%  }
 
     });
 
@@ -151,12 +187,77 @@ jQuery(document).ready(function () {
         }
     });
 
+    var plots_stock_text = '';
+    var plants_stock_text = '';
+    var tissue_samples_stock_text = '';
+
+    if (type == 'family_name') {
+        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Family Name';
+        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Family Name';
+        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Family Name';
+    } else if (type == 'cross') {
+        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Cross Unique ID';
+        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Cross Unique ID';
+        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Cross Unique ID';
+    } else {
+        plots_stock_text = 'Trait Values for Plots in this Trial grouped by Accession';
+        plants_stock_text = 'Trait Values for Plants in this Trial grouped by Accession';
+        tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Accession';
+    }
+    jQuery('#plots_stock_option').text(plots_stock_text);
+    jQuery('#plants_stock_option').text(plants_stock_text);
+    jQuery('#tissue_samples_stock_option').text(tissue_samples_stock_text);
+
 });
 
-function datatables_display_phenosummary() {
-    jQuery('#phenotype_summary_data').DataTable( {
+function datatables_display_phenosummary(type) {
+    var summary_table = jQuery('#phenotype_summary_data').DataTable( {
+        "lengthMenu": [ 10, 20, 50, 100, 500, 1000 ],
         "retrieve": true,
-        "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val(),
+        "dom": 'Bfrtip',
+        'columnDefs': [ {
+            'orderable': false,
+            'className': 'select-checkbox',
+            'targets':   0
+        } ],
+        'select': {
+            'style':    'multi'
+        },
+        "buttons":  [
+            'pageLength','copy', 'excel', 'csv', 'pdf'
+        ],
+        "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type,
+    });
+
+    var selection_changed = function () {
+        var selected_rows = summary_table.rows({'selected':true});
+        var table_type = jQuery('#display_trial_phenosummary').val();
+        var list_type = table_type.match('accession') ? 'accessions' : 'traits';
+        jQuery("#selected_row_count").text(selected_rows.count());
+        // console.log(selected_rows.data());
+
+        var selected_names = [];
+        selected_rows.data().map(function(row){
+            selected_names.push(row[0].match(/<a [^>]+>([^<]+)<\/a>/)[1] + '\n');
+        });
+
+        jQuery('#selected_names').html(selected_names);
+        addToListMenu('names_to_list_menu', 'selected_names', {
+            listType: list_type
+        });
+    };
+
+    summary_table.on( 'draw', selection_changed);
+    summary_table.on( 'deselect', selection_changed);
+    summary_table.on( 'select', selection_changed);
+
+    jQuery('.selectAll-dt').click(function(){
+      summary_table.rows().select();
+      return false;
+    });
+    jQuery('.deselectAll-dt').click(function(){
+      summary_table.rows().deselect();
+      return false;
     });
 }
 
@@ -188,7 +289,7 @@ function trait_summary_hist_display_change(value) {
                         jQuery("#working_modal").modal("hide");
                         if (response.error) {
                             alert(response.error);
-                        } 
+                        }
                         else if (response.status!="success"){
                             alert("Problem loading plant/plot data: "+response.status);
                         }

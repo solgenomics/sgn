@@ -11,6 +11,7 @@ $organization_name
 $population_name
 $timestamp
 $box_name=>undef
+$quality => undef
 $owners_string => undef
 </%args>
 
@@ -22,8 +23,6 @@ $owners_string => undef
 }
 </style>
 
-
-
 <& /page/page_title.mas, title => 'Seedlot '.$uniquename &>
 
 <&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0, subtitle=>"[<a id='edit_seedlot_details_link' >Edit Seedlot Details</a>]" &>
@@ -34,11 +33,12 @@ $owners_string => undef
 <tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
 <tr><td><b>Location Code</b><td><div id="seedlot_location_code_div">[LOADING...]</div></td></tr>
 <tr><td><b>Box Name</b></td><td><% $box_name %></td></tr>
+<tr><td><b>Quality issues</b></td><td><% $quality %></td></tr>
 <tr><td><b>Contents</b></td><td><% $content_html %></td></tr>
 <!--<tr><td><b>Population</b></td><td><% $population_name %></td></tr>-->
 <tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
 <tr><td><b>Current weight (g)</b></td><td><% $current_weight %></td></tr>
-<tr><td><b>Owners</b></td><td><% $owners_string %></td></tr>
+<tr><td><b>Submitters</b></td><td><% $owners_string %></td></tr>
 </table>
 
 </&>
@@ -137,10 +137,17 @@ $owners_string => undef
                                                 </div>
                                             </div>
 
+					    			    <div class="form-group">
+					      <label class="col-sm-3 control-label">Quality issues: </label>
+                                              <div class="col-sm-9" >
+                                                <input class="form-control" id="transaction_new_seedlot_quality" placeholder="Leave blank for no issues">
+                                              </div>
+					    </div>
+
                                             <div class="well well-sm">
                                                 <div class="row">
                                                     <div class="col-sm-3">
-                                                        <div class="form-group">
+                                                       <div class="form-group">
                                                             <label class="col-sm-12 control-label">Contents:<br/><small>Contents must match between seedlots</small> </label>
                                                         </div>
                                                     </div>
@@ -155,7 +162,7 @@ $owners_string => undef
                                                                     </div>
 % }
 % if ($content_cross_name){
-                                                                    <label class="col-sm-3 control-label">Cross name: </label>
+                                                                    <label class="col-sm-3 control-label">Cross Unique ID: </label>
                                                                     <div class="col-sm-9" >
                                                                         <input class="form-control" id="transaction_new_seedlot_cross_uniquename" disabled value="<% $content_cross_name %>">
                                                                     </div>
@@ -170,13 +177,13 @@ $owners_string => undef
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">Starting Amount (number of seeds): </label>
                                                 <div class="col-sm-9" >
-                                                    <input class="form-control" id="transaction_new_seedlot_amount" placeholder="Amount OR Weight Required" value="0">
+                                                    <input class="form-control" id="transaction_new_seedlot_amount" placeholder="Amount OR Weight Required" disabled value="0">
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">Starting Weight (g): </label>
                                                 <div class="col-sm-9" >
-                                                    <input class="form-control" id="transaction_new_seedlot_weight" placeholder="Amount OR Weight Required" value="0">
+                                                    <input class="form-control" id="transaction_new_seedlot_weight" placeholder="Amount OR Weight Required" disabled value="0">
                                                 </div>
                                             </div>
                                             <!--
@@ -205,7 +212,6 @@ $owners_string => undef
                                                     <input class="form-control" id="transaction_new_seedlot_description" placeholder="Optional">
                                                 </div>
                                             </div>
-
                                         </div>
                                     </div>
                                 </div>
@@ -309,6 +315,13 @@ $owners_string => undef
                     </div>
                 </div>
 
+		<div class="form-group">
+		  <label class="col-sm-3 control-label">Quality issues: </label>
+                  <div class="col-sm-9" >
+                    <input class="form-control" id="edit_seedlot_details_quality" placeholder="Leave blank for no issues">
+                  </div>
+                </div>
+
                 <div class="well well-sm">
                     <div class="row">
                         <div class="col-sm-3">
@@ -331,7 +344,7 @@ $owners_string => undef
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Cross name: </label>
+                                        <label class="col-sm-3 control-label">Cross Unique ID: </label>
                                         <div class="col-sm-9" >
                                             <input class="form-control" id="edit_seedlot_details_cross" placeholder="One Content Required">
                                         </div>
@@ -360,10 +373,9 @@ $owners_string => undef
   </div>
 </div>
 
-
 <script>
   jQuery(document).ready(function () {
-  
+
     jQuery('#add_seedlot_transaction_button').click( function() {
         get_select_box('seedlots', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>' });
         get_select_box('seedlots', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'multiple':'0', 'seedlot_content_accession_name':'<% $content_accession_name %>', 'seedlot_content_cross_name':'<% $content_cross_name %>' });
@@ -409,6 +421,7 @@ $owners_string => undef
                 jQuery('#edit_seedlot_details_population').val(response.population_name);
                 jQuery('#edit_seedlot_details_location').val(response.location_code);
                 jQuery('#edit_seedlot_details_box_name').val(response.box_name);
+                jQuery('#edit_seedlot_details_quality').val(response.quality);
                 var accession_name = '';
                 if (response.accession){
                     accession_name = response.accession[1];
@@ -430,120 +443,137 @@ $owners_string => undef
     });
 
     jQuery('#create_new_seedlot_transaction_button').click( function() {
-      var factor = jQuery('#seedlot_transaction_factor').val();
-      var to_new = jQuery('#seedlot_transaction_to_seedlot_new').val();
-      var from_existing_seedlot_id;
-      var to_existing_seedlot_id;
-      var to_new_seedlot_name;
-      var to_new_seedlot_breeding_program_id;
-      var to_new_seedlot_location_name;
-      var to_new_seedlot_box_name;
-      var to_new_seedlot_accession_name;
-      var to_new_seedlot_cross_name;
-      var to_new_seedlot_amount;
-      var to_new_seedlot_weight;
-      var to_new_seedlot_population_name;
-      var to_new_seedlot_organization;
-      var to_new_seedlot_timestamp;
-      var to_new_seedlot_description;
-      if (factor == 1){
-        from_existing_seedlot_id = jQuery('#seedlot_transaction_seedlot_id').val();
-      }
-      if (factor == -1){
-        if (to_new == 'no'){
-            to_existing_seedlot_id = jQuery('#seedlot_transaction_to_seedlot_existing_id').val();
-        }
-        if (to_new == 'yes'){
-            to_new_seedlot_name = jQuery('#transaction_new_seedlot_name').val();
-            to_new_seedlot_breeding_program_id = jQuery('#transaction_new_seedlot_breeding_program_id').val();
-            to_new_seedlot_location_name = jQuery('#transaction_new_seedlot_location').val();
-            to_new_seedlot_box_name = jQuery('#transaction_new_seedlot_box_name').val();
-            to_new_seedlot_accession_name = "<% $content_accession_name %>";
-            to_new_seedlot_cross_name = "<% $content_cross_name %>";
-            to_new_seedlot_amount = jQuery('#transaction_new_seedlot_amount').val();
-            to_new_seedlot_weight = jQuery('#transaction_new_seedlot_weight').val();
-            to_new_seedlot_population_name = jQuery('#transaction_new_seedlot_population_name').val();
-            to_new_seedlot_organization = jQuery('#transaction_new_seedlot_organization').val();
-            to_new_seedlot_timestamp = jQuery('#transaction_new_seedlot_timestamp').val();
-            to_new_seedlot_description = jQuery('#transaction_new_seedlot_description').val();
+        var factor = jQuery('#seedlot_transaction_factor').val();
+        var to_new = jQuery('#seedlot_transaction_to_seedlot_new').val();
+        var from_existing_seedlot_id_array;
+        var from_existing_seedlot_id;
+        var to_existing_seedlot_id_array;
+        var to_existing_seedlot_id;
+        var to_new_seedlot_name;
+        var to_new_seedlot_breeding_program_id;
+        var to_new_seedlot_location_name;
+        var to_new_seedlot_box_name;
+        var to_new_seedlot_quality;
+        var to_new_seedlot_accession_name;
+        var to_new_seedlot_cross_name;
+        var to_new_seedlot_amount;
+        var to_new_seedlot_weight;
+        var to_new_seedlot_population_name;
+        var to_new_seedlot_organization;
+        var to_new_seedlot_timestamp;
+        var to_new_seedlot_description;
 
-            if (to_new_seedlot_accession_name == '' && to_new_seedlot_cross_name == '') {
-                alert("Please provide an accession name or a cross name as the content of the seedlot."); return;
-            }
-            if (to_new_seedlot_accession_name != '' && to_new_seedlot_cross_name != '') {
-                alert("Please provide an accession name OR a cross name as the content of the seedlot. Not both."); return;
-            }
-            if (to_new_seedlot_location_name == ''){
-                alert("Please provide a location for new seedlot."); return;
-            }
-            if (to_new_seedlot_box_name == ''){
-                alert("Please provide a box name for new seedlot."); return;
-            }
-            if (to_new_seedlot_amount == '' && to_new_seedlot_weight == ''){
-                alert("Please provide a starting amount OR weight in grams for new seedlot."); return;
-            }
-            if (to_new_seedlot_timestamp == ''){
-                alert("Please provide a timestamp for new seedlot created."); return;
+        if (factor == 1){
+            from_existing_seedlot_id_array = jQuery('#seedlot_transaction_seedlot_id').val();
+            if (from_existing_seedlot_id_array.length > 1) {
+                alert("Please select only one seedlot.");
+                return;
+            } else {
+                from_existing_seedlot_id = from_existing_seedlot_id_array[0];
             }
         }
-      }
-      var amount = jQuery('#seedlot_transaction_amount').val();
-      var weight = jQuery('#seedlot_transaction_weight').val();
-      var timestamp = jQuery('#seedlot_transaction_timestamp').val();
-      var description = jQuery('#seedlot_transaction_description').val();
-
-      if (factor == '') { alert("Please provide a factor"); }
-      else if (amount == '' && weight == '') { alert("Please provide an amount OR a weight in grams"); }
-      else if (timestamp == '') { alert("Please provide a timestamp"); }
-      else if (description == '') { alert("Please provide a description"); }
-      else if (from_existing_seedlot_id == '' && to_existing_seedlot_id == '' && to_new_seedlot_name == '') { alert("Please provide seed lot"); }
-      else {
-
-      jQuery.ajax( {
-        url: '/ajax/breeders/seedlot/<% $seedlot_id %>/transaction/add',
-        data : {
-            'factor' : factor,
-            'seedlot_id': <% $seedlot_id %>,
-            'amount': amount,
-            'weight': weight,
-            'timestamp': timestamp,
-            'description': description,
-            'from_existing_seedlot_id': from_existing_seedlot_id,
-            'to_existing_seedlot_id': to_existing_seedlot_id,
-            'to_new_seedlot_name' : to_new_seedlot_name,
-            'to_new_seedlot_breeding_program_id': to_new_seedlot_breeding_program_id,
-            'to_new_seedlot_location_name': to_new_seedlot_location_name,
-            'to_new_seedlot_box_name': to_new_seedlot_box_name,
-            'to_new_seedlot_accession_name': to_new_seedlot_accession_name,
-            'to_new_seedlot_cross_name': to_new_seedlot_cross_name,
-            'to_new_seedlot_amount': to_new_seedlot_amount,
-            'to_new_seedlot_weight': to_new_seedlot_weight,
-            'to_new_seedlot_population_name': to_new_seedlot_population_name,
-            'to_new_seedlot_organization': to_new_seedlot_organization,
-            'to_new_seedlot_timestamp': to_new_seedlot_timestamp,
-            'to_new_seedlot_description': to_new_seedlot_description
-        },
-        beforeSend: function(){
-            jQuery('#working_modal').modal('show');
-        },
-        success: function(response) {
-            jQuery('#working_modal').modal('hide');
-          if (response.success == 1) {
-             alert("The seedlot transaction has been created.");
-             jQuery('#add_seedlot_transaction_dialog').modal('hide');
-             seedlot_transactions_table.ajax.reload();
-          }
-          if (response.error) {
-             alert(response.error);
-          }
-        },
-        error: function(response) {
-            jQuery('#working_modal').modal('hide');
-            alert('An error occurred creating seedlot transaction');
+        if (factor == -1){
+            if (to_new == 'no'){
+                to_existing_seedlot_id_array = jQuery('#seedlot_transaction_to_seedlot_existing_id').val();
+                if (to_existing_seedlot_id_array.length > 1) {
+                    alert("Please select only one seedlot.");
+                    return;
+                } else {
+                    to_existing_seedlot_id = to_existing_seedlot_id_array[0];
+                }
+            }
+            if (to_new == 'yes'){
+                to_new_seedlot_name = jQuery('#transaction_new_seedlot_name').val();
+                to_new_seedlot_breeding_program_id = jQuery('#transaction_new_seedlot_breeding_program_id').val();
+                to_new_seedlot_location_name = jQuery('#transaction_new_seedlot_location').val();
+                to_new_seedlot_box_name = jQuery('#transaction_new_seedlot_box_name').val();
+                to_new_seedlot_accession_name = "<% $content_accession_name %>";
+                to_new_seedlot_cross_name = "<% $content_cross_name %>";
+                to_new_seedlot_amount = jQuery('#transaction_new_seedlot_amount').val();
+                to_new_seedlot_weight = jQuery('#transaction_new_seedlot_weight').val();
+                to_new_seedlot_population_name = jQuery('#transaction_new_seedlot_population_name').val();
+                to_new_seedlot_organization = jQuery('#transaction_new_seedlot_organization').val();
+                to_new_seedlot_timestamp = jQuery('#transaction_new_seedlot_timestamp').val();
+                to_new_seedlot_description = jQuery('#transaction_new_seedlot_description').val();
+                to_new_seedlot_quality = jQuery('#transaction_new_seedlot_quality').val();
+  
+                if (to_new_seedlot_accession_name == '' && to_new_seedlot_cross_name == '') {
+                    alert("Please provide an accession name or a cross unique id as the content of the seedlot."); return;
+                }
+                if (to_new_seedlot_accession_name != '' && to_new_seedlot_cross_name != '') {
+                    alert("Please provide an accession name OR a cross unique id as the content of the seedlot. Not both."); return;
+                }
+                if (to_new_seedlot_location_name == ''){
+                    alert("Please provide a location for new seedlot."); return;
+                }
+                if (to_new_seedlot_box_name == ''){
+                    alert("Please provide a box name for new seedlot."); return;
+                }
+                if (to_new_seedlot_amount == '' && to_new_seedlot_weight == ''){
+                    alert("Please provide a starting amount OR weight in grams for new seedlot."); return;
+                }
+                if (to_new_seedlot_timestamp == ''){
+                    alert("Please provide a timestamp for new seedlot created."); return;
+                }
+            }
         }
-       });
+        var amount = jQuery('#seedlot_transaction_amount').val();
+        var weight = jQuery('#seedlot_transaction_weight').val();
+        var timestamp = jQuery('#seedlot_transaction_timestamp').val();
+        var description = jQuery('#seedlot_transaction_description').val();
 
-      }
+        if (factor == '') { alert("Please provide a factor"); }
+        else if (amount == '' && weight == '') { alert("Please provide an amount OR a weight in grams"); }
+        else if (timestamp == '') { alert("Please provide a timestamp"); }
+        else if (description == '') { alert("Please provide a description"); }
+        else if (from_existing_seedlot_id == '' && to_existing_seedlot_id == '' && to_new_seedlot_name == '') { alert("Please provide seed lot"); }
+        else {
+
+            jQuery.ajax( {
+                url: '/ajax/breeders/seedlot/<% $seedlot_id %>/transaction/add',
+                data : {
+                    'factor' : factor,
+                    'seedlot_id': <% $seedlot_id %>,
+                    'amount': amount,
+                    'weight': weight,
+                    'timestamp': timestamp,
+                    'description': description,
+                    'from_existing_seedlot_id': from_existing_seedlot_id,
+                    'to_existing_seedlot_id': to_existing_seedlot_id,
+                    'to_new_seedlot_name' : to_new_seedlot_name,
+                    'to_new_seedlot_breeding_program_id': to_new_seedlot_breeding_program_id,
+                    'to_new_seedlot_location_name': to_new_seedlot_location_name,
+                    'to_new_seedlot_box_name': to_new_seedlot_box_name,
+                    'to_new_seedlot_accession_name': to_new_seedlot_accession_name,
+                    'to_new_seedlot_cross_name': to_new_seedlot_cross_name,
+                    'to_new_seedlot_amount': to_new_seedlot_amount,
+                    'to_new_seedlot_weight': to_new_seedlot_weight,
+                    'to_new_seedlot_population_name': to_new_seedlot_population_name,
+                    'to_new_seedlot_organization': to_new_seedlot_organization,
+                    'to_new_seedlot_timestamp': to_new_seedlot_timestamp,
+                    'to_new_seedlot_description': to_new_seedlot_description,
+                    'to_new_seedlot_quality': to_new_seedlot_quality
+                },
+                beforeSend: function(){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert("The seedlot transaction has been created.");
+                        jQuery('#add_seedlot_transaction_dialog').modal('hide');
+                        seedlot_transactions_table.ajax.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred creating seedlot transaction');
+                }
+            });
+        }
     });
 
     jQuery('#seedlot_transaction_factor').change(function(){
@@ -629,6 +659,7 @@ $owners_string => undef
         var population = jQuery('#edit_seedlot_details_population').val();
         var location = jQuery('#edit_seedlot_details_location').val();
         var box_name = jQuery('#edit_seedlot_details_box_name').val();
+        var quality = jQuery('#edit_seedlot_details_quality').val();
         var accession = jQuery('#edit_seedlot_details_accession').val();
         var cross = jQuery('#edit_seedlot_details_cross').val();
         if (uniquename == ''){
@@ -638,10 +669,10 @@ $owners_string => undef
         } else if (location == ''){
             alert('Location must not be blank');
         } else if (accession == '' && cross == '') {
-            alert("Please provide an accession name or a cross name as the content of the seedlot."); return;
+            alert("Please provide an accession name or a cross unique id as the content of the seedlot."); return;
         }
         else if (accession != '' && cross != '') {
-            alert("Please provide an accession name OR a cross name as the content of the seedlot. Not both."); return;
+            alert("Please provide an accession name OR a cross unique id as the content of the seedlot. Not both."); return;
         }
         else {
             jQuery.ajax({
@@ -653,6 +684,7 @@ $owners_string => undef
                     'population':population,
                     'location':location,
                     'box_name':box_name,
+                    'quality' : quality,
                     'accession':accession,
                     'cross':cross
                 },
@@ -704,5 +736,3 @@ function editSeedlotTransaction(transaction_id){
 }
 
 </script>
-
-

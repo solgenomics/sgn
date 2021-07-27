@@ -20,8 +20,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <&| /page/info_section.mas, 
     collapsible => 1, 
-  collapsed   => 1,
-  title       => "Or select a list-based training population or create a new one",
+  collapsed   => 0,
+  title       => "Or use a list or dataset type training population or create a new one",
 &>
 
   <div class="fileupload-buttonbar">
@@ -35,7 +35,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
     </div>  
     <div class="list_upload" style="margin-left:5px">     
       <i class="glyphicon-plus"></i>
-      <a href="/solgs/breeder_search" style="color:#ffffff">Make a new list of plots or trials</a>  
+      <a href="/solgs/breeder_search" style="color:#ffffff">Make a new list or dataset of plots or trials</a>  
     </div>
     <br>
     <br>  

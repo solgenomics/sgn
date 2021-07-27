@@ -4,7 +4,7 @@ package SGN::Controller::AJAX::BreederSearch;
 use Moose;
 
 use List::MoreUtils qw | any all |;
-use JSON::Any;
+use JSON;
 use Data::Dumper;
 use Try::Tiny;
 use CXGN::BreederSearch;
@@ -14,13 +14,13 @@ BEGIN { extends 'Catalyst::Controller::REST'; };
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
     );
 
 sub get_data : Path('/ajax/breeder/search') Args(0) {
   my $self = shift;
   my $c = shift;
-  my $j = JSON::Any->new;
+  my $j = JSON->new;
 
   my @criteria_list = $c->req->param('categories[]');
   my @querytypes = $c->req->param('querytypes[]');
@@ -36,8 +36,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   print STDERR "Validating criteria_list\n";
   foreach my $select (@criteria_list) { #ensure criteria list arguments are one of the possible categories
     chomp($select);
-    if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'genotyping_protocols', 'locations', 'plants', 'plots', 'seedlots', 'trait_components', 'traits', 'trials', 'trial_designs', 'trial_types', 'years', undef)) {
-      $error = "Valid keys are accessions, breeding_programs, genotyping_protocols, locations, plants, plots, seedlots, trait_components, traits, trials, trial_designs, trial_types and years or undef";
+    if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'genotyping_protocols', 'genotyping_projects', 'locations', 'plants', 'plots', 'seedlots', 'trait_components', 'traits', 'trials', 'trial_designs', 'trial_types', 'years', undef)) {
+      $error = "Valid keys are accessions, breeding_programs, genotyping_protocols, genotyping_projects, locations, plants, plots, seedlots, trait_components, traits, trials, trial_designs, trial_types and years or undef";
       $c->stash->{rest} = { error => $error };
       return;
     }
@@ -131,6 +131,50 @@ sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
   return;
 
 }
+
+
+sub get_genotyping_protocol_chromosomes : Path('/ajax/breeder/search/genotyping_protocol_chromosomes') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+  my $genotyping_protocol_id = $c->req->param('genotyping_protocol');
+  
+  # Prtocol ID not defined, use the default genotyping protocol
+  if ( !defined($genotyping_protocol_id) || $genotyping_protocol_id eq "" ) {
+    my $genotyping_protocol_name = $c->config->{default_genotyping_protocol};
+    if ( defined($genotyping_protocol_name) ) {
+      my $genotyping_protocol_rs = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$genotyping_protocol_name});
+      if ( defined($genotyping_protocol_rs) ) {
+        $genotyping_protocol_id = $genotyping_protocol_rs->nd_protocol_id();
+      } 
+    }
+  }
+
+  # Get chromosome names for the specified protocol
+  my @names=();
+  if ( defined($genotyping_protocol_id) && $genotyping_protocol_id ne "" ) {
+    my $vcf_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "vcf_map_details_markers", "protocol_property")->cvterm_id();
+    my $q = "SELECT DISTINCT(s.value->>'chrom') AS chrom 
+            FROM nd_protocolprop, jsonb_each(nd_protocolprop.value) AS s 
+            WHERE nd_protocol_id = ? AND type_id = ? ORDER BY chrom ASC;";
+    my $dbh = $c->dbc->dbh();
+    my $h = $dbh->prepare($q);
+    $h->execute($genotyping_protocol_id, $vcf_cvterm_id);
+
+    while(my ($chrom) = $h->fetchrow_array()){
+      push @names, $chrom;
+    }
+  }
+
+  $c->stash->{rest} = {
+    genotyping_protocol => $genotyping_protocol_id,
+    chromosome_names => \@names
+  };
+
+  return;
+}
+
 
 sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
   my $self = shift;

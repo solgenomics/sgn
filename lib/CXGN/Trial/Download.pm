@@ -66,7 +66,8 @@ my $download = CXGN::Trial::Download->new({
     trait_contains => \@trait_contains_list,
     phenotype_min_value => $phenotype_min_value,
     phenotype_max_value => $phenotype_max_value,
-    has_header=>$has_header
+    has_header=>$has_header,
+    include_pedigree_parents=>$include_pedigree_parents
 });
 my $error = $download->download();
 my $file_name = "phenotype.$format";
@@ -202,6 +203,7 @@ has 'data_level' => (isa => 'Str | Undef', is => 'ro', default => 'plots');
 has 'sample_number' => (isa => 'Int | Undef', is => 'ro', default => 0);
 has 'predefined_columns' => (isa => 'ArrayRef[HashRef] | Undef', is => 'ro');
 has 'trait_list' => (isa => 'ArrayRef[Int|Str]|Undef', is => 'rw', predicate => 'has_trait_list' );
+has 'include_measured'=> (is => 'rw', isa => 'Str', default => 'false');
 has 'trait_component_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'trial_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'accession_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
@@ -210,6 +212,7 @@ has 'plant_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'location_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'year_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
+has 'include_pedigree_parents' => (isa => 'Bool', is => 'ro', default => 0);
 has 'exclude_phenotype_outlier' => (isa => 'Bool', is => 'ro', default => 0);
 has 'has_header' => (isa => 'Bool', is => 'ro', default => 1);
 has 'trait_contains' => (isa => 'ArrayRef[Str]|Undef', is => 'rw');
@@ -225,7 +228,7 @@ has 'filename' => (isa => 'Str', is => 'ro',
 		  );
 
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
-
+has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0);
 
 sub BUILD {
     my $self = shift;

@@ -107,6 +107,8 @@ sub _validate_with_plugin {
         }
         if (!$columns[5] || $columns[5] eq ''){
             push @error_messages, 'The sixth column must contain Date on row: '.$row;
+        } elsif (!$columns[5] =~ m/(\d{4})-(\d{2})-(\d{2})/) {
+            push @error_messages, "Date must be YYYY-MM-DD format";
         }
 
         $columns[1] = sprintf("%02d", $columns[1]);

@@ -19,7 +19,7 @@ BEGIN {extends 'Catalyst::Controller::REST'}
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON'},
    );
 
  has 'trial_id' => (isa => 'Int',
@@ -153,9 +153,15 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	my @dependent_trait_ids;
 	my ($db_id, $accession, @traits_cvterm_ids, $cvterm_id, @found_trait_cvterm_ids, @accessions, @trait_values);
 	my (%hash1, %hash2, %hash3, @trait_values1, @trait_values2, @trait_values3);
-	while ($msg_formula =~ /(\w{2}\:\d+)/g){
+	while ($msg_formula =~ /(\w*\:\d+)/g){
 		push @dependent_trait_ids, [$1];
-		($db_id,$accession) = split (/:/, $1);
+		($db_id,$accession) = split (/:/, $1);	
+			
+		$accession =~ s/\s+$//;
+		$accession =~ s/^\s+//;
+		$db_id =~ s/\s+$//;
+		$db_id =~ s/^\s+//;
+			
 		push @accessions, $accession;
 	}
 	print "DB ID: $db_id\n";
@@ -177,7 +183,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 		}
 	}
 
-	while ($msg_formula =~ /([\w\s-]+\|\w{2}\:\d+)/g){
+	while ($msg_formula =~ /([\w\s-]+\|\w*\:\d+)/g){
 		my $full_name = $1;
 		if ($full_name =~ m/\s-\s/g){
 			$full_name =~ s/-\s//g;
@@ -244,7 +250,7 @@ project.project_id=? ) );");
 			#print STDERR Dumper \%map_hash;
 			my $msg_formula_sub = $msg_formula;
 			foreach my $full_trait (keys %map_hash) {
-				$full_trait =~ /([\w\s-]+)\|(\w{2}\:\d+)/g;
+				$full_trait =~ /([\w\s-]+)\|(\w*\:\d+)/g;
 				#print STDERR Dumper $full_trait;
 				$msg_formula_sub =~ s/($1\|$2)/$map_hash{$full_trait}/g;
 			}
@@ -271,7 +277,16 @@ project.project_id=? ) );");
     $phenotype_metadata{'date'}="$timestamp";
     my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
+    my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+    my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+        basepath=>$c->config->{basepath},
+        dbhost=>$c->config->{dbhost},
+        dbname=>$c->config->{dbname},
+        dbuser=>$c->config->{dbuser},
+        dbpass=>$c->config->{dbpass},
+        temp_file_nd_experiment_id => $temp_file_nd_experiment_id,
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
@@ -389,7 +404,16 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
     $phenotype_metadata{'date'}="$timestamp";
 
     for (my $i=0; $i<scalar(@$data); $i++) {
+        my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
+        my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
+
         my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+            basepath=>$c->config->{basepath},
+            dbhost=>$c->config->{dbhost},
+            dbname=>$c->config->{dbname},
+            dbuser=>$c->config->{dbuser},
+            dbpass=>$c->config->{dbpass},
+            temp_file_nd_experiment_id=>$temp_file_nd_experiment_id,
             bcs_schema=>$schema,
             metadata_schema=>$metadata_schema,
             phenome_schema=>$phenome_schema,

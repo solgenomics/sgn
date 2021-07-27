@@ -19,7 +19,7 @@ BEGIN { extends 'Catalyst::Controller::REST'; }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 sub get_list_action :Path('/list/get') Args(0) {
@@ -440,7 +440,7 @@ sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) {
     my %response;
     $response{'count'} = 0;
     foreach (@$cross_id_list) {
-        my $cross = CXGN::Cross->new({bcs_schema=>$c->dbic_schema("Bio::Chado::Schema"), cross_stock_id=>$_});
+        my $cross = CXGN::Cross->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), cross_stock_id=>$_});
         my ($maternal_parent, $paternal_parent, $progeny) = $cross->get_cross_relationships();
 
         my @accession_names;
@@ -539,21 +539,18 @@ sub delete_list_action :Path('/list/delete') Args(0) {
 sub exists_list_action : Path('/list/exists') Args(0) {
     my $self =shift;
     my $c = shift;
-    my $name = $c->req->param("name");
+    my $name = $c->req->param("name") || undef;
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
 	$c->stash->{rest} = { error => 'You need to be logged in to use lists.' };
     }
 
-    my $list_id = CXGN::List::exists_list($c->dbc->dbh(), $name, $user_id);
+    my $list_info = CXGN::List::exists_list($c->dbc->dbh(), $name, $user_id);
 
-    if ($list_id) {
-	$c->stash->{rest} = { list_id => $list_id };
-    }
-    else {
-	$c->stash->{rest} = { list_id => undef };
-    }
+    print STDERR "List info is ".Dumper($list_info);
+	$c->stash->{rest} = $list_info;
+
 }
 
 sub exists_item_action : Path('/list/exists_item') :Args(0) {
@@ -596,6 +593,16 @@ sub list_size : Path('/list/size') Args(0) {
     $c->stash->{rest} = { count => $count };
 }
 
+#
+# Validate an existing list for a specified data type
+#
+# PATH: GET /list/validate/{list}/{type}
+#   {list} is the list id
+#   {type} is the name of the supported list type (accessions, trials, seedlots, etc...)
+#
+# RETURNS:
+#   missing: array list item names not in the database
+#
 sub validate : Path('/list/validate') Args(2) {
     my $self = shift;
     my $c = shift;
@@ -610,6 +617,87 @@ sub validate : Path('/list/validate') Args(2) {
     my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
 
     $c->stash->{rest} = $data;
+}
+
+#
+# Validate a list of names for a specified data type
+# - Temporarily create a list
+# - Validate the list
+# - Delete the temp list
+# - Return lists of missing and existing items
+#
+# PATH: POST /list/validate/{type}
+#   {type} is the name of a supported list type (accessions, trials, seedlots, etc...)
+# BODY:
+#   items: array of item names to validate
+#
+# RETURNS:
+#   error: error message, if an error was encountered
+#   missing: array list item names not in the database
+#   existing: array list item names found in the database
+#
+sub validate_temp : Path('/list/validate') : ActionClass('REST') { }
+sub validate_temp_POST : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $type = shift;
+    my $params = $c->request->parameters();
+
+    # Check user status
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+        $c->stash->{rest} = { error => "You must be logged in to perform a list validation" };
+	    $c->detach();
+    }
+
+    # Get list items
+    my $items = $params->{'items[]'} || $params->{'items'};
+    if (!defined $items) {
+        $c->stash->{rest} = { error => "Data items not provided" };
+        $c->detach();
+    }
+
+    # Create new temp list
+    my $list_name = "TEMP_" . sprintf("%08X", rand(0xFFFFFFFF));
+    my $list_id = $self->new_list($c, $list_name, "temp list used for validation...", $user_id);
+    if (!$list_id) {
+        $c->stash->{rest} = { error => "Could not create temporary list" };
+        $c->detach();
+    }
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
+    if (!$list) {
+        $c->stash->{rest} = { error => "Could not get temporary list" };
+        $c->detach();
+    }
+    $list->type($type);
+
+    # Add list items
+    my $response = $list->add_bulk($items);
+    if ($response->{error}) {
+        $c->stash->{rest} = { error => $response->{error} };
+        $c->detach();
+    }
+
+    # Validate the list
+    my $list_elements = $list->retrieve_elements_with_ids($list_id);
+    my @flat_list = map { $_->[1] } @$list_elements;
+    my $lv = CXGN::List::Validate->new();
+    my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
+
+    # Delete the list
+    CXGN::List::delete_list($c->dbc->dbh(), $list_id);
+
+    # Set missing
+    my $m = $data->{missing};
+
+    # Set existing
+    my %comp = map { $_ => 1 } @$m;
+    my @e = grep !$comp{$_}, @$items;
+
+    $c->stash->{rest} = {
+        missing => $m,
+        existing => \@e
+    };
 }
 
 sub fuzzysearch : Path('/list/fuzzysearch') Args(2) {
@@ -645,8 +733,7 @@ sub transform :Path('/list/transform/') Args(2) {
     my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema"), $transform_name, \@list_items);
 
     if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
-	$c->stash->{rest} = { error => "This lists contains elements that cannot be converted. Not converting list.", };
-	return;
+	$result->{error}  =  "Warning. This lists contains elements that cannot be converted.";
     }
 
     $c->stash->{rest} = $result;
@@ -997,6 +1084,138 @@ sub get_markerset_items :Path('/markerset/items') Args(0) {
 
 }
 
+
+sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id");
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+        $c->stash->{rest} = { error => "You must be logged in to use lists.", };
+        return;
+    }
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $list_id } );
+
+    if ($user_id != $list->owner()) {
+	$c->stash->{rest} = { error => "You don't own this list and you cannot modify it." };
+	return;
+    }
+
+    if ($list->type() ne "accessions") {
+	$c->stash->{rest} = { error => "Only lists with type 'accessions' can be adjusted for case in the database." };
+    }
+
+    my $lt = CXGN::List::Transform->new();
+    my $elements = $list->elements();
+
+    print STDERR "Elements: ".Dumper($elements);
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $data = $lt->transform($schema, 'accessions_2_accession_case', $elements);
+
+    print STDERR "Converted data: ".Dumper($data);
+
+    if (! $data) {
+	$c->stash->{rest} = { error => "No data!" };
+	return;
+    }
+    my $error_message = "";
+    my $replace_count = 0;
+
+    foreach my $item (@$elements) {
+	print STDERR "Replacing element $item...\n";
+	if ($data->{mapping}->{$item}) {
+	    print STDERR "  with $data->{mapping}->{$item}...\n";
+	    my $error = $list->replace_by_name($item, $data->{mapping}->{$item});
+	    if ($error) {
+		$error_message .= "Error: $item not replaced. ";
+	    }
+	    else {
+		$replace_count++;
+	    }
+	}
+    }
+
+    $c->stash->{rest} = {
+	transform => $data->{transform},
+	error => $error_message,
+	replace_count => $replace_count,
+	missing => $data->{missing} || [],
+	duplicated => $data->{duplicated} || [],
+	mapping => $data->{mapping},
+    }
+
+}
+
+sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $list_id = $c->req->param("list_id");
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+        $c->stash->{rest} = { error => "You must be logged in to use lists.", };
+        return;
+    }
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $list_id } );
+
+    if ($user_id != $list->owner()) {
+	$c->stash->{rest} = { error => "You don't own this list and you cannot modify it." };
+	return;
+    }
+
+    if ($list->type() ne "accessions") {
+	$c->stash->{rest} = { error => "Only lists with type 'accessions' can be adjusted for synonyms in the database." };
+    }
+
+    my $lt = CXGN::List::Transform->new();
+    my $elements = $list->elements();
+    print STDERR "Elements: ".Dumper($elements);
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $data = $lt->transform($schema, 'synonyms2accession_uniquename', $elements);
+
+    print STDERR "Converted data: ".Dumper($data);
+
+    print STDERR Dumper($data);
+
+    if (! $data) {
+	$c->stash->{rest} = { error => "No data!" };
+	return;
+    }
+    my $error_message = "";
+    my $replace_count = 0;
+
+    foreach my $item (@$elements) {
+	print STDERR "Replacing element $item...\n";
+	if ($data->{mapping}->{$item}) {
+	    print STDERR "  with $data->{mapping}->{$item}...\n";
+	    my $error = $list->replace_by_name($item, $data->{mapping}->{$item});
+	    if ($error) {
+		$error_message .= "Error: $item not replaced. ";
+	    }
+	    else {
+		$replace_count++;
+	    }
+	}
+    }
+
+    $c->stash->{rest} = {
+	transform => $data->{transform},
+	error => $error_message,
+	replace_count => $replace_count,
+	missing => $data->{missing} || [],
+	duplicated => $data->{duplicated} || [],
+	mapping => $data->{mapping},
+    }
+
+}
 
 #########
 1;

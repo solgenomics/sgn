@@ -53,6 +53,7 @@ $trial_has_plants => undef
 jQuery(document).ready(function() {
 
     jQuery('#create_tissue_sample_entries_button').click( function () {
+        alert("Please check the Experimental Linkage section to see if this trial is linked to a Genotyping Plate already! You may not need to create new tissue samples for your use case!");
         jQuery('#add_tissue_samples_dialog').modal("show");
     });
 

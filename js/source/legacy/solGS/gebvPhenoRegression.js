@@ -10,11 +10,13 @@ jQuery(document).ready( function() {
 
     var popDetails  = solGS.getPopulationDetails();
     var traitId     = jQuery("#trait_id").val();
+    var protocolId  = jQuery('#genotyping_protocol_id').val();
     
     var args = {
 	'trait_id'       : traitId,
 	'training_pop_id': popDetails.training_pop_id,
-	'combo_pops_id'  : popDetails.combo_pops_id
+	'combo_pops_id'  : popDetails.combo_pops_id,
+	'genotyping_protocol_id': protocolId
     };
    
     checkDataExists(args);   
@@ -47,7 +49,7 @@ function checkDataExists (args) {
 
 function calculateVarianceComponents (args) {
  
-    var gebvUrl = window.location.pathname; //'/solgs/trait/' + traitId  + '/population/' + populationId;
+    var gebvUrl = window.location.pathname;
    
     jQuery.ajax({
         type: 'POST',
@@ -217,7 +219,7 @@ function plotRegressionData(regressionData){
     regressionPlot.append("g")
         .attr("id", "x_axis_label")
         .append("text")
-        .text("Phenotype deviations (X)")
+        .text("Phenotype deviations")
         .attr("y", (pad.top + (height/2)) + 50)
         .attr("x", (width - 110))
         .attr("font-size", 10)
@@ -226,7 +228,7 @@ function plotRegressionData(regressionData){
     regressionPlot.append("g")
         .attr("id", "y_axis_label")
         .append("text")
-        .text("Breeding values (Y)")
+        .text("GEBVs")
         .attr("y", (pad.top -  10))
         .attr("x", ((width/2) - 80))
         .attr("font-size", 10)

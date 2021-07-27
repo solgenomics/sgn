@@ -78,11 +78,13 @@ jQuery(document).ready(function($) {
         $("#create_cross").modal("show");
 
         $("#cross_type").change(function() { // show cross_type specific inputs depending on cross type selected
-            $("#get_maternal_parent").toggle($("#cross_type").val() == "biparental");
-            $("#get_paternal_parent").toggle($("#cross_type").val() == "biparental");
+            $("#get_maternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross"));
+            $("#get_paternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross"));
+            $("#exact_parents").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross"));
             $("#get_selfed_parent").toggle($("#cross_type").val() == "self");
             $("#get_open_maternal_parent").toggle($("#cross_type").val() == "open");
             $("#get_open_paternal_population").toggle($("#cross_type").val() == "open");
+            $("#get_sib_parent").toggle($("#cross_type").val() == "sib");
             $("#get_bulk_maternal_population").toggle($("#cross_type").val() == "bulk");
             $("#get_bulk_paternal_parent").toggle($("#cross_type").val() == "bulk");
             $("#get_bulk_selfed_population").toggle($("#cross_type").val() == "bulk_self");
@@ -96,7 +98,7 @@ jQuery(document).ready(function($) {
         });
 
         $('input[id*="_parent"]').autocomplete({
-            source: '/ajax/stock/accession_autocomplete'
+            source: '/ajax/stock/accession_or_cross_autocomplete'
         });
 
         $('input[id*="_population"]').autocomplete({
@@ -150,7 +152,7 @@ jQuery(document).ready(function($) {
         var crossName = $("#cross_name").val();
         crossName = crossName.trim();
         if (!crossName) {
-            alert("A cross name is required");
+            alert("A cross unique id is required");
             return;
         }
 
@@ -163,8 +165,9 @@ jQuery(document).ready(function($) {
         var visibleToRole = $("#visible_to_role").val();
         var female_plot = $("#female_plot").val();
         var male_plot = $("#male_plot").val();
+        var cross_combination = $("#dialog_cross_combination").val();
 
-        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot);
+        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot, cross_combination);
 
     });
 
@@ -245,24 +248,22 @@ jQuery(document).ready(function($) {
     });
 
     jQuery(document).on('click', '[name="upload_crosses_success_complete_button"]', function(){
-        alert('Crosses saved in the database');
         jQuery('#upload_crosses_dialog').modal('hide');
+        location.reload();
     });
 
 
-    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot) {
+    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot, cross_combination) {
 
         var progenyNumber = $("#progeny_number").val();
-//        var pollinationDate = $("#pollination_date").val();
-//        var flowerNumber = $("#flower_number").val();
-//        var fruitNumber = $("#fruit_number").val();
-//        var seedNumber = $("#seed_number").val();
         var prefix = $("#prefix").val();
         var suffix = $("#suffix").val();
         var maternal;
         var paternal;
         var maternal_parents;
         var paternal_parents;
+        var maternal_parents_string;
+        var paternal_parents_string;
 
         switch (crossType) {
             case 'biparental':
@@ -277,6 +278,11 @@ jQuery(document).ready(function($) {
             case 'open':
                 maternal = $("#open_maternal_parent").val();
                 paternal = $("#open_paternal_population").val();
+                break;
+            case 'sib':
+                var sibParent = $("#sib_parent").val();
+                maternal = sibParent;
+                paternal = sibParent;
                 break;
             case 'bulk':
                 maternal = $("#bulk_maternal_population").val();
@@ -310,6 +316,18 @@ jQuery(document).ready(function($) {
                 paternal_parents = get_accession_names('paternal_accessions_list_select');
                 if (!Array.isArray(paternal_parents)) { alert(paternal_parents); return; }
                 break;
+            case 'backcross':
+                maternal = $("#maternal_parent").val();
+                paternal = $("#paternal_parent").val();
+                break;
+        }
+
+        if (maternal_parents) {
+            maternal_parents_string = maternal_parents.toString();
+        }
+
+        if (paternal_parents) {
+            paternal_parents_string = paternal_parents.toString();
         }
 
         $.ajax({
@@ -317,10 +335,22 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents +
-                '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&prefix=' + prefix +
-                '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&crossing_trial_id=' + crossing_trial_id + '&female_plot=' + female_plot +
-                '&male_plot=' + male_plot,
+            data:{
+                'cross_name': crossName,
+                'cross_type': crossType,
+                'maternal': maternal,
+                'paternal': paternal,
+                'maternal_parents': maternal_parents_string,
+                'paternal_parents': paternal_parents_string,
+                'progeny_number': progenyNumber,
+                'prefix': prefix,
+                'suffix': suffix,
+                'visible_to_role': visibleToRole,
+                'crossing_trial_id': crossing_trial_id,
+                'female_plot': female_plot,
+                'male_plot': male_plot,
+                'cross_combination': cross_combination,
+            },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -389,8 +419,13 @@ jQuery(document).ready(function($) {
         var list_data = lo.getListData(accession_list_id);
         var accessions = list_data.elements;
         var names = [];
-        for (i = 0; i < accessions.length; i++) {
-            names.push(accessions[i][1]);
+
+        if (accessions.length == 0) {
+            return "The selected list is empty";
+        } else {
+            for (i = 0; i < accessions.length; i++) {
+                names.push(accessions[i][1]);
+            }
         }
         return names;
     }
@@ -403,7 +438,7 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data:{
                 'crossingtrial_name': crossingtrial_name,
-                'crossingtrial_program_name': selectedProgram,
+                'crossingtrial_program_id': selectedProgram,
                 'crossingtrial_location': crossingtrial_location,
                 'year': year,
                 'project_description': project_description,

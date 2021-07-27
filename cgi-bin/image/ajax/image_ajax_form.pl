@@ -122,8 +122,8 @@ sub delete {
         $json{error} = "Deletion failed ($_)";
     };
 
-    $self->set_json_hash( %json );
-    $self->print_json;
+    #$self->set_json_hash( %json );
+    #$self->print_json;
 
 }
 

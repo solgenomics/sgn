@@ -99,7 +99,13 @@
       var ids = list.transform2Ids(trial_list_id, item_data);
       console.log("ids: ",ids);
 
-      BrAPI("/brapi/v1")
+      var auth_token;
+      var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+      if (require_login === '1'){
+          auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+          if (!auth_token){ alert("Login required to display graphical filtering"); }
+      } 
+      BrAPI("/brapi/v1",'v1.3',auth_token)
         .phenotypes_search({
             "studyDbIds" : ids,
             "observationLevel" : $('#unit_select').val(),
@@ -116,8 +122,7 @@
           return "/stock/"+dbId+"/view";
       });
       var sharedVars = scomp.loadData(data);
-      
-      console.log("vars",sharedVars)
+      console.log("vars",sharedVars);
       
       var varOpts = d3.select("#trait_select")
               .selectAll("option:not([disabled])")

@@ -39,7 +39,7 @@ sub transform {
             if ($rs->count() == 0) {
                 push @missing, $l;
             } else {
-                print STDERR $rs->first()->uniquename() . "\n";
+                #print STDERR $rs->first()->uniquename() . "\n";
                 push @transform, $rs->first()->uniquename();
             }
         }

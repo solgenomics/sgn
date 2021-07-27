@@ -55,8 +55,6 @@ sub BUILD {
     my $genotypeprop_id = $self->genotypeprop_id();
     my $bcs_schema = $self->bcs_schema();
 
-
-
     if ( defined($genotypeprop_id) && defined($bcs_schema)) { 
 	print STDERR "Creating CXGN::Genotype object from genotypeprop_id ".$self->genotypeprop_id()." and the schema object\n";
 
@@ -359,6 +357,38 @@ sub check_parental_genotype_concordance {
 sub calculate_encoding_type { 
 
 
+}
+
+sub delete_genotypes_with_protocol_id {
+    my $class = shift;
+    my $schema = shift;
+    my $nd_protocol_id = shift;
+
+    my $dbh = $schema->storage()->dbh();
+
+    print STDERR "Deleteing genotype entries... ";
+    my $q1 = "DELETE FROM genotype WHERE genotype_id in (SELECT genotype_id FROM nd_experiment_protocol join nd_experiment_genotype using(nd_experiment_id) JOIN genotype USING(genotype_id) WHERE nd_protocol_id=?)";
+    my $h1 = $dbh->prepare($q1);
+    $h1->execute($nd_protocol_id);
+    print STDERR "Done.\n";
+    
+    print STDERR "Delete nd_experiment_md_files entries... ";
+    my $q8 = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id in (SELECT nd_experiment_id FROM nd_experiment_protocol join nd_experiment using(nd_experiment_id) WHERE nd_protocol_id=?)";
+    my $h8 = $dbh->prepare($q8);
+    $h8->execute($nd_protocol_id);
+    
+    print STDERR "Deleting nd_experiment entries... ";
+    my $q2 = "DELETE FROM nd_experiment WHERE nd_experiment_id in (SELECT nd_experiment_id FROM nd_experiment_protocol join nd_experiment using(nd_experiment_id) WHERE nd_protocol_id=?)";
+    
+    my $h2 = $dbh->prepare($q2);
+    $h2 ->execute($nd_protocol_id);
+    print STDERR "Done.\n";
+    
+    print STDERR "Deleting protocol entry... ";
+    my $q3 = "DELETE FROM nd_protocol WHERE nd_protocol_id=?";
+    my $h3 = $dbh->prepare($q3);
+    $h3->execute($nd_protocol_id);
+    print STDERR "Done.\n";
 }
 
 __PACKAGE__->meta->make_immutable;

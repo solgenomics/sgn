@@ -69,6 +69,12 @@ $ajaxRequestString => ""
   'use strict';
   var currentGFilter = null;
   var list = new CXGN.List();
+  var auth_token;
+  var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+  if (require_login === '1'){
+      auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+      if (!auth_token){ alert("Login required to display graphical filtering"); }
+  }
   
   $('#accession_group').change(function(){$('#type_list_select').trigger("change");})
   
@@ -76,7 +82,7 @@ $ajaxRequestString => ""
     var list_id = $("#filter_list_select").val(),
         unit = $("#type_list_select").val(),
         group = $('#accession_group').is(":checked"),
-        brapi = BrAPI("/brapi/v1");
+        brapi = BrAPI("/brapi/v1","v1.3",auth_token);
     if (!unit) return;
     var list_contents = list.transform2Ids(list_id),
         list_type = list.getListType(list_id);

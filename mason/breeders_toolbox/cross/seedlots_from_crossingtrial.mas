@@ -1,0 +1,185 @@
+<%args>
+$trial_id
+$breeding_program_name
+$breeding_program_id
+$timestamp => localtime()
+$locations_by_program_json
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<table class="table table-hover table-bordered" id="seedlots_from_crossingtrial_table">
+</table>
+
+<div class="modal fade" id="add_cross_seedlot_dialog" name="add_cross_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="add_seedlot_dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="add_seedlot_dialog">Add New Seedlot</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="add_cross_seedlot_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="add_cross_seedlot_button" type="button" class="btn btn-primary" >Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#seedlots_from_crossingtrial_section_onswitch').click(function(){
+
+        var breeding_program_name = "<% $breeding_program_name %>";
+        var breeding_program_id = "<% $breeding_program_id %>";
+        var time = "<% $timestamp %>";
+        var locations_by_program_json = <% $locations_by_program_json %>;
+
+        var seedlots_crossingtrial_table = jQuery('#seedlots_from_crossingtrial_table').DataTable({
+
+            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/seedlots_from_crossingtrial',
+
+            columns: [
+                { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) {
+                    if (row.seedlot_id === null){
+                        return 'No Seedlot'
+                    } else {
+                        return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"
+                    }
+                }},
+                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addSeedlot(\""+row.cross_name+"\", \""+breeding_program_name+"\", \""+breeding_program_id+"\", \""+locations_by_program_json+"\", \""+time+"\")' >Add</a>"; } },
+            ]
+        });
+    });
+
+    jQuery('#add_cross_seedlot_button').click( function() {
+
+        var seedlot_name = jQuery('#new_seedlot_name').val();
+        if (!seedlot_name) {
+            alert ("Seedlot name is required");
+            return;
+        }
+
+        var seedlot_program = jQuery('#new_seedlot_program').val();
+        if (!seedlot_program) {
+            alert ("Error retrieving breeding program name");
+            return;
+        }
+
+        var seedlot_program_id = jQuery('#new_seedlot_breeding_program_id').val();
+        if (!seedlot_program_id) {
+            alert ("Error retrieving breeding program id");
+            return;
+        }
+
+        var seedlot_location = jQuery('#new_seedlot_location').val();
+        if (!seedlot_location) {
+            alert ("Location is required");
+            return;
+        }
+
+        var box_name = jQuery('#new_seedlot_box_name').val();
+        if (!box_name) {
+            alert ("Box name is required");
+            return;
+        }
+
+        var seedlot_content = jQuery('#new_seedlot_content').val();
+        if (!seedlot_content) {
+            alert ("Cross Unique ID is required");
+            return;
+        }
+
+        var seedlot_amount = jQuery('#new_seedlot_amount').val();
+        var seedlot_weight = jQuery('#new_seedlot_weight').val();
+        if (!seedlot_amount && !seedlot_weight) {
+            alert ("Seedlot amount or weight is required");
+            return;
+        }
+
+        var seedlot_organization = jQuery('#new_seedlot_organization').val();
+
+        var seedlot_timestamp = jQuery('#new_seedlot_timestamp').val();
+        if (!seedlot_timestamp) {
+            alert ("Timestamp is required");
+            return;
+        }
+
+        var seedlot_description = jQuery('#new_seedlot_description').val();
+
+        jQuery.ajax({
+            url: '/ajax/breeders/seedlot-create',
+            data : {
+                'seedlot_name' : seedlot_name,
+                'seedlot_location': seedlot_location,
+                'seedlot_box_name':box_name,
+                'seedlot_cross_uniquename': seedlot_content,
+                'seedlot_organization': seedlot_organization,
+                'seedlot_amount':seedlot_amount,
+                'seedlot_weight':seedlot_weight,
+                'seedlot_timestamp':seedlot_timestamp,
+                'seedlot_description':seedlot_description,
+                'seedlot_breeding_program_id':seedlot_program_id
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert("The seedlot has been added.");
+                    jQuery('#add_cross_seedlot_dialog').modal('hide');
+                    location.reload();
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred adding seedlot');
+            }
+        });
+    });
+
+});
+
+function addSeedlot(cross_name, breeding_program_name, breeding_program_id,locations_by_program_json, time){
+
+    var locations = locations_by_program_json.split (",");
+    var html = '';
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Cross Unique ID: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_content" name="new_seedlot_content" value="'+cross_name+'" disabled></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Seedlot Name: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_name" name="new_seedlot_name" placeholder="Required"></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Breeding Program: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_program" name="new_seedlot_program" value="'+breeding_program_name+'" disabled></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Location: </label><div class="col-sm-9" ><select class="form-control" id="new_seedlot_location" name="new_seedlot_location"><option disabled value="" selected hidden>Select a location</option>';
+    if (locations) {
+        for (var i=0; i<locations.length; i++) {
+            html = html + '<option value='+locations[i]+'>'+locations[i]+'</option>';
+        }
+    }
+    html = html + '</select></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Box Name: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_box_name" name="new_seedlot_box_name" placeholder="Required"></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Amount: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_amount" name="new_seedlot_amount" placeholder="Amount (number of seeds) OR Weight (g), required"></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Weight (g): </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_weight" name="new_seedlot_weight" placeholder="Amount (number of seeds) OR Weight (g), required"></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Organization: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_organization" name="new_seedlot_organization" placeholder="Optional"></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_timestamp" name="new_seedlot_timestamp" value="'+time+'"></div><br><br>';
+    html = html + '<label class="col-sm-3 control-label">Description: </label><div class="col-sm-9" ><input class="form-control" id="new_seedlot_description" name="new_seedlot_description" placeholder="Optional"></div></div></div></form>';
+    html = html + '<input id="new_seedlot_breeding_program_id" type="hidden" value="'+breeding_program_id+'"/>';
+
+    jQuery('#add_cross_seedlot_div').html(html);
+    jQuery('#add_cross_seedlot_dialog').modal('show');
+
+}
+
+
+</script>

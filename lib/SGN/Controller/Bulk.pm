@@ -3,7 +3,7 @@ use 5.010;
 use Moose;
 use namespace::autoclean;
 use Cache::File;
-use Digest::SHA1 qw/sha1_hex/;
+use Digest::SHA qw/sha1_hex/;
 use File::Path qw/make_path/;
 use CXGN::Page::FormattingHelpers qw/modesel simple_selectbox_html /;
 use CXGN::Tools::Text qw/trim/;

@@ -73,8 +73,8 @@ print STDERR Dumper $design;
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
-    user_name => "johndoe", #not implemented
-    design => $design,	
+    owner_id => 41,
+    design => $design,
     program => "test",
     trial_year => "2016",
     trial_description => "test_trial_derive_trait description",
@@ -130,6 +130,12 @@ my $parsed_data = {
 my @traits = ( 'dry matter content|CO_334:0000092' );
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$fix->config->{basepath},
+    dbhost=>$fix->config->{dbhost},
+    dbname=>$fix->config->{dbname},
+    dbuser=>$fix->config->{dbuser},
+    dbpass=>$fix->config->{dbpass},
+    temp_file_nd_experiment_id=>$fix->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$fix->bcs_schema,
     metadata_schema=>$fix->metadata_schema,
     phenome_schema=>$fix->phenome_schema,
@@ -149,11 +155,11 @@ my $tn = CXGN::Trial->new( { bcs_schema => $fix->bcs_schema(),
 				trial_id => $trial_id });
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-#print STDERR Dumper \@traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [
           [
             70741,
-            'dry matter content percentage|CO_334:0000092'
+            'dry matter content percentage|CO_334:0000092', [], 3, undef, undef
           ]
         ], "check upload worked");
 
@@ -182,6 +188,12 @@ my %phenotype_metadata;
 $phenotype_metadata{'operator'}='janedoe';
 $phenotype_metadata{'date'}="2017-02-16_03:10:59";
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$fix->config->{basepath},
+    dbhost=>$fix->config->{dbhost},
+    dbname=>$fix->config->{dbname},
+    dbuser=>$fix->config->{dbuser},
+    dbpass=>$fix->config->{dbpass},
+    temp_file_nd_experiment_id=>$fix->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$fix->bcs_schema,
     metadata_schema=>$fix->metadata_schema,
     phenome_schema=>$fix->phenome_schema,

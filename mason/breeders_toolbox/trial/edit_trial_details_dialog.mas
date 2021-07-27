@@ -104,7 +104,8 @@ $field_trial_is_planned_to_cross
                     <label class="col-sm-3 control-label" >Plot Width (m): </label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                          <select class="form-control" id="edit_trial_plot_width" title="plot_width" value="<% $plot_width %>">
+                        <input class="form-control col-sm-8" id="edit_trial_plot_width" title="plot_width" type="text" value="<%$plot_width%>" aria-describedby="edit_plot_width_status"/>
+                          <!-- <select class="form-control" id="edit_trial_plot_width" title="plot_width" value="<% $plot_width %>">
                               <option value="">NA</option>
                               <option value="0.1">0.1</option>
                               <option value="0.15">0.15</option>
@@ -132,6 +133,7 @@ $field_trial_is_planned_to_cross
                               <option value="3.5">3.5</option>
                               <option value="4">4</option>
                               <option value="4.5">4.5</option>
+                              <option value="4.8">4.8</option>
                               <option value="5">5</option>
                               <option value="5.5">5.5</option>
                               <option value="6">6</option>
@@ -148,7 +150,7 @@ $field_trial_is_planned_to_cross
                               <option value="11.5">11.5</option>
                               <option value="12">12.0</option>
                               <option value="12.5">12.5</option>
-                          </select>
+                          </select> -->
                       </div>
                     </div>
                 </div>
@@ -156,7 +158,9 @@ $field_trial_is_planned_to_cross
                     <label class="col-sm-3 control-label" >Plot Length (m): </label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                          <select class="form-control" id="edit_trial_plot_length" title="plot_length" value="<% $plot_length %>">
+                          <input class="form-control col-sm-8" id="edit_trial_plot_length" title="plot_length" type="text" value="<%$plot_length%>" aria-describedby="edit_plot_length_status"/>
+                          
+                          <!-- <select class="form-control" id="edit_trial_plot_length" title="plot_length" value="<% $plot_length %>">
                               <option value="">NA</option>
                               <option value="0.1">0.1</option>
                               <option value="0.15">0.15</option>
@@ -184,6 +188,7 @@ $field_trial_is_planned_to_cross
                               <option value="3.5">3.5</option>
                               <option value="4">4</option>
                               <option value="4.5">4.5</option>
+                              <option values="4.8">4.8</option>
                               <option value="5">5</option>
                               <option value="5.5">5.5</option>
                               <option value="6">6</option>
@@ -200,7 +205,7 @@ $field_trial_is_planned_to_cross
                               <option value="11.5">11.5</option>
                               <option value="12">12.0</option>
                               <option value="12.5">12.5</option>
-                          </select>
+                          </select> -->
                       </div>
                     </div>
                 </div>

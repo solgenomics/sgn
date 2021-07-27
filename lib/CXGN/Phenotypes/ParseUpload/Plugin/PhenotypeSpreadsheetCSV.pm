@@ -30,12 +30,15 @@ sub validate {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
+    my $zipfile = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my $delimiter = ',';
     my %parse_result;
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
-    open(my $fh, '<', $filename)
+    open(my $fh, '< :encoding(UTF-8)', $filename)
         or die "Could not open file '$filename' $!";
 
     if (!$fh) {
@@ -121,6 +124,11 @@ sub parse {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
+    my $zipfile = shift; #not relevant for this plugin
+    my $user_id = shift; #not relevant for this plugin
+    my $c = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my $delimiter = ',';
     my %parse_result;
 
@@ -135,7 +143,7 @@ sub parse {
     my @traits;
     my %data;
 
-    open(my $fh, '<', $filename)
+    open(my $fh, '< :encoding(UTF-8)', $filename)
         or die "Could not open file '$filename' $!";
 
     if (!$fh) {

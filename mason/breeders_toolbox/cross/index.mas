@@ -7,6 +7,7 @@ $progeny_count => undef
 $trial_id => undef
 $trial_name => undef
 $user_id => undef
+$identifier_prefix => ''
 </%args>
 
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.CrossDetailPage" ] &>
@@ -16,22 +17,42 @@ $user_id => undef
 % my $basename = $cross_name."P";
 % my $cross_properties = $c->config->{cross_properties};
 % my @cross_props = split ',',$cross_properties;
+% my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
+% my $cross_additional_info_header_string = $c->config->{cross_additional_info_header};
+% my @cross_additional_info_header = split ',',$cross_additional_info_header_string;
+% my $cross_additional_info_string = $c->config->{cross_additional_info};
+% my @cross_additional_info = split ',',$cross_additional_info_string;
 
 <& /page/page_title.mas, title => "Details for cross '$cross_name'" &>
 
 <&| /page/info_section.mas, title => "Cross information" &>
 
-<& /page/form.mas,
-  object_type=>'cross',
-  object_id=> $cross_id,
-  form_name=> 'stock_form',
-  server_side_script => '/phenome/stock/stock_ajax_form.pl',
-  form_div_name=>'stock_details',
-  js_object_name=> 'stockForm',
-  page_url => "/cross/$cross_id" ,
-  alternate_new_button => '',
-  alternate_delete_button => ''
-&>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-6">
+                    <& /page/form.mas,
+                        object_type=>'cross',
+                        object_id=> $cross_id,
+                        form_name=> 'stock_form',
+                        server_side_script => '/phenome/stock/stock_ajax_form.pl',
+                        form_div_name=>'stock_details',
+                        js_object_name=> 'stockForm',
+                        page_url => "/cross/$cross_id" ,
+                        alternate_new_button => '',
+                        alternate_ghosted_new_button => '',
+                        alternate_delete_button => '',
+                        alternate_ghosted_delete_button => ''
+                    &>
+                </div>
+                <div class="col-sm-6">
+                    <br /><br />
+                    <& /util/barcode.mas, identifier => "$identifier_prefix"."$cross_id", text=> "$identifier_prefix stock $cross_id ($cross_name)", format=>"stock_qrcode"  &>
+                    <br /><br />
+                </div>
+            </div>
+        </div>
+    </div>
 
 </&>
 
@@ -47,6 +68,26 @@ $user_id => undef
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
+<&| /page/info_section.mas, title => 'Member of', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "membership_table" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Crossing Experiment</th>
+                                <th>Description</th>
+                                <th>Family Name</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
 <&| /page/info_section.mas, title => 'Parents', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
@@ -55,9 +96,12 @@ $user_id => undef
                     <table id = "parent_information" class="table table-hover table-striped">
                         <thead>
                             <tr>
+                                <th>Cross Combination</th>
                                 <th>Cross Type</th>
                                 <th>Female Accession</th>
+                                <th>Female Ploidy</th>
                                 <th>Male Accession</th>
+                                <th>Male Ploidy</th>
                                 <th>Female Plot</th>
                                 <th>Male Plot</th>
                                 <th>Female Plant</th>
@@ -69,13 +113,46 @@ $user_id => undef
             </div>
         </div>
     </div>
- </&>
+</&>
 
+% my $edit_additional_info_link = "[Edit]";
+% if ($user_id) { $edit_additional_info_link = '<a id="edit_additional_info_link">[Edit]</a>'; }
+
+<div id="edit_additional_info_dialog">
+    <select id="additional_info_select">
+% foreach my $info(@cross_additional_info){
+        <option value="<%$info%>"><%$info%></option>
+%}
+    </select>
+    <input id="additional_info_value" />
+    <button id="edit_additional_info_submit" >Save</button>
+</div>
+
+
+<&| /page/info_section.mas, title => 'Additional Parent Info', collapsible => 1, collapsed => 0, subtitle => $edit_additional_info_link &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "cross_additional_info" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+% foreach my $additional_info(@cross_additional_info_header){
+                                <th><%$additional_info%></th>
+%}
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
 
 % my $edit_link = "[Edit]";
 % if ($user_id) { $edit_link = '<a id="edit_properties_link">[Edit]</a>'; }
 
-<&| /page/info_section.mas, title => 'Crossing Experimental Info', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
+<&| /page/info_section.mas, title => 'Field Crossing Data', collapsible => 1, collapsed => 0, subtitle => $edit_link &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -95,7 +172,6 @@ $user_id => undef
     </div>
  </&>
 
-
 <div id="edit_properties_dialog">
 
     <select id="properties_select">
@@ -112,6 +188,55 @@ $user_id => undef
 
 </div>
 
+<&| /page/info_section.mas, title => 'Cross Transactions', collapsible => 1, collapsed => 0, subtitle => 'View crossing activities of this cross'&>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "cross_transactions" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Operator</th>
+                                <th>Timestamp</th>
+                                <th>Number of Flowers</th>
+                                <th>Number of Fruits</th>
+                                <th>Number of Seeds</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+% if ($odk_crossing_data_service_name eq 'ONA') {
+    <&| /page/info_section.mas, id=>'tissue_culture_summary_section', title => 'Tissue culture IDs of this Cross', collapsible=>1, collapsed=>1, subtitle => 'View tissue culture IDs in each step (e.g., embryo IDs, subculture IDs, rooting IDs, weaning1 IDs)'&>
+        <div class="well well-sm">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div style="overflow:scroll">
+                        <table id="tissue_culture_summary_table" class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Embryo IDs</th>
+                                    <th>Subculture IDs</th>
+                                    <th>Rooting IDs</th>
+                                    <th>Weaning1 IDs</th>
+                                    <th>Weaning2 IDs</th>
+                                    <th>Screenhouse IDs</th>
+                                    <th>Hardening IDs</th>
+                                    <th>Openfield IDs</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </&>
+% }
 
 <& /breeders_toolbox/seedlots_section.mas, stock_id=>$cross_id, stock_type=>'cross', stock_uniquename=>$cross_name &>
 
@@ -134,3 +259,34 @@ $user_id => undef
 
 
 </&>
+
+<&|  /page/info_section.mas, title => "Delete cross", collapsible => 1, collapsed => 0, subtitle => '<font color="red">Deletion cannot be undone</font>'  &>
+
+<button id="delete_cross_button" class="btn btn-default">Delete</button>
+
+</&>
+
+<script>
+
+jQuery(document).ready( function() {
+    jQuery('#delete_cross_button').click( function() {
+        var response = confirm('Really delete this cross? This action cannot be undone.');
+        if (response) {
+            jQuery.ajax( {
+                url: '/ajax/cross/delete',
+                data: { 'cross_id' : <% $cross_id %>},
+                method: 'POST',
+                error: function(r) { alert('An error occurred.'); },
+                success: function(r) {
+                    if (r.error) {
+                        alert(r.error);
+                    } else {
+                        alert('Deletion was successful.');
+                    }
+                }
+            });
+        }
+    });
+});
+
+</script>

@@ -29,7 +29,8 @@ function run_blast(database_types, input_option_types) {
   var maxhits  = jQuery('#maxhits').val();
   var filterq  = jQuery('#filterq').val();
   var input_option = jQuery('#input_options').val(); //input option is the format of the pasted sequenced
-  
+    var word_size = jQuery('#word_size').val();
+    
   if (sequence === '') { 
     alert("Please enter a sequence :-)"); 
     return;
@@ -51,7 +52,7 @@ function run_blast(database_types, input_option_types) {
     url: '/tools/blast/run/',
 
     method: 'POST',
-    data: { 'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 'filterq': filterq, 'database': database, 'program': program, 'input_options': input_option, 'db_type': database_types[database]},
+      data: { 'sequence': sequence, 'matrix': matrix, 'evalue': evalue, 'maxhits': maxhits, 'filterq': filterq, 'database': database, 'word_size': word_size,'program': program, 'input_options': input_option, 'db_type': database_types[database]},
     success: function(response) { 
       if (response.error) { 
         enable_ui();
@@ -129,11 +130,11 @@ function finish_blast(jobid, seq_count) {
       success: function(response) { 
         var sgn_graph_array = response.desc_array;
         var seq_length = response.sequence_length;
-        
+
         // alert("descriptions: "+response.sequence_length);
         // jQuery('#blast_query_length').html("Query length ("+seq_length+")");
         // alert(response.sgn_html);
-        
+
         draw_blast_graph(sgn_graph_array, seq_length);
         jQuery('#sgn_blast_graph').css("display", "inline");
         

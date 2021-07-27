@@ -23,8 +23,13 @@ jQuery(document).ready(function () {
 
     jQuery('#stock_genotypes_section_onswitch').one("click", function() {
         var stock_genotypes_table = jQuery('#stock_direct_genotypes_datatable').DataTable({
-            'ajax': '/stock/<% $stock_id %>/datatables/genotype_data',
-            "scrollX": true
+            'destroy' : true,
+            'searching' : false,
+            'ordering'  : false,
+            'processing': true,
+            'serverSide': true,
+            "scrollX": true,
+            'ajax': '/stock/<% $stock_id %>/datatables/genotype_data'
         });
     });
 

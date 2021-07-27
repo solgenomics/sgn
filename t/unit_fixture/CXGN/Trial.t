@@ -25,151 +25,193 @@ my $trial_search = CXGN::Trial::Search->new({
     bcs_schema=>$schema,
 });
 my ($result, $total_count) = $trial_search->search();
-print STDERR Dumper $result;
+print STDERR "ALL TRIAL =".Dumper($result)."\n";
 is_deeply($result, [
           {
-            'project_harvest_date' => '',
-            'year' => '2017',
-            'trial_id' => 165,
-            'genotyping_facility_status' => undef,
-            'trial_type' => 'Preliminary Yield Trial',
-            'genotyping_facility_plate_id' => undef,
-            'breeding_program_description' => 'test',
-            'breeding_program_name' => 'test',
-            'folder_id' => undef,
-            'trial_name' => 'CASS_6Genotypes_Sampling_2015',
-            'folder_description' => undef,
-            'location_name' => 'test_location',
-            'breeding_program_id' => 134,
-            'genotyping_facility_submitted' => undef,
             'design' => 'RCBD',
-            'genotyping_facility' => undef,
-            'folder_name' => undef,
+            'breeding_program_id' => 134,
+            'genotyping_facility_status' => undef,
+            'genotyping_plate_sample_type' => undef,
+            'genotyping_facility_submitted' => undef,
+            'project_harvest_date' => '',
+            'location_id' => '23',
+            'breeding_program_description' => 'test',
+            'location_name' => 'test_location',
+            'breeding_program_name' => 'test',
+            'genotyping_plate_format' => undef,
+            'year' => '2017',
             'description' => 'Copy of trial with postcomposed phenotypes from cassbase.',
-            'genotyping_plate_format' => undef,
-            'location_id' => '23',
+            'trial_name' => 'CASS_6Genotypes_Sampling_2015',
+		'trial_type' => 'Preliminary Yield Trial',
+		'trial_type_value' => 'Preliminary Yield Trial',
+            'trial_type_name' => 'Preliminary Yield Trial',
+            'trial_type_id' => 76515,
+            'folder_description' => undef,
+            'genotyping_facility_plate_id' => undef,
+            'folder_id' => undef,
+            'genotyping_facility' => undef,
             'project_planting_date' => '',
-            'genotyping_plate_sample_type' => undef
+            'folder_name' => undef,
+            'trial_id' => 165,
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
-            'genotyping_facility_plate_id' => undef,
-            'breeding_program_description' => 'test',
-            'project_harvest_date' => '',
-            'year' => '2014',
-            'trial_id' => 139,
             'genotyping_facility_status' => undef,
-            'trial_type' => 'Clonal Evaluation',
-            'trial_name' => 'Kasese solgs trial',
-            'breeding_program_name' => 'test',
-            'folder_id' => undef,
+            'genotyping_plate_sample_type' => undef,
             'genotyping_facility_submitted' => undef,
+            'breeding_program_id' => 134,
             'design' => 'Alpha',
-            'folder_description' => undef,
-            'breeding_program_id' => 134,
-            'location_name' => 'test_location',
             'description' => 'This trial was loaded into the fixture to test solgs.',
+            'year' => '2014',
             'genotyping_plate_format' => undef,
-            'location_id' => '23',
+            'trial_type_name' => 'Clonal Evaluation',
+            'trial_name' => 'Kasese solgs trial',
+		'trial_type' => 'Clonal Evaluation',
+		'trial_type_value' => '1',
+            'folder_description' => undef,
+            'trial_type_id' => 77106,
             'project_planting_date' => '',
-            'genotyping_plate_sample_type' => undef,
             'genotyping_facility' => undef,
-            'folder_name' => undef
+            'folder_name' => undef,
+            'folder_id' => undef,
+            'trial_id' => 139,
+            'genotyping_facility_plate_id' => undef,
+            'breeding_program_description' => 'test',
+            'location_name' => 'test_location',
+            'location_id' => '23',
+            'project_harvest_date' => '',
+            'breeding_program_name' => 'test',
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
-            'folder_name' => undef,
-            'genotyping_facility' => undef,
-            'genotyping_plate_sample_type' => undef,
-            'genotyping_plate_format' => undef,
             'description' => 'new_test_cross',
-            'location_id' => undef,
-            'project_planting_date' => '',
-            'location_name' => '',
-            'breeding_program_id' => 134,
-            'folder_description' => undef,
-            'design' => undef,
-            'genotyping_facility_submitted' => undef,
-            'folder_id' => undef,
-            'breeding_program_name' => 'test',
-            'trial_name' => 'new_test_cross',
-            'trial_type' => undef,
-            'genotyping_facility_status' => undef,
-            'project_harvest_date' => '',
             'year' => undef,
+            'genotyping_plate_format' => undef,
+            'trial_type_name' => undef,
+		'trial_type' => undef,
+		'trial_type_value' => undef,
+            'trial_name' => 'new_test_cross',
+            'folder_description' => undef,
+            'trial_type_id' => undef,
             'trial_id' => 135,
+            'genotyping_facility' => undef,
+            'project_planting_date' => '',
+            'folder_name' => undef,
+            'folder_id' => undef,
             'genotyping_facility_plate_id' => undef,
-            'breeding_program_description' => 'test'
+            'breeding_program_description' => 'test',
+            'location_name' => '',
+            'project_harvest_date' => '',
+            'location_id' => undef,
+            'breeding_program_name' => 'test',
+            'genotyping_plate_sample_type' => undef,
+            'genotyping_facility_status' => undef,
+            'genotyping_facility_submitted' => undef,
+            'breeding_program_id' => 134,
+            'design' => undef,
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
+            'genotyping_facility_plate_id' => undef,
+            'genotyping_facility' => undef,
+            'folder_name' => undef,
+            'project_planting_date' => '',
             'folder_id' => undef,
-            'breeding_program_name' => 'test',
-            'trial_name' => 'test_t',
-            'genotyping_facility_status' => undef,
-            'trial_type' => undef,
             'trial_id' => 144,
-            'project_harvest_date' => '',
+            'trial_type_id' => undef,
+            'folder_description' => undef,
+            'trial_name' => 'test_t',
+		'trial_type' => undef,
+		'trial_type_value' => undef,
+            'trial_type_name' => undef,
             'year' => '2016',
-            'breeding_program_description' => 'test',
-            'genotyping_facility_plate_id' => undef,
-            'folder_name' => undef,
-            'genotyping_facility' => undef,
-            'genotyping_plate_sample_type' => undef,
-            'project_planting_date' => '',
-            'location_id' => '23',
+            'genotyping_plate_format' => undef,
             'description' => 'test tets',
-            'genotyping_plate_format' => undef,
-            'location_name' => 'test_location',
-            'breeding_program_id' => 134,
-            'folder_description' => undef,
-            'design' => 'CRD',
-            'genotyping_facility_submitted' => undef
-          },
-          {
-            'genotyping_facility' => undef,
-            'folder_name' => undef,
-            'location_id' => '23',
-            'project_planting_date' => '2017-July-04',
-            'genotyping_plate_format' => undef,
-            'description' => 'test trial',
-            'genotyping_plate_sample_type' => undef,
-            'folder_description' => undef,
-            'location_name' => 'test_location',
-            'breeding_program_id' => 134,
-            'genotyping_facility_submitted' => undef,
-            'design' => 'CRD',
             'breeding_program_name' => 'test',
-            'folder_id' => undef,
-            'trial_name' => 'test_trial',
-            'trial_id' => 137,
-            'project_harvest_date' => '2017-July-21',
-            'year' => '2014',
-            'genotyping_facility_status' => undef,
-            'trial_type' => undef,
-            'breeding_program_description' => 'test',
-            'genotyping_facility_plate_id' => undef
-          },
-          {
-            'trial_name' => 'trial2 NaCRRI',
-            'breeding_program_name' => 'test',
-            'folder_id' => undef,
-            'genotyping_facility_plate_id' => undef,
-            'breeding_program_description' => 'test',
-            'year' => '2014',
             'project_harvest_date' => '',
-            'trial_id' => 141,
-            'trial_type' => undef,
-            'genotyping_facility_status' => undef,
-            'genotyping_plate_format' => undef,
-            'description' => 'another trial for solGS',
             'location_id' => '23',
-            'project_planting_date' => '',
+            'location_name' => 'test_location',
+            'breeding_program_description' => 'test',
+            'genotyping_facility_submitted' => undef,
             'genotyping_plate_sample_type' => undef,
+            'genotyping_facility_status' => undef,
+            'design' => 'CRD',
+            'breeding_program_id' => 134,
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
+          },
+          {
+            'genotyping_facility_status' => undef,
+            'genotyping_plate_sample_type' => undef,
+            'genotyping_facility_submitted' => undef,
+            'breeding_program_id' => 134,
+            'design' => 'CRD',
+            'trial_type_name' => undef,
+            'trial_name' => 'test_trial',
+		'trial_type' => undef,
+		'trial_type_value' => undef,
+            'description' => 'test trial',
+            'year' => '2014',
+            'genotyping_plate_format' => undef,
             'genotyping_facility' => undef,
             'folder_name' => undef,
+            'project_planting_date' => '2017-July-04',
+            'folder_id' => undef,
+            'trial_id' => 137,
+            'genotyping_facility_plate_id' => undef,
+            'folder_description' => undef,
+            'trial_type_id' => undef,
+            'breeding_program_name' => 'test',
+            'breeding_program_description' => 'test',
+            'location_name' => 'test_location',
+            'project_harvest_date' => '2017-July-21',
+            'location_id' => '23',
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
+          },
+          {
             'genotyping_facility_submitted' => undef,
+            'genotyping_facility_status' => undef,
+            'genotyping_plate_sample_type' => undef,
+            'breeding_program_id' => 134,
             'design' => 'CRD',
             'folder_description' => undef,
-            'breeding_program_id' => 134,
-            'location_name' => 'test_location'
+		'trial_type_id' => undef,
+		'trial_type_value' => undef,
+            'folder_name' => undef,
+            'genotyping_facility' => undef,
+            'project_planting_date' => '',
+            'folder_id' => undef,
+            'trial_id' => 141,
+            'genotyping_facility_plate_id' => undef,
+            'description' => 'another trial for solGS',
+            'genotyping_plate_format' => undef,
+            'year' => '2014',
+            'trial_type_name' => undef,
+            'trial_name' => 'trial2 NaCRRI',
+            'trial_type' => undef,
+            'breeding_program_description' => 'test',
+            'location_name' => 'test_location',
+            'location_id' => '23',
+            'project_harvest_date' => '',
+            'breeding_program_name' => 'test',
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           }
         ], 'trial search test 1');
 
@@ -179,151 +221,187 @@ $trial_search = CXGN::Trial::Search->new({
     program_list=>['test'],
 });
 ($result, $total_count) = $trial_search->search();
-print STDERR Dumper $result;
+print STDERR "SELECTED TRIAL =".Dumper($result)."\n";
 is_deeply($result, [
           {
-            'trial_id' => 165,
-            'project_harvest_date' => '',
-            'year' => '2017',
             'genotyping_facility_status' => undef,
-            'trial_type' => 'Preliminary Yield Trial',
-            'breeding_program_description' => 'test',
-            'genotyping_facility_plate_id' => undef,
-            'breeding_program_name' => 'test',
-            'folder_id' => undef,
-            'trial_name' => 'CASS_6Genotypes_Sampling_2015',
-            'folder_description' => undef,
-            'breeding_program_id' => 134,
-            'location_name' => 'test_location',
+            'genotyping_plate_sample_type' => undef,
             'genotyping_facility_submitted' => undef,
             'design' => 'RCBD',
-            'genotyping_facility' => undef,
-            'folder_name' => undef,
-            'project_planting_date' => '',
-            'location_id' => '23',
-            'genotyping_plate_format' => undef,
+            'breeding_program_id' => 134,
+            'trial_type_name' => 'Preliminary Yield Trial',
+            'trial_type' => 'Preliminary Yield Trial',
+            'trial_name' => 'CASS_6Genotypes_Sampling_2015',
             'description' => 'Copy of trial with postcomposed phenotypes from cassbase.',
-            'genotyping_plate_sample_type' => undef
+            'year' => '2017',
+            'genotyping_plate_format' => undef,
+            'project_planting_date' => '',
+            'genotyping_facility' => undef,
+            'folder_id' => undef,
+            'folder_name' => undef,
+            'trial_id' => 165,
+            'genotyping_facility_plate_id' => undef,
+            'folder_description' => undef,
+            'trial_type_id' => 76515,
+            'breeding_program_name' => 'test',
+            'breeding_program_description' => 'test',
+		'location_name' => 'test_location',
+		'trial_type_value' => 'Preliminary Yield Trial',
+            'location_id' => '23',
+            'project_harvest_date' => '',
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           },
           {
-            'folder_description' => undef,
+            'project_harvest_date' => '',
+            'location_id' => '23',
             'location_name' => 'test_location',
-            'breeding_program_id' => 134,
-            'genotyping_facility_submitted' => undef,
-            'design' => 'Alpha',
-            'genotyping_facility' => undef,
-            'folder_name' => undef,
+            'breeding_program_description' => 'test',
+            'breeding_program_name' => 'test',
+            'genotyping_plate_format' => undef,
+            'year' => '2014',
             'description' => 'This trial was loaded into the fixture to test solgs.',
-            'genotyping_plate_format' => undef,
-            'location_id' => '23',
-            'project_planting_date' => '',
-            'genotyping_plate_sample_type' => undef,
-            'year' => '2014',
-            'project_harvest_date' => '',
-            'trial_id' => 139,
             'trial_type' => 'Clonal Evaluation',
-            'genotyping_facility_status' => undef,
+            'trial_name' => 'Kasese solgs trial',
+		'trial_type_name' => 'Clonal Evaluation',
+		'trial_type_value' => '1',
+            'trial_type_id' => 77106,
+            'folder_description' => undef,
             'genotyping_facility_plate_id' => undef,
-            'breeding_program_description' => 'test',
-            'breeding_program_name' => 'test',
+            'project_planting_date' => '',
+            'genotyping_facility' => undef,
+            'trial_id' => 139,
             'folder_id' => undef,
-            'trial_name' => 'Kasese solgs trial'
+            'folder_name' => undef,
+            'design' => 'Alpha',
+            'breeding_program_id' => 134,
+            'genotyping_facility_status' => undef,
+            'genotyping_plate_sample_type' => undef,
+            'genotyping_facility_submitted' => undef,
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           },
           {
-            'genotyping_facility_status' => undef,
-            'trial_type' => undef,
+            'genotyping_facility_plate_id' => undef,
+            'folder_id' => undef,
+            'genotyping_facility' => undef,
+            'project_planting_date' => '',
             'trial_id' => 135,
-            'year' => undef,
-            'project_harvest_date' => '',
-            'breeding_program_description' => 'test',
-            'genotyping_facility_plate_id' => undef,
-            'folder_id' => undef,
-            'breeding_program_name' => 'test',
+            'folder_name' => undef,
+            'trial_type_id' => undef,
+            'folder_description' => undef,
+            'trial_type' => undef,
             'trial_name' => 'new_test_cross',
-            'location_name' => '',
-            'breeding_program_id' => 134,
-            'folder_description' => undef,
-            'design' => undef,
-            'genotyping_facility_submitted' => undef,
-            'folder_name' => undef,
-            'genotyping_facility' => undef,
-            'genotyping_plate_sample_type' => undef,
-            'location_id' => undef,
-            'project_planting_date' => '',
+            'trial_type_name' => undef,
+            'year' => undef,
             'genotyping_plate_format' => undef,
-            'description' => 'new_test_cross'
-          },
-          {
-            'folder_description' => undef,
-            'breeding_program_id' => 134,
-            'location_name' => 'test_location',
-            'genotyping_facility_submitted' => undef,
-            'design' => 'CRD',
-            'genotyping_facility' => undef,
-            'folder_name' => undef,
-            'description' => 'test tets',
-            'genotyping_plate_format' => undef,
-            'location_id' => '23',
-            'project_planting_date' => '',
-            'genotyping_plate_sample_type' => undef,
-            'year' => '2016',
+            'description' => 'new_test_cross',
+            'breeding_program_name' => 'test',
             'project_harvest_date' => '',
-            'trial_id' => 144,
-            'genotyping_facility_status' => undef,
-            'trial_type' => undef,
-            'genotyping_facility_plate_id' => undef,
+            'location_id' => undef,
+            'location_name' => '',
             'breeding_program_description' => 'test',
-            'breeding_program_name' => 'test',
-            'folder_id' => undef,
-            'trial_name' => 'test_t'
+            'genotyping_facility_submitted' => undef,
+            'genotyping_plate_sample_type' => undef,
+            'genotyping_facility_status' => undef,
+            'breeding_program_id' => 134,
+            'design' => undef,
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'trial_type_value' => undef,
+		'additional_info' => undef
           },
           {
-            'breeding_program_description' => 'test',
-            'genotyping_facility_plate_id' => undef,
-            'trial_id' => 137,
-            'project_harvest_date' => '2017-July-21',
-            'year' => '2014',
-            'trial_type' => undef,
-            'genotyping_facility_status' => undef,
-            'trial_name' => 'test_trial',
-            'breeding_program_name' => 'test',
-            'folder_id' => undef,
-            'genotyping_facility_submitted' => undef,
             'design' => 'CRD',
-            'folder_description' => undef,
             'breeding_program_id' => 134,
-            'location_name' => 'test_location',
-            'project_planting_date' => '2017-July-04',
+            'genotyping_plate_sample_type' => undef,
+            'genotyping_facility_status' => undef,
+            'genotyping_facility_submitted' => undef,
+            'breeding_program_name' => 'test',
             'location_id' => '23',
+            'project_harvest_date' => '',
+            'breeding_program_description' => 'test',
+            'location_name' => 'test_location',
+            'trial_type' => undef,
+            'trial_name' => 'test_t',
+		'trial_type_name' => undef,
+		'trial_type_value' => undef,
+            'genotyping_plate_format' => undef,
+            'year' => '2016',
+            'description' => 'test tets',
+            'genotyping_facility_plate_id' => undef,
+            'folder_id' => undef,
+            'genotyping_facility' => undef,
+            'project_planting_date' => '',
+            'trial_id' => 144,
+            'folder_name' => undef,
+            'trial_type_id' => undef,
+            'folder_description' => undef,
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+          },
+          {
+            'design' => 'CRD',
+            'breeding_program_id' => 134,
+            'genotyping_facility_submitted' => undef,
+            'genotyping_facility_status' => undef,
+            'genotyping_plate_sample_type' => undef,
+		'breeding_program_name' => 'test',
+		'trial_type_value' => undef,
+            'breeding_program_description' => 'test',
+            'location_name' => 'test_location',
+            'location_id' => '23',
+            'project_harvest_date' => '2017-July-21',
+            'genotyping_facility' => undef,
+            'project_planting_date' => '2017-July-04',
+            'folder_id' => undef,
+            'folder_name' => undef,
+            'trial_id' => 137,
+            'genotyping_facility_plate_id' => undef,
+            'folder_description' => undef,
+            'trial_type_id' => undef,
+            'trial_type_name' => undef,
+            'trial_name' => 'test_trial',
+            'trial_type' => undef,
             'description' => 'test trial',
             'genotyping_plate_format' => undef,
-            'genotyping_plate_sample_type' => undef,
-            'genotyping_facility' => undef,
-            'folder_name' => undef
+            'year' => '2014',
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           },
           {
-            'folder_description' => undef,
-            'location_name' => 'test_location',
-            'breeding_program_id' => 134,
-            'genotyping_facility_submitted' => undef,
-            'design' => 'CRD',
-            'genotyping_facility' => undef,
-            'folder_name' => undef,
-            'location_id' => '23',
-            'project_planting_date' => '',
-            'genotyping_plate_format' => undef,
-            'description' => 'another trial for solGS',
-            'genotyping_plate_sample_type' => undef,
-            'trial_id' => 141,
-            'project_harvest_date' => '',
-            'year' => '2014',
-            'trial_type' => undef,
-            'genotyping_facility_status' => undef,
             'breeding_program_description' => 'test',
-            'genotyping_facility_plate_id' => undef,
-            'breeding_program_name' => 'test',
+            'location_name' => 'test_location',
+            'location_id' => '23',
+            'project_harvest_date' => '',
+		'breeding_program_name' => 'test',
+		 'trial_type_value' => undef,
+            'description' => 'another trial for solGS',
+            'year' => '2014',
+            'genotyping_plate_format' => undef,
+            'trial_type_name' => undef,
+            'trial_name' => 'trial2 NaCRRI',
+            'trial_type' => undef,
+            'folder_description' => undef,
+            'trial_type_id' => undef,
+            'genotyping_facility' => undef,
+            'project_planting_date' => '',
+            'trial_id' => 141,
+            'folder_name' => undef,
             'folder_id' => undef,
-            'trial_name' => 'trial2 NaCRRI'
+            'genotyping_facility_plate_id' => undef,
+            'design' => 'CRD',
+            'breeding_program_id' => 134,
+            'genotyping_facility_status' => undef,
+            'genotyping_plate_sample_type' => undef,
+            'genotyping_facility_submitted' => undef,
+            'sampling_facility' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           }
         ], 'trial search test 2');
 
@@ -356,6 +434,7 @@ is_deeply(\@all_project_types, [
           'Screen House',
           'Seed Multiplication',
           'Seedling Nursery',
+          'Specialty Trial',
           'Uniform Yield Trial',
           'Variety Release Trial',
           'crossing_block_trial',
@@ -364,8 +443,10 @@ is_deeply(\@all_project_types, [
           'genotyping_trial',
           'grafting_trial',
           'health_status_trial',
-          'heterosis_trial',
-          'phenotyping_trial',
+	      'heterosis_trial',
+	      	      'misc_trial',
+	      'phenotyping_trial',
+
           'pollinating_trial',
           'storage_trial'
         ], "check get_all_project_types");
@@ -376,7 +457,7 @@ my $initial_stock_count = $stock_count_rs->count();
 
 my $number_of_reps = 3;
 my $stock_list = [ 'test_accession1', 'test_accession2', 'test_accession3' ];
-
+# print STDERR "\n\n Before creating trial design\n\n";
 my $td = CXGN::Trial::TrialDesign->new(
     {
 	schema => $f->bcs_schema(),
@@ -388,31 +469,37 @@ my $td = CXGN::Trial::TrialDesign->new(
 	number_of_blocks => 3,
     });
 
-my $number_of_plots = $number_of_reps * scalar(@$stock_list);
+# print STDERR "\n\n After creating trial design\n\n";
 
+my $number_of_plots = $number_of_reps * scalar(@$stock_list);
+# print STDERR "\n\n before calculating design! \n\n";
+  
 $td->calculate_design();
+# print STDERR "\n\nGot passed calculating design! \n\n";
 
 my $trial_design = $td->get_design();
-#print STDERR Dumper $trial_design;
+# print STDERR "\n\nTrial Design  :".Dumper($trial_design)."\n\n";
+
 
 my $breeding_program_row = $f->bcs_schema->resultset("Project::Project")->find( { name => 'test' });
 my $trial_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
 
 my $new_trial = CXGN::Trial::TrialCreate->new(
-    {
-	dbh => $f->dbh(),
-	chado_schema => $f->bcs_schema(),
-	user_name => 'janedoe', #not implemented
-	program => 'test',
-	trial_year => 2014,
-	trial_description => 'another test trial...',
-	design_type => 'RCBD',
+  {
+    dbh => $f->dbh(),
+    chado_schema => $f->bcs_schema(),
+    user_name => 'janedoe', #not implemented
+    program => 'test',
+    trial_year => 2014,
+    trial_description => 'another test trial...',
+    design_type => 'RCBD',
     trial_type => $trial_type_cvterm_id,
-	trial_location => 'test_location',
-	trial_name => "anothertrial",
-	design => $trial_design,
+    trial_location => 'test_location',
+    trial_name => "anothertrial",
+    design => $trial_design,
+    owner_id => 41,
     operator => 'janedoe'
-    });
+  });
 
 my $save = $new_trial->save_trial();
 
@@ -443,7 +530,7 @@ foreach (@$breeding_programs){
 #print STDERR Dumper \@breeding_program_names;
 is_deeply(\@breeding_program_names, ['test'], "check breeding_program_names");
 
-my $plot_name = $trial_design->{1}->{plot_name};
+my $plot_name = $trial_design->{11}->{plot_name};
 my $rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { name => $plot_name });
 is($rs->count(), 1, "check that a single plot was saved for a single name.");
 is($rs->first->name(), $plot_name, 'check that plot name was saved correctly');
@@ -460,20 +547,27 @@ else {
 my $phenotype_count_before_store = $trial->phenotype_count();
 
 ok($trial->phenotype_count() == 0, "trial has no phenotype data");
-
-my $plotlist_ref = [ $trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name} ];
+my $plotlist_ref = [ $trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name} ];
 
 my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014' ];
 
-my %plot_trait_value = ( $trial_design->{1}->{plot_name} => { 'root number|CO_334:0000011'  => [0,''], 'dry yield|CO_334:0000014' => [30,''] },
-			   $trial_design->{2}->{plot_name} => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''] },
-			   $trial_design->{3}->{plot_name} => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''] },
+my %plot_trait_value = ( $trial_design->{11}->{plot_name} => { 'root number|CO_334:0000011'  => [0,''], 'dry yield|CO_334:0000014' => [30,''] },
+			   $trial_design->{12}->{plot_name} => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''] },
+			   $trial_design->{13}->{plot_name} => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''] },
     );
 
 
 my %metadata = ( operator => 'johndoe', date => '20141223' );
 
+my $total_phenotypes_before_store = $trial->total_phenotypes();
+
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -492,9 +586,9 @@ my $total_phenotypes = $trial->total_phenotypes();
 
 my $trial_phenotype_count = $trial->phenotype_count();
 
-print STDERR "Total phentoypes: $total_phenotypes\n";
-print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3508, "total phenotype data");
+#print STDERR "Total phentoypes: $total_phenotypes\n";
+#print STDERR "Trial phentoypes: $trial_phenotype_count\n";
+is($total_phenotypes, $total_phenotypes_before_store + 6, "total phenotype data");
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -516,7 +610,7 @@ my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 is_deeply(\@pheno_for_trait_sorted, ['30','40','50'], 'check traits assayed' );
 
 my $plot_pheno_for_trait = $tn->get_stock_phenotypes_for_traits([70727], 'all', ['plot_of','plant_of'], 'accession', 'subject');
-#print STDERR Dumper $plot_pheno_for_trait;
+print STDERR Dumper "PHENO FOR TRAIT: $plot_pheno_for_trait\n";
 my @phenotyped_stocks;
 my @phenotyped_stocks_values;
 foreach (@$plot_pheno_for_trait) {
@@ -525,15 +619,15 @@ foreach (@$plot_pheno_for_trait) {
 }
 @phenotyped_stocks = sort @phenotyped_stocks;
 @phenotyped_stocks_values = sort @phenotyped_stocks_values;
-my @expected_sorted_stocks = sort ($trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name});
+my @expected_sorted_stocks = sort ($trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name});
 print STDERR Dumper \@phenotyped_stocks;
-print STDERR Dumper \@expected_sorted_stocks;
+#print STDERR Dumper \@expected_sorted_stocks;
 is_deeply(\@phenotyped_stocks, \@expected_sorted_stocks, "check phenotyped stocks");
-is_deeply(\@phenotyped_stocks_values, ['30', '40', '50'], "check phenotyped stocks");
+is_deeply(\@phenotyped_stocks_values, ['30', '40', '50'], "check phenotyped stocks 2");
 
 my $trial_experiment_count = $trial->get_experiment_count();
-#print STDERR $trial_experiment_count."\n";
-is($trial_experiment_count, 7, "check get_experiment_count");
+print STDERR $trial_experiment_count."\n";
+is($trial_experiment_count, 4, "check get_experiment_count");
 
 my $location_type_id = $trial->get_location_type_id();
 #print STDERR $location_type_id."\n";
@@ -603,7 +697,7 @@ foreach (@$trial_plots){
 @trial_plot_names = sort @trial_plot_names;
 print STDERR "Num plots: ".scalar(@trial_plot_names)."\n";
 is(scalar(@trial_plot_names), 9, 'check number of plots');
-my @expected_sorted_plots = sort ($trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name}, $trial_design->{4}->{plot_name}, $trial_design->{5}->{plot_name}, $trial_design->{6}->{plot_name}, $trial_design->{7}->{plot_name}, $trial_design->{8}->{plot_name}, $trial_design->{9}->{plot_name});
+my @expected_sorted_plots = sort ($trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name}, $trial_design->{21}->{plot_name}, $trial_design->{22}->{plot_name}, $trial_design->{23}->{plot_name}, $trial_design->{31}->{plot_name}, $trial_design->{32}->{plot_name}, $trial_design->{33}->{plot_name});
 print STDERR Dumper \@trial_plot_names;
 print STDERR Dumper \@expected_sorted_plots;
 is_deeply(\@trial_plot_names, \@expected_sorted_plots, 'Check get_plots');
@@ -612,12 +706,10 @@ my $trial_controls = $trial->get_controls();
 #print STDERR Dumper $trial_controls;
 is_deeply($trial_controls, [], "check get_controls");
 
-
-
 #add plant entries
 my $num_plants_add = 3;
 $trial->create_plant_entities($num_plants_add);
-
+#print STDERR Dumper($trial);
 ok($trial->has_plant_entries(), "check if plant entries created.");
 
 my $trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),	trial_id => $trial_id });
@@ -625,18 +717,26 @@ my $plants = $trial->get_plants();
 #print STDERR Dumper $plants;
 is(scalar(@$plants), $number_of_plots*3, "check if the right number of plants was created");
 
-my $plantlist_ref = [ $trial_design->{1}->{plot_name}.'_plant_2', $trial_design->{2}->{plot_name}.'_plant_2', $trial_design->{3}->{plot_name}.'_plant_1' ];
+my $plantlist_ref = [ $trial_design->{11}->{plot_name}.'_plant_2', $trial_design->{12}->{plot_name}.'_plant_2', $trial_design->{13}->{plot_name}.'_plant_1' ];
 
 my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014', 'harvest index|CO_334:0000015' ];
 
-my %plant_trait_value = ( $trial_design->{1}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [12,''], 'dry yield|CO_334:0000014' => [30,''], 'harvest index|CO_334:0000015' => [2,''] },
-    $trial_design->{2}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''], 'harvest index|CO_334:0000015' => [3,''] },
-    $trial_design->{3}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
+my %plant_trait_value = ( $trial_design->{11}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [12,''], 'dry yield|CO_334:0000014' => [30,''], 'harvest index|CO_334:0000015' => [2,''] },
+    $trial_design->{12}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''], 'harvest index|CO_334:0000015' => [3,''] },
+    $trial_design->{13}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
 );
 
 my %metadata = ( operator => 'johndoe', date => '20141225' );
 
+my $total_phenotype_count_before_save2 = $trial->total_phenotypes();
+
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
     bcs_schema=>$f->bcs_schema,
     metadata_schema=>$f->metadata_schema,
     phenome_schema=>$f->phenome_schema,
@@ -656,7 +756,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 print STDERR "Total phentoypes: $total_phenotypes\n";
 print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3517, "total phenotype data");
+is($total_phenotypes, $total_phenotype_count_before_save2 + 9, "total phenotype data");
 is($trial_phenotype_count, 15, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -734,7 +834,9 @@ is_deeply(\@get_plant_names, \@expected_sorted_plants, "check get_plants()");
 
 # check trial deletion - first, delete associated phenotypes
 #
-$trial->delete_phenotype_data();
+my $del_ret = $trial->delete_phenotype_data($f->config->{basepath}, $f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, $f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete");
+ok(!$del_ret);
+print STDERR Dumper $del_ret;
 
 ok($trial->phenotype_count() ==0, "phenotype data deleted");
 
@@ -815,14 +917,17 @@ my $error = $trial->set_project_type("77106");
 
 is($trial->get_project_type()->[1], "Clonal Evaluation", "set type test");
 
+print STDERR "DELETING PROJECT ENTRY... ";
 $trial->delete_project_entry();
+print STDERR "Done.\n";
 
 my $deleted_trial;
 eval {
      $deleted_trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema, trial_id=>$trial_id });
 };
 
-ok($@, "deleted trial id");
+if ($@) { print "An error occurred: $@\n"; }
+ok($@, "deleted trial id (".$@.")");
 
 
 done_testing();

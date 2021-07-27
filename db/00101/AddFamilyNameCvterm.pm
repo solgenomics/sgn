@@ -39,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'crossing_block_trial' project_type cvterm
+This patch adds the 'family_name' stock_property cvterm
 
 has '+prereq' => (
 	default => sub {

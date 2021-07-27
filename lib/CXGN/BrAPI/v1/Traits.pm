@@ -8,30 +8,7 @@ use CXGN::Trait;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page_size' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
-
+extends 'CXGN::BrAPI::v1::Common';
 
 sub list {
 	my $self = shift;
@@ -67,6 +44,7 @@ sub list {
 		push @data, {
 			traitDbId => qq|$cvterm_id|,
 			traitId => $db_name.":".$accession,
+			traitName => $cvterm_name,
 			name => $cvterm_name,
 			description => $cvterm_definition,
 			observationVariables => [
@@ -97,6 +75,7 @@ sub detail {
 	my %result = (
 		traitDbId => $trait->cvterm_id,
 		traitId => $trait->term,
+		traitName => $trait->name,
 		name => $trait->name,
 		description => $trait->definition,
 		observationVariables => [

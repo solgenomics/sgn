@@ -50,29 +50,43 @@ sub retrieve {
     my $treatment_list = $treatment_info_hash->{treatment_trial_list} || [];
     my $treatment_name_list = $treatment_info_hash->{treatment_trial_names_list} || [];
     my $treatment_units_hash_list = $treatment_info_hash->{treatment_units_hash_list} || [];
-    my $phenotype_performance_hash = $self->phenotype_performance_hash || {};
-    my @trait_names = sort keys %$phenotype_performance_hash;
+    my $trait_header = $self->trait_header || [];
+    my $exact_performance_hash = $self->exact_performance_hash || {};
+    my $overall_performance_hash = $self->overall_performance_hash || {};
     my @output;
+    my $trial_stock_type = $self->trial_stock_type();
 
     my @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
 
     my @header;
     foreach (@possible_cols){
         if ($selected_cols{$_}){
-            push @header, $_;
+            if (($_ eq 'accession_name') && ($trial_stock_type eq 'family_name')) {
+                push @header, 'family_name';
+            } elsif (($_ eq 'accession_name') && ($trial_stock_type eq 'cross')) {
+                push @header, 'cross_unique_id';
+            } else {
+                push @header, $_;
+            }
         }
     }
+
     foreach (@$treatment_name_list){
         push @header, "ManagementFactor:".$_;
     }
-    foreach (@trait_names){
+    foreach (@$trait_header){
         push @header, $_;
     }
+
     push @output, \@header;
 
     my $trial_name = $trial->get_name ? $trial->get_name : '';
     my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
     my $trial_year = $trial->get_year ? $trial->get_year : '';
+    my $pedigree_strings = $self->_get_all_pedigrees(\%design);
+
+    my @overall_trait_names = sort keys %$overall_performance_hash;
+    my @exact_trait_names = sort keys %$exact_performance_hash;
 
     #Turn plot level design into a subplot level design that can be sorted on plot_number and then subplot index number..
     my @subplot_design;
@@ -84,8 +98,7 @@ sub retrieve {
         }
         my $acc_pedigree = '';
         if (exists($selected_cols{'pedigree'})){
-            my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-            $acc_pedigree = $accession->get_pedigree_string('Parents');
+            $acc_pedigree = $pedigree_strings->{$design_info->{"accession_name"}};
         }
         $design_info->{synonyms} = $acc_synonyms;
         $design_info->{pedigree} = $acc_pedigree;
@@ -129,7 +142,8 @@ sub retrieve {
             }
         }
         $line = $self->_add_treatment_to_line($treatment_units_hash_list, $line, $design_info->{subplot_name});
-        $line = $self->_add_trait_performance_to_line(\@trait_names, $line, $phenotype_performance_hash, $design_info);
+        $line = $self->_add_exact_performance_to_line(\@exact_trait_names, $line, $exact_performance_hash, $design_info->{subplot_name});
+        $line = $self->_add_overall_performance_to_line(\@overall_trait_names, $line, $overall_performance_hash, $design_info);
         push @output, $line;
     }
 

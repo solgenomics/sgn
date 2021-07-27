@@ -16,7 +16,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $pop_id => ''
 $trait_id
-$descriptive_stat
 $combo_pops_id => ''
 
 </%args>
@@ -27,18 +26,8 @@ $combo_pops_id => ''
 <button class="button" id="phenozoom-reset">Reset zoom</button>
 <br/>
 <br/>
-<h3 style="text-align:center">Overview</h3>
-<div id="phenoPlotOverview"> </div>
-
-
-<& /page/columnar_table.mas,
-   headings    => [ '',  ''],
-  data         => $descriptive_stat,
-  __alt_freq   => 2,
-  __alt_width  => 1,
-  __alt_offset => 3,
-  __align      => 'l',
-  &>
+<!-- <h3 style="text-align:center">Overview</h3> -->
+<!-- <div id="phenoPlotOverview"> </div> -->
 
   
 <input type="hidden"  id="trait_id" value="<% $trait_id %>" />

@@ -16,7 +16,6 @@ figure2_file_name <- args[2]
 
 geno[1:5,1:5] ### View genotypic data.
 geno$row.names[1:5]
-row.names(geno)
 # retain only a single row of genotyped values per each genotype
 # (this is necessary because the input genotype table may contain duplicate stock ids - aka germplasmDbIds)
 geno_trim <- geno[!duplicated(row.names(geno)),]
@@ -31,20 +30,20 @@ geno_trim[1:5,1:5]
 geno_trim <- geno_trim - 1
 
 ##### Get marker data from marker names in geno file:
-coordinate_matrix <- matrix(nrow = length(colnames(geno_trim)), ncol = 3)
-for (marker in 1:length(colnames(geno_trim))) {
-  current_string = strsplit(colnames(geno_trim)[marker], split='_', fixed=TRUE)
-  coordinate_matrix[marker,1] = colnames(geno_trim)[marker]
-  coordinate_matrix[marker,2] = current_string[[1]][1]
-  coordinate_matrix[marker,3] = current_string[[1]][2]
-}
+#coordinate_matrix <- matrix(nrow = length(colnames(geno_trim)), ncol = 3)
+#for (marker in 1:length(colnames(geno_trim))) {
+#  current_string = strsplit(colnames(geno_trim)[marker], split='_', fixed=TRUE)
+#  coordinate_matrix[marker,1] = colnames(geno_trim)[marker]
+#  coordinate_matrix[marker,2] = current_string[[1]][1]
+#  coordinate_matrix[marker,3] = current_string[[1]][2]
+#}
 
 geno.filtered <- geno_trim
 dim(geno.filtered)
 
 ##### The data in the database has already been imputed, but we use the A.mat function here for MAF filtering and to generate the kinship matrix #####
 library(rrBLUP)
-Imputation <- A.mat(geno.filtered,impute.method="EM",return.imputed=T,min.MAF=0.05)
+Imputation <- A.mat(t(geno.filtered),impute.method="EM",return.imputed=T,min.MAF=0.05)
 
 K.mat <- Imputation$A ### KINSHIP matrix
 geno.gwas <- Imputation$imputed #NEW geno data.

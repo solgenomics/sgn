@@ -16,7 +16,7 @@ $folder_for_genotyping_trials => undef
 % my $get_crossing_trials = $folder_for_crosses ? 1 : 0;
 % my $get_genotyping_trials = $folder_for_genotyping_trials ? 1 : 0;
 % my $dialog_type;
-% if ($project_type eq 'Trial') { $get_field_trials = 1; $folder_for_trials = 1; $dialog_type = 'Trial(s)'}
+% if ($project_type eq 'Trials and Analyses') { $get_field_trials = 1; $folder_for_trials = 1; $dialog_type = 'Trial(s) and Analyses'}
 % if ($project_type eq 'Genotyping Plate') { $get_genotyping_trials = 1; $folder_for_genotyping_trials = 1; $dialog_type = 'Genotyping Plate(s)'}
 % if ($project_type eq 'Cross') { $get_crossing_trials = 1; $folder_for_crosses = 1; $dialog_type = 'Crossing Experiment(s)' }
 % if (!$project_type) { $dialog_type = 'Trial(s)' }
@@ -162,7 +162,12 @@ function breeding_program_change_folders() {
 
 function breeding_program_change_trials() {
   var breeding_program_id = jQuery("#folder_set_breeding_program_id").val();
-  get_select_box('projects', 'select_trial_for_folder', { 'name' : 'html_select_trial_for_folder', 'id' : 'html_select_trial_for_folder', 'breeding_program_id' : breeding_program_id, 'size':'20', 'get_field_trials':<% $get_field_trials %>, 'get_crossing_trials':<% $get_crossing_trials %>, 'get_genotyping_trials':<% $get_genotyping_trials %> });
+  var get_field_trials = <% $get_field_trials %>;
+  var include_analyses = 0;
+  if (get_field_trials == 1) {
+    include_analyses = 1;
+  }
+  get_select_box('projects', 'select_trial_for_folder', { 'name' : 'html_select_trial_for_folder', 'id' : 'html_select_trial_for_folder', 'breeding_program_id' : breeding_program_id, 'size':'20', 'get_field_trials':get_field_trials, 'get_crossing_trials':<% $get_crossing_trials %>, 'get_genotyping_trials':<% $get_genotyping_trials %>, 'include_analyses':include_analyses, 'multiple': true });
 }
 
 function set_trial_folder() {

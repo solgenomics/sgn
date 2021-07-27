@@ -9,7 +9,7 @@ $query
 $pager => undef;
 $page_links => undef;
 $form => undef;
-
+$genotyping_protocol_id => ''
 </%args>
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
@@ -51,3 +51,4 @@ $form => undef;
 </&>
 %}
 
+<input type="hidden" id="genotyping_protocol_id" value="<% $genotyping_protocol_id %>" />

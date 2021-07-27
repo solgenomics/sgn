@@ -12,7 +12,8 @@ my %stock_list_type_hash = (
     'vector_constructs'=>'vector_construct',
     'crosses'=>'cross',
     'populations'=>'population',
-    'plants'=>'plant'
+    'plants'=>'plant',
+    'family_names'=>'family_name'
 );
 
 sub desynonymize {
@@ -20,11 +21,11 @@ sub desynonymize {
     my $schema = shift; # dbschema
     my $type = shift; # a stock type
     my $list = shift; # an array ref to an array of stock names
-    
+
     #check if list is a stock list
     my $match = 0;
-    my @stock_types = ('seedlots', 'plots', 'accessions', 'vector_constructs', 
-    'crosses', 'populations', 'plants');
+    my @stock_types = ('seedlots', 'plots', 'accessions', 'vector_constructs',
+    'crosses', 'populations', 'plants', 'family_names');
     foreach my $stock_type (@stock_types) {
         if( $stock_type eq $type ){
             $match = 1;
@@ -65,8 +66,8 @@ sub desynonymize {
             success => "1",
             list => \@unique_list,
             synonyms => $unique
-            # unchanged => \@already_unique, 
-            # changed => \@changed, 
+            # unchanged => \@already_unique,
+            # changed => \@changed,
             # absent => \@missing
         };
     }

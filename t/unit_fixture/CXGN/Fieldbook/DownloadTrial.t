@@ -175,7 +175,7 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     user_name => "janedoe",
     data_level => 'plots',
     selected_columns=> {'plot_name'=>1,'block_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1,'synonyms'=>1,'trial_name'=>1,'location_name'=>1,'year'=>1,'pedigree'=>1,'tier'=>1},
-    selected_trait_ids=>[70666,70668],
+    selected_trait_ids=>[70666,70668]
 });
 
 my $create_fieldbook_return = $create_fieldbook->download();

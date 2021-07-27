@@ -228,7 +228,9 @@ sub search {
             well => $s->well,
             concentration => $s->concentration,
             volume => $s->volume,
-            is_blank => $s->is_blank
+            is_blank => $s->is_blank,
+            col_number => $s->col_number,
+            row_number => $s->row_number
         };
     }
     #print STDERR Dumper \@result;

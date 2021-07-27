@@ -1,0 +1,179 @@
+<%args>
+    $accession_count
+    $breeding_program_count
+    $accession_count_pheno
+    $accession_count_geno
+    $trait_count
+    $pheno_trial_count
+    $pheno_observations
+    $pheno_last_addition
+    $geno_protocol_count
+    $marker_count
+    $geno_last_addition
+</%args>
+
+<style>
+    .content-status-well {
+        padding: 0;
+    }
+
+    table.content-status-table {
+        width: 100%;
+    }
+
+    table.content-status-table tr {
+        height: 54px;
+    }
+    table.content-status-table tr:nth-child(even) {
+        background-color: #fcfcfc;
+    }
+
+    table.content-status-table td {
+        vertical-align: middle;
+        padding: 10px 25px;
+    }
+    table.content-status-table td:nth-child(1) {
+        font-weight: bold;
+        width: 40%;
+    }
+    table.content-status-table td:nth-child(3) {
+        text-align: center;
+        width: 40%;
+    }    
+
+    a.btn {
+        color: #fff;
+    }
+    a.btn:hover {
+        background-color: #286090 !important;
+        color: #fff;
+    }
+</style>
+
+
+
+<& /page/page_title.mas, title=>'Content Status' &>
+
+<&| /page/info_section.mas, 
+        id=>'content_accessions',
+        title=>'Accessions',
+        collapsible=>1,
+        collapsed=>0 &>
+
+    <div class="well content-status-well">
+        <table class="content-status-table">
+
+            <tr>
+                <td>Breeding Programs</td>
+                <td><% $breeding_program_count %></td>
+                <td><a href="/breeders/manage_programs" class="btn btn-primary" role="button">Manage</a></td>
+            </tr>
+            
+            <tr>
+                <td>Accessions</td>
+                <td><% $accession_count %></td>
+                <td>
+                    <a href="/search/stocks" class="btn btn-primary" role="button">Search</a>
+                    <a href="/breeders/accessions" class="btn btn-primary" role="button">Manage</a>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Accessions with Phenotype Data</td>
+                <td><% $accession_count_pheno %></td>
+                <td></td>
+            </tr>
+
+            <tr>
+                <td>Accessions with Genotype Data</td>
+                <td><% $accession_count_geno %></td>
+                <td></td>
+            </tr>
+
+        </table>
+    </div>
+
+</&>
+
+
+<&| /page/info_section.mas, 
+        id=>'content_phenotype',
+        title=>'Phenotype Data',
+        collapsible=>1,
+        collapsed=>0 &>
+
+    <div class="well content-status-well">
+        <table class="content-status-table">
+
+            <tr>
+                <td>Observed Traits</td>
+                <td><% $trait_count %></td>
+                <td>
+                    <a href="/search/traits" class="btn btn-primary" role="button">Search</a>
+                    <a href="/tools/onto" class="btn btn-primary" role="button">Browse</a>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Phenotype Trials</td>
+                <td><% $pheno_trial_count %></td>
+                <td>
+                    <a href="/search/trials" class="btn btn-primary" role="button">Search</a>
+                    <a href="/breeders/trials" class="btn btn-primary" role="button">Manage</a>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Total Phenotype Observations</td>
+                <td><% $pheno_observations %></td>
+                <td></td>
+            </tr>
+
+            <tr>
+                <td>Last Addition</td>
+                <td><% $pheno_last_addition %></td>
+                <td></td>
+            </tr>
+
+        </table>
+    </div>
+
+</&>
+
+
+
+<&| /page/info_section.mas, 
+        id=>'content_genotype',
+        title=>'Genotype Data',
+        collapsible=>1,
+        collapsed=>0 &>
+
+    <div class="well content-status-well">
+        <table class="content-status-table">
+
+            <tr>
+                <td>Genotyping Protocols</td>
+                <td><% $geno_protocol_count %></td>
+                <td>
+                    <a href="/search/genotyping_protocols" class="btn btn-primary" role="button">Search</a>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Markers</td>
+                <td><% $marker_count %></td>
+                <td>
+                    <a href="/search/markers" class="btn btn-primary" role="button">Search</a>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Last Addition</td>
+                <td><% $geno_last_addition %></td>
+                <td></td>
+            </tr>
+
+        </table>
+    </div>
+
+</&>

@@ -30,6 +30,9 @@ sub validate {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
+    my $zipfile = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my %parse_result;
     my $csv = Text::CSV->new ( { binary => 1 } )  # should set binary attribute.
                 or die "Cannot use CSV: ".Text::CSV->error_diag ();
@@ -105,10 +108,14 @@ sub parse {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
+    my $zipfile = shift; #not relevant for this plugin
+    my $user_id = shift; #not relevant for this plugin
+    my $c = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my %parse_result;
     my @file_lines;
     my $header;
-    my @header_row;
     my $header_column_number = 0;
     my %header_column_info; #column numbers of key info indexed from 0;
     my %plots_seen;
@@ -123,7 +130,7 @@ sub parse {
     @file_lines = read_file($filename);
     $header = shift(@file_lines);
     my $status  = $csv->parse($header);
-    @header_row = $csv->fields();
+    my @header_row = $csv->fields();
 
     ## Get column numbers (indexed from 1) of the plot_id, trait, and value.
     foreach my $header_cell (@header_row) {
@@ -148,7 +155,10 @@ sub parse {
         return \%parse_result;
     }
 
-    foreach my $line (sort @file_lines) {
+
+    for my $index (0..$#file_lines) {
+        my $line = $file_lines[$index];
+        my $line_number = $index + 2;
         my $status  = $csv->parse($line);
         my @row = $csv->fields();
         my $plot_id = $row[0];
@@ -162,13 +172,13 @@ sub parse {
         my $collector = $row[$header_column_info{'person'}];
 
         if (!defined($plot_id) || !defined($trait) || !defined($value) || !defined($timestamp)) {
-            $parse_result{'error'} = "Error getting value from file";
-            print STDERR "value: $value\n";
+            $parse_result{'error'} = "Error parsing line $line_number: plot_name, trait, value, or timestamp is undefined.";
+            print STDERR "line $line_number has value: $value\n";
             return \%parse_result;
         }
         if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-            $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
-            print STDERR "value: $timestamp\n";
+            $parse_result{'error'} = "Error parsing line $line_number: timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+            print STDERR "line $line_number has timestamp: $timestamp\n";
             return \%parse_result;
         }
         $plots_seen{$plot_id} = 1;

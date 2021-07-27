@@ -214,7 +214,16 @@ $stock_id
     'use strict';
     var STOCK_ID = "<% $stock_id %>";
     var base_url="/brapi/v1";
-    var pdg = PedigreeViewer(base_url,undefined,function(dbId){
+    var auth_token;
+    var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+    if (require_login === '1'){
+        auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+        if (!auth_token){
+            alert("Login required to display pedigree");
+        }
+    }
+
+    var pdg = PedigreeViewer(base_url,auth_token,'v1.3',function(dbId){
         return "/stock/"+dbId+"/view";
     });
     pdg.newTree(STOCK_ID,function(){

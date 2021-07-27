@@ -1,0 +1,28 @@
+<%args>
+$program_id
+</%args>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <td>
+                <a href="/breeders/trials"><p>Go To Manage Trials</p></a>
+            </td>
+            <td>
+                <a href="/breeders/genotyping"><p>Go To Manage Genotyping Plates</p></a>
+            </td>
+            <td>
+                <a href="/breeders/crosses"><p>Go To Manage Crosses</p></a>
+            </td>
+        </div>
+    </div>
+    <&| /page/info_section.mas, id=>"program_trials", title => "Field Trials", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+        <& /breeders_toolbox/program/trials.mas, program_id => $program_id &>
+    </&>
+    <&| /page/info_section.mas, id=>"program_genotyping_plates", title => "Genotyping Plates", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+        <& /breeders_toolbox/program/program_genotyping_plates.mas, program_id => $program_id &>
+    </&>
+    <&| /page/info_section.mas, id=>"program_crossing_experiments", title => "Crossing Experiments", is_subsection => 1, collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+        <& /breeders_toolbox/program/program_crossing_experiments.mas, program_id => $program_id &>
+    </&>
+</div>

@@ -7,6 +7,7 @@ const initialtypes = [
   "accessions",
   "breeding_programs", 
   "genotyping_protocols",
+  "genotyping_projects",
   "locations",
   "seedlots",
   "trait_components",
@@ -21,6 +22,7 @@ const types = {
   "accessions":"Accessions",
   "breeding_programs":"Breeding Programs",
   "genotyping_protocols":"Genotyping Protocols",
+  "genotyping_projects":"Genotyping Projects",
   "locations":"Locations",
   "plots":"Plots",
   "plants":"Plants",
@@ -55,6 +57,11 @@ function makeURL(target,id){
       return document.location.origin+`/breeders/trial/${id}`;
       break;
     case "genotyping_protocols":
+      return document.location.origin+`/breeders_toolbox/protocol/${id}`;
+      break;
+    case "genotyping_projects":
+      return document.location.origin+`/breeders/trial/${id}`;
+      break;
     case "trial_designs":
     case "trial_types":
     case "years":
@@ -85,15 +92,15 @@ export function WizardSetup(main_id){
         })
     })
     // Function which returns column contents for a given target type
-    // and list of constraints spedified by catagories order (["type",...])
+    // and list of constraints spedified by categories order (["type",...])
     // selections ({"type":[id1,id2,id3],...}) and 
     // operations ({"type":intersect?1:0,...})
     // Returns list of of unique names or objects with a "name" key 
     // ["name","name",...]|["name","name",...]|[{"name":"example"},...]
-    .load_selection((target,catagories,selections,operations)=>{
-      if(catagories.some(c=>selections[c].length<1)) return []
+    .load_selection((target,categories,selections,operations)=>{
+      if(categories.some(c=>selections[c].length<1)) return []
       var formData = new FormData();
-      catagories.forEach((c,i)=>{
+      categories.forEach((c,i)=>{
         formData.append('categories[]', c);
         formData.append('querytypes[]', operations[c]?1:0);
         (selections[c]||[]).forEach(s=>{
@@ -132,16 +139,16 @@ export function WizardSetup(main_id){
     
     var load_lists = ()=>(new Promise((resolve,reject)=>{
       var private_lists = list.availableLists(initialtypes);
-      var public_lists = list.availableLists(initialtypes);
+      var public_lists = list.publicLists(initialtypes);
       if(public_lists.error) public_lists = [];
       if(private_lists.error) private_lists = [];
       resolve(private_lists.concat(public_lists))
     })).then(lists=>lists.reduce((acc,cur)=>{
-        acc[cur[0]] = cur[1];
+        acc[cur[0]] = { name: cur[1], type: cur[5] }
         return acc;
       },{}
     )).then(listdict=>{
-      // Dictionary of {"listID":"listName"} pairs, sets or resets lists show in dropdowns
+      // Dictionary of {"listID":{name:"listName",type:"typeName"}} pairs, sets or resets lists show in dropdowns
       wiz.lists(listdict)
     });
     
@@ -165,7 +172,10 @@ export function WizardSetup(main_id){
     
     var down = new WizardDownloads(d3.select(main_id).select(".wizard-downloads").node(),wiz);
     var dat = new WizardDatasets(d3.select(main_id).select(".wizard-datasets").node(),wiz);
-    
+
+    var lo = new CXGN.List();
+    jQuery('#wizard-download-genotypes-marker-set-list-id').html(lo.listSelect('wizard-download-genotypes-marker-set-list-id', ['markers'], 'Select a marker set', 'refresh', undefined));
+
     return {
       wizard:wiz,
       reload_lists: load_lists

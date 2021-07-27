@@ -1,0 +1,164 @@
+
+<!--button class="btn btn-primary" id="nirs_analysis_plot_spectra_show">Plot Spectra</button-->
+
+<div class="modal fade" id="nirs_analysis_plot_spectra_dialog" name="nirs_analysis_plot_spectra_dialog" tabindex="-1" role="dialog" aria-labelledby="nirsAnalysisPlotSpectraDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="nirsAnalysisPlotSpectraDialog">Plot Spectra</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "nirs_analysis_plot_spectra_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Intro" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through querying and plotting spectral data in the database." &>
+                    <br/><br/>
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Protocol" &>
+                    <& /page/page_title.mas, title=>"Select the protocol you are interested in plotting spectra:" &>
+
+                    <div id="nirs_analysis_plot_spectra_protocol_select">
+                    </div>
+
+                    <center>
+                    <button class="btn btn-primary" id="nirs_analysis_plot_spectra_protocol_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Dataset" &>
+                    <& /page/page_title.mas, title=>"Select the dataset you are interested in plotting spectra for (the accessions or plots or tissues samples in the dataset need to have spectra uploaded):" &>
+
+                    <div id="nirs_analysis_plot_spectra_dataset_select_div">
+                    </div>
+
+                    <center>
+                    <button class="btn btn-primary" id="nirs_analysis_plot_spectra_dataset_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Search" &>
+                    <& /page/page_title.mas, title=>"Search Parameters:" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Query related stocks (e.g. if you have accessions in the dataset, the query will search for spectra on associated plots, plants, etc. and vice versa): </label>
+                            <div class="col-sm-7" >
+                                <select class="form-control" id="nirs_analysis_plot_spectra_associated_stock_select_id" name="nirs_analysis_plot_spectra_associated_stock_select_id">
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="nirs_analysis_plot_spectra_search_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Results" &>
+                    <& /page/page_title.mas, title=>"Spectral Plots" &>
+
+                    <div id="nir_analysis_plot_spectra_result"></div>
+
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery('#nirs_analysis_plot_spectra_show').click(function(){
+        jQuery('#nirs_analysis_plot_spectra_dialog').modal('show');
+
+        get_select_box('high_dimensional_phenotypes_protocols','nirs_analysis_plot_spectra_protocol_select', {'checkbox_name':'nirs_analysis_plot_spectra_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol'});
+
+        get_select_box('datasets','nirs_analysis_plot_spectra_dataset_select_div', {'checkbox_name':'nirs_analysis_plot_spectra_dataset_select_id'});
+    });
+
+    var nirs_analysis_plot_spectra_protocol_id;
+    jQuery('#nirs_analysis_plot_spectra_protocol_select_step').click(function(){
+        var selected = [];
+        jQuery('input[name="nirs_analysis_plot_spectra_protocol_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+
+        if(selected.length > 1 || selected.length == 0) {
+            alert('Please select one dataset!');
+            return false;
+        }
+        else {
+            nirs_analysis_plot_spectra_protocol_id = selected[0];
+
+            Workflow.complete("#nirs_analysis_plot_spectra_protocol_select_step");
+            Workflow.focus('#nirs_analysis_plot_spectra_workflow', 2);
+        }
+    });
+
+    var nirs_analysis_plot_spectra_dataset_id;
+    jQuery('#nirs_analysis_plot_spectra_dataset_select_step').click(function(){
+        var selected = [];
+        jQuery('input[name="nirs_analysis_plot_spectra_dataset_select_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+
+        if(selected.length > 1 || selected.length == 0) {
+            alert('Please select one dataset!');
+            return false;
+        }
+        else {
+            nirs_analysis_plot_spectra_dataset_id = selected[0];
+
+            Workflow.complete("#nirs_analysis_plot_spectra_dataset_select_step");
+            Workflow.focus('#nirs_analysis_plot_spectra_workflow', 3);
+            window.scrollTo(0,0);
+        }
+    });
+
+    jQuery('#nirs_analysis_plot_spectra_search_step').click(function(){
+
+        jQuery.ajax({
+            url : '/ajax/Nirs/generate_spectral_plot',
+            type : 'POST',
+            data : {
+                'dataset_id' : nirs_analysis_plot_spectra_dataset_id,
+                'nd_protocol_id': nirs_analysis_plot_spectra_protocol_id,
+                'query_associated_stocks': jQuery('#nirs_analysis_plot_spectra_associated_stock_select_id').val(),
+            },
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response){
+                console.log(response);
+                jQuery('#working_modal').modal('hide');
+
+                if (response.error) {
+                    alert(response.error);
+                    return false;
+                }
+
+                jQuery('#nir_analysis_plot_spectra_result').html('<div class="well well-sm"><h3>Plot of Spectra: </h3><img width="80%" height="80%" src="'+response.figure+'"></div>');
+
+                Workflow.complete("#nirs_analysis_plot_spectra_search_step");
+                Workflow.focus('#nirs_analysis_plot_spectra_workflow', 4);
+                window.scrollTo(0,0);
+            },
+            error: function(response){
+                alert('Error plotting spectra from NIRS!');
+                jQuery('#working_modal').modal('hide');
+            }
+        });
+    });
+
+});
+</script>

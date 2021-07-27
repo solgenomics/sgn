@@ -189,11 +189,11 @@ my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $c->bcs_schema(),
 	   dbh => $c->dbh(),
+	   owner_id => 41,
 	   trial_year => "2016",
 	   trial_description => "Trial Upload Test",
 	   trial_location => "test_location",
 	   trial_name => "Trial_upload_test",
-	   user_name => "janedoe", #not implemented
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",
@@ -234,7 +234,7 @@ ok($post1_nd_experimentprop_diff == 0, "check ndexperimentprop table after uploa
 my $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post1_project_prop_diff."\n";
-ok($post1_project_prop_diff == 3, "check projectprop table after upload excel trial");
+ok($post1_project_prop_diff == 4, "check projectprop table after upload excel trial");
 
 my $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post1_stock_diff = $post_stock_count - $pre_stock_count;
@@ -394,9 +394,9 @@ is_deeply($design, $igd_design_check, "check igd design");
 my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	chado_schema => $c->bcs_schema,
-     	dbh => $c->dbh(),
-     	user_name => 'janedoe', #not implemented
-     	trial_year => '2016',
+ 	dbh => $c->dbh(),
+	owner_id => 41,
+ 	trial_year => '2016',
 	trial_location => 'test_location',
 	program => 'test',
 	trial_description => "Test Genotyping Plate Upload",
@@ -446,7 +446,7 @@ ok($post2_nd_experimentprop_diff == 2, "check ndexperimentprop table after uploa
 $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post2_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post2_project_prop_diff."\n";
-ok($post2_project_prop_diff == 10, "check projectprop table after upload igd trial");
+ok($post2_project_prop_diff == 11, "check projectprop table after upload igd trial");
 
 $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post2_stock_diff = $post_stock_count - $pre_stock_count;
@@ -635,11 +635,11 @@ my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $c->bcs_schema(),
 	   dbh => $c->dbh(),
+	   owner_id => 41,
 	   trial_year => "2016",
 	   trial_description => "Trial Upload Test",
 	   trial_location => "test_location",
 	   trial_name => "Trial_upload_with_seedlot_test",
-	   user_name => "janedoe", #not implemented
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",
@@ -680,7 +680,7 @@ ok($post1_nd_experimentprop_diff == 2, "check ndexperimentprop table after uploa
 my $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
 my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
 print STDERR "Projectprop: ".$post1_project_prop_diff."\n";
-ok($post1_project_prop_diff == 13, "check projectprop table after upload excel trial");
+ok($post1_project_prop_diff == 15, "check projectprop table after upload excel trial");
 
 my $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
 my $post1_stock_diff = $post_stock_count - $pre_stock_count;
@@ -1073,7 +1073,7 @@ my $plate_data = {
 
 $mech->post_ok('http://localhost:3010/ajax/breeders/storegenotypetrial', [ "sgn_session_id"=>$sgn_session_id, plate_data => encode_json($plate_data) ]);
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+print STDERR "RESPONSE: ".Dumper $response;
 
 ok($response->{trial_id});
 my $geno_trial_id = $response->{trial_id};
@@ -1081,8 +1081,8 @@ $mech->get_ok("http://localhost:3010/breeders/trial/$geno_trial_id/download/layo
 my $intertek_download = $mech->content;
 my $contents = ReadData $intertek_download;
 print STDERR Dumper $contents;
-is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
-is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct #1");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct #2");
 
 my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);

@@ -6,6 +6,7 @@
     <li><a href="http://vigs.solgenomics.net/">VIGS Tool</a></li>
     <li><a href="/tools/align_viewer/">Alignment Analyzer</a></li>
     <li><a href="/tools/tree_browser/">Tree Browser</a></li>
+    <li><a href="/tools/motifs_finder/">Motif Finder</a></li>
 
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Mapping</li>

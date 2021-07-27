@@ -2,7 +2,7 @@ package CXGN::Phenotypes::Summary;
 
 =head1 NAME
 
-CXGN::Phenotypes::Summary - an object to handle searching accession's phenotypes across database.
+CXGN::Phenotypes::Summary - an object to handle searching an accession's phenotypes across database.
 
 =head1 SYNOPSIS
 
@@ -66,7 +66,7 @@ sub search {
     my $schema = $self->bcs_schema;
     print STDERR "Phenotype Summary Search ".localtime()."\n";
 
-    my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
@@ -135,8 +135,8 @@ sub search {
         GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id, accession.stock_id, accession.uniquename
         ORDER BY cvterm.name ASC;");
 
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute($numeric_regex, $accesion_type_id);
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    $h->execute($numeric_regex, $accession_type_id);
 
     my @phenotype_data;
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {

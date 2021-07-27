@@ -99,6 +99,15 @@
 
 <& /page/page_title.mas, title=>"BLAST" &>
 
+<div style="border-style:dotted;border-width:1px;margin-bottom:20px;"><div style="margin-top:10px;margin-right:10px;margin-bottom:10px;margin-left:10px;" ><b>Note</b>: To match shorter sequences:
+<div>
+<ul>
+<li>Consider setting the word_size to a lower value.</li>
+<li>You may have to set the evalue to a higher value.</li>
+</ul>
+</div>
+The default word_size for blastn is 11 and for protein-based blast programs it is 3. The correct default will be set automatically when changing the program.</div></div>
+
 <&| /page/info_section.mas, id=>"input_parameter_section", title=>"Input parameters", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/tools/blast" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
   <input type="hidden" name="outformat" value="0" />
 
@@ -143,6 +152,7 @@
 
 	<& /page/info_table.mas, title=>'', data => [
 	  'Expect (e-value) Threshold' => '<input id="evalue" class="blast_select_box form-control" type="text" size="6" value="1e-10" name="expect" />',
+	  'Word Size (default 11, use lower value for shorter sequences)' => '<input id="word_size" class="blast_select_box form-control" type="text" size="6" value="11" name="word_size" />',
 	  'Substitution Matrix' => $substitution_matrix_select,
 		'Output Options' => $parse_options_select,
 	  'Max. hits to show' => '<input id="maxhits" class="blast_select_box form-control" type="text" name="maxhits" size="6" value="20" />',
@@ -256,6 +266,14 @@ jQuery(document).ready(function() {
 	jQuery('#dataset_select').change( function() {
 	  var selectedId = jQuery('#dataset_select').find(':selected').attr('value');
 	  swap_menu(selectedId);
+	});
+
+	jQuery('#program_select').change( function() {
+	  var selected_program = jQuery('#program_select').find(':selected').attr('value');
+	  if (selected_program === 'blastp' || selected_program === 'blastx' || selected_program === 'tblastn' || selected_program === 'tblastx') {
+	     jQuery('#word_size').val("3");
+	  }
+	  if (selected_program === 'blastn') { jQuery('#word_size').val("11"); }
 	});
 
 	var input_examples = eval(<% $input_example_json %>);

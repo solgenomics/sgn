@@ -91,7 +91,7 @@ Please verify your current password to make changes. Select changes desired by c
     jQuery('#change_account_form').submit( function(event) { 
        event.preventDefault();
        var form_data = jQuery('#change_account_form').serialize();
-       alert(JSON.stringify(form_data));
+       // alert(JSON.stringify(form_data));
        jQuery.ajax( { 
          url: '/ajax/user/update',
          data: form_data,
@@ -99,7 +99,7 @@ Please verify your current password to make changes. Select changes desired by c
          success: function(r) {
            if (r.error) { alert(r.error); }
            else { 
-             alert(r.message);
+             alert("Done! " +r.message);
            }
          }
        });

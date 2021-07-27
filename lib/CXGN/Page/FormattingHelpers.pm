@@ -507,7 +507,7 @@ sub simple_selectbox_html {
     }
     $retstring .= qq!>!;
     $retstring =~ s/ +/ /;    #collapse spaces
-    print STDERR "Retstring is $retstring\n";
+
     my $in_group = 0;
     if ($params{default}){
         my $default = $params{default};

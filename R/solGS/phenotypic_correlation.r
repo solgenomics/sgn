@@ -10,7 +10,8 @@
 options(echo = FALSE)
 
 library(ltm)
-library(rjson)
+#library(rjson)
+library(jsonlite)
 library(data.table)
 #library(phenoAnalysis)
 library(dplyr)
@@ -43,15 +44,17 @@ phenoData          <- c()
 if ( length(refererQtl) != 0 ) {
    phenoDataFile      <- grep("\\/phenodata", inputFiles, value=TRUE)    
 
-   phenoData <- read.table(phenoDataFile,
+   phenoData <- data.frame(fread(phenoDataFile,
 				header=TRUE,
                                    sep=",",
                                    na.strings=c("NA", "-", " ", ".", "..")
-                                   )
+                                   ))
 } else {
 
-  phenoData <- as.data.frame(fread(phenoDataFile, sep="\t",
-                                   na.strings = c("NA", "", "--", "-", ".", "..")
+    phenoData <- data.frame(fread(phenoDataFile,
+                                     header = TRUE,
+                                     sep="\t",
+                                     na.strings = c("NA", "", "--", "-", ".", "..")
                                    ))
 }
 
@@ -119,9 +122,6 @@ if (length(refererQtl) == 0  ) {
                              
 }
 
-
-print(formattedPhenoData[1:2, ])
-
 coefpvalues <- rcor.test(formattedPhenoData,
                          method="pearson",
                          use="pairwise"
@@ -130,17 +130,13 @@ coefpvalues <- rcor.test(formattedPhenoData,
 coefficients <- coefpvalues$cor.mat
 allcordata   <- coefpvalues$cor.mat
 
-print(allcordata)
-
 allcordata[lower.tri(allcordata)] <- coefpvalues$p.values[, 3]
 diag(allcordata) <- 1.00
 
 pvalues <- as.matrix(allcordata)
-
 pvalues <- round(pvalues, 2)
 
 coefficients <- round(coefficients, 3)
- 
 allcordata   <- round(allcordata, 3)
 
 #remove rows and columns that are all "NA"
@@ -157,36 +153,27 @@ pvalues[upper.tri(pvalues)]           <- NA
 coefficients[upper.tri(coefficients)] <- NA
 coefficients <- data.frame(coefficients)
 
-coefficients2json <- function(mat) {
-  mat <- as.list(as.data.frame(t(mat)))
-  names(mat) <- NULL
-  toJSON(mat)
-}
+coefficients2json <- coefficients
+names(coefficients2json) <- NULL
 
 traits <- colnames(coefficients)
 
 correlationList <- list(
-                     "traits" = toJSON(traits),
-                     "coefficients " =coefficients2json(coefficients)
+                     labels = traits,
+                     values  = coefficients
                    )
 
-correlationJson <- paste("{",paste("\"", names(correlationList), "\":", correlationList, collapse=","), "}")
+correlationJson <- jsonlite::toJSON(correlationList)
 
-correlationJson <- list(correlationJson)
-
-fwrite(coefficients,
-       file      = correCoefficientsFile,
+write.table(coefficients,
+       file = correCoefficientsFile,
+       sep  = "\t",
        row.names = TRUE,
-       sep       = "\t",
-       quote     = FALSE,
+       quote = FALSE
        )
 
-fwrite(correlationJson,
-       file      = correCoefficientsJsonFile,
-       col.names = FALSE,
-       row.names = FALSE,
-       qmethod   = "escape"
-       )
+write(correlationJson,
+       file = correCoefficientsJsonFile)
 
 ## if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
 ##   fwrite(formattedPhenoData,

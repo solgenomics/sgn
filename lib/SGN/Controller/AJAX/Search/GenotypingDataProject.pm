@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-SGN::Controller::AJAX::Search::GenotypingDataProject - a REST controller class to provide genotyping data project 
+SGN::Controller::AJAX::Search::GenotypingDataProject - a REST controller class to provide genotyping data project
 
 =head1 DESCRIPTION
 
@@ -17,14 +17,13 @@ use Data::Dumper;
 use JSON;
 use CXGN::People::Login;
 use CXGN::Trial::Search;
-use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 sub genotyping_data_project_search : Path('/ajax/genotyping_data_project/search') : ActionClass('REST') { }
@@ -36,7 +35,7 @@ sub genotyping_data_project_search_GET : Args(0) {
 
     my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$bcs_schema,
-        trial_design_list=>['genotype_data_project']
+        trial_design_list=>['genotype_data_project', 'pcr_genotype_data_project']
     });
     my ($data, $total_count) = $trial_search->search();
     my @result;

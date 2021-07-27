@@ -2,6 +2,7 @@
 <%args>
 $breeding_programs
 $locations
+$design_types => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
@@ -11,17 +12,17 @@ $locations
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTrialDialog">Upload Existing Trial</h4>
+                <h4 class="modal-title" id="uploadTrialDialog">Upload Existing Trial(s)</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form">
+                    <!-- <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form"> -->
 
                         <&| /util/workflow.mas, id=> "trial_upload_workflow" &>
                             <&| /util/workflow.mas:step, title=> "Intro" &>
-                                <& /page/page_title.mas, title=>"This workflow will guide you through uploading a new trial in the database" &>
-                                <p>A field trial represents plots in the field where each plot has a globally unique <i>plot_name</i>, a sequential <i>plot_number</i> that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an <i>accession_name</i> representing the genotype being tested in that plot. Each plot can belong to different blocks (<i>block_number</i>) and reps (<i>rep_number</i>) depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a <i>row_number</i> and <i>col_number</i> indicating the relative position of the plot in the field.</p>
+                                <& /page/page_title.mas, title=>"This workflow will guide you through uploading a new trial or trials into the database" &>
+                                <p>A field trial represents plots in the field where each plot has a globally unique <i>plot_name</i>, a sequential <i>plot_number</i> that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an <i>accession_name</i> representing the genotype being tested in that plot. In cases where a cross/family is being evaluated (e.g. F1 hybrid, backcrossing), a <i>cross_unique_id</i> or a <i>family_name</i> can be used instead of an accession_name. Each plot can belong to different blocks (<i>block_number</i>) and reps (<i>rep_number</i>) depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a <i>row_number</i> and <i>col_number</i> indicating the relative position of the plot in the field.</p>
                                 <p>If a specific accession is a check or control, you can indicate the plots that that accession is planted in as controls using <i>is_a_control</i>.</p>
                                 <p>You can provide the specific <i>seedlot_name</i> planted in each plot, along with the number of seeds (<i>num_seed_per_plot</i>) and/or the weight (g) of seed (<i>weight_gram_seed_per_plot</i>) that were used.</p>
                                 <p>A trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
@@ -32,25 +33,71 @@ $locations
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "File Formatting" &>
-                                <& /page/page_title.mas, title=>"Make sure your experiment is formatted in the right format" &>
-                                <br/><br/>
-                                <center>
-                                <button class="btn btn-info" id="guided_help_trial_upload_format_button">Information about file format</button><br/><br/>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Once you think your file matches, go to Next Step</button>
-                                </center>
+                                <ul class="nav nav-pills nav-justified" id="upload_trial_designs_tab_select">
+                                    <li class="active" id="upload_single_trial_design_tab"><a data-toggle="tab" href="#single_tab">Single Trial Design</a></li>
+                                    <li id="upload_multiple_trial_designs_tab"><a data-toggle="tab" href="#multiple_tab">Multiple Trial Designs</a></li>
+                                </ul>
+                                <div class="tab-content">
+
+                                    <div id="single_tab" class="tab-pane fade in active">
+                                        <hr>
+                                        <center>
+                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                                <p>
+                                                    <b>File format information</b>
+                                                    <br>
+                                                    <a id="upload_single_trial_design_format_info">Single trial spreadsheet</a>
+                                                </p>
+                                            </&>
+                                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                        </center>
+                                    </div>
+
+                                    <div id="multiple_tab" class="tab-pane fade">
+                                        <hr>
+                                        <center>
+                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                                <p>
+                                                    <b>File format information</b>
+                                                    <br>
+                                                    <a id="upload_multiple_trial_designs_format_info">Multiple trial spreadsheet</a>
+                                                </p>
+                                            </&>
+                                            <br>
+
+                                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_multiple_trial_designs_form" name="upload_multiple_trial_designs_form">
+                                              <div class="form-group">
+                                                  <input type="file" name="multiple_trial_designs_upload_file" id="multiple_trial_designs_upload_file" encoding="multipart/form-data" />
+                                              </div>
+                                              <div class="form-group">
+                                                  <div class="col-sm-4"></div>
+                                                  <label class="col-sm-2 control-label">Ignore Warnings: </label>
+                                                  <div class="col-sm-2" >
+                                                      <input id="upload_multiple_trials_ignore_warnings" name="upload_multiple_trials_ignore_warnings" type="checkbox" data-toggle="toggle" encoding="multipart/form-data">
+                                                  </div>
+                                                  <div class="col-sm-4"></div>
+                                              </div>
+                                            </form>
+
+                                            <div style="display:none" id="upload_multiple_trials_warning_messages" class="alert-warning" role="alert">
+                                            </div>
+                                            <div style="display:none" id="upload_multiple_trials_error_messages" class="alert-danger" role="alert">
+                                            </div>
+                                            <div style="display:none" id="upload_multiple_trials_success_messages" class="alert-success" role="alert">
+                                            </div>
+
+                                            <br>
+                                            <button type="button" class="btn btn-primary" id="multiple_trial_designs_upload_submit" disabled>Upload Trial Designs</button>
+                                            <button style="display:none" class="btn btn-primary" id="upload_multiple_trials_success_button">Reload Page</button>
+                                        </center>
+                                    </div>
+
+                                </div>
                             </&>
 
                             <&| /util/workflow.mas:step, title=> "Enter trial information" &>
                                 <& /page/page_title.mas, title=>"Enter information about the experiment and upload your trial layout" &>
-
-                                <&| /page/explanation.mas, title=>'Template information' &>
-                                    <p>
-                                        <b>File format information</b>
-                                        <br>
-                                        <a id="trial_upload_spreadsheet_format_info">Spreadsheet format</a>
-                                    </p>
-                                </&>
-
+                              <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_form" name="upload_trial_form">
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Trial Name: </label>
                                     <div class="col-sm-9" >
@@ -105,7 +152,8 @@ $locations
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Plot Width (m): </label>
                                     <div class="col-sm-9">
-                                        <select class="form-control" id="trial_upload_plot_width" name="trial_upload_plot_width">
+                                        <input type="text" class="form-control" id="trial_upload_plot_width" name="trial_upload_plot_width" />
+                                        <!-- <select class="form-control" id="trial_upload_plot_width" name="trial_upload_plot_width">
                                             <option value="">NA</option>
                                             <option value="0.1">0.1</option>
                                             <option value="0.15">0.15</option>
@@ -149,13 +197,14 @@ $locations
                                             <option value="11.5">11.5</option>
                                             <option value="12">12.0</option>
                                             <option value="12.5">12.5</option>
-                                        </select>
+                                        </select> -->
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Plot Length (m): </label>
                                     <div class="col-sm-9">
-                                        <select class="form-control" id="trial_upload_plot_length" name="trial_upload_plot_length">
+                                        <input type="text" class="form-control" id="trial_upload_plot_length" name="trial_upload_plot_length" />
+                                        <!-- <select class="form-control" id="trial_upload_plot_length" name="trial_upload_plot_length">
                                             <option value="">NA</option>
                                             <option value="0.1">0.1</option>
                                             <option value="0.15">0.15</option>
@@ -199,7 +248,7 @@ $locations
                                             <option value="11.5">11.5</option>
                                             <option value="12">12.0</option>
                                             <option value="12.5">12.5</option>
-                                        </select>
+                                        </select> -->
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -209,25 +258,58 @@ $locations
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Plants per Plot: </label> 
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="trial_upload_plant_entries" name="trial_upload_plant_entries" type="text" />
+                                        <p><i>Creates plant entries for each plot. Ignore if not adding plant entries.</i></p>
+                                    </div>
+                                    <label style="font-size: 80%;" class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                    <div class="col-sm-8" >
+                                        <input name="trial_upload_plants_per_plot_inherit_treatments" id="trial_upload_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Description: </label>
                                     <div class="col-sm-9" >
                                         <textarea class="form-control" id="trial_upload_description" name="trial_upload_description" form="upload_trial_form" maxlength="250"></textarea>
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Stock Type Being Evaluated in Trial: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="trial_upload_trial_stock_type" name="trial_upload_trial_stock_type">
+                                            <option value="">Select a stock type</option>
+                                            <option value="accession">accession</option>
+                                            <option value="cross">cross</option>
+                                            <option value="family_name">family_name</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Design Type: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="trial_upload_design_method" name="trial_upload_design_method">
-                                            <option value=CRD>Completely Randomized</option>
-                                            <option value=RCBD>Complete Block</option>
-                                            <option value=Alpha>Alpha Lattice</option>
-                                            <option value=Augmented>Augmented</option>
-                                            <option value=MAD>Modified Augmented Design</option>
-                                            <option value=westcott>Westcott Design</option>
-                                            <option value=Lattice>Lattice</option>
-                                            <!--  <option value=MADIII>MADIII</option>   -->
-                                            <!--  <option value=MADIV>MADIV</option> -->
-                                            <!--  <option value=MADV>MADV</option> -->
+% foreach my $type(@$design_types){
+%    my $method;
+%    if ($type eq 'Completely Randomized'){
+%        $method = 'CRD';
+%    } elsif ($type eq 'Complete Block'){
+%        $method = 'RCBD';
+%    } elsif ($type eq 'Alpha Lattice'){
+%        $method = 'Alpha';
+%    } elsif ($type eq 'Modified Augmented Design'){
+%        $method = 'MAD';
+%    } elsif ($type eq 'Nursery/Greenhouse'){
+%        $method = 'greenhouse';
+%    } elsif ($type eq 'Split Plot'){
+%        $method = 'splitplot';
+%    } elsif ($type eq 'Partially Replicated'){
+%        $method = 'p-rep';
+%    } else {
+%        $method = $type;
+%    }
+    <option value="<%$method%>"><%$type%></option>
+%}
                                         </select>
                                     </div>
                                 </div>
@@ -246,7 +328,7 @@ $locations
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
                                 <& /page/page_title.mas, title=>"Is your trial linked with other field trials, genotyping plates, or crossing experiments in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved." &>
 
-                                <div class="well">
+                                <div class="well form-horizontal">
                                     <div class="form-group">
                                         <label class="col-sm-5 control-label">Is this trial following-up a previous field trial?: </label>
                                         <div class="col-sm-7">
@@ -267,7 +349,7 @@ $locations
 
                                 <p>If you go on to collect tissue samples for creating a 96 well plate for genotyping, when adding the genotyping plate (96 well plate layout) to the database you can use plot names or plant names or tissue sample names from this field trial. By doing so, we can create linkage between this field trial and the genotyping plate.</p>
 
-                                <div class="well">
+                                <div class="well form-horizontal">
                                     <div class="form-group">
                                         <label class="col-sm-5 control-label">Will this trial be genotyped?: </label>
                                         <div class="col-sm-7">
@@ -281,7 +363,7 @@ $locations
 
                                 <p>If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing experiment in the database.</p>
 
-                                <div class="well">
+                                <div class="well form-horizontal">
                                     <div class="form-group">
                                         <label class="col-sm-5 control-label">Will crosses be done on this trial?: </label>
                                         <div class="col-sm-7">
@@ -296,7 +378,7 @@ $locations
                                 <br/>
                                 <center>
                                     <button type="button" class="btn btn-lg btn-primary" name="upload_trial_validate_form_button" id="upload_trial_validate_form_button">First validate the form</button>
-                                    <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit" onclick="Workflow.complete(this, false); return false;" >Upload Trial</button>
+                                    <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit_first" onclick="Workflow.complete(this, false); return false;" >Upload Trial</button>
                                 <center>
                             </&>
 
@@ -376,7 +458,7 @@ $locations
                                 <& /page/page_title.mas, title=>"Submit your trial again. You should have corrected all errors by now, but if not please take a look at the errors in the red box below. You can continue to modify your file and then click Upload until it works." &>
                                 <div id="trial_upload_show_repeat_upload_button">
                                     <center>
-                                    <button type="button" class="btn btn-lg btn-primary" name="upload_trial_submit" >Upload Trial</button><br/><br/>
+                                    <button type="button" class="btn btn-lg btn-primary" name="upload_trial_submit_second" >Upload Trial</button><br/><br/>
                                     </center>
                                 </div>
                                 <center>
@@ -409,9 +491,9 @@ $locations
                                     <li>You an add phenotypes for the plots or plants in this trial now.</li>
                                 </ul>
                                 <br/>
-                                <center>
-                                <button class="btn btn-primary" name="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
-                                </center>
+                                <!--center>
+                                <button class="btn btn-primary" id="upload_trial_success_complete_button">The trial was saved to the database with no errors! Congrats Click Here</button><br/><br/>
+                                </center-->
                             </&>
                         </&>
                     </form>
@@ -436,16 +518,169 @@ $locations
                     <b>Trials may be uploaded in an Excel file (.xls)</b>
                     <br />
                     (.xlsx format not supported)
+                    <br />
+                    <hr>
+                    <&| /page/info_section.mas, title=>"Stock type being evaluated in this trial: accession", collapsible=>1, collapsed=>1 &>
+                        <div class="well well-sm">
+                            <b>Header:</b>
+                            <br/>
+                            The first row (header) must contain the following:
+                            <br />
+                            <table class="table table-hover table-bordered table-condensed" >
+                                <thead></thead>
+                                <tbody>
+                                    <tr>
+                                        <td>plot_name</td>
+                                        <td>accession_name</td>
+                                        <td>plot_number</td>
+                                        <td>block_number</td>
+                                        <td>is_a_control</td>
+                                        <td>rep_number</td>
+                                        <td>range_number</td>
+                                        <td>row_number</td>
+                                        <td>col_number</td>
+                                        <td>seedlot_name</td>
+                                        <td>num_seed_per_plot</td>
+                                        <td>weight_gram_seed_per_plot</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <b>Header as a string:</b><br/>
+                            <p>plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
+                        </div>
+                    </&>
+
+                    <&| /page/info_section.mas, title=>"Stock type being evaluated in this trial: cross unique id", collapsible=>1, collapsed=>1 &>
+                        <div class="well well-sm">
+                            <b>Header:</b>
+                            <br/>
+                            The first row (header) must contain the following:
+                            <br />
+                            <table class="table table-hover table-bordered table-condensed" >
+                                <thead></thead>
+                                <tbody>
+                                    <tr>
+                                        <td>plot_name</td>
+                                        <td>cross_unique_id</td>
+                                        <td>plot_number</td>
+                                        <td>block_number</td>
+                                        <td>is_a_control</td>
+                                        <td>rep_number</td>
+                                        <td>range_number</td>
+                                        <td>row_number</td>
+                                        <td>col_number</td>
+                                        <td>seedlot_name</td>
+                                        <td>num_seed_per_plot</td>
+                                        <td>weight_gram_seed_per_plot</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <b>Header as a string:</b><br/>
+                            <p>plot_name,cross_unique_id,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
+                        </div>
+                    </&>
+
+                    <&| /page/info_section.mas, title=>"Stock type being evaluated in this trial: family name", collapsible=>1, collapsed=>1 &>
+                        <div class="well well-sm">
+                            <b>Header:</b>
+                            <br/>
+                            The first row (header) must contain the following:
+                            <br />
+                            <table class="table table-hover table-bordered table-condensed" >
+                                <thead></thead>
+                                <tbody>
+                                    <tr>
+                                        <td>plot_name</td>
+                                        <td>family_name</td>
+                                        <td>plot_number</td>
+                                        <td>block_number</td>
+                                        <td>is_a_control</td>
+                                        <td>rep_number</td>
+                                        <td>range_number</td>
+                                        <td>row_number</td>
+                                        <td>col_number</td>
+                                        <td>seedlot_name</td>
+                                        <td>num_seed_per_plot</td>
+                                        <td>weight_gram_seed_per_plot</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <b>Header as a string:</b><br/>
+                            <p>plot_name,family_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
+                        </div>
+                    </&>
+
+                    <b>Required fields:</b>
+                    <ul>
+                    <li>plot_name (must be unique across entire database. this is often a concatenation of the trial name and the plot number.)</li>
+                    <li>accession_name or cross_unique_id or family_name (must exist in the database. this is the accession or cross unique id or family name being tested in the plot.)</li>
+                    <li>plot_number (a sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). these numbers should be unique for the trial.)</li>
+                    <li>block_number (a design parameter indicating which block the plot is in)</li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                    <li>is_a_control (type 1 in this field if the plot is a control, otherwise leave blank. generally you will have accessions/cross unique ids/family names that are controls, so you should indicate the plots of those accessions/cross unique ids/family names as a control.)</li>
+                    <li>rep_number (replicate number, numeric)</li>
+                    <li>range_number (range number. often synonymous with col_number, numeric)</li>
+                    <li>row_number (row number. if the field is a grid, this represents the y coordinate, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>
+                    <li>col_number (column number. if the field is a grid, this represents the x coordinate. sometimes called range_number, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>
+                    <li>seedlot_name (the seedlot from where the planted seed originated. must exist in the database)</li>
+                    <li>num_seed_per_plot (number seeds per plot. seed is transferred from seedlot mentioned in seedlot_name. numeric)</li>
+                    <li>weight_gram_seed_per_plot (weight in gram of seeds in plot. seed is transferred from seedlot mentioned in seedlot name. numeric)</li>
+                    </ul>
+
+                    <b>Treatments:</b>
+                    <ul>
+                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). the value for each plot should be 1 if the treatment was applied or empty.)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="multiple_trial_upload_spreadsheet_info_dialog" name="multiple_trial_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadMultipleTrialInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadMultipleTrialInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Trials may be uploaded in an Excel file (.xls)</b>
+                    <br />
+                    (.xlsx format not supported)
                     <br /><br />
+
+                    <b>Multiple Trial Designs:</b>
+
                     <b>Header:</b>
                     <br>
-                    The first row (header) must contain the following:
+                    The first row (header) must contain the following, which is an expansion of the single trial design header:
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
                         <tbody>
                             <tr>
+                                <td>trial_name</td>
+                                <td>breeding_program</td>
+                                <td>location</td>
+                                <td>year</td>
+                                <td>design_type</td>
+                                <td>description</td>
+                                <td>trial_type</td>
+                                <td>plot_width</td>
+                                <td>plot_length</td>
+                                <td>field_size</td>
+                                <td>planting_date</td>
+                                <td>harvest_date</td>
                                 <td>plot_name</td>
                                 <td>accession_name</td>
                                 <td>plot_number</td>
@@ -461,22 +696,35 @@ $locations
                             </tr>
                         </tbody>
                     </table>
-                    <b>Header as a string:</b><br/>
-                    <p>plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
 
-                    <b>Required fields:</b>
+                    <b>Header as a string:</b><br/>
+                    <p>trial_name,breeding_program,location,year,design_type,description,trial_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot</p>
+
+                    <b> Required fields:</b>
                     <ul>
-                    <li>plot_name (must be unique across entire database. this is often a concatenation of the trial name, the accession name, and the plot number.)</li>
-                    <li>accession_name (must exist in the database. this is the accession being tested in the plot.)</li>
-                    <li>plot_number (a sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). these numbers should be unique for the trial.)</li>
-                    <li>block_number (a design parameter indicating which block the plot is in)</li>
+                    <li>trial_name (Must be unique across entire database. It is often a concatenation of the year, purpose, unique number, and location.)</li>
+                    <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
+                    <li>location (The name of the location where the trial was held, must exist in the database.)</li>
+                    <li>year (The year the trial was held.)</li>
+                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), Alpha (Alpha Lattice Design) Augmented (Augmented Design), MAD (Modified Augmented Design), Westcott (Westcott Design), Lattice (Lattice Design))</li>
+                    <li>description (Additional text with any other relevant information about the trial.)</li>
+                    <li>plot_name (Must be unique across entire database. It is often a concatenation of the trial name and the plot number.)</li>
+                    <li>accession_name (The accession being tested in the plot, must exist in the database.)</li>
+                    <li>plot_number (A sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). These numbers should be unique for the trial.)</li>
+                    <li>block_number (A design parameter indicating which block the plot is in.)</li>
                     </ul>
 
-                    <b>Optional fields:</b>
+                    <b>Additional optional fields:</b>
                     <ul>
-                    <li>is_a_control (type 1 in this field if the plot is a control, otherwise leave blank. generally you will have accessions that are controls, so you shuold indicate the plots that that accession is in as a control.)</li>
-                    <li>rep_number (replicate number, numeric)</li>
-                    <li>range_number (range number. often synonymous with col_number, numeric)</li>
+                    <li>trial_type (The name of the trial type, must exist in the database. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial)</li>
+                    <li>plot_width (plot width in meters)</li>
+                    <li>plot_length (plot length in meters)</li>
+                    <li>field_size (field size in hectares)</li>
+                    <li>planting_date (Date of Planting in YYYY-MM-DD format)</li>
+                    <li>harvest_date (Date of Harvest in YYYY-MM-DD format)</li>
+                    <li>is_a_control (type 1 in this field if the plot is a control, otherwise 0 or leave blank. generally you will have accessions that are controls, so you shuold indicate the plots that that accession is in as a control.)</li>
+                    <li>rep_number (replicate number, must be numeric)</li>
+                    <li>range_number (range number. often synonymous with col_number, must be numeric)</li>
                     <li>row_number (row number. if the field is a grid, this represents the y coordinate, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>
                     <li>col_number (column number. if the field is a grid, this represents the x coordinate. sometimes called range_number, numeric, required for field map generation. the top left plot shuold be row 1, column 1)</li>
                     <li>seedlot_name (the seedlot from where the planted seed originated. must exist in the database)</li>
@@ -486,13 +734,13 @@ $locations
 
                     <b>Treatments:</b>
                     <ul>
-                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). the value for each plot should be 1 if the treatment was applied or empty.)</li>
+                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). the value for each plot should be 1 if the treatment was applied or empty if not applied.)</li>
                     </ul>
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_multiple_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -509,10 +757,18 @@ jQuery(document).ready(function(){
         filter_options(jQuery(this).val(), 'program', 'trial_upload_location');
     });
 
-    jQuery('#guided_help_trial_upload_format_button').click(function(){
-        jQuery('#trial_upload_spreadsheet_info_dialog').modal('show');
-        return false;
+    jQuery('#multiple_trial_designs_upload_file').change(function() {
+        if (jQuery(this).val()) {
+          jQuery('#multiple_trial_designs_upload_submit').prop("disabled",false);
+        } else {
+          jQuery('#multiple_trial_designs_upload_submit').prop("disabled",true);
+        }
     });
 
-})
+    jQuery('#upload_multiple_trials_ignore_warnings').change(function() {
+      if (this.checked) {
+        jQuery('#upload_multiple_trials_warning_messages').hide();
+      }
+    });
+});
 </script>

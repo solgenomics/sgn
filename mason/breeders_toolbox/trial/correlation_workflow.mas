@@ -1,0 +1,141 @@
+<%args>
+$trial_id => undef
+$is_analysis => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<div class="well well-sm">
+    <button class="btn btn-primary" id="trial_detail_page_analysis_correlation_workflow">Find Correlation Between Saved Measurements</button>
+</div>
+<hr>
+
+<div class="modal fade" id="trial_analysis_correlation_workflow_dialog" name="trial_analysis_correlation_workflow_dialog" tabindex="-1" role="dialog" aria-labelledby="trialAnalysisCorrelationWorkflowDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialAnalysisCorrelationWorkflowDialog">Find Correlation Between Saved Measurements</h4>
+            </div>
+            <div class="modal-body">
+
+                <&| /util/workflow.mas, id=> "trial_analysis_correlation_workflow_dialog_workflow" &>
+                    <&| /util/workflow.mas:step, title=> "Input" &>
+                        <& /page/page_title.mas, title=>"Select the input measurements to correlate" &>
+                
+                        <div class="container-fluid">
+                            <div class="form-horizontal">
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Observation Unit Level: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="trial_analysis_correlation_workflow_observation_level">
+%  if ($is_analysis) {
+                                            <option value="analysis_instance">Analysis Instance</option>
+%  } else {
+                                            <option value="plot">Plot</option>
+%  }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Correlation Method: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="trial_analysis_correlation_workflow_correlation_type">
+                                            <option value="pearson">Pearson</option>
+                                            <option value="spearman">Spearman</option>
+                                            <option value="kendall">Kendall</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trait(s): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="trial_analysis_correlation_workflow_traits_div"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            
+                            <hr>
+                            <center>
+                                <button type="button" class="btn btn-primary" name="trial_analysis_correlation_workflow_submit" id="trial_analysis_correlation_workflow_submit" title="Submit">Submit</button>
+                            </center>
+                        </div>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Output" &>
+                        <& /page/page_title.mas, title=>"Results" &>
+
+                        <div id="trial_analysis_correlation_workflow_results_div"></div>
+                    </&>
+                </&>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#trial_detail_page_analysis_correlation_workflow').click( function(){
+        jQuery('#trial_analysis_correlation_workflow_dialog').modal('show');
+
+        get_select_box('traits', 'trial_analysis_correlation_workflow_traits_div', { 'name' : 'trial_analysis_correlation_workflow_traits_ids', 'id' : 'trial_analysis_correlation_workflow_traits_ids', 'empty':1, 'trial_ids':<% $trial_id %>, 'stock_type':'plot', 'multiple':1, 'size':30 });
+    });
+
+    jQuery('#trial_analysis_correlation_workflow_submit').click(function() {
+        var selected_trait_ids = jQuery('#trial_analysis_correlation_workflow_traits_ids').val();
+        console.log(selected_trait_ids);
+
+        if (!selected_trait_ids || selected_trait_ids.length < 1) {
+            alert('Please select at least one trait!');
+            return false;
+        }
+        else {
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/<% $trial_id %>/correlate_traits?trait_ids='+JSON.stringify(selected_trait_ids)+'&observation_unit_level='+jQuery('#trial_analysis_correlation_workflow_observation_level').val()+'&correlation_type='+jQuery('#trial_analysis_correlation_workflow_correlation_type').val(),
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else {
+                        var html = '<table class="table table-hover table-bordered"><thead><tr>';
+                        for(var i=0; i<response.result[0].length; i++) {
+                            html = html + '<th>'+response.result[0][i]+'</th>';
+                        }
+                        html = html + '</tr></thead>';
+                        for(var i=1; i<response.result.length; i++) {
+                            html = html + '<tr>';
+                            for(var j=0; j<response.result[i].length; j++) {
+                                html = html + '<td>'+response.result[i][j]+'</td>';
+                            }
+                            html = html + '</tr>';
+                        }
+                        html = html + '</tbody></table>';
+                        jQuery('#trial_analysis_correlation_workflow_results_div').html(html);
+
+                        Workflow.complete("#trial_analysis_correlation_workflow_submit");
+                        Workflow.focus('#trial_analysis_correlation_workflow_dialog_workflow', 1);
+                    }
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error doing correlation!');
+                }
+            });
+        }
+        
+    });
+
+});
+
+</script>

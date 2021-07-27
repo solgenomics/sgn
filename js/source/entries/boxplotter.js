@@ -40,7 +40,7 @@ export function init(main_div){
   var boxplot = BrAPIBoxPlotter(bp.find(".boxplotter-result").get(0));
   
   
-  function loadDatasetObsUnits(ds,ou){
+  function loadDatasetObsUnits(ds,ou,auth_token){
     var d = {
       'dataset':ds    
     };
@@ -52,14 +52,15 @@ export function init(main_div){
       data : d,
       dataType:'json',
       success : function(data) {    
-        console.log(data);
-        var obsUnits = BrAPI(document.location.origin+"/brapi/v1").phenotypes_search({
+        //console.log(data);
+        var obsUnits = BrAPI(document.location.origin+"/brapi/v2","",auth_token).search_observationunits({
           "germplasmDbIds" : data["categories"]["accessions"],
           "observationVariableDbIds" : data["categories"]["traits"],
           "studyDbIds" : data["categories"]["trials"],
           "locationDbIds" : data["categories"]["locations"],
           "programDbIds" : data["categories"]["breeding_programs"],
-          "observationLevel" : ou, 
+          "observationLevelName" : ou,
+          "includeObservations" : "true",
           "pageSize" : 1000
         })
         boxplot.setData(obsUnits);

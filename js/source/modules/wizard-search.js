@@ -1,5 +1,5 @@
-import "../legacy/d3/d3v4Min.js";
-  
+import "../legacy/d3/d3v5Min.js";
+
 
 const list_prefix = "__LIST__";
 
@@ -9,11 +9,11 @@ const list_prefix = "__LIST__";
  * @class
  * @classdesc Manages a wizard and performs searches
  * @param  {type} main_id div containing Wizard divs and templates (see Wizard.basicTemplate)
- * @param  {type} col_number number of wizard columns to create 
- * @returns {Object} 
- */ 
+ * @param  {type} col_number number of wizard columns to create
+ * @returns {Object}
+ */
 export function Wizard(main_id,col_number){
-  
+
   /**
    * @typedef {Object} Wizard~objectWithName
    * @property {string} name Name of object
@@ -23,7 +23,7 @@ export function Wizard(main_id,col_number){
    * @typedef {(string|Wizard~objectWithName)} Wizard~columnItem
    * @property {string} name Name of object
   */
- 
+
   /**
    * Returns the first column contents for a given target type
    * @callback Wizard~load_initialCallback
@@ -31,19 +31,19 @@ export function Wizard(main_id,col_number){
    * @returns {Array.<Wizard~columnItem>} contents of column
    */
   var load_initial = (target)=>[];
-  
+
   /**
    * Returns the column contents for a given target type and selection
    * @callback Wizard~load_selectionCallback
    * @param {string} target Type of column contents to load.
-   * @param {Array.<Wizard~columnItem>} catagories Array of pervious column types in order
-   * @param {Object.<string,Array.<Wizard~columnItem>>} selections Object where keys are catagories and values are arrays of items selected in those catagories
-   * @param {Object.<string,boolean>} operations Object where keys are catagories and values are booleans (true if interect, false if union)
+   * @param {Array.<Wizard~columnItem>} categories Array of pervious column types in order
+   * @param {Object.<string,Array.<Wizard~columnItem>>} selections Object where keys are categories and values are arrays of items selected in those categories
+   * @param {Object.<string,boolean>} operations Object where keys are categories and values are booleans (true if interect, false if union)
    * @returns {Array.<Wizard~columnItem>} contents of column
    */
-  var load_selection = (target,catagories,selections,operations)=>[];
-  
-  
+  var load_selection = (target,categories,selections,operations)=>[];
+
+
   /**
    * @typedef {Object} Wizard~listDetails
    * @property {string} type catagory of list
@@ -56,7 +56,7 @@ export function Wizard(main_id,col_number){
    * @returns {Wizard~listDetails}
    */
   var load_list = (listID)=>[];
-  
+
   /**
    * Creates a list from a wizard selection
    * @callback Wizard~create_listCallback
@@ -64,16 +64,16 @@ export function Wizard(main_id,col_number){
    * @param {Array.<Wizard~columnItem>} items items to add to list
    */
   var create_list = (listName,items)=>{};
-  
+
   /**
    * Callback for wizard changes
    * @callback Wizard~on_changeCallback
-   * @param {Array.<Wizard~columnItem>} catagories Array of column types in order
-   * @param {Object.<string,Array.<Wizard~columnItem>>} selections Object where keys are catagories and values are arrays of items selected in those catagories
-   * @param {Object.<string,boolean>} operations Object where keys are catagories and values are booleans (true if interect, false if union)
+   * @param {Array.<Wizard~columnItem>} categories Array of column types in order
+   * @param {Object.<string,Array.<Wizard~columnItem>>} selections Object where keys are categories and values are arrays of items selected in those categories
+   * @param {Object.<string,boolean>} operations Object where keys are categories and values are booleans (true if interect, false if union)
    */
   var on_change_cbs = [];
-  
+
   /**
    * Adds items to existing list from wizard selection
    * @callback Wizard~add_to_listCallback
@@ -82,17 +82,17 @@ export function Wizard(main_id,col_number){
    * @param {Array.<Wizard~columnItem>} items items to add to list
    */
   var add_to_list = (listID,items)=>{};
-  
-  
+
+
   var type_dict = {};
   var initial_types = [];
-  
+
   var main = d3.select(main_id);
-  
+
   var unselectedHTML = main.select(".templates .wizard-unselected").html();
   var selectedHTML = main.select(".templates .wizard-selected").html();
   var columnHTML = main.select(".templates .wizard-column").html();
-    
+
   var col_objects = [];
   for (var i = 0; i < col_number; i++) {
     col_objects.push({index:i,type:null,filter:()=>true});
@@ -102,14 +102,14 @@ export function Wizard(main_id,col_number){
     col_objects[i].load_promise = Promise.resolve(true);
     col_objects[i].reflowing = false;
   }
-  
+
   col_objects.forEach((col)=>{
     col.reload = (list_content)=>{
-      
-      col.loading = true;      
+
+      col.loading = true;
       var load_promise;
       var load_outdated = new Error("Load outdated.");
-      
+
       load_promise = Promise.all(
           col_objects.slice(0,col.index).map(c=>c.load_promise) // Wait for previous cols to load.
         ).then(()=>{
@@ -128,15 +128,15 @@ export function Wizard(main_id,col_number){
           }
           else {
             var prev = col_objects.slice(0,col.index);
-            var catagories = prev.map(c=>c.type);
+            var categories = prev.map(c=>c.type);
             var selections = {};
             var operations = {};
             prev.forEach(c=>selections[c.type]=c.items.filter(i=>i.selected).map(i=>i.value));
             prev.forEach(c=>operations[c.type]=c.intersect);
-            
+
             return load_selection(
               col.type,
-              catagories,
+              categories,
               selections,
               operations
             );
@@ -164,7 +164,7 @@ export function Wizard(main_id,col_number){
                 }
                 else{
                   fresh[name] = existing[name]
-                }            
+                }
                 freshList.push(fresh[name]);
               }
             });
@@ -184,27 +184,27 @@ export function Wizard(main_id,col_number){
             }
           }
         );
-        
+
       col.load_promise = load_promise;
       return load_promise;
     };
   });
-  
+
   function itemName(i){return i.name!==undefined?i.name:""+i};
-  
+
   function getColumns(){
     return col_objects;
   }
-  
+
   function setColumn(index, new_type, intersect, selector, list_content){
     var col = col_objects[index];
-    
+
     if(new_type==col.type && intersect==undefined && selector==undefined){
       return;
     }
-    
+
     col.type = new_type;
-    
+
     // Prevents call loop with .wizard-type-select callback
     var select = allCols.filter(d=>d.index==index).select(".wizard-type-select");
     var selVal = select.property("value");
@@ -212,9 +212,9 @@ export function Wizard(main_id,col_number){
       select.property("value",new_type);
     }
     redraw_types();
-    
+
     col.intersect = intersect!=undefined ? intersect : col.intersect;
-    
+
     selector = selector || (()=>null);
     col.reload(list_content).then(()=>{
       if(col.type==new_type){
@@ -226,7 +226,7 @@ export function Wizard(main_id,col_number){
       reflow(col.index,true);
     })
   }
-  
+
   function setColumnFromList(index,listID){
     allCols.filter(d=>d.index==index)
       .style("opacity","0.5")
@@ -240,7 +240,7 @@ export function Wizard(main_id,col_number){
         .style("display","none");
     })
   }
-  
+
   //Init Columns
   console.log(main);
   var cols = main.select(".wizard-columns").selectAll(".wizard-column")
@@ -268,8 +268,13 @@ export function Wizard(main_id,col_number){
     reflow(d.index, true);
   });
   allCols.select(".wizard-select-all").on("click",function(d){
-    d.items.forEach(i=>{i.selected=true});
-    reflow(d.index,true);
+      var s = d3.selectAll(".wizard-search").filter(function(e, i) { return i === d.index });
+      var search_txt = s ? s.property("value").replace(/\s+/g, "").toLowerCase() : undefined;
+      d.items.forEach(i=>{
+          var val = i.name.replace(/\s+/g, "").toLowerCase();
+          i.selected = search_txt ? val.indexOf(search_txt) != -1 : true;
+      });
+      reflow(d.index,true);
   })
   allCols.select(".wizard-select-clear").on("click",function(d){
     d.items.forEach(i=>{i.selected=false});
@@ -319,7 +324,7 @@ export function Wizard(main_id,col_number){
     }
     reflow(d.index, false, true);
   });
-  
+
   //set up virtual scroll sections
   allCols.each(function(coldat){
     var col = d3.select(this);
@@ -352,25 +357,25 @@ export function Wizard(main_id,col_number){
       });
     });
   })
-  
+
   // Initial draw
   reflow();
-  
+
   function reflow(from, dont_reload, dont_propagate){
     if(!from) from = 0;
     if(from>=col_objects.length) return true;
-        
+
     allCols.filter(d=>(d.index==from&&!dont_reload)||(!dont_propagate&&d.index>from))
       .style("opacity","0.5")
       .select(".wizard-loader")
       .style("display",null);
-    
+
     var reflowCol = allCols.filter(d=>d.index==from);
     if(allCols.empty()) return;
     var col = reflowCol.datum();
-    
+
     col.reflowing = true;
-    
+
     var load = dont_reload===true?Promise.resolve(true):col.reload();
     return load.then(()=>{
       if(col.reflowing){
@@ -379,21 +384,21 @@ export function Wizard(main_id,col_number){
             .select(".wizard-loader")
             .style("display","none");
         }
-        
+
         col.unselectedList.set(col.items.filter(d=>!d.selected&&col.filter(d)));
         col.selectedList.set(col.items.filter(d=>d.selected&&col.filter(d)));
-        
+
         reflowCol.select(".wizard-union-toggle").style("display",(d,i,n)=>{
           return d.items.filter(i=>i.selected).length>0&&d.index<col_objects.length-1?null:"none";
-        }) 
+        })
         reflowCol.select(".wizard-count-selected").text(d=>d.items.filter(i=>i.selected).length);
         reflowCol.select(".wizard-count-all").text(d=>d.items.length);
-        
+
         reflowCol.select(".wizard-save-to-list")
           .style("display","none")
           .filter(d=>d.items.filter(i=>i.selected).length>0)
           .style("display",null);
-        
+
         col.reflowing = false;
         on_change();
         if(!dont_propagate) return reflow(from+1);
@@ -404,7 +409,7 @@ export function Wizard(main_id,col_number){
       }
     });
   }
-  
+
   function virtualList(selection,template,height,margin){
     var elHeight = height+margin;
     var el = selection.node();
@@ -435,14 +440,14 @@ export function Wizard(main_id,col_number){
           el.scrollTop = totalHeight-el.clientHeight;
         }
         var initial_pos = el.scrollTop;
-        
+
         var hidden_above = Math.max(0,Math.floor(
           el.scrollTop/elHeight-1
         ));
         var hidden_below = Math.max(0,Math.floor(
           (totalHeight-(el.scrollTop+el.clientHeight))/elHeight
         ));
-                                    
+
         var all = selection.selectAll("li:not(.virtlist-buffer)").data(
           data.slice(hidden_above,data.length-hidden_below)
         );
@@ -450,14 +455,14 @@ export function Wizard(main_id,col_number){
           .style("height",`${height}px`)
           .style("margin",`0 0 ${margin}px 0`);
         all.exit().remove();
-        
+
         selection.select(".virtlist-buffer-top")
           .style("height",`${hidden_above*elHeight}px`)
           .lower();
         selection.select(".virtlist-buffer-bottom")
           .style("height",`${hidden_below*elHeight}px`)
           .raise();
-          
+
         afterDraw(all.merge(ent));
         el.scrollTop = initial_pos;
       }
@@ -466,43 +471,44 @@ export function Wizard(main_id,col_number){
     vlist.redraw();
     return vlist;
   }
-  
+
   function on_change(){
     var filled_cols = col_objects.filter(c=>c.items.filter(i=>i.selected).length>0);
-    var catagories = filled_cols.map(c=>c.type);
+    var categories = filled_cols.map(c=>c.type);
     var selections = {};
     var operations = {};
     filled_cols.forEach(c=>selections[c.type]=c.items.filter(i=>i.selected).map(i=>i.value));
     filled_cols.forEach(c=>operations[c.type]=c.intersect);
-    
+
     on_change_cbs.forEach(cb=>cb(
-      catagories,
+      categories,
       selections,
       operations
     ))
   }
-  
+
   function set_lists(list_dict){
     list_dict = list_dict || {};
-    var lists = Object.keys(list_dict).map(k=>({id:k,name:list_dict[k]}));
+    var lists = Object.keys(list_dict).map(k=>({id:k,name:list_dict[k].name,type:list_dict[k].type}));
     lists = lists.sort((a,b)=>a.name.toLowerCase() < b.name.toLowerCase() ? -1 : b.name.toLowerCase() < a.name.toLowerCase() ? 1 : 0);
     var opts = allCols.selectAll(".wizard-lists-group").selectAll("option")
       .data(lists);
     opts.enter().append("option").merge(opts)
       .attr("value",d=>list_prefix+d.id)
+      .attr("data-type",d=>d.type)
       .text(d=>d.name);
   }
-  
+
   function set_types(td){
     type_dict = td || {};
     redraw_types();
   }
-  
+
   function set_inital_types(types){
     initial_types = types;
     redraw_types();
   }
-  
+
   function redraw_types(){
     var list = Object.keys(type_dict).map(k=>({id:k,name:type_dict[k]}));
     var used = [];
@@ -526,57 +532,57 @@ export function Wizard(main_id,col_number){
       opts.exit().remove();
     })
   }
-  
+
   var wizard = {
-    
+
     setColumn: setColumn,
     getColumns: getColumns,
-    
-    /**    
-     * load_initial    
-     * @memberof Wizard.prototype     
+
+    /**
+     * load_initial
+     * @memberof Wizard.prototype
      * @param  {Wizard~load_initialCallback} f
-     * @returns {this}     
-     */     
+     * @returns {this}
+     */
     load_initial: function(f){ load_initial = f; return wizard},
-    
-    /**    
-     * load_selection    
-     * @memberof Wizard.prototype     
-     * @param  {Wizard~load_selectionCallback} f     
-     * @returns {this}     
-     */     
+
+    /**
+     * load_selection
+     * @memberof Wizard.prototype
+     * @param  {Wizard~load_selectionCallback} f
+     * @returns {this}
+     */
     load_selection: function(f){ load_selection = f; return wizard},
-    
-    /**    
-     * load_list    
-     * @memberof Wizard.prototype     
-     * @param  {Wizard~load_listCallback} f     
-     * @returns {this}     
+
+    /**
+     * load_list
+     * @memberof Wizard.prototype
+     * @param  {Wizard~load_listCallback} f
+     * @returns {this}
      */
     load_list: function(f){ load_list = f; return wizard},
-    
-    /**    
-     * add_to_list    
-     * @memberof Wizard.prototype     
-     * @param  {Wizard~add_to_listCallback} f     
-     * @returns {this}     
+
+    /**
+     * add_to_list
+     * @memberof Wizard.prototype
+     * @param  {Wizard~add_to_listCallback} f
+     * @returns {this}
      */
     add_to_list: function(f){ add_to_list = f; return wizard},
-    
-    /**    
-     * create_list    
-     * @memberof Wizard.prototype     
-     * @param  {Wizard~create_listCallback} f     
-     * @returns {this}     
+
+    /**
+     * create_list
+     * @memberof Wizard.prototype
+     * @param  {Wizard~create_listCallback} f
+     * @returns {this}
      */
     create_list: function(f){ create_list = f; return wizard},
-    
-    /**    
-     * on_change    
-     * @memberof Wizard.prototype     
-     * @param  {Wizard~on_changeCallback} f     
-     * @returns {this}     
+
+    /**
+     * on_change
+     * @memberof Wizard.prototype
+     * @param  {Wizard~on_changeCallback} f
+     * @returns {this}
      */
     on_change: function(f){
       if(f===null){
@@ -587,28 +593,28 @@ export function Wizard(main_id,col_number){
       }
       return wizard
     },
-    
-    /**    
+
+    /**
      * lists - sets or resets the availible lists to show in the wizard
-     * @memberof Wizard.prototype     
-     * @param  {Object} list_dict object where keys are listIDs and values are the human-readable name     
-     * @returns {this}  
+     * @memberof Wizard.prototype
+     * @param  {Object} list_dict object where keys are listIDs and values are the human-readable name
+     * @returns {this}
      */
     lists: function(list_dict){ set_lists(list_dict); return wizard},
-    
-    /**    
+
+    /**
      * types - sets or resets the availible types to show in the wizard
-     * @memberof Wizard.prototype     
-     * @param  {Object} type_dict object where keys are type/catagory ids and values are the human-readable name     
-     * @returns {this}  
+     * @memberof Wizard.prototype
+     * @param  {Object} type_dict object where keys are type/catagory ids and values are the human-readable name
+     * @returns {this}
      */
     types: function(type_dict){ set_types(type_dict); return wizard},
-    
-    /**    
+
+    /**
      * types - sets or resets the availible types to show in the wizard
-     * @memberof Wizard.prototype     
+     * @memberof Wizard.prototype
      * @param  {Array.<string>} types list of types availible in the first column
-     * @returns {this}  
+     * @returns {this}
      */
     initial_types: function(types){set_inital_types(types); return wizard}
   };
@@ -651,7 +657,7 @@ Wizard.basicTemplate = `
         <button class="wizard-add-to-list">Add</button>
         <input class="wizard-create-list-name" type="text"></input>
         <button class="wizard-create-list">Create</button>
-      </div>    
+      </div>
     </div>
   </div>
 </span>`;

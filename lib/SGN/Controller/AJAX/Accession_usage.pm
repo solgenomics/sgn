@@ -2,13 +2,14 @@ package SGN::Controller::AJAX::Accession_usage;
 
 use Moose;
 use Data::Dumper;
+use Scalar::Util qw(looks_like_number);
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -112,4 +113,91 @@ sub accession_usage_male: Path('/ajax/accession_usage_male') :Args(0){
     $c->stash->{rest}={data=>\@male_parents};
 }
 
-  1;
+sub accession_usage_phenotypes: Path('/ajax/accession_usage_phenotypes') :Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $params = $c->req->params() || {};
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $round = Math::Round::Var->new(0.01);
+    my $dbh = $c->dbc->dbh();
+    my $display = $c->req->param('display');
+
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+    my $limit = $c->req->param('length');
+    my $offset = $c->req->param('start');
+
+    my $limit_clause = '';
+    my $offset_clause = '';
+    if (defined($limit)) {
+        $limit_clause = ' LIMIT '.$limit;
+    }
+    if (defined($offset)) {
+        $offset_clause = ' OFFSET '.$offset;
+    }
+
+    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
+        cvterm.cvterm_id,
+        count(phenotype.value),
+        to_char(avg(phenotype.value::real), 'FM999990.990'),
+        to_char(max(phenotype.value::real), 'FM999990.990'),
+        to_char(min(phenotype.value::real), 'FM999990.990'),
+        to_char(stddev(phenotype.value::real), 'FM999990.990'),
+        accession.uniquename,
+        accession.stock_id,
+        count(cvterm.cvterm_id) OVER() AS full_count
+        FROM cvterm
+            JOIN phenotype ON (cvterm_id=cvalue_id)
+            JOIN nd_experiment_phenotype USING(phenotype_id)
+            JOIN nd_experiment_project USING(nd_experiment_id)
+            JOIN nd_experiment_stock USING(nd_experiment_id)
+            JOIN stock as plot USING(stock_id)
+            JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
+            JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
+            JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
+        WHERE phenotype.value~?
+            AND stock_relationship.type_id=?
+            AND plot.type_id=?
+            AND accession.type_id=?
+        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id, accession.stock_id, accession.uniquename
+        ORDER BY cvterm.name ASC
+        ,accession.uniquename DESC
+        $limit_clause
+        $offset_clause;");
+
+    my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
+    $h->execute($numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
+
+    my @phenotype_data;
+
+    my $total_count;
+    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id, $full_count) = $h->fetchrow_array()) {
+        $total_count = $full_count;
+        if (looks_like_number($average)){
+            my $cv = 0;
+            if ($stddev && $average != 0) {
+                $cv = ($stddev /  $average) * 100;
+                $cv = $round->round($cv) . '%';
+            }
+            if ($average) { $average = $round->round($average); }
+            if ($min) { $min = $round->round($min); }
+            if ($max) { $max = $round->round($max); }
+            if ($stddev) { $stddev = $round->round($stddev); }
+
+            my @return_array = ( qq{<a href="/stock/$stock_id/view">$stock_name</a>}, qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count );
+            push @phenotype_data, \@return_array;
+        }
+    }
+    my $draw = $c->req->param('draw');
+    if ($draw){
+        $draw =~ s/\D//g; # cast to int
+    }
+
+    $c->stash->{rest} = { data => \@phenotype_data, draw => $draw, recordsTotal => $total_count,  recordsFiltered => $total_count };
+}
+
+
+1;

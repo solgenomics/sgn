@@ -12,8 +12,17 @@ use CXGN::Dataset::Cache;
 
 my $t = SGN::Test::Fixture->new();
 
-my $ds = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema());
+$t->dbh()->begin_work();
 
+my $cache_root_dir = $t->config->{cache_file_path};
+my $cluster_shared_tempdir_config = $t->config->{cluster_shared_tempdir};
+my $backend_config = $t->config->{backend};
+my $cluster_host_config = $t->config->{cluster_host};
+my $web_cluster_queue_config = $t->config->{'web_cluster_queue'};
+my $basepath_config = $t->config->{basepath};
+my $forbid_cache = 0;
+
+my $ds = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema());
 $ds->accessions( [ 38913, 38914, 38915 ]);
 $ds->years(['2012', '2013']);
 $ds->traits([ 70666, 70741 ]);
@@ -27,6 +36,8 @@ $ds->description("test description");
 $ds->sp_person_id(41);
 
 my $sp_dataset_id = $ds->store();
+
+print STDERR "Dataset_id = $sp_dataset_id\n";
 
 my $new_ds = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema(), sp_dataset_id => $sp_dataset_id);
 
@@ -49,35 +60,37 @@ foreach my $ds (@datasets) {
     if ($ds->can("cache")) { $ds->cache->clear(); }
     $ds->name("test");
     $ds->description("test description");
-
+    
     $ds->accessions( [ 38913, 38914, 38915 ] );
-
+    
     my $sp_dataset_id = $ds->store();
-
+    
     my $trials = $ds->retrieve_trials();
-
+    
     is_deeply($trials, [
-                         [
-                           139,
-                           'Kasese solgs trial'
-                         ],
-                         [
-                           144,
-                           'test_t'
-                         ],
-                         [
-                           141,
-                           'trial2 NaCRRI'
-                         ]
-                       ]
+		  [
+		   139,
+		   'Kasese solgs trial'
+		  ],
+		  [
+		   144,
+		   'test_t'
+		  ],
+		  [
+		   141,
+		   'trial2 NaCRRI'
+		  ]
+	      ]
 	      , "trial retrieve test");
-
+    
     if ($ds->isa("CXGN::Dataset::File")) {
 	ok(-e $ds->file_name()."_trials.txt", "trial file exists");
     }
-
+    
     my $traits = $ds->retrieve_traits();
-
+    
+    print STDERR Dumper($traits);
+    
     is_deeply($traits, [
 		  [
 		   70741,
@@ -97,17 +110,22 @@ foreach my $ds (@datasets) {
 		  ]
 	      ]
 	);
-
+    
     my $phenotypes = $ds->retrieve_phenotypes();
-
-    my $genotypes = $ds->retrieve_genotypes(1);
-
+    
+    if ($ds->isa("CXGN::Dataset::File")) {
+	my$geno_filename = $ds->file_name()."_genotype.txt";
+	my $genotypes = $ds->retrieve_genotypes(1,$geno_filename,$cache_root_dir,$cluster_shared_tempdir_config,$backend_config,$cluster_host_config,$web_cluster_queue_config,$basepath_config,$forbid_cache);
+    } else {
+	my $genotypes = $ds->retrieve_genotypes(1);
+    }
+    
     my $years = $ds->retrieve_years();
-
+    
     is_deeply($years, [], "Year retrieve test");
-
+    
     my $plots = $ds->retrieve_plots();
-
+    
     is_deeply($plots, [
 		  [
 		   39299,
@@ -178,7 +196,16 @@ foreach my $ds (@datasets) {
 		   'UG120038_block:2_plot:TP38_2012_NaCRRI'
 		  ]
 	      ], "plot retrieve test");
-
+    
 }
+
+
+
+print STDERR "DATA = ".$ds->data()."\n";
+
+$ds->delete();
+
+
+$t->dbh->rollback();
 
 done_testing();

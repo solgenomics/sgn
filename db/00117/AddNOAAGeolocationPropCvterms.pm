@@ -1,0 +1,88 @@
+#!/usr/bin/env perl
+
+
+=head1 NAME
+
+ AddNOAAGeolocationPropCvterms
+
+=head1 SYNOPSIS
+
+mx-run AddNOAAGeolocationPropCvterms [options] -H hostname -D dbname -u username [-F]
+
+this is a subclass of L<CXGN::Metadata::Dbpatch>
+see the perldoc of parent class for more details.
+
+=head1 DESCRIPTION
+This patch adds noaa_station_id cvterm to geolocation_property cv
+This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
+
+=head1 AUTHOR
+
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2010 Boyce Thompson Institute for Plant Research
+
+This program is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+
+
+package AddNOAAGeolocationPropCvterms;
+
+use Moose;
+use Bio::Chado::Schema;
+use Try::Tiny;
+extends 'CXGN::Metadata::Dbpatch';
+
+
+has '+description' => ( default => <<'' );
+This patch adds the 'noaa_station_id' geolocation_property cvterm
+
+has '+prereq' => (
+	default => sub {
+        [],
+    },
+
+);
+
+sub patch {
+    my $self=shift;
+
+    print STDERR "Executing the patch:\n " .   $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
+
+    print STDERR "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
+
+    print STDERR "\nExecuting the SQL commands.\n";
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
+
+
+    print STDERR "INSERTING CV TERMS...\n";
+
+    my $terms = {
+        'geolocation_property' => [
+            'noaa_station_id',
+        ],
+        'project_property' => [
+            'drone_run_averaged_temperature_growing_degree_days',
+            'drone_run_related_time_cvterms_json'
+        ]
+    };
+
+    foreach my $t (keys %$terms){
+        foreach (@{$terms->{$t}}){
+            $schema->resultset("Cv::Cvterm")->create_with({
+                name => $_,
+                cv => $t
+            });
+        }
+    }
+
+    print STDERR "Patch complete.\n";
+}
+
+
+####
+1; #
+####

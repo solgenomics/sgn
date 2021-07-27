@@ -2,6 +2,7 @@
 <%args>
 $trial_id => undef
 $trial_name => undef
+$trial_stock_type => undef
 </%args>
 
 
@@ -49,6 +50,7 @@ $trial_name => undef
                         <select class="form-control" id="create_spreadsheet_phenotype_file_format" name="create_spreadsheet_phenotype_file_format">
                             <option value="ExcelBasic">Detailed</option>
                             <option value="ExcelBasicSimple">Simple</option>
+                            <option value="ExcelAssociatedImages">Associated Images</option>
                         </select>
                     </div>
                 </div>
@@ -183,6 +185,7 @@ function create_phenotype_spreadsheet() {
 %  } else {
         var trial_ids = jQuery("#html_select_trial_for_create_spreadsheet").val();
 %  }
+    var trial_stock_type = "<% $trial_stock_type %>";
     new jQuery.ajax({
         type: 'POST',
         url: '/ajax/phenotype/create_spreadsheet',
@@ -193,7 +196,8 @@ function create_phenotype_spreadsheet() {
             'include_notes': include_notes,
             'data_level': jQuery("#create_spreadsheet_data_level").val(),
             'sample_number': jQuery("#create_spreadsheet_sample_number").val(),
-            'format': jQuery('#create_spreadsheet_phenotype_file_format').val()
+            'format': jQuery('#create_spreadsheet_phenotype_file_format').val(),
+            'trial_stock_type': trial_stock_type
         },
         beforeSend: function() {
             jQuery('#working_modal').modal("show");

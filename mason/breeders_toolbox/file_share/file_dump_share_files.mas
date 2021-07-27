@@ -1,0 +1,22 @@
+<%args>
+</%args>
+
+<table class="table table-bordered table-hover" id="manage_file_share_dump_table">
+    <thead>
+        <tr>
+            <th>File Name</th>
+            <th>User Name</th>
+            <th>Date</th>
+            <th>Options</th>
+        </tr>
+    </thead>
+</table>
+
+<script>
+jQuery(document).ready(function(){
+    jQuery('#manage_file_share_dump_table').DataTable({
+        'lengthMenu': [10,20,50,100,1000,5000],
+        'ajax': { 'url':  '/ajax/filesharedump/list' }
+    });
+});
+</script>

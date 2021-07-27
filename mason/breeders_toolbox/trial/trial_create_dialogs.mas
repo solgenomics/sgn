@@ -2,16 +2,8 @@
 <%args>
 $locations
 $breeding_programs
-$crd_description => "generates completely a randomized design with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database."
-$rcbd_description => "generates Randomized Complete Block Design, using the methods of random number generation in R. Creates plot entities in the database."
-$alpha_description => "creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database."
-$lattice_description => "SIMPLE and TRIPLE lattice designs. It randomizes treatments in K x K lattice. Creates plot entities in the database."
-$augmented_description => "some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once. Creates plot entities in the database."
-$mad_description => "Adjustments are calculated using data from all checks. Creates plot entities in the database."
-$greenhouse_nursery_description => "A greenhouse/nursery houses plants in no particular layout design. The plants can be of named accessions or in the case of seedling nurseries from crosses, the plants can be of named crosses. Creates plot entities with plant entities in the database."
-$splitplot_description => "Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment(s) distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database."
-$prep_description => "Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database."
-$westcott_description => "Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981)."
+$management_factor_types => ()
+$design_types => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker' ] &>
@@ -77,9 +69,9 @@ rect.bordered {
                         <&| /util/workflow.mas, id=> "trial_design_workflow" &>
                             <&| /util/workflow.mas:step, title=> "Intro" &>
                                 <& /page/page_title.mas, title=>"This workflow will guide you through designing a new trial in the database" &>
-                                <p>A field trial represents a field where each plot has a globally unique plot name, a sequential plot number that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an accession representing the genotype being tested in that plot. Each plot can belong to different blocks and reps depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a row number and col number indicating the relative position of the plot in the field.</p>
+                                <p>A field trial represents a field where each plot has a globally unique plot name, a sequential plot number that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an accession representing the genotype being tested in that plot. In cases where crosses/families are being evaluated (e.g. F1 hybrid, backcrossing), cross unique ids or family names can be used instead of accessions. Each plot can belong to different blocks and reps depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a row number and col number indicating the relative position of the plot in the field.</p>
                                 <p>To design a trial you need to provide a globally unique trial name. The plot names will be generated based on the trial name you provide (e.g. if the trial name is 2018MyTrial, plot_names will be generated like 2018MyTrial_101, 2018MyTrial_102, etc).</p>
-                                <p>You also need to provide a list of accessions to use. Based on the design you have picked, the accessions will be randomized over the blocks or replicates in the trial.</p>
+                                <p>You also need to provide a list of accessions, cross unique ids or family names to use. Based on the design you have picked, the accessions, cross unique ids or family names will be randomized over the blocks or replicates in the trial.</p>
                                 <p>You can provide a list of accessions to use as controls or checks in your experiment.</p>
                                 <p>Depending on the design you have picked, you will need to provide different design parameters (e.g. for complete block you will need to provide number of blocks, while for alpha lattice you will need to provide block size and number of replicates.).</p>
                                 <p>A trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
@@ -149,7 +141,9 @@ rect.bordered {
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Plot Width (m): </label>
                                     <div class="col-sm-9">
-                                        <select class="form-control" id="add_project_plot_width" name="add_project_plot_width">
+                                        <input class="form-control" id="add_project_plot_width" name="add_project_plot_width" type="text" />
+
+                                        <!-- <select class="form-control" id="add_project_plot_width" name="add_project_plot_width">
                                             <option value="">NA</option>
                                             <option value="0.1">0.1</option>
                                             <option value="0.15">0.15</option>
@@ -177,6 +171,7 @@ rect.bordered {
                                             <option value="3.5">3.5</option>
                                             <option value="4">4</option>
                                             <option value="4.5">4.5</option>
+                                            <option value="4.8">4.8</option>
                                             <option value="5">5</option>
                                             <option value="5.5">5.5</option>
                                             <option value="6">6</option>
@@ -193,13 +188,15 @@ rect.bordered {
                                             <option value="11.5">11.5</option>
                                             <option value="12">12.0</option>
                                             <option value="12.5">12.5</option>
-                                        </select>
+                                        </select> -->
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Plot Length (m): </label>
                                     <div class="col-sm-9">
-                                        <select class="form-control" id="add_project_plot_length" name="add_project_plot_length">
+                                        <input class="form-control" id="add_project_plot_length" name="add_project_plot_length" type="text" />
+
+                                        <!-- <select class="form-control" id="add_project_plot_length" name="add_project_plot_length">
                                             <option value="">NA</option>
                                             <option value="0.1">0.1</option>
                                             <option value="0.15">0.15</option>
@@ -227,6 +224,7 @@ rect.bordered {
                                             <option value="3.5">3.5</option>
                                             <option value="4">4</option>
                                             <option value="4.5">4.5</option>
+                                            <option value="4.8">4.8</option>
                                             <option value="5">5</option>
                                             <option value="5.5">5.5</option>
                                             <option value="6">6</option>
@@ -243,7 +241,7 @@ rect.bordered {
                                             <option value="11.5">11.5</option>
                                             <option value="12">12.0</option>
                                             <option value="12.5">12.5</option>
-                                        </select>
+                                        </select> -->
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -253,6 +251,17 @@ rect.bordered {
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Plants per Plot: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="add_plant_entries" name="add_plant_entries" type="text" />
+                                        <p><i>Creates plant entries for each plot. Ignore if not adding plant entries.</i></p>
+                                    </div>
+                                    <label style="font-size: 80%;" class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                        <div class="col-sm-8" >
+                                            <input name="trial_create_plants_per_plot_inherit_treatments" id="trial_create_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
+                                        </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Description: </label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="add_project_description" name="add_project_description" maxlength="250"></textarea>
@@ -260,22 +269,42 @@ rect.bordered {
                                 </div>
                                 <hr>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Stock Type Being Evaluated in Trial: </label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="select_stock_type">
+                                            <option value="">Select a stock type</option>
+                                            <option value="accession">accession</option>
+                                            <option value="cross">cross</option>
+                                            <option value="family_name">family_name</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Design Type: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="select_design_method" name="select_design_method">
-                                            <option data-title="<% $crd_description %>" title="<% $crd_description %>" value="CRD">Completely Randomized</option>
-                                            <option data-title="<% $rcbd_description %>" title="<% $rcbd_description %>" value="RCBD">Complete Block</option>
-                                            <option data-title="<% $alpha_description %>" title="<% $alpha_description %>" value="Alpha">Alpha Lattice</option>
-                                            <option data-title="<% $lattice_description %>" title="<% $lattice_description %>" value="Lattice">Lattice</option>
-                                            <option data-title="<% $augmented_description %>" title="<% $augmented_description %>" value="Augmented">Augmented</option>
-                                            <option data-title="<% $mad_description %>" title="<% $mad_description %>" value="MAD">Modified Augmented Design </option>
-                                            <option data-title="<% $greenhouse_nursery_description %>" title="<% $greenhouse_nursery_description %>" value="greenhouse" >Nursery/Greenhouse </option>
-                                            <option data-title="<% $splitplot_description %>" title="<% $splitplot_description %>" value="splitplot">Split Plot</option>
-                                            <option data-title="<% $prep_description %>" title="<% $prep_description %>" value="p-rep">Partially Replicated</option>
-                                            <option data-title="<% $westcott_description %>" title="<% $westcott_description %>" value="westcott">Westcott Design</option>
-                                            <!--<option value=MADIII>MADIII</option>-->
-                                            <!--<option value=MADIV>MADIV</option>-->
-                                            <!--<option value=MADV>MADV</option>-->
+% foreach my $type(@$design_types){
+%    my $method;
+%    if ($type eq 'Completely Randomized'){
+%        $method = 'CRD';
+%    } elsif ($type eq 'Complete Block'){
+%        $method = 'RCBD';
+%    } elsif ($type eq 'Alpha Lattice'){
+%        $method = 'Alpha';
+%    } elsif ($type eq 'Modified Augmented Design'){
+%        $method = 'MAD';
+%    } elsif ($type eq 'Nursery/Greenhouse'){
+%        $method = 'greenhouse';
+%    } elsif ($type eq 'Split Plot'){
+%        $method = 'splitplot';
+%    } elsif ($type eq 'Partially Replicated'){
+%        $method = 'p-rep';
+%    } else {
+%        $method = $type;
+%    }
+    <option value="<%$method%>"><%$type%></option>
+%}
                                         </select>
                                         <div id="create_trial_design_description_div">
                                         </div>
@@ -291,7 +320,6 @@ rect.bordered {
                                     </div>
                                 </div>
                                 <hr>
-
                                 <center>
                                 <button type="button" class="btn btn-lg btn-primary" name="create_trial_validate_form_button" id="create_trial_validate_form_button">First validate the form</button>
                                 <button type="button" class="btn btn-lg btn-primary" disabled onclick="Workflow.complete(this); return false;" name="create_trial_submit">Continue to Next Step</button>
@@ -300,13 +328,26 @@ rect.bordered {
                             </&>
                             <&| /util/workflow.mas:step, title=> "Design Information" &>
                                 <& /page/page_title.mas, title=>"Design your trial layout" &>
-
                                 <div class="well well-sm">
-                                    <center><h4>Which accessions will be in the field?</h4></center>
-                                    <hr>
                                     <div class="form-group form-group-sm" id="show_list_of_accession_section" >
+                                        <center><h4>Which accessions will be in the field?</h4></center>
+                                        <hr>
                                         <label class="col-sm-7 control-label">List of accessions to include (required):</label>
                                         <div class="col-sm-5" id="select_list" name="select_list">
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="show_list_of_cross_section" >
+                                        <center><h4>Which crosses will be in the field?</h4></center>
+                                        <hr>
+                                        <label class="col-sm-7 control-label">List of crosses to include (required):</label>
+                                        <div class="col-sm-5" id="select_cross_list" name="select_cross_list">
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="show_list_of_family_name_section" >
+                                        <center><h4>Which family names will be in the field?</h4></center>
+                                        <hr>
+                                        <label class="col-sm-7 control-label">List of family names to include (required):</label>
+                                        <div class="col-sm-5" id="select_family_name_list" name="select_family_name_list">
                                         </div>
                                     </div>
                                     <div class="form-group" id="westcott_check_1_section" style="display: none">
@@ -326,15 +367,44 @@ rect.bordered {
                                         <div class="col-sm-5" id="list_of_checks_section" >
                                         </div>
                                     </div>
+                                    <div class="form-group form-group-sm" id="show_list_of_cross_checks_section" style="display: none" >
+                                        <label class="col-sm-7 control-label">List of checks to include (required): </label>
+                                        <div class="col-sm-5" id="list_of_cross_checks_section" >
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="show_list_of_family_name_checks_section" style="display: none" >
+                                        <label class="col-sm-7 control-label">List of checks to include (required): </label>
+                                        <div class="col-sm-5" id="list_of_family_name_checks_section" >
+                                        </div>
+                                    </div>
                                     <div class="form-group form-group-sm" id="crbd_show_list_of_checks_section" style="display: none" >
                                         <label class="col-sm-7 control-label">List of checks to include. Checks list should be separate from accessions list. (optional): </label>
                                         <div class="col-sm-5" id="crbd_list_of_checks_section" >
                                         </div>
                                     </div>
-
+                                    <div class="form-group form-group-sm" id="crbd_show_list_of_cross_checks_section" style="display: none" >
+                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be accessions list. (optional): </label>
+                                        <div class="col-sm-5" id="crbd_list_of_cross_checks_section" >
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="crbd_show_list_of_family_name_checks_section" style="display: none" >
+                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be accessions list. (optional): </label>
+                                        <div class="col-sm-5" id="crbd_list_of_family_name_checks_section" >
+                                        </div>
+                                    </div>
                                     <div class="form-group form-group-sm" id="show_list_of_unrep_accession" style="display: none" >
                                         <label class="col-sm-7 control-label">List of unreplicated accession (required):</label>
                                         <div class="col-sm-5" id="list_of_unrep_accession"  >
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="show_list_of_unrep_cross" style="display: none" >
+                                        <label class="col-sm-7 control-label">List of unreplicated cross (required):</label>
+                                        <div class="col-sm-5" id="list_of_unrep_cross"  >
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="show_list_of_unrep_family_name" style="display: none" >
+                                        <label class="col-sm-7 control-label">List of unreplicated family_name (required):</label>
+                                        <div class="col-sm-5" id="list_of_unrep_family_name"  >
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="show_list_of_rep_accession" style="display: none" >
@@ -342,7 +412,18 @@ rect.bordered {
                                         <div class="col-sm-5" id="list_of_rep_accession" >
                                         </div>
                                     </div>
-                                    <center>Need to create a list of accessions?&nbsp;&nbsp;&nbsp;&nbsp;<button name="lists_link" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></center>
+                                    <div class="form-group form-group-sm" id="show_list_of_rep_cross" style="display: none" >
+                                        <label class="col-sm-7 control-label">List of replicated cross (required): </label>
+                                        <div class="col-sm-5" id="list_of_rep_cross" >
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" id="show_list_of_rep_family_name" style="display: none" >
+                                        <label class="col-sm-7 control-label">List of replicated family_name (required): </label>
+                                        <div class="col-sm-5" id="list_of_rep_family_name" >
+                                        </div>
+                                    </div>
+
+                                    <center>Need to create a list?&nbsp;&nbsp;&nbsp;&nbsp;<button name="lists_link" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></center>
                                 </div>
 
                                 <div class="form-group form-group-sm" id="show_no_of_row_in_design" style="display: none" >
@@ -638,7 +719,7 @@ rect.bordered {
                                             <input type="text" class="form-control" id="fieldMap_col_number" name="fieldMap_col_number" />
                                         </div>
                                     </div> -->
-                                    <div class="form-group form-group-sm" >
+                                    <div class="form-group form-group-sm" id="field_map_row_aug">
                                         <label class="col-sm-7 control-label">Number of rows (optional): </label>
                                         <div class="col-sm-5" >
                                           <input type="text" class="form-control" id="fieldMap_row_number" name="fieldMap_row_number" placeholder="Will use number of blocks by default"/>
@@ -775,7 +856,7 @@ rect.bordered {
     </div>
 </div>
 
-<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
+<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas, management_factor_types => $management_factor_types &>
 
 <div class="modal fade" id="partial_rep_help_dialog" name="partial_rep_help_dialog" tabindex="-1" role="dialog" aria-labelledby="partialRepHelpDialog">
     <div class="modal-dialog modal-lg" role="document">

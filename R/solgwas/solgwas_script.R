@@ -4,14 +4,18 @@
 library("methods")
 library("dplyr")
 
+
 ########################################
 ##### Read data from temp files #####
 ########################################
 args = commandArgs(trailingOnly = TRUE)
 
-pheno <- read.table(args[1], sep = "\t", header = TRUE)
+pheno <- read.table(args[1], sep = "\t", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
 colnames(pheno)
 
+#### Current script accepts genotype data with markers as rows and accessions as columns
+#### But rest of code operates on previous format which had genotype data with markers as columns and accessions as rows
+#### therefore the geno table is transposed when the A.mat function is called
 geno <- read.table(args[2], sep="\t", row.names = 1, header = TRUE)
 study_trait <- args[3]
 study_trait
@@ -27,10 +31,11 @@ pc_check
 print("kinship_check:")
 kinship_check
 
-
 # pheno[1:5,1:21]
 # Note: still need to test how well this pmatch deals with other trickier cases
-pheno_vector <- pheno[,pmatch(study_trait, names(pheno))]
+pheno_names <- names(pheno)
+pheno_names <- gsub(" ", ".", pheno_names)
+pheno_vector <- pheno[,pmatch(study_trait, pheno_names)]
 pheno_vector[1:5]
 # Make a new phenotype table, including only the phenotype selected:
 pheno_mod <- cbind(pheno, pheno_vector)
@@ -44,17 +49,17 @@ colnames(pheno_mod)
 # Shapiro-Wilk test for normality
 #shapiro.test(pheno[,18])
 
-# retain only a single row of genotyped values per each genotype
-# (this is necessary because the input genotype table may contain duplicate stock ids - aka germplasmDbIds)
-geno_trim <- geno[!duplicated(row.names(geno)),]
+# retain only a single column of genotyped values per each genotype
+# (this is necessary because the input genotype table may contain duplicate stock ids - aka germplasmName is used yet - germplasmDbIds)
+geno_trim <- geno[,!duplicated(colnames(geno))]
 # genotype data is coded as 0,1,2 - convert this to -1,0,1
 geno_trim <- geno_trim - 1
-
+geno_trim[1:5,1:5]
 ##### Get marker data from marker names in geno file:
-coordinate_matrix <- matrix(nrow = length(colnames(geno_trim)), ncol = 3)
-for (marker in 1:length(colnames(geno_trim))) {
-  current_string = strsplit(colnames(geno_trim)[marker], split='_', fixed=TRUE)
-  coordinate_matrix[marker,1] = colnames(geno_trim)[marker]
+coordinate_matrix <- matrix(nrow = length(row.names(geno_trim)), ncol = 3)
+for (marker in 1:length(row.names(geno_trim))) {
+  current_string = strsplit(row.names(geno_trim)[marker], split='_', fixed=TRUE)
+  coordinate_matrix[marker,1] = row.names(geno_trim)[marker]
   coordinate_matrix[marker,2] = current_string[[1]][1]
   coordinate_matrix[marker,3] = current_string[[1]][2]
 }
@@ -70,7 +75,8 @@ dim(geno.filtered)
 
 ##### The data in the database has already been imputed, but we use the A.mat function here for MAF filtering and to generate the kinship matrix #####
 library(rrBLUP)
-Imputation <- A.mat(geno.filtered,impute.method="EM",return.imputed=T,min.MAF=0.05)
+##### transposition of geno.filtered because that is what A.mat expects accessions as rows and markers as columns
+Imputation <- A.mat(t(geno.filtered),impute.method="EM",return.imputed=T,min.MAF=0.05)
 
 K.mat <- Imputation$A ### KINSHIP matrix
 geno.gwas <- Imputation$imputed #NEW geno data.
@@ -86,32 +92,34 @@ dim(pheno_mod)
 pheno_mod=pheno_mod[which(pheno_mod$pheno_vector != "NA"),]
 print("Filtering out NAs...")
 dim(pheno_mod)
-#pheno_mod <- pheno_mod[!duplicated(pheno_mod$germplasmDbId),]
-pheno_mod <- distinct(pheno_mod, germplasmDbId, .keep_all = TRUE)
+#pheno_mod <- pheno_mod[!duplicated(pheno_mod$germplasmName),]
+pheno_mod <- distinct(pheno_mod, germplasmName, .keep_all = TRUE)
 print("Filtering out duplicated stock IDs, keeping only single row for each stock ID...")
 dim(pheno_mod)
 rownames(geno.gwas)
 colnames(pheno_mod)
 colnames(pheno)
-pheno_mod=pheno_mod[pheno_mod$germplasmDbId%in%rownames(geno.gwas),]
+pheno_mod=pheno_mod[pheno_mod$germplasmName%in%rownames(geno.gwas),]
 print("Filtering out stock IDs not in geno matrix...")
 dim(pheno_mod)
-pheno_mod$germplasmDbId<-factor(as.character(pheno_mod$germplasmDbId), levels=rownames(geno.gwas)) #to ensure same levels on both files
-pheno_mod <- pheno_mod[order(pheno_mod$germplasmDbId),]
-##Creating file for GWAS function from rrBLUP package
-pheno_mod$locationDbId<- as.factor(pheno_mod$locationDbId)
-# Check the number of levels in the pheno_mod$locationDbId
-location_levels <- nlevels(pheno_mod$locationDbId)
-print("Number of Levels:")
-location_levels
-# Check model.matrix
-# Set model.matrix to include locationDbId in the model, but not if this factor has only one level...
-if (nlevels(pheno_mod$locationDbId) > 1) {
-X<-model.matrix(~-1+locationDbId, data=pheno_mod)
-} else {
+pheno_mod$germplasmName<-factor(as.character(pheno_mod$germplasmName), levels=rownames(geno.gwas)) #to ensure same levels on both files
+pheno_mod <- pheno_mod[order(pheno_mod$germplasmName),]
+
+####
+###Creating file for GWAS function from rrBLUP package
+#pheno_mod$locationDbId<- as.factor(pheno_mod$locationDbId)
+## Check the number of levels in the pheno_mod$locationDbId
+#location_levels <- nlevels(pheno_mod$locationDbId)
+#print("Number of Levels:")
+#location_levels
+## Check model.matrix
+## Set model.matrix to include locationDbId in the model, but not if this factor has only one level...
+#if (nlevels(pheno_mod$locationDbId) > 1) {
+#X<-model.matrix(~-1+locationDbId, data=pheno_mod)
+#} else {
 X<-model.matrix(~-1, data=pheno_mod)
-}
-pheno.gwas <- data.frame(GID=pheno_mod$germplasmDbId,X,PHENO=pheno_mod$pheno_vector)
+#}
+pheno.gwas <- data.frame(GID=pheno_mod$germplasmName,X,PHENO=pheno_mod$pheno_vector)
 pheno.gwas[1:5,1:2]
 geno.gwas <- geno.gwas[rownames(geno.gwas)%in%pheno.gwas$GID,]
 pheno.gwas <- pheno.gwas[pheno.gwas$GID%in%rownames(geno.gwas),]

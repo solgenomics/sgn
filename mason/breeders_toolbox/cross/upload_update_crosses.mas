@@ -2,137 +2,13 @@
 
 </%args>
 
-<div class="modal fade" id="update_progenies_crosses_dialog" name="update_progenies_crosses_dialog" tabindex="-1" role="dialog" aria-labelledby="updateProgeniesDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updateProgeniesDialog">Upload Progenies of Existing Crosses </h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template Information' &>
-                        <p>
-                            <b>File Format Information</b>
-                            <br>
-                            <a id="update_progenies_spreadsheet_format_info">Spreadsheet Format</a>
-                            <br>
-                        </p>
-                    </&>
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_progenies_form" name="upload_progenies_form">
-                        <div class="form-group">
-                            <label class="col-sm-2 control-label">Upload File: </label>
-                                <div class="col-sm-10">
-                                    <input type="file" name="progenies_upload_file" id="progenies_upload_file" encoding="multipart/form-data" />
-                                </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="update_progenies_submit" id="update_progenies_submit">Upload File</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="upload_progenies_error_display" name="upload_progenies_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadProgeniesErrorDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadProgeniesErrorDialog">Upload Progenies File Error</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <table>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="update_progenies_spreadsheet_info_dialog" name="update_progenies_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadProgeniesInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadProgeniesInfoDialog">Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>
-                        Progenies of existing crosses may be uploaded in an Excel file (.xls)
-                    </b>
-                    <br>
-                        (.xlsx format not supported)
-                    <br><br>
-                    <b>
-                        Header:
-                    </b>
-                    <br>
-                        The first row (header) must contain the following:
-                    <br>
-
-                    <table class="table table-bordered table-hover">
-                        <tbody>
-                            <tr>
-                                <td>cross_name</td>
-                                <td>progeny_name</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <b>
-                        Required columns:
-                    </b>
-                    <br>
-                        <b>-cross_name</b> (must exist in the database)
-                    <br>
-                        <b>-progeny_name</b> (accession names must not already exist in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
-                    <br>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="progenies_saved_dialog_message" name="progenies_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="progeniesSavedDialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="progeniesSavedDialog">Success</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <p>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The progenies were saved successfully.
-                    </p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="dismiss_progenies_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="modal fade" id="update_crossinfo_dialog" name="update_crossinfo_dialog" tabindex="-1" role="dialog" aria-labelledby="updateCrossinfoDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updateCrossinfoDialog">Upload Experimantal Info of Existing Crosses </h4>
+                <h4 class="modal-title" id="updateCrossinfoDialog">Upload Cross Info of Existing Crosses </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -193,7 +69,7 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Experimental Info of existing crosses may be uploaded in an Excel file (.xls)
+                        Cross info of existing crosses may be uploaded in an Excel file (.xls)
                     </b>
                     <br>
                         (.xlsx format not supported)
@@ -208,27 +84,25 @@
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
-                                <td>cross_name</td>
-                                <td>At least one column of experimental info listed below</td>
+                                <td>cross_unique_id</td>
+                                <td>At least one column of cross info listed below (please use exact column header as shown)</td>
                             </tr>
                         </tbody>
                     </table>
                     <b>
                         Required columns:
                     </b>
-                    <br>
-                        <b>-cross_name</b> (must exist in the database, must not have duplicate cross name in the upload file)
-                    <br>
-                        <b>-At least one of the following columns:</b> (all of the experimental info of a cross must be in a single row)
-                    <br>
-                        (Dates must be in the format YYYY/MM/DD)
-                    <br>
+                    <ul>
+                        <li><b>cross_unique_id:</b> Must exist in the database, must not have duplicate cross unique id in the same upload file.
+                        <li><b>At least one of the following columns:</b> You can upload different types of cross info by selecting corresponding column headers. All of cross info of the same cross unique id must be in a single row. Dates must be in the <b>YYYY/MM/DD</b> format.</li>
+                        <br>
 % my $cross_properties = $c->config->{cross_properties};
 % my @column_header = split ',',$cross_properties;
 % foreach my $column_header(@column_header){
-                    <%$column_header%>
-                    <br>
+                        <%$column_header%>
+                        <br>
 %}
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
@@ -260,12 +134,13 @@
     </div>
 </div>
 
-<div class="modal fade" id="upload_family_name_dialog" name="upload_family_name_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadFamilyNameDialog">
+
+<div class="modal fade" id="upload_additional_info_dialog" name="upload_additional_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadAdditionalInfoDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadFamilyNameDialog">Upload Family Name of Existing Crosses </h4>
+                <h4 class="modal-title" id="uploadAdditionalInfoDialog">Upload Additional Parent Info of Existing Crosses </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -273,15 +148,15 @@
                         <p>
                             <b>File Format Information</b>
                             <br>
-                            <a id="upload_family_name_spreadsheet_format_info">Spreadsheet Format</a>
+                            <a id="upload_additional_info_format">Spreadsheet Format</a>
                             <br>
                         </p>
                     </&>
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_family_name_form" name="upload_family_name_form">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_additional_info_form" name="upload_additional_info_form">
                         <div class="form-group">
                             <label class="col-sm-2 control-label">Upload File: </label>
                                 <div class="col-sm-10">
-                                    <input type="file" name="family_name_upload_file" id="family_name_upload_file" encoding="multipart/form-data" />
+                                    <input type="file" name="additional_info_upload_file" id="additional_info_upload_file" encoding="multipart/form-data" />
                                 </div>
                         </div>
                     </form>
@@ -289,44 +164,23 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_family_name_submit" id="upload_family_name_submit">Upload File</button>
+                <button type="button" class="btn btn-primary" name="upload_additional_info_submit" id="upload_additional_info_submit">Upload File</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="upload_family_name_error_display" name="upload_family_name_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadFamilyNameErrorDialog">
+<div class="modal fade" id="upload_additional_info_format_dialog" name="upload_additional_info_format_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadAdditionalInfoFormatDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadFamilyNameErrorDialog">Upload Family Name File Error</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <table>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="upload_family_name_spreadsheet_info_dialog" name="upload_family_name_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadFamilyNameInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadFamilyNameInfoDialog">Template Information</h4>
+                <h4 class="modal-title" id="uploadAdditionalInfoFormatDialog">Template Information</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>
-                        Family Name of existing crosses may be uploaded in an Excel file (.xls)
+                        Additional Parent Info of existing crosses may be uploaded in an Excel file (.xls)
                     </b>
                     <br>
                         (.xlsx format not supported)
@@ -337,23 +191,28 @@
                     <br>
                         The first row (header) must contain the following:
                     <br>
-
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
-                                <td>cross_name</td>
-                                <td>family_name</td>
+                                <td>cross_unique_id</td>
+                                <td>At least one column of parent info listed below (please use exact column header as shown)</td>
                             </tr>
                         </tbody>
                     </table>
                     <b>
                         Required columns:
                     </b>
-                    <br>
-                        <b>-cross_name</b> (must exist in the database)
-                    <br>
-                        <b>-family_name</b>
-                    <br>
+                    <ul>
+                        <li><b>cross_unique_id:</b> Must exist in the database, must not have duplicate cross unique id in the same upload file.
+                        <li><b>At least one of the following columns:</b> You can upload different types of parent info by selecting corresponding column headers. All of parent info of the same cross unique id must be in a single row.</li>
+                        <br>
+% my $cross_additional_info_string = $c->config->{cross_additional_info};
+% my @additional_info_headers = split ',',$cross_additional_info_string;
+% foreach my $info_header(@additional_info_headers){
+                        <%$info_header%>
+                        <br>
+%}
+                    </ul>
                 </div>
             </div>
             <div class="modal-footer">
@@ -362,29 +221,6 @@
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="family_name_saved_dialog_message" name="family_name_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="familyNameSavedDialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="familyNameSavedDialog">Success</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <p>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The family names were saved successfully.
-                    </p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="dismiss_family_name_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 
 <script>
 
@@ -437,37 +273,37 @@ jQuery(document).ready(function(){
         location.reload();
     });
 
-    jQuery("#upload_progenies_existing_crosses").click(function(){
+    jQuery("#upload_additional_info").click(function(){
 
-        jQuery("#update_progenies_spreadsheet_format_info").click(function(){
-            jQuery("#update_progenies_spreadsheet_info_dialog").modal("show");
+        jQuery("#upload_additional_info_format").click(function(){
+            jQuery("#upload_additional_info_format_dialog").modal("show");
         });
 
-        jQuery("#update_progenies_crosses_dialog").modal("show");
+        jQuery("#upload_additional_info_dialog").modal("show");
     });
 
-    jQuery("#update_progenies_submit").click(function(){
-        var uploadFile = jQuery("#progenies_upload_file").val();
-        jQuery('#upload_progenies_form').attr("action", "/ajax/cross/upload_progenies");
+    jQuery("#upload_additional_info_submit").click(function(){
+        var uploadFile = jQuery("#additional_info_upload_file").val();
+        jQuery('#upload_additional_info_form').attr("action", "/ajax/cross/upload_info");
         if (uploadFile === ''){
             alert("Please select a file");
             return;
         }
-        jQuery("#upload_progenies_form").submit();
-        jQuery("#update_progenies_crosses_dialog").modal("hide");
+        jQuery("#upload_additional_info_form").submit();
+        jQuery("#upload_additional_info_dialog").modal("hide");
     });
 
-    jQuery('#upload_progenies_form').iframePostForm({
+    jQuery('#upload_additional_info_form').iframePostForm({
         json: true,
         post: function(){
             jQuery("#working_modal").modal("show");
         },
-        complete: function(response) {
+        complete: function(response){
             jQuery("#working_modal").modal("hide");
-            if (response.error_string) {
-                jQuery("#upload_progenies_error_display tbody").html('');
-                jQuery("#upload_progenies_error_display tbody").append(response.error_string);
-                jQuery("#upload_progenies_error_display").modal("show");
+            if (response.error_string){
+                jQuery("#upload_crossinfo_error_display tbody").html('');
+                jQuery("#upload_crossinfo_error_display tbody").append(response.error_string);
+                jQuery("#upload_crossinfo_error_display").modal("show");
                 return;
             }
             if (response.error) {
@@ -475,60 +311,9 @@ jQuery(document).ready(function(){
                 return;
             }
             if (response.success) {
-                jQuery('#progenies_saved_dialog_message').modal("show");
+                jQuery('#cross_info_saved_dialog_message').modal("show");
             }
         }
-    });
-
-    jQuery("#dismiss_progenies_saved_dialog").click(function(){
-        location.reload();
-    });
-
-    jQuery("#upload_family_name_existing_crosses").click(function(){
-
-        jQuery("#upload_family_name_spreadsheet_format_info").click(function(){
-            jQuery("#upload_family_name_spreadsheet_info_dialog").modal("show");
-        });
-
-        jQuery("#upload_family_name_dialog").modal("show");
-    });
-
-    jQuery("#upload_family_name_submit").click(function(){
-        var uploadFile = jQuery("#family_name_upload_file").val();
-        jQuery('#upload_family_name_form').attr("action", "/ajax/cross/upload_family_names");
-        if (uploadFile === ''){
-            alert("Please select a file");
-            return;
-        }
-        jQuery("#upload_family_name_form").submit();
-        jQuery("#upload_family_name_dialog").modal("hide");
-    });
-
-    jQuery('#upload_family_name_form').iframePostForm({
-        json: true,
-        post: function(){
-            jQuery("#working_modal").modal("show");
-        },
-        complete: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error_string) {
-                jQuery("#upload_family_name_error_display tbody").html('');
-                jQuery("#upload_family_name_error_display tbody").append(response.error_string);
-                jQuery("#upload_family_name_error_display").modal("show");
-                return;
-            }
-            if (response.error) {
-                alert(response.error);
-                return;
-            }
-            if (response.success) {
-                jQuery('#family_name_saved_dialog_message').modal("show");
-            }
-        }
-    });
-
-    jQuery("#dismiss_family_name_saved_dialog").click(function(){
-        location.reload();
     });
 
 

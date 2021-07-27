@@ -1,0 +1,25 @@
+<%args>
+$model_id
+</%args>
+
+<table class="table table-hover table-bordered" id="analyses_by_model_table">
+    <thead>
+        <tr>
+            <th>Analysis Name</th>
+            <th>Analysis Description</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+jQuery(document).ready(function(){
+
+    jQuery('#analyses_by_model_table').DataTable({
+        'ajax': { 'url': '/ajax/analyses/by_model?model_id=<% $model_id %>' }
+    });
+
+});
+</script>
+

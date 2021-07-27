@@ -71,6 +71,7 @@ sub download {
         treatment_project_ids => $self->treatment_project_ids,
         selected_columns => $self->selected_columns,
         selected_trait_ids => $self->trait_list,
+        include_measured => $self->include_measured
     });
     my $output = $trial_layout_download->get_layout_output();
     if ($output->{error_messages}){

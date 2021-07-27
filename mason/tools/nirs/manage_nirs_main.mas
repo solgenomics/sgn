@@ -1,0 +1,133 @@
+<%args>
+$nirs_files => undef
+$deleted_nirs_files => undef
+$all_nirs_files => undef
+$all_deleted_nirs_files => undef
+$locations => undef
+$sampling_facilities => ()
+</%args>
+
+<& /tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas &>
+<& /tools/high_dimensional_phenotypes/download_high_dim_phenotypes_dialogs.mas &>
+<& /tools/high_dimensional_phenotypes/download_high_dim_phenotypes_relationship_matrix_dialogs.mas &>
+<& /tools/nirs/nirs_analysis_train_dialogs.mas &>
+<& /tools/nirs/nirs_analysis_predict_dialogs.mas &>
+<& /tools/nirs/nirs_analysis_plot_spectra_dialogs.mas &>
+<& /breeders_toolbox/sampling_trials/create_sampling_trials_dialogs.mas, sampling_facilities=>$sampling_facilities &>
+
+<div class="well">
+<&| /page/info_section.mas, title=>'Uploaded NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage uploaded NIRS data files' &>
+
+    <&| /page/info_section.mas, title=>'Your Uploaded NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1 &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <& /breeders_toolbox/file_list.mas, files=>$nirs_files, allow_delete=>0 &>
+            </div>
+        </div>
+    </&>
+    <&| /page/info_section.mas, title=>'Your Obsoleted NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'These are deleted NIRS files' &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <& /breeders_toolbox/file_list.mas, files=>$deleted_nirs_files, allow_delete=>0 &>
+            </div>
+        </div>
+    </&>
+    <&| /page/info_section.mas, title=>'All Uploaded NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1 &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <& /breeders_toolbox/file_list.mas, files=>$all_nirs_files, allow_delete=>0 &>
+            </div>
+        </div>
+    </&>
+    <&| /page/info_section.mas, title=>'All Obsoleted NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'These are deleted NIRS files' &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <& /breeders_toolbox/file_list.mas, files=>$all_deleted_nirs_files, allow_delete=>0 &>
+            </div>
+        </div>
+    </&>
+</&>
+</div>
+
+<div class="well">
+<&| /page/info_section.mas, title=>'NIRS Analyses', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage your NIRS analyses' &>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <table class="table table-bordered table-hover" id="analyses_by_user_table">
+              <thead>
+              <tr>
+                <th>
+                  Analysis Name
+                </th>
+                <th>
+                  Description
+                </th>
+                <th>
+                  Model Type
+                </th>
+                <th>
+                  Protocol
+                </th>
+                <th>
+                  Application
+                </th>
+                <th>
+                  Language
+                </th>
+              </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+        </div>
+    </div>
+</&>
+</div>
+
+
+<div class="well">
+<&| /page/info_section.mas, title=>'Trained NIRS Models', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage your NIRS models' &>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <table class="table table-bordered table-hover" id="models_by_user_table">
+              <thead>
+              <tr>
+                <th>
+                  Model Name
+                </th>
+                <th>
+                  Description
+                </th>
+                <th>
+                  Model Type
+                </th>
+                <th>
+                  Protocol
+                </th>
+                <th>
+                  Application
+                </th>
+                <th>
+                  Language
+                </th>
+              </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+        </div>
+    </div>
+</&>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+    jQuery('#analyses_by_user_table').DataTable({
+        'ajax': { 'url': '/ajax/analyses/by_user?analysis_model_type=waves_nirs_spectral_predictions' }
+    });
+
+    jQuery('#models_by_user_table').DataTable({
+        'ajax': { 'url': '/ajax/analyses/models/by_user?analysis_model_type=waves_nirs_spectral_predictions' }
+    });
+});
+</script>

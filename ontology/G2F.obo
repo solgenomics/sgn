@@ -1,0 +1,293 @@
+format-version: 1.2
+ontology: G2F_ontology
+default-namespace: G2F_ontology
+
+[Term]
+id: G2F:0000000
+name: G2F
+
+[Term]
+id: G2F:0000001
+name: Agronomic Traits
+is_a: G2F:0000000
+
+[Term]
+id: G2F:0000002
+name: Pollen DAP [days]
+def: "Number of days after planting that 50% of plants in the plot began shedding pollen." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000003
+name: Silk DAP [days]
+def: "Number of days after planting that 50% of plants in the plot had visible silks." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000004
+name: Plant Height [cm]
+def: "Measured as the distance between the base of a plant and the ligule of the flag leaf." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000005
+name: Ear Height [cm]
+def: "Measured as the distance from the ground to the primary ear bearing node." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000006
+name: Stand Count [plants]
+def: "Number of plants per plot at harvest." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000007
+name: Root Lodging [plants]
+def: "Number of plants that show root lodging per plot, i.e., those stems that lean substantially to one side (> 15% from vertical).  Count includes ‘goosenecked’ plants that have ‘straightened up’ after becoming lodged earlier in the season." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000008
+name: Stalk Lodging [plants]
+def: "Number of plants broken between ground level and top ear node at harvest." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000009
+name: Grain Moisture [percent]
+def: "Water content in grain at harvest." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000010
+name: Test Weight [lbs/bu]
+def: "Shelled grain weight per bushel." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000011
+name: Plot Weight [lbs]
+def: "Shelled grain weight per plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000012
+name: Grain Yield [bu/acre]
+def: "Grain yield in bushels per acre at 15.5% grain moisture assuming 56lbs per bushel and usin plot area without alley." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000013
+name: Zonal Statistics Traits
+is_a: G2F:0000000
+
+[Term]
+id: G2F:0000014
+name: Nonzero Pixel Count
+def: "Total number of pixels that have a non-zero pixel value i.e. they are not completely black or empty." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000015
+name: Total Pixel Sum
+def: "Total sum of all pixel values." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000016
+name: Mean Pixel Value
+def: "The arithmetic mean of all pixel values." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000017
+name: Harmonic Mean Pixel Value
+def: "The harmonic mean of all pixel values." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000018
+name: Median Pixel Value
+def: "The median pixel value." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000019
+name: Pixel Variance
+def: "The variance over all pixel values." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000020
+name: Pixel Standard Deviation
+def: "The standard deviation over all pixel values." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000021
+name: Pixel Population Standard Deviation
+def: "The population standard deviation over all pixel values." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000022
+name: Minimum Pixel Value
+def: "The minimum pixel value observed." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000023
+name: Maximum Pixel Value
+def: "The maximum pixel value observed." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000024
+name: Minority Pixel Value
+def: "The pixel value that is observed the least number of times." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000025
+name: Minority Pixel Count
+def: "The number of times that the least observed pixel value is observed." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000026
+name: Majority Pixel Value
+def: "The pixel value that is observed the most number of times." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000027
+name: Majority Pixel Count
+def: "The number of times that the most observed pixel is observed." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000028
+name: Pixel Group Count
+def: "The number of unique pixel values that are observed." []
+relationship: variable_of G2F:0000013
+
+[Term]
+id: G2F:0000029
+name: Damaged Plants [count]
+def: "Number of plants in plot damaged by hogs." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000030
+name: PLTHT tassel [cm]
+def: "Plant height to the tip of the tassel." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000031
+name: Percent Northern Leaf Blight (%)
+def: "Percent northern leaf blight." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000032
+name: Ear height plant1 [cm]
+def: "Ear height measurement for first plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000033
+name: Ear height plant2 [cm]
+def: "Ear height measurement for second plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000034
+name: Ear height plant3 [cm]
+def: "Ear height measurement for third plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000035
+name: Ear height plant4 [cm]
+def: "Ear height measurement for fourth plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000036
+name: Ear height plant5 [cm]
+def: "Ear height measurement for fifth plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000037
+name: Ear height plant6 [cm]
+def: "Ear height measurement for sixth plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000038
+name: Ear height plant7 [cm]
+def: "Ear height measurement for seventh plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000039
+name: Ear height plant8 [cm]
+def: "Ear height measurement for eighth plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000040
+name: Ear height plant9 [cm]
+def: "Ear height measurement for ninth plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000041
+name: Plant height plant2 [cm]
+def: "Plant height to flag leaf for second plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000042
+name: Plant height plant3 [cm]
+def: "Plant height to flag leaf for third plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000043
+name: Plant height plant4 [cm]
+def: "Plant height to flag leaf for fourth plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000044
+name: Plant height plant5 [cm]
+def: "Plant height to flag leaf for fifth plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000045
+name: Ear height plant10 [cm]
+def: "Ear height measurement for tenth plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000046
+name: Plant height plant1 [cm]
+def: "Plant height to flag leaf for first plant in plot." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000047
+name: Anthesis [date]
+def: "Date of anthesis in MM/DD/YY format." []
+relationship: variable_of G2F:0000001
+
+[Term]
+id: G2F:0000048
+name: Silking [date]
+def: "Date of silking in MM/DD/YY format." []
+relationship: variable_of G2F:0000001

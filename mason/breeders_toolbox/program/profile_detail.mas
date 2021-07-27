@@ -1,0 +1,51 @@
+<%args>
+$user_id => undef
+$profile_id
+$profile_name
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<& /page/page_title.mas, title => "Profile: '$profile_name'" &>
+
+<&| /page/info_section.mas, title => 'Details', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "profile_detail_table" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Trait Name</th>
+                                <th>Target Value</th>
+                                <th>Benchmark Variety</th>
+                                <th>Performance</th>
+                                <th>Weight</th>
+                                <th>Trait Type</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+ </&>
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#profile_detail_table').DataTable( {
+        'ajax': '/ajax/breeders/program/profile_detail/'+ <% $profile_id %>,
+        'paging' : false,
+        'searching' : false,
+
+    });
+
+});
+
+
+</script>

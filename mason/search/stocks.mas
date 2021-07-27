@@ -114,8 +114,8 @@ my $breeding_programs_select = simple_selectbox_html(
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Organization: </label>
-          <div class="col-sm-9" >
+          <label class="col-sm-4 control-label">Organization: </label>
+          <div class="col-sm-8" >
             <input type="text" class="form-control" id="organization" placeholder="Type to Autocomplete"/>
           </div>
         </div>
@@ -272,7 +272,7 @@ my $breeding_programs_select = simple_selectbox_html(
                     <th>Stock Type</th>
                     <th>Organism</th>
                     <th>Synonyms</th>
-                    <th>Owners</th>
+                    <th>Submitters</th>
                     <th>Organization</th>
                 </tr>
                 </thead>
@@ -333,6 +333,17 @@ jQuery(document).ready(function () {
      jQuery("#year").autocomplete({
         source: '/ajax/stock/project_year_autocomplete',
      });
+     jQuery("#organization").autocomplete({
+        source: '/ajax/stock/stockproperty_autocomplete?property=organization',
+     });
+
+    // Update changed organization
+    jQuery(document).on("change", "#organization", function() {
+      editable_stockprops_search["organization"] = {
+        "matchtype": "contains",
+        "value": jQuery(this).val()
+      }
+    });
 
     var editable_stockprops_search = {};
     var params = {};
@@ -387,7 +398,7 @@ jQuery(document).ready(function () {
             stockprop_extra_columns_view[selected_property] = 1;
             stockprop_extra_columns_view_array.push(selected_property);
 
-            var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Stock Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Owners</th>';
+            var table_header_html = '<table id="stock_search_results" class="table table-hover table-striped"><thead><tr><th>Stock Name</th><th>Stock Type</th><th>Organism</th><th>Synonyms</th><th>Submitters</th>';
             for (var i=0; i<stockprop_extra_columns_view_array.length; i++){
                 table_header_html = table_header_html + '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
             }
@@ -398,7 +409,8 @@ jQuery(document).ready(function () {
         _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
     });
 
-    _load_stock_search_results('accession', editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+    parseArgs();
+    _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
       var name_links = stock_table.column(0).data();
@@ -486,6 +498,14 @@ jQuery(document).ready(function () {
 
 
 });
+
+function parseArgs() {
+  const params = new URLSearchParams(window.location.search);
+  if ( params.has('any_name') ) {
+    jQuery('#any_name').val(params.get('any_name'));
+    jQuery('#stock_type_select').val(0);
+  }
+}
 
 function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array){
     console.log(stock_type);

@@ -108,7 +108,7 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A1: date is missing from the header";
     }
     if (!$sample_id_head || $sample_id_head ne 'sample_id') {
-        push @error_messages, "Cell B1: block_number is missing from the header";
+        push @error_messages, "Cell B1: sample_id is missing from the header";
     }
     if (!$well_A01_head || $well_A01_head ne 'well_A01') {
         push @error_messages, "Cell C1: well_A01 is missing from the header.";
@@ -259,7 +259,10 @@ sub _validate_with_plugin {
         #date must not be blank
         if (!$date || $date eq '') {
             push @error_messages, "Cell A$row_name: date missing";
+        } elsif (!$date =~ m/(\d{4})-(\d{2})-(\d{2})/) {
+            push @error_messages, "Cell A$row_name: date must be YYYY-MM-DD format";
         }
+
         if ($is_blank) {
             if (!($is_blank eq "1" || $is_blank eq "0" || $is_blank eq '')) {
                 push @error_messages, "Cell M$row_name: is_blank is not either 1, 0, or blank: $is_blank";

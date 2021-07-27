@@ -5,6 +5,7 @@ use Moose;
 use Data::Dumper;
 use CXGN::Trait;
 use CXGN::Trait::Search;
+use CXGN::BreederSearch;
 
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
@@ -12,7 +13,7 @@ BEGIN { extends 'Catalyst::Controller::REST'; }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
 );
 
 sub search : Path('/ajax/search/traits') Args(0) {
@@ -22,10 +23,8 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $params = $c->req->params() || {};
     #print STDERR Dumper $params;
 
-    my $trait_cv_name = $params->{trait_cv_name} || $c->config->{trait_cv_name};
     my $ontology_db_ids;
     if ($params->{'ontology_db_id[]'}){
-        $trait_cv_name = undef;
         $ontology_db_ids = ref($params->{'ontology_db_id[]'}) eq 'ARRAY' ? $params->{'ontology_db_id[]'} : [$params->{'ontology_db_id[]'}];
     }
 
@@ -57,7 +56,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
 
     my $trait_search = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
-        trait_cv_name => $trait_cv_name,
+	is_variable=>1,
         ontology_db_id_list => $ontology_db_ids,
         limit => $limit,
         offset => $offset,
@@ -67,16 +66,62 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my ($data, $records_total) = $trait_search->search();
     my @result;
 
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+
     foreach (@$data){
         my $db_name = $_->{db_name};
         my $accession = $_->{accession};
+        my $trait_id = $_->{trait_id};
         my $trait_accession = $db_name .":". $accession ;
+        my $trait_usage = "<em>None</em>";
+
+        # Get the number of trials that observed the trait
+        my $trial_criteria_list  = ['traits', 'trials'];
+        my $trial_dataref = {
+            'trials' => {
+                'traits' => $trait_id
+            }
+        };
+        my $trial_queryref = {
+            'trials' => {
+                'traits' => 0
+            }
+        };
+        my $trial_results_ref = $bs->metadata_query($trial_criteria_list, $trial_dataref, $trial_queryref);
+        my $trials = $trial_results_ref->{results};
+        my $trial_count = $#{$trials} + 1;
+        
+        # Get the number of plots that observed the trait
+        if ( $trial_count && $trial_count > 0 ) {
+            my $plot_criteria_list  = ['traits', 'plots'];
+            my $plot_dataref = {
+                'plots' => {
+                    'traits' => $trait_id
+                }
+            };
+            my $plot_queryref = {
+                'plots' => {
+                    'traits' => 0
+                }
+            };
+            my $plot_results_ref = $bs->metadata_query($plot_criteria_list, $plot_dataref, $plot_queryref);
+            my $plots = $plot_results_ref->{results};
+            my $plot_count = $#{$plots} + 1;
+
+            $trait_usage = "Trials:&nbsp;$trial_count<br />Plots:&nbsp;$plot_count";
+        }
+
+
         push @result,
             [
                 '',
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
                 $_->{trait_definition},
+                $trait_usage,
+                $_->{trait_name},
+                $trait_accession
             ];
     }
     #print STDERR Dumper \@result;

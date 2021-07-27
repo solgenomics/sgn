@@ -4,7 +4,7 @@ $trial_id
 $trial_type
 </%args>
 
-<& /util/import_javascript.mas, classes => [  ] &>
+<& /util/import_javascript.mas, classes => [ ] &>
 
 
 <div id="crossing_trial_to_field_trial_html">

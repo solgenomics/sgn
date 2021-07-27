@@ -12,22 +12,15 @@ library(dplyr)
 
 allArgs <- commandArgs()
 
-inputFiles <- scan(grep("input_selection_index",
-                        allArgs, value = TRUE),
+inputFiles <- scan(grep("input_files", allArgs, value = TRUE),
                    what = "character")
 
-relWeightsFile <- grep("rel_weights",
-                       inputFiles,
-                       value = TRUE)
+relWeightsFile <- grep("rel_weights", inputFiles, value = TRUE)
 
-outputFiles <- scan(grep("output_selection_index",
-                         allArgs,
-                         value = TRUE),
+outputFiles <- scan(grep("output_files", allArgs, value = TRUE),
                     what = "character")
 
-traitsFiles <- grep("gebv_files_of_traits",
-                    inputFiles,
-                    value = TRUE)
+traitsFiles <- grep("gebv_files_of_traits", inputFiles, value = TRUE)
 
 gebvsSelectionIndexFile <- grep("gebvs_selection_index",
                                 outputFiles,
@@ -48,18 +41,19 @@ if (length(relWeightsFile) == 0)
   stop("There is no file with relative weights of traits.")
 
 
-relWeights           <- data.frame(fread(relWeightsFile))
+relWeights           <- data.frame(fread(relWeightsFile, header = TRUE))
 rownames(relWeights) <- relWeights[, 1]
 relWeights[, 1]      <- NULL 
 
-if (is.null(relWeights))
+if (is.null(relWeights)) {
     stop('There were no relative weights for all the traits.')
+}
 
 combinedRelGebvs <- c()
 
 for (i in 1:traitsTotal) {
   traitFile           <- traitFilesList[[i]]
-  traitGEBV           <- data.frame(fread(traitFile))
+  traitGEBV           <- data.frame(fread(traitFile, header = TRUE))
   rownames(traitGEBV) <- traitGEBV[, 1]
   traitGEBV[, 1]      <- NULL
   traitGEBV           <- traitGEBV[order(rownames(traitGEBV)),,drop=FALSE] 
@@ -70,8 +64,7 @@ for (i in 1:traitsTotal) {
   if (is.na(relWeight) == FALSE && relWeight != 0 ) {
       
       weightedTraitGEBV <- apply(traitGEBV, 1,
-                                 function(x) x*relWeight
-                                 )
+                                 function(x) x*relWeight)
 
       weightedTraitGEBV <- data.frame(weightedTraitGEBV)
       colnames(weightedTraitGEBV) <- paste0(trait, '_weighted')

@@ -4,11 +4,11 @@ package CXGN::List::Validate::Plugin::PlotsOrSubplotsOrPlants;
 use Moose;
 use SGN::Model::Cvterm;
 
-sub name { 
+sub name {
     return "plots_or_subplots_or_plants";
 }
 
-sub validate { 
+sub validate {
     my $self = shift;
     my $schema = shift;
     my $list = shift;
@@ -20,12 +20,13 @@ sub validate {
     #print STDERR "PLOT TYPE ID $type_id\n";
 
     my @missing = ();
-    foreach my $l (@$list) { 
+    foreach my $l (@$list) {
         my $rs = $schema->resultset("Stock::Stock")->search({
             type_id=> [$plot_type_id, $plant_type_id, $subplot_type_id],
-            uniquename => $l, 
-        });	
-        if ($rs->count() == 0) { 
+            uniquename => $l,
+            is_obsolete => {'!=' => 't'}, 
+        });
+        if ($rs->count() == 0) {
             push @missing, $l;
         }
     }

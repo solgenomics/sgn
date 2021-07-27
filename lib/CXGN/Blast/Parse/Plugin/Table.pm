@@ -54,6 +54,8 @@ sub parse {
   while (my $line = <$blast_fh>) {
     chomp($line);
 
+    $line =~ s/lcl\|//g; # remove lcl tags
+    
     if ($line =~ /Query\=\s*(\S+)/) {
       $query = $1;
     }
@@ -81,6 +83,11 @@ sub parse {
       if ($line =~ /^>(\S+)\s*(.*)/) {
         $subject = $1;
         $desc = $2;
+
+	if ($subject =~ /lcl\|(.*)/) { # remove lcl prefix
+	    $subject = $1;
+	}
+
       }
     }
 

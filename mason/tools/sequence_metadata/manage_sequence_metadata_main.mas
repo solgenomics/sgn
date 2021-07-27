@@ -1,0 +1,12 @@
+
+<%args>
+</%args>
+
+
+<&| /page/info_section.mas, title=>'Sequence Metadata Protocols', is_subsection=>1, collapsible=>1, collapsed=>0, subtitle=>'View and query existing sequence metadata' &>
+    <& /tools/sequence_metadata/protocols_sequence_metadata.mas &>
+</&>
+
+<&| /page/info_section.mas, title=>'Sequence Metadata API', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'Query sequence metadata through an API' &>
+    <& /tools/sequence_metadata/api_sequence_metadata.mas &>
+</&>

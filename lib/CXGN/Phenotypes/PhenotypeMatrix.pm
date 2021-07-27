@@ -18,6 +18,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     plot_list=>$plot_list,
     plant_list=>$plant_list,
     include_timestamp=>$include_timestamp,
+    include_pedigree_parents=>$include_pedigree_parents,
     exclude_phenotype_outlier=>0,
     trait_contains=>$trait_contains,
     phenotype_min_value=>$phenotype_min_value,
@@ -102,6 +103,12 @@ has 'year_list' => (
     is => 'rw',
 );
 
+has 'include_pedigree_parents' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 0
+);
+
 has 'include_timestamp' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -141,6 +148,9 @@ has 'offset' => (
 
 sub get_phenotype_matrix {
     my $self = shift;
+    my $include_pedigree_parents = $self->include_pedigree_parents();
+    my $include_timestamp = $self->include_timestamp;
+
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
@@ -156,7 +166,7 @@ sub get_phenotype_matrix {
             plot_list=>$self->plot_list,
             plant_list=>$self->plant_list,
             subplot_list=>$self->subplot_list,
-            include_timestamp=>$self->include_timestamp,
+            include_timestamp=>$include_timestamp,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
@@ -179,6 +189,10 @@ sub get_phenotype_matrix {
         my @line = @metadata_headers;
         push @line, ('plantedSeedlotStockDbId', 'plantedSeedlotStockUniquename', 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount', 'plantedSeedlotTransactionWeight', 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames');
 
+        if ($include_pedigree_parents){
+            push @line, ('germplasmPedigreeFemaleParentName', 'germplasmPedigreeFemaleParentDbId', 'germplasmPedigreeMaleParentName', 'germplasmPedigreeMaleParentDbId');
+        }
+
         my @sorted_traits = sort keys(%$unique_traits);
         foreach my $trait (@sorted_traits) {
             push @line, $trait;
@@ -187,7 +201,7 @@ sub get_phenotype_matrix {
         push @info, \@line;
 
         foreach my $obs_unit (@$data){
-            my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
+            my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
             my $synonyms = $obs_unit->{synonyms};
             my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
             my $available_germplasm_seedlots = $obs_unit->{available_germplasm_seedlots};
@@ -197,18 +211,36 @@ sub get_phenotype_matrix {
             }
             my $available_germplasm_seedlots_uniquenames = join ' AND ', (keys %available_germplasm_seedlots_uniquenames);
 
-	    my $trial_name = $obs_unit->{trial_name};
-	    my $trial_desc = $obs_unit->{trial_description};
+            my $trial_name = $obs_unit->{trial_name};
+            my $trial_desc = $obs_unit->{trial_description};
 
-	    $trial_name =~ s/\s+$//g;
-	    $trial_desc =~ s/\s+$//g;
+            $trial_name =~ s/\s+$//g;
+            $trial_desc =~ s/\s+$//g;
 
             my @line = ($obs_unit->{year}, $obs_unit->{breeding_program_id}, $obs_unit->{breeding_program_name}, $obs_unit->{breeding_program_description}, $obs_unit->{trial_id}, $trial_name, $trial_desc, $obs_unit->{design}, $obs_unit->{plot_width}, $obs_unit->{plot_length}, $obs_unit->{field_size}, $obs_unit->{field_trial_is_planned_to_be_genotyped}, $obs_unit->{field_trial_is_planned_to_cross}, $obs_unit->{planting_date}, $obs_unit->{harvest_date}, $obs_unit->{trial_location_id}, $obs_unit->{trial_location_name}, $obs_unit->{germplasm_stock_id}, $obs_unit->{germplasm_uniquename}, $synonym_string, $obs_unit->{observationunit_type_name}, $obs_unit->{observationunit_stock_id}, $obs_unit->{observationunit_uniquename}, $obs_unit->{obsunit_rep}, $obs_unit->{obsunit_block}, $obs_unit->{obsunit_plot_number}, $obs_unit->{obsunit_row_number}, $obs_unit->{obsunit_col_number}, $entry_type, $obs_unit->{obsunit_plant_number}, $obs_unit->{seedlot_stock_id}, $obs_unit->{seedlot_uniquename}, $obs_unit->{seedlot_current_count}, $obs_unit->{seedlot_current_weight_gram}, $obs_unit->{seedlot_box_name}, $obs_unit->{seedlot_transaction_amount}, $obs_unit->{seedlot_transaction_weight_gram}, $obs_unit->{seedlot_transaction_description}, $available_germplasm_seedlots_uniquenames);
 
+            if ($include_pedigree_parents) {
+                my $germplasm = CXGN::Stock->new({schema => $self->bcs_schema, stock_id=>$obs_unit->{germplasm_stock_id}});
+                my $parents = $germplasm->get_parents();
+                push @line, ($parents->{'mother'}, $parents->{'mother_id'}, $parents->{'father'}, $parents->{'father_id'});
+            }
+
             my $observations = $obs_unit->{observations};
+#            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
+            my $include_timestamp = $self->include_timestamp;
             my %trait_observations;
             foreach (@$observations){
-                $trait_observations{$_->{trait_name}} = $_->{value};
+                my $collect_date = $_->{collect_date};
+                my $timestamp = $_->{timestamp};
+                if ($include_timestamp && $timestamp) {
+                    $trait_observations{$_->{trait_name}} = "$_->{value},$timestamp";
+                }
+                elsif ($include_timestamp && $collect_date) {
+                    $trait_observations{$_->{trait_name}} = "$_->{value},$collect_date";
+                }
+                else {
+                    $trait_observations{$_->{trait_name}} = $_->{value};
+                }
             }
             foreach my $trait (@sorted_traits) {
                 push @line, $trait_observations{$trait};
@@ -218,11 +250,10 @@ sub get_phenotype_matrix {
         }
     } else {
         $data = $phenotypes_search->search();
-        #print STDERR Dumper $data;
+#        print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
 
         my %obsunit_data;
         my %traits;
-        my $include_timestamp = $self->include_timestamp;
 
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
@@ -251,11 +282,11 @@ sub get_phenotype_matrix {
                 my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
                 my $entry_type = $d->{is_a_control} ? 'check' : 'test';
 
-		my $trial_name = $d->{trial_name};
-		my $trial_desc = $d->{trial_description};
+                my $trial_name = $d->{trial_name};
+                my $trial_desc = $d->{trial_description};
 
-		$trial_name =~ s/\s+$//g;
-		$trial_desc =~ s/\s+$//g;
+                $trial_name =~ s/\s+$//g;
+                $trial_desc =~ s/\s+$//g;
 
                 $obsunit_data{$obsunit_id}->{metadata} = [
                     $d->{year},

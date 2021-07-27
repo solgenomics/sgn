@@ -21,6 +21,11 @@ function get_select_box(type, div_id, options) {
         if (options.multiple) {
             var select = jQuery("#"+options.id).prop('multiple', 'multiple');
         }
+        if (options.workflow_trigger) {
+            // console.log("this is a workflow trigger. Response.select is: \n");
+            // console.log(JSON.stringify(response.select));
+            var select = jQuery("#"+options.id).attr('onChange', 'Workflow.complete(this);');
+        }
 	},
 	error: function(response) {
 	    alert("An error occurred");

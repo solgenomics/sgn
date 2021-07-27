@@ -37,7 +37,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
-    map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
+    map       => { 'application/json' => 'JSON' },
    );
 
 
@@ -67,7 +67,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
     my $sample_number = $c->req->param('sample_number');
     if ($sample_number eq '') {$sample_number = undef};
     my $predefined_columns = $c->req->param('predefined_columns') ? decode_json $c->req->param('predefined_columns') : [];
-
+    my $trial_stock_type = $c->req->param('trial_stock_type');
     #print STDERR Dumper $sample_number;
     #print STDERR Dumper $predefined_columns;
 
@@ -108,6 +108,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
         include_notes => $include_notes,
         sample_number => $sample_number,
         predefined_columns => $predefined_columns,
+        trial_stock_type => $trial_stock_type,
     });
 
     $create_spreadsheet->download();
@@ -159,8 +160,8 @@ sub _parse_list_from_json {
   my $list_json = shift;
   my $json = new JSON;
   if ($list_json) {
-    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-    #my $decoded_list = decode_json($list_json);
+      #my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+      my $decoded_list = decode_json($list_json);
     my @array_of_list_items = @{$decoded_list};
     return \@array_of_list_items;
   }

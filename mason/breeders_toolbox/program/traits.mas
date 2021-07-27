@@ -29,7 +29,7 @@ $collapse_phenotypes_section => 1
       </tbody>
     </table>
   </div>
-</div>  
+</div>
 
 
 <div class="well well-sm" id="raw_data_histogram_well">
@@ -49,10 +49,10 @@ $collapse_phenotypes_section => 1
       <div class="col-sm-4" id="traits_assayed_histogram_cvterm_link">
       </div>
     </div>
-    
+
     <div id="program_summary_hist">
     </div>
-    
+
   </div>
 </div>
 
@@ -80,7 +80,7 @@ jQuery(document).ready(function () {
     });
     trait_summary_hist_display_change("<% $program_id %>");
 %  }
-    ///clicking on the histogram glyph from the dataTable 
+    ///clicking on the histogram glyph from the dataTable
     /// scrolls down to the histogram div
     ///
     jQuery('#phenotype_summary_data').on('click', 'a[href^="#"]', function(event) {
@@ -102,7 +102,7 @@ function trait_summary_hist_display_change(program_id) {
     jQuery.ajax ( {
         url : '/ajax/breeders/program/'+ program_id + '/traits_assayed',
         beforeSend: function() {
-            jQuery("#working_modal").modal("show");
+//            jQuery("#working_modal").modal("show");
         },
         success: function(response){
             //console.log(response);
@@ -126,7 +126,7 @@ function trait_summary_hist_display_change(program_id) {
                         jQuery("#working_modal").modal("hide");
                         if (response.error) {
                             alert(response.error);
-                        } 
+                        }
                         else if (response.status!="success"){
                             alert("Problem loading plant/plot data: "+response.status);
                         }
@@ -178,5 +178,5 @@ function trait_summary_hist_change(program_id, value) {
             alert('An error occured retrieving trait histogram data.');
         }
     });
-}							       
+}
 </script>

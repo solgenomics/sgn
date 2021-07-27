@@ -147,7 +147,7 @@ sub render_fasta_page {
 
     my $fasta = "";
 
-    open( F, "<" . $self->{tempdir} . "/" . $self->{dumpfile} )
+    open( F, "< :encoding(UTF-8)" . $self->{tempdir} . "/" . $self->{dumpfile} )
       || $self->{page}->error_page( "Can't open " . $self->{dumpfile} );
 
     # read column definitions
@@ -427,7 +427,7 @@ sub newSearchButton {
 sub getFileLines {
     my $self   = shift;
     my $file   = shift;
-    open my $f, '<', $file or die "$! reading $file";
+    open my $f, '< :encoding(UTF-8)', $file or die "$! reading $file";
     my $cnt = 0;
     $cnt++ while <$f>;
     return $cnt;

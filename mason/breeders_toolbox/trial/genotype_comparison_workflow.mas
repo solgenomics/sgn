@@ -1,0 +1,237 @@
+<%args>
+$trial_id => undef
+$data_level => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<div class="well well-sm">
+    <button class="btn btn-primary" id="trial_detail_page_analysis_genotype_comparison_workflow">Compare Genotypic Marker Composition On Saved Measurements</button>
+</div>
+<hr>
+
+<div class="modal fade" id="trial_analysis_genotype_comparison_workflow_dialog" name="trial_analysis_genotype_comparison_workflow_dialog" tabindex="-1" role="dialog" aria-labelledby="trialAnalysisGenotypeComparisonWorkflowDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialAnalysisGenotypeComparisonWorkflowDialog">Genotype Comparison</h4>
+            </div>
+            <div class="modal-body">
+
+                <&| /util/workflow.mas, id=> "trial_analysis_genotype_comparison_workflow_dialog_workflow" &>
+                    <&| /util/workflow.mas:step, title=> "Traits" &>
+                        <& /page/page_title.mas, title=>"Select the input measurements to use" &>
+
+                        <div class="container-fluid">
+                            <div class="form-horizontal">
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trait(s): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="trial_analysis_genotype_comparison_workflow_traits_div"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;" >Go to Next Step</button>
+                            </center>
+                        </div>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Accessions" &>
+                        <& /page/page_title.mas, title=>"Select the accessions to use" &>
+
+                        <div class="container-fluid">
+                            <div class="form-horizontal">
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Accessions (Leave empty for all): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="trial_analysis_genotype_comparison_workflow_accessions_div"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <center>
+                                <button type="button" class="btn btn-primary" name="trial_analysis_genotype_comparison_accessions_submit" id="trial_analysis_genotype_comparison_accessions_submit" >Next Step</button>
+                            </center>
+                        </div>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Trait Weightings" &>
+                        <& /page/page_title.mas, title=>"Give weightings for traits" &>
+
+                        <div class="container-fluid">
+
+                            <div id="trial_analysis_genotype_comparison_trait_weights_div"></div>
+
+                            <center>
+                                <button type="button" class="btn btn-primary" name="trial_analysis_genotype_comparison_weightings_submit" id="trial_analysis_genotype_comparison_weightings_submit" title="Submit">Submit</button>
+                            </center>
+                        </div>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Genotype Protocol" &>
+                        <& /page/page_title.mas, title=>"Give weightings for traits" &>
+
+                        <div class="container-fluid">
+
+                            <div class="form-horizontal">
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Genotype Protocol(s): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="trial_analysis_genotype_comparison_workflow_genotyping_protocol_div"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Compute Genotypes From Parents(s): </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="trial_analysis_genotype_comparison_workflow_compute_from_parents_div">
+                                            <option value="no">No</option>
+                                            <option value="yes">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Genotypes: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="trial_analysis_genotype_comparison_workflow_genotype_filter_div">
+                                            <option value="">All</option>
+                                            <option value="0,2">Only genotypes of dosage 0 or 2</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <center>
+                                <button type="button" class="btn btn-primary" name="trial_analysis_genotype_comparison_workflow_submit" id="trial_analysis_genotype_comparison_workflow_submit" title="Submit">Submit</button>
+                            </center>
+                        </div>
+                    </&>
+                    <&| /util/workflow.mas:step, title=> "Output" &>
+                        <& /page/page_title.mas, title=>"Results" &>
+
+                        <div id="trial_analysis_genotype_comparison_workflow_results_div"></div>
+                    </&>
+                </&>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#trial_detail_page_analysis_genotype_comparison_workflow').click( function(){
+        jQuery('#trial_analysis_genotype_comparison_workflow_dialog').modal('show');
+
+        get_select_box('traits', 'trial_analysis_genotype_comparison_workflow_traits_div', { 'name' : 'trial_analysis_genotype_comparison_workflow_trait_ids', 'id' : 'trial_analysis_genotype_comparison_workflow_trait_ids', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':<% $trial_id %>, 'stock_type':'analysis_instance' });
+
+        get_select_box('stocks', 'trial_analysis_genotype_comparison_workflow_accessions_div', { 'name' : 'trial_analysis_genotype_comparison_workflow_accessions_ids', 'id' : 'trial_analysis_genotype_comparison_workflow_accessions_ids', 'empty':1, 'multiple':1, 'size': 20, 'trial_id_list':<% $trial_id %>, 'stock_type_name':'accession' });
+
+        get_select_box('genotyping_protocol', 'trial_analysis_genotype_comparison_workflow_genotyping_protocol_div', { 'name' : 'trial_analysis_genotype_comparison_workflow_genotyping_protocol_id', 'id' : 'trial_analysis_genotype_comparison_workflow_genotyping_protocol_id', 'empty':1 });
+    });
+
+    var trial_analysis_genotype_comparison_workflow_trait_ids = [];
+    var trial_analysis_genotype_comparison_workflow_accessions_ids = [];
+    jQuery('#trial_analysis_genotype_comparison_accessions_submit').click(function() {
+        trial_analysis_genotype_comparison_workflow_trait_ids = jQuery('#trial_analysis_genotype_comparison_workflow_trait_ids').val();
+        console.log(trial_analysis_genotype_comparison_workflow_trait_ids);
+
+        trial_analysis_genotype_comparison_workflow_accessions_ids = jQuery('#trial_analysis_genotype_comparison_workflow_accessions_ids').val();
+        console.log(trial_analysis_genotype_comparison_workflow_accessions_ids);
+
+        if ( !trial_analysis_genotype_comparison_workflow_trait_ids || trial_analysis_genotype_comparison_workflow_trait_ids.length < 1) {
+            alert('Please select at least one trait!');
+            return false;
+        }
+        else {
+            var html = '<table class="table table-bordered table-hover"><thead><tr><th>Trait</th><th>Weighting</th></tr></thead><tbody>';
+            for (var i=0; i<trial_analysis_genotype_comparison_workflow_trait_ids.length; i++) {
+                html = html + '<tr><td>'+trial_analysis_genotype_comparison_workflow_trait_ids[i]+'</td><td><input type="text" name="trial_analysis_genotype_comparison_workflow_trait_weights" data-trait_id="'+trial_analysis_genotype_comparison_workflow_trait_ids[i]+'" class="form-control" value="1"></td></tr>';
+            }
+            html = html + '</tbody></table>';
+            jQuery('#trial_analysis_genotype_comparison_trait_weights_div').html(html);
+
+            Workflow.complete("#trial_analysis_genotype_comparison_accessions_submit");
+            Workflow.focus('#trial_analysis_genotype_comparison_workflow_dialog_workflow', 2);
+        }
+    });
+
+    var trial_analysis_genotype_comparison_workflow_trait_weights_values = [];
+    jQuery('#trial_analysis_genotype_comparison_weightings_submit').click(function(){
+        jQuery('input[name="trial_analysis_genotype_comparison_workflow_trait_weights"]').each(function() {
+            if (jQuery(this).val() == '') {
+                alert('Please give weights!');
+                return false;
+            }
+            trial_analysis_genotype_comparison_workflow_trait_weights_values.push([jQuery(this).data('trait_id'), jQuery(this).val()]);
+        });
+        if (trial_analysis_genotype_comparison_workflow_trait_weights_values.length != trial_analysis_genotype_comparison_workflow_trait_ids.length) {
+            alert('Please give weights!');
+            return false;
+        }
+
+        Workflow.complete("#trial_analysis_genotype_comparison_weightings_submit");
+        Workflow.focus('#trial_analysis_genotype_comparison_workflow_dialog_workflow', 3);
+    });
+
+    var trial_analysis_genotype_comparison_workflow_genotyping_protocol_id;
+    var trial_analysis_genotype_comparison_workflow_genotyping_protocol_compute_from_parents;
+    var trial_analysis_genotype_comparison_workflow_genotyping_protocol_genotypes;
+    jQuery('#trial_analysis_genotype_comparison_workflow_submit').click(function() {
+
+        trial_analysis_genotype_comparison_workflow_genotyping_protocol_id = jQuery('#trial_analysis_genotype_comparison_workflow_genotyping_protocol_id').val();
+        trial_analysis_genotype_comparison_workflow_genotyping_protocol_compute_from_parents = jQuery('#trial_analysis_genotype_comparison_workflow_compute_from_parents_div').val();
+        trial_analysis_genotype_comparison_workflow_genotyping_protocol_genotypes = jQuery('#trial_analysis_genotype_comparison_workflow_genotype_filter_div').val();
+
+        if (!trial_analysis_genotype_comparison_workflow_genotyping_protocol_id) {
+            alert('Please select a genotyping protocol!');
+            return false;
+        }
+        else {
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/<% $trial_id %>/genotype_comparison?trait_ids='+JSON.stringify(trial_analysis_genotype_comparison_workflow_trait_ids)+'&accession_ids='+JSON.stringify(trial_analysis_genotype_comparison_workflow_accessions_ids)+'&trait_weights='+JSON.stringify(trial_analysis_genotype_comparison_workflow_trait_weights_values)+'&nd_protocol_id='+trial_analysis_genotype_comparison_workflow_genotyping_protocol_id+'&data_level=<% $data_level %>&compute_from_parents='+trial_analysis_genotype_comparison_workflow_genotyping_protocol_compute_from_parents+'&genotype_filter='+trial_analysis_genotype_comparison_workflow_genotyping_protocol_genotypes,
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else {
+                        var html = '<img src="'+response.figure+'"><hr><table class="table table-hover table-bordered"><thead><tr><th>Rank</th><th>Rank Group</th><th>Accession Name</th><th>Value</th></tr></thead><tbody>';
+                        for (var i=0; i<response.sorted_accessions.length; i++) {
+                            var accession_name = response.sorted_accessions[i];
+                            var value = response.sorted_values[i];
+                            var rank_group = response.sorted_rank_groups[i];
+                            var rank = response.sorted_ranks[i];
+                            html = html + '<tr><td>'+rank+'</td><td>'+rank_group+'</td><td>'+accession_name+'</td><td>'+value+'</td></tr>';
+                        }
+                        html = html + '</tbody></table>';
+                        jQuery('#trial_analysis_genotype_comparison_workflow_results_div').html(html);
+
+                        Workflow.complete("#trial_analysis_genotype_comparison_workflow_submit");
+                        Workflow.focus('#trial_analysis_genotype_comparison_workflow_dialog_workflow', 4);
+                    }
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error doing genotype comparison!');
+                }
+            });
+        }
+    });
+
+});
+
+</script>

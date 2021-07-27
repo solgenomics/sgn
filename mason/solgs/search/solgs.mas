@@ -1,6 +1,6 @@
 <%doc>
 
-=head1 NAME 
+=head1 NAME
 
 /search/solgs.mas - a view for solgs search form - startpage for GEBV prediction model building
 
@@ -25,25 +25,24 @@ $gs_traits_index => undef
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTraits",  
-  "solGS.searchTrials", "jquery.dataTables",  "solGS.combineTrials", 
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTraits",
+  "solGS.searchTrials", "jquery.dataTables", "solGS.Dataset", "solGS.combineTrials",
   "solGS.ajaxAutocomplete"] &>
 
-<div class="container">
 
-<& /page/page_title.mas, 
-   title => "solGS: start building a GS model by searching for a training population or trait" 
-  &>
+<div id="solgs_search_page" class="container">
+    <& /page/page_title.mas,
+	  title => "solGS: Genomic Prediction Modeling"
+	 &>
 
+      <& /solgs/genotyping_protocol.mas &>
 
-<& /solgs/search/trial_search_form.mas &>
+	   <& /solgs/search/trial_search_form.mas &>
 
+	    <& /solgs/search/list_type_training_population.mas &>
 
-<& /solgs/search/list_type_training_population.mas &>
+	    <& /solgs/search/trait_search_form.mas,
+		  gs_traits_index => $gs_traits_index
+		 &>
 
-
-<& /solgs/search/trait_search_form.mas,
-   gs_traits_index => $gs_traits_index
- &>
-   
 </div>

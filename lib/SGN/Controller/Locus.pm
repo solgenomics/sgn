@@ -93,22 +93,22 @@ sub view_by_name : Path('/locus/view/') Args(0) {
     my $locus_id = undef;
     my $locus = undef;
     if ($symbol && $species) { 
-	$locus = $c->stash->{locus} = CXGN::Phenome::Locus->new_with_symbol_and_species($c->dbc->dbh, $symbol, $species);
+        $locus = $c->stash->{locus} = CXGN::Phenome::Locus->new_with_symbol_and_species($c->dbc->dbh, $symbol, $species);
     }
 
-    if ($locusname) { 
-	$locus = $c->stash->{locus} = CXGN::Phenome::Locus->new_with_locusname($c->dbc->dbh, $locusname);
+    if ($locusname) {
+        $locus = $c->stash->{locus} = CXGN::Phenome::Locus->new_with_locusname($c->dbc->dbh, $locusname);
     }
     
-    if (defined($locus->get_locus_id())) { 
-	my $locus_id = $locus->get_locus_id();
-	$c->stash->{locus} = $locus;
-	$c->detach("/locus/view/", [ $locus_id] );    #("/locus/$locus_id/view");    
+    if (defined($locus) && defined($locus->get_locus_id())) { 
+        $locus_id = $locus->get_locus_id();
+        my $url = "/locus/$locus_id/view";
+        $c->res->redirect($url, 301);
     }
     else { 
-	$c->stash->{template} = 'generic_message.mas';
-	$c->stash->{message} = "No locus was found for the identifier provided ($symbol $locusname $species).";
-	# forward to search page ?
+        $c->stash->{template} = 'generic_message.mas';
+        $c->stash->{message} = "No locus was found for the identifier provided ($symbol $locusname $species).";
+        # forward to search page ?
     }
 
 

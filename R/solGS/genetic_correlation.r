@@ -9,10 +9,9 @@
 
 options(echo = FALSE)
 
-library(gplots)
 library(ltm)
-library(plyr)
-library(rjson)
+#library(rjson)
+library(jsonlite)
 library(methods)
 library(dplyr)
 library(tibble)
@@ -95,47 +94,29 @@ allcordata <- round(allcordata,
                     )
 
 #remove rows and columns that are all "NA"
-if ( apply(coefficients,
-           1,
-           function(x)any(is.na(x))
-           )
-    ||
-    apply(coefficients,
-          2,
-          function(x)any(is.na(x))
-          )
-    )
-  {
-                                                            
-    coefficients<-coefficients[-which(apply(coefficients,
-                                            1,
-                                            function(x)all(is.na(x)))
-                                      ),
-                               -which(apply(coefficients,
-                                            2,
-                                            function(x)all(is.na(x)))
-                                      )
-                               ]
-  }
+if (apply(coefficients, 1, function(x) any(is.na(x))) ||
+    apply(coefficients, 2, function(x) any(is.na(x)))) {
+    
+    coefficients <- coefficients[-which(apply(coefficients, 1, function(x) all(is.na(x)))),
+                                 -which(apply(coefficients, 2, function(x) all(is.na(x))))]
+}
 
 
 pvalues[upper.tri(pvalues)]           <- NA
 coefficients[upper.tri(coefficients)] <- NA
+coefficients <- data.frame(coefficients)
 
-coefficients2json <- function(mat){
-    mat <- as.list(as.data.frame(t(mat)))
-    names(mat) <- NULL
-    toJSON(mat)
-}
+coefficients2json <- coefficients
+names(coefficients2json) <- NULL
 
 traits <- colnames(coefficients)
 
 correlationList <- list(
-                   "traits"=toJSON(traits),
-                   "coefficients"=coefficients2json(coefficients)
-                   )
+    labels = traits,
+    values  = coefficients
+)
 
-correlationJson <- paste("{",paste("\"", names(correlationList), "\":", correlationList, collapse=","), "}")
+correlationJson <- jsonlite::toJSON(correlationList)
 
 write.table(coefficients,
       file=correTableFile,
@@ -145,11 +126,8 @@ write.table(coefficients,
       dec="."
       )
 
+write(correlationJson,
+       file = correJsonFile)
 
-write.table(correlationJson,
-      file=correJsonFile,
-      col.names=FALSE,
-      row.names=FALSE,
-      )
 
 q(save = "no", runLast = FALSE)

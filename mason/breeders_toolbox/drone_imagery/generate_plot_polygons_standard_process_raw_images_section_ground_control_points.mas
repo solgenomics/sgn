@@ -1,0 +1,67 @@
+<%args>
+</%args>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+
+            <div class="well well-sm">
+                <p>If a previous imaging event on this field experiment has already completed the standard process and has ground control points (GCPs) defined, then that imaging event can be used to automate the rest of the standard process on this new imaging event.</p>
+            </div>
+
+            <div class="form-horizontal">
+                <div class="form-group form-group-sm">
+                    <label class="col-sm-6 control-label">Has a previous imaging event on this field trial completed the standard process and also has GCPs defined already?: </label>
+                    <div class="col-sm-6">
+                        <select class="form-control" id="manage_drone_imagery_standard_process_interative_ground_control_points_option">
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="manage_drone_imagery_standard_process_interactive_ground_control_points_select_div" style="display:none">
+                <div class="well well-sm">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Select the aerial imaging event to use as a template: </label>
+                                <div class="col-sm-6">
+                                    <div id="manage_drone_imagery_standard_process_interactive_ground_control_points_select"></div>
+                                </div>
+                            </div>
+                            <br/><br/>
+                            <hr>
+
+                            <div class="well well-sm">
+                                <ul>
+                                    <li>Click on the ground control points (GCPs) in the image below and save them.</li>
+                                    <li>Please click and save at least three points. The names of the GCPs MUST be consistent across imaging events!</li>
+                                    <li>For best results, use ground control points at the far four corners of the field.</li>
+                                    <li>You can zoom out on your browser (Cntrl + -).</li>
+                                </ul>
+                            </div>
+
+                            <div class="well well-sm">
+                                <div id="project_drone_imagery_standard_process_interactive_ground_control_points_saved_div"></div>
+
+                                <br/><br/>
+                                <center>
+                                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_interactive_ground_control_points_step">Draw Computed Plot Polygons</button>
+                                <button class="btn btn-primary" id="manage_drone_imagery_standard_process_interactive_ground_control_points_step_confirm">Confirm and Save</button>
+                                </center>
+                            </div>
+
+                            <div id="project_drone_imagery_standard_process_interactive_ground_control_points_info_div"></div>
+
+                            <div id="project_drone_imagery_standard_process_interactive_ground_control_points_loading_div"><img src="/img/wheel.gif" /></div>
+
+                            <canvas id="project_drone_imagery_standard_process_interactive_ground_control_points_canvas_div"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

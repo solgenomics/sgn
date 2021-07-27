@@ -7,8 +7,8 @@
 To add the cluster analysis interface any where on the website
 add the template '/solgs/cluster/analysis.mas' in your mason template
 and pass any of the arguments listed below.
-Adding the 'data_structure_type' argument is also recommended.
-A data structure can any of this: 'list', if of list type; 'dataset',if of dataset type;
+Adding the 'data_structure' argument is also recommended.
+A data structure can be any of this: 'list', if of list type; 'dataset', if of dataset type;
 'trial', if of just a trial.
 
 =AUTHOR
@@ -24,8 +24,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $trial_id => undef
 $list_id => undef
 $dataset_id => undef
-$data_structure_type => undef
-
+$data_structure => undef
 $pop_name => undef
 $pop_type => undef
 
@@ -36,27 +35,50 @@ $pop_type => undef
 
 my $pop_id = $trial_id if $trial_id;
 
-if (!$data_structure_type) {
+if (!$data_structure) {
    if ($dataset_id) {
-      $data_structure_type = 'dataset';
+      $data_structure = 'dataset';
    } elsif ($list_id) {
-     $data_structure_type = 'list';
+     $data_structure = 'list';
    }
 }
 
 my $url = $c->req->path;
+my $title;
+my $collapsed = 0;
+
+if ($url =~ /cluster\/analysis/) {
+$title = 'Select a list of accessions or trials and run cluster analysis using k-means method';
+} else {
+$title = 'Clustering';
+$collapsed = 1 if $url =~ /breeders\/trial/;
+}
 
 </%perl>
 
 
-<&| /page/info_section.mas, 
-  collapsible => 1, 
-  collapsed   => 0, 
-  title       => "Clustering" 
+% if ($url =~ /cluster\/analysis/) {
+
+<& /page/page_title.mas,
+   title => "Cluster Analysis"
+  &>
+%}
+
+
+<&| /page/info_section.mas,
+  collapsible => 1,
+  collapsed   => $collapsed,
+  title       => $title
   &>
 
-<div id="cluster_canvas">
-    
+  <div id='cluster_div'>
+
+% if ($url =~ /cluster\/analysis|breeders\/trial\//) {
+
+  <& /solgs/genotyping_protocol.mas &>
+
+%}
+
 % if ($url =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) {
 
   <& /solgs/cluster/gebvs_cluster.mas,
@@ -65,23 +87,25 @@ my $url = $c->req->path;
     pop_type => $pop_type
     &>
 
-%} elsif ($url =~ /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/populations\//) {
- <& /solgs/cluster/trial_cluster.mas &>
-    
+%} elsif ($url =~ /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/trials\//) {
+
+    <& /solgs/cluster/cluster_options.mas &>
+
+%} elsif ($url =~ /cluster\/analysis/) {
+
+   <& /solgs/cluster/select_menu.mas &>
+
 %} else {
     <input id="run_cluster" class="button" type="button" value="Run Cluster" />
 %}
-  
+
 
 <& /solgs/cluster/plot.mas,
    pop_id => $pop_id,
   list_id => $list_id,
   dataset_id => $dataset_id,
-  data_structure_type => $data_structure_type,
+  data_structure => $data_structure,
   &>
 
-
-
 </div>
-
 </&>

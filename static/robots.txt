@@ -9,4 +9,5 @@ Disallow: /phenome/qtl.pl
 Disallow: /phenome/population.pl
 Disallow: /qtl/download/
 Disallow: /solgs/
+Disallow: /*genotypes
 Crawl-delay: 30

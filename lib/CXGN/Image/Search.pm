@@ -8,6 +8,35 @@ CXGN::Image::Search - an object to handle searching for images given criteria
 
 my $image_search = CXGN::Image::Search->new({
     bcs_schema=>$schema,
+    image_id_list=>\@image_id_list,
+    image_names_exact=>0,
+    image_name_list=>\@image_name_list,
+    include_obsolete_images=>0,
+    original_filenames_exact=>0,
+    original_filename_list=>\@original_filename_list,
+    descriptions_exact=>0,
+    description_list=>\@description_list,
+    tag_list_exact=>0,
+    tag_list=>\@tag_list,
+    include_obsolete_tags=>0,
+    include_obsolete_image_tags=>0,
+    submitter_usernames_exact=>0,
+    submitter_username_list=>\@submitter_username_list,
+    submitter_first_names_exact=>0,
+    submitter_first_name_list=>\@submitter_first_name_list,
+    submitter_last_names_exact=>0,
+    submitter_last_name_list=>\@submitter_last_name_list,
+    submitter_id_list=>\@submitter_id_list,
+    stock_type=>$stock_type,
+    stock_id_list=>\@stock_id_list,
+    stock_names_exact=>0,
+    stock_name_list=>\@stock_name_list,
+    project_id_list=>\@project_id_list,
+    project_names_exact=>0,
+    project_name_list=>\@project_name_list,
+    project_md_image_type_name_list=>\@project_md_image_type_name_list,
+    limit=>$limit,
+    offset=>$offset
 });
 my ($result, $total_count) = $image_search->search();
 
@@ -158,21 +187,32 @@ has 'stock_name_list' => (
     is => 'rw',
 );
 
-# has 'project_id_list' => (
-#     isa => 'ArrayRef[Int]|Undef',
-#     is => 'rw',
-# );
-# 
-# has 'project_names_exact' => (
-#     isa => 'Bool|Undef',
-#     is => 'rw',
-#     default => 0
-# );
-# 
-# has 'project_name_list' => (
-#     isa => 'ArrayRef[Str]|Undef',
-#     is => 'rw',
-# );
+has 'project_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'project_names_exact' => (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
+);
+
+has 'project_name_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'project_md_image_type_names_exact' => (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
+);
+
+has 'project_md_image_type_name_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
 
 has 'limit' => (
     isa => 'Int|Undef',
@@ -207,9 +247,11 @@ sub search {
     my $stock_id_list = $self->stock_id_list;
     my $stock_name_list = $self->stock_name_list;
     my $stock_names_exact = $self->stock_names_exact;
-    # my $project_id_list = $self->project_id_list;
-    # my $project_name_list = $self->project_name_list;
-    # my $project_names_exact = $self->project_names_exact;
+    my $project_id_list = $self->project_id_list;
+    my $project_name_list = $self->project_name_list;
+    my $project_names_exact = $self->project_names_exact;
+    my $project_md_image_type_name_list = $self->project_md_image_type_name_list;
+    my $project_md_image_type_names_exact = $self->project_md_image_type_names_exact;
     my $include_obsolete_images = $self->include_obsolete_images;
     my $include_obsolete_tags = $self->include_obsolete_tags;
     my $include_obsolete_image_tags = $self->include_obsolete_image_tags;
@@ -328,21 +370,32 @@ sub search {
             }
         }
     }
-    # if ($project_id_list && scalar(@$project_id_list)>0) {
-    #     my $sql = join ("," , @$project_id_list);
-    #     push @where_clause, "project.project_id in ($sql)";
-    # }
-    # if ($project_name_list && scalar(@$project_name_list)>0) {
-    #     if ($project_names_exact) {
-    #         my $sql = join ("','" , @$project_name_list);
-    #         my $name_sql = "'" . $sql . "'";
-    #         push @where_clause, "project.name in ($name_sql)";
-    #     } else {
-    #         foreach (@$project_name_list) {
-    #             push @or_clause, "project.name ilike '%".$_."%'";
-    #         }
-    #     }
-    # }
+    if ($project_id_list && scalar(@$project_id_list)>0) {
+        my $sql = join ("," , @$project_id_list);
+        push @where_clause, "project.project_id in ($sql)";
+    }
+    if ($project_name_list && scalar(@$project_name_list)>0) {
+        if ($project_names_exact) {
+            my $sql = join ("','" , @$project_name_list);
+            my $name_sql = "'" . $sql . "'";
+            push @where_clause, "project.name in ($name_sql)";
+        } else {
+            foreach (@$project_name_list) {
+                push @or_clause, "project.name ilike '%".$_."%'";
+            }
+        }
+    }
+    if ($project_md_image_type_name_list && scalar(@$project_md_image_type_name_list)>0) {
+        if ($project_md_image_type_names_exact) {
+            my $sql = join ("','" , @$project_md_image_type_name_list);
+            my $name_sql = "'" . $sql . "'";
+            push @where_clause, "project_image_type.name in ($name_sql)";
+        } else {
+            foreach (@$project_md_image_type_name_list) {
+                push @or_clause, "project_image_type.name ilike '%".$_."%'";
+            }
+        }
+    }
     if (!$include_obsolete_images) {
         push @where_clause, "image.obsolete = 'f'";
     }
@@ -362,12 +415,19 @@ sub search {
         $offset_clause = " OFFSET ".$self->offset;
     }
 
-    my $q = "SELECT image.image_id, image.name, image.description, image.original_filename, image.file_ext, image.sp_person_id, submitter.username, image.create_date, image.modified_date, image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, 
-    COALESCE(
-        json_agg(json_build_object('tag_id', tags.tag_id, 'name', tags.name, 'description', tags.description, 'sp_person_id', tags.sp_person_id, 'modified_date', tags.modified_date, 'create_date', tags.create_date, 'obsolete', tags.obsolete))
-        FILTER (WHERE tags.tag_id IS NOT NULL), '[]'
-    ) AS tags,
-    count(image.image_id) OVER() AS full_count
+    my $q = "SELECT image.image_id, image.name, image.description, image.original_filename, image.file_ext, image.sp_person_id, submitter.username,
+        to_char (image.create_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD\"T\"HH24:MI:SSOF00') as create_date,
+        to_char (image.modified_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD\"T\"HH24:MI:SSOF00') as modified_date,
+        image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, project.project_id, project.name, project_image.project_md_image_id, project_image_type.name,
+        COALESCE(
+            json_agg(json_build_object('tag_id', tags.tag_id, 'name', tags.name, 'description', tags.description, 'sp_person_id', tags.sp_person_id, 'modified_date', tags.modified_date, 'create_date', tags.create_date, 'obsolete', tags.obsolete))
+            FILTER (WHERE tags.tag_id IS NOT NULL), '[]'
+        ) AS tags,
+        COALESCE(
+            json_agg(json_build_object('phenotype_id', phenotype.phenotype_id, 'value', phenotype.value, 'observationvariable_name', phenotype_variable.name))
+            FILTER (WHERE phenotype.phenotype_id IS NOT NULL), '[]'
+        ) AS observations,
+        count(image.image_id) OVER() AS full_count
         FROM metadata.md_image AS image
         JOIN sgn_people.sp_person AS submitter ON (submitter.sp_person_id=image.sp_person_id)
         LEFT JOIN metadata.md_tag_image AS image_tag ON (image.image_id=image_tag.image_id)
@@ -375,19 +435,26 @@ sub search {
         LEFT JOIN phenome.stock_image AS stock_image ON (image.image_id=stock_image.image_id)
         LEFT JOIN stock ON (stock_image.stock_id=stock.stock_id)
         LEFT JOIN cvterm AS stock_type ON (stock.type_id=stock_type.cvterm_id)
+        LEFT JOIN phenome.project_md_image AS project_image ON(project_image.image_id=image.image_id)
+        LEFT JOIN cvterm AS project_image_type ON(project_image.type_id=project_image_type.cvterm_id)
+        LEFT JOIN project ON(project_image.project_id=project.project_id)
+        LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images ON(image.image_id = nd_experiment_md_images.image_id)
+        LEFT JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id = nd_experiment_md_images.nd_experiment_id)
+        LEFT JOIN phenotype ON (nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id)
+        LEFT JOIN cvterm AS phenotype_variable ON (phenotype.cvalue_id=phenotype_variable.cvterm_id)
         $where_clause
-        GROUP BY(image.image_id, image.name, image.description, image.original_filename, image.file_ext, image.sp_person_id, submitter.username, image.create_date, image.modified_date, image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name)
+        GROUP BY(image.image_id, image.name, image.description, image.original_filename, image.file_ext, image.sp_person_id, submitter.username, image.create_date, image.modified_date, image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, project.project_id, project.name, project_image.project_md_image_id, project_image_type.name)
         ORDER BY image.image_id
         $limit_clause
         $offset_clause;";
 
-    print STDERR Dumper $q;
+    # print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
     my @result;
     my $total_count = 0;
-    while (my ($image_id, $image_name, $image_description, $image_original_filename, $image_file_ext, $image_sp_person_id, $image_username, $image_create_date, $image_modified_date, $image_obsolete, $image_md5sum, $stock_id, $stock_uniquename, $stock_type_name, $tags, $full_count) = $h->fetchrow_array()) {
+    while (my ($image_id, $image_name, $image_description, $image_original_filename, $image_file_ext, $image_sp_person_id, $image_username, $image_create_date, $image_modified_date, $image_obsolete, $image_md5sum, $stock_id, $stock_uniquename, $stock_type_name, $project_id, $project_name, $project_md_image_id, $project_image_type_name, $tags, $observations, $full_count) = $h->fetchrow_array()) {
         push @result, {
             image_id => $image_id,
             image_name => $image_name,
@@ -403,7 +470,12 @@ sub search {
             stock_id => $stock_id,
             stock_uniquename => $stock_uniquename,
             stock_type_name => $stock_type_name,
-            tags_array => decode_json $tags
+            project_id => $project_id,
+            project_name => $project_name,
+            project_md_image_id => $project_md_image_id,
+            project_image_type_name => $project_image_type_name,
+            tags_array => decode_json $tags,
+            observations_array => decode_json $observations,
         };
         $total_count = $full_count;
     }

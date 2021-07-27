@@ -26,130 +26,154 @@ Naama Menda <nm249@cornell.edu>
 </%doc>
 
 <%args>
-  $stock_id 
-  $subset => [  'stock_synonym' ]
+  $stock_id
+  $form_div_id
+  $subset => [  'released_variety_name' ]
   $props
   $editable => []
   $div_name => ''
   $edit_privs => 0
 </%args>
+<& /util/import_javascript.mas,
+   classes => ["jquery", "jqueryui", "CXGN.Page.FormattingHelpers",  "CXGN.Stock" ],
+&>
 
 <%perl>
 use JSON::Any;
+use CXGN::Page::FormattingHelpers qw | simple_selectbox_html simple_checkbox_html |;
 
 my $subset_json = JSON::Any->objToJson($subset);
-print STDERR "^^^^^^^^^^^^^^^SUBSET = $subset_json **** \n\n";
+
 
 $div_name ||= join("_", @$subset);
 $div_name =~ s/ +/\_/g;
-print STDERR "****div_name = $div_name *****\n\n\n";
-my $prop_select = prop_select($editable, $div_name);
 
 $edit_privs ||= 0;
 
-sub prop_select {
-  my $editable = shift;
-  my $div_name = shift;
-  my $html = "<select id=\"$div_name"."_select"."\">";
-  foreach my $item (@$editable) { 
-      $html .= qq{ <option>$item</option> };
-  }
-  $html .= qq{ </select> };
-  return $html;
-}
-    
+my $prop_select = simple_selectbox_html(
+     name => $div_name."_select",
+     id => $div_name."_select",
+     choices => $editable
+);
+
 
 </%perl>
 
 <div id="<% $div_name %>_content">
 </div>
 
-<div id="<% $div_name %>_add_dialog" >
-Add <% $prop_select %>
-<input id="<% $div_name %>_prop" />
+
+<div class ="modal fade" id="<% $div_name %>_add_dialog" name="<% $div_name %>_add_dialog" tabindex="-1" role="dialog" aria-labelledby="add<% $div_name %>Dialog">
+
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header" style="text-align: center">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="add<% $div_name %>Dialog">Add Property</h4>
+      </div>
+      <div class="modal-body">
+	<div class="container-fluid">
+	  
+          <form class="form-horizontal" role="form" method="post" id="add_<% $div_name %>_dialog_form" name="add_<% $div_name %>_dialog_form">
+            <div class="form-group">
+              <label class="col-sm-6 control-label"><% $prop_select %> </label><br />
+	    </div>
+	    <div class ="form-group">
+              <div class="col-sm-6" >
+                <input name="<% $div_name %>_prop" id="<% $div_name %>_prop" class="form-control" type="text" />
+              </div>
+            </div>
+
+          </div>
+        </div>
+      
+      <div class="modal-footer">
+        <button id="close_add_<% $div_name %>_stockprop_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="<% $div_name %>_addProp_submit" id="<% $div_name %>_addProp_submit" title="submit">Submit</button>  
+      </div>
+      </form>
+    </div>
+  </div>
 </div>
+
+
 
 <script defer="defer" >
 
-jQuery(document).ready(function() { 
+jQuery(document).ready(function() {
+   <% $div_name %>_getProps();
 
-  jQuery('#<% $div_name %>_add_dialog').dialog( {
-     title: 'Add property',
-     buttons: { 'Cancel': function() { jQuery('#<% $div_name %>_add_dialog').dialog("close"); }, 'Add': {text: 'Add', id: '<% $div_name %>_addProp_submit', click: function() { <% $div_name %>_addProp() } } },
-     autoOpen: false,
-     modal: true
-  });
 
-  <% $div_name %>_getProps();
-  
-});
+   jQuery('#<% $form_div_id %>').click(function(){
+      jQuery('#<% $div_name %>_add_dialog').modal("show");
+   });
 
+   jQuery('#<% $div_name %>_addProp_submit').click( function () {
+    <% $div_name %>_addProp() },
+    );
+});    
+ 
 // note: the $div_name prefix is needed when several instances are created on a page
 
-function <% $div_name %>_getProps() { 
-  jQuery.ajax( { 
+function <% $div_name %>_getProps() {
+  jQuery.ajax( {
     type: 'GET',
     url: '/stock/prop/get',
     data: { stock_id: <% $stock_id %> },
     success: function(response) { <% $div_name %>_renderProps(response);  },
-    error: function(response) { alert('an error occurred'); }
-  });
-}
+    error: function(response) { alert('an error occurred'); } 
+    });
+ 
+ }
 
 
-function <% $div_name %>_renderProps(props) { 
+function <% $div_name %>_renderProps(props) {
    var subset = eval(<% $subset_json %>);
 
    // eliminate types without values
    var filteredSet = {};
-   for (var n=0; n<subset.length; n++) {				   
+   for (var n=0; n<subset.length; n++) {
      for (var i=0; i<props.length; i++) {
-       if (subset[n] ==  props[i]['type_name']) { 
+       if (subset[n] ==  props[i]['type_name']) {
          filteredSet[subset[n]]=1;
            }
        }
    }
-    
-   
+
+
    var html = '';
    var prop_string;
    var edit_privs = <% $edit_privs %>;
    for (var n in filteredSet) {
       var lines = new Array();
       for(var i=0; i<props.length; i++) {
-        if (n ===  props[i]['type_name']) { 
+        if (n ===  props[i]['type_name']) {
           var lineStr = props[i]['value'];
-          if (jQuery.cookie("sgn_session_id") && edit_privs === 1) { 
-            lineStr = lineStr + '[<a href="javascript:<% $div_name %>_deleteProp(\''+props[i]['value']+'\', '+props[i]['stockprop_id']+')">X</a>]';		
+          if (jQuery.cookie("sgn_session_id") && edit_privs === 1) {
+            lineStr = lineStr + '[<a href="javascript:<% $div_name %>_deleteProp(\''+props[i]['value']+'\', '+props[i]['stockprop_id']+')">X</a>]';
           }
 	  lines.push(lineStr);
         }
-          
+
       }
-      html = html + '<b>'+n+'</b>&nbsp;&nbsp;'; 
+      html = html + '<b>'+n+'</b>&nbsp;&nbsp;';
       //html  = html + lineStr;
       html = html + lines.join(", ");
       html = html + '<br />\n';
-      
    }
    jQuery('#<% $div_name %>_content').html(html);
-		
-}		 
-
-function <% $div_name %>_addPropDialog(prop, typeId) { 
-  jQuery('#<% $div_name %>_add_dialog').dialog("open");
 
 }
 
 
 
-function <% $div_name %>_addProp() { 
+function <% $div_name %>_addProp() {
   var prop_type = jQuery('#<% $div_name %>_select').val();
   var prop = jQuery('#<% $div_name %>_prop').val();
   prop = prop.trim();
   if (prop === '') { alert("Please fill in the field."); return; }
-				 
-  jQuery.ajax( { 
+
+  jQuery.ajax( {
     type: 'POST',
     url: '/stock/prop/add',
     beforeSend: function(){
@@ -159,33 +183,44 @@ function <% $div_name %>_addProp() {
     success: function(response) {
         jQuery('#working_modal').modal('hide');
         if ("error" in response) { alert ('ERROR '+response.error); }
-        if ("message" in response) { alert('Successfully added property: ' + prop + '. ('+response.message+')'); }
+        if ("message" in response) {
+            alert('Successfully added property: ' + prop + '. ('+response.message+')');
+        }
     },
     error: function(response) {
         jQuery('#working_modal').modal('hide');
         alert('an error occurred while storing the prop ' + response.error);
-    }
-  });
-
-  <% $div_name %>_getProps();
-  jQuery('#<% $div_name %>_add_dialog').dialog("close");
-}
-
-
-function <% $div_name %>_deleteProp(stockprop_value, stockprop_id) { 
-  confirm('Delete stockprop '+stockprop_value+'?');
-  jQuery.ajax( { 
-    method: 'GET',
-    url: '/stock/prop/delete',
-    data: { 'stockprop_id' : stockprop_id },
-    success: function(response) {  
-      if ('message' in response) {  alert(response.message); } 
-      if ('error'   in response) {  alert(response.error);   }
     },
-    error: function(response) { alert('An error occurred. Please try again later.'); }
+    complete: function() {
+	<% $div_name %>_getProps();
+	jQuery('#<% $div_name %>_add_dialog').modal("hide");
+    },				   
   });
+  
+  }
 
-  <% $div_name %>_getProps();
+
+function <% $div_name %>_deleteProp(stockprop_value, stockprop_id) {
+    var yes = confirm('Delete stockprop '+stockprop_value+'?');
+    if (yes) {
+        jQuery.ajax( {
+            method: 'GET',
+            url: '/stock/prop/delete',
+            data: { 'stockprop_id' : stockprop_id },
+            success: function(response) {
+            if ('message' in response) {
+                alert(response.message);
+                //location.reload();
+            }
+            if ('error'   in response) {  alert(response.error);   }
+           },
+           error: function(response) { alert('An error occurred. Please try again later.');
+           },
+         complete: function() {
+           <% $div_name %>_getProps();
+	 }
+        });
+    }
 }
 
 </script>

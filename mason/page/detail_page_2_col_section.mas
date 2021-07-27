@@ -12,6 +12,7 @@ $info_section_id => "2col_id"
 $info_section_title => "A title"
 $info_section_subtitle => "A subtitle"
 $buttons_html => undef
+$locations_by_program_json => undef
 
 #Specific to trial detail page
 $has_plant_entries => undef
@@ -26,6 +27,7 @@ $main_production_site_url => undef
 $trial_phenotype_files => undef
 $hidap_enabled => undef
 $location_name => undef
+$country_name => undef
 $breeding_program_name => undef
 $breeding_program_id => undef
 $year => undef
@@ -45,6 +47,9 @@ $identifier_prefix => undef
 $genotyping_facility => undef
 $management_factor_date => undef
 $management_factor_type => undef
+$trial_stock_type => undef
+$trial_stock_count => undef
+$trial_owner => undef
 
 #Specific to stock detail page
 $type_name => undef
@@ -78,8 +83,53 @@ $reference_genome_name => undef
 $species_name => undef
 $create_date => undef
 $sample_observation_unit_type_name => undef
+$marker_type => undef
+
+#Specific to drone run detail page
+$drone_run_date => undef
+$id_extension => undef
+
+#Specific to analysis detail page
+$analysis_metadata => undef
+$for_analysis_page => undef
+$data_level => undef
+
+$program_id => undef
+$program_name => undef
+
+#Specific to analysis model detail page
+$model_id => undef
+$model_name => undef
+$model_description => undef
+$model_properties => {}
+$model_file_ids => {}
+$model_type_name => undef
+$model_files => {}
+
+#Specific to manage nirs page
+$nirs_files => undef
+$deleted_nirs_files => undef
+$all_nirs_files => undef
+$all_deleted_nirs_files => undef
+$locations => undef
+$sampling_facilities => ()
+
+#Specific to analytics detail page
+$analytics_protocol_id => undef
+$analytics_protocol_name => undef
+$analytics_protocol_description => undef
+$analytics_protocol_type_id => undef
+$analytics_protocol_type_name => undef
+$analytics_protocol_create_date => undef
+$analytics_protocol_properties => {}
+$analytics_protocol_result_summary => {}
 
 </%args>
+
+<& /util/import_javascript.mas,
+   classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "d3.d3v4Min" ],
+  entries => ["sequenced_accessions"]
+&>
 
 <div class="row">
     <div class="col-sm-12">
@@ -104,10 +154,10 @@ $sample_observation_unit_type_name => undef
                             <div class="panel-body">
 
 % if ($info_section_id eq 'pheno_heatmap'){
-                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
+                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level &>
 % } #End pheno_heatmap
 % if ($info_section_id eq 'trial_design_section'){
-                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name &>
+                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type &>
 % } #End trial_design_section
 % if ($info_section_id eq 'trial_detail_traits_assayed'){
 
@@ -115,16 +165,22 @@ $sample_observation_unit_type_name => undef
                                 <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name, sgn_session_id=>$sgn_session_id, user_name=>$user_name, main_production_site_url=>$main_production_site_url &>
 % }
 
-                                <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
+                                <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 
 % } #End trial_detail_traits_assayed
 % if ($info_section_id eq 'compute_derived_traits'){
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
 % } #End compute_derived_traits
 % if ($info_section_id eq 'trial_upload_files'){
-                                <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files &>
+                                <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
 % } #End trial_upload_files
 % if ($info_section_id eq 'trial_analysis_tools'){
+
+
+			        <!-- analysis tools on saved measurements -->
+			       <& /breeders_toolbox/trial/saved_measurement_analysis.mas,
+				     trial_id => $trial_id
+				&>
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/population/correlation.mas,
                                     trial_id => $trial_id
@@ -134,7 +190,7 @@ $sample_observation_unit_type_name => undef
                                     trial_id => $trial_id
                                 &>
 
-                                <!-- Population structure analysis PCA -->
+                                 <!-- Population structure analysis PCA -->
                                 <& /solgs/pca/analysis.mas,
                                     trial_id => $trial_id
                                   &>
@@ -142,8 +198,31 @@ $sample_observation_unit_type_name => undef
 				<!-- Clustering -->
                                 <& /solgs/cluster/analysis.mas,
                                     trial_id => $trial_id
+                                  &>
+
+				<!-- kinship and inbreeding-->
+                                <& /solgs/kinship/analysis.mas,
+                                    trial_id => $trial_id
                                 &>
 
+
+                                  <& /tools/heritability/heritability.mas,
+                                    trial_id => $trial_id
+                                &>
+
+                                <& /solgs/population/trait_acronyms.mas,
+                                  trial_id => $trial_id
+                              &>
+
+% if ($c->req->base =~ /sweetpotatobase/) {
+                                <& /tools/qualityControl/qualityControl.mas,
+                                    trial_id => $trial_id
+                                &>
+% }
+
+                                <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id &>
+                                <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
+                                <& /breeders_toolbox/trial/numerical_derivatives_row_and_column_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
 % if ($hidap_enabled) {
                                 <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
 % }
@@ -156,7 +235,7 @@ $sample_observation_unit_type_name => undef
 %} #End trial_jbrowse_data
 % if ($info_section_id eq 'trial_linkage_section'){
                                 <&| /page/info_section.mas, title => 'Field Trial to Field Trial Linkage', id => 'field_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
-                                    <& /breeders_toolbox/trial/field_trial_from_field_trial_linkage.mas, trial_id => $trial_id &>
+                                    <& /breeders_toolbox/trial/field_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => $trial_type, trial_name=>$trial_name &>
                                 </&>
                                 <&| /page/info_section.mas, title => 'Field Trial to Genotyping Plate Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
@@ -197,6 +276,8 @@ $sample_observation_unit_type_name => undef
                                 <& /stock/related_stock.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End stock_related_stock_section
 % if ($info_section_id eq 'stock_images_section'){
+                                <& /image/compare_images.mas, stock_id => $stock_id &>
+
                                 <&| /page/info_section.mas, title=>"Images of This Stock(" .  scalar(@$image_ids)  . ")", collapsible=>1, collapsed=>0 &>
                                     <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh, additional_image_button_id=>'stock_images' &>
                                 </&>
@@ -205,6 +286,9 @@ $sample_observation_unit_type_name => undef
                                     <& /image/print_images.mas , images=>$related_image_ids , dbh=>$dbh, additional_image_button_id=>'related_stock_images' &>
                                 </&>
 % } #End stock_images_section
+% if ($info_section_id eq 'stock_sequencing_status_section'){
+                                <& /stock/sequencing_status.mas, stock_id => $stock_id &>
+% } #End stock requencing status section
 % if ($info_section_id eq 'stock_literature_annotation_section'){
                                 <&| /page/info_section.mas, title=>"Literature annotation (".scalar( @$pubs ).")" , id=>"publications" , collapsible=>1, collapsed=>1 &>
 
@@ -245,8 +329,11 @@ $sample_observation_unit_type_name => undef
 % if ($info_section_id eq 'manage_tissue_samples_genotyping_trials'){
                                 <& /breeders_toolbox/tissue_samples/genotyping_trials.mas &>
 % } #End manage_tissue_samples_genotyping_trials
+% if ($info_section_id eq 'manage_tissue_samples_sampling_trials'){
+                                <& /breeders_toolbox/tissue_samples/sampling_trials.mas &>
+% } #End manage_tissue_samples_sampling_trials
 % if ($info_section_id eq 'trial_details'){
-                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross &>
+                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner &>
 % } #End trial_details
 % if ($info_section_id eq 'stocks_search_graphical_filtering'){
                                 <& /search/stocks_graphicalfiltering.mas &>
@@ -271,7 +358,7 @@ $sample_observation_unit_type_name => undef
 % } #End management_factor_design
 
 % if ($info_section_id eq 'genotyping_protocol_details'){
-                                <& /breeders_toolbox/genotyping_protocol/details.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name &>
+                                <& /breeders_toolbox/genotyping_protocol/details.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name, marker_type => $marker_type &>
 % } #End genotyping_protocol_details
 % if ($info_section_id eq 'genotyping_protocol_markers'){
                                 <& /breeders_toolbox/genotyping_protocol/markers.mas, protocol_id => $protocol_id &>
@@ -279,15 +366,29 @@ $sample_observation_unit_type_name => undef
 % if ($info_section_id eq 'genotyping_protocol_genotype_data'){
                                 <& /breeders_toolbox/genotyping_protocol/genotype_data.mas, protocol_id => $protocol_id &>
 % } #End genotyping_protocol_genotype_data
+% if ($info_section_id eq 'genotyping_protocol_delete_genotype_data') {
+                                <& /breeders_toolbox/genotyping_protocol/delete_genotype_data.mas, protocol_id => $protocol_id &>
+% }
+% if ($info_section_id eq 'pcr_based_genotyping_markers'){
+                                <& /breeders_toolbox/genotyping_protocol/pcr_markers.mas, protocol_id => $protocol_id &>
+% } #End pcr_based_genotyping_markers
+% if ($info_section_id eq 'pcr_genotyping_protocol_genotype_data'){
+                                <& /breeders_toolbox/genotyping_protocol/pcr_genotype_data.mas, protocol_id => $protocol_id, marker_names => $marker_names &>
+% } #End pcr_genotyping_protocol_genotype_data
+
 
 
 % if ($info_section_id eq 'crossingtrial_details'){
-                                <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, location_name=>$location_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix &>
+                                <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, location_name=>$location_name, country_name=>$country_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix &>
 % } #End crossingtrial_details
 
 % if ($info_section_id eq 'crosses_in_crossingtrial_section'){
                                 <& /breeders_toolbox/cross/crosses_in_crossingtrial.mas, trial_id=>$trial_id &>
 % } #End crosses_in_crossingtrial_section
+
+% if ($info_section_id eq 'additional_info_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/cross_additional_info_crossingtrial.mas, trial_id=>$trial_id &>
+% } #End additional_info_crossingtrial_section
 
 % if ($info_section_id eq 'cross_properties_crossingtrial_section'){
                                 <& /breeders_toolbox/cross/cross_properties_crossingtrial.mas, trial_id=>$trial_id &>
@@ -297,15 +398,108 @@ $sample_observation_unit_type_name => undef
                                 <& /breeders_toolbox/cross/progenies_in_crossingtrial.mas, trial_id=>$trial_id &>
 % } #End progenies_in_crossingtrial_section
 
+% if ($info_section_id eq 'seedlots_from_crossingtrial_section'){
+                                <& /breeders_toolbox/cross/seedlots_from_crossingtrial.mas, trial_id=>$trial_id, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, locations_by_program_json=>$locations_by_program_json &>
+% } #End seedlots_from_crossingtrial_section
+
 % if ($info_section_id eq 'crossing_trial_from_field_trial_section'){
                                 <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
 % } #End crossing_trial_from_field_trial_section
-
 
 % if ($info_section_id eq 'marker_set_summary_section'){
                                 <& /breeders_toolbox/markers/marker_set_summary.mas &>
 % } #End marker_set_summary_section
 
+% if ($info_section_id eq 'crossing_experiment_deletion_section'){
+                                <& /breeders_toolbox/cross/crossing_experiment_deletion.mas, trial_id => $trial_id  &>
+%} #End crossing_experiment_deletion_section
+
+% if ($info_section_id eq 'progeny_search_section'){
+                                <& /search/cross/progeny_search_section.mas &>
+%} #End progeny_search_section
+
+% if ($info_section_id eq 'cross_search_section'){
+                                <& /search/cross/cross_search_section.mas &>
+%} #End cross_search_section
+
+% if ($info_section_id eq 'manage_nirs_main'){
+                                <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations, sampling_facilities=>$sampling_facilities &>
+% } #End manage_nirs_main
+
+% if ($info_section_id eq 'manage_sequence_metadata'){
+    <& /tools/sequence_metadata/manage_sequence_metadata_main.mas &>
+% } #End manage_smd_main
+
+% if ($info_section_id eq 'manage_drone_imagery_main'){
+                                <& /breeders_toolbox/drone_imagery/raw_image_section.mas &>
+% } #End manage_drone_imagery_main
+
+% if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_section'){
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_section.mas, id_extension=>$id_extension &>
+% } #End manage_drone_imagery_generate_plot_polygons_section
+% if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section'){
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_raw_images_section.mas, id_extension=>$id_extension &>
+% } #End manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section
+% if ($info_section_id eq 'manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section_ground_control_points'){
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_raw_images_section_ground_control_points.mas &>
+% } #End manage_drone_imagery_generate_plot_polygons_standard_process_raw_images_section_ground_control_points
+% if ($info_section_id eq 'manage_drone_imagery_standard_process_generate_plot_polygons_section'){
+                                <& /breeders_toolbox/drone_imagery/generate_plot_polygons_standard_process_section.mas &>
+% } #End manage_drone_imagery_standard_process_generate_plot_polygons_section
+% if ($info_section_id eq 'drone_run_project_details'){
+                                <& /breeders_toolbox/drone_imagery/drone_run_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, identifier_prefix=>$identifier_prefix, drone_run_date=>$drone_run_date &>
+% } #End trial_details
+% if ($info_section_id eq 'analysis_details'){
+                                <& /analyses/analysis_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, year=>$year, identifier_prefix=>$identifier_prefix, trial_stock_type => $trial_stock_type, analysis_metadata=>$analysis_metadata &>
+% } #End analysis_details
+% if ($info_section_id eq 'analysis_page_analysis_tools'){
+                                <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id, is_analysis => 1 &>
+
+                                <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id, data_level=>'analysis_instance' &>
+
+                                <& /breeders_toolbox/trial/accession_rank_workflow.mas, trial_id => $trial_id, data_level=>'analysis_instance' &>
+
+                                <& /breeders_toolbox/trial/genotype_comparison_workflow.mas, trial_id => $trial_id, data_level=>'analysis_instance' &>
+% }
+% if ($info_section_id eq 'model_details'){
+                                <& /analyses/model_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, analysis_metadata=>$analysis_metadata &>
+% } #End analysis_details
+% if ($info_section_id eq 'analysis_model_details'){
+                                <& /analyses/model_detail_page_section.mas, model_id => $model_id, model_name => $model_name, model_description => $model_description, model_properties => $model_properties, model_file_ids => $model_file_ids, model_type_name => $model_type_name, model_files => $model_files, identifier_prefix => $identifier_prefix &>
+% } #End analysis_model_details
+% if ($info_section_id eq 'model_analyses'){
+                                <& /analyses/model_detail_page_analyses_section.mas, model_id => $model_id &>
+% } #End model_analyses
+% if ($info_section_id eq 'analytics_protocol_details'){
+                                <& /analytics_protocols/analytics_protocols_details.mas, analytics_protocol_id=>$analytics_protocol_id, analytics_protocol_name=>$analytics_protocol_name, analytics_protocol_description=>$analytics_protocol_description, analytics_protocol_type_id=>$analytics_protocol_type_id, analytics_protocol_type_name=>$analytics_protocol_type_name, analytics_protocol_create_date=>$analytics_protocol_create_date, analytics_protocol_properties=>$analytics_protocol_properties, analytics_protocol_result_summary=>$analytics_protocol_result_summary &>
+% } #End analytics_protocol_details
+% if ($info_section_id eq 'analytics_protocol_result_files'){
+                                <& /analytics_protocols/analytics_protocols_result_files.mas, analytics_protocol_id=>$analytics_protocol_id, analytics_protocol_name=>$analytics_protocol_name &>
+% } #End analytics_protocol_result_files
+% if ($info_section_id eq 'model_deletion_section'){
+                                <&| /page/info_section.mas, title=>'Delete model', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
+                                    <& /analyses/model_deletion.mas, model_id => $model_id  &>
+                                </&>
+% } #End model_deletion_section
+% if ($info_section_id eq 'manage_file_share_dump'){
+                                <& /breeders_toolbox/file_share/file_dump_share_files.mas &>
+% } #End manage_file_share_dump
+
+% if ($info_section_id eq 'program_location_section'){
+                                <& /breeders_toolbox/program/program_locations.mas, program_id => $program_id &>
+% } #End program_location_section
+% if ($info_section_id eq 'program_project_section'){
+                                <& /breeders_toolbox/program/program_project_section.mas, program_id => $program_id &>
+% } #End program_project_section
+% if ($info_section_id eq 'program_stock_section'){
+                                <& /breeders_toolbox/program/program_stock_section.mas, program_id => $program_id &>
+% } #End program_stock_section
+% if ($info_section_id eq 'program_phenotype_section'){
+                                <& /breeders_toolbox/program/traits.mas, program_id => $program_id, collapse_phenotypes_section => 0 &>
+% } #End program_phenotype_section
+% if ($info_section_id eq 'program_product_profile_section'){
+                                <& /breeders_toolbox/program/product_profile.mas, program_id => $program_id, collapse_phenotypes_section => 0 &>
+% } #End program_product_profile_section
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>

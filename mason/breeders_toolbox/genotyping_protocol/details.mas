@@ -8,6 +8,7 @@ $reference_genome_name
 $species_name
 $create_date
 $sample_observation_unit_type_name
+$marker_type
 </%args>
 
 <div class="row">
@@ -30,21 +31,38 @@ $sample_observation_unit_type_name
             </tr>
 
             <tr>
+                <td><b>Marker Type</b></td>
+                <td>
+                    <% $marker_type %>
+                </td>
+            </tr>
+
+            <tr>
                 <td><b>Number of Markers</b></td>
                 <td>
-%                   print scalar(@$marker_names);                        
+%                   print scalar(@$marker_names);
                 </td>
             </tr>
 
             <tr>
                 <td><b>Header Information Description</b></td>
                 <td>
-                    <ul>
-%  foreach (@$header_information_lines){
-%       $_ =~ tr/<>//d;
-%       print "<li>$_</li>";
-%  }
-                    </ul>
+% my @trimmed;
+% my $header_line_count = 0;
+% foreach (@$header_information_lines){
+%    if ($header_line_count < 10) {
+%        $_ =~ tr/<>//d;
+%        push @trimmed, $_;
+%    }
+%    else {
+%        push @trimmed, "### ----- SHOWING FIRST 10 LINES ONLY ----- ###";
+%        last;
+%    }
+%    $header_line_count++;
+% }
+% my $description = join '<br/>', @trimmed;
+% $description = $description ? $description : 'NA';
+% print "$description";
                 </td>
             </tr>
 

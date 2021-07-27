@@ -6,6 +6,21 @@ use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
 use Math::Round qw(round);
 
+has 'markers' => (is => 'rw', isa => 'Ref');
+has 'chroms' => (is => 'rw', isa => 'Ref');
+has 'pos' => (is => 'rw', isa => 'Ref');
+has 'ids' => (is => 'rw', isa => 'Ref');
+has 'refs' => (is => 'rw', isa => 'Ref');
+has 'alts' => (is => 'rw', isa => 'Ref');
+has 'qual' => (is => 'rw', isa => 'Ref');
+has 'filter' => (is => 'rw', isa => 'Ref');
+has 'info' => (is => 'rw', isa => 'Ref');
+has 'format' => (is => 'rw', isa => 'Ref');
+has 'protocol_data' => (is => 'rw', isa=> 'Ref');
+has 'header_info' => (is => 'rw', isa => 'Ref');
+has 'observation_unit_names' => (is => 'rw', isa => 'Ref');
+has '_fh' => (is => 'rw', isa => 'Ref');
+
 sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
@@ -43,11 +58,18 @@ sub _validate_with_plugin {
 
     open($F, "<", $filename) || die "Can't open file $filename\n";
 
+        my @chroms;
+        my @positions;
         my @markers;
+        my @refs;
+        my @alts;
+        my @quals;
+        my @filters;
+        my @infos;
+        my @formats;
         my $line_count = 1;
         while (<$F>) {
             chomp;
-            #print STDERR Dumper $_;
 
             if ($_ =~ m/^##/){
                 next;
@@ -59,6 +81,14 @@ sub _validate_with_plugin {
             @fields = split /\t/;
 
             my @marker_info = @fields[ 0..8 ];
+            push @chroms, $marker_info[0];
+            push @positions, $marker_info[1];
+            push @refs, $marker_info[3];
+            push @alts, $marker_info[4];
+            push @quals, $marker_info[5];
+            push @filters, $marker_info[6];
+            push @infos, $marker_info[7];
+            push @formats, $marker_info[8];
 
             my $marker_name;
             my $marker_info_p2 = $marker_info[2];
@@ -69,8 +99,14 @@ sub _validate_with_plugin {
             }
             push @markers, $marker_name;
 
-            if (!$marker_name) {
-                push @error_messages, "No marker name given on line $line_count";
+            if ($marker_info[2] eq '' || !defined($marker_info[2])) {
+                push @error_messages, "No marker name given on line $line_count. Marker name can be . if not assigned";
+            }
+            if ($marker_info[0] eq '' || !defined($marker_info[0])) {
+                push @error_messages, "No chromosome 'chrom' given for marker $marker_name";
+            }
+            if ($marker_info[1] eq '' || !defined($marker_info[1])) {
+                push @error_messages, "No position 'pos' given for marker $marker_name";
             }
             if (!$marker_info[3]) {
                 push @error_messages, "No reference 'ref' allele given for marker $marker_name";
@@ -118,6 +154,16 @@ sub _validate_with_plugin {
         push @error_messages, 'Column 9 header must be "FORMAT".';
     }
 
+    $self->chroms(\@chroms);
+    $self->pos(\@positions);
+    $self->ids(\@markers);
+    $self->refs(\@refs);
+    $self->alts(\@alts);
+    $self->qual(\@quals);
+    $self->filter(\@filters);
+    $self->info(\@infos);
+    $self->format(\@formats);
+
     my $number_observation_units = scalar(@observation_unit_names);
     print STDERR "Number observation units: $number_observation_units...\n";
 
@@ -146,8 +192,10 @@ sub _validate_with_plugin {
         @missing_stocks = @{$validator->validate($schema,'tissue_samples',$observation_unit_names)->{'missing'}};
     } elsif ($stock_type eq 'accession'){
         @missing_stocks = @{$validator->validate($schema,'accessions',$observation_unit_names)->{'missing'}};
+    } elsif ($stock_type eq 'stocks'){
+        @missing_stocks = @{$validator->validate($schema,'stocks',$observation_unit_names)->{'missing'}};
     } else {
-        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms)!"
+        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms) OR stocks!"
     }
 
     my %unique_stocks;
@@ -162,6 +210,7 @@ sub _validate_with_plugin {
             push @missing_stocks_return, $_;
             print STDERR "WARNING! Observation unit name $_ not found for stock type $stock_type. You can pass an option to automatically create accessions.\n";
         } else {
+            print STDERR "Adding new accession $_!\n";
             my $stock = $schema->resultset("Stock::Stock")->create({
                 organism_id => $organism_id,
                 name       => $_,
@@ -183,9 +232,51 @@ sub _validate_with_plugin {
         return;
     }
 
+    $self->observation_unit_names(\@observation_unit_names);
+    $self->header_info(\@header_info);
+
+    my $protocol_data = $self->extract_protocol_data();
+    $self->protocol_data($protocol_data);
+
     return 1; #returns true if validation is passed
 }
 
+sub extract_protocol_data {
+    my $self = shift;
+    my %protocolprop_info;
+
+    for (my $i=0; $i<@{$self->ids()}; $i++) {
+        my $marker_info_p2 = $self->ids()->[$i];
+        my $marker_name;
+        my $marker_info_p8 = $self->format()->[$i];
+        if ($marker_info_p2 eq '.') {
+            $marker_name = $self->chroms()->[$i]."_".$self->pos()->[$i];
+        } else {
+            $marker_name = $self->ids()->[$i];
+        }
+        my $chrom_name = $self->chroms()->[$i]
+        my %marker = (
+            name => $self->ids()->[$i],
+            chrom => $chrom_name,
+            pos => $self->pos()->[$i],
+            ref => $self->refs()->[$i],
+            alt => $self->alts()->[$i],
+            qual => $self->qual()->[$i],
+            filter => $self->filter()->[$i],
+            info => $self->info()->[$i],
+            format => $marker_info_p8,
+        );
+
+        push @{$protocolprop_info{'marker_names'}}, $marker_name;
+
+        $protocolprop_info{'markers'}->{$chrom_name}->{$marker_name} = \%marker;
+        push @{$protocolprop_info{'markers_array'}->{$chrom_name}}, \%marker;
+    }
+    $protocolprop_info{header_information_lines} = $self->header_info();
+    $protocolprop_info{sample_observation_unit_type_name} = $self->get_observation_unit_type_name;
+
+    return \%protocolprop_info;
+}
 
 sub _parse_with_plugin {
     my $self = shift;
@@ -195,32 +286,39 @@ sub _parse_with_plugin {
 
     print STDERR "Reading VCF to parse\n";
 
-    my %protocolprop_info;
-    my %genotypeprop_observation_units;
-    my @observation_unit_names;
-
     my $F;
     open($F, "<", $filename) || die "Can't open file $filename\n";
+    while (<$F> =~ m/^##/) {
+        #Trash header lines
+    }
+    $self->_fh($F);
+}
 
-        my @header_info;
-        my @fields;
-        while (<$F>) {
-            chomp;
-            #print STDERR Dumper $_;
+sub next_genotype {
+    my $self = shift;
+    my %genotypeprop_observation_units;
+    my $observation_unit_names = $self->observation_unit_names;
+    
+    my $line;
+    my $F = $self->_fh();
 
-            if ($_ =~ m/^##/){
-                push @header_info, $_;
-                next;
+    for my $iter (1..10) {
+        if (! ($line = <$F>)) {
+            print STDERR "No next genotype... Done!\n";
+            if ($F) {
+                close($F);
             }
-            if ($_ =~ m/^#/){
-                my $header = $_;
-                @fields = split /\t/, $header;
-                @observation_unit_names = @fields[9..$#fields];
-                next;
+            return ($observation_unit_names, \%genotypeprop_observation_units);
+        }
+        else {
+            chomp($line);
+            LABEL: if ($line =~ m/^\#/) {
+                #print STDERR "Skipping header line: $line\n";
+                $line = <$F>;
+                goto LABEL;
             }
 
-            @fields = split /\t/;
-
+            my @fields = split /\t/, $line;
             my @marker_info = @fields[ 0..8 ];
             my @values = @fields[ 9..$#fields ];
 
@@ -233,33 +331,16 @@ sub _parse_with_plugin {
                 $marker_name = $marker_info_p2;
             }
 
-            #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
-            my %marker = (
-                name => $marker_name,
-                chrom => $marker_info[0],
-                pos => $marker_info[1],
-                ref => $marker_info[3],
-                alt => $marker_info[4],
-                qual => $marker_info[5],
-                filter => $marker_info[6],
-                info => $marker_info[7],
-                format => $marker_info_p8,
-            );
-            $protocolprop_info{'markers'}->{$marker_name} = \%marker;
-            push @{$protocolprop_info{'marker_names'}}, $marker_name;
-            push @{$protocolprop_info{'markers_array'}}, \%marker;
-
             my @separated_alts = split ',', $marker_info[4];
+            my $chrom = $marker_info[0];
 
             my @format =  split /:/,  $marker_info_p8;
             #As it goes down the rows, it contructs a separate json object for each observation unit column. They are all stored in the %genotypeprop_observation_units. Later this hash is iterated over and actually stores the json object in the database.
-            for (my $i = 0; $i < scalar(@observation_unit_names); $i++ ) {
+            for (my $i = 0; $i < scalar(@$observation_unit_names); $i++ ) {
                 my @fvalues = split /:/, $values[$i];
                 my %value;
-                #for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
-                #    $value{@format[$fv]} = @fvalues[$fv];
-                #}
                 @value{@format} = @fvalues;
+                my $gt_dosage_val = 'NA';
                 my $gt_dosage = 0;
                 if (exists($value{'GT'})) {
                     my $gt = $value{'GT'};
@@ -277,7 +358,9 @@ sub _parse_with_plugin {
                     my @alt_calls;
                     foreach (@alleles) {
                         if (looks_like_number($_)) {
-                            $gt_dosage = $gt_dosage + $_;
+                            if ($_ eq '0' || $_ == 0) {
+                                $gt_dosage++;
+                            }
                             my $index = $_ + 0;
                             if ($index == 0) {
                                 push @nucleotide_genotype, $marker_info[3]; #Using Reference Allele
@@ -286,6 +369,7 @@ sub _parse_with_plugin {
                                 push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
                                 push @alt_calls, $separated_alts[$index-1];
                             }
+                            $gt_dosage_val = $gt_dosage;
                         } else {
                             push @nucleotide_genotype, $_;
                         }
@@ -297,33 +381,18 @@ sub _parse_with_plugin {
                     $value{'NT'} = join $separator, @nucleotide_genotype;
                 }
                 if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
-                    $value{'DS'} = $gt_dosage;
+                    $value{'DS'} = $gt_dosage_val;
                 }
                 if (looks_like_number($value{'DS'})) {
                     my $rounded_ds = round($value{'DS'});
                     $value{'DS'} = "$rounded_ds";
                 }
-                $genotypeprop_observation_units{$observation_unit_names[$i]}->{$marker_name} = \%value;
+                $genotypeprop_observation_units{$observation_unit_names->[$i]}->{$chrom}->{$marker_name} = \%value;
             }
         }
+    }
 
-    close($F);
-
-    $protocolprop_info{'header_information_lines'} = \@header_info;
-    $protocolprop_info{'sample_observation_unit_type_name'} = $stock_type;
-
-    #print STDERR Dumper \%protocolprop_info;
-    #print STDERR Dumper \%genotypeprop_observation_units;
-
-    my %parsed_data = (
-        protocol_info => \%protocolprop_info,
-        genotypes_info => \%genotypeprop_observation_units,
-        observation_unit_uniquenames => \@observation_unit_names
-    );
-
-    $self->_set_parsed_data(\%parsed_data);
-
-    return 1;
+    return ($observation_unit_names, \%genotypeprop_observation_units);
 }
 
 1;

@@ -1,0 +1,146 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
+
+<!--button class="btn btn-primary" id="upload_spreadsheet_phenotypes_link">Upload NIRS</button-->
+
+<div class="modal fade" id="upload_phenotype_spreadsheet_dialog" name="upload_phenotype_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addSpreadsheetNIRSDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addSpreadsheetNIRSDialog">Upload NIRS Spreadsheet</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /page/explanation.mas, title=>'Template Information' &>
+                <p>
+                <b>File format information</b>
+                <br>
+                <a id="phenotype_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                </p>
+            </&>
+
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_spreadsheet_phenotype_file_form" name="upload_spreadsheet_phenotype_file_form">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Spreadsheet Format: </label>
+                    <div class="col-sm-9" >
+                        <b>General upload format.</b>
+                        <select class="form-control" id="upload_spreadsheet_phenotype_file_format" name="upload_spreadsheet_phenotype_file_format">
+                            <option value="scio">NIRS all formats</option>
+                            <!-- <option value="nirs">General NIRS upload</option> -->
+
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Timestamps Included: </label>
+                    <div class="col-sm-9" >
+                        <input type="checkbox" id="upload_spreadsheet_phenotype_timestamp_checkbox" name="upload_spreadsheet_phenotype_timestamp_checkbox" />
+                    </div>
+                </div>
+                <div id="upload_spreadsheet_phenotype_data_level_div">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Data Level: </label>
+                        <div class="col-sm-9" >
+                            <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
+                                <option value="plots">Plots</option>
+                                <option value="plants">Plants</option>
+                                <option value="subplots">Subplots</option>
+                                <option value="tissue_samples">Tissue Samples</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">NIRS Spreadsheet: </label>
+                    <div class="col-sm-9" >
+                        <input type="file" id="upload_spreadsheet_phenotype_file_input" name="upload_spreadsheet_phenotype_file_input" encoding="multipart/form-data" />
+                    </div>
+                </div>
+
+
+                <div id="upload_phenotype_spreadsheet_verify_status"></div>
+                </div>
+            </form><br/>
+
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-info" name="upload_spreadsheet_phenotype_submit_verify" id="upload_spreadsheet_phenotype_submit_verify">Verify</button>
+            <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_phenotype_submit_store" id="upload_spreadsheet_phenotype_submit_store" title="First Verify Your File">Store</button>
+        </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="phenotype_upload_spreadsheet_info_dialog" name="phenotype_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="phenotypeUploadInfoDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="phenotypeUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h5>With this model is possible to upload NIRS data just need to follow these columns</h5>
+
+            <h3>Upload NIRS .csv:</h3>
+
+            <ul>
+                <li><strong>id</strong>: Optional identifier for each NIRS read. The id must be an integer.</li>
+                <li><strong>sampling_id</strong>: Optional identifier for each sample. Strings are allowed.</li>
+                <li><strong>sampling_date</strong>: Optional field. The format allowed is: YYYY-MM-DD.</li>
+                <li><strong>observationunit_name</strong>: Required field that matches with existing data in the database. It can be the plot name, subplots, plant name, or tissue sample, depending how your trial is designed.</li>
+                <li><strong>device_id</strong>: Optional field to identify your device. Strings are allowed.</li>
+                <li><strong>device_type</strong>: Required field. It is possible upload data for a single device type. They can be: <strong>SCiO, QST, Foss6500,FOSSDS2500, FOSSXDS, ASDQualityspec,ASDLabSpec,SpecimFX17, BunchiN500, or LinkSquare</strong>.</li>
+                <li><strong>comments</strong>: Optional field for general comments.</li>
+                <li>All other columns are required wavelengths. You can add how many columns you want upload -- there is no limit.</li>
+            </ul>
+            <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>id</td>
+                                <td>sample_id</td>
+                                <td>sampling_date</td>
+                                <td>obserbationunit_name</td>
+                                <td>device_id</td>
+                                <td>device_type</td>
+                                <td>comments</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+            <h3>Template for Upload NIRS .csv:</h3>
+            <ul>
+                <li>The observationunit_name and device_type must be valid for BreedBase.</li>
+                <li><a href="https://docs.google.com/spreadsheets/d/1Zxxwhq6Dz1PvvUEMz3Xj3gBYTkchp4tGDfgsIHDNJB8/edit?usp=sharing">Upload NIRS .csv template</a></li>
+            </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+
+    jQuery('#upload_spreadsheet_phenotypes_link').click( function() {
+        jQuery('#upload_phenotype_spreadsheet_dialog').modal("show");
+    });
+
+    jQuery("#phenotype_upload_spreadsheet_format_info").click( function () {
+        jQuery("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");
+    });
+
+});
+</script>

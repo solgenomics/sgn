@@ -4,29 +4,27 @@ $program_id
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
-<table id="trial_summary_data_<% $program_id %>" class="display">
-<thead>
-  <tr>
-    <th>Trial name</th>
-    <th>Description</th>
-  </tr>
-</thead>
-
-</table>
-
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
+<table id="trial_summary_data_<% $program_id %>" class="display">
+    <thead>
+        <tr>
+            <th>Trial name</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+</table>
 
 <script>
 
-  jQuery(document).ready(function () {
-  
-    jQuery('#trial_summary_data_<% $program_id %>').DataTable( { 
-      'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/trials',
-    });
-  });
+jQuery(document).ready(function () {
 
+    jQuery('#trial_summary_data_<% $program_id %>').DataTable( {
+        'autoWidth': false,
+        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/field_trials',
+    });
+
+});
 
 </script>

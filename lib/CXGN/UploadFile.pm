@@ -9,6 +9,7 @@ CXGN::UploadFile - an object to handle uploading files
  my $uploader = CXGN::UploadFile->new({
     tempfile => '/tmp/myfile.csv',
     subdirectory => 'some_directory',
+    second_subdirectory => 'some_directory',
     archive_path => '/some/path/to/dir',
     archive_filename => 'myfilename.csv',
     timestamp => '2016-09-24_10:30:30',
@@ -50,6 +51,16 @@ has 'subdirectory' => (isa => "Str",
     required => 0
 );
 
+has 'second_subdirectory' => (isa => "Str",
+    is => 'rw',
+    required => 0
+);
+
+has 'third_subdirectory' => (isa => "Str",
+    is => 'rw',
+    required => 0
+);
+
 has 'archive_path' => (isa => "Str",
     is => 'rw',
     required => 0
@@ -85,6 +96,8 @@ has 'include_timestamp' => (
 sub archive {
     my $self = shift;
     my $subdirectory = $self->subdirectory;
+    my $second_subdirectory = $self->second_subdirectory;
+    my $third_subdirectory = $self->third_subdirectory;
     my $tempfile = $self->tempfile;
     my $archive_filename = $self->archive_filename;
     my $timestamp = $self->timestamp;
@@ -93,39 +106,69 @@ sub archive {
     my $file_destination;
     my $error;
 
-    if (!$subdirectory || !$tempfile || !$archive_filename || !$timestamp || !$archive_path || !$user_id){
+    #    if (!$subdirectory || !$tempfile || !$archive_filename || !$timestamp || !$archive_path || !$user_id){
+    if (!$subdirectory || !$tempfile || !$timestamp || !$user_id){
         die "To archive a tempfile you need to provide: tempfile, subdirectory, archive_filename, timestamp, archive_path, and user_id\n";
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" || $_ eq "sequencer" } ($self->user_role)  ) {
-	die  "You have insufficient privileges to archive a file.\n". Dumper $self->user_role;
+        die  "You have insufficient privileges to archive a file.\n". Dumper $self->user_role;
     }
-    if (!$subdirectory || !$tempfile || !$archive_filename ) {
-        print STDERR "File archive failed: incomplete information to archive file.\n";
-	die "File archive failed: incomplete information to archive file.\n";
-    }
+    # if (!$subdirectory || !$tempfile || !$archive_filename ) {
+    #     print STDERR "File archive failed: incomplete information to archive file.\n";
+    # 	die "File archive failed: incomplete information to archive file.\n";
+    # }
     if ($self->include_timestamp){
-        $file_destination =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
+        $file_destination =  catfile($archive_path, $user_id, $subdirectory, $timestamp."_".$archive_filename);
     }
     else {
-        $file_destination =  catfile($archive_path, $user_id, $subdirectory,$archive_filename);
+        $file_destination =  catfile($archive_path, $user_id, $subdirectory, $archive_filename);
     }
+    if ($second_subdirectory) {
+        if ($self->include_timestamp){
+            $file_destination =  catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $timestamp."_".$archive_filename);
+        }
+        else {
+            $file_destination =  catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $archive_filename);
+        }
+        if ($third_subdirectory) {
+            if ($self->include_timestamp){
+                $file_destination =  catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory, $timestamp."_".$archive_filename);
+            }
+            else {
+                $file_destination =  catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory, $archive_filename);
+            }
+        }
+    }
+
     try {
-	if (!-d $archive_path) {
-	    mkdir $archive_path;
-	}
-	if (! -d catfile($archive_path, $user_id)) {
-	  mkdir (catfile($archive_path, $user_id));
-	}
-	if (! -d catfile($archive_path, $user_id, $subdirectory)) {
-	  mkdir (catfile($archive_path, $user_id, $subdirectory));
-	}
-	copy($tempfile,$file_destination);
-    } catch {
-	$error = "Error saving archived file: $file_destination\n$_";
+        if (!-d $archive_path) {
+            mkdir $archive_path;
+        }
+        if (! -d catfile($archive_path, $user_id)) {
+            mkdir (catfile($archive_path, $user_id));
+        }
+        if (! -d catfile($archive_path, $user_id, $subdirectory)) {
+            mkdir (catfile($archive_path, $user_id, $subdirectory));
+        }
+        if ($second_subdirectory) {
+            if (! -d catfile($archive_path, $user_id, $subdirectory, $second_subdirectory)) {
+                mkdir (catfile($archive_path, $user_id, $subdirectory, $second_subdirectory));
+            }
+        }
+        if ($second_subdirectory && $third_subdirectory) {
+            if (! -d catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory)) {
+                mkdir (catfile($archive_path, $user_id, $subdirectory, $second_subdirectory, $third_subdirectory));
+            }
+        }
+
+        copy($tempfile,$file_destination);
+    }
+    catch {
+        $error = "Error saving archived file: $file_destination\n$_";
     };
     if ($error) {
-	die "$error\n";
+        print STDERR  "$error\n";
     }
     print STDERR "ARCHIVED: $file_destination\n";
     return $file_destination;
@@ -136,7 +179,7 @@ sub get_md5 {
     my $file_name_and_location = shift;
     #print STDERR $file_name_and_location;
 
-    open(my $F, "<", $file_name_and_location) || die "Can't open file ";
+    open(my $F, "<", $file_name_and_location) || die "Can't open file $file_name_and_location";
     binmode $F;
     my $md5 = Digest::MD5->new();
     $md5->addfile($F);

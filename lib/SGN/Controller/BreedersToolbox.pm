@@ -21,7 +21,9 @@ use File::Spec::Functions;
 use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
 use CXGN::Genotype::Search;
-use JSON;
+use JSON::XS;
+use CXGN::Trial;
+
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -68,6 +70,13 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
 
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
+
     my $breeding_programs = $projects->get_breeding_programs();
     my @breeding_programs = @$breeding_programs;
     my @roles = $c->user->roles();
@@ -84,12 +93,21 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     }
 
     #print STDERR "Breeding programs are ".Dumper(@breeding_programs);
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
 
+    my $design_type_string = $c->config->{design_types};
+    my @design_types = split ',',$design_type_string;
+
+    $c->stash->{design_types} = \@design_types;
+    $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
 
-    my $locations = decode_json($projects->get_all_locations_by_breeding_program());
+    my $json = JSON::XS->new();
+    my $locations = $json->decode($projects->get_all_locations_by_breeding_program());
 
     #print STDERR "Locations are ".Dumper($locations)."\n";
 
@@ -121,11 +139,19 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
 
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
+
     $c->stash->{accessions} = $accessions;
     $c->stash->{list_id} = $list_id;
     #$c->stash->{population_groups} = $populations;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 }
 
@@ -157,7 +183,14 @@ sub manage_tissue_samples : Path("/breeders/samples") Args(0) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
 
+    my $sampling_facilities = $c->config->{sampling_facilities};
+    my @sampling_facilities = split ',',$sampling_facilities;
+
+    $c->stash->{facilities} = \@facilities;
+    $c->stash->{sampling_facilities} = \@sampling_facilities;
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
     $c->stash->{template} = '/breeders_toolbox/manage_samples.mas';
 }
@@ -245,7 +278,8 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
         }
     }
 
-    my $locations = decode_json $crossingtrial->get_all_locations_by_breeding_program();
+    my $json = JSON::XS->new();
+    my $locations = $json->decode($crossingtrial->get_all_locations_by_breeding_program());
 
     $c->stash->{locations} = $locations;
 
@@ -272,12 +306,39 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 	return;
     }
 
-    my $data = $self->get_phenotyping_data($c);
+    my @file_types = ( 'spreadsheet phenotype file', 'direct phenotyping', 'trial_additional_file_upload', 'brapi observations', 'tablet phenotype file' );
+    my $data = $self->get_file_data($c, \@file_types);
 
-    $c->stash->{phenotype_files} = $data->{phenotype_files};
-    $c->stash->{deleted_phenotype_files} = $data->{deleted_phenotype_files};
+    $c->stash->{phenotype_files} = $data->{files};
+    $c->stash->{deleted_phenotype_files} = $data->{deleted_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_phenotyping.mas';
+
+}
+
+sub manage_nirs :Path("/breeders/nirs") Args(0) {
+    my $self =shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    my @file_types = ( 'nirs spreadsheet' );
+    my $all_data = $self->get_file_data($c, \@file_types, 1);
+    my $data = $self->get_file_data($c, \@file_types, 0);
+
+    my $sampling_facilities = $c->config->{sampling_facilities};
+    my @sampling_facilities = split ',',$sampling_facilities;
+
+    $c->stash->{sampling_facilities} = \@sampling_facilities;
+    $c->stash->{nirs_files} = $data->{files};
+    $c->stash->{deleted_nirs_files} = $data->{deleted_files};
+    $c->stash->{all_nirs_files} = $all_data->{files};
+    $c->stash->{all_deleted_nirs_files} = $all_data->{deleted_files};
+
+    $c->stash->{template} = '/breeders_toolbox/manage_nirs.mas';
 
 }
 
@@ -293,16 +354,52 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
-    $c->stash->{editable_stock_props} = \%editable_stock_props;
+
+    my @editable_stock_props_definitions = split ',', $c->config->{editable_stock_props_definitions};
+    my %def_hash;
+    foreach (@editable_stock_props_definitions) {
+        my @term_def = split ':', $_;
+        $def_hash{$term_def[0]} = $term_def[1];
+    }
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
     my $breeding_programs = $projects->get_breeding_programs();
-    $c->stash->{geojson_locations} = decode_json($projects->get_all_locations_by_breeding_program());
+
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
+    my $json = JSON::XS->new();
+
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',',$field_management_factors;
+
+    my $design_type_string = $c->config->{design_types};
+    my @design_types = split ',',$design_type_string;
+
+    $c->stash->{editable_stock_props} = \%editable_stock_props;
+    $c->stash->{editable_stock_props_definitions} = \%def_hash;
+    $c->stash->{design_types} = \@design_types;
+    $c->stash->{management_factor_types} = \@management_factor_types;
+    $c->stash->{facilities} = \@facilities;
+    $c->stash->{geojson_locations} = $json->decode($projects->get_all_locations_by_breeding_program());
     $c->stash->{locations} = $projects->get_all_locations();
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{timestamp} = localtime;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{template} = '/breeders_toolbox/manage_upload.mas';
+}
+
+sub manage_file_share_dump :Path("/breeders/file_share_dump") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    $c->stash->{template} = '/breeders_toolbox/file_share/manage_file_share_dump.mas';
 }
 
 sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
@@ -335,6 +432,9 @@ sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
     }
     my $project_name = $schema->resultset("Project::Project")->find( { project_id=>$trial_id })->name();
 
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+
+    $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
     $c->stash->{trial_name} = $project_name;
     $c->stash->{trial_id} = $trial_id;
     $c->stash->{template} = '/breeders_toolbox/manage_trial_phenotyping.mas';
@@ -625,7 +725,7 @@ sub breeder_home :Path("/breeders/home") Args(0) {
     # # get uploaded phenotype files
     # #
 
-    # my $data = $self->get_phenotyping_data($c);
+    # my $data = $self->get_file_data($c, \@file_types);
 
     # $c->stash->{phenotype_files} = $data->{file_info};
     # $c->stash->{deleted_phenotype_files} = $data->{deleted_file_info};
@@ -636,57 +736,70 @@ sub breeder_home :Path("/breeders/home") Args(0) {
 
 sub breeder_search : Path('/breeders/search/') :Args(0) {
     my ($self, $c) = @_;
+
+    if (!$c->user()) {
+    	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    	return;
+    }
+
+    $c->stash->{dataset_id} = $c->req->param('dataset_id');
     $c->stash->{template} = '/breeders_toolbox/breeder_search_page.mas';
 
 }
-
-sub get_phenotyping_data : Private {
+sub get_file_data : Private {
     my $self = shift;
     my $c = shift;
+    my $file_types = shift;
+    my $get_files_for_all_users = shift;
+    my $file_type_string = "'".join("','", @$file_types)."'";
 
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 
     my $file_info = [];
     my $deleted_file_info = [];
 
-     my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( { create_person_id => $c->user()->get_object->get_sp_person_id() }, { order_by => 'create_date' } );
-
-    print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
-
-    while (my $md_row = ($metadata_rs->next())) {
-	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id(), filetype => {'!=' => 'document_browser'} } );
-
-	if (!$md_row->obsolete) {
-	    while (my $file_row = $file_rs->next()) {
-		push @$file_info, { file_id => $file_row->file_id(),
-				    basename => $file_row->basename,
-				    dirname  => $file_row->dirname,
-				    file_type => $file_row->filetype,
-				    md5checksum => $file_row->md5checksum,
-				    create_date => $md_row->create_date,
-		};
-	    }
-	}
-	else {
-	    while (my $file_row = $file_rs->next()) {
-		push @$deleted_file_info, { file_id => $file_row->file_id(),
-					    basename => $file_row->basename,
-					    dirname => $file_row->dirname,
-					    file_type => $file_row->filetype,
-					    md5checksum => $file_row->md5checksum,
-					    create_date => $md_row->create_date,
-		};
-	    }
-	}
+    my $where_string = '';
+    if (!$get_files_for_all_users) {
+        $where_string = ' AND md.create_person_id = '.$c->user()->get_object->get_sp_person_id();
     }
 
-    my $data = { phenotype_files => $file_info,
-		 deleted_phenotype_files => $deleted_file_info,
+    my $q = "SELECT mdf.file_id, mdf.basename, mdf.dirname, mdf.filetype, mdf.md5checksum, md.create_date, md.obsolete
+        FROM metadata.md_files AS mdf
+        JOIN metadata.md_metadata AS md ON (mdf.metadata_id = md.metadata_id)
+        WHERE mdf.filetype IN ($file_type_string) $where_string;";
+    print STDERR $q."\n";
+    my $h = $c->dbc->dbh->prepare($q);
+    $h->execute();
+    while (my ($file_id, $basename, $dirname, $filetype, $md5, $create_date, $obsolete) = $h->fetchrow_array()) {
+        if (!$obsolete) {
+            push @$file_info, {
+                file_id => $file_id,
+                basename => $basename,
+                dirname  => $dirname,
+                file_type => $filetype,
+                md5checksum => $md5,
+                create_date => $create_date
+            };
+        }
+        else {
+            push @$deleted_file_info, {
+                file_id => $file_id,
+                basename => $basename,
+                dirname  => $dirname,
+                file_type => $filetype,
+                md5checksum => $md5,
+                create_date => $create_date
+            };
+        }
+    }
+
+    my $data = {
+        files => $file_info,
+        deleted_files => $deleted_file_info
     };
     return $data;
-
-
 }
+
 
 sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
     my $self = shift;
@@ -712,11 +825,16 @@ sub manage_genotyping : Path("/breeders/genotyping") Args(0) {
 
     $genotyping_trials_by_breeding_project{'Other'} = $projects->get_genotyping_trials_by_breeding_program();
 
+    my $genotyping_facilities = $c->config->{genotyping_facilities};
+    my @facilities = split ',',$genotyping_facilities;
+
     $c->stash->{locations} = $projects->get_all_locations($c);
 
     $c->stash->{genotyping_trials_by_breeding_project} = \%genotyping_trials_by_breeding_project;
 
     $c->stash->{breeding_programs} = $breeding_programs;
+
+    $c->stash->{facilities} = \@facilities;
 
     $c->stash->{template} = '/breeders_toolbox/manage_genotyping.mas';
 }
@@ -733,20 +851,6 @@ sub manage_genotype_qc : Path("/breeders/genotype_qc") :Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$schema,
-        accession_list=>[45642, 45636],
-        # tissue_sample_list=>$tissue_sample_list,
-        # trial_list=>$trial_list,
-        # protocol_id_list=>$protocol_id_list,
-        # marker_name_list=>['S80_265728', 'S80_265723']
-        # marker_search_hash_list=>[{'S80_265728' => {'pos' => '265728', 'chrom' => '1'}}],
-        # marker_score_search_hash_list=>[{'S80_265728' => {'GT' => '0/0', 'GQ' => '99'}}],
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-    #print STDERR Dumper $genotypes;
-
-    $c->stash->{data} = 'my data';
     $c->stash->{template} = '/breeders_toolbox/manage_genotype_qc.mas';
 }
 
@@ -758,6 +862,18 @@ sub manage_markers : Path("/breeders/markers") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/markers/manage_markers.mas';
 }
 
+sub manage_drone_imagery : Path("/breeders/drone_imagery") Args(0) {
+    my $self = shift;
+    my $c = shift;
 
+    if (!$c->user()) {
+        # redirect to login page
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    $c->stash->{template} = '/breeders_toolbox/manage_drone_imagery.mas';
+}
 
 1;

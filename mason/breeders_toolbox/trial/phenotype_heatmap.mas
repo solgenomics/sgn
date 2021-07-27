@@ -2,15 +2,16 @@
 <%args>
 $trial_id
 $stockref => undef
+$data_level => 'plot'
 </%args>
 
- <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3v4Min.js', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
+<& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
+ <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3Min.js', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
 
 <style>
     #trait_heatmap {display: inline; }
     #trial_no_phenoMSG {display: none; }
     #trial_no_rowColMSG {display: none; }
-    #traitdiv {display: none; }
     #trial_heatmap_div  {display: none; }
     #chart {display: none; }
     #chart_fm {display: none; }
@@ -18,22 +19,24 @@ $stockref => undef
     #plot_image_ids {display: none;}
     
     #container_heatmap {
-        //border:2px dashed #000;
+        /*border:2px dashed #000;*/
         height: 390px;
         width: 700px;
         overflow: auto;
-        //overflow: scroll;
+        /*overflow: scroll;*/
         display: none;
         margin: 10px;
     }
     #container_fm {
-        //border:2px dashed #000;
+        /*border:2px dashed #000;*/
         height: 390px;
+        /*width: 390px;*/
         width: 700px;
         overflow: auto;
-        //overflow: scroll;
+        /*overflow: scroll;*/
         display: none;
         margin: 10px;
+        transition: all 1s ease-in-out;
     }
     
     rect.bordered {
@@ -64,14 +67,20 @@ $stockref => undef
       .legend .d3checks { background-color: #081d58; }
       .legend .d3rep_even_number { background-color: red; height: 8px; width: 18px;}
       .legend .d3rep_odd_number { background-color: green; height: 8px; width: 18px;}
+      
+      .rotated {
+          transform: rotate(-180deg);
+      }
+
     
 </style>
 
 <div class="well well-sm">
-    <div class="form-group form-group-sm" id="traitdiv" >
+    <div class="form-group form-group-sm" id="traitdiv" style="display:inline-block">
         <label for="trait_list_dropdown" class="col-sm-2 control-label">Select:</label></br>
         <div class="col-sm-12">
             <div id="heatmap_traits_assayed_dropdown">
+                Loading Traits Assayed...
             </div>
         </div>
     </div>
@@ -88,10 +97,10 @@ $stockref => undef
     <br/>
     
 </div>
-<div class="col-sm-10" id="view_ctrl_button" style="display:none";>
+
+<div id="view_ctrl_button" style="display:none">
   <a id="view_ctrl_button_link"><button class="btn btn-primary"  type="button" id="view_ctrl_id_button" value="delete_cords" >View Controls</button></a>
 </div>
-<p></br>
 
 
 <div class="well well-sm">
@@ -103,18 +112,23 @@ $stockref => undef
   <li><span class="d3rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
   <li><span class="d3rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
   <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image</li>
+  <li><button type="button" id="rotate_map" class="btn btn-success btn-sm">Rotate Map</button></li>
   <a id="hm_replace_accessions_link"><button class="btn btn-success" type="button" id="hm_replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
 </div>
 
 <div id="container_heatmap" ></div>
 <div id="container_fm" ></div>
 <div id="trait_heatmap" >loading...</div>
+<div id="container_heatmap_geo" ></div>
 <div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
 <div class="container" id="trial_no_rowColMSG">
     <div class="well">
     <!--    <centre><div id="trial_no_rowColMSG2" ><b>Trial plots have no row and column number to display heatmap</b></div></centre> -->
     </div>
 </div>
+
+<canvas id='trial_phenotype_heatmap_download_image_canvas' width="3000" height="3000" style="display:none"></canvas>
+
 <div id="chart"></div>
 <!--<div class="col-sm-10" id="d_button" style="display:none";>
   <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp;
@@ -347,6 +361,36 @@ $stockref => undef
     </div>
 </div>
 
+<div class="modal fade" id="hm_replace_accession_curator_warning_message" name="hm_replace_accession_curator_warning_message" tabindex="-1" role="dialog" aria-labelledby="td_curator_warning">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="tDDialog"><b>Warning!</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <big>
+                        <span>&#9888;</span> 
+                        <p3>
+                            One or more traits have been assayed for this trial; <br>
+                            It is not recommended to change accessions at this point. Are you sure?
+                        </p3>
+                    </big>
+
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="fm_override_accession_warning" type="button" class="btn btn-primary">Yes</button>
+                <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal">No</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <%perl>
 my $dbh = $stockref->{dbh};
 my $image_ids =  $stockref->{image_ids} || [] ;
@@ -388,15 +432,33 @@ var phenotypes_id = [];
 var ctrlFuncDataset;
 jQuery(document).ready( function() {
 
+    var auth_token;
+    var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+    if (require_login === '1'){
+        auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+        if (!auth_token){
+            alert("Login required to display");
+        }
+    }
+
     function assayed_trait_heatmap_view(selected) {
         var selectedTrait = selected;
         jQuery.ajax( {
-            //url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected,
-            url: '/brapi/v1/phenotypes-search?observationLevel=plot&studyDbId='+trial_id+'&observationVariableDbId='+selectedTrait+'&pageSize=1000&page=0',
+            type: 'POST',
+            url: '/brapi/v1/phenotypes-search',
+            data: {
+                'observationLevel':'<% $data_level %>',
+                'studyDbId':trial_id,
+                'observationVariableDbId':selectedTrait,
+                'pageSize':1000,
+                'page':0
+            },
+            headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response) {
+                console.log(response);
                 var data = response.result.data; 
                 var datasort = data.sort(function(obj1, obj2) {
 	                  // Ascending: first plotNumber less than the previous
@@ -499,7 +561,7 @@ jQuery(document).ready( function() {
                     if (i == rows.indexOf(itm)){
                         unique_rows.push(itm);
                     }
-                });
+                }); 
                 
                 function makeArray(count, content) {
                    var result = [];
@@ -579,7 +641,7 @@ jQuery(document).ready( function() {
                       buckets = 9,
                       colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
                       rows = unique_rows,
-                      columns = unique_cols;
+                      columns = unique_cols.sort((a,b)=>a-b);
                       datasets = result;
                       ctrlFuncDataset = datasets;
                 
@@ -713,7 +775,7 @@ jQuery(document).ready( function() {
                       alert("Pseudo row and column numbers have been used in displaying the heat map. Plot's row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the true field layout.");
                   }
     
-                }
+                } 
                 else  {
                     jQuery("#working_modal").modal("hide");
                     jQuery("#container_heatmap").css("display", "none");
@@ -743,6 +805,7 @@ jQuery(document).ready( function() {
         jQuery("#ctrldiv").css("display", "none");
         jQuery.ajax( {
              //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
+            headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
              url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
@@ -765,6 +828,7 @@ jQuery(document).ready( function() {
                 var plot_names = [];
                 var replicates = [];
                 var plot_mums = [];
+                var seedlot_names = [];
                 var design;
                 var plotImageDbIds = [];
                 var plant_names = [];
@@ -812,6 +876,9 @@ jQuery(document).ready( function() {
                                 if (key_add == 'plantNames'){
                                     var s = value_add.length;
                                     plant_names.push(s); 
+                                }
+                                if (key_add == 'seedLotName'){
+                                    seedlot_names.push(value_add);
                                 }
                             });
                         }
@@ -894,24 +961,37 @@ jQuery(document).ready( function() {
                 var result = [];
                 for (var i=0; i<plot_names.length; i++){
                     if (plant_names[i] < 1) { 
-            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i];
+            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nseedlot:"+seedlot_names[i];
             		}
             		else{
-            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nnumber_of_plants:"+plant_names[i];
+            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nnumber_of_plants:"+plant_names[i]+"\nseedlot:"+seedlot_names[i];
                     }
-            		result.push({plotname:plot_names[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp}) ;
+            		result.push({plotname:plot_names[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp, seedlot:seedlot_names[i]}) ;
                 }
                                 
                 var col_max = Math.max.apply(Math,unique_cols);
                 var row_max = Math.max.apply(Math,unique_rows);
                 var rep_max = Math.max.apply(Math,replicates);
-                var block_max = Math.max.apply(Math,blocks);                
+                var block_max = Math.max.apply(Math,blocks);          
                 var col_length = cols[0]; 
                 var row_length = rows[0];
+
+
+
+                unique_rows = [];
+                unique_cols = [];
+
+                for (let i=1; i<=row_max; i++){
+                    unique_rows.push(i);
+                }
+
+                for (let i=1; i<=col_max; i++){
+                    unique_cols.push(i);
+                }
+                
                 var controls = [];
                 var unique_ctrl = [];
                 var plots = plot_mums;
-                var col_max;
                 var stocks = accession_names;
                 for (var i = 0; i < check.length; i++) {
                     if ( check[i] == "Check") {
@@ -957,7 +1037,7 @@ jQuery(document).ready( function() {
                       buckets = 9,
                       colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
                       rows = unique_rows,
-                      columns = unique_cols;
+                      columns = unique_cols.sort((a,b)=>a-b);
                       datasets = result;
                      
                   var svg = d3.select("#container_fm").append("svg")
@@ -985,7 +1065,7 @@ jQuery(document).ready( function() {
                         .style("text-anchor", "middle")
                         .attr("transform", "translate(" + gridSize / 2 + ", -6)")
                         .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });                
-                  
+                       
                     var heatmapChart = function(datasets) {
                         datasets.forEach(function(d) { 
                             d.row = +d.row;
@@ -1224,6 +1304,45 @@ jQuery(document).ready( function() {
         });    
     }
     
+
+    function geo_field_map_view(){
+
+        jQuery('#container_heatmap_geo_div').width(jQuery('#container_heatmap_geo').parent().width());
+        jQuery('#container_heatmap_geo_div').height(jQuery('#container_heatmap_geo').parent().width()*0.7);
+
+     
+        var brapi_endpoint = "/brapi/v2";
+        var auth_token;
+        var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+        if (require_login === '1'){
+            auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+            if (!auth_token){
+                alert("Login required to display field map");
+            }
+        }
+      
+        var fieldMap = new BrAPIFieldmap("#container_heatmap_geo_div",brapi_endpoint);
+
+        fieldMap.brapi_endpoint = brapi_endpoint;
+        fieldMap.opts.brapi_pageSize = 1000;
+        fieldMap.opts.brapi_auth = auth_token;
+        fieldMap.load('<% $trial_id %>').then((value)=>{if (!value) alert("No geo reference data in this trial!"); } ); 
+
+    }
+
+    var r = 0; 
+    var toggleWidthFM = 0;
+    jQuery('#rotate_map').click(function(){ 
+        jQuery("#container_fm").css('transform','rotate(' + (r += 90) + 'deg)');
+        jQuery("#container_fm").width(390 + 'px');
+        //toggleWidthFM = jQuery("#container_fm").width();
+        //console.log(toggleWidthFM);
+        //console.log(r);
+        if ((r/90) % 2 == 0){
+            jQuery("#container_fm").width(700 + 'px');
+        }
+    }); 
+    
     jQuery("#hm_view_plot_image_submit").click( function() {
         jQuery("#view_plot_image_dialog").modal("show");
     });
@@ -1231,13 +1350,22 @@ jQuery(document).ready( function() {
     jQuery("#hm_accession").autocomplete({
         appendTo: "#hm_replace_plot_accessions_dialog",
         source: '/ajax/stock/accession_autocomplete',
-    }); 
-    
-    jQuery('#hm_replace_plot_accession_submit').click( function() {
-      hm_replace_plotAccession_fieldMap();
     });
 
-    function hm_replace_plotAccession_fieldMap() {
+    jQuery("#hm_replace_plot_accession_form").submit( function() {
+      event.preventDefault();
+      hm_replace_plotAccession_fieldMap('check');
+    });
+
+    jQuery('#hm_replace_plot_accession_submit').click( function() {
+      hm_replace_plotAccession_fieldMap('check');
+    });
+
+    jQuery('#fm_override_accession_warning').click( function() {
+      hm_replace_plotAccession_fieldMap('override');
+    });
+
+    function hm_replace_plotAccession_fieldMap(override) {
       jQuery('#hm_replace_plot_accessions_dialog').modal("hide");
       jQuery('#working_modal').modal("show");
 
@@ -1255,15 +1383,19 @@ jQuery(document).ready( function() {
                 'old_accession': old_accession,
                 'old_plot_id': old_plot_id,
                 'old_plot_name': old_plot_name,
+                'override': override,
         },
 
         success: function (response) {
           jQuery('#working_modal').modal("hide");
-
-          if (response.error) {
+          if (response.warning) {
+            jQuery('#working_modal').modal("hide");
+            jQuery('#hm_replace_accession_curator_warning_message').modal("show");
+          } else if (response.error) {
             alert("Error Replacing Plot Accession: "+response.error);
           }
           else {
+            jQuery('#hm_replace_accession_curator_warning_message').modal("hide");
             jQuery('#hm_replace_accessions_dialog_message').modal("show");
           }
         },
@@ -1278,7 +1410,8 @@ jQuery(document).ready( function() {
         jQuery("#trait_heatmap").css("display", "none");
         field_map_view();
         jQuery.ajax ( {
-            url: '/brapi/v1/studies/'+ <% $trial_id %> +'/observationvariables',
+            headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+            url: '/brapi/v1/studies/'+ <% $trial_id %> +'/observationvariables?pageSize=1000000',
             //url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
             beforeSend: function() {
               jQuery("#working_modal").modal("show");
@@ -1301,27 +1434,30 @@ jQuery(document).ready( function() {
                 if (varName != '' && varID != '' ) {
                     var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
                     traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
-                    traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option></optgroup>";
+                    traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option>";
+                    traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>view geo field layout</option></optgroup>";
                     traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
                     for (i=0; i<varID.length; i++) {
-                        traits_assayed_html = traits_assayed_html + "<option value="+ varID[i] + " >" + varName[i] + "</option>";
+                        traits_assayed_html = traits_assayed_html + "<option value='"+ varID[i] + "' >" + varName[i] + "</option>";
                     }
                     traits_assayed_html = traits_assayed_html +"</optgroup>";
                     traits_assayed_html = traits_assayed_html +"</select>";
+
+                    traits_assayed_html = traits_assayed_html + "<br/><button class='btn btn-primary btn-sm' id='trial_phenotype_heatmap_download'>Download Heatmap</button>";
+
                     jQuery("#trait_heatmap").css("display", "none");                   
                     jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
-                    jQuery("#traitdiv").css("display", "inline-block");
                 } 
                 else {
                     var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
                     traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
-                    traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option></optgroup>";
+                    traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option>";
+                    traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>view geo field layout</option></optgroup>";
                     traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
                     traits_assayed_html = traits_assayed_html +"</optgroup>";
                     traits_assayed_html = traits_assayed_html +"</select>";
                     jQuery("#trait_heatmap").css("display", "none");                   
                     jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
-                    jQuery("#traitdiv").css("display", "inline-block");               
                 }
             },
             error: function(response){
@@ -1334,7 +1470,6 @@ jQuery(document).ready( function() {
         d3.select("svg").remove();
         jQuery("#trait_heatmap").css("display", "none");
         jQuery("#trial_heatmap_div").css("display", "none");
-        jQuery("#traitdiv").css("display", "none");
         jQuery("#container_heatmap").css("display", "none");
         jQuery("#chart_fm").css("display", "none");
         jQuery("#container_fm").css("display", "none");
@@ -1344,24 +1479,64 @@ jQuery(document).ready( function() {
 
   jQuery(document).on('change', '#trait_list_dropdown', function () {
     selected = jQuery("#trait_list_dropdown").val();
-    if (selected == ''){ }
-    if (jQuery.isNumeric(selected)){
+    if (selected == 'fieldmap'){
         d3.select("svg").remove();
+        jQuery("#view_ctrl_button").css("display", "none");
+        jQuery("#ctrldiv").css("display", "none");
+        d3.select("#container_heatmap_geo_div").remove();
+        field_map_view();
+    } else if (selected == 'geofieldmap'){
+        jQuery('#working_modal').modal("show");
+        d3.select("svg").remove();
+        d3.select("#container_heatmap_geo_div").remove();
+        d3.select('#container_heatmap_geo').append('div').attr("id","container_heatmap_geo_div");
+        jQuery("#container_heatmap").css("display", "none");
+        jQuery("#d3legend").css("display", "none");
+        jQuery("#container_fm").css("display", "none");
+        jQuery("#delete_button_fm").css("display", "none");
+        jQuery("#view_ctrl_button").css("display", "none");
+        jQuery("#ctrldiv").css("display", "none");
+        geo_field_map_view();
+        jQuery('#working_modal').modal("hide");
+    } else  if (selected != ''){
+        d3.select("svg").remove();
+        d3.select("#container_heatmap_geo_div").remove();
         jQuery("#d3legend").css("display", "none");
         jQuery("#container_fm").css("display", "none");
         jQuery("#delete_button_fm").css("display", "none");
         jQuery("#ctrldiv").css("display", "none");
-        jQuery("#view_ctrl_button").css("display", "inline-block");
-        assayed_trait_heatmap_view(selected); 
+        jQuery("#view_ctrl_button").show();
+        assayed_trait_heatmap_view(selected);
+    }
+  });
 
-    }
-    if (selected == 'fieldmap'){ 
-        d3.select("svg").remove();
-        jQuery("#view_ctrl_button").css("display", "none");
-        jQuery("#ctrldiv").css("display", "none");
-        field_map_view();
-    }
-    
+  jQuery(document).on('click', '#trial_phenotype_heatmap_download', function(){
+      var html = d3.select("svg")
+            .attr("version", 1.1)
+            .attr("xmlns", "http://www.w3.org/2000/svg")
+            .node().parentNode.innerHTML;;
+
+      //console.log(html);
+      var imgsrc = 'data:image/svg+xml;base64,'+ btoa(html);
+      var img = '<img src="'+imgsrc+'">'; 
+
+      var canvas = document.getElementById("trial_phenotype_heatmap_download_image_canvas"),
+      context = canvas.getContext("2d");
+
+      var image = new Image;
+      image.src = imgsrc;
+      image.onload = function() {
+        context.drawImage(image, 0, 0);
+
+        var canvasdata = canvas.toDataURL("image/png");
+
+        var pngimg = '<img src="'+canvasdata+'">'; 
+
+        var a = document.createElement("a");
+        a.download = "trial_phenotype_heatmap.png";
+        a.href = canvasdata;
+        a.click();
+    };
   });
 
   jQuery("#suppress_plot_pheno_dialog_submit").click(function() {

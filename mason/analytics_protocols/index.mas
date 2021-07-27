@@ -1,0 +1,51 @@
+
+<%args>
+</%args>
+
+<%doc>
+
+=head1 NAME
+
+/mason/analytics_protocols/index.mas - show user-specific analytics in the system
+
+=head1 DESCRIPTION
+
+Displays a page with a table of all the analytics run by the currently logged in user.
+
+=head1 AUTHOR
+
+=cut
+
+</%doc>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => [] &>
+
+<& /page/page_title.mas, title => "Your Analytics Protocols" &>
+
+<button class='btn btn-success' style='margin:3px;float:right' id='drone_imagery_analytics_link'>Drone Imagery Analytics</button><br />
+<hr>
+
+<& /breeders_toolbox/drone_imagery/drone_imagery_analytics.mas &>
+
+<div class="well">
+    <table class="table table-bordered table-hover" id="analytics_protocols_by_user_table">
+        <thead>
+            <tr>
+                <th>Analytics Protocol Name</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Create Date</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
+<script>
+jQuery(document).ready(function(){
+    jQuery('#analytics_protocols_by_user_table').DataTable({
+        'ajax': { 'url': '/ajax/analytics_protocols/by_user' }
+    });
+});
+</script>

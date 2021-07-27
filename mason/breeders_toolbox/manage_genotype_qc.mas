@@ -1,6 +1,7 @@
 
 <%args>
 $data => 'Default'
+$facilities
 </%args>
 
 
@@ -44,8 +45,8 @@ $data => 'Default'
     </center>
      
     
-<& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas &>
-<& /breeders_toolbox/genotyping_trials/upload_genotyping_data_qc_dialogs.mas &>
+<& /breeders_toolbox/genotyping_trials/upload_genotyping_data_dialogs.mas, facilities => $facilities &>
+<& /breeders_toolbox/genotyping_trials/upload_genotyping_data_qc_dialogs.mas, facilities => $facilities &>
 
 <script>
 jQuery(document).ready(function(){

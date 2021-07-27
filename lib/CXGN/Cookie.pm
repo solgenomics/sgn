@@ -19,7 +19,10 @@ sub get_cookie {
 sub set_cookie {
     my ( $name, $value ) = @_;
     $value = '' unless defined $value;
-    $c->response->cookies->{$name} = { value => $value };
+    $c->response->cookies->{$name} = {
+        value => $value,
+        samesite => 'Strict'
+    };
 }
 
 1;

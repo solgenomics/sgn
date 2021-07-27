@@ -1,0 +1,1186 @@
+<%args>
+$high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabolomics
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form' ] &>
+
+<!--button class="btn btn-primary" name="upload_high_dim_phenotypes_spreadsheet_link">Upload High Dimensional Data</button-->
+
+<div class="modal fade" id="upload_high_dim_phenotypes_spreadsheet_dialog" name="upload_high_dim_phenotypes_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addHighDimDataDialog">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addHighDimDataDialog">Upload High-Dimensional Phenotype Data</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "high_dim_data_upload_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Intro" &>
+                    <& /page/page_title.mas, title=>"This workflow will guide you through uploading high-dimensional data into the database." &>
+
+                    <center>
+                        <div class="well">
+                            <h4>High-dimensional phenotype data includes:</h4>
+                            <p>NIRS</p>
+                            <p>Transcriptomics</p>
+                            <p>Metabolomics</p>
+                        </div>
+                    </center>
+
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Samples" &>
+                    <& /page/page_title.mas, title=>"Make sure your samples are already in the database." &>
+
+                    <center>
+                        <div class="well">
+                            <h4>The samples for which you are uploading high-dimensional phenotypes must exist in the database already. They can be field trial entities such as plot names, plant names, and tissue sample names. They can be genotyping plate well tissue sample names. They can also be sample names from a sampling trial in the database.</h4>
+                            <p>Go to <a href="/breeders/samples">Manage Tissue Samples</a> for more guidance.</p>
+                            <p>You can upload or create a new sampling trial <button class="btn btn-sm btn-primary" style="margin:3px" name="create_sampling_trial_button">Create new sampling trial</button></p>
+                        </div>
+                    </center>
+
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Data Type" &>
+                    <& /page/page_title.mas, title=>"Select the type of high-dimensional data being uploaded" &>
+                    <br/><br/>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Data Type: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="high_dim_data_upload_type_select">
+%  if ($high_dimensional_phenotype_type eq 'NIRS') {
+                                    <option value="NIRS">NIRS</option>
+                                    <option disabled value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="Metabolomics">Metabolomics</option>
+%  } elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
+                                    <option value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="NIRS">NIRS</option>
+                                    <option disabled value="Metabolomics">Metabolomics</option>
+%  } elsif ($high_dimensional_phenotype_type eq 'Metabolomics') {
+                                    <option value="Metabolomics">Metabolomics</option>
+                                    <option disabled value="Transcriptomics">Transcriptomics</option>
+                                    <option disabled value="NIRS">NIRS</option>
+%  } else {
+                                    <option value="NIRS">NIRS</option>
+                                    <option value="Transcriptomics">Transcriptomics</option>
+                                    <option value="Metabolomics">Metabolomics</option>
+%  }
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                    <center>
+                    <button class="btn btn-primary" id="high_dim_data_upload_data_type_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Protocol Info" &>
+                    <& /page/page_title.mas, title=>"Select a protocol for how your data was generated or create a new protocol" &>
+
+                    <div id="high_dim_data_upload_protocol_select">
+                    </div>
+
+                    <hr>
+                    <center>
+                    <button class="btn btn-primary" id="high_dim_data_upload_new_protocol">Protocol Not Shown. Create a New Protocol</button>
+                    </center>
+                    <br/><br/>
+
+                    <div id="high_dim_data_upload_protocol_div" style="display:none">
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Protocol Name: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_protocol_name" type="text">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Protocol Description: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_protocol_desc"  type="text">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="high_dim_data_upload_nirs_protocol_div" style="display:none">
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">NIRS Device: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="high_dim_data_upload_nirs_device_type_select">
+                                        <option value="SCIO">SCIO</option>
+                                        <option value="QST">QST</option>
+                                        <option value="Foss6500">Foss6500</option>
+                                        <option value="Foss DS2500">Foss DS2500</option>
+                                        <option value="Foss XDS">Foss XDS</option>
+                                        <option value="BunchiN500">BunchiN500</option>
+                                        <option value="LinkSquare">LinkSquare</option>
+                                        <option value="ASD Qualityspec">ASD Qualityspec</option>
+                                        <option value="ASD LabSpec">ASD LabSpec</option>
+                                        <option value="Specim FX17">Specim FX17</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="high_dim_data_upload_transcriptomics_protocol_div" style="display:none">
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Transcriptomics Unit: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_unit_select">
+                                    <option value="RPKM">RPKM</option>
+                                    <option value="FPKM">FPKM</option>
+                                    <option value="TPM">TPM</option>
+                                    <option value="VST">VST</option>
+                                    <option value="RawCount">RawCount</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Genome Version: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_genome_version_select" type="text" placeholder="e.g. v6.1, v7.0, v8.0">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Genome Annotation Version: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_genome_annotation_version_select" type="text" placeholder="e.g. v6.0, v6.1, v7.0">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div id="high_dim_data_upload_metabolomics_protocol_div" style="display:none">
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Equipment Type: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="high_dim_data_upload_metabolomics_equipment_type">
+                                        <option value="NMR">NMR</option>
+                                        <option value="MS">MS</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Phenotype Type: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_phenotype_type" type="text" placeholder="e.g. relative abundance, BLUP, drBLUP, concentration">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Phenotype Units: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_phenotype_units" type="text" placeholder="e.g. ug/g">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="high_dim_data_upload_metabolomics_protocol_ms_div" style="display:none">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Chromatography Type: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="high_dim_data_upload_metabolomics_chromatography_type">
+                                            <option value="LCMS">LCMS</option>
+                                            <option value="GCMS">GCMS</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Chromatography System Brand: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_system_brand" type="text" placeholder="e.g. ThermoFisher MS100 System">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Chromatography Column Brand: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_chromatography_column_brand" type="text" placeholder="e.g. ThermoFisher MS100 Column">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">MS Brand: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_brand" type="text" placeholder="e.g. ThermoFisher MS100">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">MS Instrument Type: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_instrument_type" type="text" placeholder="e.g. time of flight (TOF), triple quadropole">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">MS Type: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="high_dim_data_upload_metabolomics_ms_type" type="text" placeholder="e.g. EI, ESI, APCI, MALDI">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Ion Mode: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="high_dim_data_upload_metabolomics_ion_mode">
+                                            <option value="negative">Negative</option>
+                                            <option value="positive">Positive</option>
+                                            <option value="both">Both</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Equipment Description: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_metabolomics_equipment_description" type="text" placeholder="e.g. ThermoFisher MS100 Electron Ionization TOF Negative Ion Mode">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Data Process Description: </label>
+                                <div class="col-sm-9" >
+                                    <textarea rows="10" class="form-control" id="high_dim_data_upload_metabolomics_data_process_description" placeholder="e.g. This describes mode, instrument settings, calibration procedure. Also, describes how the files from the LCMS machine were transformed into peak area. Finally, describes how metabolite annotations were assinged to peaks"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <center>
+                    <button class="btn btn-primary" id="high_dim_data_upload_data_protocol_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Template Info" &>
+                    <& /page/page_title.mas, title=>"High-dimensional data must be uploaded using the template information provided" &>
+
+                    <center>
+                    <&| /page/explanation.mas, title=>'Spreadsheet Template Information' &>
+                        <p>
+                        <b>File format information</b>
+                        <br>
+                        <a id="high_dim_data_spreadsheet_format_info">Spreadsheet Format</a>
+                        </p>
+                    </&>
+                    </center>
+
+                    <div id="high_dim_data_upload_transcriptomics_protocol_template_div">
+                        <center>
+                        <&| /page/explanation.mas, title=>'Transcript Details Spreadsheet Template Information' &>
+                            <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="high_dim_data_spreadsheet_transcripts_format_info">Transcript Details Spreadsheet Format</a>
+                            </p>
+                        </&>
+                        </center>
+                    </div>
+
+                    <div id="high_dim_data_upload_metabolomics_protocol_template_div">
+                        <center>
+                        <&| /page/explanation.mas, title=>'Metabolite Details Spreadsheet Template Information' &>
+                            <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="high_dim_data_spreadsheet_metabolites_format_info">Metabolite Details Spreadsheet Format</a>
+                            </p>
+                        </&>
+                        </center>
+                    </div>
+
+                    <center>
+                    <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Upload" &>
+                    <& /page/page_title.mas, title=>"Select your high-dimensional data file to upload" &>
+
+                    <div id="high_dim_data_upload_nirs_div" style="display:none">
+                        <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_nirs_spreadsheet_file_form" name="upload_nirs_spreadsheet_file_form">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Data Level: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="upload_nirs_spreadsheet_data_level" name="upload_nirs_spreadsheet_data_level">
+                                        <option value="tissue_samples">Samples</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">NIRS Spreadsheet: </label>
+                                <div class="col-sm-9" >
+                                    <input type="file" id="upload_nirs_spreadsheet_file_input" name="upload_nirs_spreadsheet_file_input" encoding="multipart/form-data" />
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_id" name="upload_nirs_spreadsheet_protocol_id" type="text">
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_name" name="upload_nirs_spreadsheet_protocol_name" type="text">
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_desc" name="upload_nirs_spreadsheet_protocol_desc" type="text">
+                            <input type="hidden" id="upload_nirs_spreadsheet_protocol_device_type" name="upload_nirs_spreadsheet_protocol_device_type" type="text">
+                        </form>
+
+                        <hr>
+                        <center>
+                            <button type="button" class="btn btn-info" name="upload_nirs_spreadsheet_submit_verify" id="upload_nirs_spreadsheet_submit_verify">Verify</button>
+                            <button disabled type="button" class="btn btn-primary" name="upload_nirs_spreadsheet_submit_store" id="upload_nirs_spreadsheet_submit_store" title="First Verify Your File">Store</button>
+                        </center>
+
+                        <div id="upload_nirs_spreadsheet_verify_status"></div>
+                        <div id="upload_nirs_spreadsheet_verify_figure"></div>
+                    </div>
+
+                    <div id="high_dim_data_upload_transcriptomics_div" style="display:none">
+                        <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_transcriptomics_spreadsheet_file_form" name="upload_transcriptomics_spreadsheet_file_form">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Data Level: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="upload_transcriptomics_spreadsheet_data_level" name="upload_transcriptomics_spreadsheet_data_level">
+                                        <option value="tissue_samples">Tissue Samples</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Transcriptomics Data Matrix Spreadsheet: </label>
+                                <div class="col-sm-9" >
+                                    <input type="file" id="upload_transcriptomics_spreadsheet_file_input" name="upload_transcriptomics_spreadsheet_file_input" encoding="multipart/form-data" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Transcripts Details Spreadsheet: </label>
+                                <div class="col-sm-9" >
+                                    <input type="file" id="upload_transcriptomics_transcript_metadata_spreadsheet_file_input" name="upload_transcriptomics_transcript_metadata_spreadsheet_file_input" encoding="multipart/form-data" />
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_id" name="upload_transcriptomics_spreadsheet_protocol_id" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_name" name="upload_transcriptomics_spreadsheet_protocol_name" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_desc" name="upload_transcriptomics_spreadsheet_protocol_desc" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_unit" name="upload_transcriptomics_spreadsheet_protocol_unit" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_genome" name="upload_transcriptomics_spreadsheet_protocol_genome" type="text">
+                            <input type="hidden" id="upload_transcriptomics_spreadsheet_protocol_annotation" name="upload_transcriptomics_spreadsheet_protocol_annotation" type="text">
+                        </form>
+
+                        <hr>
+                        <center>
+                            <button type="button" class="btn btn-info" name="upload_transcriptomics_spreadsheet_submit_verify" id="upload_transcriptomics_spreadsheet_submit_verify">Verify</button>
+                            <button disabled type="button" class="btn btn-primary" name="upload_transcriptomics_spreadsheet_submit_store" id="upload_transcriptomics_spreadsheet_submit_store" title="First Verify Your File">Store</button>
+                        </center>
+
+                        <div id="upload_transcriptomics_spreadsheet_verify_status"></div>
+                    </div>
+
+                    <div id="high_dim_data_upload_metabolomics_div" style="display:none">
+                        <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_metabolomics_spreadsheet_file_form" name="upload_metabolomics_spreadsheet_file_form">
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Data Level: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="upload_metabolomics_spreadsheet_data_level" name="upload_metabolomics_spreadsheet_data_level">
+                                        <option value="tissue_samples">Tissue Samples</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Metabolomics Data Matrix Spreadsheet: </label>
+                                <div class="col-sm-9" >
+                                    <input type="file" id="upload_metabolomics_spreadsheet_file_input" name="upload_metabolomics_spreadsheet_file_input" encoding="multipart/form-data" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Metabolites Details Spreadsheet: </label>
+                                <div class="col-sm-9" >
+                                    <input type="file" id="upload_metabolomics_metabolite_details_spreadsheet_file_input" name="upload_metabolomics_metabolite_details_spreadsheet_file_input" encoding="multipart/form-data" />
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_id" name="upload_metabolomics_spreadsheet_protocol_id" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_name" name="upload_metabolomics_spreadsheet_protocol_name" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_desc" name="upload_metabolomics_spreadsheet_protocol_desc" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_equipment_type" name="upload_metabolomics_spreadsheet_protocol_equipment_type" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_equipment_description" name="upload_metabolomics_spreadsheet_protocol_equipment_description" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_data_process_description" name="upload_metabolomics_spreadsheet_protocol_data_process_description" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_chromatography_system_brand" name="upload_metabolomics_spreadsheet_protocol_chromatography_system_brand" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_chromatography_column_brand" name="upload_metabolomics_spreadsheet_protocol_chromatography_column_brand" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_brand" name="upload_metabolomics_spreadsheet_protocol_ms_brand" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_type" name="upload_metabolomics_spreadsheet_protocol_ms_type" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ms_instrument_type" name="upload_metabolomics_spreadsheet_protocol_ms_instrument_type" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_ion_mode" name="upload_metabolomics_spreadsheet_protocol_ion_mode" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_phenotype_type" name="upload_metabolomics_spreadsheet_protocol_phenotype_type" type="text">
+                            <input type="hidden" id="upload_metabolomics_spreadsheet_protocol_phenotype_units" name="upload_metabolomics_spreadsheet_protocol_phenotype_units" type="text">
+                        </form>
+
+                        <hr>
+                        <center>
+                            <button type="button" class="btn btn-info" name="upload_metabolomics_spreadsheet_submit_verify" id="upload_metabolomics_spreadsheet_submit_verify">Verify</button>
+                            <button disabled type="button" class="btn btn-primary" name="upload_metabolomics_spreadsheet_submit_store" id="upload_metabolomics_spreadsheet_submit_store" title="First Verify Your File">Store</button>
+                        </center>
+
+                        <div id="upload_metabolomics_spreadsheet_verify_status"></div>
+                    </div>
+
+                </&>
+            </&>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="upload_nirs_spreadsheet_info_dialog" name="upload_nirs_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="nirsUploadInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="nirsUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h3>Upload NIRS in a tabular spreadsheet (.csv) format with the following columns:</h3>
+
+            <ul>
+                <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
+                <li>All other columns are <strong>wavelengths</strong> (e.g. 100, 400, 2000, etc). You can add as many columns as you want upload, there isn't a limit.</li>
+            </ul>
+            <table class="table table-hover table-bordered table-condensed" >
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>sample_name</td>
+                        <td>wavelength columns (e.g. 400, 1200, etc)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="upload_transcriptomics_spreadsheet_info_dialog" name="upload_transcriptomics_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="transcriptomicsUploadInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="transcriptomicsUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h3>Upload Transcriptomics in a tabular spreadsheet (.csv) format with the following columns:</h3>
+
+            <ul>
+
+                <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
+                <li>All other columns are <strong>transcript names</strong>. You can add as many columns as you want to upload, there isn't a limit.</li>
+            </ul>
+            <table class="table table-hover table-bordered table-condensed" >
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>sample_name</td>
+                        <td>transcipt name columns</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="upload_metabolomics_spreadsheet_info_dialog" name="upload_metabolomics_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="metabolomicsUploadInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="metabolomicsUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h3>Upload Metabolomics in a tabular spreadsheet (.csv) format with the following columns:</h3>
+
+            <ul>
+                <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
+                <li>All other columns are <strong>metabolite names</strong>. You can add as many columns as you want to upload, there isn't a limit.</li>
+            </ul>
+            <table class="table table-hover table-bordered table-condensed" >
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>sample_name</td>
+                        <td>metabolite name columns</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="upload_transcriptomics_transcript_details_spreadsheet_info_dialog" name="upload_transcriptomics_transcript_details_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="transcriptomicsDetailsUploadInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="transcriptomicsDetailsUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h3>Upload details about the transcripts in a tabular spreadsheet (.csv) format with the following columns:</h3>
+
+            <ul>
+                <li>transcript_name (required): This should be the same name as present in a column in your transcriptomics data matrix file.</li>
+                <li>chromosome (required): The chromosome where the transcript exists.</li>
+                <li>start_position (required): The start position in base pairs of where the transcript begins.</li>
+                <li>end_position (required): The end position in base pairs of where the transcript ends.</li>
+                <li>gene_description (optional): Descriptors for gene annotations.</li>
+                <li>notes (optional): Any additional descrptions.</li>
+            </ul>
+            <table class="table table-hover table-bordered table-condensed" >
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>transcript_name</td>
+                        <td>chromosome</td>
+                        <td>start_position</td>
+                        <td>end_position</td>
+                        <td>gene_description</td>
+                        <td>notes</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="upload_transcriptomics_metabolite_details_spreadsheet_info_dialog" name="upload_transcriptomics_metabolite_details_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="metabolomicsDetailsUploadInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="metabolomicsDetailsUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h3>Upload details about the metabolites in a tabular spreadsheet (.csv) format with the following columns:</h3>
+
+            <ul>
+                <li>metabolite_name (required): This should be the same name as present in a column in your metabolomics data matrix file.</li>
+                <li>inchi_key (optional): The International Chemical Identifier for the metabolite.</li>
+                <li>compound_name (optional): Name for the compound.</li>
+            </ul>
+            <table class="table table-hover table-bordered table-condensed" >
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>metabolite_name</td>
+                        <td>inchi_key</td>
+                        <td>compound_name</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+
+    jQuery('button[name=upload_high_dim_phenotypes_spreadsheet_link]').click( function() {
+        jQuery('#upload_high_dim_phenotypes_spreadsheet_dialog').modal("show");
+    });
+
+    var high_dim_data_upload_type = '';
+    jQuery('#high_dim_data_upload_data_type_step').click(function(){
+        high_dim_data_upload_type = jQuery('#high_dim_data_upload_type_select').val();
+
+        if (high_dim_data_upload_type == 'NIRS') {
+            jQuery('#high_dim_data_upload_nirs_div').show();
+            jQuery('#high_dim_data_upload_transcriptomics_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_div').hide();
+
+            get_select_box('high_dimensional_phenotypes_protocols','high_dim_data_upload_protocol_select', {'checkbox_name':'high_dim_data_upload_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol'});
+        }
+        else if (high_dim_data_upload_type == 'Transcriptomics') {
+            jQuery('#high_dim_data_upload_nirs_div').hide();
+            jQuery('#high_dim_data_upload_transcriptomics_div').show();
+            jQuery('#high_dim_data_upload_metabolomics_div').hide();
+
+            get_select_box('high_dimensional_phenotypes_protocols','high_dim_data_upload_protocol_select', {'checkbox_name':'high_dim_data_upload_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_transcriptomics_protocol'});
+        }
+        else if (high_dim_data_upload_type == 'Metabolomics') {
+            jQuery('#high_dim_data_upload_nirs_div').hide();
+            jQuery('#high_dim_data_upload_transcriptomics_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_div').show();
+
+            get_select_box('high_dimensional_phenotypes_protocols','high_dim_data_upload_protocol_select', {'checkbox_name':'high_dim_data_upload_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_metabolomics_protocol'});
+        }
+
+
+        Workflow.complete("#high_dim_data_upload_data_type_step");
+        Workflow.focus('#high_dim_data_upload_workflow', 3);
+    });
+
+    jQuery('#high_dim_data_upload_new_protocol').click(function(){
+        jQuery('#high_dim_data_upload_protocol_div').show();
+
+        if (high_dim_data_upload_type == 'NIRS') {
+            jQuery('#high_dim_data_upload_nirs_protocol_div').show();
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_div').hide();
+
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').hide();
+        }
+        else if (high_dim_data_upload_type == 'Transcriptomics') {
+            jQuery('#high_dim_data_upload_nirs_protocol_div').hide();
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_div').show();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_div').hide();
+
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').show();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').hide();
+        }
+        if (high_dim_data_upload_type == 'Metabolomics') {
+            jQuery('#high_dim_data_upload_nirs_protocol_div').hide();
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_div').show();
+
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').show();
+        }
+
+    });
+
+    jQuery("#high_dim_data_spreadsheet_format_info").click( function () {
+        if (high_dim_data_upload_type == 'NIRS') {
+            jQuery("#upload_nirs_spreadsheet_info_dialog" ).modal("show");
+        }
+        else if (high_dim_data_upload_type == 'Transcriptomics') {
+            jQuery("#upload_transcriptomics_spreadsheet_info_dialog" ).modal("show");
+        }
+        else if (high_dim_data_upload_type == 'Metabolomics') {
+            jQuery("#upload_metabolomics_spreadsheet_info_dialog" ).modal("show");
+        }
+    });
+
+    jQuery('#high_dim_data_spreadsheet_transcripts_format_info').click(function() {
+        jQuery("#upload_transcriptomics_transcript_details_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery('#high_dim_data_spreadsheet_metabolites_format_info').click(function() {
+        jQuery("#upload_transcriptomics_metabolite_details_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery('#high_dim_data_upload_metabolomics_equipment_type').change(function(){
+        if (jQuery(this).val() == 'MS') {
+            jQuery('#high_dim_data_upload_metabolomics_protocol_ms_div').show();
+        } else {
+            jQuery('#high_dim_data_upload_metabolomics_protocol_ms_div').hide();
+        }
+    });
+
+    jQuery('#high_dim_data_upload_data_protocol_step').click(function(){
+
+        var selected = [];
+        jQuery('input[name="high_dim_data_upload_protocol_id"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if(selected.length > 1) {
+            alert('Please select only one protocol!');
+            return false;
+        }
+
+        var high_dim_protocol_name = jQuery('#high_dim_data_upload_protocol_name').val();
+        var high_dim_protocol_desc = jQuery('#high_dim_data_upload_protocol_desc').val();
+
+        if (selected.length>0 && high_dim_protocol_name != '') {
+            alert('Please select a protocol or give a name for a new one! Not both!');
+            return false;
+        }
+        if (selected.length==0 && high_dim_protocol_name == '') {
+            alert('Please select a protocol or create a new one!');
+            return false;
+        }
+        if (selected.length==0 && high_dim_protocol_desc == '') {
+            alert('Please select a protocol or create a new one with a description!');
+            return false;
+        }
+
+        if (high_dim_data_upload_type == 'NIRS') {
+            jQuery('#upload_nirs_spreadsheet_protocol_id').val(selected[0]);
+            jQuery('#upload_nirs_spreadsheet_protocol_name').val(high_dim_protocol_name);
+            jQuery('#upload_nirs_spreadsheet_protocol_desc').val(high_dim_protocol_desc);
+            jQuery('#upload_nirs_spreadsheet_protocol_device_type').val(jQuery('#high_dim_data_upload_nirs_device_type_select').val());
+        }
+        else if (high_dim_data_upload_type == 'Transcriptomics') {
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_id').val(selected[0]);
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_name').val(high_dim_protocol_name);
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_desc').val(high_dim_protocol_desc);
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_unit').val(jQuery('#high_dim_data_upload_transcriptomics_unit_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_genome').val(jQuery('#high_dim_data_upload_transcriptomics_genome_version_select').val());
+            jQuery('#upload_transcriptomics_spreadsheet_protocol_annotation').val(jQuery('#high_dim_data_upload_transcriptomics_genome_annotation_version_select').val());
+        }
+        else if (high_dim_data_upload_type == 'Metabolomics') {
+            var metabolomics_equipment_type = jQuery('#high_dim_data_upload_metabolomics_equipment_type').val();
+
+            jQuery('#upload_metabolomics_spreadsheet_protocol_id').val(selected[0]);
+            jQuery('#upload_metabolomics_spreadsheet_protocol_name').val(high_dim_protocol_name);
+            jQuery('#upload_metabolomics_spreadsheet_protocol_desc').val(high_dim_protocol_desc);
+            jQuery('#upload_metabolomics_spreadsheet_protocol_equipment_type').val(metabolomics_equipment_type);
+            jQuery('#upload_metabolomics_spreadsheet_protocol_equipment_description').val(jQuery('#high_dim_data_upload_metabolomics_equipment_description').val());
+            jQuery('#upload_metabolomics_spreadsheet_protocol_data_process_description').val(jQuery('#high_dim_data_upload_metabolomics_data_process_description').val());
+            jQuery('#upload_metabolomics_spreadsheet_protocol_phenotype_type').val(jQuery('#high_dim_data_upload_metabolomics_phenotype_type').val());
+            jQuery('#upload_metabolomics_spreadsheet_protocol_phenotype_units').val(jQuery('#high_dim_data_upload_metabolomics_phenotype_units').val());
+
+            if (metabolomics_equipment_type == 'MS') {
+                jQuery('#upload_metabolomics_spreadsheet_protocol_chromatography_system_brand').val(jQuery('#high_dim_data_upload_metabolomics_chromatography_system_brand').val());
+                jQuery('#upload_metabolomics_spreadsheet_protocol_chromatography_column_brand').val(jQuery('#high_dim_data_upload_metabolomics_chromatography_column_brand').val());
+                jQuery('#upload_metabolomics_spreadsheet_protocol_ms_brand').val(jQuery('#high_dim_data_upload_metabolomics_ms_brand').val());
+                jQuery('#upload_metabolomics_spreadsheet_protocol_ms_type').val(jQuery('#high_dim_data_upload_metabolomics_ms_instrument_type').val());
+                jQuery('#upload_metabolomics_spreadsheet_protocol_ms_instrument_type').val(jQuery('#high_dim_data_upload_metabolomics_ms_type').val());
+                jQuery('#upload_metabolomics_spreadsheet_protocol_ion_mode').val(jQuery('#high_dim_data_upload_metabolomics_ion_mode').val());
+            }
+        }
+
+        Workflow.complete("#high_dim_data_upload_data_protocol_step");
+        Workflow.focus('#high_dim_data_upload_workflow', 4);
+    });
+
+    // VERIFY AND UPLOAD NIRS
+
+    jQuery('#upload_nirs_spreadsheet_submit_verify').click(function(){
+        var file_input = jQuery("#upload_nirs_spreadsheet_file_input").val();
+        if (file_input === '') {
+            alert("Please select a file");
+            return false;
+        }
+        else {
+            jQuery('#working_msg').html("Verifying NIRS File and Data");
+            jQuery('#working_modal').modal("show");
+            jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/nirs_upload_verify');
+            jQuery('#upload_nirs_spreadsheet_file_form').submit();
+        }
+    });
+
+    jQuery("#upload_nirs_spreadsheet_file_form").iframePostForm({
+        json: true,
+        post: function () { },
+        timeout: 7200000,
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_msg').html("");
+            jQuery('#working_modal').modal("hide");
+
+            var submit_verify_button = "#upload_nirs_spreadsheet_submit_verify";
+            var submit_store_button = "#upload_nirs_spreadsheet_submit_store";
+            var upload_phenotype_status = "#upload_nirs_spreadsheet_verify_status";
+
+            jQuery('#upload_nirs_spreadsheet_verify_figure').html('<div class="well well-sm"><h3>Plot of Spectra: </h3><img width="80%" height="80%" src="'+response.figure+'"></div>');
+
+            jQuery(submit_verify_button).attr('disabled', true);
+            var message_text = "<hr><ul class='list-group'>";
+            if (response.success) {
+                var arrayLength = response.success.length;
+                for (var i = 0; i < arrayLength; i++) {
+                    message_text += "<li class='list-group-item list-group-item-success'>";
+                    message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
+                    message_text += response.success[i];
+                    message_text += "</li>";
+                }
+                jQuery(submit_store_button).attr('disabled', false);
+            }
+            if (response.error) {
+                var errorarrayLength = response.error.length;
+                for (var i = 0; i < errorarrayLength; i++) {
+                    message_text += "<li class='list-group-item list-group-item-danger'>";
+                    message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+                    message_text += response.error[i];
+                    message_text += "</li>";
+                }
+                if (errorarrayLength > 0) {
+                    jQuery(submit_store_button).attr('disabled', true);
+                }
+            }
+            if (response.warning) {
+                var warningarrayLength = response.warning.length;
+                if (warningarrayLength > 0) {
+                    message_text += "<li class='list-group-item list-group-item-warning'>";
+                    message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
+                    message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>If you continue, by default any new values will be uploaded and any previously stored values will be skipped.<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
+                    message_text += "</li>";
+                    for (var i = 0; i < warningarrayLength; i++) {
+                        message_text += "<li class='list-group-item list-group-item-warning'>";
+                        message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
+                        message_text += response.warning[i];
+                        message_text += "</li>";
+                    }
+                }
+            }
+            message_text += "</ul>";
+            jQuery(upload_phenotype_status).html(message_text);
+
+            jQuery("#upload_nirs_spreadsheet_submit_store").click( function() {
+                var file_input = jQuery("#upload_nirs_spreadsheet_file_input").val();
+                if (file_input === '') {
+                    alert("Please select a file");
+                    return false;
+                }
+                else {
+                    jQuery('#working_msg').html("Storing NIRS File and Data");
+                    jQuery('#working_modal').modal("show");
+                    jQuery('#upload_nirs_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/nirs_upload_store');
+                    jQuery('#upload_nirs_spreadsheet_file_form').submit();
+                }
+            });
+
+            jQuery("#upload_nirs_spreadsheet_file_form").iframePostForm({
+                json: true,
+                post: function () { },
+                timeout: 7200000,
+                complete: function (response) {
+                    jQuery('#working_msg').html("");
+                    jQuery('#working_modal').modal("hide");
+
+                    jQuery(upload_phenotype_status).empty();
+                    jQuery(submit_store_button).attr('disabled', true);
+                    var message_text = "<hr><ul class='list-group'>";
+                    if (response.success) {
+                        var arrayLength = response.success.length;
+                        for (var i = 0; i < arrayLength; i++) {
+                            message_text += "<li class='list-group-item list-group-item-success'>";
+                            message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
+                            message_text += response.success[i];
+                            message_text += "</li>";
+                        }
+                    }
+                    if (response.error) {
+                        var errorarrayLength = response.error.length;
+                        for (var i = 0; i < errorarrayLength; i++) {
+                            message_text += "<li class='list-group-item list-group-item-danger'>";
+                            message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+                            message_text += response.error[i];
+                            message_text += "</li>";
+                        }
+                        if (errorarrayLength == 0) {
+                            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                        }
+                    } else {
+                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                    }
+                    message_text += "</ul>";
+                    jQuery(upload_phenotype_status).html(message_text);
+
+                },
+            });
+        },
+        error: function(){
+            jQuery('#working_msg').html("");
+            jQuery('#working_modal').modal("hide");
+        }
+    });
+
+    // VERIFY AND UPLOAD TRANSCRIPTOMICS
+
+    jQuery('#upload_transcriptomics_spreadsheet_submit_verify').click(function(){
+        var file_input = jQuery("#upload_transcriptomics_spreadsheet_file_input").val();
+        if (file_input === '') {
+            alert("Please select a file");
+            return false;
+        }
+        else {
+            jQuery('#working_msg').html("Verifying Transcriptomics File and Data");
+            jQuery('#working_modal').modal("show");
+            jQuery('#upload_transcriptomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/transcriptomics_upload_verify');
+            jQuery('#upload_transcriptomics_spreadsheet_file_form').submit();
+        }
+    });
+
+    jQuery("#upload_transcriptomics_spreadsheet_file_form").iframePostForm({
+        json: true,
+        post: function () { },
+        timeout: 7200000,
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_msg').html("");
+            jQuery('#working_modal').modal("hide");
+
+            var submit_verify_button = "#upload_transcriptomics_spreadsheet_submit_verify";
+            var submit_store_button = "#upload_transcriptomics_spreadsheet_submit_store";
+            var upload_phenotype_status = "#upload_transcriptomics_spreadsheet_verify_status";
+
+            jQuery(submit_verify_button).attr('disabled', true);
+            var message_text = "<hr><ul class='list-group'>";
+            if (response.success) {
+                var arrayLength = response.success.length;
+                for (var i = 0; i < arrayLength; i++) {
+                    message_text += "<li class='list-group-item list-group-item-success'>";
+                    message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
+                    message_text += response.success[i];
+                    message_text += "</li>";
+                }
+                jQuery(submit_store_button).attr('disabled', false);
+            }
+            if (response.error) {
+                var errorarrayLength = response.error.length;
+                for (var i = 0; i < errorarrayLength; i++) {
+                    message_text += "<li class='list-group-item list-group-item-danger'>";
+                    message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+                    message_text += response.error[i];
+                    message_text += "</li>";
+                }
+                if (errorarrayLength > 0) {
+                    jQuery(submit_store_button).attr('disabled', true);
+                }
+            }
+            if (response.warning) {
+                var warningarrayLength = response.warning.length;
+                if (warningarrayLength > 0) {
+                    message_text += "<li class='list-group-item list-group-item-warning'>";
+                    message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
+                    message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>If you continue, by default any new values will be uploaded and any previously stored values will be skipped.<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
+                    message_text += "</li>";
+                    for (var i = 0; i < warningarrayLength; i++) {
+                        message_text += "<li class='list-group-item list-group-item-warning'>";
+                        message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
+                        message_text += response.warning[i];
+                        message_text += "</li>";
+                    }
+                }
+            }
+            message_text += "</ul>";
+            jQuery(upload_phenotype_status).html(message_text);
+
+            jQuery("#upload_transcriptomics_spreadsheet_submit_store").click( function() {
+                var file_input = jQuery("#upload_transcriptomics_spreadsheet_file_input").val();
+                if (file_input === '') {
+                    alert("Please select a file");
+                    return false;
+                }
+                else {
+                    jQuery('#working_msg').html("Storing Transcriptomics File and Data");
+                    jQuery('#working_modal').modal("show");
+                    jQuery('#upload_transcriptomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/transcriptomics_upload_store');
+                    jQuery('#upload_transcriptomics_spreadsheet_file_form').submit();
+                }
+            });
+
+            jQuery("#upload_transcriptomics_spreadsheet_file_form").iframePostForm({
+                json: true,
+                post: function () { },
+                timeout: 7200000,
+                complete: function (response) {
+                    jQuery('#working_msg').html("");
+                    jQuery('#working_modal').modal("hide");
+
+                    jQuery(upload_phenotype_status).empty();
+                    jQuery(submit_store_button).attr('disabled', true);
+                    var message_text = "<hr><ul class='list-group'>";
+                    if (response.success) {
+                        var arrayLength = response.success.length;
+                        for (var i = 0; i < arrayLength; i++) {
+                            message_text += "<li class='list-group-item list-group-item-success'>";
+                            message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
+                            message_text += response.success[i];
+                            message_text += "</li>";
+                        }
+                    }
+                    if (response.error) {
+                        var errorarrayLength = response.error.length;
+                        for (var i = 0; i < errorarrayLength; i++) {
+                            message_text += "<li class='list-group-item list-group-item-danger'>";
+                            message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+                            message_text += response.error[i];
+                            message_text += "</li>";
+                        }
+                        if (errorarrayLength == 0) {
+                            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                        }
+                    } else {
+                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                    }
+                    message_text += "</ul>";
+                    jQuery(upload_phenotype_status).html(message_text);
+
+                },
+            });
+        },
+        error: function(){
+            jQuery('#working_msg').html("");
+            jQuery('#working_modal').modal("hide");
+        }
+    });
+
+    // VERIFY AND UPLOAD METABOLOMICS
+
+    jQuery('#upload_metabolomics_spreadsheet_submit_verify').click(function(){
+        var file_input = jQuery("#upload_metabolomics_spreadsheet_file_input").val();
+        if (file_input === '') {
+            alert("Please select a file");
+            return false;
+        }
+        else {
+            jQuery('#working_msg').html("Verifying Metabolomics File and Data");
+            jQuery('#working_modal').modal("show");
+            jQuery('#upload_metabolomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/metabolomics_upload_verify');
+            jQuery('#upload_metabolomics_spreadsheet_file_form').submit();
+        }
+    });
+
+    jQuery("#upload_metabolomics_spreadsheet_file_form").iframePostForm({
+        json: true,
+        post: function () { },
+        timeout: 7200000,
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_msg').html("");
+            jQuery('#working_modal').modal("hide");
+
+            var submit_verify_button = "#upload_metabolomics_spreadsheet_submit_verify";
+            var submit_store_button = "#upload_metabolomics_spreadsheet_submit_store";
+            var upload_phenotype_status = "#upload_metabolomics_spreadsheet_verify_status";
+
+            jQuery(submit_verify_button).attr('disabled', true);
+            var message_text = "<hr><ul class='list-group'>";
+            if (response.success) {
+                var arrayLength = response.success.length;
+                for (var i = 0; i < arrayLength; i++) {
+                    message_text += "<li class='list-group-item list-group-item-success'>";
+                    message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
+                    message_text += response.success[i];
+                    message_text += "</li>";
+                }
+                jQuery(submit_store_button).attr('disabled', false);
+            }
+            if (response.error) {
+                var errorarrayLength = response.error.length;
+                for (var i = 0; i < errorarrayLength; i++) {
+                    message_text += "<li class='list-group-item list-group-item-danger'>";
+                    message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+                    message_text += response.error[i];
+                    message_text += "</li>";
+                }
+                if (errorarrayLength > 0) {
+                    jQuery(submit_store_button).attr('disabled', true);
+                }
+            }
+            if (response.warning) {
+                var warningarrayLength = response.warning.length;
+                if (warningarrayLength > 0) {
+                    message_text += "<li class='list-group-item list-group-item-warning'>";
+                    message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
+                    message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>If you continue, by default any new values will be uploaded and any previously stored values will be skipped.<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
+                    message_text += "</li>";
+                    for (var i = 0; i < warningarrayLength; i++) {
+                        message_text += "<li class='list-group-item list-group-item-warning'>";
+                        message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
+                        message_text += response.warning[i];
+                        message_text += "</li>";
+                    }
+                }
+            }
+            message_text += "</ul>";
+            jQuery(upload_phenotype_status).html(message_text);
+
+            jQuery("#upload_metabolomics_spreadsheet_submit_store").click( function() {
+                var file_input = jQuery("#upload_metabolomics_spreadsheet_file_input").val();
+                if (file_input === '') {
+                    alert("Please select a file");
+                    return false;
+                }
+                else {
+                    jQuery('#working_msg').html("Storing Metabolomics File and Data");
+                    jQuery('#working_modal').modal("show");
+                    jQuery('#upload_metabolomics_spreadsheet_file_form').attr("action", '/ajax/highdimensionalphenotypes/metabolomics_upload_store');
+                    jQuery('#upload_metabolomics_spreadsheet_file_form').submit();
+                }
+            });
+
+            jQuery("#upload_metabolomics_spreadsheet_file_form").iframePostForm({
+                json: true,
+                post: function () { },
+                timeout: 7200000,
+                complete: function (response) {
+                    jQuery('#working_msg').html("");
+                    jQuery('#working_modal').modal("hide");
+
+                    jQuery(upload_phenotype_status).empty();
+                    jQuery(submit_store_button).attr('disabled', true);
+                    var message_text = "<hr><ul class='list-group'>";
+                    if (response.success) {
+                        var arrayLength = response.success.length;
+                        for (var i = 0; i < arrayLength; i++) {
+                            message_text += "<li class='list-group-item list-group-item-success'>";
+                            message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
+                            message_text += response.success[i];
+                            message_text += "</li>";
+                        }
+                    }
+                    if (response.error) {
+                        var errorarrayLength = response.error.length;
+                        for (var i = 0; i < errorarrayLength; i++) {
+                            message_text += "<li class='list-group-item list-group-item-danger'>";
+                            message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+                            message_text += response.error[i];
+                            message_text += "</li>";
+                        }
+                        if (errorarrayLength == 0) {
+                            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                        }
+                    } else {
+                        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                    }
+                    message_text += "</ul>";
+                    jQuery(upload_phenotype_status).html(message_text);
+
+                },
+            });
+        },
+        error: function(){
+            jQuery('#working_msg').html("");
+            jQuery('#working_modal').modal("hide");
+        }
+    });
+
+});
+</script>

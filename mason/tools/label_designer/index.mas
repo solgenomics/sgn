@@ -1,0 +1,32 @@
+
+
+
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.LabelDesigner', 'CXGN.BreederSearch', 'bootstrap-select_min'] &>
+<& /page/page_title.mas, title=>"Label Designer" &>
+
+<&| /util/workflow.mas , id=> "label_designer_workflow"&>
+
+    <&| /util/workflow.mas:step, title=>"Intro and Data Source" &>
+        <& /tools/label_designer/select_datasource.mas &>
+        <br/><br/>
+        <div class="col-md-12 text-center">
+            <button id="select_datasource_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled>Next</button>
+        </div>
+    </&>
+    <&| /util/workflow.mas:step, title=>"Set Page and Label Size" &>
+        <& /tools/label_designer/select_layout.mas &>
+        <div class="col-md-12 text-center">
+            <button id="select_layout_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled>Next</button>
+        </div>
+    </&>
+    <&| /util/workflow.mas:step, title=>"Design Your Label" &>
+        <& /tools/label_designer/design_label.mas &>
+        <div class="col-md-12 text-center">
+            <button id="design_label_button" class="btn btn-primary" type="button" class="btn btn-default" onclick="Workflow.complete(this);" disabled>Next</button>
+        </div>
+    </&>
+    <&| /util/workflow.mas:step, title=>"More Options, Save, And Download" &>
+        <& /tools/label_designer/save_and_download.mas &>
+      </&>
+</&>
+<& /tools/label_designer/label_designer_modals.mas &>

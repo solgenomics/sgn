@@ -51,8 +51,8 @@ sub _validate_with_plugin {
         $cross_name_head  = $worksheet->get_cell(0,0)->value();
     }
 
-    if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
-        push @error_messages, "Cell A1: cross_name is missing from the header";
+    if (!$cross_name_head || $cross_name_head ne 'cross_unique_id' ) {
+        push @error_messages, "Cell A1: cross_unique_id is missing from the header";
     }
 
     my %valid_properties;
@@ -80,10 +80,11 @@ sub _validate_with_plugin {
         }
 
         if (!$cross_name || $cross_name eq '') {
-            push @error_messages, "Cell A$row_name: cross name missing";
+            push @error_messages, "Cell A$row_name: cross unique id missing";
         } elsif ($seen_cross_names{$cross_name}) {
-            push @error_messages, "Duplicate cross name at cell A$row_name".": $cross_name";
+            push @error_messages, "Duplicate cross unique id at cell A$row_name".": $cross_name";
         } else {
+            $cross_name =~ s/^\s+|\s+$//g;
             $seen_cross_names{$cross_name}++;
         }
 
@@ -106,7 +107,7 @@ sub _validate_with_plugin {
     my @crosses_missing = @{$cross_validator->validate($schema,'crosses',\@crosses)->{'missing'}};
 
     if (scalar(@crosses_missing) > 0){
-        push @error_messages, "The following crosses are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
+        push @error_messages, "The following cross unique ids are not in the database as uniquenames or synonyms: ".join(',',@crosses_missing);
         $errors{'missing_crosses'} = \@crosses_missing;
     }
 
@@ -128,8 +129,6 @@ sub _parse_with_plugin {
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
-    my %properties_columns;
-    my %additional_properties;
     my %parsed_result;
 
     $excel_obj = $parser->parse($filename);
@@ -141,18 +140,12 @@ sub _parse_with_plugin {
     my ($row_min, $row_max) = $worksheet->row_range();
     my ($col_min, $col_max) = $worksheet->col_range();
 
-    for my $column (1 .. $col_max){
-        my $header_string = $worksheet->get_cell(0,$column)->value();
-
-        $properties_columns{$column} = $header_string;
-        $additional_properties{$header_string} = ();
-    }
-
     for my $row (1 .. $row_max){
         my $cross_name;
 
         if ($worksheet->get_cell($row,0)){
             $cross_name = $worksheet->get_cell($row,0)->value();
+            $cross_name =~ s/^\s+|\s+$//g;
         }
 
         #skip blank lines or lines with no name, type and parent
@@ -160,17 +153,15 @@ sub _parse_with_plugin {
             next;
         }
 
-        for my $column (1 .. $col_max ){
+        for my $column ( 1 .. $col_max ) {
             if ($worksheet->get_cell($row,$column)) {
-                my $column_property = $properties_columns{$column};
-                $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
-                if ($row == $row_max) {
-                    my $info_type = $worksheet->get_cell(0,$column)->value();
-                    $parsed_result{$info_type} = $additional_properties{$column_property};
-                }
+                my $info_header =  $worksheet->get_cell(0,$column)->value();
+                $info_header =~ s/^\s+|\s+$//g;
+                $parsed_result{$cross_name}{$info_header} = $worksheet->get_cell($row,$column)->value();
             }
         }
     }
+    print STDERR "PARSED RESULT =".Dumper(\%parsed_result)."\n";
 
     $self->_set_parsed_data(\%parsed_result);
 

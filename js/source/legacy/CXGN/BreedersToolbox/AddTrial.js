@@ -23,6 +23,7 @@ jQuery(document).ready(function ($) {
     var list = new CXGN.List();
 
     var design_json;
+    var trial_id;
     var stock_list_id;
     var stock_list;
     var check_stock_list_id;
@@ -40,6 +41,8 @@ jQuery(document).ready(function ($) {
     var crbd_checks_list_seedlot_hash = {};
     var unrep_list_seedlot_hash = {};
     var rep_list_seedlot_hash = {};
+    var plants_per_plot;
+    var inherits_plot_treatments;
 
     jQuery('#create_trial_validate_form_button').click(function(){
         create_trial_validate_form();
@@ -51,7 +54,13 @@ jQuery(document).ready(function ($) {
         var location = $("#add_project_location").val().toString().trim(); // remove whitespace
         var trial_year = $("#add_project_year").val();
         var description = $("#add_project_description").val();
-        var design_type = $("#select_design_method").val();
+        var design_type = $("#select_design_method").val(); 
+        var stock_type = $("#select_stock_type").val();
+        var plot_width = $("#add_project_plot_width").val();
+        var plot_length = $("#add_project_plot_length").val();
+        plants_per_plot = $("#add_plant_entries").val();
+        inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
+        
         if (trial_name === '') {
             alert("Please supply a trial name");
         }
@@ -64,11 +73,29 @@ jQuery(document).ready(function ($) {
         else if (trial_year === '') {
             alert("Please select a trial year");
         }
+        else if (plot_width < 0 ){
+            alert("Please check the plot width");
+        }
+        else if (plot_width > 13){
+            alert("Please check the plot width is too high");
+        }
+        else if (plot_length < 0){
+            alert("Please check the plot length");
+        }
+        else if (plot_length > 13){
+            alert("Please check the plot length is too high");
+        }
+        else if (plants_per_plot > 500) {
+            alert("Please no more than 500 plants per plot.");
+        }
         else if (description === '') {
-            alert("Please supply a description");
+            alert("Please supply a description!");
         }
         else if (design_type === '') {
             alert("Please select a design type");
+        }
+        else if (stock_type === '') {
+            alert("Please select a stock type");
         }
         else {
             verify_create_trial_name(trial_name);
@@ -111,6 +138,22 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('focusout', '#select_cross_list_list_select', function() {
+        if ($('#select_cross_list_list_select').val()) {
+            cross_list_id = $('#select_cross_list_list_select').val();
+            cross_list = JSON.stringify(list.getList(cross_list_id));
+            verify_cross_list(cross_list);
+        }
+    });
+
+    $(document).on('focusout', '#select_family_name_list_list_select', function() {
+        if ($('#select_family_name_list_list_select').val()) {
+            family_name_list_id = $('#select_family_name_list_list_select').val();
+            family_name_list = JSON.stringify(list.getList(family_name_list_id));
+            verify_family_name_list(family_name_list);
+        }
+    });
+
     $(document).on('focusout', '#list_of_checks_section_list_select', function() {
         if ($('#list_of_checks_section_list_select').val()) {
             check_stock_list_id = $('#list_of_checks_section_list_select').val();
@@ -121,6 +164,22 @@ jQuery(document).ready(function ($) {
             } else {
                 checks_list_seedlot_hash = {};
             }
+        }
+    });
+
+    $(document).on('focusout', '#list_of_cross_checks_section_list_select', function() {
+        if ($('#list_of_cross_checks_section_list_select').val()) {
+            check_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
+            check_cross_list = JSON.stringify(list.getList(check_cross_list_id));
+            verify_cross_list(check_cross_list);
+        }
+    });
+
+    $(document).on('focusout', '#list_of_family_name_checks_section_list_select', function() {
+        if ($('#list_of_family_name_checks_section_list_select').val()) {
+            check_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
+            check_family_name_list = JSON.stringify(list.getList(check_family_name_list_id));
+            verify_family_name_list(check_family_name_list);
         }
     });
 
@@ -137,6 +196,22 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('focusout', '#crbd_list_of_cross_checks_section_list_select', function() {
+        if ($('#crbd_list_of_cross_checks_section_list_select').val()) {
+            crbd_check_cross_list_id = $('#crbd_list_of_cross_checks_section_list_select').val();
+            crbd_check_cross_list = JSON.stringify(list.getList(crbd_check_cross_list_id));
+            verify_cross_list(crbd_check_cross_list);
+        }
+    });
+
+    $(document).on('focusout', '#crbd_list_of_family_name_checks_section_list_select', function() {
+        if ($('#crbd_list_of_family_name_checks_section_list_select').val()) {
+            crbd_check_family_name_list_id = $('#crbd_list_of_family_name_checks_section_list_select').val();
+            crbd_check_family_name_list = JSON.stringify(list.getList(crbd_check_family_name_list_id));
+            verify_family_name_list(crbd_check_family_name_list);
+        }
+    });
+
     $(document).on('focusout', '#list_of_unrep_accession_list_select', function() {
         if ($('#list_of_unrep_accession_list_select').val()) {
             unrep_stock_list_id = $('#list_of_unrep_accession_list_select').val();
@@ -150,6 +225,22 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('focusout', '#list_of_unrep_cross_list_select', function() {
+        if ($('#list_of_unrep_cross_list_select').val()) {
+            unrep_cross_list_id = $('#list_of_unrep_cross_list_select').val();
+            unrep_cross_list = JSON.stringify(list.getList(unrep_cross_list_id));
+            verify_cross_list(unrep_cross_list);
+        }
+    });
+
+    $(document).on('focusout', '#list_of_unrep_family_name_list_select', function() {
+        if ($('#list_of_unrep_family_name_list_select').val()) {
+            unrep_family_name_list_id = $('#list_of_unrep_family_name_list_select').val();
+            unrep_family_name_list = JSON.stringify(list.getList(unrep_family_name_list_id));
+            verify_family_name_list(unrep_family_name_list);
+        }
+    });
+
     $(document).on('focusout', '#list_of_rep_accession_list_select', function() {
         if ($('#list_of_rep_accession_list_select').val()) {
             rep_stock_list_id = $('#list_of_rep_accession_list_select').val();
@@ -160,6 +251,22 @@ jQuery(document).ready(function ($) {
             } else {
                 rep_list_seedlot_hash = {};
             }
+        }
+    });
+
+    $(document).on('focusout', '#list_of_rep_cross_list_select', function() {
+        if ($('#list_of_rep_cross_list_select').val()) {
+            rep_cross_list_id = $('#list_of_rep_cross_list_select').val();
+            rep_cross_list = JSON.stringify(list.getList(rep_cross_list_id));
+            verify_cross_list(rep_cross_list);
+        }
+    });
+
+    $(document).on('focusout', '#list_of_rep_family_name_list_select', function() {
+        if ($('#list_of_rep_family_name_list_select').val()) {
+            rep_family_name_list_id = $('#list_of_rep_family_name_list_select').val();
+            rep_family_name_list = JSON.stringify(list.getList(rep_family_name_list_id));
+            verify_family_name_list(rep_family_name_list);
         }
     });
 
@@ -287,6 +394,70 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    var cross_list_verified = 0;
+    function verify_cross_list(cross_list) {
+        $.ajax({
+            type: 'POST',
+            timeout: 3000000,
+            url: '/ajax/trial/verify_cross_list',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            dataType: "json",
+            data: {
+                'cross_list': cross_list,
+            },
+            success: function (response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                    cross_list_verified = 0;
+                }
+                if (response.success){
+                    cross_list_verified = 1;
+                }
+            },
+            error: function () {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred. sorry');
+                cross_list_verified = 0;
+            }
+        });
+    }
+
+    var family_name_list_verified = 0;
+    function verify_family_name_list(family_name_list) {
+        $.ajax({
+            type: 'POST',
+            timeout: 3000000,
+            url: '/ajax/trial/verify_family_name_list',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            dataType: "json",
+            data: {
+                'family_name_list': family_name_list,
+            },
+            success: function (response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                    family_name_list_verified = 0;
+                }
+                if (response.success){
+                    family_name_list_verified = 1;
+                }
+            },
+            error: function () {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred. sorry');
+                family_name_list_verified = 0;
+            }
+        });
+    }
+
     jQuery('#add_project_trial_sourced').change(function(){
         if(jQuery(this).val() == 'yes'){
             jQuery('#add_trial_source_trial_section').show();
@@ -318,6 +489,7 @@ jQuery(document).ready(function ($) {
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
         //console.log("Trial location is "+trial_location);
+        var trial_stock_type = jQuery('#select_stock_type').val();
         var block_number = $('#block_number').val();
         //alert(block_number);
         var row_number= $('#row_number').val();
@@ -325,24 +497,63 @@ jQuery(document).ready(function ($) {
         var col_number_per_block=$('#col_number_per_block').val();
         var col_number=$('#col_number').val();
        // alert(row_number);
-        var stock_list_id = $('#select_list_list_select').val();
-        var control_list_id = $('#list_of_checks_section_list_select').val();
-        var control_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
 
-        var control_list_crbd;
-        if (control_list_id_crbd != ""){
-            control_list_crbd = JSON.stringify(list.getList(control_list_id_crbd));
-        }
+        // accession stock type
+        var accession_list_id = $('#select_list_list_select').val();
+        var control_accession_list_id = $('#list_of_checks_section_list_select').val();
+        var control_accession_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
+
+        // cross stock type
+        var cross_list_id = $('#select_cross_list_list_select').val();
+        var control_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
+        var control_cross_list_id_crbd = $('#crbd_list_of_cross_checks_section_list_select').val();
+
+        // family_name stock type
+        var family_name_list_id = $('#select_family_name_list_list_select').val();
+        var control_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
+        var control_family_name_list_id_crbd = $('#crbd_list_of_family_name_checks_section_list_select').val();
+
         var stock_list;
         var stock_list_array;
-        if (stock_list_id != "") {
-            stock_list_array = list.getList(stock_list_id);
+
+        if (accession_list_id != "") {
+            stock_list_array = list.getList(accession_list_id);
+            stock_list = JSON.stringify(stock_list_array);
+        } else if (cross_list_id != "") {
+            stock_list_array = list.getList(cross_list_id);
+            stock_list = JSON.stringify(stock_list_array);
+        } else if (family_name_list_id != "") {
+            stock_list_array = list.getList(family_name_list_id);
             stock_list = JSON.stringify(stock_list_array);
         }
+
         var control_list;
-        if (control_list_id != "") {
-            control_list = JSON.stringify(list.getList(control_list_id));
+        var control_list_array;
+        if (control_accession_list_id != '') {
+            control_list_array = list.getList(control_accession_list_id);
+            control_list = JSON.stringify(control_list_array);
+        } else if (control_cross_list_id != '') {
+            control_list_array = list.getList(control_cross_list_id);
+            control_list = JSON.stringify(control_list_array);
+        } else if (control_family_name_list_id != '') {
+            control_list_array = list.getList(control_family_name_list_id);
+            control_list = JSON.stringify(control_list_array);
         }
+
+        var control_list_crbd;
+        var control_list_crbd_array;
+        if (control_accession_list_id_crbd != '') {
+            control_list_crbd_array = list.getList(control_accession_list_id_crbd);
+            control_list_crbd = JSON.stringify(control_list_crbd_array);
+        } else if (control_cross_list_id_crbd != '') {
+            control_list_crbd_array = list.getList(control_cross_list_id_crbd);
+            control_list_crbd = JSON.stringify(control_list_crbd_array);
+        } else if (control_family_name_list_id_crbd != '') {
+            control_list_crbd_array = list.getList(control_family_name_list_id_crbd);
+            control_list_crbd = JSON.stringify(control_list_crbd_array);
+        }
+
+
 
         var design_type = $('#select_design_method').val();
         if (design_type == "") {
@@ -358,8 +569,20 @@ jQuery(document).ready(function ($) {
         var fieldmap_col_number = $('#fieldMap_col_number').val();
         var fieldmap_row_number = $('#fieldMap_row_number').val();
         var plot_layout_format = $('#plot_layout_format').val();
+
+        // accession stock_type
         var replicated_accession_list_id = $('#list_of_rep_accession_list_select').val();
         var unreplicated_accession_list_id = $('#list_of_unrep_accession_list_select').val();
+
+        // cross stock_type
+        var replicated_cross_list_id = $('#list_of_rep_cross_list_select').val();
+        var unreplicated_cross_list_id = $('#list_of_unrep_cross_list_select').val();
+
+        // family_name stock_type
+        var replicated_family_name_list_id = $('#list_of_rep_family_name_list_select').val();
+        var unreplicated_family_name_list_id = $('#list_of_unrep_family_name_list_select').val();
+
+
         var row_in_design_number = $('#no_of_row_in_design').val();
         var col_in_design_number = $('#no_of_col_in_design').val();
         var no_of_rep_times = $('#no_of_rep_times').val();
@@ -373,7 +596,6 @@ jQuery(document).ready(function ($) {
         var plot_width = $('#add_project_plot_width').val();
         var plot_length = $('#add_project_plot_length').val();
         var field_size = $('#new_trial_field_size').val();
-
         var seedlot_hash_combined = {};
         seedlot_hash_combined = extend_obj(accession_list_seedlot_hash, checks_list_seedlot_hash);
         seedlot_hash_combined = extend_obj(seedlot_hash_combined, crbd_checks_list_seedlot_hash);
@@ -386,19 +608,30 @@ jQuery(document).ready(function ($) {
             }
         }
 
-        var unreplicated_accession_list;
+        var unreplicated_stock_list;
         if (unreplicated_accession_list_id != "") {
-            unreplicated_accession_list = JSON.stringify(list.getList(unreplicated_accession_list_id));
+            unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_accession_list_id));
+        } else if (unreplicated_cross_list_id != "") {
+            unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_cross_list_id));
+        } else if (unreplicated_family_name_list_id != "") {
+            unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_family_name_list_id));
         }
 
-        var replicated_accession_list;
+        var replicated_stock_list;
         if (replicated_accession_list_id != "") {
-            replicated_accession_list = JSON.stringify(list.getList(replicated_accession_list_id));
+            replicated_stock_list = JSON.stringify(list.getList(replicated_accession_list_id));
+        } else if (replicated_cross_list_id != "") {
+            replicated_stock_list = JSON.stringify(list.getList(replicated_cross_list_id));
+        } else if (replicated_family_name_list_id != "") {
+            replicated_stock_list = JSON.stringify(list.getList(replicated_family_name_list_id));
         }
 
         var treatments = []
         if (design_type == 'splitplot'){
             var count = jQuery('#create_trial_with_treatment_additional_count').val();
+            if (count == 0) {
+                count = 4; //Interface starts with 4 inputs and user can add additional ones..
+            }
             var int_count = parseInt(count);
             for(var i=1; i<=int_count; i++){
                 var treatment_value = jQuery('#create_trial_with_treatment_name_input'+i).val();
@@ -447,6 +680,7 @@ jQuery(document).ready(function ($) {
                 'project_description': desc,
                 'year': year,
                 'trial_location': trial_location,
+                'trial_stock_type': trial_stock_type,
                 'stock_list': stock_list,
                 'control_list': control_list,
                 'control_list_crbd': control_list_crbd,
@@ -472,8 +706,8 @@ jQuery(document).ready(function ($) {
                 'col_in_design_number': col_in_design_number,
                 'no_of_rep_times': no_of_rep_times,
                 'no_of_block_sequence': no_of_block_sequence,
-                'unreplicated_accession_list': unreplicated_accession_list,
-                'replicated_accession_list': replicated_accession_list,
+                'unreplicated_stock_list': unreplicated_stock_list,
+                'replicated_stock_list': replicated_stock_list,
                 'no_of_sub_block_sequence': no_of_sub_block_sequence,
                 'seedlot_hash': JSON.stringify(seedlot_hash_combined),
                 'num_seed_per_plot': num_seed_per_plot,
@@ -721,34 +955,104 @@ jQuery(document).ready(function ($) {
         }
         if (stock_list_verified == 1 && seedlot_list_verified == 1){
             generate_experimental_design();
+        } else if (cross_list_verified == 1 && stock_list_verified == 0 && family_name_list_verified == 0){
+            generate_experimental_design();
+        } else if (family_name_list_verified == 1 && cross_list_verified == 0 && stock_list_verified == 0){
+            generate_experimental_design();
         } else {
-            alert('Accession list or seedlot list is not valid!');
+            alert('Accession list, seedlot list, cross list or family name list is not valid!');
             return;
         }
     });
 
     $(document).on('change', '#select_design_method', function () {
-        if (jQuery(this).find("option:selected").data("title")){
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>'+jQuery(this).find("option:selected").data("title")+'</p></div>');
+
+        var design_method = $("#select_design_method").val();
+        var stock_type = jQuery('#select_stock_type').val();
+
+        if (design_method == "CRD"){
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates completely a randomized design with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "RCBD") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates Randomized Complete Block Design, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "Alpha") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "Lattice") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>SIMPLE and TRIPLE lattice designs. It randomizes treatments in K x K lattice. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "Augmented") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "MAD") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Adjustments are calculated using data from all checks. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "greenhouse") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>A greenhouse/nursery houses plants in no particular layout design. The plants can be of named accessions or in the case of seedling nurseries from crosses, the plants can be of named crosses. Creates plot entities with plant entities in the database.</p></div>');
+        } else if (design_method == "splitplot") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment(s) distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database.</p></div>');
+        } else if (design_method == "p-rep") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "Westcott") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981).</p></div>');
         } else {
             jQuery('#create_trial_design_description_div').html('');
         }
 
-        var design_method = $("#select_design_method").val();
+
         if (design_method == "CRD") {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").show();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").show();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").show();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
             $("#trial_multi-design_more_info").show();
             $("#FieldMap").show();
             $("#prephelp").hide();
-            $("#show_list_of_accession_section").show();
-            $("#show_list_of_unrep_accession").hide();
-            $("#show_list_of_rep_accession").hide();
             $("#show_no_of_row_in_design").hide();
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("#show_no_of_block_sequence").hide();
             $("#show_no_of_sub_block_sequence").hide();
-            $("#show_list_of_checks_section").hide();
-            $("#crbd_show_list_of_checks_section").show();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -770,19 +1074,63 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         } else if (design_method == "RCBD") {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").show();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").show();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").show();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
             $("#trial_multi-design_more_info").show();
             $("#FieldMap").show();
             $("#prephelp").hide();
-            $("#show_list_of_accession_section").show();
-            $("#show_list_of_unrep_accession").hide();
-            $("#show_list_of_rep_accession").hide();
             $("#show_no_of_row_in_design").hide();
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("#show_no_of_block_sequence").hide();
             $("#show_no_of_sub_block_sequence").hide();
-            $("#crbd_show_list_of_checks_section").show();
-            $("#show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").show();
             $("#block_size_section").hide();
@@ -804,19 +1152,63 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         } else if (design_method == "Alpha") {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").show();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").show();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").show();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
             $("#FieldMap").show();
             $("#prephelp").hide();
             $("#trial_multi-design_more_info").show();
-            $("#show_list_of_accession_section").show();
-            $("#show_list_of_unrep_accession").hide();
-            $("#show_list_of_rep_accession").hide();
             $("#show_no_of_row_in_design").hide();
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("#show_no_of_block_sequence").hide();
             $("#show_no_of_sub_block_sequence").hide();
-            $("#crbd_show_list_of_checks_section").show();
-            $("#show_list_of_checks_section").hide();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
             $("#block_size_section").show();
@@ -838,19 +1230,63 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         } else if (design_method == "Lattice") {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").show();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").show();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").show();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
             $("#FieldMap").show();
             $("#prephelp").hide();
             $("#trial_multi-design_more_info").show();
-            $("#crbd_show_list_of_checks_section").show();
-            $("#show_list_of_accession_section").show();
-            $("#show_list_of_unrep_accession").hide();
-            $("#show_list_of_rep_accession").hide();
             $("#show_no_of_row_in_design").hide();
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("#show_no_of_block_sequence").hide();
             $("#show_no_of_sub_block_sequence").hide();
-            $("#show_list_of_checks_section").hide();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -872,14 +1308,59 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         } else if (design_method == "Augmented") {
-            $("#FieldMap").hide();
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").show();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").show();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").show();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
+            $("#field_map_row_aug").hide();
+            $("#FieldMap").show();
             $("#prephelp").hide();
             $("#trial_multi-design_more_info").show();
-            $("#show_list_of_checks_section").show();
-            $("#crbd_show_list_of_checks_section").hide();
-            $("#show_list_of_accession_section").show();
-            $("#show_list_of_unrep_accession").hide();
-            $("#show_list_of_rep_accession").hide();
             $("#show_no_of_row_in_design").hide();
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
@@ -913,6 +1394,16 @@ jQuery(document).ready(function ($) {
             $("#show_list_of_accession_section").hide();
             $("#show_list_of_unrep_accession").hide();
             $("#show_list_of_rep_accession").hide();
+            $("#show_list_of_cross_checks_section").hide();
+            $("#crbd_show_list_of_cross_checks_section").hide();
+            $("#show_list_of_cross_section").hide();
+            $("#show_list_of_unrep_cross").hide();
+            $("#show_list_of_rep_cross").hide();
+            $("#show_list_of_family_name_checks_section").hide();
+            $("#crbd_show_list_of_family_name_checks_section").hide();
+            $("#show_list_of_family_name_section").hide();
+            $("#show_list_of_unrep_family_name").hide();
+            $("#show_list_of_rep_family_name").hide();
             $("#show_no_of_row_in_design").hide();
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
@@ -940,16 +1431,59 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         }
-
         else if (design_method == "MAD") {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").show();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").show();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").show();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
             $("#FieldMap").hide();
             $("#prephelp").hide();
             $("#trial_multi-design_more_info").show();
-            $("#show_list_of_checks_section").show();
-            $("#crbd_show_list_of_checks_section").hide();
-            $("#show_list_of_accession_section").show();
-            $("#show_list_of_unrep_accession").hide();
-            $("#show_list_of_rep_accession").hide();
             $("#show_no_of_row_in_design").hide();
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
@@ -985,16 +1519,59 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         }
-
         else if (design_method == 'greenhouse') {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
             $("#FieldMap").hide();
             $("#prephelp").hide();
             $("#trial_multi-design_more_info").show();
-            $("#show_list_of_checks_section").hide();
-            $("#crbd_show_list_of_checks_section").hide();
-            $("#show_list_of_accession_section").show();
-            $("#show_list_of_unrep_accession").hide();
-            $("#show_list_of_rep_accession").hide();
             $("#show_no_of_row_in_design").hide();
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
@@ -1023,16 +1600,59 @@ jQuery(document).ready(function ($) {
             $("#FieldMap_westcott").hide();
             greenhouse_show_num_plants_section();
         }
-
         else if (design_method == 'splitplot') {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
             $("#FieldMap").show();
             $("#prephelp").hide();
             $("#trial_multi-design_more_info").show();
-            $("#show_list_of_checks_section").hide();
-            $("#crbd_show_list_of_checks_section").hide();
-            $("#show_list_of_accession_section").show();
-            $("#show_list_of_unrep_accession").hide();
-            $("#show_list_of_rep_accession").hide();
             $("#show_no_of_row_in_design").hide();
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
@@ -1061,19 +1681,63 @@ jQuery(document).ready(function ($) {
             $("#FieldMap_westcott").hide();
         }
         else if (design_method == 'p-rep') {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").show();
+                $("#show_list_of_rep_accession").show();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").show();
+                $("#show_list_of_rep_cross").show();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").show();
+                $("#show_list_of_rep_family_name").show();
+            }
             $("#FieldMap").hide();
             $("#trial_multi-design_more_info").show();
             $("#prephelp").show();
-            $("#show_list_of_accession_section").hide();
-            $("#show_list_of_checks_section").hide();
-            $("#show_list_of_unrep_accession").show();
-            $("#show_list_of_rep_accession").show();
             $("#show_no_of_row_in_design").show();
             $("#show_no_of_col_in_design").show();
             $("#show_no_of_rep_times").show();
             $("#show_no_of_block_sequence").show();
             $("#show_no_of_sub_block_sequence").show();
-            $("#crbd_show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -1096,20 +1760,64 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         }
-        else if (design_method == 'westcott') {
+        else if (design_method == 'Westcott') {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
             $("#FieldMap").hide();
             $("#trial_multi-design_more_info").show();
             $("#prephelp").hide();
-            $("#show_list_of_accession_section").show();
-            $("#show_list_of_checks_section").hide();
-            $("#show_list_of_unrep_accession").hide();
-            $("#show_list_of_rep_accession").hide();
             $("#show_no_of_row_in_design").hide();
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("#show_no_of_block_sequence").hide();
             $("#show_no_of_sub_block_sequence").hide();
-            $("#crbd_show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -1154,6 +1862,19 @@ jQuery(document).ready(function ($) {
             greenhouse_show_num_plants_section();
         }
     });
+
+    jQuery(document).on('change', '#select_cross_list_list_select', function() {
+        if (jQuery("#select_design_method").val() == 'greenhouse') {
+            greenhouse_show_num_plants_section();
+        }
+    });
+
+    jQuery(document).on('change', '#select_family_name_list_list_select', function() {
+        if (jQuery("#select_design_method").val() == 'greenhouse') {
+            greenhouse_show_num_plants_section();
+        }
+    });
+
     jQuery(document).on('keyup', '#greenhouse_default_num_plants_per_accession_val', function() {
         if (jQuery("#select_design_method").val() == 'greenhouse') {
             greenhouse_show_num_plants_section();
@@ -1184,6 +1905,32 @@ jQuery(document).ready(function ($) {
       }
     });
 
+
+    function add_plants_per_plot() {
+        if (plants_per_plot && plants_per_plot != 0) {
+            jQuery.ajax( {
+                url: '/ajax/breeders/trial/'+trial_id+'/create_plant_entries/',
+                type: 'POST',
+                data: {
+                  'plants_per_plot' : plants_per_plot,
+                  'inherits_plot_treatments' : inherits_plot_treatments,
+                },
+                success: function(response) {
+                    console.log(response);
+                  if (response.error) {
+                    alert(response.error);
+                  }
+                  else {
+                    jQuery('#add_plants_dialog').modal("hide");
+                  }
+                },
+                error: function(response) {
+                  alert(response);
+                },
+              });
+        }
+    }
+
     function save_experimental_design(design_json) {
         var list = new CXGN.List();
         var name = jQuery('#new_trial_name').val();
@@ -1191,6 +1938,7 @@ jQuery(document).ready(function ($) {
         var desc = jQuery('#add_project_description').val();
         var locations = jQuery('#add_project_location').val();
         var trial_location =  JSON.stringify(locations);
+        var trial_stock_type = jQuery('#select_stock_type').val();
 
         var block_number = jQuery('#block_number').val();
         var stock_list_id = jQuery('#select_list_list_select').val();
@@ -1271,6 +2019,7 @@ jQuery(document).ready(function ($) {
                 'year': year,
                 'trial_type': trial_type,
                 'trial_location': trial_location,
+                'trial_stock_type': trial_stock_type,
                 'stock_list': stock_list,
                 'control_list': control_list,
                 'design_type': design_type,
@@ -1302,6 +2051,7 @@ jQuery(document).ready(function ($) {
                 'use_same_layout' : use_same_layout
             },
             success: function (response) {
+                trial_id = response.trial_id;
                 jQuery('#working_modal').modal("hide");
                 if (response.error) {
                     alert(response.error);
@@ -1311,6 +2061,7 @@ jQuery(document).ready(function ($) {
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
                     Workflow.check_complete("#trial_design_workflow");
+                    add_plants_per_plot();
                 }
             },
             error: function () {
@@ -1327,7 +2078,7 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery('#new_trial_confirm_submit').click(function () {
-            save_experimental_design(design_json);
+        save_experimental_design(design_json);
     });
 
     $('#redo_trial_layout_button').click(function () {
@@ -1343,10 +2094,24 @@ jQuery(document).ready(function ($) {
         document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh', undefined);
         document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh', undefined);
 
+        document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], '', 'refresh', undefined);
+        document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+
+        document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_family_name_list", [ 'family_names' ], '', 'refresh', undefined);
+        document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+
         //add lists to the list select and list of checks select dropdowns for CRBD.
         document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
         document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh', undefined);
         document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh', undefined);
+
+        document.getElementById("crbd_list_of_cross_checks_section").innerHTML = list.listSelect("crbd_list_of_cross_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
+        document.getElementById("list_of_unrep_cross").innerHTML = list.listSelect("list_of_unrep_cross", [ 'crosses' ], "Required: e.g. 200", 'refresh', undefined);
+        document.getElementById("list_of_rep_cross").innerHTML = list.listSelect("list_of_rep_cross", [ 'crosses' ], "Required: e.g. 119", 'refresh', undefined);
+
+        document.getElementById("crbd_list_of_family_name_checks_section").innerHTML = list.listSelect("crbd_list_of_family_name_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
+        document.getElementById("list_of_unrep_family_name").innerHTML = list.listSelect("list_of_unrep_family_name", [ 'family_names' ], "Required: e.g. 200", 'refresh', undefined);
+        document.getElementById("list_of_rep_family_name").innerHTML = list.listSelect("list_of_rep_family_name", [ 'family_names' ], "Required: e.g. 119", 'refresh', undefined);
 
         //add a blank line to location select dropdown that dissappears when dropdown is opened
         $("#add_project_location").prepend("<option value=''></option>").val('');
@@ -1357,6 +2122,16 @@ jQuery(document).ready(function ($) {
         //add a blank line to list select dropdown that dissappears when dropdown is opened
         $("#select_list_list_select").prepend("<option value=''></option>").val('');
         $("#select_list_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#select_cross_list_list_select").prepend("<option value=''></option>").val('');
+        $("#select_cross_list_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#select_family_name_list_list_select").prepend("<option value=''></option>").val('');
+        $("#select_family_name_list_list_select").one('mousedown', function () {
             $("option:first", this).remove();
         });
 
@@ -1375,6 +2150,26 @@ jQuery(document).ready(function ($) {
 
         $("#crbd_list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
         $("#crbd_list_of_checks_section_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#list_of_cross_checks_section_list_select").prepend("<option value=''></option>").val('');
+        $("#list_of_cross_checks_section_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#crbd_list_of_cross_checks_section_list_select").prepend("<option value=''></option>").val('');
+        $("#crbd_list_of_cross_checks_section_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#list_of_family_name_checks_section_list_select").prepend("<option value=''></option>").val('');
+        $("#list_of_family_name_checks_section_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+        });
+
+        $("#crbd_list_of_family_name_checks_section_list_select").prepend("<option value=''></option>").val('');
+        $("#crbd_list_of_family_name_checks_section_list_select").one('mousedown', function () {
             $("option:first", this).remove();
         });
 
@@ -1446,6 +2241,11 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery('#new_trial_add_treatments_submit').click(function(){
+        var new_treatment_year = jQuery('#new_treatment_year').val();
+        var new_treatment_date = jQuery('#new_treatment_date').val();
+        var new_treatment_type = jQuery('#new_treatment_type').val();
+        new_treatment_date = moment(new_treatment_date).format('YYYY/MM/DD HH:mm:ss')
+
         var trial_treatments = [];
         jQuery('input[name="add_trial_treatment_input"]').each(function() {
             if (this.checked){
@@ -1457,32 +2257,37 @@ jQuery(document).ready(function ($) {
                 if (trial_index in trial_treatments){
                     var trial = trial_treatments[trial_index];
                     if (trial_treatment in trial){
-                        trial[trial_treatment].push(plot_name);
+                        trial[trial_treatment]['new_treatment_stocks'].push(plot_name);
                     } else {
-                        trial[trial_treatment] = [plot_name];
+                        trial[trial_treatment]['new_treatment_stocks'] = [plot_name];
                     }
                     if (plant_names != 'undefined'){
                         for(var i=0; i<plant_names.length; i++){
-                            trial[trial_treatment].push(plant_names[i]);
+                            trial[trial_treatment]['new_treatment_stocks'].push(plant_names[i]);
                         }
                     }
                     if (subplot_names != 'undefined'){
                         for(var i=0; i<subplot_names.length; i++){
-                            trial[trial_treatment].push(subplot_names[i]);
+                            trial[trial_treatment]['new_treatment_stocks'].push(subplot_names[i]);
                         }
                     }
+                    trial[trial_treatment]["new_treatment_type"] = new_treatment_type;
+                    trial[trial_treatment]["new_treatment_date"] = new_treatment_date;
+                    trial[trial_treatment]["new_treatment_year"] = new_treatment_year;
+
                     trial_treatments[trial_index] = trial;
                 } else {
                     obj = {};
-                    obj[trial_treatment] = [plot_name];
+                    obj[trial_treatment] = {};
+                    obj[trial_treatment]['new_treatment_stocks'] = [plot_name];
                     if (plant_names != 'undefined'){
                         for(var i=0; i<plant_names.length; i++){
-                            obj[trial_treatment].push(plant_names[i]);
+                            obj[trial_treatment]['new_treatment_stocks'].push(plant_names[i]);
                         }
                     }
                     if (subplot_names != 'undefined'){
                         for(var i=0; i<subplot_names.length; i++){
-                            obj[trial_treatment].push(subplot_names[i]);
+                            obj[trial_treatment]['new_treatment_stocks'].push(subplot_names[i]);
                         }
                     }
                     trial_treatments[trial_index] = obj;
@@ -1515,7 +2320,7 @@ jQuery(document).ready(function ($) {
             //html += "Trial "+i+"<br/>";
             for (var key in treatments){
                 html += "Treatment: <b>"+key+"</b> Plots: ";
-                var plot_array = treatments[key];
+                var plot_array = treatments[key]['new_treatment_stocks'];
                 html += plot_array.join(', ') + "<br/>";
             }
         }
@@ -1528,14 +2333,33 @@ jQuery(document).ready(function ($) {
 
 function greenhouse_show_num_plants_section(){
     var list = new CXGN.List();
-    var stock_list_id = jQuery('#select_list_list_select').val();
+
+    var accession_list_id = jQuery('#select_list_list_select').val();
+    var cross_list_id = jQuery('#select_cross_list_list_select').val();
+    var family_name_list_id = jQuery('#select_family_name_list_list_select').val();
+
     var default_num = jQuery('#greenhouse_default_num_plants_per_accession_val').val();
-    if (stock_list_id != "") {
-        stock_list = list.getList(stock_list_id);
-        //console.log(stock_list);
+    if (accession_list_id != "") {
+        var accession_list = list.getList(accession_list_id);
         var html = '<form class="form-horizontal">';
-        for (var i=0; i<stock_list.length; i++){
-            html = html + '<div class="form-group"><label class="col-sm-9 control-label">' + stock_list[i] + ': </label><div class="col-sm-3"><input class="form-control" id="greenhouse_num_plants_input_' + i + '" type="text" placeholder="'+default_num+'" value="'+default_num+'" /></div></div>';
+        for (var i=0; i<accession_list.length; i++){
+            html = html + '<div class="form-group"><label class="col-sm-9 control-label">' + accession_list[i] + ': </label><div class="col-sm-3"><input class="form-control" id="greenhouse_num_plants_input_' + i + '" type="text" placeholder="'+default_num+'" value="'+default_num+'" /></div></div>';
+        }
+        html = html + '</form>';
+        jQuery("#greenhouse_num_plants_per_accession").empty().html(html);
+    } else if (cross_list_id != "") {
+        var cross_list = list.getList(cross_list_id);
+        var html = '<form class="form-horizontal">';
+        for (var i=0; i<cross_list.length; i++){
+            html = html + '<div class="form-group"><label class="col-sm-9 control-label">' + cross_list[i] + ': </label><div class="col-sm-3"><input class="form-control" id="greenhouse_num_plants_input_' + i + '" type="text" placeholder="'+default_num+'" value="'+default_num+'" /></div></div>';
+        }
+        html = html + '</form>';
+        jQuery("#greenhouse_num_plants_per_accession").empty().html(html);
+    } else if (family_name_list_id != "") {
+        var family_name_list = list.getList(family_name_list_id);
+        var html = '<form class="form-horizontal">';
+        for (var i=0; i<family_name_list.length; i++){
+            html = html + '<div class="form-group"><label class="col-sm-9 control-label">' + family_name_list[i] + ': </label><div class="col-sm-3"><input class="form-control" id="greenhouse_num_plants_input_' + i + '" type="text" placeholder="'+default_num+'" value="'+default_num+'" /></div></div>';
         }
         html = html + '</form>';
         jQuery("#greenhouse_num_plants_per_accession").empty().html(html);

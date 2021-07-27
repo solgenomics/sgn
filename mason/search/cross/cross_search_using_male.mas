@@ -1,0 +1,174 @@
+
+<& /page/page_title.mas, title=>'Search Cross Details Using Male Parents / Populations' &>
+<br>
+<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0&>
+    <div class="row" id="cross_search_form" >
+        <div class="col-sm-12 well">
+            <div class="row">
+                <div class="col-sm-10">
+                    <div class="form-horizontal">
+                        <div class="form-group form-group-sm">
+                            <label class="control-label col-sm-3">Male Parent / Population:</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="cross_male" placeholder="Enter male parent">
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-info" id="search_cross_female_parents"><i class="glyphicon glyphicon-search"></i> Female Parent</button>
+                                        <button class="btn btn-primary" id="search_all_crosses_using_male"><i class="glyphicon glyphicon-search"></i> All Crosses </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="control-label col-sm-3">Female Parent:</label>
+                            <div class="col-sm-9" >
+                                <div class="input-group">
+                                    <select class="form-control" id="cross_female">
+                                        <option value="">Choose male parent first</option>
+                                    </select>
+                                    </select>
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-info" id="search_crosses_male_female"><i class="glyphicon glyphicon-search"></i> Cross Info </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+<&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0&>
+    <div class="well well-sm">
+        <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table id="cross_male_female_search_results" width="100%" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Female Parent</th>
+                            <th>Male Parent / Population</th>
+                            <th>Cross Unique ID</th>
+                            <th>Cross Type</th>
+                            <th>Family Name</th>
+                            <th>Crossing Experiment</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <&| /page/info_section.mas, title => 'Copy crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the cross unique ids showing in table to a new or exisiting list</i>'&>
+                    <div style="text-align:right" id="crosses_to_list_menu"></div>
+                    <div id="cross_names" style="display: none;"></div>
+                </&>
+            </div>
+        </div>
+    </div>
+</&>
+
+
+<script>
+
+
+jQuery(document).ready(function (){
+
+
+    jQuery("#cross_male").autocomplete({
+        source:'/ajax/stock/cross_male_parent_autocomplete',
+    });
+
+
+    jQuery("#search_cross_female_parents").click(function(){
+
+        jQuery.ajax({
+            url:'/ajax/search/cross_female_parents',
+            data:{'male_parent':jQuery('#cross_male').val()},
+            success: function(response){
+                console.log(response);
+                var html = '<select id = "cross_female" >';
+                for (var i=0; i<response.data.length; i++) {
+                    html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+                }
+                html = html + "</select>";
+                console.log(html);
+
+                if(i ==''){
+                    alert("No female parent");
+                    return;
+                }
+
+                jQuery('#cross_female').html(html);
+            },
+            error:function(response){
+                alert("An error occurred");
+            }
+        });
+    });
+
+
+    jQuery('#search_crosses_male_female').click(function(){
+
+        var table = jQuery('#cross_male_female_search_results').DataTable({
+            'searching': true,
+            'paging': true,
+            'ordering': false,
+            'destroy'    : true,
+            'ajax':{'url':'/ajax/search/crosses',
+                'data':{'female_parent':jQuery('#cross_female').val(),
+                    'male_parent':jQuery('#cross_male').val()},
+            }
+        });
+
+        jQuery('#cross_male_female_search_results').on( 'draw.dt', function (){
+            var name_links = table.column(2).data();
+            var names = [];
+            //console.log("name links are: "+JSON.stringify(name_links));
+            for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+                names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            }
+
+            jQuery('#cross_names').html(names);
+
+            addToListMenu('crosses_to_list_menu', 'cross_names',{
+                listType:'crosses'
+            });
+        });
+    });
+
+
+    jQuery('#search_all_crosses_using_male').click(function(){
+
+        var table = jQuery('#cross_male_female_search_results').DataTable({
+            'searching': true,
+            'paging': true,
+            'ordering': false,
+            'destroy': true,
+            'ajax':{'url':'/ajax/search/crosses',
+                data:{'male_parent':jQuery('#cross_male').val()},
+            }
+        });
+
+        jQuery('#cross_male_female_search_results').on( 'draw.dt', function (){
+            var name_links = table.column(2).data();
+            var names = [];
+            //console.log("name links are: "+JSON.stringify(name_links));
+            for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+                names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            }
+
+            jQuery('#cross_names').html(names);
+
+            addToListMenu('crosses_to_list_menu', 'cross_names',{
+                listType:'crosses'
+            });
+        });
+    });
+
+
+});
+
+
+</script>

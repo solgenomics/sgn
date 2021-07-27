@@ -60,7 +60,7 @@ sub _validate_with_plugin {
     my @observation_units_names_trim;
     # Separates sample name from lab id
     foreach (@observation_unit_names) {
-        my ($observation_unit_name_with_accession_name, $lab_id) = split(/\./, $_);
+        my ($observation_unit_name_with_accession_name, $lab_number) = split(/\./, $_, 2);
         $observation_unit_name_with_accession_name =~ s/^\s+|\s+$//g;
         my ($observation_unit_name, $accession_name) = split(/\|\|\|/, $observation_unit_name_with_accession_name);
         push @observation_units_names_trim, $observation_unit_name;
@@ -78,8 +78,10 @@ sub _validate_with_plugin {
         @missing_stocks = @{$validator->validate($schema,'tissue_samples',$observation_unit_names)->{'missing'}};
     } elsif ($stock_type eq 'accession'){
         @missing_stocks = @{$validator->validate($schema,'accessions',$observation_unit_names)->{'missing'}};
+    } elsif ($stock_type eq 'stocks'){
+        @missing_stocks = @{$validator->validate($schema,'stocks',$observation_unit_names)->{'missing'}};
     } else {
-        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms)!"
+        push @error_messages, "You can only upload genotype data for a tissue_sample OR accession (including synonyms) OR stocks!"
     }
 
     my %unique_stocks;
@@ -210,6 +212,7 @@ sub _parse_with_plugin {
 
                 my $ref = $marker_info->{$customer_snp_id}->{ref};
                 my $alt = $marker_info->{$customer_snp_id}->{alt};
+                my $chrom = $marker_info->{$customer_snp_id}->{chrom};
                 my $marker_name = $marker_info->{$customer_snp_id}->{name} || $customer_snp_id;
 
                 my $genotype_obj;
@@ -223,12 +226,11 @@ sub _parse_with_plugin {
                         if ($a eq $ref) {
                             push @gt_vcf_genotype, 0;
                             push @ref_calls, $a;
-                            $gt_dosage = $gt_dosage + 0;
+                            $gt_dosage++;
                         }
                         elsif ($a eq $alt) {
                             push @gt_vcf_genotype, 1;
                             push @alt_calls, $a;
-                            $gt_dosage = $gt_dosage + 1;
                         }
                         elsif ($a eq '?' || $a eq 'Uncallable') {
                             $gt_dosage = 'NA';
@@ -251,7 +253,7 @@ sub _parse_with_plugin {
                     die "There should always be a ref and alt according to validation above\n";
                 }
 
-                $genotype_info{$sample_id_with_lab_id}->{$marker_name} = $genotype_obj;
+                $genotype_info{$sample_id_with_lab_id}->{$chrom}->{$marker_name} = $genotype_obj;
             }
         }
 

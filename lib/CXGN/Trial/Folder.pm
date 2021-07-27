@@ -2,10 +2,11 @@
 package CXGN::Trial::Folder;
 
 use CXGN::Chado::Cvterm;
-
+use CXGN::Location;
 use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use JSON;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 	is => 'rw',
@@ -38,6 +39,11 @@ has 'name' => (isa => 'Str',
 	default => 'Untitled',
 );
 
+has 'description' => (
+	isa => 'Str',
+	is  => 'rw'
+);
+
 has 'folder_for_trials' => (isa => 'Bool',
 	is => 'rw',
 	default => 0,
@@ -54,6 +60,10 @@ has 'folder_for_genotyping_trials' => (isa => 'Bool',
 );
 
 has 'location_id' => (isa => 'Int',
+	is => 'rw',
+);
+
+has 'location_name' => (isa => 'Str',
 	is => 'rw',
 );
 
@@ -77,6 +87,9 @@ has 'folder_cvterm_id' => (isa => 'Int',
 	is => 'rw',
 );
 
+has 'additional_info' => (
+	is  => 'rw'
+);
 
 sub BUILD {
 	my $self = shift;
@@ -88,13 +101,16 @@ sub BUILD {
 	}
 
 	$self->name($row->name());
+	$self->description($row->description());
 
 	my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program', 'project_property')->cvterm_id();
 	my $folder_for_trials_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_trials', 'project_property')->cvterm_id();
 	my $folder_for_crosses_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_crosses', 'project_property')->cvterm_id();
 	my $folder_for_genotyping_trials_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_genotyping_trials', 'project_property')->cvterm_id();
 	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
+	my $analyses_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'analysis_metadata_json', 'project_property')->cvterm_id();
 	my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
+	my $additional_info_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project_additional_info', 'project_property')->cvterm_id();
 
 	$self->breeding_program_cvterm_id($breeding_program_type_id);
 	$self->folder_cvterm_id($folder_cvterm_id);
@@ -113,6 +129,9 @@ sub BUILD {
 			$self->folder_for_crosses(1);
 		} elsif ($folder_type_row->type_id() == $folder_for_genotyping_trials_cvterm_id) {
 			$self->folder_for_genotyping_trials(1);
+		} elsif ($folder_type_row->type_id() == $additional_info_cvterm_id) {
+			my $additional_info = decode_json($folder_type_row->value);
+			$self->additional_info($additional_info);
 		}
 	}
 
@@ -125,8 +144,14 @@ sub BUILD {
 				$self->folder_type("cross");
 			} elsif ($tt->value eq 'genotyping_plate') {
 				$self->folder_type("genotyping_trial");
+            } elsif ($tt->value eq 'sampling_trial') {
+				$self->folder_type("sampling_trial");
+            } elsif ($tt->type_id == $analyses_cvterm_id) {
+				$self->folder_type("analyses");
 			} elsif ($tt->type_id == $location_cvterm_id) {
 				$self->location_id($tt->value + 0);
+                my $location = CXGN::Location->new( { bcs_schema => $self->bcs_schema, nd_geolocation_id => $self->location_id } );
+                $self->location_name($location->name());
 			}
 		}
 
@@ -163,6 +188,7 @@ sub create {
 	my $folder_for_trials = $args->{folder_for_trials};
 	my $folder_for_crosses = $args->{folder_for_crosses};
 	my $folder_for_genotyping_trials = $args->{folder_for_genotyping_trials};
+	my $additional_info = $args->{additional_info} || undef;
 
 	# check if name is already taken
 	my $check_rs = $schema->resultset('Project::Project')->search( { name => $folder_name } );
@@ -190,6 +216,10 @@ sub create {
         my $folder_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_genotyping_trials', 'project_property');
         $project->create_projectprops({ $folder_type_cvterm->name() => '1' });
     }
+	if ($additional_info){
+		my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_additional_info', 'project_property');
+		$project->create_projectprops({ $additional_info_cvterm->name() => encode_json($additional_info) });
+	}
 
 	my $folder = CXGN::Trial::Folder->new({
 		bcs_schema => $schema,
@@ -360,51 +390,51 @@ sub set_folder_content_type {
 
 sub associate_parent {
     my $self = shift;
-		my $parent_id = shift;
+	my $parent_id = shift;
 
-		my $folder_cvterm_id = $self->folder_cvterm_id();
-		my $breeding_program_trial_relationship_id = $self->breeding_program_trial_relationship_id();
+	my $folder_cvterm_id = $self->folder_cvterm_id();
+	my $breeding_program_trial_relationship_id = $self->breeding_program_trial_relationship_id();
 
-		#If the user selects 'None' to remove the trial from the folder, then the parent_id will be passed as 0. No new parent will be created.
-		if ($parent_id == 0) {
-			$self->remove_parents;
-			return;
-		}
-
-		my $parent_row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $parent_id } );
-
-		if (!$parent_row) {
-			print STDERR "The folder specified as parent does not exist";
-			return;
-		}
-
-		my $parentprop_row = $self->bcs_schema()->resultset("Project::Projectprop")->find( { project_id => $parent_id,  type_id => { -in => [ $folder_cvterm_id, $breeding_program_trial_relationship_id ] } } );
-
-		if (!$parentprop_row) {
-			print STDERR "The specified parent folder is not of type folder or breeding program. Ignoring.";
-			return;
-		}
-
+	#If the user selects 'None' to remove the trial from the folder, then the parent_id will be passed as 0. No new parent will be created.
+	if ($parent_id == 0) {
 		$self->remove_parents;
+		return;
+	}
 
-		my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create({
-	    object_project_id => $parent_id,
-	    subject_project_id => $self->folder_id(),
-	    type_id => $folder_cvterm_id,
-		});
-		$project_rel_row->insert();
+	my $parent_row = $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $parent_id } );
+
+	if (!$parent_row) {
+		print STDERR "The folder specified as parent does not exist";
+		return;
+	}
+
+	my $parentprop_row = $self->bcs_schema()->resultset("Project::Projectprop")->find( { project_id => $parent_id,  type_id => { -in => [ $folder_cvterm_id, $breeding_program_trial_relationship_id ] } } );
+
+	if (!$parentprop_row) {
+		print STDERR "The specified parent folder is not of type folder or breeding program. Ignoring.";
+		return;
+	}
+
+	$self->remove_parents;
+
+	my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create({
+		object_project_id => $parent_id,
+		subject_project_id => $self->folder_id(),
+		type_id => $folder_cvterm_id,
+	});
+	$project_rel_row->insert();
 
     $self->project_parent($parent_row);
 
-		my $parent_is_child = check_if_folder_is_child_in_tree($self->bcs_schema, $parent_id, $self->children());
-		if ($parent_is_child) {
-			print STDERR 'Parent '.$parent_id.' is child in tree of folder '.$self->folder_id()."\n";
-			my $parent_folder = CXGN::Trial::Folder->new({
-				bcs_schema => $self->bcs_schema,
-				folder_id => $parent_id
-			});
-			$parent_folder->remove_parents;
-		}
+	my $parent_is_child = check_if_folder_is_child_in_tree($self->bcs_schema, $parent_id, $self->children());
+	if ($parent_is_child) {
+		print STDERR 'Parent '.$parent_id.' is child in tree of folder '.$self->folder_id()."\n";
+		my $parent_folder = CXGN::Trial::Folder->new({
+			bcs_schema => $self->bcs_schema,
+			folder_id => $parent_id
+		});
+		$parent_folder->remove_parents;
+	}
 
 }
 
@@ -492,6 +522,26 @@ sub delete_folder {
 	return 1;
 }
 
+sub rename_folder {
+        my $self = shift;
+	my $new_name = shift;
+	my $folder_exists = $self->get_folder_by_name($new_name);
+	return 0 if $folder_exists;
+	my $update_folder = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->folder_id });
+	$update_folder->name($new_name );
+	$update_folder->update();
+	return 1;
+}
+
+sub get_folder_by_name {
+    my $self= shift;
+    my $name = shift;
+    my $exists = $self->bcs_schema->resultset("Project::Project")->search( { name => $name } );
+    my $count = $exists->count();
+    if ( $exists->count() > 0 ) { return 1 } else { return 0 }
+    return;
+}
+
 sub remove_parent {
 
 
@@ -529,12 +579,24 @@ sub get_jstree_html {
     $html .= "<ul>";
 
     my %children = fast_children($self, $schema, $parent_type);
-    #print STDERR Dumper \%children;
+    # print STDERR Dumper \%children;
     if (%children) {
         foreach my $child (sort keys %children) {
             #print STDERR "Working on child ".$children{$child}->{'name'}."\n";
 
-            if ($children{$child}->{$folder_type_of_interest}) {
+            if ($project_type_of_interest eq 'trial' && $children{$child}->{'analysis_experiment'}) {
+                $html .= _jstree_li_html($schema, 'analyses', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+            }
+            elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'genotype_data_project'}) {
+                $html .= _jstree_li_html($schema, 'genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+            }
+			elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'pcr_genotype_data_project'}) {
+                $html .= _jstree_li_html($schema, 'pcr_genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+            }
+            elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'sampling_trial'}) {
+                $html .= _jstree_li_html($schema, 'sampling_trial', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+            }
+            elsif ($children{$child}->{$folder_type_of_interest}) {
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
             elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_genotyping_trials'} && !$children{$child}->{'folder_for_trials'} && $children{$child}->{'trial_folder'}) {
@@ -560,12 +622,16 @@ sub _jstree_li_html {
     my $name = shift;
 
     my $url = '#';
-    if ($type eq 'trial' || $type eq 'genotyping_trial') {
+    if ($type eq 'trial' || $type eq 'genotyping_trial' || $type eq 'sampling_trial') {
         $url = "/breeders/trial/".$id;
     } elsif ($type eq 'folder') {
         $url = "/folder/".$id;
     } elsif ($type eq 'cross') {
         $url = "/cross/".$id;
+    } elsif ($type eq 'analyses') {
+        $url = "/analyses/".$id;
+    } elsif ($type eq 'breeding_program') {
+        $url = "/breeders/program/".$id;
     }
 
     return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';

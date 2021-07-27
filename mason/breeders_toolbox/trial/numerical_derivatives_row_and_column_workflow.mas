@@ -1,0 +1,107 @@
+<%args>
+$trial_id => undef
+$data_level => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<div class="well well-sm">
+    <button class="btn btn-primary" id="trial_detail_page_analysis_numerical_derivative_workflow">Numerical Derivatives Across Row and Columns On Saved Measurements</button>
+</div>
+<hr>
+
+<div class="modal fade" id="trial_analysis_numerical_derivative_workflow_dialog" name="trial_analysis_numerical_derivative_workflow_dialog" tabindex="-1" role="dialog" aria-labelledby="trialAnalysisNumericalDerivativeWorkflowDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="trialAnalysisNumericalDerivativeWorkflowDialog">Calculate Numerical Derivatives Across Row and Columns</h4>
+            </div>
+            <div class="modal-body">
+
+                <&| /util/workflow.mas, id=> "trial_analysis_numerical_derivative_workflow_dialog_workflow" &>
+                    <&| /util/workflow.mas:step, title=> "Traits" &>
+                        <& /page/page_title.mas, title=>"Select the input measurements to calculate derivatives for" &>
+
+                        <div class="container-fluid">
+                            <div class="form-horizontal">
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Derivative: </label>
+                                    <div class="col-sm-9" >
+                                        <select class="form-control" id="trial_analysis_numerical_derivative_workflow_derivative_div">
+                                            <option value="first">First 2D Derivative</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trait(s): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="trial_analysis_numerical_derivative_workflow_traits_div"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <center>
+                                <button class="btn btn-primary" id="trial_analysis_numerical_derivative_workflow_submit" >Compute and Save!</button>
+                            </center>
+                        </div>
+                    </&>
+                </&>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#trial_detail_page_analysis_numerical_derivative_workflow').click( function(){
+        jQuery('#trial_analysis_numerical_derivative_workflow_dialog').modal('show');
+
+        get_select_box('traits', 'trial_analysis_numerical_derivative_workflow_traits_div', { 'name' : 'trial_analysis_numerical_derivative_workflow_trait_ids', 'id' : 'trial_analysis_numerical_derivative_workflow_trait_ids', 'empty':1, 'multiple':1, 'size': 20, 'trial_ids':<% $trial_id %>, 'stock_type':'<% $data_level %>' });
+    });
+
+    jQuery('#trial_analysis_numerical_derivative_workflow_submit').click(function() {
+        var selected_trait_ids = jQuery('#trial_analysis_numerical_derivative_workflow_trait_ids').val();
+        console.log(selected_trait_ids);
+        var derivative = jQuery('#trial_analysis_numerical_derivative_workflow_derivative_div').val();
+
+        if (!selected_trait_ids || selected_trait_ids.length < 1) {
+            alert('Please select at least one trait!');
+            return false;
+        }
+        else {
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/<% $trial_id %>/calculate_numerical_derivative?derivative='+derivative+'&trait_ids='+JSON.stringify(selected_trait_ids)+'&data_level=<% $data_level %>',
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response){
+                    console.log(response);
+                    jQuery("#working_modal").modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    if (response.success) {
+                        alert('Computed derivative and saved!');
+                    }
+                    location.reload();
+                },
+                error: function(response){
+                    jQuery("#working_modal").modal("hide");
+                    alert('Error doing numerical derivative!');
+                }
+            });
+        }
+        
+    });
+
+});
+
+</script>

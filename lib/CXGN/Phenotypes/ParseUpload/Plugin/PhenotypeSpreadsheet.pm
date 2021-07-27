@@ -31,6 +31,9 @@ sub validate {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
+    my $zipfile = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
     my @file_lines;
     my $delimiter = ',';
     my $header;
@@ -76,7 +79,7 @@ sub validate {
         return \%parse_result;
     }
     if ($data_level eq 'plots' && ( $worksheet->get_cell(6,0)->value() ne 'plot_name' ||
-                                    $worksheet->get_cell(6,1)->value() ne 'accession_name' ||
+                                    (($worksheet->get_cell(6,1)->value() ne 'accession_name') && ($worksheet->get_cell(6,1)->value() ne 'family_name') && ($worksheet->get_cell(6,1)->value() ne 'cross_unique_id')) ||
                                     $worksheet->get_cell(6,2)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,3)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'is_a_control' ||
@@ -84,13 +87,13 @@ sub validate {
                                     $worksheet->get_cell(6,6)->value() ne 'planting_date' ||
                                     $worksheet->get_cell(6,7)->value() ne 'harvest_date' ||
                                     $worksheet->get_cell(6,8)->value() ne 'trial_name' ) ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plot phenotypes: 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control',  'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plot phenotypes: 'plot_name', 'accession_name' or 'family_name' or 'cross_unique_id', 'plot_number', 'block_number', 'is_a_control',  'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is plots\n";
         return \%parse_result;
     }
     if ($data_level eq 'plants' && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
                                     $worksheet->get_cell(6,1)->value() ne 'plot_name' ||
-                                    $worksheet->get_cell(6,2)->value() ne 'accession_name' ||
+                                    (($worksheet->get_cell(6,2)->value() ne 'accession_name') && ($worksheet->get_cell(6,2)->value() ne 'family_name') && ($worksheet->get_cell(6,2)->value() ne 'cross_unique_id')) ||
                                     $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'is_a_control' ||
@@ -98,14 +101,14 @@ sub validate {
                                     $worksheet->get_cell(6,7)->value() ne 'planting_date' ||
                                     $worksheet->get_cell(6,8)->value() ne 'harvest_date' ||
                                     $worksheet->get_cell(6,9)->value() ne 'trial_name') ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes: 'plant_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes: 'plant_name', 'plot_name', 'accession_name' or 'family_name' or 'cross_unique_id', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is plants\n";
         return \%parse_result;
     }
     if ($data_level eq 'tissue_samples' && ($worksheet->get_cell(6,0)->value() ne 'tissue_sample_name' ||
                                     $worksheet->get_cell(6,1)->value() ne 'plant_name' ||
                                     $worksheet->get_cell(6,2)->value() ne 'plot_name' ||
-                                    $worksheet->get_cell(6,3)->value() ne 'accession_name' ||
+                                    (($worksheet->get_cell(6,3)->value() ne 'accession_name') && ($worksheet->get_cell(6,3)->value() ne 'family_name') && ($worksheet->get_cell(6,3)->value() ne 'cross_unique_id')) ||
                                     $worksheet->get_cell(6,4)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,6)->value() ne 'is_a_control' ||
@@ -113,13 +116,13 @@ sub validate {
                                     $worksheet->get_cell(6,8)->value() ne 'planting_date' ||
                                     $worksheet->get_cell(6,9)->value() ne 'harvest_date' ||
                                     $worksheet->get_cell(6,10)->value() ne 'trial_name') ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Tissue Sample phenotypes: 'tissue_sample_name', 'plant_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Tissue Sample phenotypes: 'tissue_sample_name', 'plant_name', 'plot_name', 'accession_name' or 'family_name' or 'cross_unique_id', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is tissue_samples\n";
         return \%parse_result;
     }
     if ($data_level eq 'subplots' && ( ($worksheet->get_cell(6,0)->value() ne 'subplot_name' ||
                                     $worksheet->get_cell(6,1)->value() ne 'plot_name' ||
-                                    $worksheet->get_cell(6,2)->value() ne 'accession_name' ||
+                                    (($worksheet->get_cell(6,2)->value() ne 'accession_name') && ($worksheet->get_cell(6,2)->value() ne 'family_name') && ($worksheet->get_cell(6,2)->value() ne 'cross_unique_id')) ||
                                     $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'is_a_control' ||
@@ -129,7 +132,7 @@ sub validate {
                                     $worksheet->get_cell(6,9)->value() ne 'trial_name') && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
                                                                     $worksheet->get_cell(6,1)->value() ne 'subplot_name' ||
                                                                     $worksheet->get_cell(6,2)->value() ne 'plot_name' ||
-                                                                    $worksheet->get_cell(6,3)->value() ne 'accession_name' ||
+                                                                    (($worksheet->get_cell(6,3)->value() ne 'accession_name') && ($worksheet->get_cell(6,3)->value() ne 'family_name') && ($worksheet->get_cell(6,3)->value() ne 'cross_unique_id')) ||
                                                                     $worksheet->get_cell(6,4)->value() ne 'plot_number' ||
                                                                     $worksheet->get_cell(6,5)->value() ne 'block_number' ||
                                                                     $worksheet->get_cell(6,6)->value() ne 'is_a_control' ||
@@ -137,7 +140,7 @@ sub validate {
                                                                     $worksheet->get_cell(6,8)->value() ne 'planting_date' ||
                                                                     $worksheet->get_cell(6,9)->value() ne 'harvest_date' ||
                                                                     $worksheet->get_cell(6,10)->value() ne 'trial_name') ) ) {
-        $parse_result{'error'} = "Data columns must be in one of these two orders for uploading Subplot phenotypes: 1) 'subplot_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name' OR 2) 'plant_name', 'subplot_name', 'plot_name', 'accession_name', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
+        $parse_result{'error'} = "Data columns must be in one of these two orders for uploading Subplot phenotypes: 1) 'subplot_name', 'plot_name', 'accession_name' or 'family_name' or 'cross_unique_id', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name' OR 2) 'plant_name', 'subplot_name', 'plot_name', 'accession_name' or 'family_name' or 'cross_unique_id', 'plot_number', 'block_number', 'is_a_control', 'rep_number', 'planting_date', 'harvest_date', 'trial_name'. Make sure to select the correct data level. It may help to recreate your spreadsheet from the website.";
         print STDERR "Columns not correct and data_level is subplots\n";
         return \%parse_result;
     }
@@ -201,7 +204,13 @@ sub parse {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
-    my $composable_cvterm_format = shift // 'extended';
+    my $zipfile = shift; #not relevant for this plugin
+    my $user_id = shift; #not relevant for this plugin
+    my $c = shift; #not relevant for this plugin
+    my $nd_protocol_id = shift; #not relevant for this plugin
+    my $nd_protocol_filename = shift; #not relevant for this plugin
+
+    my $composable_cvterm_format = $c ? $c->config->{composable_cvterm_format} : 'extended';
     my %parse_result;
     my @file_lines;
     my $delimiter = ',';
@@ -260,6 +269,8 @@ sub parse {
     }
 
     my $num_col_before_traits = $num_fixed_col + $num_predef_col;
+    print STDERR Dumper $num_col_before_traits;
+    my %composed_trait_name_map;
 
     for my $row ( 7 .. $row_max ) {
         my $plot_name;
@@ -276,23 +287,41 @@ sub parse {
                             $trait_name = $worksheet->get_cell(6,$col)->value();
                             if (defined($trait_name)) {
                                 if ($trait_name ne ''){
+				    if ($num_predef_col > 0) {
+					my @component_cvterm_names = ($trait_name);
+					for my $predef_col ($num_fixed_col .. $num_col_before_traits-1) {
+					    if ($worksheet->get_cell($row,$predef_col)){
+						my $component_term = $worksheet->get_cell($row, $predef_col)->value();
+						push @component_cvterm_names, $component_term;
+					    }
+				        }
+					my $trait_name_composed = join "\|\|", @component_cvterm_names;
+					if (exists($composed_trait_name_map{$trait_name_composed})) {
+					    $trait_name = $composed_trait_name_map{$trait_name_composed};
+					}
+					else {
+					    my @component_cvterm_ids;
+					    foreach my $component_term (@component_cvterm_names) {
+						my $component_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $component_term)->cvterm_id();
+						push @component_cvterm_ids, $component_cvterm_id;
+					    }
+					    my $trait_name_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_cvterm_ids);
+					    $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_name_cvterm_id, $composable_cvterm_format);
+					    print STDERR Dumper $trait_name_composed;
+					    if (!$trait_name) {
+						my $term_check = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name_composed, 'postcomposed_terms');
+						$trait_name = $term_check ? $term_check->name() : undef;
+					    }
+					    if (!$trait_name) {
+						my $term_check = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name_composed, 'composed_trait');
+						$trait_name = $term_check ? $term_check->name() : undef;
+					    }
+					    $composed_trait_name_map{$trait_name_composed} = $trait_name;
+					}
+				    }
 
-                                    if ($num_predef_col > 0) {
-                                        my @component_cvterm_ids;
-                                        for my $predef_col ($num_fixed_col .. $num_col_before_traits-1) {
-                                            if ($worksheet->get_cell($row,$predef_col)){
-                                                my $component_term = $worksheet->get_cell($row, $predef_col)->value();
-                                                #print STDERR $component_term."\n";
-                                                my $component_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $component_term)->cvterm_id();
-                                                push @component_cvterm_ids, $component_cvterm_id;
-                                            }
-                                        }
-                                        my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
-                                        push @component_cvterm_ids, $trait_cvterm_id;
-                                        my $trait_name_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_cvterm_ids);
-                                        $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_name_cvterm_id, $composable_cvterm_format);
-                                    }
-
+				    print STDERR Dumper $trait_name;
+				    if (!$trait_name){ die; }
                                     $traits_seen{$trait_name} = 1;
                                     my $value_string = '';
 

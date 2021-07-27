@@ -67,7 +67,8 @@ my $parsed_data_check =  [
             'Field',
             42,
             -76,
-            123
+            123,
+            'GHCND:USC00300331'
           ]
         ];
 is_deeply($parse_result->{'success'}, $parsed_data_check, 'check location excel parse data' );

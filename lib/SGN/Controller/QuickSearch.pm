@@ -13,7 +13,10 @@ use Class::Load ':all';
 use CXGN::Marker::Tools;
 use CXGN::Tools::Identifiers qw/ identifier_url identifier_namespace /;
 use CXGN::Tools::Text qw/to_tsquery_string trim/;
-
+use SGN::Model::Cvterm;
+use Bio::Chado::Schema;
+use CXGN::Marker::SearchMatView;
+use Data::Dumper;
 
 =head1 NAME
 
@@ -33,6 +36,10 @@ search is Google search is repeated without the domain constraint to
 show the number of hits on the world wide web in total. A link for
 that search is also provided.
 
+
+## TO DO: Make this a little more modern and move this code to
+## an AJAX Controller...
+
 =head1 PUBLIC ACTIONS
 
 =cut
@@ -43,12 +50,21 @@ my %searches = (
     clone      => { function => \&quick_clone_search, exact => 1 },
     est        => { function => \&quick_est_search,   exact => 1 },
     microarray => { function => \&quick_array_search, exact => 1 },
-    marker     => { function => \&quick_marker_search  },
+    # marker   => { function => \&quick_marker_search  },
+    marker     => { function => \&quick_mapped_geno_marker_search },
     manual_annotations    => { function => \&quick_manual_annotation_search    },
     automatic_annotations => { function => \&quick_automatic_annotation_search },
     sgn_pages  => { function => \&quick_page_search },
-    web        => { function => \&quick_web_search  },
+#    web        => { function => \&quick_web_search  },
     phenotype  => { function => \&quick_phenotype_search },
+    accessions => { function => \&quick_accession_search },
+    plots      => { function => \&quick_plot_search },
+    populations=> { function => \&quick_populations_search },
+    trials     => { function => \&quick_trials_search },
+    locations  => { function => \&quick_locations_search },
+    traits     => { function => \&quick_traits_search },
+    breeding_programs => { function => \&quick_bp_search },
+
     # search-framework searches
     people     => { sf_class    => 'CXGN::Searches::People',
                     result_desc => 'people',
@@ -162,7 +178,7 @@ sub redirect_if_only_one_possible : Private {
          ),
        );
 
-    if( @possible_urls == 1 ) {
+    if( @possible_urls == 1 && $possible_urls[0] ne '' ) {
         $c->log->debug("redirecting to only possible url: $possible_urls[0]") if $c->debug;
         $c->res->redirect( $possible_urls[0] );
         return;
@@ -174,19 +190,21 @@ sub execute_predefined_searches: Private {
 
     # execute all the searches and stash the results
     for my $search_name ( sort keys %searches ) {
+	print STDERR "performing quick search for $search_name (". Dumper($searches{$search_name}).")...\n";
          my $search = $searches{$search_name};
          my $b = time;
          my $searchresults = $self->do_quick_search(
              $c->dbc->dbh,
              %$search,
              term => $c->stash->{term},
+	     schema => $c->dbic_schema("Bio::Chado::Schema"),
            );
          $c->stash->{results}{$search_name} = {
              result => $searchresults,
              time   => time - $b,
              exact  => $search->{exact}
            };
-
+	print STDERR Dumper($searchresults);
     }
 }
 
@@ -205,7 +223,8 @@ sub do_quick_search {
     my ( $self, $db, %args ) = @_;
 
     if ($args{function}) { #just run legacy functions and return their results
-        return $args{function}->( $db,$args{term});
+	print STDERR "INVOKING $args{function} with $args{term}\n";
+        return $args{function}->( $self, $db,$args{term}, $args{schema});
     } else {
         my $classname = $args{sf_class}
             or die 'Must provide a class name';
@@ -240,6 +259,7 @@ sub do_quick_search {
 ###################### LEGACY QUICK SEARCH FUNCTIONS ##########################
 
 sub quick_est_search {
+    my $self = shift;
     my $db = shift;
     my $term = shift;
 
@@ -263,6 +283,7 @@ sub quick_est_search {
 }
 
 sub quick_clone_search {
+    my $self = shift;
     my $db = shift;
     my $term = shift;
 
@@ -302,6 +323,7 @@ sub quick_clone_search {
 # For quick_search queries without the Version#-Release#- prefix, the version and release are
 # assumed to both be one. This is hardcoded below in two variables $version and $release.
 sub quick_array_search {
+    my $self = shift;
     my $db = shift;
     my $term = shift;
 
@@ -338,8 +360,9 @@ sub quick_array_search {
     }
     return $array_link;
 }
+
 sub quick_phenotype_search {
-    my ($db, $term) = @_;
+    my ($self, $db, $term) = @_;
     my $q = "select count (distinct stock_id ) from stock left join stockprop using (stock_id) left join cvterm on stockprop.type_id = cvterm.cvterm_id where stock.name ilike ? or stock.uniquename ilike ? or (stockprop.value ilike ? and cvterm.name ilike ? ) " ;
     my $count = sql_query_count( $db , $q , "\%$term\%","\%$term\%","\%$term\%", "\%synonym\%" );
     my $pheno_link = [ undef , "0 phenotype identifiers"];
@@ -351,6 +374,7 @@ sub quick_phenotype_search {
 }
 
 sub quick_marker_search {
+    my $self = shift;
     my $db = shift;
     my $term = shift;
 
@@ -368,7 +392,37 @@ sub quick_marker_search {
     return $marker_link;
 }
 
+sub quick_mapped_geno_marker_search {
+    my $self = shift;
+    my $db = shift;
+    my $term = shift;
+    my $schema = shift;
+
+    my $count = 0;
+    my $marker_link = [undef, "0 marker identifiers"];
+
+    # Get count of mapped markers
+    my $mapped_count = CXGN::Marker::Tools::marker_name_to_ids($db,$term);
+    $count = $count + $mapped_count;
+
+    # Get count of genotyped markers
+    my $msearch = CXGN::Marker::SearchMatView->new(bcs_schema => $schema);
+    my $results = $msearch->query({ name => $term, name_match => 'exact' });
+    my $genotyped_count = $results->{counts}->{markers};
+    $count = $count + $genotyped_count;
+
+    if ( $count != 0 ) {
+        $marker_link = [
+            "/search/variants/results?marker_name=$term&marker_name_match=exactly",
+            "$count marker identifiers"
+        ];
+    }
+
+    return $marker_link;
+}
+
 sub quick_manual_annotation_search {
+    my $self = shift;
     my $db = shift;
     my $term = shift;
 
@@ -404,6 +458,7 @@ EOSQL
 }
 
 sub quick_automatic_annotation_search {
+    my $self = shift;
     my $db = shift;
     my $term = shift;
     my $cleaned_term = to_tsquery_string($term);
@@ -441,8 +496,9 @@ sub sql_query_count {
 }
 
 sub google_search {
-  my( $site_title, $term, $site_address ) = @_;
+  my( $self, $site_title, $term, $site_address ) = @_;
 
+  print STDERR "Googling...\n";
   my $google_url = uri( scheme   => 'http',
                         host     => 'www.google.com',
                         path     => '/custom',
@@ -460,6 +516,7 @@ sub google_search {
   $lwp_ua->agent( 'SGN Quick Search ( Mozilla compatible )' );
   my $res = $lwp_ua->request( HTTP::Request->new( GET => $google_url ));
 
+  print STDERR "Hello world!\n";
   my $count = do {
     if( $res ->is_success ) {
       my $cont = $res->content;
@@ -469,6 +526,7 @@ sub google_search {
     }
   };
 
+  print STDERR "Returning search results...\n";
   if( $count ) {
       return [ $google_url, "$count pages on $site_title" ];
   } else {
@@ -476,18 +534,205 @@ sub google_search {
   }
 }
 
+sub stock_search {
+    my $self = shift;
+    my $schema = shift;
+    my $type = shift;
+    my $term = shift;
+
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $type, 'stock_type')->cvterm_id();
+    my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => { ilike => $term} , type_id => $accession_type_id });
+
+    my ($id, $name);
+    if ($rs->count() > 0) {
+	my $row = $rs->next();
+	$id = $row->stock_id();
+	$name = $row->uniquename();
+	print STDERR "FOUND: $id, $name\n";
+    }
+    return ($id, $name);
+}
+
+sub quick_accession_search {
+    my $self = shift;
+    my $db = shift;
+    my $term = shift;
+    my $schema = shift;
+
+    my ($id, $name) = $self->stock_search($schema, 'accession', $term);
+    if ($id) {
+	print STDERR "Found accession $id, $name\n";
+	return [ '/stock/'.$id.'/view', "1 accession: ".$name ];
+    }
+    else {
+	print STDERR "Found no accession... ???\n";
+	return [ '', "0 accession identifers" ];
+    }
+}
+
+sub quick_plot_search {
+    my $self = shift;
+    my $db = shift;
+    my $term = shift;
+    my $schema = shift;
+
+    my ($id, $name) = $self->stock_search($schema, 'plot', $term);
+
+    if ($id) {
+	return [ '/stock/'.$id."/view", "1 plot: ".$name ];
+    }
+    else {
+	return [ '', "plots: No exact match." ];
+    }
+}
+
+sub quick_populations_search {
+    my $self = shift;
+    my $db = shift;
+    my $term = shift;
+    my $schema = shift;
+
+    my ($id, $name) = $self->stock_search($schema, 'population', $term);
+
+    if ($id) {
+	return [ '/stock/'.$id."/view", "1 population: ".$name ];
+    }
+    else {
+	return [ '', "0 populations." ];
+    }
+}
+
+sub quick_trials_search {
+    my $self = shift;
+    my $db = shift;
+    my $term = shift;
+    my $schema = shift;
+
+    my $cv_rs = $schema->resultset("Cv::Cv")->search( { 'me.name' => 'project_type' }, { join => 'cvterms', '+select' => [ 'cvterms.name', 'cvterms.cvterm_id' ], '+as' => [ 'cvterm_name', 'cvterm_id' ]  });
+
+    my @trial_type_ids = ();
+    while (my $row = $cv_rs->next()) {
+	my $cvterm_id = $row->get_column('cvterm_id');
+	print STDERR "retrieving cvterm id: $cvterm_id\n";
+	push @trial_type_ids, $cvterm_id;
+    }
+
+    my $rs = $schema->resultset("Project::Project")->search( { name => { ilike => $term }, 'projectprops.type_id' => { -in => [ @trial_type_ids ] } }, { join => 'projectprops', '+select' => [ 'projectprops.type_id' ], '+as' => [ 'project_type_id' ] });
+
+    my ($id, $name);
+    if ($rs->count() == 1) {
+	my $row = $rs->next();
+	$id = $row->project_id();
+	$name = $row->name();
+    }
+    if ($id) { 
+	return [ '/breeders/trial/'.$id, "1 trial: ".$name ];
+    }
+    else {
+	return [ '', "0 trials" ];
+    }
+}
+
+sub quick_locations_search {
+    my $self = shift;
+    my $db = shift;
+    my $term = shift;
+    my $schema = shift;
+
+    print STDERR "LOCATION SEARCH!\n";
+    my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search( { description => { ilike => $term } });
+
+    my ($id, $name);
+    if ($rs->count() == 1) {
+	my $row = $rs->next();
+	$id = $row->nd_geolocation_id();
+	$name = $row->description();
+    }
+    else {
+	print STDERR "LOCATION HAS ".$rs->count()." MATCHES!!!!\n";
+    }
+    print STDERR "RETURNED: $id, $name\n";
+    if ($id) {
+	return [ '/breeders/locations/', '1 location: '.$name ]; # just link to generic locations page
+    }
+    else {
+	return [ '', '0 locations' ];
+    }
+}
+
+sub quick_traits_search {
+    my $self = shift;
+    my $db = shift;
+    my $term = shift;
+    my $schema = shift;
+
+    my $rs = $schema->resultset("Cv::Cvterm")->search( { name => { ilike => $term } });
+
+    my ($id, $name);
+    if ($rs->count() > 0) {
+	my $row = $rs->next();
+	$id = $row->cvterm_id();
+	$name = $row->name();
+    }
+    if ($id) {
+	return [ '/cvterm/'.$id.'/view', '1 trait: '.$name ];
+    }
+    else {	
+	return [ '', '0 cvterms' ];
+    }
+}
+
+sub quick_bp_search {
+    my $self = shift;
+    my $db = shift;
+    my $term = shift;
+    my $schema = shift;
+
+    print STDERR "breeding program search... \n";
+    my $rs = $schema->resultset("Project::Project")->search( { 'me.name' => { ilike => $term }  } , { cvterm_name => 'breeding_program', join => 'projectprops' => { 'cvterms', '+select' => [ 'cvterm.name'], '+as' => ['cvterm_name'] } } );
+
+    my ($id, $name);
+
+    if ($rs->count() > 1) {
+	print STDERR $rs->count()." results, which is unexpected...\n";
+	while (my $row = $rs->next()) {
+	    print STDERR join("\t", $row->name(), $row->project_id())."\n";
+	}
+	return [ '', 'too many hits' ];
+    }
+
+    elsif ($rs->count() == 1) {
+	my $row = $rs->next();
+	$id = $row->project_id();
+	$name = $row->name();
+    }
+    else {
+	print STDERR "Sorry, no match!\n";
+    }
+
+    print STDERR "FOUND: $id\n";
+    if ($id) {
+	return [ '/breeders/program/'.$id, "1 breeding program: ".$name ];
+    }
+    else { 
+	return [ '', '0 breeding programs' ];
+    }
+
+}
 
 sub quick_web_search {
-  my (undef,$term) = @_;
+  my ($self, undef,$term) = @_;
   # works the same way as quick_page_search, except that the domain contraint is removed from the
   # search.
-  return google_search('the entire web',$term);
-}
-sub quick_page_search {
-  my (undef,$term) = @_;
-  return google_search('SGN',$term,'solgenomics.net');
+  print STDERR "Performing web search... ";
+  return $self->google_search('the entire web',$term);
 }
 
+sub quick_page_search {
+  my ($self, undef,$term) = @_;
+  return $self->google_search('SGN',$term,'solgenomics.net');
+}
 
 __PACKAGE__->meta->make_immutable;
+
 1;

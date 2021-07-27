@@ -170,7 +170,11 @@ sub make_bioperl_result_writer {
     $writer->id_parser( sub {
 	my ($idline) = @_;
 	my ($ident,$acc) = Bio::SearchIO::Writer::HTMLResultWriter::default_id_parser($idline);
-	
+
+	# remove lcl| prefixes
+	if ($ident =~ m/lcl\|(.*)/) {
+	    $ident = $1;
+	}
 	# The default implementation checks for NCBI-style identifiers in the given string ('gi|12345|AA54321').
 	# For these IDs, it extracts the GI and accession and
 	# returns a two-element list of strings (GI, acc).

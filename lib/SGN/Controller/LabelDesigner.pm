@@ -18,7 +18,7 @@ sub interactive_barcoder_main :Path('/tools/label_designer') Args(0) {
     	return;
     }
 
-    $c->stash->{template} = '/tools/label_designer.mas';
+    $c->stash->{template} = '/tools/label_designer/index.mas';
 }
 
 sub barcode_preview :Path('/tools/label_designer/preview') {

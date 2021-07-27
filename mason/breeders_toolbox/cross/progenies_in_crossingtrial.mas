@@ -5,16 +5,387 @@ $trial_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<table class="table table-hover table-bordered" id="progenies_in_crossingtrial_table">
-    <thead>
-        <tr>
-            <th>Cross Name</th>
-            <th>Number of Progenies</th>
-            <th>Family Name</th>
-        </tr>
-    </thead>
-</table>
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Upload Progenies or Family Names", is_subsection => 1, collapsible=>1, collapsed=>1, &>
+                <&| /page/info_section.mas, title=>"Upload progeny names that are NOT in database ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_progenies_new_accessions_link">Upload</button>'&>
+                </&>
+                <&| /page/info_section.mas, title=>"Upload progeny names that already EXIST in database", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_progenies_existing_accessions_link">Upload</button>'&>
+                </&>
+                <&| /page/info_section.mas, title=>"Upload family names ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_family_names_link">Upload</button>'&>
+                </&>
+            </&><!-- closes upload progenies and family names section -->
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Progeny and Family Name Info", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+                <table class="table table-hover table-bordered" id="progenies_in_crossingtrial_table">
+                    <thead>
+                        <tr>
+                            <th>Cross Unique ID</th>
+                            <th>Cross Combination</th>
+                            <th>Number of Progenies</th>
+                            <th>Family Name</th>
+                        </tr>
+                    </thead>
+                </table>
+            </&><!-- closes progeny and family name info section -->
+        </div>
+    </div>
+</div><!-- closes well -->
 
+<div class="modal fade" id="upload_progenies_new_accessions_dialog" name="upload_progenies_new_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="updateProgeniesDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProgeniesNewDialog">Upload Progeny Names that are NOT in Database </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File Format Information</b>
+                            <br>
+                            <a id="upload_progenies_new_spreadsheet_format_info">Spreadsheet Format</a>
+                            <br>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_progenies_new_form" name="upload_progenies_new_form">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Upload File: </label>
+                                <div class="col-sm-10">
+                                    <input type="file" name="progenies_new_upload_file" id="progenies_new_upload_file" encoding="multipart/form-data" />
+                                </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_progenies_new_submit" id="upload_progenies_new_submit">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_progenies_new_spreadsheet_info_dialog" name="upload_progenies_new_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadProgeniesInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProgeniesNewInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Progenies of existing crosses may be uploaded in an Excel file (.xls)
+                    </b>
+                    <br>
+                        (.xlsx format not supported)
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>cross_unique_id</td>
+                                <td>progeny_name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Required columns:
+                    </b>
+                    <br>
+                        <b>-cross_unique_id</b> (must exist in the database)
+                    <br>
+                        <b>-progeny_name</b> (accession names must NOT already exist in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
+                    <br>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_progenies_error_display" name="upload_progenies_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadProgeniesErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProgeniesErrorDialog">Upload Progenies File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="progenies_saved_dialog_message" name="progenies_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="progeniesSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="progeniesSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The progenies were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_progenies_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_progenies_existing_accessions_dialog" name="upload_progenies_existing_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadProgeniesExistDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProgeniesExistDialog">Upload Progeny Names that Exist in Database </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File Format Information</b>
+                            <br>
+                            <a id="upload_progenies_exist_spreadsheet_format_info">Spreadsheet Format</a>
+                            <br>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_progenies_exist_form" name="upload_progenies_exist_form">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Upload File: </label>
+                                <div class="col-sm-10">
+                                    <input type="file" name="progenies_exist_upload_file" id="progenies_exist_upload_file" encoding="multipart/form-data" />
+                                </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_progenies_exist_submit" id="upload_progenies_exist_submit">Validate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_cross_progenies_validate_display" name="upload_cross_progenies_validate_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossProgeniesValidateDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossProgeniesValidateDialog">Results From Validation</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="well">To Overwrite Parents In the Case That An Accession Already Has Male or Female Parents <input type="checkbox" checked id="cross_upload_overwrite_pedigrees" /></div>
+                        <table class="table table-hover">
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_cross_progenies_store" id="upload_cross_progenies_store" data-dismiss="modal">Store</button>
+            </div>
+        </div>
+     </div>
+</div>
+
+<div class="modal fade" id="upload_progenies_exist_spreadsheet_info_dialog" name="upload_progenies_exist_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadProgeniesInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProgeniesExistInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Progenies of existing crosses may be uploaded in an Excel file (.xls)
+                    </b>
+                    <br>
+                        (.xlsx format not supported)
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>cross_unique_id</td>
+                                <td>progeny_name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Required columns:
+                    </b>
+                    <br>
+                        <b>-cross_unique_id</b> (must exist in the database)
+                    <br>
+                        <b>-progeny_name</b> (accession names must already EXIST in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
+                    <br>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_family_name_dialog" name="upload_family_name_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadFamilyNameDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadFamilyNameDialog">Upload Family Name of Existing Crosses </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                            <b>File Format Information</b>
+                            <br>
+                            <a id="upload_family_name_spreadsheet_format_info">Spreadsheet Format</a>
+                            <br>
+                        </p>
+                    </&>
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_family_name_form" name="upload_family_name_form">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Upload File: </label>
+                                <div class="col-sm-10">
+                                    <input type="file" name="family_name_upload_file" id="family_name_upload_file" encoding="multipart/form-data" />
+                                </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_family_name_submit" id="upload_family_name_submit">Upload File</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_family_name_error_display" name="upload_family_name_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadFamilyNameErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadFamilyNameErrorDialog">Upload Family Name File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="upload_family_name_spreadsheet_info_dialog" name="upload_family_name_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadFamilyNameInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadFamilyNameInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Family Name of existing crosses may be uploaded in an Excel file (.xls)
+                    </b>
+                    <br>
+                        (.xlsx format not supported)
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>cross_unique_id</td>
+                                <td>family_name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required columns:</b>
+                    <ul>
+                        <li>cross_unique_id (must exist in the database)</li>
+                        <li>family_name (may be new family name or family name already stored in the database. Crosses in the same family must have the same parental genotypes. If you would like to use family name previously stored in the database, please check the name carefully)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="family_name_saved_dialog_message" name="family_name_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="familyNameSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="familyNameSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The family names were saved successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_family_name_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 
@@ -26,6 +397,179 @@ jQuery(document).ready(function(){
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_progenies_trial',
         });
     });
+
+    jQuery('#upload_progenies_new_accessions_link').click(function(){
+
+        jQuery('#upload_progenies_new_spreadsheet_format_info').click(function(){
+            jQuery('#upload_progenies_new_spreadsheet_info_dialog').modal("show");
+        });
+
+        jQuery('#upload_progenies_new_accessions_dialog').modal("show");
+    });
+
+    jQuery('#upload_progenies_new_submit').click(function(){
+        var uploadFile = jQuery('#progenies_new_upload_file').val();
+        jQuery('#upload_progenies_new_form').attr("action", "/ajax/cross/upload_progenies");
+        if (uploadFile === ''){
+            alert('Please select a file');
+            return;
+        }
+        jQuery('#upload_progenies_new_form').submit();
+        jQuery('#upload_progenies_new_accessions_dialog').modal("hide");
+    });
+
+    jQuery('#upload_progenies_new_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery('#working_modal').modal("show");
+        },
+        complete: function(response) {
+            jQuery('#working_modal').modal("hide");
+            if (response.error_string) {
+                jQuery('#upload_progenies_error_display tbody').html('');
+                jQuery('#upload_progenies_error_display tbody').append(response.error_string);
+                jQuery('#upload_progenies_error_display').modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#progenies_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery('#upload_progenies_existing_accessions_link').click(function(){
+
+        jQuery('#upload_progenies_exist_spreadsheet_format_info').click(function(){
+            jQuery('#upload_progenies_exist_spreadsheet_info_dialog').modal("show");
+        });
+
+        jQuery('#upload_progenies_existing_accessions_dialog').modal("show");
+    });
+
+    jQuery('#upload_progenies_exist_submit').click(function(){
+        var uploadFile = jQuery('#progenies_exist_upload_file').val();
+        jQuery('#upload_progenies_exist_form').attr("action", "/ajax/cross/validate_upload_existing_progenies");
+        if (uploadFile === ''){
+            alert('Please select a file');
+            return;
+        }
+        jQuery('#upload_progenies_exist_form').submit();
+        jQuery('#upload_progenies_existing_accessions_dialog').modal("hide");
+    });
+
+    var archived_file_name;
+    var user_id;
+
+    jQuery('#upload_progenies_exist_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery('#working_modal').modal("show");
+        },
+        complete: function (response) {
+            jQuery('#working_modal').modal("hide");
+            console.log(response);
+            var html;
+            archived_file_name = response.archived_file_name;
+            user_id = response.user_id;
+            if (response.error_string) {
+                jQuery('#upload_progenies_error_display tbody').html('');
+                jQuery('#upload_progenies_error_display tbody').append(response.error_string);
+                jQuery('#upload_progenies_error_display').modal("show");
+                return;
+            }
+            if (response.existing_pedigrees) {
+                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.existing_pedigrees+'</p>';
+            }
+            else {
+                html = '<h3>There Were No Issues Identified</h3>';
+            }
+            jQuery('#upload_cross_progenies_validate_display tbody').html(html);
+            jQuery('#upload_cross_progenies_validate_display').modal('show');
+        }
+    });
+
+    jQuery('#upload_cross_progenies_store').click(function(){
+        jQuery.ajax( {
+            url: '/ajax/cross/store_upload_existing_progenies',
+            data: {
+                'archived_file_name':archived_file_name,
+                'overwrite_pedigrees':jQuery('#cross_upload_overwrite_pedigrees').is(":checked"),
+                'user_id' : user_id,               
+            },
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.error) {
+                    alert('An Error Occured: No progenies were saved!. '+response.error);
+                    return;
+                } else {
+                    jQuery('#progenies_saved_dialog_message').modal("show");
+                }
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred storing the progenies. None were uploaded.');
+            }
+        });
+    });
+
+    jQuery('#dismiss_progenies_saved_dialog').click(function(){
+        location.reload();
+    });
+
+    jQuery("#upload_family_names_link").click(function(){
+
+        jQuery("#upload_family_name_spreadsheet_format_info").click(function(){
+            jQuery("#upload_family_name_spreadsheet_info_dialog").modal("show");
+        });
+
+        jQuery("#upload_family_name_dialog").modal("show");
+    });
+
+    jQuery("#upload_family_name_submit").click(function(){
+        var uploadFile = jQuery("#family_name_upload_file").val();
+        jQuery('#upload_family_name_form').attr("action", "/ajax/cross/upload_family_names");
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_family_name_form").submit();
+        jQuery("#upload_family_name_dialog").modal("hide");
+    });
+
+    jQuery('#upload_family_name_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_family_name_error_display tbody").html('');
+                jQuery("#upload_family_name_error_display tbody").append(response.error_string);
+                jQuery("#upload_family_name_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#family_name_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_family_name_saved_dialog").click(function(){
+        location.reload();
+    });
+
 
 });
 

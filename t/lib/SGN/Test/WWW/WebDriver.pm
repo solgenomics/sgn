@@ -69,7 +69,7 @@ has 'host' => ( is => 'rw',
 
 has 'driver' => ( is => 'rw',
 		  isa => 'Selenium::Remote::Driver',
-		  default => sub { Selenium::Remote::Driver->new() },
+		  default => sub { Selenium::Remote::Driver->new('base_url' => $ENV{SGN_TEST_SERVER}, 'remote_server_addr' => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost') },
     );
 
 has 'user_data' => ( is => 'rw',
@@ -146,7 +146,7 @@ sub base_url {
 sub get { 
     my $self = shift;
     my $url = shift;
-    return $self->driver->get(catfile($self->base_url(), $url));
+    return $self->driver->get($url);
 }
 
 sub get_ok { 

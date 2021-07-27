@@ -1,0 +1,33 @@
+<div class="text-center">
+    <p>Last Step! Here you can edit additional layout settings and/or save your design.</p>
+    <p>When you are ready, click 'download' to generate your labels. If you are trying to download a very large set, you will be given the option to download your labels in batches.</p>
+</div>
+</br>
+<div class="col-md-12" id="save_and_download">
+    <div class="col-md-4" style="margin-top:40px;">
+        <center>
+        <br>
+            <button class="btn btn-primary" id="edit_additional_settings">Edit Additional Settings</button>
+        </center>
+    </div></br></br>
+    <div class="col-md-4" style="margin-top:40px;">
+        <center>
+            <label>Save label design:</label>
+            <div class="input-group" id="save_design_div">
+                <input type="text" id="save_design_name" class="form-control" placeholder="Enter a name"></input>
+                <span class="input-group-btn">
+                    <button class="btn btn-default" id="d3-save-button" type="button">Save</button>
+                </span>
+            </div>
+        </center>
+    </div>
+    <div class="col-md-4" style="margin-top:40px;">
+      <center>
+          <br>
+          <button id="d3-pdf-button" value="pdf" class="btn btn-primary" style="display:none;">Download pdf</button>
+          <button id="d3-zpl-button" value="zpl" class="btn btn-primary" style="display:none;">Download zpl file</button>
+      </center>
+      &nbsp
+      &nbsp
+    </div>
+</div>

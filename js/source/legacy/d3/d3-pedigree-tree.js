@@ -340,7 +340,7 @@
         // }
         //var offset_level = counts[sink_level];
         var offset_level = Math.abs((y2-y1) / nodePadding);
-        console.log(offset_level);
+        //console.log(offset_level);
         var start = x2-(x2-x1)*(1-sink_ratio);
         var end = x1+(x2-x1)*(source_ratio);
         var width = (end-start);
@@ -366,7 +366,7 @@
             return child.level-1;
           });
         }
-        console.log(node.level);
+        //console.log(node.level);
       });
     }
     

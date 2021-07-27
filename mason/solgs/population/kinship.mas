@@ -1,0 +1,41 @@
+<%doc>
+
+=head1 NAME
+ 
+/solgs/population/kinship.mas - kinship heatmap
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id   => undef
+$trial_id => undef
+
+</%args>
+
+<%perl>
+
+$pop_id = $trial_id if $trial_id;
+
+</%perl>
+
+
+<&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 1, 
+      title       => "Kinship and inbreeding coefficients"
+&>
+
+  <input id="run_kinship" class="button" type="button" value="Run kinship" /> 
+
+  <& /solgs/kinship/plot.mas,
+     pop_id => $pop_id
+  &>
+
+</&>

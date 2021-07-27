@@ -4,9 +4,9 @@
     (global.PedigreeViewer = factory());
 }(this, (function () { 'use strict';
 
-function PedigreeViewer(server,auth,urlFunc){
+function PedigreeViewer(server,auth,version,urlFunc){
         var pdgv = {};
-        var brapijs = BrAPI(server,auth);
+        var brapijs = BrAPI(server,version,auth);
         var root = null;
         var access_token = null;
         var loaded_nodes = {};
@@ -14,11 +14,13 @@ function PedigreeViewer(server,auth,urlFunc){
         var locationSelector = null;
         
         urlFunc = urlFunc!=undefined?urlFunc:function(){return null};
-                
-        pdgv.newTree = function(stock_id,callback){
+             
+        pdgv.newTree = function(stock_id,callback){   
             root = stock_id;
             loaded_nodes = {};
-            var all_nodes = [];
+            var all_nodes = []; 
+            var levels =0;
+            var number_ancestors =1;
             load_node_and_all_ancestors([stock_id]);
             function load_node_and_all_ancestors(ids){
                 load_nodes(ids,function(nodes){
@@ -31,8 +33,9 @@ function PedigreeViewer(server,auth,urlFunc){
                                loaded_nodes[d]===undefined &&
                                self.indexOf(d) === index;
                     });
-                    if (parents.length>0){
-                        load_node_and_all_ancestors(parents);
+                    if (parents.length>0 && levels < number_ancestors){
+                        load_node_and_all_ancestors(parents); 
+                        levels++;
                     }
                     else {
                         createNewTree(all_nodes);
@@ -70,8 +73,8 @@ function PedigreeViewer(server,auth,urlFunc){
         
         function load_nodes(stock_ids,callback){
             var germplasm = brapijs.data(stock_ids);
-            var pedigrees = germplasm.germplasm_pedigree(function(d){return {'germplasmDbId':d}});
-            var progenies = germplasm.germplasm_progeny(function(d){return {'germplasmDbId':d}},"map");
+            var pedigrees = germplasm.germplasm_pedigree(function(d){return {'germplasmDbId':d,'pageSize':1000}});
+            var progenies = germplasm.germplasm_progeny(function(d){return {'germplasmDbId':d,'pageSize':1000}},"map");
             pedigrees.join(progenies,germplasm).filter(function(ped_pro_germId){
                 if (ped_pro_germId[0]===null || ped_pro_germId[1]===null) {
                     console.log("Failed to load progeny or pedigree for "+ped_pro_germId[2]);
@@ -391,7 +394,7 @@ function PedigreeViewer(server,auth,urlFunc){
             allNodes.filter(function(d){return d.type=="node-group"})
               .style("cursor", "pointer")
               .on("click",function(d){
-                layout.pdgtree.excludeFromGrouping(d.value.slice(0,10).map(function(d){return d.id;}));
+                layout.pdgtree.excludeFromGrouping(d.value.slice(0,20).map(function(d){return d.id;}));
                 drawTree(d3.transition().duration(700).ease(d3.easeLinear));
             });
             var oldNodes = nodes.exit().remove();

@@ -8,7 +8,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
     default => 'application/json',
     stash_key => 'rest',
-    map => { 'application/json' => 'JSONP', 'text/html' => 'JSONP' },
+    map => { 'application/json' => 'JSONP' },
    );
 
 

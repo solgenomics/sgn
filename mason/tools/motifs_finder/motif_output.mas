@@ -1,0 +1,64 @@
+<%args>
+$parameters => ""
+$res => ""
+$outfile => ""
+$weblogo_output => ""
+@logo => ""
+@logoID => ""
+$tfile => ""
+@logowidth => ""
+@motif_tab => ""
+@freq_tab => ""
+@prob_tab => ""
+@BGPM_tab => ""
+@sum_indv_tab => ""
+$sum => ""
+</%args>
+
+<center>
+
+	<%perl>
+
+		for (my $i = 0; $i < scalar(@logo); $i++){
+			#print "my index = $i <br\>";
+			print "<div class='well' style=\"width:90%\">";
+			#print "<b>Motif Sequence logo $logoID[$i], for Length $logowidth[$i]</b>\n <br/>";
+			print "<b>Motif Sequence logo $logoID[$i]</b>\n <br/>";
+			#print "<img src= \"/export/prod/tmp/motifs_finder/$logo[$i]\"><br/><br/><br/>";
+			print "<img src= \"/static/documents/tempfiles/motifs_finder/$logo[$i]\" ><br/><br/><br/>";
+		 	print "<b>Motif Table </b><br/>$motif_tab[$i]\n <br/><br/>" ;
+			print "<b>Motif Model (residue frequence x 100)</b><br\>$freq_tab[$i]\n <br\> ";
+			print "<b>Motif Probabilty Model </b><br\>$prob_tab[$i]\n <br/>" ;
+			print "<b>Background Probabilty Model </b> <br\>$BGPM_tab[$i]\n <br/>" ;
+			print "<b>Motif $logoID[$i] Log MAP Value</b><br\>$sum_indv_tab[$i]\n <br/>" ;
+			print "</div>";
+		}
+
+	</%perl>
+
+	<hr style="\&quot;color:" #006699;="" margin:="" 50px="" 20px;="" \"="">
+	<h ><b>Motif Finder Result Summary</h></b><br/><br/><%  $sum %> <br/><br/><br/>
+
+</center>
+
+<style>
+
+	p.f1 {
+	font: 15px courier, sans-serif;
+	}
+
+</style>
+
+<center>
+	<form action="/result", method="POST" >
+
+		<input name="file_name" value="<% $outfile %>" style="display:none;">
+		<input name="output_file" value="<% $res %>" style="display:none;">
+		<button class="btn btn-primary"  id="button"  value="Download Result">Download Result</button>
+	</form>
+
+ 		<p><br/>
+		<a href="#top"  >Back to top</a> &nbsp &nbsp <!--<a href="javascript:javascript:history.go(-1)">Back to previous page</a> --> &nbsp &nbsp
+		<a id="back_to_input" href="/tools/motifs_finder">Go back to input page</a>
+		</p>
+</center>

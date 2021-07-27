@@ -21,11 +21,11 @@ $validation_download_url => ''
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Model accuracy" 
+  title       => "Model accuracy statistics -- K-Folds Cross-validation method" 
 &> 
 
 <& /page/columnar_table.mas,
-  headings     => ["Runs", "Accuracy(r)"], 
+  headings     => [" ", " "], 
   data         => $accuracy_report,
   __alt_freq   => 2,
   __alt_width  => 1,

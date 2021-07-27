@@ -14,6 +14,7 @@ sub _validate_with_plugin {
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $editable_stockprops = $self->get_editable_stock_props();
     my $parser = Spreadsheet::ParseExcel->new();
     my @error_messages;
     my %errors;
@@ -66,8 +67,8 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell(0,4)) {
         $synonyms_head  = $worksheet->get_cell(0,4)->value();
     }
-    my @allowed_stockprops_head = ('location_code(s)','ploidy_level(s)','genome_structure(s)','variety(s)','donor(s)','donor_institute(s)','donor_PUI(s)','country_of_origin(s)','state(s)','institute_code(s)','institute_name(s)','biological_status_of_accession_code(s)','notes(s)','accession_number(s)','PUI(s)','seed_source(s)','type_of_germplasm_storage_code(s)','acquisition_date(s)','transgenic','introgression_parent','introgression_backcross_parent','introgression_map_version','introgression_chromosome','introgression_start_position_bp','introgression_end_position_bp');
-    my %allowed_stockprops_head = map { $_ => 1 } @allowed_stockprops_head;
+    push @$editable_stockprops, ('location_code(s)','ploidy_level(s)','genome_structure(s)','variety(s)','donor(s)','donor_institute(s)','donor_PUI(s)','country_of_origin(s)','state(s)','institute_code(s)','institute_name(s)','biological_status_of_accession_code(s)','notes(s)','accession_number(s)','PUI(s)','seed_source(s)','type_of_germplasm_storage_code(s)','acquisition_date(s)','transgenic','introgression_parent','introgression_backcross_parent','introgression_map_version','introgression_chromosome','introgression_start_position_bp','introgression_end_position_bp');
+    my %allowed_stockprops_head = map { $_ => 1 } @$editable_stockprops;
     for my $i (5..$col_max){
         my $stockprops_head;
         if ($worksheet->get_cell(0,$i)) {
@@ -87,11 +88,11 @@ sub _validate_with_plugin {
     if (!$population_name_head || $population_name_head ne 'population_name') {
         push @error_messages, "Cell C1: population_name is missing from the header";
     }
-    if (!$organization_name_head || $organization_name_head ne 'organization_name(s)') {
-        push @error_messages, "Cell D1: organization_name(s) is missing from the header";
+    if (!$organization_name_head || ($organization_name_head ne 'organization_name(s)' && $organization_name_head ne 'organization_name') ) {
+        push @error_messages, "Cell D1: organization_name is missing from the header";
     }
-    if (!$synonyms_head || $synonyms_head ne 'synonym(s)') {
-        push @error_messages, "Cell E1: synonym(s) is missing from the header";
+    if (!$synonyms_head || ($synonyms_head ne 'synonym(s)' && $synonyms_head ne 'synonym') ) {
+        push @error_messages, "Cell E1: synonym is missing from the header";
     }
 
     my %seen_accession_names;
@@ -124,6 +125,7 @@ sub _validate_with_plugin {
             push @error_messages, "Cell B$row_name: species_name missing.";
         }
         else {
+            $species_name =~ s/^\s+|\s+$//g;
             $seen_species_names{$species_name}=$row_name;
         }
     }
@@ -150,8 +152,10 @@ sub _validate_with_plugin {
 
 sub _parse_with_plugin {
     my $self = shift;
+    my $editable_stockprops = $self->get_editable_stock_props();
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $do_fuzzy_search = $self->get_do_fuzzy_search();
     my $parser   = Spreadsheet::ParseExcel->new();
     my $excel_obj;
     my $worksheet;
@@ -188,6 +192,7 @@ sub _parse_with_plugin {
             $seen_accession_names{$accession_name}++;
         }
         if ($species_name){
+            $species_name =~ s/^\s+|\s+$//g;
             $seen_species_names{$species_name}++;
         }
         if ($synonyms_string && $synonyms_string ne '' ) {
@@ -202,117 +207,65 @@ sub _parse_with_plugin {
     my @synonyms_list = keys %seen_synonyms;
     my @organism_list = keys %seen_species_names;
     my %accession_lookup;
-    my $accessions_in_db_rs = $schema->resultset("Stock::Stock")->search({uniquename=>{-in=>\@accession_list}});
+    my $accessions_in_db_rs = $schema->resultset("Stock::Stock")->search({uniquename=>{-ilike=>\@accession_list}});
     while(my $r=$accessions_in_db_rs->next){
         $accession_lookup{$r->uniquename} = $r->stock_id;
     }
 
-    my %col_name_map;
+    # Old accession upload format had "(s)" appended to the editable_stock_props terms... this is now not the case, but should still allow for it. Now the header of the uploaded file should use the terms in the editable_stock_props configuration key directly.
+    my %col_name_map = (
+        'location_code(s)' => ['location_code', 'locationCode'],
+        'location_code' => ['location_code', 'locationCode'],
+        'ploidy_level(s)' => ['ploidy_level', 'ploidyLevel'],
+        'ploidy_level' => ['ploidy_level', 'ploidyLevel'],
+        'genome_structure(s)' => ['genome_structure', 'genomeStructure'],
+        'genome_structure' => ['genome_structure', 'genomeStructure'],
+        'variety(s)' => ['variety', 'variety'],
+        'variety' => ['variety', 'variety'],
+        'donor(s)' => ['donor', ''],
+        'donor' => ['donor', ''],
+        'donor_institute(s)' => ['donor institute', ''],
+        'donor institute' => ['donor institute', ''],
+        'donor_PUI(s)' => ['donor PUI', ''],
+        'donor PUI' => ['donor PUI', ''],
+        'country_of_origin(s)' => ['country of origin', 'countryOfOriginCode'],
+        'country of origin' => ['country of origin', 'countryOfOriginCode'],
+        'state(s)' => ['state', 'state'],
+        'state' => ['state', 'state'],
+        'institute_code(s)' => ['institute code', 'instituteCode'],
+        'institute code' => ['institute code', 'instituteCode'],
+        'institute_name(s)' => ['institute name', 'instituteName'],
+        'institute name' => ['institute name', 'instituteName'],
+        'biological_status_of_accession_code(s)' => ['biological status of accession code', 'biologicalStatusOfAccessionCode'],
+        'biological status of accession code' => ['biological status of accession code', 'biologicalStatusOfAccessionCode'],
+        'notes(s)' => ['notes', 'notes'],
+        'notes' => ['notes', 'notes'],
+        'accession_number(s)' => ['accession number', 'accessionNumber'],
+        'accession number' => ['accession number', 'accessionNumber'],
+        'PUI(s)' => ['PUI', 'germplasmPUI'],
+        'PUI' => ['PUI', 'germplasmPUI'],
+        'seed_source(s)' => ['seed source', 'germplasmSeedSource'],
+        'seed source' => ['seed source', 'germplasmSeedSource'],
+        'type_of_germplasm_storage_code(s)' => ['type of germplasm storage code', 'typeOfGermplasmStorageCode'],
+        'type of germplasm storage code' => ['type of germplasm storage code', 'typeOfGermplasmStorageCode'],
+        'acquisition_date(s)' => ['acquisition date', 'acquisitionDate'],
+        'acquisition date' => ['acquisition date', 'acquisitionDate'],
+        'transgenic(s)' => ['transgenic', 'transgenic'],
+        'transgenic' => ['transgenic', 'transgenic'],
+        'introgression_parent' => ['introgression_parent', 'introgression_parent'],
+        'introgression_backcross_parent' => ['introgression_backcross_parent', 'introgression_backcross_parent'],
+        'introgression_chromosome' => ['introgression_chromosome', 'introgression_chromosome'],
+        'introgression_start_position_bp' => ['introgression_start_position_bp', 'introgression_start_position_bp'],
+        'introgression_end_position_bp' => ['introgression_end_position_bp', 'introgression_end_position_bp']
+    );
+
+    my @header;
     for my $i (5..$col_max){
         my $stockprops_head;
         if ($worksheet->get_cell(0,$i)) {
             $stockprops_head  = $worksheet->get_cell(0,$i)->value();
         }
-        my $stockprop_cvterm_name;
-        my $internal_ref_name;
-        if ($stockprops_head eq 'location_code(s)'){
-            $stockprop_cvterm_name = 'location_code';
-            $internal_ref_name = 'locationCode';
-        }
-        if ($stockprops_head eq 'ploidy_level(s)'){
-            $stockprop_cvterm_name = 'ploidy_level';
-            $internal_ref_name = 'ploidyLevel';
-        }
-        if ($stockprops_head eq 'genome_structure(s)'){
-            $stockprop_cvterm_name = 'genome_structure';
-            $internal_ref_name = 'genomeStructure';
-        }
-        if ($stockprops_head eq 'variety(s)'){
-            $stockprop_cvterm_name = 'variety';
-            $internal_ref_name = 'variety';
-        }
-        if ($stockprops_head eq 'donor(s)'){
-            $stockprop_cvterm_name = 'donor';
-        }
-        if ($stockprops_head eq 'donor_institute(s)'){
-            $stockprop_cvterm_name = 'donor institute';
-        }
-        if ($stockprops_head eq 'donor_PUI(s)'){
-            $stockprop_cvterm_name = 'donor PUI';
-        }
-        if ($stockprops_head eq 'country_of_origin(s)'){
-            $stockprop_cvterm_name = 'country of origin';
-            $internal_ref_name = 'countryOfOriginCode';
-        }
-        if ($stockprops_head eq 'state(s)'){
-            $stockprop_cvterm_name = 'state';
-            $internal_ref_name = 'state';
-        }
-        if ($stockprops_head eq 'institute_code(s)'){
-            $stockprop_cvterm_name = 'institute code';
-            $internal_ref_name = 'instituteCode';
-        }
-        if ($stockprops_head eq 'institute_name(s)'){
-            $stockprop_cvterm_name = 'institute name';
-            $internal_ref_name = 'instituteName';
-        }
-        if ($stockprops_head eq 'biological_status_of_accession_code(s)'){
-            $stockprop_cvterm_name = 'biological status of accession code';
-            $internal_ref_name = 'biologicalStatusOfAccessionCode';
-        }
-        if ($stockprops_head eq 'notes(s)'){
-            $stockprop_cvterm_name = 'notes';
-            $internal_ref_name = 'notes';
-        }
-        if ($stockprops_head eq 'accession_number(s)'){
-            $stockprop_cvterm_name = 'accession number';
-            $internal_ref_name = 'accessionNumber';
-        }
-        if ($stockprops_head eq 'PUI(s)'){
-            $stockprop_cvterm_name = 'PUI';
-            $internal_ref_name = 'germplasmPUI';
-        }
-        if ($stockprops_head eq 'seed_source(s)'){
-            $stockprop_cvterm_name = 'seed source';
-            $internal_ref_name = 'germplasmSeedSource';
-        }
-        if ($stockprops_head eq 'type_of_germplasm_storage_code(s)'){
-            $stockprop_cvterm_name = 'type of germplasm storage code';
-            $internal_ref_name = 'typeOfGermplasmStorageCode';
-        }
-        if ($stockprops_head eq 'acquisition_date(s)'){
-            $stockprop_cvterm_name = 'acquisition date';
-            $internal_ref_name = 'acquisitionDate';
-        }
-        if ($stockprops_head eq 'transgenic(s)'){
-            $stockprop_cvterm_name = 'transgenic';
-            $internal_ref_name = 'transgenic';
-        }
-        if ($stockprops_head eq 'introgression_parent'){
-            $stockprop_cvterm_name = 'introgression_parent';
-            $internal_ref_name = 'introgression_parent';
-        }
-        if ($stockprops_head eq 'introgression_backcross_parent'){
-            $stockprop_cvterm_name = 'introgression_backcross_parent';
-            $internal_ref_name = 'introgression_backcross_parent';
-        }
-        if ($stockprops_head eq 'introgression_map_version'){
-            $stockprop_cvterm_name = 'introgression_map_version';
-            $internal_ref_name = 'introgression_map_version';
-        }
-        if ($stockprops_head eq 'introgression_chromosome'){
-            $stockprop_cvterm_name = 'introgression_chromosome';
-            $internal_ref_name = 'introgression_chromosome';
-        }
-        if ($stockprops_head eq 'introgression_start_position_bp'){
-            $stockprop_cvterm_name = 'introgression_start_position_bp';
-            $internal_ref_name = 'introgression_start_position_bp';
-        }
-        if ($stockprops_head eq 'introgression_end_position_bp'){
-            $stockprop_cvterm_name = 'introgression_end_position_bp';
-            $internal_ref_name = 'introgression_end_position_bp';
-        }
-        $col_name_map{$i} = [$stockprop_cvterm_name, $internal_ref_name];
+        push @header, $stockprops_head;
     }
 
     for my $row ( 1 .. $row_max ) {
@@ -362,26 +315,31 @@ sub _parse_with_plugin {
             $row_info{stock_id} = $stock_id;
         }
 
+        my $counter = 0;
         for my $i (5..$col_max){
+            my $stockprop_header_term = $header[$counter];
             my $stockprops_value;
             if ($worksheet->get_cell($row,$i)) {
                 $stockprops_value  = $worksheet->get_cell($row,$i)->value();
             }
             if ($stockprops_value){
                 my $key_name;
-                if ($col_name_map{$i}->[0] eq 'donor' || $col_name_map{$i}->[0] eq 'donor institute' || $col_name_map{$i}->[0] eq 'donor PUI'){
+                if (exists($col_name_map{$stockprop_header_term}) && ($col_name_map{$stockprop_header_term}->[0] eq 'donor' || $col_name_map{$stockprop_header_term}->[0] eq 'donor institute' || $col_name_map{$stockprop_header_term}->[0] eq 'donor PUI') ) {
                     my %donor_key_map = ('donor'=>'donorGermplasmName', 'donor institute'=>'donorInstituteCode', 'donor PUI'=>'germplasmPUI');
                     if (exists($row_info{donors})){
                         my $donors_hash = $row_info{donors}->[0];
-                        $donors_hash->{$donor_key_map{$col_name_map{$i}->[0]}} = $stockprops_value;
+                        $donors_hash->{$donor_key_map{$col_name_map{$stockprop_header_term}->[0]}} = $stockprops_value;
                         $row_info{donors} = [$donors_hash];
                     } else {
-                        $row_info{donors} = [{ $donor_key_map{$col_name_map{$i}->[0]} => $stockprops_value }];
+                        $row_info{donors} = [{ $donor_key_map{$col_name_map{$stockprop_header_term}->[0]} => $stockprops_value }];
                     }
+                } elsif (exists($col_name_map{$stockprop_header_term})) {
+                    $row_info{$col_name_map{$stockprop_header_term}->[1]} = $stockprops_value;
                 } else {
-                    $row_info{$col_name_map{$i}->[1]} = $stockprops_value;
+                    $row_info{other_editable_stock_props}->{$stockprop_header_term} = $stockprops_value;
                 }
             }
+            $counter++;
         }
 
         $parsed_entries{$row} = \%row_info;
@@ -390,45 +348,59 @@ sub _parse_with_plugin {
     my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
     my $fuzzy_organism_search = CXGN::BreedersToolbox::OrganismFuzzySearch->new({schema => $schema});
     my $max_distance = 0.2;
-    my $found_accessions;
-    my $fuzzy_accessions;
-    my $absent_accessions;
+    my $found_accessions = [];
+    my $fuzzy_accessions = [];
+    my $absent_accessions = [];
     my $found_synonyms = [];
     my $fuzzy_synonyms = [];
     my $absent_synonyms = [];
     my $found_organisms;
     my $fuzzy_organisms;
     my $absent_organisms;
+    my %return_data;
 
     #remove all trailing and ending spaces from accessions and organisms
     s/^\s+|\s+$//g for @accession_list;
     s/^\s+|\s+$//g for @organism_list;
 
-    my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance, 'accession');
-    #print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
-    print STDERR "DoFuzzySearch 2".localtime()."\n";
+    if ($do_fuzzy_search) {
+        my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance, 'accession');
 
-    $found_accessions = $fuzzy_search_result->{'found'};
-    $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
-    $absent_accessions = $fuzzy_search_result->{'absent'};
+        $found_accessions = $fuzzy_search_result->{'found'};
+        $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+        $absent_accessions = $fuzzy_search_result->{'absent'};
 
-    if (scalar @synonyms_list > 0){
-        my $fuzzy_synonyms_result = $fuzzy_accession_search->get_matches(\@synonyms_list, $max_distance, 'accession');
-        $found_synonyms = $fuzzy_synonyms_result->{'found'};
-        $fuzzy_synonyms = $fuzzy_synonyms_result->{'fuzzy'};
-        $absent_synonyms = $fuzzy_synonyms_result->{'absent'};
-        #print STDERR "\n\nOrganismFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_organism_result)."\n\n";
+        if (scalar @synonyms_list > 0){
+            my $fuzzy_synonyms_result = $fuzzy_accession_search->get_matches(\@synonyms_list, $max_distance, 'accession');
+            $found_synonyms = $fuzzy_synonyms_result->{'found'};
+            $fuzzy_synonyms = $fuzzy_synonyms_result->{'fuzzy'};
+            $absent_synonyms = $fuzzy_synonyms_result->{'absent'};
+        }
+
+        if (scalar @organism_list > 0){
+            my $fuzzy_organism_result = $fuzzy_organism_search->get_matches(\@organism_list, $max_distance);
+            $found_organisms = $fuzzy_organism_result->{'found'};
+            $fuzzy_organisms = $fuzzy_organism_result->{'fuzzy'};
+            $absent_organisms = $fuzzy_organism_result->{'absent'};
+        }
+
+        if ($fuzzy_search_result->{'error'}){
+            $return_data{error_string} = $fuzzy_search_result->{'error'};
+        }
+    } else {
+        my $validator = CXGN::List::Validate->new();
+        my $absent_accessions = $validator->validate($schema, 'accessions', \@accession_list)->{'missing'};
+        my %accessions_missing_hash = map { $_ => 1 } @$absent_accessions;
+
+        foreach (@accession_list){
+            if (!exists($accessions_missing_hash{$_})){
+                push @$found_accessions, { unique_name => $_,  matched_string => $_};
+                push @$fuzzy_accessions, { unique_name => $_,  matched_string => $_};
+            }
+        }
     }
 
-    if (scalar @organism_list > 0){
-        my $fuzzy_organism_result = $fuzzy_organism_search->get_matches(\@organism_list, $max_distance);
-        $found_organisms = $fuzzy_organism_result->{'found'};
-        $fuzzy_organisms = $fuzzy_organism_result->{'fuzzy'};
-        $absent_organisms = $fuzzy_organism_result->{'absent'};
-        #print STDERR "\n\nOrganismFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_organism_result)."\n\n";
-    }
-
-    my %return_data = (
+    %return_data = (
         parsed_data => \%parsed_entries,
         found_accessions => $found_accessions,
         fuzzy_accessions => $fuzzy_accessions,
@@ -440,10 +412,7 @@ sub _parse_with_plugin {
         fuzzy_organisms => $fuzzy_organisms,
         absent_organisms => $absent_organisms
     );
-
-    if ($fuzzy_search_result->{'error'}){
-        $return_data{error_string} = $fuzzy_search_result->{'error'};
-    }
+    print STDERR "\n\nAccessionsXLS parsed results :\n".Data::Dumper::Dumper(%return_data)."\n\n";             
 
     $self->_set_parsed_data(\%return_data);
     return 1;
