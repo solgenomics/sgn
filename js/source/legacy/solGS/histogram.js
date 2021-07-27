@@ -65,7 +65,7 @@ solGS.histogram =  {
           + '<table class="table bin_elements_table" style="text-align: left;">'
           + '<thead>'
           +  '<tr>'
-          +  '<th>Genotypes in the selected bin</th>'
+          +  '<th>Bin elements</th>'
           +  '<th>Values</th>'
           +  '</tr>'
           + '</thead>'
@@ -121,7 +121,9 @@ solGS.histogram =  {
     var namedValues = histo.namedValues;
 
     var barClr = histo.bar_color || '#9A2EFE';
-     var altBarClr = histo.alt_bar_color ||  '#C07CFE';
+    var altBarClr = histo.alt_bar_color ||  '#C07CFE';
+    var caption = histo.caption;
+
 
     if (!values || !values[0]) {
         values = this.extractValues(namedValues);
@@ -294,8 +296,8 @@ solGS.histogram =  {
             .style("fill", barClr)
             .attr("transform", "rotate(-90)");
 
-    if (histo.caption) {
-        jQuery(canvas).append('<br/>' + histo.caption);
+    if (caption) {
+        jQuery(canvas).append('<br/>' + caption);
     }
     },
 
