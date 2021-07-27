@@ -113,7 +113,16 @@ solGS.correlation = {
 	if (traitsIds) {
 	    traitsIds = traitsIds.split(',');
 	}
+
 	var protocolId = jQuery('#genotyping_protocol_id').val();
+    var corrMsgDiv;
+    if (sIndexFile) {
+        divPlace = '#si_canvas';
+        corrMsgDiv = '#si_correlation_message';
+    } else {
+        divPlace = '#correlation_canvas';
+        corrMsgDiv = 'correlation_message';
+    }
 	var genArgs = {
 	    'training_pop_id': trainingPopId,
 	    'corre_pop_id': correPopId,
@@ -121,54 +130,41 @@ solGS.correlation = {
         'training_traits_code': traitsCode,
 	    'pop_type' : popType,
 	    'selection_index_file': sIndexFile,
+        'div_place': divPlace,
 	    'genotyping_protocol_id': protocolId
 	};
 
     genArgs = JSON.stringify(genArgs);
 
 	jQuery("#run_genetic_correlation").hide();
-    jQuery("#correlation_canvas .multi-spinner-container").show();
-	jQuery("#correlation_message")
-            .css({"padding-left": '0px'})
+    jQuery(divPlace + ' .multi-spinner-container').show();
+	jQuery(corrMsgDiv)
             .html("Running genetic correlation analysis...").show();
 
 	jQuery.ajax({
-            type: 'POST',
-            dataType: 'json',
-            data: {'arguments': genArgs},
-            url: '/correlation/genetic/data/',
-            success: function (res) {
+        type: 'POST',
+        dataType: 'json',
+        data: {'arguments': genArgs},
+        url: '/correlation/genetic/data/',
+        success: function (res) {
 
-		if (res.status) {
+    		if (res.status) {
+                solGS.correlation.runGenCorrelationAnalysis(res.corre_args);
 
-            var genArgs = JSON.parse(res.corre_args);
+    		} else {
+                jQuery(corrMsgDiv)
+    			         .html("This population has no valid traits to correlate.")
+                         .fadeOut(8400);;
+    		}
+        },
+        error: function (res) {
+    		jQuery(corrMsgDiv)
+                        .html("Error occured preparing the additive genetic data for correlation analysis.")
+                        .fadeOut(8400);;
 
-            if (genArgs.selection_index_file) {
-			    divPlace = '#si_canvas';
-            } else {
-			    divPlace = '#correlation_canvas';
-		    }
-
-            genArgs['div_place'] = divPlace;
-            genArgs = JSON.stringify(genArgs);
-
-            solGS.correlation.runGenCorrelationAnalysis(genArgs);
-
-		} else {
-                    jQuery(divPlace +" #correlation_message")
-			.css({"padding-left": '0px'})
-			.html("This population has no valid traits to correlate.");
-
-		}
-            },
-            error: function (res) {
-		jQuery(divPlace +"#correlation_message")
-                    .css({"padding-left": '0px'})
-                    .html("Error occured preparing the additive genetic data for correlation analysis.");
-
-		// jQuery.unblockUI();
-            }
-	});
+    		// jQuery.unblockUI();
+        }
+       });
     },
 
     phenotypicCorrelation: function() {
@@ -200,7 +196,6 @@ solGS.correlation = {
                         solGS.correlation.runPhenoCorrelationAnalysis(args);
                     } else {
                         jQuery("#correlation_message")
-                            .css({"padding-left": '0px'})
                             .html("This population has no phenotype data.")
                             .fadeOut(8400);;
 
@@ -209,7 +204,6 @@ solGS.correlation = {
                 },
                 error: function (response) {
                     jQuery("#correlation_message")
-                        .css({"padding-left": '0px'})
                         .html("Error occured preparing the phenotype data for correlation analysis.")
                         .fadeOut(8400);
 
@@ -245,7 +239,6 @@ solGS.correlation = {
     		    jQuery("#correlation_canvas .multi-spinner-container").hide();
 
                 jQuery("#correlation_message")
-    			.css({"padding-left": '0px'})
     			.html("There is no correlation output for this dataset.")
     			.fadeOut(8400);
 
@@ -256,7 +249,6 @@ solGS.correlation = {
                     jQuery("#correlation_canvas .multi-spinner-container").hide();
 
     		        jQuery("#correlation_message")
-                        .css({"padding-left": '0px'})
                         .html("Error occured running the correlation analysis.")
     		            .fadeOut(8400);
 
@@ -271,6 +263,14 @@ solGS.correlation = {
         var divPlace = JSON.parse(args);
         divPlace = divPlace.div_place;
 
+        var corrMsgDiv;
+        if (divPlace === '#si_canvas') {
+            corrMsgDiv = '#si_correlation_message';
+        } else {
+            corrMsgDiv = 'correlation_message';
+        }
+
+
     	jQuery.ajax({
                 type: 'POST',
                 dataType: 'json',
@@ -279,55 +279,55 @@ solGS.correlation = {
                 success: function (response) {
     		if (response.status == 'success') {
 
-                        if (divPlace == '#si_canvas') {
-    			jQuery("#si_correlation_message").empty();
-    			jQuery("#si_canvas").show();
-                        }
+                    if (divPlace === '#si_canvas') {
+            			jQuery(corrMsgDiv).empty();
+            			jQuery(divPlace).show();
+                    }
 
-                        solGS.correlation.plotCorrelation(response.data, divPlace);
-                        jQuery("#correlation_message").empty();
+                    solGS.correlation.plotCorrelation(response.data, divPlace);
+                    jQuery(corrMsgDiv).empty();
 
-                        if (divPlace ==  '#si_canvas') {
+                     if (divPlace ===  '#si_canvas') {
 
-    			var popName   = jQuery("#selected_population_name").val();
-    			var corLegDiv = "<div id=\"si_correlation_"
-                                + popName.replace(/\s/g, "")
-                                + "\"></div>";
+            			var popName   = jQuery("#selected_population_name").val();
+            			var corLegDiv = "<div id=\"si_correlation_"
+                                        + popName.replace(/\s/g, "")
+                                        + "\"></div>";
 
-    			var legendValues = solGS.sIndex.legendParams();
-    			var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
+            			var legendValues = solGS.sIndex.legendParams();
+            			var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
 
-    			jQuery("#si_canvas").append(corLegDivVal).show();
+            			jQuery(divPlace).append(corLegDivVal).show();
 
-                        } else {
+                    } else {
 
-    			var popName = jQuery("#corre_selected_population_name").val();
-    			var corLegDiv  = "<div id=\"corre_correlation_"
-                                + popName.replace(/\s/g, "")
-                                + "\"></div>";
+            			var popName = jQuery("#corre_selected_population_name").val();
+            			var corLegDiv  = "<div id=\"corre_correlation_"
+                                        + popName.replace(/\s/g, "")
+                                        + "\"></div>";
 
-    			var corLegDivVal = jQuery(corLegDiv).html(popName);
-    			jQuery("#correlation_canvas").append(corLegDivVal).show();
+            			var corLegDivVal = jQuery(corLegDiv).html(popName);
+            			jQuery(divPlace).append(corLegDivVal).show();
 
-    			jQuery("#run_genetic_correlation").show();
-                        }
+            			jQuery("#run_genetic_correlation").show();
+                         }
 
     		} else {
-                        jQuery(divPlace + " #correlation_message")
-    			.css({"padding-left": '0px'})
-    			.html("There is no genetic correlation output for this dataset.");
+                        jQuery(corrMsgDiv)
+    			                 .html("There is no genetic correlation output for this dataset.")
+                                 .fadeOut(8400);;
     		}
 
-    		jQuery("#correlation_canvas .multi-spinner-container").hide();
+    		jQuery(divPlace + ' .multi-spinner-container').hide();
     		jQuery.unblockUI();
                 },
                 error: function (response) {
-    		jQuery(divPlace +" #correlation_message")
-                        .css({"padding-left": '0px'})
-                        .html("Error occured running the genetic correlation analysis.");
+    		jQuery(corrMsgDiv)
+                        .html("Error occured running the genetic correlation analysis.")
+                        .fadeOut(8400);;
 
     		jQuery("#run_genetic_correlation").show();
-    		jQuery("#correlation_canvas .multi-spinner-container").hide();
+    		jQuery(divPlace + ' .multi-spinner-container').hide();
     		jQuery.unblockUI();
                 }
     	});
