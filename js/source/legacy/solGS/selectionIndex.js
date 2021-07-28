@@ -266,7 +266,7 @@ solGS.sIndex = {
                        let caption = `<br/>${res.download_link}<strong>Index Name:</strong> ${res.sindex_name} ${legend}`;
                        let histo = {
                            canvas: '#si_canvas',
-                           plot_id: '#si_output',
+                           plot_id: `#${res.sindex_name}`,
                            namedValues: res.indices,
                            caption: caption
                        };
