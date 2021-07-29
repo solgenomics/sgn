@@ -450,6 +450,9 @@ sub observationunits_update {
 
         #update accession
         if ($old_accession && $accession_id && $old_accession_id ne $accession_id) {
+            if (! defined $study_ids_arrayref) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('StudyDbId is required.'), 400);
+            }
             my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
                 bcs_schema => $schema,
                 trial_id => $study_ids_arrayref,
