@@ -553,6 +553,7 @@ jQuery(document).ready( function() {
     var auth_token;
     var require_login = "<%  $c->get_conf('brapi_require_login') %>";
     auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+    console.log(auth_token);
 
     if (require_login === '1'){
         auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
@@ -1151,16 +1152,66 @@ jQuery(document).ready( function() {
     });
 
     function submit_fieldmap_metadata() {
-        var data = [
-            borders;
-        ]
+        var data =
+            {
+    additionalInfo: {
+      control: 1, },
+  germplasmDbId: "38840",
+  germplasmName: "test_accession1",
+  observationUnitName: "Plot 9",
+observationUnitPosition: {"entryType": "TEST",
+    geoCoordinates: {
+      geometry: {
+        coordinates: [
+          -76.50604211,
+          42.41737311,
+          711
+        ],
+        type: "Point"
+      },
+      type: "Feature"
+    },
+    observationLevel: {
+      levelName: "plot",
+      levelOrder: 2,
+      levelCode: "Plot_12111"
+    },
+    observationLevelRelationships: [
+      {
+        levelCode: "Rep_11",
+        levelName: "replicate",
+        levelOrder: 0
+      },
+      {
+        levelCode: "Block_1211",
+        levelName: "block",
+        levelOrder: 1
+      },
+      {
+        levelCode: "Plot_12301",
+        levelName: "plot",
+        levelOrder: 2
+      }
+    ],
+    positionCoordinateX: "7411",
+    positionCoordinateXType: "GRID_COL",
+    positionCoordinateY: "3011",
+    positionCoordinateYType: "GRID_ROW"
+    },
+    externalReferences:[
+      {referenceID:"doi:10.155454/12341234","referenceSource":"DOI"},
+      {referenceSource:"OBO Library","referenceID":"http://purl.obolibrary.org/obo/ro.owl"},
+      {referenceSource:"ext db","referenceID":"localhost:8080/brapi/v2/observationunits/42788"}
+      ]
+   };
+        
         var stringifiedData = JSON.stringify(data);
 
         new jQuery.ajax({
-            type: 'POST',
+            type: 'PUT',
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-            url: '/brapi/v2/observationunits',
-            body: stringifiedData,
+            url: '/brapi/v2/observationunits/54207',
+            data: stringifiedData,
 
             success: function(response) {
                 console.log(response);
