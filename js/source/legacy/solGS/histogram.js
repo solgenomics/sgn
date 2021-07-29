@@ -74,14 +74,27 @@ solGS.histogram =  {
     },
 
     binElemsTableSelector: function(canvas, plotId) {
-        return `${canvas} ${plotId} .bin_elements_table`;
 
+        plotId = this.formatPlotDivId(plotId);
+        return `${canvas} ${plotId} .bin_elements_table`;
+    },
+
+    formatPlotDivId: function(plotId) {
+
+        plotId = String(plotId);
+        if (plotId.match(/\./)) {
+            plotId = plotId.replace(/\./g, '-');
+        }
+
+        return plotId;
     },
 
     appendBinElemsTable: function(canvas, plotId) {
+        
         var binElemsTableDiv = this.binElemsTableSelector(canvas, plotId);
 
         if (!jQuery(binElemsTableDiv).length) {
+            plotId = this.formatPlotDivId(plotId);
             var plotDivId = plotId.replace('#', '');
             var plotDiv = `<div id=${plotDivId}></div>`;
             jQuery(canvas).append(plotDiv).show();
