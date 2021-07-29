@@ -902,11 +902,18 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
         if (data_type == 'ssr') {
-            jQuery('#upload_ssr_protocol_dialog').modal('show');
-            jQuery("#upload_ssr_species_name_input").autocomplete({
-                source: '/organism/autocomplete'
+            selected = [];
+            jQuery('input[name="upload_genotyping_data_protocol_select"]:checked').each(function() {
+                selected.push(jQuery(this).val());
             });
-
+            if (selected.length == 0){
+                jQuery('#upload_ssr_protocol_dialog').modal('show');
+                jQuery("#upload_ssr_species_name_input").autocomplete({
+                    source: '/organism/autocomplete'
+                });
+            } else if (selected.length > 0) {
+                alert('If you selected a protocol, do not try to make a new one at the same time!');
+            }
         } else {
             jQuery('#upload_genotype_data_protocol_details').show();
         }
