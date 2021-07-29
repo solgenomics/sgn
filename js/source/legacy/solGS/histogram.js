@@ -73,12 +73,25 @@ solGS.histogram =  {
         return table;
     },
 
-    binElemsTable: function(plotId) {
-        return `${plotId} .bin_elements_table`;
+    binElemsTableSelector: function(canvas, plotId) {
+        return `${canvas} ${plotId} .bin_elements_table`;
 
     },
 
-    displayBinElements: function(binValues, namedValues, plotId) {
+    appendBinElemsTable: function(canvas, plotId) {
+        var binElemsTableDiv = this.binElemsTableSelector(canvas, plotId);
+
+        if (!jQuery(binElemsTableDiv).length) {
+            var plotDivId = plotId.replace('#', '');
+            var plotDiv = `<div id=${plotDivId}></div>`;
+            jQuery(canvas).append(plotDiv).show();
+
+            var table = this.createBinElementsTable();
+            jQuery(plotId).append(table);
+        }
+    },
+
+    displayBinElements: function(binValues, namedValues, canvas, plotId) {
 
        var binElems = [];
        var binMin = d3.min(binValues);
@@ -91,7 +104,7 @@ solGS.histogram =  {
           }
        });
 
-        var table = this.binElemsTable(plotId);
+        var table = this.binElemsTableSelector(canvas, plotId);
         jQuery(table).show();
 
         if (jQuery.fn.DataTable.isDataTable(table) ) {
@@ -108,7 +121,6 @@ solGS.histogram =  {
 
         table.clear().draw();
         table.rows.add(binElems).draw();
-
     },
 
 
@@ -222,6 +234,8 @@ solGS.histogram =  {
                         + "," + height - yAxisScale(d.y) + ")";
                 });
 
+        var binElemsTableDiv= this.binElemsTableSelector(canvas, plotId);
+
     	bar.append("rect")
                 .attr("x", function(d) { return 2*pad.left + xAxisScale(d.x); } )
                 .attr("y", function(d) {return height - yAxisScale(d.y); })
@@ -230,11 +244,10 @@ solGS.histogram =  {
                 .style("fill", barClr)
     	        .style('stroke', "#ffffff")
                 .on("mouseover", function(d) {
-                    //solGS.histogram.displayBinElements(d, namedValues, plotId);
                     d3.select(this).style("fill", altBarClr);
                 })
                 .on("mouseout", function() {
-                    //jQuery(table).hide();
+                    jQuery(binElemsTableDiv).hide();
                     d3.select(this).style("fill", barClr);
                 });;
 
@@ -286,24 +299,11 @@ solGS.histogram =  {
                 .style("fill", barClr)
                 .attr("transform", "rotate(-90)");
 
-        var plotDivId = plotId.replace('#', '')
-        jQuery(canvas).append(`<div id=${plotDivId}></div>`).show();
-        var table = this.binElemsTable(plotId);
+        this.appendBinElemsTable(canvas, plotId);
 
         bar.on("mouseover", function(d) {
-            solGS.histogram.displayBinElements(d, namedValues, plotId);
-            //d3.select(this).style("fill", altBarClr);
-        })
-            .on("mouseout", function() {
-                jQuery(table).hide();
-                //d3.select(this).style("fill", barClr);
+            solGS.histogram.displayBinElements(d, namedValues, canvas, plotId);
         });
-
-
-        if (!jQuery(table).length) {
-            table = this.createBinElementsTable(table);
-            jQuery(plotId).append(table);
-        }
 
         if (caption) {
             jQuery(canvas).append('<br/>' + caption);
