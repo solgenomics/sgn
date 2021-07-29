@@ -902,7 +902,18 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
         if (data_type == 'ssr') {
-            jQuery('#upload_ssr_protocol_dialog').modal('show');
+            selected = [];
+            jQuery('input[name="upload_genotyping_data_protocol_select"]:checked').each(function() {
+                selected.push(jQuery(this).val());
+            });
+            if (selected.length == 0){
+                jQuery('#upload_ssr_protocol_dialog').modal('show');
+                jQuery("#upload_ssr_species_name_input").autocomplete({
+                    source: '/organism/autocomplete'
+                });
+            } else if (selected.length > 0) {
+                alert('If you selected a protocol, do not try to make a new one at the same time!');
+            }
         } else {
             jQuery('#upload_genotype_data_protocol_details').show();
         }
@@ -1017,8 +1028,25 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#upload_ssr_protocol_submit").click(function(){
+
+        var ssr_protocol_name = jQuery("#upload_ssr_protocol_name").val();
+        var ssr_protocol_species_name = jQuery("#upload_ssr_species_name_input").val();
+        var ssr_protocol_description = jQuery("#upload_ssr_protocol_description_input").val();
         var uploadFile = jQuery("#xls_ssr_protocol_file").val();
+
         jQuery('#upload_ssr_protocol_form').attr("action", "/ajax/genotype/upload_ssr_protocol");
+        if (ssr_protocol_name === ''){
+            alert("Please give a protocol name");
+            return;
+        }
+        if (ssr_protocol_species_name === ''){
+            alert("Please give a species name");
+            return;
+        }
+        if (ssr_protocol_description === ''){
+            alert("Please give a description");
+            return;
+        }
         if (uploadFile === ''){
             alert("Please select a file");
             return;
