@@ -353,7 +353,6 @@ sub progress : Path('/ajax/progress') Args(0) {
     $c->stash->{rest} = { data => $data };
 }
 
-
 sub radarGraph : Path('/ajax/radargraph') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -383,26 +382,9 @@ sub radarGraph : Path('/ajax/radargraph') Args(0) {
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
     my $trait_list = $ds->retrieve_phenotypes();
 
-    #my $accessions_count = scalar @$trait_list;
-    #foreach(@$trait_list)
-    #{
-    #    for(my $i = 39;$i < $accessions_count-2; $i++)
-    #    {
-    #        print STDERR "Trait List = ".Dumper(@$_[i]);
-    #    }
-    #}
-
     print STDERR "Dataset Id = $dataset_id\n";
     print STDERR "Trait List = ".Dumper($trait_list);
 
-
-
-#   $h->execute($stock_id,$cvterm_id);
-#   my $data = [];
-
-#   while (my ($name, $cvterm_id, $stock_id, $uniquename, $avg, $stddev, $count) = $h->fetchrow_array()) {
-#	push @$data, [ $name, $cvterm_id, $stock_id, $uniquename, sprintf("%.2f", $avg), sprintf("%.2f", $stddev), $count ];
-#    }
     $c->stash->{rest} = {
         data => \@$trait_list,
     };
