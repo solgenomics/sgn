@@ -117,7 +117,6 @@ solGS.correlation = {
 	var protocolId = jQuery('#genotyping_protocol_id').val();
 
     var {canvas, corrMsgDiv} = this.corrDivs(sIndexFile);
-    console.log(`canvas ${canvas} msgdiv ${corrMsgDiv}`)
     this.showCorrProgress(canvas, 'Preparing GEBVS');
 
 	var genArgs = {
@@ -154,8 +153,6 @@ solGS.correlation = {
     		jQuery(corrMsgDiv)
                         .html("Error occured preparing the additive genetic data for correlation analysis.")
                         .fadeOut(8400);;
-
-    		// jQuery.unblockUI();
         }
        });
     },
@@ -331,11 +328,10 @@ solGS.correlation = {
     		} else {
                         jQuery(corrMsgDiv)
     			                 .html("There is no genetic correlation output for this dataset.")
-                                 .fadeOut(8400);;
+                                 .fadeOut(8400);
     		}
 
     		jQuery(canvas + ' .multi-spinner-container').hide();
-            console.log(`corrMsgDiv ${corrMsgDiv}`)
             jQuery(corrMsgDiv).empty();
             jQuery("#run_genetic_correlation").show();
     		jQuery.unblockUI();

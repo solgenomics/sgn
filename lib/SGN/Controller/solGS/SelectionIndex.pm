@@ -10,8 +10,16 @@ use List::MoreUtils qw /uniq/;
 
 use JSON;
 
-BEGIN { extends 'Catalyst::Controller' }
 
+BEGIN { extends 'Catalyst::Controller::REST' }
+
+
+
+__PACKAGE__->config(
+    default   => 'application/json',
+    stash_key => 'rest',
+    map       => { 'application/json' => 'JSON'},
+    );
 
 
 sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
@@ -26,21 +34,19 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
     my $traits;
     if ($selection_pop_id)
     {
-	$c->controller('solGS::solGS')->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
+	    $c->controller('solGS::solGS')->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
         $traits = $c->stash->{selection_pop_analyzed_traits};
     }
     else
     {
-	$c->controller('solGS::Gebvs')->training_pop_analyzed_traits($c);
+	    $c->controller('solGS::Gebvs')->training_pop_analyzed_traits($c);
         $traits = $c->stash->{selection_index_traits};
     }
 
     my $ret->{status} = 'success';
     $ret->{traits} = $traits;
 
-    $ret = to_json($ret);
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
+    $c->stash->{rest} = $ret;
 
 }
 
@@ -71,12 +77,12 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
         $self->gebv_rel_weights($c, $rel_wts);
         $self->calc_selection_index($c);
 
-	my $top_10_si = $c->stash->{top_10_selection_indices};
+    	my $top_10_si = $c->stash->{top_10_selection_indices};
         my $top_10_genos = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($top_10_si);
 
         my $link       = $c->stash->{selection_index_download_url};
         my $index_file = $c->stash->{selection_index_only_file};
-	my $sindex_name = $c->stash->{file_id};
+    	my $sindex_name = $c->stash->{file_id};
 
         my $si_data = $c->controller("solGS::Utils")->read_file_data($index_file);
 
@@ -89,18 +95,15 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
             $ret->{top_10_genotypes} = $top_10_genos;
             $ret->{download_link} = $link;
             $ret->{index_file} = $index_file;
-	    $ret->{sindex_name} = $sindex_name;
+	        $ret->{sindex_name} = $sindex_name;
         }
     }
     else
     {
-	$ret->{status} = 'No relative weights submitted';
+	    $ret->{status} = 'No relative weights submitted';
     }
 
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
+    $c->stash->{rest} = $ret;
 }
 
 
@@ -214,7 +217,6 @@ sub gebvs_selection_index_file {
     my ($self, $c) = @_;
 
    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
-   # my $file_id = $c->stash->{file_id};
 
     my $name = "gebvs_selection_index_${file_id}";
     my $dir = $c->stash->{selection_index_cache_dir};
@@ -236,8 +238,7 @@ sub selection_index_file {
     my $file_id = $c->stash->{sindex_name};
     if (!$file_id)
     {
-	$file_id = $c->controller('solGS::Files')->create_file_id($c);
-	#$file_id = $c->stash->{file_id};
+	    $file_id = $c->controller('solGS::Files')->create_file_id($c);
     }
 
     my $name = "selection_index_only_${file_id}";
@@ -258,7 +259,6 @@ sub rel_weights_file {
     my ($self, $c) = @_;
 
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
-    ###my $file_id = $c->stash->{file_id};
 
     my $dir = $c->stash->{selection_index_cache_dir};
     my $name =  "rel_weights_${file_id}";
