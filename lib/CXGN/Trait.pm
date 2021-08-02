@@ -4,6 +4,7 @@ package CXGN::Trait;
 use Moose;
 use Data::Dumper;
 use Try::Tiny;
+use JSON;
 use CXGN::BrAPI::v2::ExternalReferences;
 use CXGN::BrAPI::v2::Methods;
 use CXGN::BrAPI::v2::Scales;
@@ -321,6 +322,11 @@ has 'active' => (
 	is  => 'rw'
 );
 
+has 'additional_info' => (
+	is  => 'rw',
+	isa => 'Maybe[HashRef]'
+);
+
 sub BUILD { 
     #print STDERR "BUILDING...\n";
     my $self = shift;
@@ -351,6 +357,7 @@ sub store {
 	my $ontology_id = $self->ontology_id(); # passed in value not used currently, uses config
 	my $synonyms = $self->synonyms();
 	my $active = $self->active();
+	my $additional_info = $self->additional_info();
 
 	# get cv_id from sgn_local.conf
 	my $context = SGN::Context->new;
@@ -467,6 +474,20 @@ sub store {
 			$new_term->add_synonym($synonym);
 		}
 
+		# Save additional info
+		my $rank = 0;
+		my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cvterm_additional_info', 'trait_property')->cvterm_id();
+		if (defined $additional_info) {
+			my $prop_id = $schema->resultset("Cv::Cvtermprop")->create(
+				{
+					cvterm_id => $new_term->get_column('cvterm_id'),
+					type_id   => $additional_info_type_id,
+					value     => encode_json $additional_info,
+					rank      => $rank
+				}
+			);
+		}
+
 		# save scale properties
 		$self->scale->{cvterm_id} = $new_term->cvterm_id;
 		$self->scale->store();
@@ -499,6 +520,7 @@ sub update {
 	my $active = $self->active();
 	my $synonyms = $self->synonyms();
 	my $cvterm_id = $self->cvterm_id();
+	my $additional_info = $self->additional_info();
 
 	$self->bcs_schema()->txn_do(sub {
 
@@ -515,6 +537,28 @@ sub update {
 		# Add new synonyms
 		foreach my $synonym (@{$synonyms}) {
 			$self->cvterm->add_synonym($synonym);
+		}
+
+		# Delete old additional info
+		my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cvterm_additional_info', 'trait_property')->cvterm_id();
+		$schema->resultset("Cv::Cvtermprop")->search(
+			{
+				cvterm_id => $self->cvterm_id,
+				type_id   => $additional_info_type_id
+			}
+		)->delete;
+
+		# Add new additional info
+		my $rank = 0;
+		if (defined $additional_info) {
+			my $prop_id = $schema->resultset("Cv::Cvtermprop")->create(
+				{
+					cvterm_id => $self->cvterm_id,
+					type_id   => $additional_info_type_id,
+					value     => encode_json $additional_info,
+					rank      => $rank
+				}
+			);
 		}
 
 		# update scale properties
