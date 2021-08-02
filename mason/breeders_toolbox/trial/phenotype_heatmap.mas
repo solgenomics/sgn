@@ -120,11 +120,10 @@ $data_level => 'plot'
 <div id="container_heatmap" ></div>
 <div id="container_fm" >
     <div style="margin-left: 5%; float: inline;">
+        <button style="margin-bottom: 1%;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success btn-sm">Submit Field Layout</button><br>
         <label for="invert_rows">Invert Rows</label>
         <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
     </div>
-<button style="margin-right: 5%; float: right;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success btn-sm">Submit Field Layout</button>
-
 </div>
 <div id="trait_heatmap" >loading...</div>
 <div id="container_heatmap_geo" ></div>
@@ -546,7 +545,7 @@ var changed_dim_rows;
 var changed_dim_cols;
 var num_real_plots;
 var invert_rows;
-var borders;
+var brapi_plots;
 
 
 jQuery(document).ready( function() {
@@ -936,16 +935,14 @@ jQuery(document).ready( function() {
                 },
                 success: function(response) {
                 var data = response.result.data;
-                console.log(data);
                 var data = data.sort(function(obj1, obj2) {
                         // Ascending: first plotNumber less than the previous
                     return obj1.additionalInfo.plotNumber - obj2.additionalInfo.plotNumber;
                 });
                 FieldMap.make_hash_map(data);
                 FieldMap.field_view();
-                console.log(data);
-                borders = FieldMap.get_borders();
-
+                brapi_plots = FieldMap.brapi_plots;
+                console.log(brapi_plots);
             },
                 error: function(reponse) {
                 alert('Error displaying traits assayed heatmap');   
@@ -1152,69 +1149,66 @@ jQuery(document).ready( function() {
     });
 
     function submit_fieldmap_metadata() {
-        var data =
-            {
-    additionalInfo: {
-      control: 1, },
-  germplasmDbId: "38840",
-  germplasmName: "test_accession1",
-  observationUnitName: "Plot 9",
-observationUnitPosition: {"entryType": "TEST",
-    geoCoordinates: {
-      geometry: {
-        coordinates: [
-          -76.50604211,
-          42.41737311,
-          711
-        ],
-        type: "Point"
-      },
-      type: "Feature"
-    },
-    observationLevel: {
-      levelName: "plot",
-      levelOrder: 2,
-      levelCode: "Plot_12111"
-    },
-    observationLevelRelationships: [
-      {
-        levelCode: "Rep_11",
-        levelName: "replicate",
-        levelOrder: 0
-      },
-      {
-        levelCode: "Block_1211",
-        levelName: "block",
-        levelOrder: 1
-      },
-      {
-        levelCode: "Plot_12301",
-        levelName: "plot",
-        levelOrder: 2
-      }
-    ],
-    positionCoordinateX: "7411",
-    positionCoordinateXType: "GRID_COL",
-    positionCoordinateY: "3011",
-    positionCoordinateYType: "GRID_ROW"
-    },
-    externalReferences:[
-      {referenceID:"doi:10.155454/12341234","referenceSource":"DOI"},
-      {referenceSource:"OBO Library","referenceID":"http://purl.obolibrary.org/obo/ro.owl"},
-      {referenceSource:"ext db","referenceID":"localhost:8080/brapi/v2/observationunits/42788"}
-      ]
-   };
+        // var data = {};
+        jQuery('#working_modal').modal("show");
+        // jQuery.each(brapi_plots, function(key_obj, value_obj) {
+        //     jQuery.each(value_obj, function(key, value) {
+        //         if (key == )
+        //     })
+
+        // })
+        
+        var data = {
+            studyDbId: 268,
+            germplasmDbId: "38840",
+            germplasmName: "test_accession1",
+            observationUnitName: "d261232215",
+            observationUnitPosition: {
+                entryType: "TEST",
+                observationLevel: {
+                    levelName: "plot",
+                    levelOrder: 2,
+                    levelCode: "1013"
+                },
+                observationLevelRelationships: [
+                    {
+                        levelCode: "1",
+                        levelName: "replicate",
+                        levelOrder: 0
+                    },
+                    {
+                        levelCode: "1",
+                        levelName: "block",
+                        levelOrder: 1
+                    },
+                    {
+                        levelCode: "1013",
+                        levelName: "plot",
+                        levelOrder: 2
+                    }
+                ],
+                positionCoordinateX: 3,
+                positionCoordinateXType: "GRID_COL",
+                positionCoordinateY: 2,
+                positionCoordinateYType: "GRID_ROW"
+            },
+        };
+
+
         
         var stringifiedData = JSON.stringify(data);
 
         new jQuery.ajax({
             type: 'PUT',
+            contentType: 'application/json',
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-            url: '/brapi/v2/observationunits/54207',
+            url: '/brapi/v2/observationunits/65733',
             data: stringifiedData,
 
             success: function(response) {
                 console.log(response);
+                jQuery('#working_modal').modal("hide");
+
             }
 
         });
