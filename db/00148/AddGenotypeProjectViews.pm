@@ -59,6 +59,8 @@ sub patch {
 
 -- drop and recreate phenoview with single unique index and no joining through nd_experiment
 
+/* ======= Included in the SpeedUpMatviews DB Patch =========
+
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenoview CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_phenoview AS
 SELECT
@@ -90,6 +92,8 @@ SELECT
 WITH DATA;
 CREATE UNIQUE INDEX unq_pheno_idx ON public.materialized_phenoview(stock_id,phenotype_id,trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW materialized_phenoview OWNER TO web_usr;
+
+*/
 
 
 -- drop and recreate genoview with new column for genotype project id
@@ -134,6 +138,8 @@ ALTER MATERIALIZED VIEW materialized_genoview OWNER TO web_usr;
 -- EXISTING VIEWS --
 
 -- drop and recreate all the single category matviews as just views
+
+/* ======= Included in the SpeedUpMatviews DB Patch =========
 
 DROP VIEW IF EXISTS public.accessions CASCADE;
 CREATE VIEW public.accessions AS
@@ -269,8 +275,12 @@ SELECT projectprop.value AS year_id,
   GROUP BY public.projectprop.value;
 ALTER VIEW years OWNER TO web_usr;
 
+*/
+
 
 -- drop and recreate all the binary matviews as just views
+
+/* ======= Included in the SpeedUpMatviews DB Patch =========
 
 DROP VIEW IF EXISTS public.accessionsXseedlots CASCADE;
 CREATE VIEW public.accessionsXseedlots AS
@@ -293,6 +303,8 @@ SELECT public.materialized_phenoview.breeding_program_id,
   GROUP BY 1,2;
 ALTER VIEW breeding_programsXseedlots OWNER TO web_usr;
 
+*/
+
 DROP VIEW IF EXISTS public.genotyping_protocolsXseedlots CASCADE;
 CREATE VIEW public.genotyping_protocolsXseedlots AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
@@ -302,6 +314,8 @@ LEFT JOIN stock_relationship seedlot_relationship ON materialized_genoview.acces
 LEFT JOIN stock ON seedlot_relationship.object_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot')
   GROUP BY 1,2;
 ALTER VIEW genotyping_protocolsXseedlots OWNER TO web_usr;
+
+/* ======= Included in the SpeedUpMatviews DB Patch =========
 
 DROP VIEW IF EXISTS public.plantsXseedlots CASCADE;
 CREATE VIEW public.plantsXseedlots AS
@@ -391,6 +405,8 @@ SELECT public.materialized_phenoview.breeding_program_id,
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.trait_id;
 ALTER VIEW breeding_programsXtraits OWNER TO web_usr;
 
+*/
+
 DROP VIEW IF EXISTS public.genotyping_protocolsXtraits CASCADE;
 CREATE VIEW public.genotyping_protocolsXtraits AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
@@ -399,6 +415,8 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
    JOIN public.materialized_phenoview USING(accession_id)
   GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.trait_id;
   ALTER VIEW genotyping_protocolsXtraits OWNER TO web_usr;
+
+/* ======= Included in the SpeedUpMatviews DB Patch =========
 
 DROP VIEW IF EXISTS public.locationsXtraits CASCADE;
 CREATE VIEW public.locationsXtraits AS
@@ -483,6 +501,8 @@ JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.
 GROUP BY 1,2;
 ALTER VIEW breeding_programsXtrait_components OWNER TO web_usr;
 
+*/
+
 DROP VIEW IF EXISTS public.genotyping_protocolsXtrait_components CASCADE;
 CREATE VIEW public.genotyping_protocolsXtrait_components AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
@@ -494,6 +514,8 @@ JOIN cvterm_relationship ON(trait.cvterm_id = cvterm_relationship.object_id AND 
 JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
 GROUP BY 1,2;
 ALTER VIEW genotyping_protocolsXtrait_components OWNER TO web_usr;
+
+/* ======= Included in the SpeedUpMatviews DB Patch =========
 
 DROP VIEW IF EXISTS public.locationsXtrait_components CASCADE;
 CREATE VIEW public.locationsXtrait_components AS
@@ -587,6 +609,8 @@ SELECT public.materialized_phenoview.accession_id,
   GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.breeding_program_id;
   ALTER VIEW accessionsXbreeding_programs OWNER TO web_usr;
 
+*/
+
 DROP VIEW IF EXISTS public.accessionsXgenotyping_protocols CASCADE;
 CREATE VIEW public.accessionsXgenotyping_protocols AS
 SELECT public.materialized_genoview.accession_id,
@@ -594,6 +618,8 @@ SELECT public.materialized_genoview.accession_id,
    FROM public.materialized_genoview
   GROUP BY public.materialized_genoview.accession_id, public.materialized_genoview.genotyping_protocol_id;
   ALTER VIEW accessionsXgenotyping_protocols OWNER TO web_usr;
+
+/* ======= Included in the SpeedUpMatviews DB Patch =========
 
 DROP VIEW IF EXISTS public.accessionsXlocations CASCADE;
 CREATE VIEW public.accessionsXlocations AS
@@ -656,6 +682,8 @@ SELECT public.materialized_phenoview.accession_id,
   GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.year_id;
 ALTER VIEW accessionsXyears OWNER TO web_usr;
 
+*/
+
 DROP VIEW IF EXISTS public.breeding_programsXgenotyping_protocols CASCADE;
 CREATE VIEW public.breeding_programsXgenotyping_protocols AS
 SELECT public.materialized_phenoview.breeding_program_id,
@@ -664,6 +692,8 @@ SELECT public.materialized_phenoview.breeding_program_id,
    JOIN public.materialized_genoview USING(accession_id)
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_genoview.genotyping_protocol_id;
 ALTER VIEW breeding_programsXgenotyping_protocols OWNER TO web_usr;
+
+/* ======= Included in the SpeedUpMatviews DB Patch =========
 
 DROP VIEW IF EXISTS public.breeding_programsXlocations CASCADE;
 CREATE VIEW public.breeding_programsXlocations AS
@@ -725,6 +755,8 @@ SELECT public.materialized_phenoview.breeding_program_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.year_id;
 ALTER VIEW breeding_programsXyears OWNER TO web_usr;
+
+*/
 
 DROP VIEW IF EXISTS public.genotyping_protocolsXlocations CASCADE;
 CREATE VIEW public.genotyping_protocolsXlocations AS
@@ -793,6 +825,8 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
    JOIN public.materialized_phenoview USING(accession_id)
   GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.year_id;
 ALTER VIEW genotyping_protocolsXyears OWNER TO web_usr;
+
+/* ======= Included in the SpeedUpMatviews DB Patch =========
 
 DROP VIEW IF EXISTS public.locationsXplants CASCADE;
 CREATE VIEW public.locationsXplants AS
@@ -993,6 +1027,7 @@ SELECT public.materialized_phenoview.trial_id,
   GROUP BY public.materialized_phenoview.trial_id, public.materialized_phenoview.year_id;
 ALTER VIEW trialsXyears OWNER TO web_usr;
 
+*/
 
 
 -- NEW GENOTYPE PROJECT VIEWS --
