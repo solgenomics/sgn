@@ -324,28 +324,28 @@ solGS.sIndex = {
 
 
      sumElements: function(elements) {
-	 var sum = 0;
-	 for (var i=0; i<elements.length; i++) {
-             if (!isNaN(elements[i])) {
-		 sum = parseFloat(sum) +  parseFloat(elements[i]);
-             }
-	 }
+    	 var sum = 0;
+    	 for (var i=0; i<elements.length; i++) {
+                 if (!isNaN(elements[i])) {
+    		 sum = parseFloat(sum) +  parseFloat(elements[i]);
+                 }
+    	 }
 
-	 return sum;
+    	 return sum;
      },
 
 
     selectionIndex: function(trainingPopId, selectionPopId) {
 
-	var legendValues = this.legendParams();
+    	var legendValues = this.legendParams();
 
-	var legend   = legendValues.legend;
-	var params   = legendValues.params;
-	var validate = legendValues.validate;
+    	var legend   = legendValues.legend;
+    	var params   = legendValues.params;
+    	var validate = legendValues.validate;
 
-	if (params && validate) {
-            this.calcSelectionIndex(params, legend, trainingPopId, selectionPopId);
-	}
+    	if (params && validate) {
+                this.calcSelectionIndex(params, legend, trainingPopId, selectionPopId);
+    	}
 
     },
 
@@ -371,12 +371,15 @@ solGS.sIndex = {
             var nm = all[i].name;
             var val = all[i].value;
             val = String(val);
-            val = val.replace(/x/i, '*');
+            val = val.replace(/x/ig, '*');
 
             if (val.match(/\*/)) {
                 var nums = val.split("*");
                 nums = nums.map(Number);
-                val = nums[0] * nums[1];
+                val = nums[0];
+                for (var j=1; j < nums.length; j++) {
+                    val = val * nums[j];
+                }
             }
 
             if (val != 'Calculate')  {
