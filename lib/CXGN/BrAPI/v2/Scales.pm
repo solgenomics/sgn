@@ -290,7 +290,8 @@ sub store {
             $rank++;
 
             # form categories string for v1 call
-            $categories_v1=$categories_v1.$label."=".$value."/";
+            # For brapi v1, label = meaning, in brapi v2 terms, value = label.
+            $categories_v1=$categories_v1.$value."=".$label."/";
         }
 
         my $format = $schema->resultset("Cv::Cvtermprop")->create(
