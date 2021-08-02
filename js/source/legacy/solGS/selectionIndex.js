@@ -300,24 +300,25 @@ solGS.sIndex = {
 
     validateRelativeWts: function(nm, val) {
 
-	if (isNaN(val) && nm != 'all') {
-            alert('the relative weight of trait ' + nm + ' must be a number.');
-            return;
-	} else if (!val && nm != 'all') {
-            alert('You need to assign a relative weight to trait ' + nm + '.'
-		  + ' If you want to exclude the trait assign 0 to it.');
-            return;
-	    // }// else if (val < 0 && nm != 'all') {
-	    //   alert('The relative weight to trait '+nm+
-	    //         ' must be a positive number.'
-	    //         );
-	    //    return;
-	} else if (nm == 'all' && val == 0) {
-            alert('At least two traits must be assigned relative weight.');
-            return;
-	} else {
-            return true;
-	}
+         if (isNaN(val) && nm != 'all') {
+                alert('the relative weight of trait ' + nm + ' must be a number.');
+                return;
+    	}
+        else if (!val && nm != 'all') {
+                alert('You need to assign a relative weight to trait ' + nm + '.'
+    		  + ' If you want to exclude the trait assign 0 to it.');
+                return;
+    	    // }// else if (val < 0 && nm != 'all') {
+    	    //   alert('The relative weight to trait '+nm+
+    	    //         ' must be a positive number.'
+    	    //         );
+    	    //    return;
+    	} else if (nm == 'all' && val == 0) {
+                alert('At least two traits must be assigned relative weight.');
+                return;
+    	} else {
+                return true;
+    	}
 
     },
 
@@ -369,18 +370,26 @@ solGS.sIndex = {
 	for (var i = 0; i < all.length; i++) {
             var nm = all[i].name;
             var val = all[i].value;
+            val = String(val);
+            val = val.replace(/x/i, '*');
+
+            if (val.match(/\*/)) {
+                var nums = val.split("*");
+                nums = nums.map(Number);
+                val = nums[0] * nums[1];
+            }
 
             if (val != 'Calculate')  {
-		if (nm != 'selection_pop_name') {
+        		if (nm != 'selection_pop_name') {
 
-                    allValues.push(val);
-                    validate = this.validateRelativeWts(nm, val);
+                            allValues.push(val);
+                            validate = this.validateRelativeWts(nm, val);
 
-                    if (validate) {
-			params[nm] = val;
-			trRelWts += '<b> ' + nm + '</b>' + ': '+ val;
-                    }
-		}
+                            if (validate) {
+        			params[nm] = val;
+        			trRelWts += '<b> ' + nm + '</b>' + ': '+ val;
+                            }
+        		}
             }
 	}
 
