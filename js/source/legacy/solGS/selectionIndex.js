@@ -112,12 +112,11 @@ solGS.sIndex = {
 	    }
 	}
 
-	return sIndexList;
+	   return sIndexList;
     },
 
-
-    saveIndexedPops: function(siId) {
-	solGS.sIndex.indexed.push(siId);
+        saveIndexedPops: function(siId) {
+	    solGS.sIndex.indexed.push(siId);
     },
 
     addSelectionPopulations: function() {
@@ -263,13 +262,22 @@ solGS.sIndex = {
 		success: function(res){
 
                     if (res.status == 'success' ) {
-                       let caption = `<br/>${res.download_link}<strong>Index Name:</strong> ${res.sindex_name} ${legend}`;
-                       let histo = {
-                           canvas: '#si_canvas',
-                           plot_id: `#${res.sindex_name}`,
-                           namedValues: res.indices,
-                           caption: caption
-                       };
+
+                        var sindexFile = res.sindex_file;
+                        var gebvsSindexFile = res.gebvs_sindex_file;
+
+           			    var fileNameSindex = sindexFile.split('/').pop();
+           			    var fileNameGebvsSindex= gebvsSindexFile.split('/').pop();
+           			    var sindexLink= `<a href="${sindexFile}" download="${fileNameSindex}">Indices</a>`;
+           			    var gebvsSindexLink = `<a href="${gebvsSindexFile}" download="${fileNameGebvsSindex}">Weighted GEBVs+indices</a>`;
+
+           			    let caption = `<br/><strong>Index Name:</strong> ${res.sindex_name} <strong>Download:</strong>: ${sindexLink} | ${gebvsSindexLink} ${legend}`;
+                        let histo = {
+                               canvas: '#si_canvas',
+                               plot_id: `#${res.sindex_name}`,
+                               namedValues: res.indices,
+                               caption: caption
+                           };
 
                         solGS.histogram.plotHistogram(histo);
 
@@ -278,15 +286,15 @@ solGS.sIndex = {
 
                         solGS.correlation.formatGenCorInputData(popId, popType,  res.index_file);
 
-        		    jQuery('#si_canvas #selected_pop').val('');
+            		    jQuery('#si_canvas #selected_pop').val('');
 
-        		    var sIndexed = {
-        			'sindex_id': popId,
-        			'sindex_name': res.sindex_name
-        		    };
+            		    var sIndexed = {
+            			'sindex_id': popId,
+            			'sindex_name': res.sindex_name
+            		    };
 
-        		    solGS.sIndex.saveIndexedPops(sIndexed);
-        		    solGS.cluster.listClusterPopulations();
+            		    solGS.sIndex.saveIndexedPops(sIndexed);
+            		    solGS.cluster.listClusterPopulations();
             }
 		},
 		error: function(res){
@@ -433,24 +441,24 @@ solGS.sIndex = {
 
 	var popsList ='';
 	for (var i = 1; i < listTypeSelPopsRows.length; i++) {
-            var row    = listTypeSelPopsRows[i];
-            var popRow = row.innerHTML;
+        var row    = listTypeSelPopsRows[i];
+        var popRow = row.innerHTML;
 
-            predictedListTypePops = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
+        predictedListTypePops = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
 
-            if (predictedListTypePops) {
-		var selPopsInput  = row.getElementsByTagName("input")[0];
-		var idPopName     = selPopsInput.value;
-		var idPopNameCopy = idPopName;
-		idPopNameCopy     = JSON.parse(idPopNameCopy);
-		var popName       = idPopNameCopy.name;
+        if (predictedListTypePops) {
+    		var selPopsInput  = row.getElementsByTagName("input")[0];
+    		var idPopName     = selPopsInput.value;
+    		var idPopNameCopy = idPopName;
+    		idPopNameCopy     = JSON.parse(idPopNameCopy);
+    		var popName       = idPopNameCopy.name;
 
-		popsList += '<li>'
-                    + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
-                    + '</li>';
-            } else {
-		popsList = undefined;
-            }
+    		popsList += '<li>'
+                        + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
+                        + '</li>';
+        } else {
+		    popsList = undefined;
+        }
 	}
 
 	return popsList;

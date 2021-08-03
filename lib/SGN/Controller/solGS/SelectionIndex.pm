@@ -4,6 +4,7 @@ use Moose;
 use namespace::autoclean;
 
 use File::Basename;
+use File::Path qw / mkpath  /;
 use File::Slurp qw /write_file read_file/;
 use File::Spec::Functions qw / catfile catdir/;
 use List::MoreUtils qw /uniq/;
@@ -65,12 +66,14 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
         $self->save_rel_weights($c);
         $self->calc_selection_index($c);
 
-        $self->download_sindex_url($c);
-        my $link       = $c->stash->{selection_index_download_url};
+        $self->prep_download_si_files($c);
+        my $sindex_file = $c->stash->{download_sindex};
+        my $gebvs_sindex_file = $c->stash->{download_gebvs_sindex};
 
         my $index_file = $c->stash->{selection_index_only_file};
-        my $sindex_name  = $c->controller('solGS::Files')->create_file_id($c);
         my $si_data = $c->controller("solGS::Utils")->read_file_data($index_file);
+
+        my $sindex_name  = $c->controller('solGS::Files')->create_file_id($c);
 
         $ret->{status} = 'No GEBV values to rank.';
 
@@ -78,9 +81,10 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
         {
             $ret->{status} = 'success';
             $ret->{indices} = $si_data;
-            $ret->{download_link} = $link;
             $ret->{index_file} = $index_file;
 	        $ret->{sindex_name} = $sindex_name;
+            $ret->{sindex_file}  =  $sindex_file;
+            $ret->{gebvs_sindex_file}  =  $gebvs_sindex_file;
         }
     }
     else
@@ -96,16 +100,53 @@ sub download_selection_index :Path('/solgs/download/selection/index') Args(1) {
     my ($self, $c, $sindex_name) = @_;
 
     $c->stash->{sindex_name} = $sindex_name;
+
+    $self->prep_download_si_files($c);
+	my $sindex_file = $c->stash->{download_sindex};
+    my $gebvs_sindex_file = $c->stash->{download_gebvs_sindex};
+
+	$c->stash->{rest}{sindex_file}  =  $sindex_file;
+    $c->stash->{rest}{sindex_file}  =  $gebvs_sindex_file;
+
+    # $c->stash->{sindex_name} = $sindex_name;
+    # $self->selection_index_file($c);
+    # my $sindex_file = $c->stash->{selection_index_only_file};
+    #
+    # if (-s $sindex_file)
+    # {
+    #     my @sindex =  map { [ split(/\t/) ] }  read_file($sindex_file, {binmode => ':utf8'});
+    #
+    #     $c->res->content_type("text/plain");
+    #     $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @sindex);
+    # }
+
+}
+
+sub prep_download_si_files {
+    my ($self, $c) = @_;
+
+    my $tmp_dir = catfile($c->config->{tempfiles_subdir}, 'selectionindex');
+    my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
+
+    mkpath ([$base_tmp_dir], 0, 0755);
+
     $self->selection_index_file($c);
     my $sindex_file = $c->stash->{selection_index_only_file};
 
-    if (-s $sindex_file)
-    {
-        my @sindex =  map { [ split(/\t/) ] }  read_file($sindex_file, {binmode => ':utf8'});
+    $self->gebvs_selection_index_file($c);
+    my $gebvs_sindex_file = $c->stash->{gebvs_selection_index_file};
 
-        $c->res->content_type("text/plain");
-        $c->res->body(join "", map { $_->[0] . "\t" . $_->[1] }  @sindex);
-    }
+    $c->controller('solGS::Files')->copy_file($sindex_file, $base_tmp_dir);
+    $c->controller('solGS::Files')->copy_file($gebvs_sindex_file, $base_tmp_dir);
+
+    $sindex_file = fileparse($sindex_file);
+    $sindex_file = catfile($tmp_dir, $sindex_file);
+
+    $gebvs_sindex_file = fileparse($gebvs_sindex_file);
+    $gebvs_sindex_file = catfile($tmp_dir, $gebvs_sindex_file);
+
+    $c->stash->{download_sindex} = $sindex_file;
+    $c->stash->{download_gebvs_sindex} = $gebvs_sindex_file;
 
 }
 
@@ -174,7 +215,7 @@ sub si_output_files {
 
 sub calc_selection_index {
     my ($self, $c) = @_;
-    
+
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{selection_index_temp_dir};
     $c->stash->{output_files} = $self->si_output_files($c);
@@ -200,7 +241,8 @@ sub get_top_10_selection_indices {
 sub download_sindex_url {
     my ($self, $c) = @_;
 
-    my $sindex_name = $c->stash->{file_id};
+
+    my $sindex_name = $c->controller('solGS::Files')->create_file_id($c);
     my $url = qq | <a href="/solgs/download/selection/index/$sindex_name">Download selection indices</a> |;
 
     $c->stash->{selection_index_download_url} = $url;
@@ -251,7 +293,11 @@ sub save_rel_weights {
 sub gebvs_selection_index_file {
     my ($self, $c) = @_;
 
-   my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+   my $file_id = $c->stash->{sindex_name};
+   if (!$file_id)
+   {
+       $file_id = $c->controller('solGS::Files')->create_file_id($c);
+   }
 
     my $name = "gebvs_selection_index_${file_id}";
     my $dir = $c->stash->{selection_index_cache_dir};
