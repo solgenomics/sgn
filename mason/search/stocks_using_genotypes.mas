@@ -1,4 +1,3 @@
-
 <%args>
 
 
@@ -8,46 +7,61 @@
 
 <& /page/page_title.mas, title=>'Search Accessions with Specific Genotype' &>
 
-<&| /page/info_section.mas, title=>''&>
-
-<div class="row" id="genotype_search_form" >
-    <div class="col-sm-1">
+<&| /page/info_section.mas, title=>'Step 1: Select a set of accessiions (dataset)'&>
+    <div class="row" id="search_form_1" >
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-12 well">
+            <span style="width:240px" id="dataset_accessions"></span>
+        </div>
     </div>
-    <div class="col-sm-12 well">
-        <div class="row">
-            <div class="col-sm-11">
-                <div class="form-horizontal">
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Select a set of accessions (data set):</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <select class="form-control" id="selected_dataset">
-                                    <option value="">Select a dataset</option>
-                                    </select>
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Select a set of markers (marker set):</label>
+</&>
+<br>
+<&| /page/info_section.mas, title=>'Step 2: Select a set of marker info (marker set)'&>
+    <div class="row" id="search_form_2" >
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-12 well">
+            <div class="row">
+                <div class="col-sm-11">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="control-label col-sm-4">Select a set of markers (marker set):</label>
                             <div class="col-sm-8" >
                                 <div class="input-group">
                                     <select class="form-control" id="selected_markerset">
-                                    <option value="">Select a marker set</option>
+                                        <option value="">Select a marker set</option>
                                     </select>
                                 </div>
                             </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4"></label>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+<br>
+<&| /page/info_section.mas, title=>'Step 3: Search options'&>
+    <div class="row" id="search_form_3" >
+        <div class="col-sm-1">
+        </div>
+        <div class="col-sm-12 well">
+            <div class="row">
+                <div class="col-sm-11">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="control-label col-sm-4"></label>
                             <div class="col-sm-8" >
-                                <button class="btn btn-info" id="search_accessions_using_dosages"><i class="glyphicon glyphicon-search"></i> Accessions Using Dosages</button>
+                                <button class="btn btn-info" id="search_accessions_using_dosages"><i class="glyphicon glyphicon-search"></i> Search by Using Dosages</button>
                             </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4"></label>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-sm-4"></label>
                             <div class="col-sm-8" >
-                                <button class="btn btn-info" id="search_accessions_using_snps"><i class="glyphicon glyphicon-search"></i> Accessions Using SNPs</button>
+                                <button class="btn btn-info" id="search_accessions_using_snps"><i class="glyphicon glyphicon-search"></i> Search by Using SNPs</button>
                             </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -72,7 +86,8 @@ jQuery(document).ready(function (){
     var data_set = new CXGN.Dataset();
     var lo = new CXGN.List();
 
-    get_select_box('datasets','selected_dataset');
+    get_select_box('datasets', 'dataset_accessions', {"checkbox_name":"dataset_accessions_checkbox"});
+
     jQuery('#selected_markerset').html(lo.listSelect('selected_markerset', ['markers'], 'Select a marker set', undefined, undefined));
 
     jQuery("#search_accessions_using_dosages").click(function(){
