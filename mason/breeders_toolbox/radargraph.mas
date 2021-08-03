@@ -64,11 +64,17 @@ var radar_chart = new Chart(ctx, {
                 borderWidth: 3,
             },
             point: {
-                pointRadius: 10,
+                pointRadius: 8,
             },
         },
         scales: {
             r: {
+                angleLines: {
+                    color: 'black'
+                },
+                grid: {
+                    color: 'black'
+                },
                 pointLabels: {
                     font: {
                         family: 'sans-serif',
@@ -104,7 +110,7 @@ jQuery('#load_data').click(function () {
             url: '/ajax/radargraph?dataset_id=' + dataset_ids[i],
             success: function (r) {
                 get_labels(r.data);
-                format_data(r.data, i);
+                format_data(r.data, r.name);
             }
         })
     }
@@ -114,7 +120,7 @@ jQuery('#load_data').click(function () {
  * Pushes the input into the dataset as an array of values
  * @param {*} input Data from the AJAX request
  */
-function format_data(input, dataset_id) {
+function format_data(input, dataset_name) {
     var data = [];
     var trait_indices = input[0].indexOf("availableGermplasmSeedlotUniquenames") + 1;
 
@@ -126,18 +132,17 @@ function format_data(input, dataset_id) {
         data.push(Math.round((get_avg(temp)) * 10) / 10);
     }
 
-    // Picks a random color from colors and the corresponding color from colors_alpha
     var rgb_col = colors[Math.floor(Math.random() * colors.length)]
     var rgba_col = colors_alpha[colors.indexOf(rgb_col)]
 
 
     var set = {
-        label: dataset_id,
+        label: dataset_name,
         data: data,
         fill: true,
         backgroundColor: rgba_col,
         borderColor: rgb_col,
-        pointHoverRadius: 15,
+        pointHoverRadius: 13,
         pointBackgroundColor: rgb_col,
         pointBorderColor: '#fff',
         pointHoverBackgroundColor: '#fff',
