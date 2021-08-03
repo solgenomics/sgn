@@ -67,6 +67,8 @@ CREATE TABLE sgn_people.sp_token (
    sp_person_id bigint references sgn_people.sp_person
 )
 
+GRANT select, update, insert, delete  ON sgn_people.sp_token to postgres, web_usr;
+
 
 
 
