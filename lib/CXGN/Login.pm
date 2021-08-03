@@ -337,6 +337,23 @@ sub login_user {
         if ($disabled) {
             $login_info->{account_disabled} = $disabled;
         }
+
+        # else if ($self->get_login()->verify_session()) {
+        #     $login_info->{user_prefs} = $user_prefs;
+        #     my $new_cookie_string = $self->get_login_cookie();
+        #     print STDERR "$new_cookie_string\n";
+        #     $sth = $self->get_sql("cookie_string_exists");
+        #     $sth->execute($new_cookie_string);
+        #     $sth = $self->get_sql("login");
+        #     $sth->execute( $new_cookie_string, $person_id );
+        #     CXGN::Cookie::set_cookie( $LOGIN_COOKIE_NAME, $new_cookie_string);
+        #     CXGN::Cookie::set_cookie( "user_prefs", $user_prefs );
+        #             $login_info->{person_id}     = $person_id;
+        #             $login_info->{first_name}     = $first_name;
+        #             $login_info->{last_name}     = $last_name;
+        #             $login_info->{cookie_string} = $new_cookie_string;
+
+        # }
         else {
             $login_info->{user_prefs} = $user_prefs;
             if ($person_id) {
