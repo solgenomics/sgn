@@ -514,13 +514,13 @@ sub set_sql {
 
         login =>    #send: cookie_string, sp_person_id
 
-          "	UPDATE 
+          "	INSERT 
 				sgn_people.sp_token 
 			SET 
 				cookie_string=?,
-				last_access_time=current_timestamp 
-			WHERE 
-				sp_person_id=?",
+				sp_person_id =? 
+				last_access_time=current_timestamp ",
+            
 
         logout =>    #send: cookie_string
 
