@@ -1774,6 +1774,32 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   $c->stash->{rest} = { success => 1};
 }
 
+sub submit_plot_layout : Chained('trial') PathPart('submit_plot_layout') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $trial_id = $c->stash->{trial_id};
+
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+        return;
+    }
+
+    if ($self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
+        return;
+    }
+
+    my $submit_plot_layout_fieldmap = CXGN::Trial::FieldMap->new({
+        trial_id => $trial_id,
+        bcs_schema => $schema,
+    });
+    $submit_plot_layout_fieldmap->_regenerate_trial_layout_cache();
+
+    $c->stash->{rest} = { success => 1};
+
+}
+
 sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions') Args(0) {
   my $self = shift;
   my $c = shift;
