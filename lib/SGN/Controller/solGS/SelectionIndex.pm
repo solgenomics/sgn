@@ -57,42 +57,27 @@ sub calculate_selection_index :Path('/solgs/calculate/selection/index') Args() {
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    my $traits_wts = $c->stash->{rel_wts};
-    my $json = JSON->new();
-    my $rel_wts = $json->decode($traits_wts);
-    my @traits = keys (%$rel_wts);
-    @traits    = grep {$_ ne 'rank'} @traits;
-
-    my @values;
-    foreach my $tr (@traits)
-    {
-        push @values, $rel_wts->{$tr};
-    }
+    my $values = $self->check_si_form_wts($c);
 
     my $ret->{status} = 'Selection index failed.';
-    if (@values)
+    if ($values->[0])
     {
-        $c->controller('solGS::Gebvs')->get_gebv_files_of_traits($c);
-
-        $self->gebv_rel_weights($c, $rel_wts);
+        $self->save_rel_weights($c);
         $self->calc_selection_index($c);
 
-    	my $top_10_si = $c->stash->{top_10_selection_indices};
-        my $top_10_genos = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($top_10_si);
-
+        $self->download_sindex_url($c);
         my $link       = $c->stash->{selection_index_download_url};
-        my $index_file = $c->stash->{selection_index_only_file};
-    	my $sindex_name = $c->stash->{file_id};
 
+        my $index_file = $c->stash->{selection_index_only_file};
+        my $sindex_name  = $c->controller('solGS::Files')->create_file_id($c);
         my $si_data = $c->controller("solGS::Utils")->read_file_data($index_file);
 
         $ret->{status} = 'No GEBV values to rank.';
 
-        if (@$top_10_si)
+        if (@$si_data)
         {
             $ret->{status} = 'success';
             $ret->{indices} = $si_data;
-            $ret->{top_10_genotypes} = $top_10_genos;
             $ret->{download_link} = $link;
             $ret->{index_file} = $index_file;
 	        $ret->{sindex_name} = $sindex_name;
@@ -124,14 +109,49 @@ sub download_selection_index :Path('/solgs/download/selection/index') Args(1) {
 
 }
 
-
-sub calc_selection_index {
+sub check_si_form_wts {
     my ($self, $c) = @_;
+
+    my $rel_wts = $self->get_rel_wts_hash($c);
+    my @traits = keys (%$rel_wts);
+    @traits    = grep {$_ ne 'rank'} @traits;
+
+    my @values;
+    foreach my $tr (@traits)
+    {
+        push @values, $rel_wts->{$tr};
+    }
+
+    return \@values;
+
+}
+
+
+sub si_input_files {
+    my ($self, $c) = @_;
+
+    $c->controller('solGS::Gebvs')->get_gebv_files_of_traits($c);
+    $self->rel_weights_file($c);
 
     my $input_files = join("\t",
                            $c->stash->{rel_weights_file},
                            $c->stash->{gebv_files_of_traits}
         );
+
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
+    my $temp_dir = $c->stash->{selection_index_temp_dir};
+
+    my $in_name = "input_files_selection_index_${file_id}";
+    my $input_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $in_name);
+    write_file($input_file, {binmode => ':utf8'}, $input_files);
+
+    return $input_file;
+
+}
+
+
+sub si_output_files {
+    my ($self, $c) = @_;
 
     $self->gebvs_selection_index_file($c);
     $self->selection_index_file($c);
@@ -141,28 +161,29 @@ sub calc_selection_index {
                             $c->stash->{selection_index_only_file}
         );
 
-
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
-    $c->stash->{file_id} = $file_id;
-
     my $out_name = "output_files_selection_index_${file_id}";
     my $temp_dir = $c->stash->{selection_index_temp_dir};
     my $output_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $out_name);
     write_file($output_file, {binmode => ':utf8'}, $output_files);
 
-    my $in_name = "input_files_selection_index_${file_id}";
-    my $input_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $in_name);
-    write_file($input_file, {binmode => ':utf8'}, $input_files);
+    return $output_file;
 
+}
+
+
+sub calc_selection_index {
+    my ($self, $c) = @_;
+    
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
     $c->stash->{analysis_tempfiles_dir} = $c->stash->{selection_index_temp_dir};
-    $c->stash->{output_files} = $output_file;
-    $c->stash->{input_files}  = $input_file;
+    $c->stash->{output_files} = $self->si_output_files($c);
+    $c->stash->{input_files}  = $self->si_input_files($c);
     $c->stash->{r_temp_file}  = "selection_index_${file_id}";
     $c->stash->{r_script}     = 'R/solGS/selection_index.r';
 
     $c->controller('solGS::AsyncJob')->run_r_script($c);
-    $self->download_sindex_url($c);
-    $self->get_top_10_selection_indices($c);
+
 }
 
 
@@ -186,8 +207,22 @@ sub download_sindex_url {
 
 }
 
-sub gebv_rel_weights {
-    my ($self, $c, $rel_wts) = @_;
+
+sub get_rel_wts_hash {
+    my ($self, $c) = @_;
+
+    my $traits_wts = $c->stash->{rel_wts};
+    my $json = JSON->new();
+    my $rel_wts = $json->decode($traits_wts);
+
+    return $rel_wts;
+
+}
+
+sub save_rel_weights {
+    my ($self, $c) = @_;
+
+    my $rel_wts = $self->get_rel_wts_hash($c);
 
     my @si_wts;
     my $rel_wts_txt = "trait" . "\t" . 'relative_weight' . "\n";
@@ -199,7 +234,7 @@ sub gebv_rel_weights {
         {
             $rel_wts_txt .= $tr . "\t" . $wt;
             $rel_wts_txt .= "\n";
-	    push @si_wts, $tr, $wt;
+	        push @si_wts, $tr, $wt;
         }
     }
 
