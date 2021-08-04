@@ -262,7 +262,6 @@ sub store {
     my $coderef = sub {
 
         # write category values for v2
-        my $label_counter = 1;
         foreach my $category (@scale_categories) {
             my $label = $category->{'label'};
             my $value = $category->{'value'};
@@ -272,11 +271,10 @@ sub store {
                 {
                     cvterm_id => $cvterm_id,
                     type_id   => $scale_categories_label_id,
-                    value     => defined $label ? $label : $label_counter,
+                    value     => defined $label && $label ne "" ? $label : $value,
                     rank      => $rank
                 }
             );
-            $label_counter += 1;
 
             my $prop_source = $schema->resultset("Cv::Cvtermprop")->create(
                 {
