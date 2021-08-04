@@ -93,7 +93,10 @@ sub get_accessions_using_snps :Path('/ajax/search/accessions_using_snps') :Args(
     );
 
     my $dataset_ref = $dataset->get_dataset_data();
-#    print STDERR "DATASET =" .Dumper($dataset_ref). "\n";
+
+    print STDERR "DATASET ID =".Dumper($dataset_id)."\n";
+    print STDERR "MARKERSET ID =".Dumper($markerset_id)."\n";
+    print STDERR "DATASET =".Dumper($dataset_ref). "\n";
 
     my %data = %{$dataset_ref};
 

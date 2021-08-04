@@ -29,7 +29,7 @@
                             <label class="control-label col-sm-4">Select a set of markers (marker set):</label>
                             <div class="col-sm-8" >
                                 <div class="input-group">
-                                    <select class="form-control" id="selected_markerset">
+                                    <select class="form-control" id="markerset_select">
                                         <option value="">Select a marker set</option>
                                     </select>
                                 </div>
@@ -88,12 +88,27 @@ jQuery(document).ready(function (){
 
     get_select_box('datasets', 'dataset_accessions', {"checkbox_name":"dataset_accessions_checkbox"});
 
-    jQuery('#selected_markerset').html(lo.listSelect('selected_markerset', ['markers'], 'Select a marker set', undefined, undefined));
+    jQuery('#markerset_select').html(lo.listSelect('markerset_select', ['markers'], 'Select a marker set', undefined, undefined));
 
     jQuery("#search_accessions_using_dosages").click(function(){
 
-        var dataset_id = jQuery('#selected_dataset').val();
-        var markerset_id = jQuery('#selected_markerset').val();
+        var selected_datasets = [];
+        var dataset_id;
+        jQuery('input[name="dataset_accessions_checkbox"]:checked').each(function() {
+            selected_datasets.push(jQuery(this).val());
+        });
+
+        if (selected_datasets.length < 1){
+            alert('Please select a set of accessions!');
+            return false;
+        } else if (selected_datasets.length > 1){
+            alert('Please select only one set of accessions!');
+            return false;
+        } else {
+            dataset_id = selected_datasets[0];
+        }
+
+        var markerset_id = jQuery('#markerset_select').val();
 
         var table = jQuery('#genotype_search_results').DataTable({
             'destroy' : true,
@@ -122,15 +137,30 @@ jQuery(document).ready(function (){
 
     jQuery("#search_accessions_using_snps").click(function(){
 
-        var dataset_id_snps = jQuery('#selected_dataset').val();
-        var markerset_id_snps = jQuery('#selected_markerset').val();
+        var selected_datasets = [];
+        var dataset_id;
+        jQuery('input[name="dataset_accessions_checkbox"]:checked').each(function() {
+            selected_datasets.push(jQuery(this).val());
+        });
+
+        if (selected_datasets.length < 1){
+            alert('Please select a set of accessions!');
+            return false;
+        } else if (selected_datasets.length > 1){
+            alert('Please select only one set of accessions!');
+            return false;
+        } else {
+            dataset_id = selected_datasets[0];
+        }
+
+        var markerset_id = jQuery('#markerset_select').val();
 
         var table = jQuery('#genotype_search_results').DataTable({
             'destroy' : true,
             'ajax': { 'url':'/ajax/search/accessions_using_snps',
                 'data':{
-                    'dataset_id': dataset_id_snps,
-                    'markerset_id': markerset_id_snps,
+                    'dataset_id': dataset_id,
+                    'markerset_id': markerset_id,
                 }
             },
             columns: [
