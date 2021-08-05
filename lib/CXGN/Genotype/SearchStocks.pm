@@ -127,6 +127,7 @@ sub get_accessions_using_snps {
     my @parameters = @{$filtering_parameters};
 
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
 
     my $protocol_id;
     my %genotype_nt;
@@ -160,16 +161,16 @@ sub get_accessions_using_snps {
         if ($marker_name){
             my @ref_alt = ();
 
-            my $q = "SELECT value->'markers'->?->>'ref', value->'markers'->?->>'alt'
-                FROM nd_protocolprop where nd_protocol_id = ?";
+            my $q = "SELECT value->?->>'ref', value->?->>'alt'
+                FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
 
             my $h = $schema->storage->dbh()->prepare($q);
-            $h->execute($marker_name, $marker_name, $protocol_id);
+            $h->execute($marker_name, $marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id);
 
             while (my ($ref, $alt) = $h->fetchrow_array()){
                 push @ref_alt, $ref, $alt
             }
-            print STDERR "REF ALT=" .Dumper(\@ref_alt). "\n";
+#            print STDERR "REF ALT=" .Dumper(\@ref_alt). "\n";
 
             my @nt = ();
 
@@ -205,7 +206,6 @@ sub get_accessions_using_snps {
         $all_nt_string = encode_json \%genotype_nt;
     }
 
-    print STDERR "PARAM HASH=" .Dumper(\%genotype_nt). "\n";
     print STDERR "PARAM STRING=" .Dumper($all_nt_string). "\n";
 
     my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM dataset_table
