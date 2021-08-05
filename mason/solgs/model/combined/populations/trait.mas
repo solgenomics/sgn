@@ -20,7 +20,7 @@ $selection_prediction_download => ''
 $selection_pop_id => ''
 $list_of_prediction_pops =>''
 $selection_pop_name => ''
-$analyzed_traits =>''
+$training_pop_analyzed_traits =>''
 $owner =>''
 $protocol_url => ''
 $genotyping_protocol_id => ''
@@ -126,7 +126,7 @@ $model_link
 
 <& /solgs/population/selection_populations.mas,
    selection_prediction_download => $selection_prediction_download,
-   analyzed_traits         => $analyzed_traits,
+   training_pop_analyzed_traits         => $training_pop_analyzed_traits,
    pop_id                  => $combo_pops_id,
    selection_pop_id       => $selection_pop_id,
    list_of_prediction_pops => $list_of_prediction_pops,

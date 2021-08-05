@@ -10,7 +10,7 @@ $selection_pop_name => ''
 $selection_pop_desc => ''
 
 $genotyping_protocol_id => ''
-
+$data_set_type => ''
 $training_traits_ids => ''
 $selection_traits_ids => ''
 $training_traits_code => ''
@@ -31,3 +31,4 @@ $training_traits_code => ''
 <input type="hidden" id="training_traits_ids" value= "<% $training_traits_ids %>" />
 <input type="hidden" id="selection_traits_ids" value="<% $selection_traits_ids %>" />
 <input type="hidden" id="training_traits_code" value="<% $training_traits_code %>" />
+<input type="hidden" id="data_set_type" value="<% $data_set_type %>" />

@@ -29,7 +29,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('analysis_name', 'id', 'geno pca job')->send_keys('Geno pca job');
     sleep(2);
-    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(80);
@@ -207,7 +207,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'Test Kasese Tr pop')->send_keys('Test Kasese Tr pop');
     sleep(2);
-    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(80);
@@ -227,7 +227,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'Test DMCP model Kasese')->send_keys('Test DMCP model Kasese');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -283,7 +283,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('analysis_name', 'id', ' sel pred job queueing')->send_keys('Test DMCP selection pred Kasese');
     sleep(3);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(3);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(180);
@@ -341,7 +341,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'combo trials tr pop')->send_keys('combo trials tr pop');
     sleep(2);
-    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(80);
@@ -375,7 +375,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'Test DMCP model combo')->send_keys('Test DMCP model combo');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(120);
@@ -432,7 +432,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(4);
     $d->find_element_ok('analysis_name', 'id', 'Test DMCP selection pred nacrri')->send_keys('Test DMCP selection pred nacrri');
     sleep(4);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(3);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(160);

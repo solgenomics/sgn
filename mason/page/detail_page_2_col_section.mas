@@ -183,7 +183,7 @@ $analytics_protocol_result_summary => {}
 				&>
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/population/correlation.mas,
-                                    trial_id => $trial_id
+                                    corre_pop_id => $trial_id
                                 &>
 
                                 <& /solgs/anova/analysis.mas,
@@ -220,9 +220,6 @@ $analytics_protocol_result_summary => {}
                                 &>
 % }
 
-                                <& /breeders_toolbox/trial/correlation_workflow.mas, trial_id => $trial_id &>
-                                <& /breeders_toolbox/trial/time_series_accessions_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
-                                <& /breeders_toolbox/trial/numerical_derivatives_row_and_column_workflow.mas, trial_id => $trial_id, data_level=>'plot' &>
 % if ($hidap_enabled) {
                                 <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
 % }
