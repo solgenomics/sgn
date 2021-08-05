@@ -65,10 +65,10 @@ CREATE TABLE sgn_people.sp_token (
    last_access_time timestamp without time zone,
    source_ip_address varchar(64),
    sp_person_id bigint references sgn_people.sp_person
-)
+);
 
 GRANT select, update, insert, delete  ON sgn_people.sp_token to postgres, web_usr;
-
+GRANT usage on sequence sp_token_sp_token_id_seq to postgres, web_usr;
 
 
 

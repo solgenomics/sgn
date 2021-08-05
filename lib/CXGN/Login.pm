@@ -43,7 +43,6 @@ use warnings;
 
 use Digest::MD5 qw(md5);
 use String::Random;
-
 use CXGN::Cookie;
 
 use CatalystX::GlobalContext '$c';
@@ -338,22 +337,6 @@ sub login_user {
             $login_info->{account_disabled} = $disabled;
         }
 
-        # else if ($self->get_login()->verify_session()) {
-        #     $login_info->{user_prefs} = $user_prefs;
-        #     my $new_cookie_string = $self->get_login_cookie();
-        #     print STDERR "$new_cookie_string\n";
-        #     $sth = $self->get_sql("cookie_string_exists");
-        #     $sth->execute($new_cookie_string);
-        #     $sth = $self->get_sql("login");
-        #     $sth->execute( $new_cookie_string, $person_id );
-        #     CXGN::Cookie::set_cookie( $LOGIN_COOKIE_NAME, $new_cookie_string);
-        #     CXGN::Cookie::set_cookie( "user_prefs", $user_prefs );
-        #             $login_info->{person_id}     = $person_id;
-        #             $login_info->{first_name}     = $first_name;
-        #             $login_info->{last_name}     = $last_name;
-        #             $login_info->{cookie_string} = $new_cookie_string;
-
-        # }
         else {
             $login_info->{user_prefs} = $user_prefs;
             if ($person_id) {
@@ -482,10 +465,10 @@ sub set_sql {
         user_from_cookie =>    #send: session_time_in_secs, cookiestring
 
           "	SELECT 
-				sp_person_id,
+				sp_token.sp_person_id,
 				sgn_people.sp_roles.name as user_type,
 				user_prefs,
-				extract (epoch FROM current_timestamp-last_access_time)>? AS expired 
+				extract (epoch FROM current_timestamp-sp_token.last_access_time)>? AS expired 
 			FROM 
 				sgn_people.sp_person JOIN sgn_people.sp_person_roles using(sp_person_id) join sgn_people.sp_roles using(sp_role_id) JOIN sgn_people.sp_token on(sgn_people.sp_person.sp_person_id = sgn_people.sp_token.sp_person_id)
 			WHERE 
@@ -514,12 +497,13 @@ sub set_sql {
 
         login =>    #send: cookie_string, sp_person_id
 
-          "	INSERT 
-				sgn_people.sp_token 
-			SET 
-				cookie_string=?,
-				sp_person_id =? 
-				last_access_time=current_timestamp ",
+          "	INSERT INTO
+				sgn_people.sp_token(cookie_string, sp_person_id, last_access_time) 
+			VALUES ( 
+				?,
+				?, 
+				current_timestamp
+            )",
             
 
         logout =>    #send: cookie_string
