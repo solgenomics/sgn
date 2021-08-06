@@ -1,8 +1,8 @@
 <%doc>
 
 =head1 NAME
- 
-/mode/top_blups.mas - displays a plot of the gebvs of a trait for all genotypes; displays top 10 genotypes in tablar form with download function for the entire genotypes set. 
+
+/model/top_blups.mas - displays displays top 10 genotypes in tablar form with download function for the entire genotypes set.
 
 =AUTHOR
 
@@ -15,34 +15,14 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 $top_blups
-$blups_download_url => ''
-
-
 </%args>
 
 
-<&| /page/info_section.mas, 
-  collapsible => 1, 
-  collapsed   => 0, 
-  title       => "Genomic estimated breeding values (GEBVs) - GBLUP method" 
-&>
 
-
-<div id="gebvPlot2"> </div> 
-
-<button class="button" id="gebvzoom-reset">Reset zoom</button>
-<button  class="button" id="inverse_gebv_plot">Inverse plot</button>
-<br/>
-<br/>
-<h3 style="text-align:center">Overview</h3>
-<div id="gebvPlotOverview"> 
-</div>
-<br/>
-<br/>
 <i>Top 10 genotypes</i>:
 
 <& /page/columnar_table.mas,
-  headings     => ["Genotypes", "GEBV"], 
+  headings     => ["Genotypes", "GEBVs"],
   data         => $top_blups,
   __alt_freq   => 2,
   __alt_width  => 1,
@@ -51,8 +31,3 @@ $blups_download_url => ''
 &>
 
 <br />
-[ <% $blups_download_url %> ]
-
-</&>
-
-

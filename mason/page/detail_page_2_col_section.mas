@@ -83,6 +83,7 @@ $reference_genome_name => undef
 $species_name => undef
 $create_date => undef
 $sample_observation_unit_type_name => undef
+$marker_type => undef
 
 #Specific to drone run detail page
 $drone_run_date => undef
@@ -112,6 +113,16 @@ $all_nirs_files => undef
 $all_deleted_nirs_files => undef
 $locations => undef
 $sampling_facilities => ()
+
+#Specific to analytics detail page
+$analytics_protocol_id => undef
+$analytics_protocol_name => undef
+$analytics_protocol_description => undef
+$analytics_protocol_type_id => undef
+$analytics_protocol_type_name => undef
+$analytics_protocol_create_date => undef
+$analytics_protocol_properties => {}
+$analytics_protocol_result_summary => {}
 
 </%args>
 
@@ -172,7 +183,7 @@ $sampling_facilities => ()
 				&>
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/population/correlation.mas,
-                                    trial_id => $trial_id
+                                    corre_pop_id => $trial_id
                                 &>
 
                                 <& /solgs/anova/analysis.mas,
@@ -221,7 +232,7 @@ $sampling_facilities => ()
 %} #End trial_jbrowse_data
 % if ($info_section_id eq 'trial_linkage_section'){
                                 <&| /page/info_section.mas, title => 'Field Trial to Field Trial Linkage', id => 'field_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
-                                    <& /breeders_toolbox/trial/field_trial_from_field_trial_linkage.mas, trial_id => $trial_id &>
+                                    <& /breeders_toolbox/trial/field_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => $trial_type, trial_name=>$trial_name &>
                                 </&>
                                 <&| /page/info_section.mas, title => 'Field Trial to Genotyping Plate Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
@@ -344,7 +355,7 @@ $sampling_facilities => ()
 % } #End management_factor_design
 
 % if ($info_section_id eq 'genotyping_protocol_details'){
-                                <& /breeders_toolbox/genotyping_protocol/details.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name &>
+                                <& /breeders_toolbox/genotyping_protocol/details.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name, marker_type => $marker_type &>
 % } #End genotyping_protocol_details
 % if ($info_section_id eq 'genotyping_protocol_markers'){
                                 <& /breeders_toolbox/genotyping_protocol/markers.mas, protocol_id => $protocol_id &>
@@ -355,6 +366,13 @@ $sampling_facilities => ()
 % if ($info_section_id eq 'genotyping_protocol_delete_genotype_data') {
                                 <& /breeders_toolbox/genotyping_protocol/delete_genotype_data.mas, protocol_id => $protocol_id &>
 % }
+% if ($info_section_id eq 'pcr_based_genotyping_markers'){
+                                <& /breeders_toolbox/genotyping_protocol/pcr_markers.mas, protocol_id => $protocol_id &>
+% } #End pcr_based_genotyping_markers
+% if ($info_section_id eq 'pcr_genotyping_protocol_genotype_data'){
+                                <& /breeders_toolbox/genotyping_protocol/pcr_genotype_data.mas, protocol_id => $protocol_id, marker_names => $marker_names &>
+% } #End pcr_genotyping_protocol_genotype_data
+
 
 % if ($info_section_id eq 'crossingtrial_details'){
                                 <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, location_name=>$location_name, country_name=>$country_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix &>
@@ -444,6 +462,12 @@ $sampling_facilities => ()
 % if ($info_section_id eq 'model_analyses'){
                                 <& /analyses/model_detail_page_analyses_section.mas, model_id => $model_id &>
 % } #End model_analyses
+% if ($info_section_id eq 'analytics_protocol_details'){
+                                <& /analytics_protocols/analytics_protocols_details.mas, analytics_protocol_id=>$analytics_protocol_id, analytics_protocol_name=>$analytics_protocol_name, analytics_protocol_description=>$analytics_protocol_description, analytics_protocol_type_id=>$analytics_protocol_type_id, analytics_protocol_type_name=>$analytics_protocol_type_name, analytics_protocol_create_date=>$analytics_protocol_create_date, analytics_protocol_properties=>$analytics_protocol_properties, analytics_protocol_result_summary=>$analytics_protocol_result_summary &>
+% } #End analytics_protocol_details
+% if ($info_section_id eq 'analytics_protocol_result_files'){
+                                <& /analytics_protocols/analytics_protocols_result_files.mas, analytics_protocol_id=>$analytics_protocol_id, analytics_protocol_name=>$analytics_protocol_name &>
+% } #End analytics_protocol_result_files
 % if ($info_section_id eq 'model_deletion_section'){
                                 <&| /page/info_section.mas, title=>'Delete model', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
                                     <& /analyses/model_deletion.mas, model_id => $model_id  &>

@@ -15,7 +15,7 @@
 
 <div id="manage_drone_imagery_standard_process_raw_images_interactive_div" style="display:none">
 
-    <& /page/page_title.mas, title=>"Manage Drone Imagery: Run A Standard Process On Raw Images Interactively" &>
+    <& /page/page_title.mas, title=>"Manage Aerial Imagery: Run A Standard Process On Raw Images Interactively" &>
 
     <&| /util/workflow.mas, id=> "manage_drone_imagery_standard_process_raw_images_interactive_workflow" &>
         <&| /util/workflow.mas:step, title=> "Intro" &>
@@ -305,7 +305,7 @@
             </div>
 
             <hr>
-            
+
             <div class="well well-sm">
                 <div id="drone_imagery_interactive_trial_layout_div"></div>
             </div>
@@ -617,7 +617,7 @@ jQuery(document).ready(function(){
             //.style("stroke-width", 2)
             .attr("cx", manage_drone_imagery_standard_process_raw_images_interactive_image.width)
             .attr("cy", manage_drone_imagery_standard_process_raw_images_interactive_image.length);
-            
+
         var imageborder = imageGroup.append('rect')
             .attr('class', 'image-border')
             .style("fill", "none")
@@ -708,7 +708,7 @@ jQuery(document).ready(function(){
 
     function dragged(d) {
         var newX = d3.event.x - manage_drone_imagery_standard_process_raw_images_interactive_image.width / 2;
-        var newY = d3.event.y - manage_drone_imagery_standard_process_raw_images_interactive_image.length / 2; 
+        var newY = d3.event.y - manage_drone_imagery_standard_process_raw_images_interactive_image.length / 2;
         d.x_pos = newX;
         d.y_pos = newY;
         var rotate_angle = d3.select(this).attr("rotate_angle");
@@ -723,7 +723,7 @@ jQuery(document).ready(function(){
         d3.select(this).moveToFront();
 
         var newX = d3.event.x - manage_drone_imagery_standard_process_raw_images_interactive_image.width / 2;
-        var newY = d3.event.y - manage_drone_imagery_standard_process_raw_images_interactive_image.length / 2; 
+        var newY = d3.event.y - manage_drone_imagery_standard_process_raw_images_interactive_image.length / 2;
         d3.select(this).datum({position: newX,newY});
         d3.select(this).attr("x_pos", newX);
         d3.select(this).attr("y_pos", newY);
@@ -1497,7 +1497,7 @@ jQuery(document).ready(function(){
     jQuery('#manage_drone_imagery_standard_process_interactive_ground_control_points_option').change(function(){
         if (jQuery(this).val() == 'Yes') {
             jQuery('#manage_drone_imagery_standard_process_interactive_ground_control_points_select_div').show();
-            
+
             //Change click type to save ground control points
         }
         else {
@@ -1692,7 +1692,7 @@ jQuery(document).ready(function(){
 
     jQuery('#drone_imagery_plot_polygons_rectangles_apply_square_average_raw_images_interactive').click(function() {
         alert('Click the four corners of 10 single plots at random in the current imaging pass. For each single plot click the top left, then the top right, then the bottom right, then the bottom left.');
-        
+
     });
 
     jQuery('#drone_imagery_plot_polygons_rectangles_apply_square_raw_images_interactive').click(function() {
@@ -1767,7 +1767,7 @@ jQuery(document).ready(function(){
         }
         html = html + '</tbody></table><hr>';
         html = html + '<button class="btn btn-primary" id="'+generate_assign_button+'">Generate Assignments From Manual Input (Does Not Save)</button>&nbsp;&nbsp;&nbsp;<button class="btn btn-primary" name="'+save_button+'">Finish and Save Polygons To Plots. Go to Next Imaging Pass.</button></div></div>';
-        
+
         jQuery('#'+div_id).html(html);
         jQuery('#'+table_id).DataTable({'paging':false});
     }
@@ -1982,7 +1982,7 @@ jQuery(document).ready(function(){
             row_num = row_num + 1;
         }
         console.log(plot_polygons_interactive_generated_polygons_intermediate);
-        
+
         alert('Click on where the top left corner of the template will be pasted in the current imaging event pass.');
 
         d3.selectAll("g").on('mousedown.drag', null);

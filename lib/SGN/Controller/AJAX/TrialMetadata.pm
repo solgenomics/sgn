@@ -2,12 +2,9 @@ package SGN::Controller::AJAX::TrialMetadata;
 
 use Moose;
 use Data::Dumper;
-use List::Util 'max';
 use Bio::Chado::Schema;
-use List::Util qw | any |;
 use CXGN::Trial;
 use Math::Round::Var;
-use List::MoreUtils qw(uniq);
 use File::Temp 'tempfile';
 use Text::CSV;
 use CXGN::Trial::FieldMap;
@@ -21,15 +18,16 @@ use CXGN::UploadFile;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
 use File::Basename qw | basename dirname|;
-use List::MoreUtils ':all';
+use List::MoreUtils qw | :all !before !after |;
 use Try::Tiny;
 use CXGN::BreederSearch;
 use CXGN::Page::FormattingHelpers qw / html_optional_show /;
 use SGN::Image;
 use CXGN::Trial::TrialLayoutDownload;
-use List::Util qw(sum);
 use CXGN::Genotype::DownloadFactory;
-use POSIX;
+use POSIX qw | !qsort !bsearch |;
+use CXGN::Phenotypes::StorePhenotypes;
+use Statistics::Descriptive::Full;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -100,6 +98,9 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     my $self = shift;
     my $c = shift;
     my $datatype = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
     if ($self->privileges_denied($c)) {
         $c->stash->{rest} = { error => "You have insufficient access privileges to delete trial data." };
@@ -112,11 +113,23 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
         my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
         my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
-        $error = $c->stash->{trial}->delete_phenotype_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
+        $error = $c->stash->{trial}->delete_phenotype_metadata($metadata_schema, $phenome_schema);
         $error .= $c->stash->{trial}->delete_phenotype_data($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id);
     }
 
     elsif ($datatype eq 'layout') {
+
+        my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_on_field_trial', 'project_relationship')->cvterm_id();
+        my $drone_image_check_q = "SELECT count(subject_project_id) FROM project_relationship WHERE object_project_id = ? AND type_id = ?;";
+        my $drone_image_check_h = $schema->storage->dbh()->prepare($drone_image_check_q);;
+        $drone_image_check_h->execute($c->stash->{trial_id}, $project_relationship_type_id);
+        my ($drone_run_count) = $drone_image_check_h->fetchrow_array();
+
+        if ($drone_run_count > 0) {
+            $c->stash->{rest} = { error => "Please delete the imaging events belonging to this field trial first!" };
+            return;
+        }
+
         $error = $c->stash->{trial}->delete_metadata();
         $error .= $c->stash->{trial}->delete_field_layout();
         $error .= $c->stash->{trial}->delete_project_entry();
@@ -231,8 +244,8 @@ sub trial_details_POST  {
     # submitters can change if they are associated with the breeding program
     # users cannot change
 
-    if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) { 
-    
+    if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+
 #    if (!exists($has_roles{$breeding_program_name})) {
       $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to change the details of this trial." };
       return;
@@ -739,7 +752,7 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
-        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments);
+        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
@@ -849,7 +862,7 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
-        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments);
+        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
@@ -959,7 +972,7 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_index_numbers}}, $_->{plant_index_number};
         }
         my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
-        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments);
+        $t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id);
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();
@@ -1771,7 +1784,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
   my $old_plot_name = $c->req->param('old_plot_name');
   my $override = $c->req->param('override');
   my $trial_id = $c->stash->{trial_id};
-  
+
   if (!$c->user){
         $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
         return;
@@ -1943,9 +1956,10 @@ sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Ar
         return;
     }
 
+    my $user_id = $c->user->get_object->get_sp_person_id();
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments, $plant_owner, $plant_owner_username)) {
+    if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments, $user_id)) {
 
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -1993,9 +2007,10 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
         $c->detach;
     }
 
+    my $user_id = $c->user->get_object->get_sp_person_id();
     my $t = CXGN::Trial->new({ bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $tissue_sample_owner, $tissue_owner_username)) {
+    if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $user_id)) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
@@ -2867,6 +2882,8 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     my $accession_ids = $c->req->param('accession_ids') ne 'null' ? decode_json $c->req->param('accession_ids') : [];
     my $trait_format = $c->req->param('trait_format');
     my $data_level = $c->req->param('data_level');
+    my $draw_error_bars = $c->req->param('draw_error_bars');
+    my $use_cumulative_phenotype = $c->req->param('use_cumulative_phenotype');
 
     my $user_id;
     my $user_name;
@@ -2914,17 +2931,42 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
         return;
     }
 
+    my %trait_ids_hash = map {$_ => 1} @$trait_ids;
+
     my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$c->stash->{trial_id}});
     my $traits_assayed = $trial->get_traits_assayed($data_level, $trait_format, 'time_ontology');
     my %unique_traits_ids;
     foreach (@$traits_assayed) {
-        $unique_traits_ids{$_->[0]} = $_;
+        if (exists($trait_ids_hash{$_->[0]})) {
+            $unique_traits_ids{$_->[0]} = $_;
+        }
     }
     my %unique_components;
     foreach (values %unique_traits_ids) {
         foreach my $component (@{$_->[2]}) {
             if ($component->{cv_type} && $component->{cv_type} eq 'time_ontology') {
                 $unique_components{$_->[0]} = $component->{name};
+            }
+        }
+    }
+
+    my @sorted_times;
+    my %sorted_time_hash;
+    while( my($trait_id, $time_name) = each %unique_components) {
+        my @time_split = split ' ', $time_name;
+        my $time_val = $time_split[1] + 0;
+        push @sorted_times, $time_val;
+        $sorted_time_hash{$time_val} = $trait_id;
+    }
+    @sorted_times = sort @sorted_times;
+
+    my %cumulative_time_hash;
+    while( my($trait_id, $time_name) = each %unique_components) {
+        my @time_split = split ' ', $time_name;
+        my $time_val = $time_split[1] + 0;
+        foreach my $t (@sorted_times) {
+            if ($t < $time_val) {
+                push @{$cumulative_time_hash{$time_val}}, $sorted_time_hash{$t};
             }
         }
     }
@@ -2945,13 +2987,12 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     }
     my @sorted_germplasm_names = sort keys %seen_germplasm_names;
 
-    my $header_string = 'germplasmName,time,value';
+    my $header_string = 'germplasmName,time,value,sd';
 
-    my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
-    my $tmp_stats_dir = $shared_cluster_dir_config."/tmp_trial_correlation";
-    mkdir $tmp_stats_dir if ! -d $tmp_stats_dir;
-    my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
-    my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+    my $dir = $c->tempfiles_subdir('/trial_analysis_accession_time_series_plot_dir');
+    my $pheno_data_tempfile_string = $c->tempfile( TEMPLATE => 'trial_analysis_accession_time_series_plot_dir/datafileXXXX');
+    $pheno_data_tempfile_string .= '.csv';
+    my $stats_tempfile = $c->config->{basepath}."/".$pheno_data_tempfile_string;
 
     open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
         print $F $header_string."\n";
@@ -2962,13 +3003,33 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
                 my $time_val = $time_split[1];
                 my $vals = $phenotype_data{$s}->{$t};
                 my $val;
+                my $sd;
                 if (!$vals || scalar(@$vals) == 0) {
                     $val = 'NA';
+                    $sd = 0;
                 }
                 else {
-                    $val = sum(@$vals)/scalar(@$vals);
+                    my $stat = Statistics::Descriptive::Full->new();
+                    $stat->add_data(@$vals);
+                    $sd = $stat->standard_deviation();
+                    $val = $stat->mean();
+                    if ($use_cumulative_phenotype eq 'Yes') {
+                        my $previous_time_trait_ids = $cumulative_time_hash{$time_val};
+                        my @previous_vals_avgs = ($val);
+                        foreach my $pt (@$previous_time_trait_ids) {
+                            my $previous_vals = $phenotype_data{$s}->{$pt};
+                            my $previous_stat = Statistics::Descriptive::Full->new();
+                            $previous_stat->add_data(@$previous_vals);
+                            my $previous_val_avg = $previous_stat->mean();
+                            push @previous_vals_avgs, $previous_val_avg;
+                        }
+                        my $stat_cumulative = Statistics::Descriptive::Full->new();
+                        $stat_cumulative->add_data(@previous_vals_avgs);
+                        $sd = $stat_cumulative->standard_deviation();
+                        $val = sum(@previous_vals_avgs);
+                    }
                 }
-                print $F "$s,$time_val,$val\n";
+                print $F "$s,$time_val,$val,$sd\n";
             }
         }
     close($F);
@@ -2981,7 +3042,6 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     }
     my $color_string = join '\',\'', @colors;
 
-    my $dir = $c->tempfiles_subdir('/trial_analysis_accession_time_series_plot_dir');
     my $pheno_figure_tempfile_string = $c->tempfile( TEMPLATE => 'trial_analysis_accession_time_series_plot_dir/figureXXXX');
     $pheno_figure_tempfile_string .= '.png';
     my $pheno_figure_tempfile = $c->config->{basepath}."/".$pheno_figure_tempfile_string;
@@ -2994,7 +3054,16 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     sp <- ggplot(mat, aes(x = time, y = value)) +
         geom_line(aes(color = germplasmName), size = 1) +
         scale_fill_manual(values = c(\''.$color_string.'\')) +
-        theme_minimal();
+        theme_minimal()';
+    if ($draw_error_bars eq "Yes") {
+        $cmd .= '+ geom_errorbar(aes(ymin=value-sd, ymax=value+sd, color=germplasmName), width=.2, position=position_dodge(0.05));
+        ';
+    }
+    else {
+        $cmd .= ';
+        ';
+    }
+    $cmd .= 'sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
     sp <- sp + guides(shape = guide_legend(override.aes = list(size = 0.5)));
     sp <- sp + guides(color = guide_legend(override.aes = list(size = 0.5)));
     sp <- sp + theme(legend.title = element_text(size = 3), legend.text = element_text(size = 3));';
@@ -3006,7 +3075,7 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     print STDERR Dumper $cmd;
     my $status = system($cmd);
 
-    $c->stash->{rest} = {success => 1, figure => $pheno_figure_tempfile_string};
+    $c->stash->{rest} = {success => 1, figure => $pheno_figure_tempfile_string, data_file => $pheno_data_tempfile_string, cmd => $cmd};
 }
 
 sub trial_accessions_rank : Chained('trial') PathPart('accessions_rank') Args(0) {

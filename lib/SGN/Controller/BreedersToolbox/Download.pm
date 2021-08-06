@@ -217,6 +217,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     }
 
     my $has_header = defined($c->req->param('has_header')) ? $c->req->param('has_header') : 1;
+    my $search_type = $c->req->param("speed") && $c->req->param("speed") ne 'null' ? $c->req->param("speed") : "Native";
     my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xls";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
@@ -374,7 +375,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
-        has_header=>$has_header
+        has_header => $has_header,
+        search_type => $search_type
     });
 
     my $error = $download->download();

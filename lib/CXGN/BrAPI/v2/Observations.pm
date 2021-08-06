@@ -105,7 +105,7 @@ sub search {
                         season => \@season,
                         collector => $_->{operator},
                         studyDbId => qq|$obs_unit->{trial_id}|,
-                        uploadedBy=>undef,
+                        uploadedBy=> $_->{operator},
                         value => qq|$_->{value}|,
                     };
                 }
@@ -200,7 +200,7 @@ sub detail {
                 season => \@season,
                 collector => $_->{operator},
                 studyDbId => qq|$obs_unit->{trial_id}|,
-                uploadedBy=>undef,
+                uploadedBy=> $_->{operator},
                 value => qq|$_->{value}|,
             };
         }
@@ -222,6 +222,7 @@ sub observations_store {
     my $dbh = $self->bcs_schema()->storage()->dbh();
 
     my $observations = $params->{observations};
+    my $overwrite_values = $params->{overwrite} ? $params->{overwrite} : 0;
     my $user_id = $params->{user_id};
     my $user_type = $params->{user_type};
     my $archive_path = $c->config->{archive_path};
@@ -235,11 +236,20 @@ sub observations_store {
     my %result;
 
     #print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
+    if (!$user_id) {
+        print STDERR 'Must provide user_id to upload phenotypes! Please contact us!';
+        push @$status, {'403' => 'Permission Denied. Must provide user_id.'};
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'Must provide user_id to upload phenotypes! Please contact us!', 403);
+    }
+
     if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
         print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
         push @$status, {'403' => 'Permission Denied. Must have correct privilege.'};
-        return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!');
+        return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!', 403);
     }
+
+    my $p = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->find({sp_person_id=>$user_id});
+    my $user_name = $p->username;
 
     ## Validate request structure and parse data
     my $timestamp_included = 1;
@@ -251,13 +261,13 @@ sub observations_store {
     if (!$validated_request || $validated_request->{'error'}) {
         my $parse_error = $validated_request ? $validated_request->{'error'} : "Error parsing request structure";
         print STDERR $parse_error;
-        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
+        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error, 400);
     } elsif ($validated_request->{'success'}) {
         push @$status, {'info' => $validated_request->{'success'} };
     }
 
 
-    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema, undef, $user_id, undef, undef);
+    my $parsed_request = $parser->parse('brapi observations', $observations, $timestamp_included, $data_level, $schema, undef, $user_name, undef, undef);
     my %parsed_data;
     my @units;
     my @variables;
@@ -265,7 +275,7 @@ sub observations_store {
     if (!$parsed_request || $parsed_request->{'error'}) {
         my $parse_error = $parsed_request ? $parsed_request->{'error'} : "Error parsing request data";
         print STDERR $parse_error;
-        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error);
+        return CXGN::BrAPI::JSONResponse->return_error($status, $parse_error, 400);
     } elsif ($parsed_request->{'success'}) {
         push @$status, {'info' => $parsed_request->{'success'} };
         #define units (observationUnits) and variables (observationVariables) from parsed request
@@ -290,7 +300,7 @@ sub observations_store {
     my $archive_error_message = $response->{error_message};
     my $archive_success_message = $response->{success_message};
     if ($archive_error_message){
-        return CXGN::BrAPI::JSONResponse->return_error($status, $archive_error_message);
+        return CXGN::BrAPI::JSONResponse->return_error($status, $archive_error_message, 500);
     }
     if ($archive_success_message){
         push @$status, {'info' => $archive_success_message };
@@ -304,6 +314,7 @@ sub observations_store {
     my $timestamp = $time->ymd()."_".$time->hms();
     $phenotype_metadata{'archived_file'} = $file;
     $phenotype_metadata{'archived_file_type'} = 'brapi observations';
+    $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;
 
     ## Store observations and return details for response
@@ -323,19 +334,29 @@ sub observations_store {
         values_hash=>\%parsed_data,
         has_timestamps=>1,
         metadata_hash=>\%phenotype_metadata,
+        overwrite_values=>$overwrite_values,
         #image_zipfile_path=>$image_zip,
     );
+    my ($verified_warning, $verified_error) = $store_observations->verify();
+
+    if ($verified_error) {
+        print STDERR "Error: $verified_error\n";
+        return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request did not pass the checks.", 500);
+    }
+    if ($verified_warning) {
+        print STDERR "\nWarning: $verified_warning\n";
+    }
 
     my ($stored_observation_error, $stored_observation_success, $stored_observation_details) = $store_observations->store();
 
     if ($stored_observation_error) {
         print STDERR "Error: $stored_observation_error\n";
-        return CXGN::BrAPI::JSONResponse->return_error($status, $stored_observation_error);
+        return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request could not be processed correctly.", 500);
     }
     if ($stored_observation_success) {
         #if no error refresh matviews 
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
 
         print STDERR "Success: $stored_observation_success\n";
         # result need to be updated with v2 format

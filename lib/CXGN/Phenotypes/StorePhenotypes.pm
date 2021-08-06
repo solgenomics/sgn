@@ -481,7 +481,9 @@ sub store {
     my $coderef = sub {
         my %trait_and_stock_to_overwrite;
         my @overwritten_values;
-
+        my $new_count = 0;
+        my $skip_count = 0;
+        my $overwrite_count = 0;
         foreach my $plot_name (@plot_list) {
 
             my $stock_id = $data{$plot_name}[0];
@@ -530,7 +532,6 @@ sub store {
                 my $trait_cvterm = $trait_objs{$trait_name};
 
                 my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
-                #print STDERR Dumper $value_array;
                 my $trait_value = $value_array->[0];
                 my $timestamp = $value_array->[1];
                 $operator = $value_array->[2] ? $value_array->[2] : $operator;
@@ -540,25 +541,38 @@ sub store {
 
                 if (defined($trait_value) && length($trait_value)) {
 
-                    #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
-                    if ($overwrite_values) {
-                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                            push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
-                            push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
-                        }
-                        $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
-                    }
                     if ($ignore_new_values) {
                         if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                            $skip_count++;
                             next;
                         }
                     }
 
-                    my $plot_trait_uniquename = "Stock: " .
+                    my $plot_trait_uniquename = "stock: " .
                         $stock_id . ", trait: " .
                         $trait_cvterm->name .
-                        " date: $unique_time" .
-                        "  operator = $operator" ;
+                        ", date: $unique_time" .
+                        ", operator: $operator" ;
+
+                    # Remove previous phenotype values for a given stock and trait if $overwrite values is checked, otherwise skip to next
+                    if ($overwrite_values) {
+                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                            push @{$trait_and_stock_to_overwrite{traits}}, $trait_cvterm->cvterm_id();
+                            push @{$trait_and_stock_to_overwrite{stocks}}, $stock_id;
+                            $plot_trait_uniquename .= ", overwritten: $upload_date";
+                            $overwrite_count++;
+                        } else {
+                            $new_count++;
+                        }
+                        $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
+                    } else {
+                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
+                            $skip_count++;
+                            next;
+                        } else {
+                            $new_count++;
+                        }
+                    }
 
                     my $phenotype;
                     if ($observation) {
@@ -632,7 +646,7 @@ sub store {
                         "observationVariableDbId"=> qq|$observationVariableDbId|,
                         "observationVariableName"=> $trait_cvterm->name,
                         "studyDbId"=> $project_id,
-                        "uploadedBy"=> $user_id,
+                        "uploadedBy"=> $operator ? $operator : "",
                         "value" => $trait_value
                     );
 
@@ -649,8 +663,10 @@ sub store {
             push @overwritten_values, $self->delete_previous_phenotypes(\%trait_and_stock_to_overwrite, \@saved_nd_experiment_ids);
         }
 
-        $success_message = 'All values in your file are now saved in the database!';
-        #print STDERR Dumper \@overwritten_values;
+        $success_message = 'All values in your file have been successfully processed!<br><br>';
+        $success_message .= "$new_count new values stored<br>";
+        $success_message .= "$skip_count previously stored values skipped<br>";
+        $success_message .= "$overwrite_count previously stored values overwritten<br><br>";
         my %files_with_overwritten_values = map {$_->[0] => 1} @overwritten_values;
         my $obsoleted_files = $self->check_overwritten_files_status(keys %files_with_overwritten_values);
         if (scalar (@$obsoleted_files) > 0){
