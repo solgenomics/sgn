@@ -145,6 +145,7 @@ sub get_accessions_using_snps {
         $h->execute($accession);
     }
 
+    my %chrom_hash;
     foreach my $param (@parameters){
         my $param_ref = decode_json$param;
         my %params = %{$param_ref};
@@ -157,42 +158,51 @@ sub get_accessions_using_snps {
         if ($genotyping_protocol_id){
             $protocol_id = $genotyping_protocol_id
         }
-
+        print STDERR "PROTOCOL ID PARAM =".Dumper($genotyping_protocol_id)."\n";
         if ($marker_name){
-            my @ref_alt = ();
+            my @ref_alt_chrom = ();
 
-            my $q = "SELECT value->?->>'ref', value->?->>'alt'
+            my $q = "SELECT value->?->>'ref', value->?->>'alt', value->?->>'chrom'
                 FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
 
             my $h = $schema->storage->dbh()->prepare($q);
-            $h->execute($marker_name, $marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id);
+            $h->execute($marker_name, $marker_name, $marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id);
 
-            while (my ($ref, $alt) = $h->fetchrow_array()){
-                push @ref_alt, $ref, $alt
+            while (my ($ref, $alt, $chrom) = $h->fetchrow_array()){
+                if ($ref) {
+                    push @ref_alt_chrom, $ref
+                }
+                if ($alt) {
+                    push @ref_alt_chrom, $alt
+                }
+                if ($chrom) {
+                    push @ref_alt_chrom, $chrom
+                }
             }
-#            print STDERR "REF ALT=" .Dumper(\@ref_alt). "\n";
+            print STDERR "REF ALT CHROM=" .Dumper(\@ref_alt_chrom). "\n";
 
             my @nt = ();
 
             if ($allele_1 ne $allele_2){
                 foreach my $allele(@allele_param){
-                    if (grep{/$allele/}(@ref_alt)){
-                        if ($allele eq $ref_alt[0]){
+                    if (grep{/$allele/}(@ref_alt_chrom)){
+                        if ($allele eq $ref_alt_chrom[0]){
                             $nt[0] = $allele;
-                        } elsif ($allele eq $ref_alt[1]){
+                        } elsif ($allele eq $ref_alt_chrom[1]){
                             $nt[1] = $allele;
                         }
+
                         my $nt_string = join(",", @nt);
-                        $genotype_nt{$marker_name} = {'NT' => $nt_string};
+                        $genotype_nt{$ref_alt_chrom[2]}{$marker_name} = {'NT' => $nt_string};
                     } else {
                         last;
                     }
                 }
             } elsif ($allele_1 eq $allele_2){
-                if (grep{/$allele_1/}(@ref_alt)){
+                if (grep{/$allele_1/}(@ref_alt_chrom)){
                     @nt = ($allele_1, $allele_2);
                     my $nt_string = join(",", @nt);
-                    $genotype_nt{$marker_name} = {'NT' => $nt_string};
+                    $genotype_nt{$ref_alt_chrom[2]}{$marker_name} = {'NT' => $nt_string};
                  } else {
                     last;
                 }
@@ -200,13 +210,22 @@ sub get_accessions_using_snps {
             }
         }
     }
+   print STDERR "GENOTYPE NT =".Dumper(\%genotype_nt)."\n";
 
+    my @formatted_parameters;
+#    if (%genotype_nt){
+#        $all_nt_string = encode_json \%genotype_nt;
+#    }
     my $all_nt_string;
-    if (%genotype_nt){
-        $all_nt_string = encode_json \%genotype_nt;
+    if (%genotype_nt) {
+        foreach my $chromosome (keys %genotype_nt) {
+            my $marker_params = $genotype_nt{$chromosome};
+            my $each_chrom_markers_string = encode_json $marker_params;
+            push @formatted_parameters, $each_chrom_markers_string
+        }
     }
 
-    print STDERR "PARAM STRING=" .Dumper($all_nt_string). "\n";
+    print STDERR "FORMATTED PARAM =" .Dumper(\@formatted_parameters). "\n";
 
     my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM dataset_table
         JOIN stock ON (dataset_table.stock_id = stock.stock_id)
