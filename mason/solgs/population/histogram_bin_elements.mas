@@ -1,0 +1,35 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/population/histogram_bin_elements.mas - displays histogram bin elements data
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+</%args>
+
+<%perl>
+
+</%perl>
+
+
+ <& /util/import_javascript.mas, classes => [ "jquery.dataTables"] &>
+
+<div class="bin_elements" style="display:none">
+
+<table class="table bin_elements_table" style="text-align: left;">
+  <thead>
+    <tr>
+      <th>Genotypes in the selected bin</th>
+      <th>Values</th>
+    </tr>
+  </thead>
+</table>
+</div>
