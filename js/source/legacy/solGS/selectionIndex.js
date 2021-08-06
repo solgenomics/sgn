@@ -271,7 +271,7 @@ solGS.sIndex = {
            			    var sindexLink= `<a href="${sindexFile}" download="${fileNameSindex}">Indices</a>`;
            			    var gebvsSindexLink = `<a href="${gebvsSindexFile}" download="${fileNameGebvsSindex}">Weighted GEBVs+indices</a>`;
 
-           			    let caption = `<br/><strong>Index Name:</strong> ${res.sindex_name} <strong>Download:</strong>: ${sindexLink} | ${gebvsSindexLink} ${legend}`;
+           			    let caption = `<br/><strong>Index Name:</strong> ${res.sindex_name} <strong>Download:</strong> ${sindexLink} |  ${gebvsSindexLink} ${legend}`;
                         let histo = {
                                canvas: '#si_canvas',
                                plot_id: `#${res.sindex_name}`,
@@ -309,7 +309,8 @@ solGS.sIndex = {
     validateRelativeWts: function(nm, val) {
 
          if (isNaN(val) && nm != 'all') {
-                alert('the relative weight of trait ' + nm + ' must be a number.');
+                alert(`the relative weight of trait  ${nm} must be a number.
+                    Only numbers and multiplication symbols ('*' or 'x') are allowed.`);
                 return;
     	}
         else if (!val && nm != 'all') {
