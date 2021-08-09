@@ -34,11 +34,22 @@ $trial_stock_type => undef
         <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
     </&>
 
-% if ($has_subplot_entries) {
     <&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
-        <& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id &>
-    </&>
+
+        <div id="subplot_entries_section">
+
+% if (!$has_subplot_entries) {
+            <button class="btn btn-default" id="create_subplot_entries_button">Add subplot entries</button>
+            <button class="btn btn-default" id="upload_subplot_entries_button">Upload subplot entries using subplot_name</button>
+            <button class="btn btn-default" id="upload_subplot_entries_with_index_number_button">Upload subplot entries using subplot index number</button>
+            <button class="btn btn-default" id="trial_upload_subplots_with_num_subplots_button">Upload subplot entries using number of subplots per plot</button>
+% } else {
+            <& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id &>
 % }
+
+        </div>
+
+    </&>
 
     <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
 
