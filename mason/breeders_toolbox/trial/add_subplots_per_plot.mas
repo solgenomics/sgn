@@ -349,7 +349,59 @@ jQuery(document).ready(function() {
     });
 
 
+    jQuery('#add_subplots_save_button').click( function () {
+        add_subplots_to_trial();
+    });
+
+
 
 });
+
+
+function add_subplots_to_trial() {
+
+    var is_checked;
+    if(jQuery('#add_subplots_per_plot_inherit_treatments').is(":checked")){
+        is_checked = 1;
+    }
+
+    jQuery.ajax( {
+        url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_subplot_entries/',
+        type: 'POST',
+        beforeSend: function() {
+            subplots_enable_working_modal();
+        },
+        data: {
+            'subplots_per_plot' : jQuery('#add_subplots_per_plot_num').val(),
+            'inherits_plot_treatments' : is_checked
+        },
+        success: function(response) {
+            subplots_disable_working_modal();
+            if (response.error) {
+                alert(response.error);
+            }
+            else {
+                alert("Successfully created subplot entries.");
+                jQuery('#add_subplots_dialog').modal("hide");
+                window.location.replace('/breeders/trial/'+<% $trial_id %>);
+            }
+        },
+        error: function(response) {
+            subplots_disable_working_modal();
+            alert("An error occurred saving subplot entries");
+        },
+    });
+
+}
+
+
+
+function subplots_enable_working_modal() {
+    jQuery("#working_modal").modal("show");
+}
+
+function subplots_disable_working_modal() {
+    jQuery("#working_modal").modal("hide");
+}
 
 </script>
