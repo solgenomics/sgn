@@ -141,8 +141,8 @@ function processCode(data) {
     if ( data && data !== "" && RETURN_URL && RETURN_URL !== "" && RETURN_PARAM && RETURN_PARAM !== "" ) {
         let q = RETURN_URL.includes('?') ? '&' : '?';
         window.location = RETURN_URL + q + RETURN_PARAM + '=' + encodeURIComponent(data);
+        stopReader();
     }
-    stopReader();
 }
 
 </script>
