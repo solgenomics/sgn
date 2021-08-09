@@ -131,7 +131,6 @@ sub get_accessions_using_snps {
 
     my $protocol_id;
     my %genotype_nt;
-    my @selected_accessions;
 #    print STDERR "ACCESSION LIST=" .Dumper(\@accessions). "\n";
 
     my $dataset_table = "DROP TABLE IF EXISTS dataset_table;
@@ -206,17 +205,11 @@ sub get_accessions_using_snps {
                  } else {
                     last;
                 }
-
             }
         }
     }
-   print STDERR "GENOTYPE NT =".Dumper(\%genotype_nt)."\n";
 
     my @formatted_parameters;
-#    if (%genotype_nt){
-#        $all_nt_string = encode_json \%genotype_nt;
-#    }
-    my $all_nt_string;
     if (%genotype_nt) {
         foreach my $chromosome (keys %genotype_nt) {
             my $marker_params = $genotype_nt{$chromosome};
@@ -225,26 +218,52 @@ sub get_accessions_using_snps {
         }
     }
 
-    print STDERR "FORMATTED PARAM =" .Dumper(\@formatted_parameters). "\n";
+    my $genotype_string = join("<br>", @formatted_parameters);
 
-    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM dataset_table
+    my $number_of_param_sets = @formatted_parameters;
+
+    my @all_selected_stocks;
+    foreach my $param (@formatted_parameters) {
+        my $q = "SELECT DISTINCT stock.stock_id FROM dataset_table
         JOIN stock ON (dataset_table.stock_id = stock.stock_id)
         JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
         JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
         JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
-        WHERE genotypeprop.value @> ?";
+        WHERE genotypeprop.value @> ? ORDER BY stock.stock_id ASC";
 
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $all_nt_string);
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $param);
 
-    while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
-        push @selected_accessions, [$selected_id, $selected_uniquename, $all_nt_string]
+        while (my ($selected_id) = $h->fetchrow_array()){
+            push @all_selected_stocks, $selected_id
+        }
     }
 
-    return \@selected_accessions;
+    my @selected_stocks;
+    my %count;
+    $count{$_}++ foreach @all_selected_stocks;
+
+    while (my ($stock_id, $value) = each(%count)) {
+        if ($value == $number_of_param_sets) {
+            push @selected_stocks, $stock_id
+        }
+    }
+    print STDERR "SELECTED STOCKS =".Dumper(\@selected_stocks)."\n";
+
+    my $selected_stocks_sql = join ("," , @selected_stocks);
+    my @selected_stocks_details;
+    my $q2 = "SELECT stock.stock_id, stock.uniquename FROM stock where stock.stock_id in ($selected_stocks_sql)  ORDER BY stock.stock_id ASC";
+
+    my $h2 = $schema->storage->dbh()->prepare($q2);
+    $h2->execute();
+
+    while (my ($selected_id, $selected_uniquename) = $h2->fetchrow_array()){
+        push @selected_stocks_details, [$selected_id, $selected_uniquename, $genotype_string ]
+    }
+
+    return \@selected_stocks_details;
 
 }
-
 
 1;
