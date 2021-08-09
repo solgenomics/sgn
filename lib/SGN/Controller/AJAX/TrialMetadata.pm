@@ -1774,7 +1774,7 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   $c->stash->{rest} = { success => 1};
 }
 
-sub submit_plot_layout : Chained('trial') PathPart('submit_plot_layout') Args(0) {
+sub regenerate_cache : Chained('trial') PathPart('regenerate_cache') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');

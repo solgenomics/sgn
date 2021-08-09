@@ -114,13 +114,14 @@ $data_level => 'plot'
   <li><button type="button" id="rotate_map" class="btn btn-success btn-sm">Rotate Map</button></li>
   <li><button type="button" id="add_border" class="btn btn-success btn-sm">Add Border</button></li>
   <li><button type="button" id="change_dimensions" class="btn btn-success btn-sm">Change Dimensions</button></li>
+  <li><button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success btn-sm">Submit Field Layout</button></li>
+
   <a id="hm_replace_accessions_link"><button class="btn btn-success" type="button" id="hm_replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
 </div>
 
 <div id="container_heatmap" ></div>
 <div id="container_fm" >
-    <div style="margin-left: 5%; float: inline;">
-        <button style="margin-bottom: 1%;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success btn-sm">Submit Field Layout</button><br>
+    <div style="position: absolute; margin-left: 2.5%; float: inline;">
         <label for="invert_rows">Invert Rows</label>
         <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
     </div>
@@ -545,14 +546,14 @@ var changed_dim_rows;
 var changed_dim_cols;
 var num_real_plots;
 var invert_rows;
-var brapi_plots;
+var post_brapi_plots;
+var put_brapi_plots;
 
 
 jQuery(document).ready( function() {
     var auth_token;
     var require_login = "<%  $c->get_conf('brapi_require_login') %>";
     auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
-    console.log(auth_token);
 
     if (require_login === '1'){
         auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
@@ -939,11 +940,14 @@ jQuery(document).ready( function() {
                         // Ascending: first plotNumber less than the previous
                     return obj1.additionalInfo.plotNumber - obj2.additionalInfo.plotNumber;
                 });
-                FieldMap.make_hash_map(data);
+                console.log('incoming', data);
+                FieldMap.make_map(data);
                 FieldMap.field_view();
-                brapi_plots = FieldMap.brapi_plots;
+                put_brapi_plots = data;
+                post_brapi_plots = FieldMap.post_brapi_plots;
+                console.log(post_brapi_plots);
             },
-                error: function(reponse) {
+                error: function(response) {
                 alert('Error displaying traits assayed heatmap');   
                 }
         });    
@@ -1123,7 +1127,13 @@ jQuery(document).ready( function() {
 
     jQuery('#submit_fieldmap').click( function() {
         submit_fieldmap_metadata();
+        refresh_cache();
     });
+
+
+    jQuery('#close_fp_success_dialog').click(function() {
+        location.reload();
+    })
 
     jQuery("#hm_view_plot_image_submit").click( function() {
         jQuery("#view_plot_image_dialog").modal("show");
@@ -1151,56 +1161,144 @@ jQuery(document).ready( function() {
         // var data = {};
         jQuery('#working_modal').modal("show");
         var type;
-        console.log('plots', brapi_plots);
+        console.log('puts', put_brapi_plots);
+        console.log('posts', post_brapi_plots);
 
-        for (plot of brapi_plots) {
+        for (plot of put_brapi_plots) {
+            console.log(plot);
             var data = {
-                studyDbId: trial_id,
-                germplasmDbId: plot.accession_id ,
-                germplasmName: plot.stock,
-                observationUnitName: plot.plotname,
+                studyDbId: plot.studyDbId,
+                germplasmDbId: plot.germplasmDbId ,
+                germplasmName: plot.germplasmName,
+                observationUnitName: plot.observationUnitName,
                 observationUnitPosition: {
-                entryType: plot.entryType,
-                observationLevel: {
-                    levelName: "plot",
-                    levelOrder: 2,
-                    levelCode: plot.plotn
-                },
-                observationLevelRelationships: [
-                    {
-                        levelCode: plot.blkn,
-                        levelName: "block",
-                        levelOrder: 1
-                    },
-                    {
-                        levelCode: plot.plotn,
+                    entryType: plot.entryType,
+                    observationLevel: {
                         levelName: "plot",
-                        levelOrder: 2
-                    }
-                ],
-                positionCoordinateX: plot.col,
-                positionCoordinateXType: "GRID_COL",
-                positionCoordinateY: plot.row,
-                positionCoordinateYType: "GRID_ROW"
-            },
-        };
-            if (plot.plotname.includes('border') || plot.plotname.includes('filler')) {
-                console.log(plot.plotname);
-                type = "POST";
-                data = [data];
-            } else {
-                type = "PUT";
-            }
-            var obs_unit = type == "PUT" ? plot.plot_id : "";
-            var stringifiedData = JSON.stringify(data);
+                        levelOrder: 2,
+                        levelCode: plot.additionalInfo.plotNumber
+                    },
+                    observationLevelRelationships: [
+                        {
+                            levelCode: plot.blockNumber,
+                            levelName: "block",
+                            levelOrder: 1
+                        },
+                        {
+                            levelCode: plot.additionalInfo.plotNumber,
+                            levelName: "plot",
+                            levelOrder: 2
+                        }
+                    ],
+                    positionCoordinateX: plot.X,
+                    positionCoordinateXType: "GRID_COL",
+                    positionCoordinateY: plot.Y,
+                    positionCoordinateYType: "GRID_ROW"
+                },
+            };
+            // if (plot.plotname.includes('border') || plot.plotname.includes('filler')) {
+            //     console.log(plot.plotname);
+            //     type = "POST";
+            //     data = [data];
+            // } else {
+            //     type = "PUT";
+            // }
 
+
+        // var data = {
+        //         studyDbId: "266",
+        //         germplasmDbId: "38840",
+        //         germplasmName: "test_accession1",
+        //         observationUnitName: "d191232321",
+        //         observationUnitPosition: {
+        //         entryType: "test"   ,
+        //         observationLevel: {
+        //             levelName: "plot",
+        //             levelOrder: 2,
+        //             levelCode: "1001"
+        //         },
+        //         observationLevelRelationships: [
+        //             {
+        //                 levelCode: "1",
+        //                 levelName: "block",
+        //                 levelOrder: 1
+        //             },
+        //             {
+        //                 levelCode: "1001",
+        //                 levelName: "plot",
+        //                 levelOrder: 2
+        //             }
+        //         ],
+        //         positionCoordinateX: "1",
+        //         positionCoordinateXType: "GRID_COL",
+        //         positionCoordinateY: "1",
+        //         positionCoordinateYType: "GRID_ROW"
+        //         },
+        // }
+  
+//     "65736": {
+//     "additionalInfo": {},   
+//     "externalReferences": [
+//       {
+//         "referenceID": "doi:10.155454/12341234",
+//         "referenceSource": "DOI"
+//       }
+//     ],
+//     "germplasmDbId": "38840",
+//     "germplasmName": "test_accession1",
+//     "locationDbId": "26",
+//     "observationUnitName": "d1812323125",
+//     "observationUnitPUI": "localhost/stock/65736/view",
+//     "observationUnitPosition": {
+//       "entryType": "TEST",
+//       "observationLevel": {
+//         "levelCode": "1002",
+//         "levelName": "plot",
+//         "levelOrder": 2
+//       },
+//       "observationLevelRelationships": [
+//         {
+//           "levelCode": "1",
+//           "levelName": "replicate",
+//           "levelOrder": 0
+//         },
+//         {
+//           "levelCode": "1",
+//           "levelName": "block",
+//           "levelOrder": 1
+//         },
+//         {
+//           "levelCode": "1002",
+//           "levelName": "plot",
+//           "levelOrder": 2
+//         }
+//       ],
+//       "positionCoordinateX": "11",
+//       "positionCoordinateXType": "GRID_COL",
+//       "positionCoordinateY": "11",
+//       "positionCoordinateYType": "GRID_ROW"
+//     },
+//     "programDbId": "134",
+//     "studyDbId": "268",
+    
+//     "trialDbId": "268",
+//     "trialName": "testing plant entry creation with trial upload 3456"
+//   }
+  
+
+
+            // var obs_unit = type == "PUT" ? plot.plot_id : "";
+            var stringifiedData = JSON.stringify(data);
+            
             new jQuery.ajax({
                 type: 'PUT',
                 contentType: 'application/json',
                 headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-                url: '/brapi/v2/observationunits/' + obs_unit,
+                url: '/brapi/v2/observationunits/' + plot.observationUnitDbId,
                 data: stringifiedData,
-                success: function(response) {},
+                success: function(response) {
+
+                },
                 error: function(response) {console.log(response)},
             });
         };
@@ -1209,13 +1307,14 @@ jQuery(document).ready( function() {
     function refresh_cache() {
         new jQuery.ajax({
             type: 'POST',
-            url: '/ajax/breeders/trial/<% $trial_id %>/submit_plot_layout',
+            url: '/ajax/breeders/trial/<% $trial_id %>/regenerate_cache',
             dataType: "json",
             data: {
                 'trial_id': trial_id,
             },
             success: function (response) {
                 jQuery('#working_modal').modal("hide");
+                jQuery('#fieldplot_layout_success_dialog').modal("show");
             },
             error: function (response) {
                 console.log(response);
