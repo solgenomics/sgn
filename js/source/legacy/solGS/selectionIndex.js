@@ -480,7 +480,6 @@ solGS.sIndex = {
 
     },
 
-
 /////
 }
 ////
@@ -501,4 +500,8 @@ jQuery(document).on("click", "#calculate_si", function() {
     var popType = jQuery("#si_canvas #selected_population_type").val();
 
     solGS.sIndex.selectionIndex(modelId, selectionPopId);
+});
+
+jQuery(document).ready( function() {
+    jQuery('#si_tooltip[title]').tooltip();
 });
