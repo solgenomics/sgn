@@ -77,7 +77,14 @@ sub _get_plot_dimensions_from_trial {
     if ($plants_per_plot_row) {
         $plants_per_plot = $plants_per_plot_row->value();
     }
-    return [$plot_length, $plot_width, $plants_per_plot];
+
+    my $subplots_per_plot = '';
+    my $subplots_per_plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
+    my $subplots_per_plot_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $subplots_per_plot_cvterm_id});
+    if ($subplots_per_plot_row) {
+        $subplots_per_plot = $subplots_per_plot_row->value();
+    }
+    return [$plot_length, $plot_width, $plants_per_plot, $subplots_per_plot];
 }
 
 ###

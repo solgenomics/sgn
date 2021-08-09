@@ -1571,6 +1571,7 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
 
     my $plot_length = '';
     my $plot_width = '';
+    my $subplots_per_plot = '';
     my $plants_per_plot = '';
     my $number_of_blocks = '';
     if ($design_type ne 'genotyping_plate') {
@@ -1578,6 +1579,7 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
         $plot_length = $plot_dimensions->[0] ? $plot_dimensions->[0] : '';
         $plot_width = $plot_dimensions->[1] ? $plot_dimensions->[1] : '';
         $plants_per_plot = $plot_dimensions->[2] ? $plot_dimensions->[2] : '';
+        $subplots_per_plot = $plot_dimensions->[3] ? $plot_dimensions->[3] : '';
 
         my $block_numbers = $layout->get_block_numbers();
         if ($block_numbers) {
@@ -1603,6 +1605,7 @@ sub trial_design : Chained('trial') PathPart('design') Args(0) {
         num_reps => $number_of_replicates,
         plot_length => $plot_length,
         plot_width => $plot_width,
+        subplots_per_plot => $subplots_per_plot,
         plants_per_plot => $plants_per_plot,
         total_number_plots => $number_of_plots,
         design => $design
