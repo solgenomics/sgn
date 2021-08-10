@@ -83,6 +83,7 @@ $reference_genome_name => undef
 $species_name => undef
 $create_date => undef
 $sample_observation_unit_type_name => undef
+$marker_type => undef
 
 #Specific to drone run detail page
 $drone_run_date => undef
@@ -354,7 +355,7 @@ $analytics_protocol_result_summary => {}
 % } #End management_factor_design
 
 % if ($info_section_id eq 'genotyping_protocol_details'){
-                                <& /breeders_toolbox/genotyping_protocol/details.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name &>
+                                <& /breeders_toolbox/genotyping_protocol/details.mas, protocol_id => $protocol_id, protocol_name => $protocol_name, protocol_description => $protocol_description, marker_names => $marker_names, header_information_lines => $header_information_lines, reference_genome_name => $reference_genome_name, species_name => $species_name, create_date => $create_date, sample_observation_unit_type_name => $sample_observation_unit_type_name, marker_type => $marker_type &>
 % } #End genotyping_protocol_details
 % if ($info_section_id eq 'genotyping_protocol_markers'){
                                 <& /breeders_toolbox/genotyping_protocol/markers.mas, protocol_id => $protocol_id &>
@@ -365,6 +366,13 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'genotyping_protocol_delete_genotype_data') {
                                 <& /breeders_toolbox/genotyping_protocol/delete_genotype_data.mas, protocol_id => $protocol_id &>
 % }
+% if ($info_section_id eq 'pcr_based_genotyping_markers'){
+                                <& /breeders_toolbox/genotyping_protocol/pcr_markers.mas, protocol_id => $protocol_id &>
+% } #End pcr_based_genotyping_markers
+% if ($info_section_id eq 'pcr_genotyping_protocol_genotype_data'){
+                                <& /breeders_toolbox/genotyping_protocol/pcr_genotype_data.mas, protocol_id => $protocol_id, marker_names => $marker_names &>
+% } #End pcr_genotyping_protocol_genotype_data
+
 
 % if ($info_section_id eq 'crossingtrial_details'){
                                 <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, location_name=>$location_name, country_name=>$country_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix &>

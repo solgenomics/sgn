@@ -6,6 +6,8 @@ use SGN::Context;
 use base 'Exporter';
 use Test::More;
 
+use SGN::Test::Fixture;
+
 use Data::UUID ();
 
 our $schema;
@@ -19,7 +21,8 @@ sub import {
     $schema_class ||= 'Bio::Chado::Schema';
     my $db_profile = 'sgn_test';
     eval {
-        $schema = SGN::Context->new->dbic_schema( $schema_class, $db_profile)
+        #$schema = SGN::Context->new->dbic_schema( $schema_class, $db_profile)
+	$schema = SGN::Test::Fixture->new()->bcs_schema();
     };
     if ($@) {
         plan skip_all => "Could not create a db connection. Do  you have the $db_profile db profile? ($@)";
