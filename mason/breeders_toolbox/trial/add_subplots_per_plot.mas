@@ -398,6 +398,7 @@ jQuery(document).ready(function() {
 
     }
 
+
     function upload_subplots_to_trial() {
         var uploadFile = jQuery("#trial_upload_subplots_file").val();
         jQuery('#upload_subplots_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_subplots");
@@ -435,14 +436,39 @@ jQuery(document).ready(function() {
 
 
     function upload_subplots_with_index_number_to_trial() {
-            var uploadFile = jQuery("#trial_upload_plants_with_index_number_file").val();
-            jQuery('#upload_plants_with_index_number_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_with_plant_index_number");
-            if (uploadFile === '') {
-                alert("Please select a file");
+        var uploadFile = jQuery("#trial_upload_subplots_with_index_number_file").val();
+        jQuery('#upload_subplots_with_index_number_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_subplots_with_subplot_index_number");
+        if (uploadFile === '') {
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_subplots_with_index_number_dialog_form").submit();
+    }
+
+    jQuery('#upload_subplots_with_index_number_dialog_form').iframePostForm({
+        json: true,
+        post: function () {
+            var uploadedSubplotsFile = jQuery("#trial_upload_subplots_with_index_number_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadedSubplotsFile === '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+
+            if (response.error_string) {
+                alert(response.error_string);
                 return;
             }
-            jQuery("#upload_plants_with_index_number_dialog_form").submit();
+            if (response.success) {
+                alert("File uploaded successfully");
+                window.location.replace('/breeders/trial/'+<% $trial_id %>);
+            }
         }
+    });
 
 
 
