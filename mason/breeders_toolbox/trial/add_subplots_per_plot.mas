@@ -361,6 +361,10 @@ jQuery(document).ready(function() {
         upload_subplots_with_index_number_to_trial();
     });
 
+    jQuery('#upload_subplots_with_num_subplots_save_button').click( function () {
+        upload_subplots_with_num_subplots_to_trial();
+    });
+
 
     function add_subplots_to_trial() {
 
@@ -373,14 +377,14 @@ jQuery(document).ready(function() {
             url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_subplot_entries/',
             type: 'POST',
             beforeSend: function() {
-                subplots_enable_working_modal();
+                jQuery("#working_modal").modal("show");
             },
             data: {
                 'subplots_per_plot' : jQuery('#add_subplots_per_plot_num').val(),
                 'inherits_plot_treatments' : is_checked
             },
             success: function(response) {
-                subplots_disable_working_modal();
+                jQuery("#working_modal").modal("hide");
                 if (response.error) {
                     alert(response.error);
                 }
@@ -391,7 +395,7 @@ jQuery(document).ready(function() {
                 }
             },
             error: function(response) {
-                subplots_disable_working_modal();
+                jQuery("#working_modal").modal("hide");
                 alert("An error occurred saving subplot entries");
             },
         });
@@ -471,14 +475,42 @@ jQuery(document).ready(function() {
     });
 
 
-
-    function subplots_enable_working_modal() {
-        jQuery("#working_modal").modal("show");
+    function upload_subplots_with_num_subplots_to_trial() {
+        var uploadFile = jQuery("#trial_upload_subplots_with_number_of_subplots_file").val();
+        jQuery('#upload_subplots_with_num_subplots_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_subplots_with_number_of_subplots");
+        if (uploadFile === '') {
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_subplots_with_num_subplots_dialog_form").submit();
     }
 
-    function subplots_disable_working_modal() {
-        jQuery("#working_modal").modal("hide");
-    }
+    jQuery('#upload_subplots_with_num_subplots_dialog_form').iframePostForm({
+        json: true,
+        post: function () {
+            var uploadedSubplotsFile = jQuery("#trial_upload_subplots_with_number_of_subplots_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadedSubplotsFile === '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+
+            if (response.error_string) {
+                alert(response.error_string);
+                return;
+            }
+            if (response.success) {
+                alert("File uploaded successfully");
+                window.location.replace('/breeders/trial/'+<% $trial_id %>);
+            }
+        }
+    });
+
+
 
 });
 
