@@ -249,17 +249,20 @@ sub get_accessions_using_snps {
             push @selected_stocks, $stock_id
         }
     }
-    print STDERR "SELECTED STOCKS =".Dumper(\@selected_stocks)."\n";
-
-    my $selected_stocks_sql = join ("," , @selected_stocks);
+#    print STDERR "SELECTED STOCKS =".Dumper(\@selected_stocks)."\n";
     my @selected_stocks_details;
-    my $q2 = "SELECT stock.stock_id, stock.uniquename FROM stock where stock.stock_id in ($selected_stocks_sql)  ORDER BY stock.stock_id ASC";
 
-    my $h2 = $schema->storage->dbh()->prepare($q2);
-    $h2->execute();
+    if (scalar(@selected_stocks) > 0) {
+        my $selected_stocks_sql = join ("," , @selected_stocks);
 
-    while (my ($selected_id, $selected_uniquename) = $h2->fetchrow_array()){
-        push @selected_stocks_details, [$selected_id, $selected_uniquename, $genotype_string ]
+        my $q2 = "SELECT stock.stock_id, stock.uniquename FROM stock where stock.stock_id in ($selected_stocks_sql)  ORDER BY stock.stock_id ASC";
+
+        my $h2 = $schema->storage->dbh()->prepare($q2);
+        $h2->execute();
+
+        while (my ($selected_id, $selected_uniquename) = $h2->fetchrow_array()){
+            push @selected_stocks_details, [$selected_id, $selected_uniquename, $genotype_string ]
+        }
     }
 
     return \@selected_stocks_details;
