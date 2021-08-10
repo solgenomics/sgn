@@ -353,55 +353,107 @@ jQuery(document).ready(function() {
         add_subplots_to_trial();
     });
 
-
-
-});
-
-
-function add_subplots_to_trial() {
-
-    var is_checked;
-    if(jQuery('#add_subplots_per_plot_inherit_treatments').is(":checked")){
-        is_checked = 1;
-    }
-
-    jQuery.ajax( {
-        url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_subplot_entries/',
-        type: 'POST',
-        beforeSend: function() {
-            subplots_enable_working_modal();
-        },
-        data: {
-            'subplots_per_plot' : jQuery('#add_subplots_per_plot_num').val(),
-            'inherits_plot_treatments' : is_checked
-        },
-        success: function(response) {
-            subplots_disable_working_modal();
-            if (response.error) {
-                alert(response.error);
-            }
-            else {
-                alert("Successfully created subplot entries.");
-                jQuery('#add_subplots_dialog').modal("hide");
-                window.location.replace('/breeders/trial/'+<% $trial_id %>);
-            }
-        },
-        error: function(response) {
-            subplots_disable_working_modal();
-            alert("An error occurred saving subplot entries");
-        },
+    jQuery('#upload_subplots_save_button').click( function () {
+        upload_subplots_to_trial();
     });
 
-}
+    jQuery('#upload_subplots_with_index_number_save_button').click( function () {
+        upload_subplots_with_index_number_to_trial();
+    });
+
+
+    function add_subplots_to_trial() {
+
+        var is_checked;
+        if(jQuery('#add_subplots_per_plot_inherit_treatments').is(":checked")){
+            is_checked = 1;
+        }
+
+        jQuery.ajax( {
+            url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_subplot_entries/',
+            type: 'POST',
+            beforeSend: function() {
+                subplots_enable_working_modal();
+            },
+            data: {
+                'subplots_per_plot' : jQuery('#add_subplots_per_plot_num').val(),
+                'inherits_plot_treatments' : is_checked
+            },
+            success: function(response) {
+                subplots_disable_working_modal();
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    alert("Successfully created subplot entries.");
+                    jQuery('#add_subplots_dialog').modal("hide");
+                    window.location.replace('/breeders/trial/'+<% $trial_id %>);
+                }
+            },
+            error: function(response) {
+                subplots_disable_working_modal();
+                alert("An error occurred saving subplot entries");
+            },
+        });
+
+    }
+
+    function upload_subplots_to_trial() {
+        var uploadFile = jQuery("#trial_upload_subplots_file").val();
+        jQuery('#upload_subplots_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_subplots");
+        if (uploadFile === '') {
+            alert("Please select a file");
+            return;
+        }
+        jQuery("#upload_subplots_dialog_form").submit();
+    }
+
+    jQuery('#upload_subplots_dialog_form').iframePostForm({
+        json: true,
+        post: function () {
+            var uploadedSubplotsFile = jQuery("#trial_upload_subplots_file").val();
+            jQuery('#working_modal').modal("show");
+            if (uploadedSubplotsFile === '') {
+                jQuery('#working_modal').modal("hide");
+                alert("No file selected");
+            }
+        },
+        complete: function (response) {
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+
+            if (response.error_string) {
+                alert(response.error_string);
+                return;
+            }
+            if (response.success) {
+                alert("File uploaded successfully");
+                window.location.replace('/breeders/trial/'+<% $trial_id %>);
+            }
+        }
+    });
+
+
+    function upload_subplots_with_index_number_to_trial() {
+            var uploadFile = jQuery("#trial_upload_plants_with_index_number_file").val();
+            jQuery('#upload_plants_with_index_number_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_with_plant_index_number");
+            if (uploadFile === '') {
+                alert("Please select a file");
+                return;
+            }
+            jQuery("#upload_plants_with_index_number_dialog_form").submit();
+        }
 
 
 
-function subplots_enable_working_modal() {
-    jQuery("#working_modal").modal("show");
-}
+    function subplots_enable_working_modal() {
+        jQuery("#working_modal").modal("show");
+    }
 
-function subplots_disable_working_modal() {
-    jQuery("#working_modal").modal("hide");
-}
+    function subplots_disable_working_modal() {
+        jQuery("#working_modal").modal("hide");
+    }
+
+});
 
 </script>
