@@ -89,7 +89,7 @@ sub _validate_with_plugin {
             push @error_messages, "Cell B$row_name: subplot_index_number must be a number";
         } else {
             #file must not contain duplicate plot names
-            my $subplot_name = $plot_name."_subplot".$subplot_index_number;
+            my $subplot_name = $plot_name."_subplot_".$subplot_index_number;
             if ($seen_subplot_names{$subplot_name}) {
                 push @error_messages, "Cell B$row_name: duplicate subplot_name at cell A".$seen_subplot_names{$subplot_name}.": $subplot_name";
             }
@@ -157,7 +157,7 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,1)) {
             $subplot_index_number = $worksheet->get_cell($row,1)->value();
         }
-        my $subplot_name = $plot_name."_subplot".$subplot_index_number;
+        my $subplot_name = $plot_name."_subplot_".$subplot_index_number;
         $seen_subplot_names{$subplot_name}++;
     }
     my @plots = keys %seen_plot_names;
@@ -180,7 +180,7 @@ sub _parse_with_plugin {
         if ($worksheet->get_cell($row,1)) {
             $subplot_index_number = $worksheet->get_cell($row,1)->value();
         }
-        my $subplot_name = $plot_name."_subplot".$subplot_index_number;
+        my $subplot_name = $plot_name."_subplot_".$subplot_index_number;
 
         #skip blank lines
         if (!$plot_name && !$subplot_name) {

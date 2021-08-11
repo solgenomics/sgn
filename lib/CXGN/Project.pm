@@ -3671,7 +3671,7 @@ sub create_subplot_entities {
             my $parent_plot_organism = $plot_row->organism_id();
 
             foreach my $subplot_index_number (1..$subplots_per_plot) {
-                my $subplot_name = $parent_plot_name."_subplot$subplot_index_number";
+                my $subplot_name = $parent_plot_name."_subplot_$subplot_index_number";
                 #print STDERR "... ... creating subplot $subplot_name...\n";
 
                 $self->_save_subplot_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, 

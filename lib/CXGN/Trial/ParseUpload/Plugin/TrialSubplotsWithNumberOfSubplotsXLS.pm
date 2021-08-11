@@ -90,7 +90,7 @@ sub _validate_with_plugin {
         } else {
             #file must not contain duplicate subplot names
             for my $i (1 .. $num_subplots_per_plot) {
-                my $subplot_name = $plot_name."_subplot".$i;
+                my $subplot_name = $plot_name."_subplot_".$i;
                 if ($seen_subplot_names{$subplot_name}) {
                     push @error_messages, "Cell B$row_name: duplicate subplot_name at cell A".$seen_subplot_names{$subplot_name}.": $subplot_name";
                 }
@@ -179,7 +179,7 @@ sub _parse_with_plugin {
         }
 
         for my $i (1 .. $num_subplots_per_plot) {
-            my $subplot_name = $plot_name."_subplot".$i;
+            my $subplot_name = $plot_name."_subplot_".$i;
 
             #skip blank lines
             if (!$plot_name && !$subplot_name) {
