@@ -1,4 +1,3 @@
-
 use strict;
 
 use lib 't/lib';
@@ -38,16 +37,18 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('Kasese', 'partial_link_text', 'create training pop')->click();
     sleep(15);
 
-    my $anova = $d->find_element('ANOVA', 'partial_link_text', 'scroll to anova');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $anova);
+    my $heri = $d->find_element('heritability', 'partial_link_text', 'scroll to heritability');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $heri);
     sleep(2);
-    $d->find_element_ok("anova_select_a_trait_div", 'id', 'click dropdown menu')->click();
+    $d->find_element_ok('run_pheno_heritability', 'id', 'run heritability')->click();
+    sleep(30);
+    $d->find_element_ok('//div[@id="heritability_canvas"]//*[contains(., "DMCP")]', 'xpath', 'heritability result')->get_text();
     sleep(3);
-    $d->find_element_ok("anova_dropdown", 'class', 'select a trait')->click();
-    sleep(2);
-    $d->find_element_ok('run_anova', 'id', 'run anova')->click();
-    sleep(120);
-    $d->find_element_ok('//div[contains(., "ANOVA result")]', 'xpath', 'anova result')->get_text();
+    $d->find_element_ok('Download heritability', 'partial_link_text',  'download  heritability')->click();
+     sleep(3);
+     $d->find_element_ok('//*[contains(text(), "DMCP")]', 'xpath', 'check heritability download')->click();
+     sleep(5);
+     $d->driver->go_back();
     sleep(5);
 
     `rm -r /tmp/localhost/`;
@@ -60,13 +61,15 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
     sleep(5);
-    $d->find_element_ok("anova_select_a_trait_div", 'id', 'click dropdown menu')->click();
+    $d->find_element_ok('run_pheno_heritability', 'id', 'run heritability')->click();
+    sleep(30);
+    $d->find_element_ok('//div[@id="heritability_canvas"]//*[contains(., "DMCP")]', 'xpath', 'heritability result')->get_text();
     sleep(3);
-    $d->find_element_ok("anova_dropdown", 'class', 'select a trait')->click();
-    sleep(2);
-    $d->find_element_ok('run_anova', 'id', 'run anova')->click();
-    sleep(120);
-    $d->find_element_ok('//div[contains(., "ANOVA result")]', 'xpath', 'anova result')->get_text();
+    $d->find_element_ok('Download heritability', 'partial_link_text',  'download  heritability')->click();
+     sleep(3);
+     $d->find_element_ok('//*[contains(text(), "DMCP")]', 'xpath', 'check heritability download')->click();
+     sleep(5);
+     $d->driver->go_back();
     sleep(5);
 
 });

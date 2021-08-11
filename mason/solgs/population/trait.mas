@@ -23,7 +23,7 @@ $selection_prediction_download =>''
 $selection_pop_id => ''
 $selection_pop_name => ''
 $list_of_prediction_pops=> ''
-$analyzed_traits => ''
+$training_pop_analyzed_traits => ''
 $owner=>''
 $protocol_url => ''
 $combo_pops_id => ''
@@ -57,9 +57,9 @@ $training_pop_url
   &>
 
  <& summary.mas,
-    pop_id   => $training_pop_id,
-   	pop_name => $training_pop_name,
-    pop_desc => $training_pop_desc,
+    training_pop_id   => $training_pop_id,
+   	training_pop_name => $training_pop_name,
+    training_pop_desc => $training_pop_desc,
 	training_pop_url    => $training_pop_url,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
@@ -134,7 +134,7 @@ $training_pop_url
 
 <& selection_populations.mas,
    selection_prediction_download     => $selection_prediction_download,
-   analyzed_traits         => $analyzed_traits,
+   training_pop_analyzed_traits         => $training_pop_analyzed_traits,
    training_pop_id        => $training_pop_id,
    training_pop_name   => $training_pop_name,
    selection_pop_id       => $selection_pop_id,

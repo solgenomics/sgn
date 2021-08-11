@@ -93,7 +93,7 @@ sub check_analysis_name :Path('/solgs/check/analysis/name') Args() {
 
 	my $match = $self->check_analyses_names($c, $new_name);
 
-	my $ret->{match} = $match;
+	my $ret->{analysis_exists} = $match;
 	$ret = to_json($ret);
 
 	$c->res->content_type('application/json');
@@ -383,7 +383,7 @@ sub analysis_report_job_args {
 	my $temp_dir = $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir} ;
 
 	my $temp_file_template = "analysis-status";
-	my $cluster_files = $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c, $temp_file_template);
+	my $cluster_files = $c->controller('solGS::AsyncJob')->create_cluster_accessible_tmp_files($c, $temp_file_template);
 	my $out_file      = $cluster_files->{out_file_temp};
 	my $err_file      = $cluster_files->{err_file_temp};
 	my $in_file       = $cluster_files->{in_file_temp};
@@ -399,7 +399,7 @@ sub analysis_report_job_args {
 	nstore $analysis_details, $report_file
 	or croak "analysis_report_job_args: $! serializing output_details to $report_file";
 
-	my $job_config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+	my $job_config = $c->controller('solGS::AsyncJob')->create_cluster_config($c, $config_args);
 
 	$status_check_duration =  ' --status_check_duration ' . $status_check_duration if $status_check_duration;
 
@@ -443,7 +443,7 @@ sub email_analysis_report {
 	$self->analysis_report_job_args($c);
 	my $job_args = $c->stash->{analysis_report_job_args};
 
-	my $job = $c->controller('solGS::solGS')->submit_job_cluster($c, $job_args);
+	my $job = $c->controller('solGS::AsyncJob')->submit_job_cluster($c, $job_args);
 
 }
 
@@ -689,12 +689,12 @@ sub structure_training_modeling_output {
 
 		    if ($analysis_page =~ m/solgs\/traits\/all\/population\//)
 		    {
-				my $traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id(\@traits_ids);
+				my $traits_selection_id = $c->controller('solGS::Gebvs')->create_traits_selection_id(\@traits_ids);
 				$analysis_data->{analysis_page} = $base . "solgs/traits/all/population/" . $pop_id
 				    . '/traits/' . $traits_selection_id
 				    . '/gp/' . $protocol_id;
 
-				$c->controller('solGS::TraitsGebvs')->catalogue_traits_selection($c, \@traits_ids);
+				$c->controller('solGS::Gebvs')->catalogue_traits_selection($c, \@traits_ids);
 		    }
 		}
 
@@ -715,13 +715,13 @@ sub structure_training_modeling_output {
 
 		    if ($analysis_page =~ m/solgs\/models\/combined\/trials\//)
 		    {
-				my $traits_selection_id = $c->controller('solGS::TraitsGebvs')->create_traits_selection_id(\@traits_ids);
+				my $traits_selection_id = $c->controller('solGS::Gebvs')->create_traits_selection_id(\@traits_ids);
 				$analysis_data->{analysis_page} = $base . "solgs/models/combined/trials/"
 				    . $combo_pops_id
 				    . '/traits/' . $traits_selection_id
 				    . '/gp/' . $protocol_id;
 
-				$c->controller('solGS::TraitsGebvs')->catalogue_traits_selection($c, \@traits_ids);
+				$c->controller('solGS::Gebvs')->catalogue_traits_selection($c, \@traits_ids);
 		    }
 		}
 
@@ -1121,13 +1121,13 @@ sub create_training_data {
 		}
 		else
 		{
-			$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, [$pop_id], $protocol_id);
+			$c->controller('solGS::AsyncJob')->submit_cluster_training_pop_data_query($c, [$pop_id], $protocol_id);
 		}
 	}
 	elsif ($analysis_page =~ /solgs\/populations\/combined\//)
 	{
 			my $trials = $c->stash->{combo_pops_list};
-			$c->controller('solGS::solGS')->submit_cluster_training_pop_data_query($c, $trials, $protocol_id);
+			$c->controller('solGS::AsyncJob')->submit_cluster_training_pop_data_query($c, $trials, $protocol_id);
 	}
 	# }
 }
