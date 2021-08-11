@@ -943,9 +943,11 @@ jQuery(document).ready( function() {
                 console.log('incoming', data);
                 FieldMap.make_map(data);
                 FieldMap.field_view();
-                put_brapi_plots = data;
-                post_brapi_plots = FieldMap.post_brapi_plots;
-                console.log(post_brapi_plots);
+                // put_brapi_plots = data;
+                // post_brapi_plots = FieldMap.post_brapi_plots;
+                // console.log(post_brapi_plots);
+                put_brapi_plots = FieldMap.brapi_plots;
+                console.log("PUT", put_brapi_plots);
             },
                 error: function(response) {
                 alert('Error displaying traits assayed heatmap');   
@@ -1127,7 +1129,6 @@ jQuery(document).ready( function() {
 
     jQuery('#submit_fieldmap').click( function() {
         submit_fieldmap_metadata();
-        refresh_cache();
     });
 
 
@@ -1158,151 +1159,68 @@ jQuery(document).ready( function() {
     });
 
     function submit_fieldmap_metadata() {
-        // var data = {};
-        jQuery('#working_modal').modal("show");
-        var type;
-        console.log('puts', put_brapi_plots);
-        console.log('posts', post_brapi_plots);
-
-        for (plot of put_brapi_plots) {
+        if (put_brapi_plots.length == 0 ) {
+            refresh_cache();
+        } else {
+            // var data = {};
+            jQuery('#working_modal').modal("show");
+            var type;
+            console.log('puts', put_brapi_plots);
+            // console.log('posts', post_brapi_plots);
+            
+            var plot = put_brapi_plots[0];
             console.log(plot);
             var data = {
-                studyDbId: plot.studyDbId,
-                germplasmDbId: plot.germplasmDbId ,
-                germplasmName: plot.germplasmName,
-                observationUnitName: plot.observationUnitName,
+                studyDbId: trial_id,
+                germplasmDbId: plot.accession_id ,
+                germplasmName: plot.stock,
+                observationUnitName: plot.plotname,
                 observationUnitPosition: {
                     entryType: plot.entryType,
                     observationLevel: {
                         levelName: "plot",
                         levelOrder: 2,
-                        levelCode: plot.additionalInfo.plotNumber
+                        levelCode: plot.plotn
                     },
                     observationLevelRelationships: [
                         {
-                            levelCode: plot.blockNumber,
+                            levelCode: plot.blkn,
                             levelName: "block",
                             levelOrder: 1
                         },
                         {
-                            levelCode: plot.additionalInfo.plotNumber,
+                            levelCode: plot.plotn,
                             levelName: "plot",
                             levelOrder: 2
                         }
                     ],
-                    positionCoordinateX: plot.X,
+                    positionCoordinateX: plot.col,
                     positionCoordinateXType: "GRID_COL",
-                    positionCoordinateY: plot.Y,
+                    positionCoordinateY: plot.row,
                     positionCoordinateYType: "GRID_ROW"
                 },
             };
-            // if (plot.plotname.includes('border') || plot.plotname.includes('filler')) {
-            //     console.log(plot.plotname);
-            //     type = "POST";
-            //     data = [data];
-            // } else {
-            //     type = "PUT";
-            // }
-
-
-        // var data = {
-        //         studyDbId: "266",
-        //         germplasmDbId: "38840",
-        //         germplasmName: "test_accession1",
-        //         observationUnitName: "d191232321",
-        //         observationUnitPosition: {
-        //         entryType: "test"   ,
-        //         observationLevel: {
-        //             levelName: "plot",
-        //             levelOrder: 2,
-        //             levelCode: "1001"
-        //         },
-        //         observationLevelRelationships: [
-        //             {
-        //                 levelCode: "1",
-        //                 levelName: "block",
-        //                 levelOrder: 1
-        //             },
-        //             {
-        //                 levelCode: "1001",
-        //                 levelName: "plot",
-        //                 levelOrder: 2
-        //             }
-        //         ],
-        //         positionCoordinateX: "1",
-        //         positionCoordinateXType: "GRID_COL",
-        //         positionCoordinateY: "1",
-        //         positionCoordinateYType: "GRID_ROW"
-        //         },
-        // }
-  
-//     "65736": {
-//     "additionalInfo": {},   
-//     "externalReferences": [
-//       {
-//         "referenceID": "doi:10.155454/12341234",
-//         "referenceSource": "DOI"
-//       }
-//     ],
-//     "germplasmDbId": "38840",
-//     "germplasmName": "test_accession1",
-//     "locationDbId": "26",
-//     "observationUnitName": "d1812323125",
-//     "observationUnitPUI": "localhost/stock/65736/view",
-//     "observationUnitPosition": {
-//       "entryType": "TEST",
-//       "observationLevel": {
-//         "levelCode": "1002",
-//         "levelName": "plot",
-//         "levelOrder": 2
-//       },
-//       "observationLevelRelationships": [
-//         {
-//           "levelCode": "1",
-//           "levelName": "replicate",
-//           "levelOrder": 0
-//         },
-//         {
-//           "levelCode": "1",
-//           "levelName": "block",
-//           "levelOrder": 1
-//         },
-//         {
-//           "levelCode": "1002",
-//           "levelName": "plot",
-//           "levelOrder": 2
-//         }
-//       ],
-//       "positionCoordinateX": "11",
-//       "positionCoordinateXType": "GRID_COL",
-//       "positionCoordinateY": "11",
-//       "positionCoordinateYType": "GRID_ROW"
-//     },
-//     "programDbId": "134",
-//     "studyDbId": "268",
-    
-//     "trialDbId": "268",
-//     "trialName": "testing plant entry creation with trial upload 3456"
-//   }
-  
-
-
-            // var obs_unit = type == "PUT" ? plot.plot_id : "";
+                
             var stringifiedData = JSON.stringify(data);
-            
+                
             new jQuery.ajax({
                 type: 'PUT',
                 contentType: 'application/json',
                 headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-                url: '/brapi/v2/observationunits/' + plot.observationUnitDbId,
+                url: '/brapi/v2/observationunits/' + plot.plot_id,
                 data: stringifiedData,
                 success: function(response) {
-
+                    put_brapi_plots.shift();
+                    submit_fieldmap_metadata();
+                    
                 },
-                error: function(response) {console.log(response)},
+                error: function(response) {
+                    alert('Error', response.error);
+                },
             });
-        };
-    }
+        }
+    };
+
 
     function refresh_cache() {
         new jQuery.ajax({

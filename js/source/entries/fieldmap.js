@@ -15,7 +15,7 @@ export function init() {
             this.trial_id = trial_id;
         }
 
-        make_hash_map(data) {
+        make_map(data) {
             console.log(data);
             var field_map_hash;
             var entryType;
@@ -35,6 +35,7 @@ export function init() {
             var design;
             var plotImageDbIds = [];
             var plant_names = [];
+            var entryType = [];
             var lowest_row = 10000;
             var lowest_col = 10000;
             var highest_row = 0;
@@ -64,7 +65,7 @@ export function init() {
                         blocks.push(value);
                     }
                     if (key == 'entryType'){
-                        check.push(value);
+                        entryType.push(value);
                     }
                     if (key == 'germplasmDbId'){
                         accession_ids.push(value);
@@ -132,7 +133,8 @@ export function init() {
                 'rows': rows,
                 'cols': cols,
                 'blocks': blocks,
-                'check': checks,
+                'entryType': entryType,
+                'check': entryType,
                 'accession_ids': accession_ids,
                 'accession_names': accession_names,
                 'plot_ids': plot_ids,
@@ -173,6 +175,7 @@ export function init() {
             var rows = field_map_hash['rows'];
             var cols = field_map_hash['cols'];
             var blocks = field_map_hash['blocks'];
+            var entryType = field_map_hash['entryType'];
             var check = field_map_hash['check'];
             var accession_ids = field_map_hash['accession_ids'];
             var accession_names = field_map_hash['accession_names'];
@@ -271,7 +274,7 @@ export function init() {
                 else {
                     plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nnumber_of_plants:"+plant_names[i]+"\nseedlot:"+seedlot_names[i];
                 }
-                result.push({plotname:plot_names[i], entryType: check, accession_id: accession_ids[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp, seedlot:seedlot_names[i]});
+                result.push({plotname:plot_names[i], entryType: entryType[i], accession_id: accession_ids[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp, seedlot:seedlot_names[i]});
             }
 
             if (plot_names.length < ((highest_col - lowest_col + 1) * (highest_row - lowest_row + 1))) {
