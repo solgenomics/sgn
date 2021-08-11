@@ -233,12 +233,13 @@ sub search {
     } else {
         push @where_clause, "(observationunit_type_name = 'plot' OR observationunit_type_name = 'plant' OR observationunit_type_name = 'subplot' OR observationunit_type_name = 'tissue_sample' OR observationunit_type_name = 'analysis_instance')"; #plots AND plants AND subplots AND tissue_samples AND analysis_instance
     }
+    # TODO: Should use placeholders or DBI query api to protect against sql injection
     if ($self->observation_unit_names_list && scalar(@{$self->observation_unit_names_list})>0) {
         my @arrayref;
-        for my $name (@{$self->observation_unit_names_list}) {push @arrayref, lc $name;}
-        my $sql = join ("','" , @arrayref);
-        my $ou_name_sql = "'" . $sql . "'";
-        push @where_clause, "LOWER(observationunit_uniquename) in ($ou_name_sql)";
+        my $dbh = $schema->storage->dbh();
+        for my $name (@{$self->observation_unit_names_list}) {push @arrayref, $dbh->quote(lc $name);}
+        my $sql = join ("," , @arrayref);
+        push @where_clause, "LOWER(observationunit_uniquename) in ($sql)";
     }
 
     my %trait_list_check;
