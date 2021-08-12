@@ -1,0 +1,148 @@
+<%args>
+</%args>
+
+<!-- 
+                            BARCODE READER
+    This page can be used to read a barcode directly from the website
+    using the device's camera.  If a barcode is successfully read, the 
+    page will return to the provided return url with a query parameter
+    set to the URI encoded contents of the read barcode.
+
+    Usage: /barcode/read?return=/breeders/seedlot/maintenance&param=barcode
+    This will start the barcode reader and when a barcode is found, change 
+    the location of the browser to:
+        /breeders/seedlot/maintenance?barcode={{contents}}
+
+    The javascript qr code reader used: https://github.com/cozmo/jsQR
+    Code based on demo: https://cozmo.github.io/jsQR/
+-->
+
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery', 'jsqr' ] &>
+
+<& /page/page_title.mas, title => 'Barcode Reader' &>
+
+<div class="panel panel-default">
+    <div class="panel-heading">Scan a Barcode<span id="panel-heading-return"></span></div>
+    <div class="panel-body" style="text-align: center">
+        <div id="loadingMessage">Starting...</div>
+        <canvas id="canvas" hidden></canvas>
+    </div>
+    <div class="panel-footer">Scanning for Barcode...</div>
+</div>
+
+<script type="text/javascript">
+
+let RETURN_URL = undefined;
+let RETURN_PARAM = undefined;
+
+jQuery(document).ready(function() {
+
+    // Parse the query arguments
+    parseArgs();
+
+    // Start the Barcode Reader
+    startReader();
+
+});
+
+
+/**
+ * Parse the query params for the return url and param
+ */
+function parseArgs() {
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    if ( urlSearchParams.has('return') ) {
+        RETURN_URL = decodeURIComponent(urlSearchParams.get('return'));
+        jQuery("#panel-heading-return").html(" to return to <a href='" + RETURN_URL + "'>" + RETURN_URL + "</a>");
+    }
+    RETURN_PARAM = urlSearchParams.get('param');
+}
+
+
+/**
+ * Start the Barcode Reader
+ * - Start the camera feed
+ * - Start processing the images for a barcode
+ * - Call processCode(data) when a barcode has been found
+ */
+function startReader() {
+    var video = document.createElement("video");
+    var canvasElement = document.getElementById("canvas");
+    var canvas = canvasElement.getContext("2d");
+    var loadingMessage = document.getElementById("loadingMessage");
+    loadingMessage.innerHTML = "<strong>Unable to access video stream</strong><br />Please make sure you have a webcam enabled and permissions have been granted for this site</p>";
+
+    // Use facingMode: environment to attemt to get the front camera on phones
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(function(stream) {
+        video.srcObject = stream;
+        video.setAttribute("playsinline", true); // required to tell iOS safari we don't want fullscreen
+        video.play();
+        requestAnimationFrame(tick);
+    });
+
+    function tick() {
+        loadingMessage.innerText = "Loading video...";
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            loadingMessage.hidden = true;
+            canvasElement.hidden = false;
+
+            canvasElement.height = video.videoHeight;
+            canvasElement.width = video.videoWidth;
+            canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+            var imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+            var code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+            });
+            if (code) {
+                drawLine(code.location.topLeftCorner, code.location.topRightCorner, "#FF3B58");
+                drawLine(code.location.topRightCorner, code.location.bottomRightCorner, "#FF3B58");
+                drawLine(code.location.bottomRightCorner, code.location.bottomLeftCorner, "#FF3B58");
+                drawLine(code.location.bottomLeftCorner, code.location.topLeftCorner, "#FF3B58");
+                processCode(code.data);
+            } 
+        }
+        requestAnimationFrame(tick);
+    }
+
+    function drawLine(begin, end, color) {
+        canvas.beginPath();
+        canvas.moveTo(begin.x, begin.y);
+        canvas.lineTo(end.x, end.y);
+        canvas.lineWidth = 4;
+        canvas.strokeStyle = color;
+        canvas.stroke();
+    }
+
+}
+
+/**
+ * Stop the camera feed
+ */
+function stopReader() {
+    if ( video ) {
+        var stream = video.srcObject;
+        var tracks = stream.getTracks();
+        video.pause();
+        tracks.forEach(function(track) { track.stop(); });
+        video.srcObject = null;
+        canvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        cancelAnimationFrame(animFrameId);
+    }
+}
+
+
+/**
+ * Process the QR code data
+ * - If return and param args are set, return to the provided url
+ * @param {string} data QR Code data
+ */
+function processCode(data) {
+    jQuery(".panel-footer").html("<strong>Barcode Found:</strong> " + data);
+    if ( data && data !== "" && RETURN_URL && RETURN_URL !== "" && RETURN_PARAM && RETURN_PARAM !== "" ) {
+        let q = RETURN_URL.includes('?') ? '&' : '?';
+        window.location = RETURN_URL + q + RETURN_PARAM + '=' + encodeURIComponent(data);
+        stopReader();
+    }
+}
+
+</script>
