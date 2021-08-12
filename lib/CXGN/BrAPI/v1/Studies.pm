@@ -659,7 +659,8 @@ sub observation_units {
             include_timestamp=>1,
             limit=>$limit,
             offset=>$offset,
-            order_by=>"plot_number"
+			# Order by plot_number, account for non-numeric plot numbers
+			order_by=>'NULLIF(regexp_replace(plot_number, \'\D\', \'\', \'g\'), \'\')::int',
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
