@@ -107,6 +107,13 @@ sub search {
         my $trait_ids_sql = join ',', @trait_ids;
         push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
     }
+    if (scalar(@cvterm_names)>0){
+        my @quotedNames;
+        my $dbh = $self->bcs_schema->storage->dbh();
+        for my $name (@cvterm_names) {push @quotedNames, $dbh->quote($name);}
+        my $cvterm_names_sql = join ("," , @quotedNames);
+        push @and_wheres, "cvterm.name IN ($cvterm_names_sql)";
+    }
     if (scalar(@trait_dbids)>0){
         my $trait_ids_sql = join ',', @trait_dbids;
         push @and_wheres, "cvterm.cvterm_id IN ($trait_ids_sql)";
@@ -159,11 +166,6 @@ sub search {
         ") as external_references on external_references.cvterm_id = cvterm.cvterm_id "
     }
 
-    if (scalar(@cvterm_names)>0){
-        foreach (@cvterm_names){
-            push @and_wheres, "cvterm.name = '$_'";
-        }
-    }
     if (scalar(@datatypes)>0){
         $join = 'JOIN cvtermprop on (cvterm.cvterm_id=cvtermprop.cvterm_id)';
         foreach (@datatypes){
