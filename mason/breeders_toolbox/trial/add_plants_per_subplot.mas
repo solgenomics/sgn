@@ -338,6 +338,7 @@ jQuery(document).ready(function() {
     });
 
 
+
     jQuery('#add_plants_subplot_save_button').click( function () {
         add_plants_subplot_to_trial();
     });
@@ -350,30 +351,24 @@ jQuery(document).ready(function() {
     jQuery('#upload_plants_subplot_save_button').click( function () {
         upload_plants_subplot_to_trial();
     });
-    
 
 
-
-
-    jQuery('#trial_upload_plants_with_index_number_spreadsheet_info_format').click( function () {
-        jQuery('#upload_plants_with_index_number_spreadsheet_info_dialog').modal("show");
+    jQuery('#trial_upload_plants_subplot_with_index_number_spreadsheet_info_format').click( function () {
+        jQuery('#upload_plants_subplot_with_index_number_spreadsheet_info_dialog').modal("show");
     });
 
-    jQuery('#trial_upload_plants_with_num_plants_spreadsheet_info_format').click( function () {
-        jQuery('#upload_plants_with_num_plants_spreadsheet_info_dialog').modal("show");
-    });
-
-    jQuery('#upload_plants_with_index_number_save_button').click( function () {
-        upload_plants_with_index_number_to_trial();
-    });
-
-    jQuery('#upload_plants_with_num_plants_save_button').click( function () {
-        upload_plants_with_num_plants_to_trial();
+    jQuery('#upload_plants_subplot_with_index_number_save_button').click( function () {
+        upload_plants_subplot_with_index_number_to_trial();
     });
 
 
+    jQuery('#trial_upload_plants_subplot_with_num_plants_spreadsheet_info_format').click( function () {
+        jQuery('#upload_plants_subplot_with_num_plants_spreadsheet_info_dialog').modal("show");
+    });
 
-
+    jQuery('#upload_plants_subplot_with_num_plants_save_button').click( function () {
+        upload_plants_subplot_with_num_plants_to_trial();
+    });
 
 
 
@@ -413,6 +408,7 @@ jQuery(document).ready(function() {
 
     }
 
+
     function upload_plants_subplot_to_trial() {
         var uploadFile = jQuery("#trial_upload_plants_subplot_file").val();
         jQuery('#upload_plants_subplot_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_subplot");
@@ -449,29 +445,20 @@ jQuery(document).ready(function() {
     });
 
 
-
-
-
-
-
-
-
-    
-
-    function upload_plants_with_index_number_to_trial() {
-        var uploadFile = jQuery("#trial_upload_plants_with_index_number_file").val();
-        jQuery('#upload_plants_with_index_number_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_with_plant_index_number");
+    function upload_plants_subplot_with_index_number_to_trial() {
+        var uploadFile = jQuery("#trial_upload_plants_subplot_with_index_number_file").val();
+        jQuery('#upload_plants_subplot_with_index_number_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_subplot_with_plant_index_number");
         if (uploadFile === '') {
             alert("Please select a file");
             return;
         }
-        jQuery("#upload_plants_with_index_number_dialog_form").submit();
+        jQuery("#upload_plants_subplot_with_index_number_dialog_form").submit();
     }
 
-    jQuery('#upload_plants_with_index_number_dialog_form').iframePostForm({
+    jQuery('#upload_plants_subplot_with_index_number_dialog_form').iframePostForm({
         json: true,
         post: function () {
-            var uploadedPlantsFile = jQuery("#trial_upload_plants_with_index_number_file").val();
+            var uploadedPlantsFile = jQuery("#trial_upload_plants_subplot_with_index_number_file").val();
             jQuery('#working_modal').modal("show");
             if (uploadedPlantsFile === '') {
                 jQuery('#working_modal').modal("hide");
@@ -493,17 +480,18 @@ jQuery(document).ready(function() {
         }
     });
 
-    function upload_plants_with_num_plants_to_trial() {
-        var uploadFile = jQuery("#trial_upload_plants_with_number_of_plants_file").val();
-        jQuery('#upload_plants_with_num_plants_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_with_number_of_plants");
+
+    function upload_plants_subplot_with_num_plants_to_trial() {
+        var uploadFile = jQuery("#trial_upload_plants_subplot_with_number_of_plants_file").val();
+        jQuery('#upload_plants_subplot_with_num_plants_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_subplot_with_number_of_plants");
         if (uploadFile === '') {
             alert("Please select a file");
             return;
         }
-        jQuery("#upload_plants_with_num_plants_dialog_form").submit();
+        jQuery("#upload_plants_subplot_with_num_plants_dialog_form").submit();
     }
 
-    jQuery('#upload_plants_with_num_plants_dialog_form').iframePostForm({
+    jQuery('#upload_plants_subplot_with_num_plants_dialog_form').iframePostForm({
         json: true,
         post: function () {
             var uploadedPlantsFile = jQuery("#trial_upload_plants_with_number_of_plants_file").val();
