@@ -2266,7 +2266,7 @@ sub substitute_stock : Chained('trial') PathPart('substitute_stock') Args(0) {
   $c->stash->{rest} = { success => 1};
 }
 
-sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Args(0) {
+sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries') Args(0) {
     my $self = shift;
     my $c = shift;
     my $plant_owner = $c->user->get_object->get_sp_person_id;
@@ -2301,6 +2301,46 @@ sub create_plant_subplots : Chained('trial') PathPart('create_plant_entries') Ar
         return;
     } else {
         $c->stash->{rest} = { error => "Error creating plant entries in controller." };
+    	return;
+    }
+
+}
+
+sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subplot_entries') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $plant_owner = $c->user->get_object->get_sp_person_id;
+    my $plant_owner_username = $c->user->get_object->get_username;
+    my $plants_per_subplot = $c->req->param("plants_per_subplot") || 8;
+    my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $plants_with_treatments;
+    if($inherits_plot_treatments eq '1'){
+        $plants_with_treatments = 1;
+    }
+
+    if (my $error = $self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    if (!$plants_per_subplot || $plants_per_subplot > 500) {
+        $c->stash->{rest} = { error => "Plants per subplot number is required and must be smaller than 500." };
+        return;
+    }
+
+    my $user_id = $c->user->get_object->get_sp_person_id();
+    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
+
+    if ($t->create_plant_subplot_entities($plants_per_subplot, $plants_with_treatments, $user_id)) {
+
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+        $c->stash->{rest} = {success => 1};
+        return;
+    } else {
+        $c->stash->{rest} = { error => "Error creating plant entries for subplots in controller." };
     	return;
     }
 
