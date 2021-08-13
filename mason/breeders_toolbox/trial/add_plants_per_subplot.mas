@@ -67,7 +67,7 @@ $trial_name => undef
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Maximum number of plants per subplot: </label>
                             <div class="col-sm-8" >
-                                <input name="upload_plants_subplot_per_plot_number" id="upload_plants_subplot_per_plot_number" class="form-control" type="number" />
+                                <input name="upload_plants_per_subplot_number" id="upload_plants_per_subplot_number" class="form-control" type="number" />
                             </div>
                         </div>
                         <div class="form-group">
@@ -343,31 +343,24 @@ jQuery(document).ready(function() {
     });
 
 
-
-
-
-
-
-
-    jQuery('#trial_upload_plants_spreadsheet_info_format').click( function () {
-        jQuery('#upload_plants_spreadsheet_info_dialog').modal("show");
+    jQuery('#trial_upload_plants_subplot_spreadsheet_info_format').click( function () {
+        jQuery('#upload_plants_subplot_spreadsheet_info_dialog').modal("show");
     });
+
+    jQuery('#upload_plants_subplot_save_button').click( function () {
+        upload_plants_subplot_to_trial();
+    });
+    
+
+
 
 
     jQuery('#trial_upload_plants_with_index_number_spreadsheet_info_format').click( function () {
         jQuery('#upload_plants_with_index_number_spreadsheet_info_dialog').modal("show");
     });
 
-    
-
     jQuery('#trial_upload_plants_with_num_plants_spreadsheet_info_format').click( function () {
         jQuery('#upload_plants_with_num_plants_spreadsheet_info_dialog').modal("show");
-    });
-
-    
-
-    jQuery('#upload_plants_save_button').click( function () {
-        upload_plants_to_trial();
     });
 
     jQuery('#upload_plants_with_index_number_save_button').click( function () {
@@ -420,30 +413,20 @@ jQuery(document).ready(function() {
 
     }
 
-
-
-
-
-
-
-
-
-
-
-    function upload_plants_to_trial() {
-        var uploadFile = jQuery("#trial_upload_plants_file").val();
-        jQuery('#upload_plants_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants");
+    function upload_plants_subplot_to_trial() {
+        var uploadFile = jQuery("#trial_upload_plants_subplot_file").val();
+        jQuery('#upload_plants_subplot_dialog_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_plants_subplot");
         if (uploadFile === '') {
             alert("Please select a file");
             return;
         }
-        jQuery("#upload_plants_dialog_form").submit();
+        jQuery("#upload_plants_subplot_dialog_form").submit();
     }
 
-    jQuery('#upload_plants_dialog_form').iframePostForm({
+    jQuery('#upload_plants_subplot_dialog_form').iframePostForm({
         json: true,
         post: function () {
-            var uploadedPlantsFile = jQuery("#trial_upload_plants_file").val();
+            var uploadedPlantsFile = jQuery("#trial_upload_plants_subplot_file").val();
             jQuery('#working_modal').modal("show");
             if (uploadedPlantsFile === '') {
                 jQuery('#working_modal').modal("hide");
@@ -464,6 +447,16 @@ jQuery(document).ready(function() {
             }
         }
     });
+
+
+
+
+
+
+
+
+
+    
 
     function upload_plants_with_index_number_to_trial() {
         var uploadFile = jQuery("#trial_upload_plants_with_index_number_file").val();
