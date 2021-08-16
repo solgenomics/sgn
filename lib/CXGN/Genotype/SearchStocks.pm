@@ -62,11 +62,13 @@ sub get_selected_accessions {
     my @parameters = @{$filtering_parameters};
 
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
 
     my @selected_accessions;
     my %vcf_params;
     my $protocol_id;
 
+    my %chrom_hash;
     foreach my $param (@parameters){
         my $param_ref = decode_json$param;
         my %params = %{$param_ref};
@@ -79,11 +81,37 @@ sub get_selected_accessions {
         }
 
         if ($marker_name){
-            $vcf_params{$marker_name} = {'DS' => $allele_dosage};
+#            $vcf_params{$marker_name} = {'DS' => $allele_dosage}
+
+            my $chrom_key;
+            my $q = "SELECT value->?->>'chrom' FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
+
+            my $h = $schema->storage->dbh()->prepare($q);
+            $h->execute($marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id);
+
+            while (my $chrom = $h->fetchrow_array()){
+                if ($chrom) {
+                    $chrom_hash{$chrom}{$marker_name}{'DS'} = $allele_dosage
+                }
+            }
+            print STDERR "CHROM HASH=" .Dumper(\%chrom_hash). "\n";
         }
     }
 
-    my $vcf_params_string = encode_json \%vcf_params;
+    my @formatted_parameters;
+    if (%chrom_hash) {
+        foreach my $chromosome (keys %chrom_hash) {
+            my $marker_params = $chrom_hash{$chromosome};
+            my $each_chrom_markers_string = encode_json $marker_params;
+            push @formatted_parameters, $each_chrom_markers_string
+        }
+    }
+
+    my $genotype_string = join("<br>", @formatted_parameters);
+
+    my $number_of_param_sets = @formatted_parameters;
+
+#    my $vcf_params_string = encode_json \%vcf_params;
 
 #    print STDERR "VCF PARAMS JSON=" .Dumper($vcf_params_string). "\n";
 #    print STDERR "PROTOCOL_ID=" .Dumper($protocol_id). "\n";
@@ -99,24 +127,53 @@ sub get_selected_accessions {
         $h->execute($accession);
     }
 
-    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM dataset_table
-        JOIN stock ON (dataset_table.stock_id = stock.stock_id)
-        JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
-        JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
-        JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-        JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
-        WHERE genotypeprop.value @> ? ";
+    my @all_selected_stocks;
+    foreach my $param (@formatted_parameters) {
+        my $q = "SELECT DISTINCT stock.stock_id FROM dataset_table
+            JOIN stock ON (dataset_table.stock_id = stock.stock_id)
+            JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+            JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
+            JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+            JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+            WHERE genotypeprop.value @> ? ";
 
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($genotyping_experiment_cvterm_id, $protocol_id, $vcf_params_string);
+        my $h2 = $schema->storage->dbh()->prepare($q);
+        $h2->execute($genotyping_experiment_cvterm_id, $protocol_id, $param);
 
-    while (my ($selected_id, $selected_uniquename) = $h->fetchrow_array()){
-        push @selected_accessions, [$selected_id, $selected_uniquename, $vcf_params_string]
+        while (my ($selected_id) = $h2->fetchrow_array()){
+            push @all_selected_stocks, $selected_id
+        }
+    }
+    print STDERR "ALL SELECTED STOCKS =".Dumper(\@all_selected_stocks)."\n";
+    my @selected_stocks;
+    my %count;
+    $count{$_}++ foreach @all_selected_stocks;
+
+    while (my ($stock_id, $value) = each(%count)) {
+        if ($value == $number_of_param_sets) {
+            push @selected_stocks, $stock_id
+        }
+    }
+    #    print STDERR "SELECTED STOCKS =".Dumper(\@selected_stocks)."\n";
+    my @selected_stocks_details;
+
+    if (scalar(@selected_stocks) > 0) {
+        my $selected_stocks_sql = join ("," , @selected_stocks);
+
+        my $q2 = "SELECT stock.stock_id, stock.uniquename FROM stock where stock.stock_id in ($selected_stocks_sql)  ORDER BY stock.stock_id ASC";
+
+        my $h3 = $schema->storage->dbh()->prepare($q2);
+        $h3->execute();
+
+        while (my ($selected_id, $selected_uniquename) = $h3->fetchrow_array()){
+            push @selected_stocks_details, [$selected_id, $selected_uniquename, $genotype_string ]
+        }
     }
 
-    return \@selected_accessions;
+    return \@selected_stocks_details;
 
 }
+
 
 sub get_accessions_using_snps {
     my $self = shift;
