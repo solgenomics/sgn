@@ -22,6 +22,7 @@ use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use JSON;
+use Sort::Key::Natural qw(natsort);
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -89,8 +90,9 @@ sub get_selected_accessions {
             my $h = $schema->storage->dbh()->prepare($q);
             $h->execute($marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id);
 
-            while (my $chrom = $h->fetchrow_array()){
+            while (my ($chrom) = $h->fetchrow_array()){
                 if ($chrom) {
+                print STDERR "CHROMOSOME NO =".Dumper($chrom)."\n";
                     $chrom_hash{$chrom}{$marker_name}{'DS'} = $allele_dosage
                 }
             }
@@ -107,7 +109,8 @@ sub get_selected_accessions {
         }
     }
 
-    my $genotype_string = join("<br>", @formatted_parameters);
+    my @sorted_markers = natsort @formatted_parameters;
+    my $genotype_string = join("<br>", @sorted_markers);
 
     my $number_of_param_sets = @formatted_parameters;
 
@@ -275,7 +278,8 @@ sub get_accessions_using_snps {
         }
     }
 
-    my $genotype_string = join("<br>", @formatted_parameters);
+    my @sorted_markers = natsort @formatted_parameters;
+    my $genotype_string = join("<br>", @sorted_markers);
 
     my $number_of_param_sets = @formatted_parameters;
 
