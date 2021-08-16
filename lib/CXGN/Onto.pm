@@ -484,4 +484,46 @@ sub store_observation_variable_trait_method_scale {
     };
 }
 
+
+#
+# Recursively get the children (and all granchildren, etc) of the specified cvterm
+# ARGS:
+#   - cvterm_id = id of the root cvterm
+# RETURNS: an arrayref of hashes of the children of the cvterm, with the following keys:
+#   - cvterm_id = id of the child cvterm
+#   - name = name of the child cvterm
+#   - definition = definition of the child cvterm
+#   - children = children of the child cvterm
+#   - accession = dbxref accession of the child cvterm
+# 
+sub get_children {
+    my $self = shift;
+    my $cvterm_id = shift;
+    my $schema = $self->schema();
+
+    my @children;
+    my $cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $cvterm_id });
+    if ( defined $cvterm ) {
+        my $cvterm_rs = $cvterm->children();
+        while (my $r = $cvterm_rs->next()) {
+            my $child = $r->subject();
+            if ( !$child->is_obsolete() ) {
+                my $gc = $self->get_children($child->cvterm_id);
+                my $dbxref_rs = $schema->resultset('General::Dbxref')->find({ dbxref_id => $child->dbxref_id() });
+                my %c = (
+                    cvterm_id => $child->cvterm_id(),
+                    name => $child->name(),
+                    definition => $child->definition(),
+                    children => scalar(@$gc) > 0 ? $gc : undef,
+                    accession => $dbxref_rs->accession()
+                );
+                push(@children, \%c);
+            }
+        }
+    }
+    
+    my @sorted =  sort { $a->{accession} <=> $b->{accession} } @children;
+    return \@sorted;
+}
+
 1;

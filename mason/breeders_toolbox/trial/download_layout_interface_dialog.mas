@@ -96,11 +96,15 @@ $trial_stock_type => undef
                                  <input id="create_fieldbook_include_measured_<% $download_type %>" type="checkbox" data-toggle="toggle">
                             </div>
                             <label class="col-sm-3 control-label">Include summary of overall accession performance (for a list of traits): </label>
-                            <div class="col-sm-3" >
+                            <div class="col-sm-2" >
                                 <div id="create_fieldbook_with_trait_list_<% $download_type %>">
                                 </div>
                             </div>
-                            <label class="col-sm-2 control-label">Use trait synonyms: </label>
+                            <label class="col-sm-1 control-label">Include all stats: </label>
+                            <div class="col-sm-1" >
+                                 <input id="create_fieldbook_all_stats_<% $download_type %>" type="checkbox" checked data-toggle="toggle">
+                            </div>
+                            <label class="col-sm-1 control-label">Use trait synonyms: </label>
                             <div class="col-sm-1" >
                                  <input id="create_fieldbook_use_synonyms_<% $download_type %>" type="checkbox" checked data-toggle="toggle">
                             </div>
@@ -471,6 +475,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
             'treatment_project_id': jQuery("#html_select_treatment_create_fieldbook_<% $download_type %>").val(),
             'selected_columns':JSON.stringify(selected_columns_<% $download_type %>),
             'include_measured': jQuery('#create_fieldbook_include_measured_<% $download_type %>').prop('checked'),
+            'all_stats': jQuery('#create_fieldbook_all_stats_<% $download_type %>').prop('checked'),
             'use_synonyms': jQuery('#create_fieldbook_use_synonyms_<% $download_type %>').prop('checked'),
             'trait_list':jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val(),
             'trial_stock_type': trial_stock_type

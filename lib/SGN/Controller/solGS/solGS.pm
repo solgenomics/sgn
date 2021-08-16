@@ -584,7 +584,6 @@ sub output_files {
 
     if ($selection_pop_id)
     {
-	# my $identifier    = $pop_id . '_' . $selection_pop_id;
         $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c,$training_pop_id, $selection_pop_id, $trait_id);
     }
 
