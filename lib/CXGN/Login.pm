@@ -538,7 +538,7 @@ sub set_sql {
 			WHERE 
 				sp_token.last_access_time IS NOT NULL 
 				AND sp_token.cookie_string IS NOT NULL 	
-				AND extract(epoch from now()-last_access_time)<? 
+				AND extract(epoch from now()-sp_token.last_access_time)<? 
 			GROUP BY 	
 				sp_roles.name",
 
@@ -551,7 +551,7 @@ sub set_sql {
 			WHERE 
 				sp_token.last_access_time IS NOT NULL 
 				AND sp_token.cookie_string IS NOT NULL	
-				AND extract(epoch from now()-last_access_time)<?",
+				AND extract(epoch from now()-sp_token.last_access_time)<?",
 
     };
 
