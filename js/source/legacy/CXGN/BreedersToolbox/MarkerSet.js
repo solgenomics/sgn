@@ -26,6 +26,11 @@ jQuery(document).ready(function (){
         var protocol_name = $('#selected_protocol').find(":selected").text();
         var desc = $('#marker_set_desc').val();
 
+        if (!desc) {
+            alert("Please provide description");
+            return;
+        }
+
         var list_id = lo.newList(name, desc);
         lo.setListType(list_id, 'markers');
 
@@ -59,6 +64,23 @@ jQuery(document).ready(function (){
         var dosage = $('#allele_dosage').val();
         var allele1 = $('#allele_1').val();
         var allele2 = $('#allele_2').val();
+
+        if ((dosage == '') && (allele1 == '') && (allele2 == '')) {
+            alert("Please indicate a dosage or nucleotides");
+            return;
+        }
+
+        if ((dosage != '') && ((allele1 != '') || ( allele2 != ''))) {
+            alert("Please indicate dosage or nucleotides, not both");
+            return;
+        }
+
+        if (dosage == '') {
+            if (((allele1 != '') && (allele2 == '')) || ((allele1 == '') && (allele2 != ''))) {
+                alert("Please indicate both allele info ");
+                return;
+            }
+        }
 
         var markerDosage = {};
 
