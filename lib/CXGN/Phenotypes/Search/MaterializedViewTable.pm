@@ -355,6 +355,7 @@ sub search {
                     my ($p1, $p2) = split /date: /, $phenotype_uniquename;
                     if ($p2){
                         my ($timestamp, $operator_value) = split /  operator = /, $p2;
+                        # this regex won't work for timestamps saved in ISO 8601 format
                         if ( $timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
                             $timestamp_value = $timestamp;
                         }
