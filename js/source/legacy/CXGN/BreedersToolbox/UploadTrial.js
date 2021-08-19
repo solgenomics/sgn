@@ -19,7 +19,7 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
-    var trial_id; 
+    var trial_id;
     var plants_per_plot;
     var inherits_plot_treatments;
     jQuery('#upload_trial_trial_sourced').change(function(){
@@ -317,16 +317,20 @@ jQuery(document).ready(function ($) {
             }
             if (response.errors) {
                 errors = response.errors;
-                error_html = "<li>"+errors.join("</li><li>")+"</li>"
+                if (Array.isArray(errors)) {
+                    error_html = "<li>"+errors.join("</li><li>")+"</li>";
+                } else {
+                    error_html = "<li>"+errors+"</li>";
+                }
                 $("#upload_multiple_trials_error_messages").show();
-                $("#upload_multiple_trials_error_messages").html('<b>Errors. Fix the following errors and try again.</b><br><br>'+error_html);
+                $("#upload_multiple_trials_error_messages").html('<b>Errors found. Fix the following problems and try again.</b><br><br>'+error_html);
                 return;
             }
             if (response.success) {
                 console.log("Success!!");
                 refreshTrailJsTree(0);
                 $("#upload_multiple_trials_success_messages").show();
-                $("#upload_multiple_trials_success_messages").html("Success! All trial successfully loaded.");
+                $("#upload_multiple_trials_success_messages").html("Success! All trials successfully loaded.");
                 $("#multiple_trial_designs_upload_submit").hide();
                 $("#upload_multiple_trials_success_button").show();
                 return;
