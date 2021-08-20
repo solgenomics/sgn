@@ -1149,7 +1149,6 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         return;
     }
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $upload = $c->req->upload('trial_design_change_accessions_file');
     my $subdirectory = "trial_change_plot_accessions_upload";
@@ -1191,11 +1190,11 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
             #print STDERR Dumper $parse_errors;
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."<br>";
+                $return_error .= $error_string."\n";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_plots => $parse_errors->{'missing_plots'}, missing_accessions => $parse_errors->{'missing_stocks'}};
-        $c->detach();
+        $c->stash->{rest} = {error => $return_error, missing_plots => $parse_errors->{'missing_plots'}, missing_accessions => $parse_errors->{'missing_stocks'}, invalid_new_plot_name => $parse_errors->{'not_valid_names'}};
+        return;
     }
 
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
@@ -1222,6 +1221,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         while (my ($key, $val) = each(%$parsed_data)){
             my $plot_name = $val->{plot_name};
             my $accession_name = $val->{accession_name};
+            my $new_plot_name = $val->{new_plot_name};
             push @stock_names, $plot_name;
             push @stock_names, $accession_name;
         }
@@ -1236,15 +1236,22 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         while (my ($key, $val) = each(%$parsed_data)){
             my $plot_id = $stock_id_map{$val->{plot_name}};
             my $accession_id = $stock_id_map{$val->{accession_name}};
+            my $new_plot_id = $val->{new_plot_name};
+
             my $stockprop_rs = $schema->resultset("Stock::StockRelationship")->search({
                 subject_id => $plot_id,
                 type_id => $plot_of_type_id
             });
+
             if ($stockprop_rs->count == 1) {
                 $stockprop_rs->first->delete();
             }
-            else {
-                die "There should only be one accession linked to the plot via plot_of\n";
+            elsif ($stockprop_rs->count > 1) {
+                $c->stash->{rest} = { error => "There should only be one accession linked to the plot via plot_of\n"};
+                return;
+            } else {
+                $c->stash->{rest} = { error => "Plot entry does not exist in database.\n"};
+                # return;
             }
 
             my $new_stockprop_rs = $schema->resultset("Stock::StockRelationship")->create({

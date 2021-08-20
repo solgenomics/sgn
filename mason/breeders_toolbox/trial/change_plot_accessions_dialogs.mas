@@ -22,13 +22,15 @@ $trial_id
                         <div class="panel panel-default">
                             <div class="panel-body">
                                 <b>Header:</b><br>
-                                The first row (header) must contain the following:
+                                The first row (header) must contain the columns 'plot_name' and 'accession_name'.<br>
+                                An optional additional column, 'new_plot_name' can be added to change the plot names:<br>
 
-                                <table class="table table-bordered table-hover">
+                                <table style="margin-top: 3%;" class="table table-bordered table-hover">
                                   <tbody>
                                   <tr>
                                     <td>plot_name</td>
                                     <td>accession_name</td>
+                                    <td>new_plot_name (optional)</td>
                                   </tr>
                                   </tbody>
                                 </table>
@@ -37,6 +39,8 @@ $trial_id
                         <b>Required columns:</b><br>
                         <b>plot_name:</b> name of plot to change the accession for<br>
                         <b>accession_name:</b> name of the accession that the plot should be connected to.<br>
+                        <br><b>Optional column:</b><br>
+                        <b>new_plot_name:</b> new name for plot.<br>
                     </div>
 
                     <form class="form-horizontal" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_design_change_accessions_form" name="trial_design_change_accessions_form">

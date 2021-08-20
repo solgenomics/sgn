@@ -49,6 +49,7 @@ sub _validate_with_plugin {
 
     my %seen_plot_names;
     my %seen_accession_names;
+    my %seen_new_plot_names;
     while ( my $row = <$fh> ){
         my @columns;
         if ($csv->parse($row)) {
@@ -67,6 +68,9 @@ sub _validate_with_plugin {
 
         $seen_plot_names{$columns[0]}++;
         $seen_accession_names{$columns[1]}++;
+        if ($columns[2]) {
+            $seen_new_plot_names{$columns[2]}++;
+        }
     }
     close($fh);
 
@@ -87,6 +91,30 @@ sub _validate_with_plugin {
         $errors{'missing_stocks'} = \@accessions_missing;
         push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
     }
+
+    if (keys %seen_new_plot_names) {
+        my @new_plot_names = keys %seen_new_plot_names;
+        my $new_plot_name_validator = CXGN::List::Validate->new();
+        my @valid_new_plot_names = @{$new_plot_name_validator->validate($schema,'plots',\@new_plot_names)->{'missing'}};
+        my @not_valid_names;
+        if (scalar(@valid_new_plot_names) != scalar(@new_plot_names)) {
+            for (@new_plot_names) {
+                if (!exists($valid_new_plot_names[$_])) {
+                    push @not_valid_names, $_;
+                }  
+            }
+            $errors{'not_valid_names'} = \@not_valid_names;
+            push @error_messages, "The following new plot names already exist in the database.: ".join(',', @not_valid_names);
+        }
+    }
+
+    if (scalar(@error_messages) >= 1) {
+        $errors{'error_messages'} = \@error_messages;
+        $self->_set_parse_errors(\%errors);
+        return;
+    }
+
+
 
     return 1; #returns true if validation is passed
 }
@@ -113,9 +141,14 @@ sub _parse_with_plugin {
         }
         my $plot_name = $columns[0];
         my $accession_name = $columns[1];
+        my $new_plot_name;
+        if ($columns[2]) {
+            $new_plot_name = $columns[2];
+        }
         $parsed_entries{$counter} = {
             plot_name => $plot_name,
-            accession_name => $accession_name
+            accession_name => $accession_name,
+            new_plot_name => $new_plot_name
         };
         $counter++;
     }
