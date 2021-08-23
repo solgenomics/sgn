@@ -46,22 +46,15 @@ sub generate_spectral_plot_POST : Args(0) {
         people_schema => $people_schema,
         schema => $schema,
         sp_dataset_id => $dataset_id,
-        autopopulate_accessions_from_trials => 1
     });
-    my $accession_ids = $ds->accessions();
-    my $plot_ids = $ds->plots();
-    my $plant_ids = $ds->plants();
 
-    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
-        bcs_schema=>$schema,
-        nd_protocol_id=>$nd_protocol_id,
-        high_dimensional_phenotype_type=>'NIRS',
-        query_associated_stocks=>$query_associated_stocks,
-        accession_list=>$accession_ids,
-        plot_list=>$plot_ids,
-        plant_list=>$plant_ids
-    });
-    my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+    my $high_dimensional_phenotype_identifier_list = [];
+    my ($data_matrix, $identifier_metadata, $identifier_names) = $ds->retrieve_high_dimensional_phenotypes(
+        $nd_protocol_id,
+        'NIRS',
+        $query_associated_stocks,
+        $high_dimensional_phenotype_identifier_list
+    );
     # print STDERR Dumper $data_matrix;
 
     if ($data_matrix->{error}) {
@@ -164,7 +157,6 @@ sub generate_results_POST : Args(0) {
         people_schema => $people_schema,
         schema => $schema,
         sp_dataset_id => $train_dataset_id,
-        autopopulate_accessions_from_trials => 1
     });
     my ($training_pheno_data, $train_unique_traits) = $training_dataset->retrieve_phenotypes_ref();
 
@@ -196,7 +188,6 @@ sub generate_results_POST : Args(0) {
             people_schema => $people_schema,
             schema => $schema,
             sp_dataset_id => $test_dataset_id,
-            autopopulate_accessions_from_trials => 1
         });
         my ($test_pheno_data, $test_unique_traits) = $test_dataset->retrieve_phenotypes_ref();
         # print STDERR Dumper $test_pheno_data;
@@ -447,7 +438,6 @@ sub generate_predictions_POST : Args(0) {
         people_schema => $people_schema,
         schema => $schema,
         sp_dataset_id => $dataset_id,
-        autopopulate_accessions_from_trials => 1
     });
     my ($training_pheno_data, $train_unique_traits) = $training_dataset->retrieve_phenotypes_ref();
     # print STDERR Dumper $training_pheno_data;
