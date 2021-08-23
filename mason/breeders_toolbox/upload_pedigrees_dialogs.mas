@@ -110,7 +110,7 @@
 	  <ul>
         <li>progeny name (must exist in the database and can be accession uniquename or accession synonym)</li>
         <li>female parent accession (must exist in the database)</li>
-        <li>type (biparental, self, open, backcross, sib)</li>
+        <li>type (biparental, self, open, backcross, sib, polycross, reselected)</li>
             <ul class="a">
                 <li>cross type descriptions:</li>
                 <ul class="b">
