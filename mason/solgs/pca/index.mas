@@ -1,8 +1,8 @@
 <%doc>
 
 =head1 NAME
- 
-/solgs/pca/index.mas - a template with menu for selecting list or dataset for pca. 
+
+/solgs/pca/index.mas - a template with menu for selecting list or dataset for pca.
 
 =AUTHOR
 
@@ -34,7 +34,7 @@ my $url = $c->req->path;
 
 </%perl>
 
-<& /util/import_css.mas, paths => [ '/static/css/solgs/spinner.css', '/static/css/solgs/solgs.css'] &>
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.pca", "solGS.Dataset", "CXGN.List", "jquery.blockUI"] &>
 
 <br />
@@ -45,16 +45,16 @@ my $url = $c->req->path;
 <& /solgs/genotyping_protocol.mas &>
 
 %}
-  
-<&| /page/info_section.mas, 
-    collapsible => 0, 
+
+<&| /page/info_section.mas,
+    collapsible => 0,
     collapsed   => 0,
     title       => "Select a list of accessions or trials and run population structure analysis (PCA)",
   &>
 
-  
+
   <& select_menu.mas &>
   <& plot.mas &>
- 
+
 
 </&>

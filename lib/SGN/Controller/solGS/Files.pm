@@ -143,9 +143,9 @@ sub filtered_selection_genotype_file {
 
 
 sub formatted_phenotype_file {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    $pop_id = $c->stash->{pop_id} if $pop_id;
     $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
 
     my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id,
@@ -286,7 +286,7 @@ sub relationship_matrix_file {
 
     $self->cache_file($c, $cache_data);
 
-    my $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
+   $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
 		      file      => 'relationship_matrix_json_' . $file_id . '.txt',
 		      stash_key => 'relationship_matrix_json_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}
@@ -325,7 +325,7 @@ sub relationship_matrix_adjusted_file {
 
     $self->cache_file($c, $cache_data);
 
-    my $cache_data = {key    => 'relationship_matrix_adjusted_json_' . $file_id ,
+    $cache_data = {key    => 'relationship_matrix_adjusted_json_' . $file_id ,
 		      file      => 'relationship_matrix_adjusted_json_' . $file_id . '.txt',
 		      stash_key => 'relationship_matrix_adjusted_json_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}

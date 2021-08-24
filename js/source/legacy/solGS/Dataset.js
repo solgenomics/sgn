@@ -165,7 +165,10 @@ solGS.dataset = {
     	var dataset = new CXGN.Dataset();
     	var d = dataset.getDataset(datasetId);
 
-    	var protocolId = d.categories['genotyping_protocols'][0];
+        var protocolId = d.categories['genotyping_protocols']
+          ? d.categories['genotyping_protocols'][0]
+          : null;
+
 
     	if (!protocolId) {
     	    protocolId  = jQuery('#genotyping_protocol_id').val();

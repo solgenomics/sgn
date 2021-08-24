@@ -1,0 +1,260 @@
+<%perl>
+    use POSIX qw(strftime);
+    my $datestr = strftime("%Y-%m-%d", localtime());
+</%perl>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h5 class="panel-title">Overdue Events</h5>
+    </div>
+    <div class="panel-body">
+
+        <p>This search will return any Seedlots from the selected list that have not had the specified 
+        event performed on or after the selected date.</p>
+
+        <br />
+        
+        <!-- Seedlots -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label" style="text-align: right">Seedlots</label>
+            <div class="col-sm-9">
+                <div id="overdue_events_seedlot_list"></div>
+            </div>
+        </div>
+
+        <br /><br />
+
+        <!-- Event -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label" style="text-align: right">Event</label>
+            <div class="col-sm-9">
+                <select class="form-control input-sm" id="overdue_events_event_select" disabled>
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+        </div>
+
+        <br /><br />
+
+        <!-- Date -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label" style="text-align: right">Date</label>
+            <div class="col-sm-9">
+                <input class="form-control input-sm" type="date" id="overdue_events_date" name="overdue_events_date" value="<% $datestr %>" max="<% $datestr %>">
+            </div>
+        </div>
+
+        <br /><br />
+
+        <div style="margin: 0 auto; max-width: 400px">
+            <button id="overdue_events_find_seedlots" class="btn btn-primary btn-block">Find Seedlots</button>
+        </div>
+
+
+        <!-- RESULTS -->
+
+        <div id="overdue_events_results" style="display: none">
+
+            <br /><br />
+            
+            <h4>Overdue Seedlots</h4>
+            <table class="table table-striped" style="width: 100%">
+                <thead>
+                    <tr>
+                        <th style="width: 50%">Seedlot</th>
+                        <th style="width: 50%">Record</th>
+                    </tr>
+                </thead>
+                <tbody id="overdue_events_results_overdue"></tbody>
+            </table>
+
+            <br /><br />
+
+            <h4>Not Overdue Seedlots</h4>
+            <table class="table table-striped" style="width: 100%">
+                <thead>
+                    <tr>
+                        <th style="width: 50%">Seedlot</th>
+                        <th style="width: 50%">Last Recorded Event</th>
+                    </tr>
+                </thead>
+                <tbody id="overdue_events_results_not_overdue"></tbody>
+            </table>
+
+        </div>
+
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+let TOOLS_LO = new CXGN.List();
+let TOOLS_ONTOLOGY = [];
+
+jQuery(document).ready(function() {
+
+    // Set seedlot list select
+    jQuery('#overdue_events_seedlot_list').html(TOOLS_LO.listSelect('overdue_events_filter_seedlot', [ 'seedlots' ], 'select', undefined, undefined));
+
+    // Get event ontology and set events
+    getToolsEventOntology(function() {
+        setOverdueEventsSelect();
+    });
+
+    // Click Listeners
+    jQuery("#overdue_events_find_seedlots").click(findOverdueSeedlots);
+
+});
+
+/**
+ * Get the maintenance event ontology
+ * @param {Function} [callback] Callback function()
+ */
+function getToolsEventOntology(callback) {
+    jQuery.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: '/ajax/breeders/seedlot/maintenance/ontology',
+        success: function(data) {
+            if ( data && data.ontology ) {
+                TOOLS_ONTOLOGY = data.ontology;
+                if ( callback ) return callback();
+            }
+            else {
+                alert("ERROR: Could not fetch ontology terms");
+            }
+        },
+        error: function() {
+            alert("ERROR: Could not fetch ontology terms");
+        }
+    });
+}
+
+/**
+* Set the selection box for the overdue events list
+* - Parse the ONTOLOGY array into option groups and options
+*/
+function setOverdueEventsSelect() {
+    let html = "<option value=''>...Select Maintenance Event...</option>";
+    for ( let i = 0; i < TOOLS_ONTOLOGY.length; i++ ) {
+        html += "<optgroup label='" + TOOLS_ONTOLOGY[i].name + "'>";
+        if ( TOOLS_ONTOLOGY[i].children ) {
+            for ( let j = 0; j < TOOLS_ONTOLOGY[i].children.length; j++ ) {
+                html += "<option value='" + TOOLS_ONTOLOGY[i].children[j].cvterm_id + "'>" + TOOLS_ONTOLOGY[i].children[j].name + "</option>";
+            }
+        }
+        html += "</optgroup>";
+    }
+    jQuery("#overdue_events_event_select").html(html);
+    jQuery("#overdue_events_event_select").prop("disabled", false);
+}
+
+/**
+ * Query the database for the overdue status of the requested seedlots
+ */
+function findOverdueSeedlots() {
+    let list_id = jQuery("#overdue_events_filter_seedlot_list_select").val();
+    let event_id = jQuery("#overdue_events_event_select").val();
+    let date = jQuery("#overdue_events_date").val();
+    let seedlot_names = list_id ? TOOLS_LO.getList(list_id) : [];
+
+    // Check required parameters
+    if ( !list_id || list_id === '' ) {
+        alert("Select a list of seedlots");
+        return false;
+    }
+    if ( !event_id || event_id === '' ) {
+        alert("Select a maintenance event");
+        return false;
+    }
+    if ( !date || date === '' ) {
+        alert("Select a date");
+        return false;
+    }
+    let regex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
+    if ( !date.match(regex) ) {
+        alert("Incorrect date format - the date must be in the format of YYYY-MM-DD");
+        return false;
+    }
+
+    // Build body of request
+    let body = {
+        seedlots: seedlot_names,
+        event: event_id,
+        date: date
+    }
+
+    // Make request
+    jQuery("#overdue_events_find_seedlots").attr("disabled", true);
+    let overdue_seedlots = [];
+    jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/breeders/seedlot/maintenance/overdue',
+        data: JSON.stringify(body),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(data) {
+            if ( data && data.results ) {
+                overdue_seedlots = data.results;
+            }
+            else {
+                alert("ERROR: Could not find overdue seedlots!");
+            }
+        },
+        error: function() {
+            alert("ERROR: Could not find overdue seedlots!");
+        },
+        complete: function() {
+            jQuery("#overdue_events_find_seedlots").attr("disabled", false);
+            displayOverdueSeedlots(overdue_seedlots);
+        }
+    });
+
+    return false;
+}
+
+/**
+ * Display the tables of overdue / not overdue seedlots
+ * @param {Object[]} seedlots Array of seedlot status info
+ */
+function displayOverdueSeedlots(seedlots) {
+    
+    // Build tables
+    let overdue = "";
+    let not_overdue = "";
+    for ( let i = 0; i < seedlots.length; i++ ) {
+        if ( seedlots[i].overdue === 1 ) {
+            overdue += "<tr><td>" + seedlots[i].seedlot + "</td>";
+            overdue += "<td><a href='/breeders/seedlot/maintenance/record?seedlot_name=" + seedlots[i].seedlot + "' target='_blank'>Record Maintenance Event</a></td></tr>"; 
+        }
+        else {
+            not_overdue += "<tr><td>" + seedlots[i].seedlot + "</td>";
+            not_overdue += "<td>" + parseTS(seedlots[i].timestamp) + "</td></tr>";
+        }
+    }
+
+    // Update tables
+    jQuery("#overdue_events_results_overdue").html(overdue);
+    jQuery("#overdue_events_results_not_overdue").html(not_overdue);
+    jQuery("#overdue_events_results").css("display", "block");
+
+}
+
+/**
+ * Parse a YYYY-MM-DD HH:MM:SS timestamp into a human-friendly form
+ */
+function parseTS(ts) {
+    let dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    let month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let d = new Date(ts);
+    let h = d.getHours();
+    let m = d.getMinutes();
+    let s = d.getSeconds();
+    if ( h <= 9 ) h = '0' + h;
+    if ( m <= 9 ) m = '0' + m;
+    if ( s <= 9 ) s = '0' + s;
+    return dow[d.getDay()] + " " + month[d.getMonth()] + " " + d.getDate() + " " + h + ":" + m + ":" + s + " " + d.getFullYear();
+}
+
+</script>
