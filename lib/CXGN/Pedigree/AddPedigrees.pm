@@ -217,10 +217,10 @@ sub validate_pedigrees {
             push @{$return{error}}, "Female parent not found for $progeny_name.";
         }
 
-        if ($cross_type ne 'biparental' && $cross_type ne 'self' && $cross_type ne 'open' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross'){
-            push @{$return{error}}, "cross_type must be either biparental, self, open, backcross, sib or polycross for progeny $progeny_name.";
+        if ($cross_type ne 'biparental' && $cross_type ne 'self' && $cross_type ne 'open' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross' && $cross_type ne 'reselected'){
+            push @{$return{error}}, "cross_type must be either biparental, self, open, backcross, sib, reselected or polycross for progeny $progeny_name.";
         }
-        if ($cross_type eq 'biparental' || $cross_type eq 'self' || $cross_type eq 'sib' || $cross_type eq 'polycross' || $cross_type eq 'backcross') {
+        if ($cross_type eq 'biparental' || $cross_type eq 'self' || $cross_type eq 'sib' || $cross_type eq 'polycross' || $cross_type eq 'backcross' || $cross_type eq 'reselected') {
             if (!$pedigree->get_male_parent){
                 push @{$return{error}}, "Male parent not provided for $progeny_name and cross type is $cross_type.";
             }

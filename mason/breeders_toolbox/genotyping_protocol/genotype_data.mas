@@ -52,6 +52,13 @@ jQuery(document).ready(function () {
      }
    });
 
+   jQuery('#genotyping_protocol_genotype_data_detail_page_download_all_vcf').click(function(){
+       window.location.replace("/breeders/download_gbs_action/?protocol_id=<% $protocol_id %>&download_format=VCF&format=accession_ids");
+   });
+   jQuery('#genotyping_protocol_genotype_data_detail_page_download_all_dosagematrix').click(function(){
+       window.location.replace("/breeders/download_gbs_action/?protocol_id=<% $protocol_id %>&download_format=DosageMatrix&format=accession_ids");
+   });
+
 });
 
 </script>
