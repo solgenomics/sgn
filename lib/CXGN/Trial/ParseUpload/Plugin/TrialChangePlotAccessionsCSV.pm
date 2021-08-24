@@ -80,7 +80,7 @@ sub _validate_with_plugin {
 
     if (scalar(@plots_missing) > 0) {
         $errors{'missing_plots'} = \@plots_missing;
-        push @error_messages, "The following plots are not in the database as uniquenames or synonyms: ".join(',',@plots_missing);
+        push @error_messages, "The following plots are not in the database as uniquenames or synonyms:<br>".join(", ",@plots_missing)."<br>";
     }
 
     my @accessions = keys %seen_accession_names;
@@ -89,7 +89,7 @@ sub _validate_with_plugin {
 
     if (scalar(@accessions_missing) > 0) {
         $errors{'missing_stocks'} = \@accessions_missing;
-        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms:<br>".join(", ",@accessions_missing)."<br>";
     }
 
     if (keys %seen_new_plot_names) {
@@ -104,7 +104,7 @@ sub _validate_with_plugin {
                 }  
             }
             $errors{'not_valid_names'} = \@not_valid_names;
-            push @error_messages, "The following new plot names already exist in the database.: ".join(',', @not_valid_names);
+            push @error_messages, "The following new plot names already exist in the database:<br>".join(", ", @not_valid_names)."<br>";
         }
     }
 

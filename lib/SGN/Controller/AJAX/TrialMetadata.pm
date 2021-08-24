@@ -1190,7 +1190,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
             #print STDERR Dumper $parse_errors;
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."\n";
+                $return_error .= $error_string."<br>";
             }
         }
         $c->stash->{rest} = {error => $return_error, missing_plots => $parse_errors->{'missing_plots'}, missing_accessions => $parse_errors->{'missing_stocks'}, invalid_new_plot_name => $parse_errors->{'not_valid_names'}};
@@ -1198,6 +1198,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
     }
 
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
 
     my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
     bcs_schema => $schema,
@@ -1236,7 +1237,9 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         while (my ($key, $val) = each(%$parsed_data)){
             my $plot_id = $stock_id_map{$val->{plot_name}};
             my $accession_id = $stock_id_map{$val->{accession_name}};
-            my $new_plot_id = $val->{new_plot_name};
+            my $plot_name = $val->{plot_name};
+            my $new_plot_name = $val->{new_plot_name};
+
 
             my $stockprop_rs = $schema->resultset("Stock::StockRelationship")->search({
                 subject_id => $plot_id,
@@ -1251,7 +1254,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
                 return;
             } else {
                 $c->stash->{rest} = { error => "Plot entry does not exist in database.\n"};
-                # return;
+                return;
             }
 
             my $new_stockprop_rs = $schema->resultset("Stock::StockRelationship")->create({
@@ -1259,7 +1262,19 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
                 object_id => $accession_id,
                 type_id => $plot_of_type_id
             });
+
+            my $stock_rs = $schema->resultset("Stock::Stock")->search({
+                stock_id => $plot_id,
+                type_id => $plot_type_id
+            });
+
+
+            $stock_rs->update({
+                uniquename => $new_plot_name 
+            });
+
         }
+
 
         my $layout = $c->stash->{trial_layout};
         $layout->generate_and_cache_layout();

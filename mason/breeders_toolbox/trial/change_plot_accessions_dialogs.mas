@@ -108,11 +108,38 @@ $trial_id
             </div>
             <div class="modal-footer">
                 <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal  fade" id="change_accession_error_dialog" name="change_accession_error_dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="change_accsn_err_dialog"><b>Error Changing Plot Accessions</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p3> Accessions were not changed due to these errors:</p3><br><br>
+                    <div style="background-color: light-gray;" class="well well-sm">
+                        <table>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_error_change_accsn" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 
             </div>
         </div>
     </div>
 </div>
+
+
 
 <script>
 
@@ -144,12 +171,13 @@ jQuery(document).ready(function () {
         },
         complete: function (response) {
             jQuery('#working_modal').modal("hide");
-            console.log(response);
             if (response.warning) {
                 jQuery('#trial_design_change_accessions_dialog').modal("hide");
                 jQuery('#td_replace_accession_curator_warning_message').modal("show");
             } else if (response.error) {
-                alert(response.error);
+                jQuery('#change_accession_error_dialog').modal("show");
+                jQuery('#change_accession_error_dialog tbody').html(response.error);
+                return;
             }
             else {
 	            jQuery('#trial_design_change_accessions_dialog').modal("hide");
