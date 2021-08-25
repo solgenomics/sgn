@@ -61,8 +61,8 @@ sub search {
 	    push @{$query{'phone_number'} }, { 'ilike' => '%'. $_  .'%' };
 	}
 
- 	my $rs2 = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->search( { %query, disabled=>undef, censor => 0 }, { page => $page, rows => $page_size, order_by => 'last_name' } );
-	
+ 	my $rs2 = $c->dbic_schema("CXGN::People::Schema")->resultset("SpPerson")->search( { %query, disabled=>undef, censor => 0 }, { order_by => { -asc =>'sp_person_id'} } );
+
 
     while (my $p = $rs2->next()) { 
 		if ($counter >= $start_index && $counter <= $end_index) {     
@@ -84,7 +84,7 @@ sub search {
 		        personDbId => qq|$id|,
 		        phoneNumber => $p->phone_number(),
 		        userID => $p->username(),
-		    }
+		    };
 		}
 		$counter++;
     }
