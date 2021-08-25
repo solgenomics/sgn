@@ -50,22 +50,21 @@ has 'filtering_parameters' => (
 );
 
 has 'stock_list' => (
-    isa => 'ArrayRef[Int]',
+    isa => 'ArrayRef[Str]',
     is => 'ro',
 );
 
 sub get_selected_accessions {
     my $self = shift;
     my $schema = $self->bcs_schema;
-    my $accession_list = $self->stock_list;
+    my $stock_list = $self->stock_list;
     my $filtering_parameters = $self->filtering_parameters;
-    my @accessions = @{$accession_list};
+    my @stocks = @{$stock_list};
     my @parameters = @{$filtering_parameters};
-
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
 
-    my @selected_accessions;
+    my @selected_stocks;
     my %vcf_params;
     my $protocol_id;
 
@@ -92,11 +91,10 @@ sub get_selected_accessions {
 
             while (my ($chrom) = $h->fetchrow_array()){
                 if ($chrom) {
-                print STDERR "CHROMOSOME NO =".Dumper($chrom)."\n";
+#                print STDERR "CHROMOSOME NO =".Dumper($chrom)."\n";
                     $chrom_hash{$chrom}{$marker_name}{'DS'} = $allele_dosage
                 }
             }
-            print STDERR "CHROM HASH=" .Dumper(\%chrom_hash). "\n";
         }
     }
 
@@ -119,21 +117,44 @@ sub get_selected_accessions {
 #    print STDERR "VCF PARAMS JSON=" .Dumper($vcf_params_string). "\n";
 #    print STDERR "PROTOCOL_ID=" .Dumper($protocol_id). "\n";
 
-    my $dataset_table = "DROP TABLE IF EXISTS dataset_table;
-        CREATE TEMP TABLE dataset_table(stock_id INT)";
-    my $d_t = $schema->storage->dbh()->prepare($dataset_table);
-    $d_t->execute();
+#    my $dataset_table = "DROP TABLE IF EXISTS dataset_table;
+#        CREATE TEMP TABLE dataset_table(stock_id INT)";
+#    my $d_t = $schema->storage->dbh()->prepare($dataset_table);
+#    $d_t->execute();
 
-    foreach my $accession(@accessions){
-        my $added_table = "INSERT INTO dataset_table (stock_id) VALUES (?)";
+    my $stock_table = "DROP TABLE IF EXISTS stock_table;
+        CREATE TEMP TABLE stock_table(stock_name Varchar(100))";
+    my $s_t = $schema->storage->dbh()->prepare($stock_table);
+    $s_t->execute();
+
+    foreach my $st(@stocks){
+        my $added_table = "INSERT INTO stock_table (stock_name) VALUES (?)";
         my $h = $schema->storage->dbh()->prepare($added_table);
-        $h->execute($accession);
+        $h->execute($st);
     }
 
     my @all_selected_stocks;
+#    foreach my $param (@formatted_parameters) {
+#        my $q = "SELECT DISTINCT stock.stock_id FROM dataset_table
+#            JOIN stock ON (dataset_table.stock_id = stock.stock_id)
+#            JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+#            JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
+#            JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+#            JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+#            WHERE genotypeprop.value @> ? ";
+
+#        my $h2 = $schema->storage->dbh()->prepare($q);
+#        $h2->execute($genotyping_experiment_cvterm_id, $protocol_id, $param);
+
+#        while (my ($selected_id) = $h2->fetchrow_array()){
+#            push @all_selected_stocks, $selected_id
+#        }
+#    }
+
+
     foreach my $param (@formatted_parameters) {
-        my $q = "SELECT DISTINCT stock.stock_id FROM dataset_table
-            JOIN stock ON (dataset_table.stock_id = stock.stock_id)
+        my $q = "SELECT DISTINCT stock.stock_id FROM stock_table
+            JOIN stock ON (stock_table.stock_name = stock.uniquename)
             JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
             JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
             JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
@@ -147,7 +168,7 @@ sub get_selected_accessions {
             push @all_selected_stocks, $selected_id
         }
     }
-    print STDERR "ALL SELECTED STOCKS =".Dumper(\@all_selected_stocks)."\n";
+
     my @selected_stocks;
     my %count;
     $count{$_}++ foreach @all_selected_stocks;
