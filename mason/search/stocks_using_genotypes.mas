@@ -63,6 +63,12 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="control-label col-sm-4">Need to create new marker set:</label>
+                            <div class="col-sm-8" >
+                                <button class="btn btn-info" id="create_markerset_link" name="create_markerset_link">Go</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -225,6 +231,12 @@ jQuery(document).ready(function (){
             ],
         });
     });
+
+    jQuery('#create_markerset_link').click(function () {
+        location.href = '/breeders/markers';
+    });
+
+
 });
 
 
