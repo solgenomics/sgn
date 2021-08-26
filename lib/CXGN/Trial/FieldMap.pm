@@ -57,6 +57,10 @@ has 'old_plot_name' => (isa => "Str",
     is => 'rw',
 );
 
+has 'new_plot_name' => (isa => "Str",
+    is => 'rw',
+);
+
 has 'old_accession_id' => (isa => "Int",
 	is => 'rw',
 );
@@ -417,6 +421,32 @@ sub replace_plot_accession_fieldMap {
 
 	return $error;
 
+}
+
+sub replace_plot_name_fieldMap {
+	my $self = shift;
+	my $error;
+	my $schema = $self->bcs_schema;
+	my $old_plot_id = $self->old_plot_id;
+	my $new_plot_name = $self->new_plot_name;
+
+	my $new_plot_name_validator = CXGN::List::Validate->new();
+    my $valid_new_plot_name = @{$new_plot_name_validator->validate($schema,'plots',[$new_plot_name])->{'missing'}};
+    if (!$valid_new_plot_name) {
+		$error = "Plot name $new_plot_name already exists in the database";
+    } else {
+		my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+		my $stock_rs = $schema->resultset("Stock::Stock")->search({
+                stock_id => $old_plot_id,
+                type_id => $plot_type_id,
+            });
+		$stock_rs->update({
+			uniquename => $new_plot_name,
+		});
+	}
+	
+	$self->_regenerate_trial_layout_cache();
+	return $error;
 }
 
 
