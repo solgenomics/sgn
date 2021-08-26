@@ -329,6 +329,7 @@ sub list_seedlots {
     my $accession_id = shift; #added for BrAPI
     my $quality = shift;
     my $only_good_quality = shift;
+    my $box_name = shift;
 
     select(STDERR);
     $| = 1;
@@ -344,6 +345,7 @@ sub list_seedlots {
     my $current_weight_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", "stock_property")->cvterm_id();
     my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
     my $seedlot_quality_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_quality", "stock_property")->cvterm_id();
+    my $location_code_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "location_code", "stock_property")->cvterm_id();
 
     my %search_criteria;
     $search_criteria{'me.type_id'} = $type_id;
@@ -396,7 +398,7 @@ sub list_seedlots {
         {'stock_relationship_objects' => 'subject'}
     );
 
-    if ($minimum_count || $minimum_weight || $quality || $only_good_quality) {
+    if ($minimum_count || $minimum_weight || $quality || $only_good_quality || $box_name) {
         if ($minimum_count) {
 	    print STDERR "Minimum count $minimum_count\n";
             $search_criteria{'stockprops.value' }  = { '>=' => $minimum_count };
@@ -411,6 +413,11 @@ sub list_seedlots {
 	     $search_criteria{'stockprops.value' } = { '=' => $quality };
 	     $search_criteria{'stockprops.type_id' } = $seedlot_quality_cvterm_id;
 	}
+        if ($box_name) {
+            print STDERR "Box Name $box_name\n";
+            $search_criteria{'stockprops.value'} = { 'ilike' => '%'.$box_name.'%' };
+            $search_criteria{'stockprops.type_id'} = $location_code_cvterm_id;
+        }
         push @seedlot_search_joins, 'stockprops';
     }
 
