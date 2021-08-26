@@ -10,9 +10,9 @@ use Scalar::Util qw(looks_like_number);
 
 sub _validate_with_plugin {
     my $self = shift;
-
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $trial_id = $self->get_trial_id();
     my @error_messages;
     my %errors;
     my %parse_result;
@@ -92,20 +92,69 @@ sub _validate_with_plugin {
         push @error_messages, "The following accessions are not in the database as uniquenames or synonyms:<br>".join(", ",@accessions_missing)."<br>";
     }
 
+    my @not_valid_names;
     if (keys %seen_new_plot_names) {
         my @new_plot_names = keys %seen_new_plot_names;
         my $new_plot_name_validator = CXGN::List::Validate->new();
         my @valid_new_plot_names = @{$new_plot_name_validator->validate($schema,'plots',\@new_plot_names)->{'missing'}};
-        my @not_valid_names;
         if (scalar(@valid_new_plot_names) != scalar(@new_plot_names)) {
             for (@new_plot_names) {
-                if (!exists($valid_new_plot_names[$_])) {
-                    push @not_valid_names, $_;
+                my $validation = 0;
+                my $current_name = $_;
+                for (@valid_new_plot_names) {
+                    if ($current_name == $_) {
+                        $validation = 1;
+                    }
                 }  
+                if (!$validation) {
+                    push @not_valid_names, $current_name;
+                }
             }
-            $errors{'not_valid_names'} = \@not_valid_names;
-            push @error_messages, "The following new plot names already exist in the database:<br>".join(", ", @not_valid_names)."<br>";
         }
+    }
+
+    if (@not_valid_names) {
+        $errors{'not_valid_names'} = \@not_valid_names;
+        push @error_messages, "The following new plot names already exist in the database:<br>".join(", ", @not_valid_names)."<br>";
+    }
+    
+    my @plots_in_different_trial;
+
+    my $q = "SELECT * FROM plotsxtrials WHERE trial_id = ?";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($trial_id);
+    my @plot_ids_in_current_trial;
+    while(my ($trial_plot_id) = $h->fetchrow_array()){
+        push @plot_ids_in_current_trial, $trial_plot_id;
+    }
+
+    my %stock_id_map;
+    for (@plots) {
+        my $stock_rs = $schema->resultset("Stock::Stock")->search({
+            uniquename => {'-in' => \@plots}
+        });
+        while (my $r = $stock_rs->next()){
+            $stock_id_map{$r->uniquename} = $r->stock_id;
+        }
+    }
+
+    for (@plots) {
+        my $current_name = $_;
+        my $validation = 0;
+        for (@plot_ids_in_current_trial) {
+            if ($stock_id_map{$current_name} == $_) {
+                $validation = 1;
+            }
+        }
+        if (!$validation) {
+            push @plots_in_different_trial, $current_name;
+        }
+
+    }
+
+    if (@plots_in_different_trial) {
+        $errors{'not_valid_names'} = \@plots_in_different_trial;
+        push @error_messages, "The following plot names belong to a different trial:<br>".join(", ", @plots_in_different_trial)."<br>";
     }
 
     if (scalar(@error_messages) >= 1) {
@@ -148,7 +197,7 @@ sub _parse_with_plugin {
         $parsed_entries{$counter} = {
             plot_name => $plot_name,
             accession_name => $accession_name,
-            new_plot_name => $new_plot_name
+            new_plot_name => $new_plot_name 
         };
         $counter++;
     }

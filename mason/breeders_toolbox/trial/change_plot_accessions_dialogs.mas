@@ -177,7 +177,6 @@ jQuery(document).ready(function () {
             } else if (response.error) {
                 jQuery('#change_accession_error_dialog').modal("show");
                 jQuery('#change_accession_error_dialog tbody').html(response.error);
-                return;
             }
             else {
 	            jQuery('#trial_design_change_accessions_dialog').modal("hide");
