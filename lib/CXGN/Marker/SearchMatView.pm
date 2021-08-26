@@ -438,11 +438,11 @@ sub query {
         $chrom =~ s/^chr//i;
         push(@args, '^(chr)?'.$chrom.'_?[0-9]*$');
         if ( defined $start ) {
-            $pw .= " AND pos >= ?";
+            $pw .= " AND (pos)::numeric >= ?";
             push(@args, $start);
         }
         if ( defined $end ) {
-            $pw .= " AND pos <= ?";
+            $pw .= " AND (pos)::numeric <= ?";
             push(@args, $end);
         }
         push(@where, $pw);
