@@ -453,7 +453,7 @@ jQuery(document).ready( function() {
             type: 'POST',
             url: '/brapi/v1/phenotypes-search',
             data: {
-                'observationLevel':value,
+                'observationLevel':'<% $data_level %>',
                 'studyDbId':trial_id,
                 'observationVariableDbId':selectedTrait,
                 'pageSize':1000,
@@ -524,7 +524,7 @@ jQuery(document).ready( function() {
                         if (key == 'designType'){
                             design = value;
                         }
-                        if (key == 'observations' && value){
+                        if (key == 'observations'){
                             var valueObs = value[0];
                            pheno_ids.push(valueObs.observationDbId);
                            trait_ids.push(valueObs.observationVariableDbId);
