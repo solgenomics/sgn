@@ -23,6 +23,12 @@ jQuery(document).ready(function (){
             return;
         }
 
+        var data_type = $('#genotyping_data_type').val();
+        if (!data_type) {
+            alert("Genotyping data type is required");
+            return;
+        }
+
         var protocol_name = $('#selected_protocol').find(":selected").text();
         var desc = $('#marker_set_desc').val();
 
@@ -37,11 +43,13 @@ jQuery(document).ready(function (){
         var markersetProtocol = {};
         markersetProtocol.genotyping_protocol_name = protocol_name;
         markersetProtocol.genotyping_protocol_id = protocol_id;
+        markersetProtocol.genotyping_data_type = data_type;
+
         var markersetProtocolString = JSON.stringify(markersetProtocol);
 
         var protocolAdded = lo.addToList(list_id, markersetProtocolString);
         if (protocolAdded){
-            alert ("Added new marker set: " + name + " for genotyping protocol: " + protocol_name);
+            alert ("Added new marker set: " + name + " for genotyping protocol: " + protocol_name + " ," + "data type: " + data_type);
         }
         location.reload();
         return list_id;
@@ -176,7 +184,7 @@ function show_table() {
         'ajax':{'url': '/marker_sets/available'},
         'columns': [
             {title: "Marker Set Name", "data": "markerset_name"},
-            {title: "Number of Items", "data": "number_of_markers"},
+            {title: "Number of Markers", "data": "number_of_markers"},
             {title: "Description", "data": "description"},
             {title: "", "data": "null", "render": function (data, type, row) {return "<a onclick = 'showMarkersetDetail("+row.markerset_id+")'>Detail</a>" ;}},
             {title: "", "data": "null", "render": function (data, type, row) {return "<a onclick = 'removeMarkerSet("+row.markerset_id+")'>Delete</a>" ;}},

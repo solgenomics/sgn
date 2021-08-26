@@ -55,6 +55,18 @@ Titima Tantikanjana <tt15@cornell.edu>
                                                 </div>
                                         </div>
                                         <div class="form-group">
+                                            <label class="control-label col-sm-4">Data type:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="genotyping_data_type">
+                                                        <option value="">Select genotyping data type</option>
+                                                        <option value="SNP">SNP</option>
+                                                        <option value="Dosage">Dosage</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
                                             <label class="control-label col-sm-4">Description:</label>
                                                 <div class="col-sm-8" >
                                                     <div class="input-group">
