@@ -498,20 +498,41 @@ jQuery(document).ready(function ($) {
         var col_number=$('#col_number').val();
        // alert(row_number);
 
-        // accession stock type
-        var accession_list_id = $('#select_list_list_select').val();
-        var control_accession_list_id = $('#list_of_checks_section_list_select').val();
-        var control_accession_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
+        var accession_list_id = '';
+        var control_accession_list_id = '';
+        var control_accession_list_id_crbd = '';
+        var cross_list_id = '';
+        var control_cross_list_id = '';
+        var control_cross_list_id_crbd = '';
+        var family_name_list_id = '';
+        var control_family_name_list_id = '';
+        var control_family_name_list_id_crbd = '';
+        var replicated_accession_list_id = '';
+        var unreplicated_accession_list_id = '';
+        var replicated_cross_list_id = '';
+        var unreplicated_cross_list_id = '';
+        var replicated_family_name_list_id = '';
+        var unreplicated_family_name_list_id = '';
 
-        // cross stock type
-        var cross_list_id = $('#select_cross_list_list_select').val();
-        var control_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
-        var control_cross_list_id_crbd = $('#crbd_list_of_cross_checks_section_list_select').val();
-
-        // family_name stock type
-        var family_name_list_id = $('#select_family_name_list_list_select').val();
-        var control_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
-        var control_family_name_list_id_crbd = $('#crbd_list_of_family_name_checks_section_list_select').val();
+        if (trial_stock_type == "accession"){
+            accession_list_id = $('#select_list_list_select').val();
+            control_accession_list_id = $('#list_of_checks_section_list_select').val();
+            control_accession_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
+            replicated_accession_list_id = $('#list_of_rep_accession_list_select').val();
+            unreplicated_accession_list_id = $('#list_of_unrep_accession_list_select').val();
+        } else if (trial_stock_type == "cross") {
+            cross_list_id = $('#select_cross_list_list_select').val();
+            control_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
+            control_cross_list_id_crbd = $('#crbd_list_of_cross_checks_section_list_select').val();
+            replicated_cross_list_id = $('#list_of_rep_cross_list_select').val();
+            unreplicated_cross_list_id = $('#list_of_unrep_cross_list_select').val();
+        } else if (trial_stock_type == "family_name") {
+            family_name_list_id = $('#select_family_name_list_list_select').val();
+            control_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
+            control_family_name_list_id_crbd = $('#crbd_list_of_family_name_checks_section_list_select').val();
+            replicated_family_name_list_id = $('#list_of_rep_family_name_list_select').val();
+            unreplicated_family_name_list_id = $('#list_of_unrep_family_name_list_select').val();
+        }
 
         var stock_list;
         var stock_list_array;
@@ -553,8 +574,6 @@ jQuery(document).ready(function ($) {
             control_list_crbd = JSON.stringify(control_list_crbd_array);
         }
 
-
-
         var design_type = $('#select_design_method').val();
         if (design_type == "") {
             var design_type = $('#select_multi-design_method').val();
@@ -569,20 +588,6 @@ jQuery(document).ready(function ($) {
         var fieldmap_col_number = $('#fieldMap_col_number').val();
         var fieldmap_row_number = $('#fieldMap_row_number').val();
         var plot_layout_format = $('#plot_layout_format').val();
-
-        // accession stock_type
-        var replicated_accession_list_id = $('#list_of_rep_accession_list_select').val();
-        var unreplicated_accession_list_id = $('#list_of_unrep_accession_list_select').val();
-
-        // cross stock_type
-        var replicated_cross_list_id = $('#list_of_rep_cross_list_select').val();
-        var unreplicated_cross_list_id = $('#list_of_unrep_cross_list_select').val();
-
-        // family_name stock_type
-        var replicated_family_name_list_id = $('#list_of_rep_family_name_list_select').val();
-        var unreplicated_family_name_list_id = $('#list_of_unrep_family_name_list_select').val();
-
-
         var row_in_design_number = $('#no_of_row_in_design').val();
         var col_in_design_number = $('#no_of_col_in_design').val();
         var no_of_rep_times = $('#no_of_rep_times').val();
