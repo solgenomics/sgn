@@ -56,6 +56,7 @@ jQuery(document).ready(function (){
 
     });
 
+    var markersetType;
     jQuery(document).on("change", "#selected_marker_set1", function() {
 
         var markersetID = jQuery('#selected_marker_set1').val();
@@ -64,9 +65,10 @@ jQuery(document).ready(function (){
             url: '/markerset/type',
             data: {'markerset_id': markersetID},
             success: function(response) {
-                if (response.type == "Dosage") {
+                markersetType = response.type;
+                if (markersetType == "Dosage") {
                     jQuery("#markerset_dosage_section").show();
-                } else if (response.type == "SNP") {
+                } else if (markersetType == "SNP") {
                     jQuery("#markerset_snp_section").show();
                 } else {
                     jQuery("#markerset_dosage_section").hide();
@@ -82,7 +84,7 @@ jQuery(document).ready(function (){
             alert("Marker set name is required");
             return;
         }
-        alert(markerID);
+
         var markerName = $('#marker_name').val();
         if (!markerName) {
             alert("Marker name is required");
@@ -93,21 +95,14 @@ jQuery(document).ready(function (){
         var allele1 = $('#allele_1').val();
         var allele2 = $('#allele_2').val();
 
-        if ((dosage == '') && (allele1 == '') && (allele2 == '')) {
-            alert("Please indicate a dosage or nucleotides");
+        if ((markersetType == "Dosage") && (dosage == '')) {
+            alert("Please indicate a dosage");
             return;
         }
 
-        if ((dosage != '') && ((allele1 != '') || ( allele2 != ''))) {
-            alert("Please indicate dosage or nucleotides, not both");
+        if ((markersetType == 'SNP') && ((allele1 == '') || ( allele2 == ''))) {
+            alert("Please indicate SNP alleles");
             return;
-        }
-
-        if (dosage == '') {
-            if (((allele1 != '') && (allele2 == '')) || ((allele1 == '') && (allele2 != ''))) {
-                alert("Please indicate both allele info ");
-                return;
-            }
         }
 
         var markerDosage = {};
