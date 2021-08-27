@@ -4,7 +4,7 @@ jQuery(document).ready(function (){
     get_select_box('genotyping_protocol','selected_protocol', {'empty':1});
 
     var lo = new CXGN.List();
-    jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a marker set', 'refresh', undefined));
+    jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a marker set', 'refresh', 'hide_public_lists' ));
 
     var list = new CXGN.List();
     jQuery('#selected_marker_set2').html(list.listSelect('selected_marker_set2', ['markers'], 'Select a marker set', 'refresh', undefined));
@@ -56,13 +56,33 @@ jQuery(document).ready(function (){
 
     });
 
+    jQuery(document).on("change", "#selected_marker_set1", function() {
+
+        var markersetID = jQuery('#selected_marker_set1').val();
+
+        jQuery.ajax({
+            url: '/markerset/type',
+            data: {'markerset_id': markersetID},
+            success: function(response) {
+                if (response.type == "Dosage") {
+                    jQuery("#markerset_dosage_section").show();
+                } else if (response.type == "SNP") {
+                    jQuery("#markerset_snp_section").show();
+                } else {
+                    jQuery("#markerset_dosage_section").hide();
+                    jQuery("#markerset_snp_section").hide();
+                }
+            },
+        });
+    });
+
     jQuery("#add_marker").click(function(){
-        var markerSetName = $('#selected_marker_set1').val();
-        if (!markerSetName) {
+        var markerSetID = $('#selected_marker_set1').val();
+        if (!markerSetID) {
             alert("Marker set name is required");
             return;
         }
-
+        alert(markerID);
         var markerName = $('#marker_name').val();
         if (!markerName) {
             alert("Marker name is required");
@@ -108,7 +128,7 @@ jQuery(document).ready(function (){
 
         var markerDosageString = JSON.stringify(markerDosage);
 
-        var markerAdded = lo.addToList(markerSetName, markerDosageString);
+        var markerAdded = lo.addToList(markerSetID, markerDosageString);
         if (markerAdded){
             alert("Added "+markerDosageString);
         }

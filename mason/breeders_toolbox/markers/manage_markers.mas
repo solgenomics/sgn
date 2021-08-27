@@ -122,7 +122,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                                                     </div>
                                                 </div>
                                         </div>
-                                        <div class="form-group">
+                                        <div class="form-group" id = "markerset_dosage_section" style="display:none">
                                             <label class="control-label col-sm-4">Allele Dosage:</label>
                                                 <div class="col-sm-8" >
                                                     <div class="input-group">
@@ -135,10 +135,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                                                     </div>
                                                 </div>
                                         </div>
-                                        <div class="form-group">
-                                            <label class="control-label col-sm-4">OR</label>
-                                        </div>
-                                        <div class="form-group">
+                                        <div class="form-group" id = "markerset_snp_section" style="display:none">
                                             <label class="control-label col-sm-4">Specify Alleles:</label>
                                                 <div class="col-sm-4" >
                                                     <div class="input-group">
