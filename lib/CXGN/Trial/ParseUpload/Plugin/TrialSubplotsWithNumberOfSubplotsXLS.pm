@@ -1,4 +1,4 @@
-package CXGN::Trial::ParseUpload::Plugin::TrialPlantsWithNumberOfPlantsXLS;
+package CXGN::Trial::ParseUpload::Plugin::TrialSubplotsWithNumberOfSubplotsXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
@@ -44,33 +44,33 @@ sub _validate_with_plugin {
 
     #get column headers
     my $plot_name_head;
-    my $num_plants_per_plot_head;
+    my $num_subplots_per_plot_head;
 
     if ($worksheet->get_cell(0,0)) {
         $plot_name_head  = $worksheet->get_cell(0,0)->value();
     }
     if ($worksheet->get_cell(0,1)) {
-        $num_plants_per_plot_head  = $worksheet->get_cell(0,1)->value();
+        $num_subplots_per_plot_head  = $worksheet->get_cell(0,1)->value();
     }
     if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
         push @error_messages, "Cell A1: plot_name is missing from the header";
     }
-    if (!$num_plants_per_plot_head || $num_plants_per_plot_head ne 'num_plants_per_plot') {
-        push @error_messages, "Cell B1: num_plants_per_plot is missing from the header";
+    if (!$num_subplots_per_plot_head || $num_subplots_per_plot_head ne 'num_subplots_per_plot') {
+        push @error_messages, "Cell B1: num_subplots_per_plot is missing from the header";
     }
 
     my %seen_plot_names;
-    my %seen_plant_names;
+    my %seen_subplot_names;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $plot_name;
-        my $num_plants_per_plot;
+        my $num_subplots_per_plot;
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $num_plants_per_plot = $worksheet->get_cell($row,1)->value();
+            $num_subplots_per_plot = $worksheet->get_cell($row,1)->value();
         }
 
         if (!$plot_name || $plot_name eq '' ) {
@@ -83,21 +83,21 @@ sub _validate_with_plugin {
             $seen_plot_names{$plot_name}=$row_name;
         }
 
-        if (!$num_plants_per_plot || $num_plants_per_plot eq '') {
-            push @error_messages, "Cell B$row_name: num_plants_per_plot missing";
-        } if (!($num_plants_per_plot =~ /^\d+?$/)) {
-            push @error_messages, "Cell B$row_name: num_plants_per_plot must be a number";
+        if (!$num_subplots_per_plot || $num_subplots_per_plot eq '') {
+            push @error_messages, "Cell B$row_name: num_subplots_per_plot missing";
+        } if (!($num_subplots_per_plot =~ /^\d+?$/)) {
+            push @error_messages, "Cell B$row_name: num_subplots_per_plot must be a number";
         } else {
-            #file must not contain duplicate plant names
-            for my $i (1 .. $num_plants_per_plot) {
-                my $plant_name = $plot_name."_plant_".$i;
-                if ($seen_plant_names{$plant_name}) {
-                    push @error_messages, "Cell B$row_name: duplicate plant_name at cell A".$seen_plant_names{$plant_name}.": $plant_name";
+            #file must not contain duplicate subplot names
+            for my $i (1 .. $num_subplots_per_plot) {
+                my $subplot_name = $plot_name."_subplot_".$i;
+                if ($seen_subplot_names{$subplot_name}) {
+                    push @error_messages, "Cell B$row_name: duplicate subplot_name at cell A".$seen_subplot_names{$subplot_name}.": $subplot_name";
                 }
-                if (!$plant_name){
-                    push @error_messages, "CellB$row_name: No plant name could be made!";
+                if (!$subplot_name){
+                    push @error_messages, "CellB$row_name: No subplot name could be made!";
                 }
-                $seen_plant_names{$plant_name}++;
+                $seen_subplot_names{$subplot_name}++;
             }
         }
 
@@ -112,10 +112,10 @@ sub _validate_with_plugin {
         $errors{'missing_plots'} = \@plots_missing;
     }
 
-    my @plants = keys %seen_plant_names;
-    my $plant_rs = $schema->resultset('Stock::Stock')->search({ 'uniquename' => {-in => \@plants} });
-    while (my $r = $plant_rs->next){
-        push @error_messages, "The following plant_name is already in the database and is not unique ".$r->uniquename;
+    my @subplots = keys %seen_subplot_names;
+    my $subplot_rs = $schema->resultset('Stock::Stock')->search({ 'uniquename' => {-in => \@subplots} });
+    while (my $r = $subplot_rs->next){
+        push @error_messages, "The following subplot_name is already in the database and is not unique ".$r->uniquename;
     }
 
     #store any errors found in the parsed file to parse_errors accessor
@@ -169,28 +169,28 @@ sub _parse_with_plugin {
 
     for my $row ( 1 .. $row_max ) {
         my $plot_name;
-        my $num_plants_per_plot;
+        my $num_subplots_per_plot;
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $num_plants_per_plot = $worksheet->get_cell($row,1)->value();
+            $num_subplots_per_plot = $worksheet->get_cell($row,1)->value();
         }
 
-        for my $i (1 .. $num_plants_per_plot) {
-            my $plant_name = $plot_name."_plant_".$i;
+        for my $i (1 .. $num_subplots_per_plot) {
+            my $subplot_name = $plot_name."_subplot_".$i;
 
             #skip blank lines
-            if (!$plot_name && !$plant_name) {
+            if (!$plot_name && !$subplot_name) {
                 next;
             }
 
             push @{$parsed_entries{'data'}}, {
                 plot_name => $plot_name,
                 plot_stock_id => $plot_lookup{$plot_name},
-                plant_name => $plant_name,
-                plant_index_number => $i
+                subplot_name => $subplot_name,
+                subplot_index_number => $i
             };
         }
     }
