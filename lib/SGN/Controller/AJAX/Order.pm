@@ -7,6 +7,8 @@ use CXGN::Stock::OrderBatch;
 use Data::Dumper;
 use JSON;
 use DateTime;
+use CXGN::People::Person;
+use CXGN::Contact;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -61,6 +63,7 @@ sub submit_order_POST : Args(0) {
         $group_by_contact_id{$contact_person_id}{$ordered_item} = $item_type;
     }
 
+    my @contact_email_list;
     foreach my $contact_id (keys %group_by_contact_id) {
         my @history = ();
         my $history_info = {};
@@ -93,6 +96,28 @@ sub submit_order_POST : Args(0) {
             $c->stash->{rest} = {error_string => "Error saving your order",};
             return;
         }
+
+        my $contact_person = CXGN::People::Person -> new($dbh, $contact_person_id);
+        my $contact_email = $contact_person->get_private_email();
+        push @contact_email_list, $contact_email;
+    }
+    print STDERR "EMAIL LIST =".Dumper(\@contact_email_list)."\n";
+
+    my $host = $c->config->{main_production_site_url};
+    my $project_name = $c->config->{project_name};
+    my $subject="Ordering Notification from $project_name";
+    my $body=<<END_HEREDOC;
+
+You have an order submitted to $project_name ($host/order/stocks/view).
+Please do *NOT* reply to this message.
+
+Thank you,
+$project_name Team
+
+END_HEREDOC
+
+    foreach my $each_email (@contact_email_list) {
+        CXGN::Contact::send_email($subject,$body,$each_email);
     }
 
     $c->stash->{rest} = {success => "1",};
