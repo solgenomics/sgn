@@ -86,6 +86,9 @@ sub create_design {
     $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie='.$serie.',kinds=randomization_method)');
   }
   $r_block->add_command('rcbd<-rcbd$book'); #added for agricolae 1.1-8 changes in output
+  if($plot_start == 1){ #Use row numbers as plot names to avoid unwanted agricolae plot num pattern
+    $r_block->add_command('rcbd$plots <- row.names(rcbd)');
+  }
   $r_block->add_command('rcbd<-as.matrix(rcbd)');
   $r_block->run_block();
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','rcbd');
