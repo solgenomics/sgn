@@ -90,7 +90,7 @@ sub submit_order_POST : Args(0) {
         $order_prop->parent_id($order_id);
         $order_prop->history(\@history);
     	my $order_prop_id = $order_prop->store_sp_orderprop();
-        print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
+#        print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
 
         if (!$order_prop_id){
             $c->stash->{rest} = {error_string => "Error saving your order",};
@@ -98,10 +98,10 @@ sub submit_order_POST : Args(0) {
         }
 
         my $contact_person = CXGN::People::Person -> new($dbh, $contact_person_id);
-        my $contact_email = $contact_person->get_private_email();
+        my $contact_email = $contact_person->get_contact_email();
         push @contact_email_list, $contact_email;
     }
-    print STDERR "EMAIL LIST =".Dumper(\@contact_email_list)."\n";
+#    print STDERR "EMAIL LIST =".Dumper(\@contact_email_list)."\n";
 
     my $host = $c->config->{main_production_site_url};
     my $project_name = $c->config->{project_name};
