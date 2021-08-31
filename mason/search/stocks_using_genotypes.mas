@@ -5,7 +5,7 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title=>'Search Accessions with Specific Genotype' &>
+<& /page/page_title.mas, title=>'Search Accessions Containing Specific Genotypes' &>
 
 <!--
 <&| /page/info_section.mas, title=>'Step 1: Select a set of accessiions (dataset)'&>
@@ -87,13 +87,7 @@
                         <div class="form-group">
                             <label class="control-label col-sm-4"></label>
                             <div class="col-sm-8" >
-                                <button class="btn btn-primary" id="search_accessions_using_dosages"><i class="glyphicon glyphicon-search"></i> Search by Using Dosages</button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label col-sm-4"></label>
-                            <div class="col-sm-8" >
-                                <button class="btn btn-primary" id="search_accessions_using_snps"><i class="glyphicon glyphicon-search"></i> Search by Using SNPs</button>
+                                <button class="btn btn-primary" id="search_accessions_using_markerset"><i class="glyphicon glyphicon-search"></i> Search Accessions</button>
                             </div>
                         </div>
                     </div>
@@ -125,7 +119,7 @@ jQuery(document).ready(function (){
 
     jQuery('#markerset_select').html(lo.listSelect('markerset_select', ['markers'], 'Select a marker set', undefined, undefined));
 
-    jQuery("#search_accessions_using_dosages").click(function(){
+    jQuery("#search_accessions_using_markerset").click(function(){
 
 //        var selected_datasets = [];
 //        var dataset_id;
@@ -159,7 +153,7 @@ jQuery(document).ready(function (){
 
         var table = jQuery('#genotype_search_results').DataTable({
             'destroy' : true,
-            'ajax': { 'url':'/ajax/search/accessions_using_dosages',
+            'ajax': { 'url':'/ajax/search/search_stocks_using_markerset',
                 'data':{
                     'stock_list_id': stock_list_id,
                     'markerset_id': markerset_id,
@@ -182,60 +176,9 @@ jQuery(document).ready(function (){
         });
     });
 
-    jQuery("#search_accessions_using_snps").click(function(){
-
-        var selected_datasets = [];
-        var dataset_id;
-        jQuery('input[name="dataset_accessions_checkbox"]:checked').each(function() {
-            selected_datasets.push(jQuery(this).val());
-        });
-
-        if (selected_datasets.length < 1){
-            alert('Please select a set of accessions!');
-            return false;
-        } else if (selected_datasets.length > 1){
-            alert('Please select only one set of accessions!');
-            return false;
-        } else {
-            dataset_id = selected_datasets[0];
-        }
-
-        var markerset_id = jQuery('#markerset_select').val();
-
-        if (!markerset_id) {
-            alert("Please choose a marker set");
-            return;
-        }
-
-        var table = jQuery('#genotype_search_results').DataTable({
-            'destroy' : true,
-            'ajax': { 'url':'/ajax/search/accessions_using_snps',
-                'data':{
-                    'dataset_id': dataset_id,
-                    'markerset_id': markerset_id,
-                }
-            },
-            columns: [
-                {
-                    title: "Accessions",
-                    data: null,
-                    render: function(data, type, row){return "<a href='/stock/"+row.stock_id+"/view'>"+row.stock_name+"</a>";}},
-                {
-                    title: "Genotypes",
-                    data: "genotypes",
-//                    render: function(data, type,row){
-//                        var newFormat = data.split(",").join("&nbsp &nbsp &nbsp &nbsp &nbsp");
-//                        return newFormat;
-//                    }
-                },
-            ],
-        });
-    });
-
     jQuery('#create_markerset_link').click(function () {
         location.href = '/breeders/markers';
     });
-
 
 });
 

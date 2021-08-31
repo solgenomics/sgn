@@ -19,7 +19,7 @@ __PACKAGE__->config(
     );
 
 
-sub get_accessions_using_dosages :Path('/ajax/search/accessions_using_dosages') :Args(0){
+sub get_stocks_using_markerset :Path('/ajax/search/search_stocks_using_markerset') :Args(0){
     my $self = shift;
     my $c = shift;
     my $stock_list_id = $c->req->param("stock_list_id");
@@ -67,7 +67,7 @@ sub get_accessions_using_dosages :Path('/ajax/search/accessions_using_dosages') 
         filtering_parameters=>\@parameters,
     });
 
-    my $result = $genotypes_accessions_search->get_selected_accessions();
+    my $result = $genotypes_accessions_search->get_selected_stocks();
 
     my @selected_accessions;
 

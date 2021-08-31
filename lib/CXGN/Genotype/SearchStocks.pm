@@ -54,7 +54,7 @@ has 'stock_list' => (
     is => 'ro',
 );
 
-sub get_selected_accessions {
+sub get_selected_stocks {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $stock_list = $self->stock_list;
@@ -67,6 +67,7 @@ sub get_selected_accessions {
     my @selected_stocks;
     my %vcf_params;
     my $protocol_id;
+    my $data_type;
 
     my %chrom_hash;
     foreach my $param (@parameters){
@@ -75,9 +76,14 @@ sub get_selected_accessions {
         my $marker_name = $params{marker_name};
         my $allele_dosage = $params{allele_dosage};
         my $genotyping_protocol_id = $params{genotyping_protocol_id};
-
+        my $genotyping_data_type = $params{genotyping_data_type};
+        print STDERR "DATA TYPE =".Dumper($genotyping_data_type)."\n";
         if ($genotyping_protocol_id){
             $protocol_id = $genotyping_protocol_id
+        }
+
+        if ($genotyping_data_type){
+            $data_type = $genotyping_data_type;
         }
 
         if ($marker_name){
@@ -90,9 +96,11 @@ sub get_selected_accessions {
             $h->execute($marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id);
 
             while (my ($chrom) = $h->fetchrow_array()){
-                if ($chrom) {
+                if ($data_type eq 'Dosage') {
+                    if ($chrom) {
 #                print STDERR "CHROMOSOME NO =".Dumper($chrom)."\n";
-                    $chrom_hash{$chrom}{$marker_name}{'DS'} = $allele_dosage
+                        $chrom_hash{$chrom}{$marker_name}{'DS'} = $allele_dosage
+                    }
                 }
             }
         }
