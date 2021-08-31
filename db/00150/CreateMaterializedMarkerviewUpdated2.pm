@@ -3,11 +3,11 @@
 
 =head1 NAME
 
-CreateMaterializedMarkerviewUpdated.pm
+CreateMaterializedMarkerviewUpdated2.pm
 
 =head1 SYNOPSIS
 
-mx-run CreateMaterializedMarkerviewUpdated [options] -H hostname -D dbname -u username [-F]
+mx-run CreateMaterializedMarkerviewUpdated2 [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -21,6 +21,9 @@ materialized view.  If new genotype data is added, this function should be used 
 materialized view rather than simply refreshing it in case there are new references or species in the data.
 
 Update: does not cast the marker position to int, in case it is not defined or not an int...
+
+Update 2: it does cast the marker position to int, but handles cases when the position is not defined, so that 
+way the query properly sorts positions numerically and is more efficient
 
 =head1 AUTHOR
 
@@ -36,7 +39,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package CreateMaterializedMarkerviewUpdated;
+package CreateMaterializedMarkerviewUpdated2;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -102,12 +105,13 @@ AS \$function\$
 		
 		-- Loop through each unique combination of species / reference genome and build the marker query
 		LOOP
-			querystr := 'SELECT nd_protocolprop.nd_protocol_id, ''' || maprow.species || ''' AS species_name, ''' || maprow.reference_genome || ''' AS reference_genome_name, s.value->>''name'' AS marker_name, s.value->>''chrom'' AS chrom, s.value->>''pos'' AS pos, s.value->>''ref'' AS ref, s.value->>''alt'' AS alt, CASE WHEN s.value->>''alt'' < s.value->>''ref'' THEN concat(''' || maprow.species_abbreviation || ''', ''' || maprow.reference_genome_cleaned || ''', ''_'', REGEXP_REPLACE(s.value->>''chrom'', ''^chr?'', ''''), ''_'', s.value->>''pos'', ''_'', s.value->>''alt'', ''_'', s.value->>''ref'') ELSE concat(''' || maprow.species_abbreviation || ''', ''' || maprow.reference_genome_cleaned || ''', ''_'', REGEXP_REPLACE(s.value->>''chrom'', ''^chr?'', ''''), ''_'', s.value->>''pos'', ''_'', s.value->>''ref'', ''_'', s.value->>''alt'') END AS variant_name FROM nd_protocolprop, LATERAL jsonb_each(nd_protocolprop.value) s(key, value) WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = ''vcf_map_details_markers'') AND nd_protocol_id IN (SELECT nd_protocol_id FROM nd_protocolprop WHERE value->>''species_name'' = ''' || maprow.species || ''' and value->>''reference_genome_name'' = ''' || maprow.reference_genome || ''' AND type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = ''vcf_map_details''))';
+			querystr := 'SELECT nd_protocolprop.nd_protocol_id, ''' || maprow.species || ''' AS species_name, ''' || maprow.reference_genome || ''' AS reference_genome_name, s.value->>''name'' AS marker_name, s.value->>''chrom'' AS chrom, cast(coalesce(nullif(s.value->>''pos'',''''),NULL) as numeric) AS pos, s.value->>''ref'' AS ref, s.value->>''alt'' AS alt, CASE WHEN s.value->>''alt'' < s.value->>''ref'' THEN concat(''' || maprow.species_abbreviation || ''', ''' || maprow.reference_genome_cleaned || ''', ''_'', REGEXP_REPLACE(s.value->>''chrom'', ''^chr?'', ''''), ''_'', s.value->>''pos'', ''_'', s.value->>''alt'', ''_'', s.value->>''ref'') ELSE concat(''' || maprow.species_abbreviation || ''', ''' || maprow.reference_genome_cleaned || ''', ''_'', REGEXP_REPLACE(s.value->>''chrom'', ''^chr?'', ''''), ''_'', s.value->>''pos'', ''_'', s.value->>''ref'', ''_'', s.value->>''alt'') END AS variant_name FROM nd_protocolprop, LATERAL jsonb_each(nd_protocolprop.value) s(key, value) WHERE type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = ''vcf_map_details_markers'') AND nd_protocol_id IN (SELECT nd_protocol_id FROM nd_protocolprop WHERE value->>''species_name'' = ''' || maprow.species || ''' and value->>''reference_genome_name'' = ''' || maprow.reference_genome || ''' AND type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = ''vcf_map_details''))';
 			queries := array_append(queries, querystr);
+
 		END LOOP;
 
 		-- Add an empty query in case there is no existing marker data
-		emptyquery := 'SELECT column1::int AS nd_protocol_id, column2::text AS species_name, column3::text AS reference_genome_name, column4::text AS marker_name, column5::text AS chrom, column6::text AS pos, column7::text AS ref, column8::text AS alt, column9::text AS variant_name FROM (values (null,null,null,null,null,null,null,null,null)) AS x WHERE false';
+		emptyquery := 'SELECT column1::int AS nd_protocol_id, column2::text AS species_name, column3::text AS reference_genome_name, column4::text AS marker_name, column5::text AS chrom, column6::numeric AS pos, column7::text AS ref, column8::text AS alt, column9::text AS variant_name FROM (values (null,null,null,null,null,null,null,null,null)) AS x WHERE false';
 		queries := array_append(queries, emptyquery);
 		
 		-- Combine queries with a UNION

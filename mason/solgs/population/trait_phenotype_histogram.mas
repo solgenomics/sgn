@@ -49,9 +49,6 @@ $pop_id = $trial_id if $trial_id;
 
  <& /util/import_javascript.mas, classes => ["d3.d3Min",  "d3.d3-v6-tip", "solGS.histogram", "solGS.phenoHistogram"] &>
 
-<div id="pheno_histogram_canvas">
-    <div id="pheno_histogram_plot"></div>
+<div id="pheno_histo_canvas">
     <div class="message" id="histogram_message" style="display:none"></div>
 </div>
-
- 

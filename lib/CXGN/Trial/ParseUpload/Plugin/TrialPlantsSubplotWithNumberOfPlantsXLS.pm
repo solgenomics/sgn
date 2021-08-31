@@ -1,4 +1,4 @@
-package CXGN::Trial::ParseUpload::Plugin::TrialPlantsWithNumberOfPlantsXLS;
+package CXGN::Trial::ParseUpload::Plugin::TrialPlantsSubplotWithNumberOfPlantsXLS;
 
 use Moose::Role;
 use Spreadsheet::ParseExcel;
@@ -43,54 +43,54 @@ sub _validate_with_plugin {
     }
 
     #get column headers
-    my $plot_name_head;
-    my $num_plants_per_plot_head;
+    my $subplot_name_head;
+    my $num_plants_per_subplot_head;
 
     if ($worksheet->get_cell(0,0)) {
-        $plot_name_head  = $worksheet->get_cell(0,0)->value();
+        $subplot_name_head  = $worksheet->get_cell(0,0)->value();
     }
     if ($worksheet->get_cell(0,1)) {
-        $num_plants_per_plot_head  = $worksheet->get_cell(0,1)->value();
+        $num_plants_per_subplot_head  = $worksheet->get_cell(0,1)->value();
     }
-    if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
-        push @error_messages, "Cell A1: plot_name is missing from the header";
+    if (!$subplot_name_head || $subplot_name_head ne 'subplot_name' ) {
+        push @error_messages, "Cell A1: subplot_name is missing from the header";
     }
-    if (!$num_plants_per_plot_head || $num_plants_per_plot_head ne 'num_plants_per_plot') {
-        push @error_messages, "Cell B1: num_plants_per_plot is missing from the header";
+    if (!$num_plants_per_subplot_head || $num_plants_per_subplot_head ne 'num_plants_per_subplot') {
+        push @error_messages, "Cell B1: num_plants_per_subplot is missing from the header";
     }
 
-    my %seen_plot_names;
+    my %seen_subplot_names;
     my %seen_plant_names;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
-        my $plot_name;
-        my $num_plants_per_plot;
+        my $subplot_name;
+        my $num_plants_per_subplot;
 
         if ($worksheet->get_cell($row,0)) {
-            $plot_name = $worksheet->get_cell($row,0)->value();
+            $subplot_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $num_plants_per_plot = $worksheet->get_cell($row,1)->value();
+            $num_plants_per_subplot = $worksheet->get_cell($row,1)->value();
         }
 
-        if (!$plot_name || $plot_name eq '' ) {
-            push @error_messages, "Cell A$row_name: plot_name missing.";
+        if (!$subplot_name || $subplot_name eq '' ) {
+            push @error_messages, "Cell A$row_name: subplot_name missing.";
         }
-        elsif ($plot_name =~ /\s/ || $plot_name =~ /\// || $plot_name =~ /\\/ ) {
-            push @error_messages, "Cell A$row_name: plot_name must not contain spaces or slashes.";
+        elsif ($subplot_name =~ /\s/ || $subplot_name =~ /\// || $subplot_name =~ /\\/ ) {
+            push @error_messages, "Cell A$row_name: subplot_name must not contain spaces or slashes.";
         }
         else {
-            $seen_plot_names{$plot_name}=$row_name;
+            $seen_subplot_names{$subplot_name}=$row_name;
         }
 
-        if (!$num_plants_per_plot || $num_plants_per_plot eq '') {
-            push @error_messages, "Cell B$row_name: num_plants_per_plot missing";
-        } if (!($num_plants_per_plot =~ /^\d+?$/)) {
-            push @error_messages, "Cell B$row_name: num_plants_per_plot must be a number";
+        if (!$num_plants_per_subplot || $num_plants_per_subplot eq '') {
+            push @error_messages, "Cell B$row_name: num_plants_per_subplot missing";
+        } if (!($num_plants_per_subplot =~ /^\d+?$/)) {
+            push @error_messages, "Cell B$row_name: num_plants_per_subplot must be a number";
         } else {
             #file must not contain duplicate plant names
-            for my $i (1 .. $num_plants_per_plot) {
-                my $plant_name = $plot_name."_plant_".$i;
+            for my $i (1 .. $num_plants_per_subplot) {
+                my $plant_name = $subplot_name."_plant_".$i;
                 if ($seen_plant_names{$plant_name}) {
                     push @error_messages, "Cell B$row_name: duplicate plant_name at cell A".$seen_plant_names{$plant_name}.": $plant_name";
                 }
@@ -103,13 +103,13 @@ sub _validate_with_plugin {
 
     }
 
-    my @plots = keys %seen_plot_names;
-    my $plots_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plots_validator->validate($schema,'plots',\@plots)->{'missing'}};
+    my @subplots = keys %seen_subplot_names;
+    my $subplots_validator = CXGN::List::Validate->new();
+    my @subplots_missing = @{$subplots_validator->validate($schema,'subplots',\@subplots)->{'missing'}};
 
-    if (scalar(@plots_missing) > 0) {
-        push @error_messages, "The following plot_name are not in the database: ".join(',',@plots_missing);
-        $errors{'missing_plots'} = \@plots_missing;
+    if (scalar(@subplots_missing) > 0) {
+        push @error_messages, "The following subplot_name are not in the database: ".join(',',@subplots_missing);
+        $errors{'missing_subplots'} = \@subplots_missing;
     }
 
     my @plants = keys %seen_plant_names;
@@ -147,48 +147,48 @@ sub _parse_with_plugin {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
-    my %seen_plot_names;
+    my %seen_subplot_names;
     for my $row ( 1 .. $row_max ) {
-        my $plot_name;
+        my $subplot_name;
         if ($worksheet->get_cell($row,0)) {
-            $plot_name = $worksheet->get_cell($row,0)->value();
-            $seen_plot_names{$plot_name}++;
+            $subplot_name = $worksheet->get_cell($row,0)->value();
+            $seen_subplot_names{$subplot_name}++;
         }
     }
-    my @plots = keys %seen_plot_names;
-    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id;
+    my @subplots = keys %seen_subplot_names;
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id;
     my $rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => \@plots },
-        'type_id' => $plot_cvterm_id
+        'uniquename' => { -in => \@subplots },
+        'type_id' => $subplot_cvterm_id
     });
-    my %plot_lookup;
+    my %subplot_lookup;
     while (my $r=$rs->next){
-        $plot_lookup{$r->uniquename} = $r->stock_id;
+        $subplot_lookup{$r->uniquename} = $r->stock_id;
     }
 
     for my $row ( 1 .. $row_max ) {
-        my $plot_name;
-        my $num_plants_per_plot;
+        my $subplot_name;
+        my $num_plants_per_subplot;
 
         if ($worksheet->get_cell($row,0)) {
-            $plot_name = $worksheet->get_cell($row,0)->value();
+            $subplot_name = $worksheet->get_cell($row,0)->value();
         }
         if ($worksheet->get_cell($row,1)) {
-            $num_plants_per_plot = $worksheet->get_cell($row,1)->value();
+            $num_plants_per_subplot = $worksheet->get_cell($row,1)->value();
         }
 
-        for my $i (1 .. $num_plants_per_plot) {
-            my $plant_name = $plot_name."_plant_".$i;
+        for my $i (1 .. $num_plants_per_subplot) {
+            my $plant_name = $subplot_name."_plant_".$i;
 
             #skip blank lines
-            if (!$plot_name && !$plant_name) {
+            if (!$subplot_name && !$plant_name) {
                 next;
             }
 
             push @{$parsed_entries{'data'}}, {
-                plot_name => $plot_name,
-                plot_stock_id => $plot_lookup{$plot_name},
+                subplot_name => $subplot_name,
+                subplot_stock_id => $subplot_lookup{$subplot_name},
                 plant_name => $plant_name,
                 plant_index_number => $i
             };

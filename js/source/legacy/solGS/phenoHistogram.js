@@ -69,8 +69,8 @@ jQuery(document).ready(function () {
             } else {
                 var args = {
                     'namedValues' : traitData,
-                    'canvas' : '#pheno_histogram_canvas',
-                    'plot_id': '#pheno_histogram_plot'
+                    'canvas' : '#pheno_histo_canvas',
+                    'plot_id': '#pheno_histo_plot'
                 };
 
                 solGS.histogram.plotHistogram(args);
