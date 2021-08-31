@@ -469,9 +469,7 @@ sub structure_output_details {
 	my $analysis_page = $analysis_data->{analysis_page};
 
 	my $referer = $c->req->referer;
-	my $base = $c->req->base;
-	$base =~ s/:\d+//;
-
+    my $base = $c->controller('solGS::Path')->clean_base_name($c);
 	my $output_details = {};
 
 	my $match_pages = 'solgs\/traits\/all\/population\/'
@@ -517,8 +515,8 @@ sub structure_output_details {
 	$output_details->{contact_page}      = $base . 'contact/form';
 	$output_details->{data_set_type}     = $c->stash->{data_set_type};
 	$output_details->{analysis_log_file} = $log_file;
-	$output_details->{host}              = qq | $base |;
-	$output_details->{referer}           = qq | $referer |;
+	$output_details->{host}              = $base;
+	$output_details->{referer}           = $referer;
 	$output_details->{mailing_list} = $mail_list;
 
 	$c->stash->{bg_job_output_details} = $output_details;
@@ -549,8 +547,7 @@ sub structure_kinship_analysis_output {
 	$c->controller('solGS::Kinship')->stash_data_str_kinship_pop_id($c);
 	my $pop_id = $c->stash->{kinship_pop_id};
 
-	my $base = $c->req->base;
-	$base =~ s/:\d+//;
+    my $base = $c->controller('solGS::Path')->clean_base_name($c);
 
 	my $kinship_page = $base . $analysis_page;
 	$analysis_data->{analysis_page} = $kinship_page;
@@ -584,8 +581,7 @@ sub structure_pca_analysis_output {
 
 	my $pop_id = $c->stash->{pca_pop_id};
 
-	my $base = $c->req->base;
-	$base =~ s/:\d+//;
+    my $base = $c->controller('solGS::Path')->clean_base_name($c);
 
 	my $pca_page = $base . $analysis_page;
 	$analysis_data->{analysis_page} = $pca_page;
@@ -618,9 +614,7 @@ sub structure_cluster_analysis_output {
 
 	my $pop_id = $c->stash->{cluster_pop_id};
 
-	my $base = $c->req->base;
-	$base =~ s/:\d+//;
-
+    my $base = $c->controller('solGS::Path')->clean_base_name($c);
 	my $cluster_page = $base . $analysis_page;
 	$analysis_data->{analysis_page} = $cluster_page;
 
@@ -657,9 +651,7 @@ sub structure_training_modeling_output {
     my @traits_ids = @{$c->stash->{training_traits_ids}} if $c->stash->{training_traits_ids};
     my $referer = $c->req->referer;
 
-    my $base = $c->req->base;
-    $base =~ s/:\d+//;
-
+    my $base = $c->controller('solGS::Path')->clean_base_name($c);
 	my $url_args = {
 		'training_pop_id' => $pop_id,
 		'genotyping_protocol_id' => $protocol_id,
@@ -759,9 +751,7 @@ sub structure_training_single_pop_data_output {
 	my $pop_id        = $c->stash->{pop_id};
 	my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
-	my $base = $c->req->base;
-    $base =~ s/:\d+//;
-
+    my $base = $c->controller('solGS::Path')->clean_base_name($c);
 	my $args = {
 		 'training_pop_id' => $pop_id,
 		 'genotyping_protocol_id' => $protocol_id,
@@ -828,9 +818,7 @@ sub structure_training_combined_pops_data_output {
     my $combo_pops_id = $c->stash->{combo_pops_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    my $base = $c->req->base;
-    $base =~ s/:\d+//;
-
+    my $base = $c->controller('solGS::Path')->clean_base_name($c);
 	my $args = {
 		 'training_pop_id' => $combo_pops_id,
 		 'genotyping_protocol_id' => $protocol_id,
@@ -898,10 +886,7 @@ sub structure_selection_prediction_output {
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my $referer = $c->req->referer;
-
-    my $base = $c->req->base;
-    $base =~ s/:\d+//;
-
+    my $base = $c->controller('solGS::Path')->clean_base_name($c);
     my $data_set_type = $c->stash->{data_set_type};
     my %output_details = ();
 
@@ -1028,7 +1013,7 @@ sub run_analysis {
     my $analysis_page    = $analysis_profile->{analysis_page};
     $c->stash->{analysis_page} = $analysis_page;
 
-    my $base             = $c->req->base;
+    my $base = $c->controller('solGS::Path')->clean_base_name($c);
     $analysis_page       =~ s/$base//;
     my $referer          = $c->req->referer;
 
