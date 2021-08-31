@@ -19,7 +19,7 @@ sub observation_levels {
     my @data_window;
     push @data_window, ({
             levelName => 'replicate',
-            levelOrder => 0 }, 
+            levelOrder => 0 },
         {
             levelName => 'block',
             levelOrder => 1 },
@@ -34,7 +34,7 @@ sub observation_levels {
             levelOrder => 4 },
         {
             levelName => 'tissue_sample',
-            levelOrder => 5 
+            levelOrder => 5
          });
 
     my $total_count = 6;
@@ -42,7 +42,7 @@ sub observation_levels {
     my @data_files;
     my %result = (data=>\@data_window);
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$total_count,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Levels result constructed');   
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Levels result constructed');
 }
 
 sub search {
@@ -71,7 +71,7 @@ sub search {
         my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
         return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
     }
-   
+
     my $join = '';
     my @and_wheres;
     if (scalar(@trait_ids)>0){
@@ -132,7 +132,7 @@ sub search {
             if ($study_check) {
                 my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
                 my $traits_assayed = $t->get_traits_assayed();
-                
+
                 foreach (@$traits_assayed){
                     $trait_ids_sql .= ',' . $_->[0] ;
                 }
@@ -157,24 +157,24 @@ sub search {
     my $limit = $page_size;
     my $offset = $page*$page_size;
     my $total_count = 0;
-    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.accession, array_agg(cvtermsynonym.synonym), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ". 
+    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.accession, array_agg(cvtermsynonym.synonym ORDER BY CHAR_LENGTH(cvtermsynonym.synonym)), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
         "JOIN dbxref USING(dbxref_id) ".
         "JOIN db using(db_id) ".
         "JOIN cvtermsynonym using(cvterm_id) ".
         "inner JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) ".
         "JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join ".
         "WHERE $and_where_clause ".
-        "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.accession ". 
+        "GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.accession ".
         "ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
 
     my $sth = $self->bcs_schema->storage->dbh->prepare($q);
     $sth->execute();
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
-        foreach (@$synonym){
-            $_ =~ s/ EXACT \[\]//;
-            $_ =~ s/\"//g;
-        }
+        # foreach (@$synonym){
+        #     $_ =~ s/ EXACT \[\]//;
+        #     $_ =~ s/\"//g;
+        # }
 
         my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
         my $categories = $trait->categories;
@@ -286,7 +286,7 @@ sub detail {
     my $page = $self->page;
     my $status = $self->status;
     my $supported_crop = $c->config->{'supportedCrop'};
-   
+
     my $join = '';
     my $and_where;
     if ($trait_id){
@@ -297,7 +297,7 @@ sub detail {
     my $limit = $page_size;
     my $offset = $page*$page_size;
     my $total_count = 0;
-    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.accession, array_agg(cvtermsynonym.synonym), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ". 
+    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.accession, array_agg(cvtermsynonym.synonym ORDER BY CHAR_LENGTH(cvtermsynonym.synonym)), cvterm.is_obsolete, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
         "JOIN dbxref USING(dbxref_id) ".
         "JOIN db using(db_id) ".
         "JOIN cvtermsynonym using(cvterm_id) ".
@@ -311,10 +311,10 @@ sub detail {
     $sth->execute();
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
-        foreach (@$synonym){
-            $_ =~ s/ EXACT \[\]//;
-            $_ =~ s/\"//g;
-        }
+        # foreach (@$synonym){
+        #     $_ =~ s/ EXACT \[\]//;
+        #     $_ =~ s/\"//g;
+        # }
         my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
         my $categories = $trait->categories;
         my @brapi_categories = split '/', $categories;
