@@ -74,7 +74,6 @@ sub get_selected_stocks {
         my $param_ref = decode_json$param;
         my %params = %{$param_ref};
         my $marker_name = $params{marker_name};
-        my $allele_dosage = $params{allele_dosage};
         my $genotyping_protocol_id = $params{genotyping_protocol_id};
         my $genotyping_data_type = $params{genotyping_data_type};
         print STDERR "DATA TYPE =".Dumper($genotyping_data_type)."\n";
@@ -86,22 +85,75 @@ sub get_selected_stocks {
             $data_type = $genotyping_data_type;
         }
 
-        if ($marker_name){
+        if ($data_type eq 'Dosage') {
+            if ($marker_name){
 #            $vcf_params{$marker_name} = {'DS' => $allele_dosage}
+                my $allele_dosage = $params{allele_dosage};
 
-            my $chrom_key;
-            my $q = "SELECT value->?->>'chrom' FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
+                my $chrom_key;
+                my $q = "SELECT value->?->>'chrom' FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
 
-            my $h = $schema->storage->dbh()->prepare($q);
-            $h->execute($marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id);
+                my $h = $schema->storage->dbh()->prepare($q);
+                $h->execute($marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id);
 
-            while (my ($chrom) = $h->fetchrow_array()){
-                if ($data_type eq 'Dosage') {
+                while (my ($chrom) = $h->fetchrow_array()){
                     if ($chrom) {
-#                print STDERR "CHROMOSOME NO =".Dumper($chrom)."\n";
+                        print STDERR "CHROMOSOME NO =".Dumper($chrom)."\n";
                         $chrom_hash{$chrom}{$marker_name}{'DS'} = $allele_dosage
                     }
                 }
+            }
+        } elsif ($data_type eq 'SNP') {
+            if ($marker_name) {
+                my $allele_1 = $params{allele1};
+                my $allele_2 = $params{allele2};
+                my @allele_param = ($allele_1, $allele_2);
+
+                my @ref_alt_chrom = ();
+
+                my $q = "SELECT value->?->>'ref', value->?->>'alt', value->?->>'chrom'
+                FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
+
+                my $h = $schema->storage->dbh()->prepare($q);
+                $h->execute($marker_name, $marker_name, $marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id);
+
+                while (my ($ref, $alt, $chrom) = $h->fetchrow_array()){
+                    if ($ref) {
+                        push @ref_alt_chrom, $ref
+                    }
+                    if ($alt) {
+                        push @ref_alt_chrom, $alt
+                    }
+                    if ($chrom) {
+                        push @ref_alt_chrom, $chrom
+                    }
+                }
+                print STDERR "REF ALT CHROM=" .Dumper(\@ref_alt_chrom). "\n";
+                my @nt = ();
+
+                if ($allele_1 ne $allele_2){
+                    foreach my $allele(@allele_param){
+                        if (grep{/$allele/}(@ref_alt_chrom)){
+                            if ($allele eq $ref_alt_chrom[0]){
+                                $nt[0] = $allele;
+                            } elsif ($allele eq $ref_alt_chrom[1]){
+                                $nt[1] = $allele;
+                            }
+                            my $nt_string = join(",", @nt);
+                            $chrom_hash{$ref_alt_chrom[2]}{$marker_name} = {'NT' => $nt_string};
+                        } else {
+                            last;
+                        }
+                    }
+                } elsif ($allele_1 eq $allele_2){
+                    if (grep{/$allele_1/}(@ref_alt_chrom)){
+                        @nt = ($allele_1, $allele_2);
+                        my $nt_string = join(",", @nt);
+                        $chrom_hash{$ref_alt_chrom[2]}{$marker_name} = {'NT' => $nt_string};
+                    } else {
+                        last;
+                   }
+               }
             }
         }
     }

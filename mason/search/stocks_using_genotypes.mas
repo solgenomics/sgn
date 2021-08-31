@@ -167,10 +167,10 @@ jQuery(document).ready(function (){
                 {
                     title: "Genotypes",
                     data: "genotypes",
-                    render: function(data, type,row){
-                        var newFormat = data.split(",").join("&nbsp &nbsp &nbsp &nbsp &nbsp");
-                        return newFormat;
-                    }
+//                    render: function(data, type,row){
+//                        var newFormat = data.split(",").join("&nbsp &nbsp &nbsp &nbsp &nbsp");
+//                        return newFormat;
+//                    }
                 },
             ],
         });
