@@ -40,6 +40,8 @@ function makeURL(target,id){
     case "accessions":
     case "plants":
     case "plots":
+      return document.location.origin+`/stock/${id}/view`;
+      break;
     case "seedlots":
       return document.location.origin+`/breeders/seedlot/${id}`;
       break;
