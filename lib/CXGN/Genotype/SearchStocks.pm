@@ -65,7 +65,6 @@ sub get_selected_stocks {
     my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
 
     my @selected_stocks;
-    my %vcf_params;
     my $protocol_id;
     my $data_type;
 
@@ -76,7 +75,7 @@ sub get_selected_stocks {
         my $marker_name = $params{marker_name};
         my $genotyping_protocol_id = $params{genotyping_protocol_id};
         my $genotyping_data_type = $params{genotyping_data_type};
-        print STDERR "DATA TYPE =".Dumper($genotyping_data_type)."\n";
+#        print STDERR "DATA TYPE =".Dumper($genotyping_data_type)."\n";
         if ($genotyping_protocol_id){
             $protocol_id = $genotyping_protocol_id
         }
@@ -87,7 +86,6 @@ sub get_selected_stocks {
 
         if ($data_type eq 'Dosage') {
             if ($marker_name){
-#            $vcf_params{$marker_name} = {'DS' => $allele_dosage}
                 my $allele_dosage = $params{allele_dosage};
 
                 my $chrom_key;
@@ -172,16 +170,6 @@ sub get_selected_stocks {
 
     my $number_of_param_sets = @formatted_parameters;
 
-#    my $vcf_params_string = encode_json \%vcf_params;
-
-#    print STDERR "VCF PARAMS JSON=" .Dumper($vcf_params_string). "\n";
-#    print STDERR "PROTOCOL_ID=" .Dumper($protocol_id). "\n";
-
-#    my $dataset_table = "DROP TABLE IF EXISTS dataset_table;
-#        CREATE TEMP TABLE dataset_table(stock_id INT)";
-#    my $d_t = $schema->storage->dbh()->prepare($dataset_table);
-#    $d_t->execute();
-
     my $stock_table = "DROP TABLE IF EXISTS stock_table;
         CREATE TEMP TABLE stock_table(stock_name Varchar(100))";
     my $s_t = $schema->storage->dbh()->prepare($stock_table);
@@ -194,24 +182,6 @@ sub get_selected_stocks {
     }
 
     my @all_selected_stocks;
-#    foreach my $param (@formatted_parameters) {
-#        my $q = "SELECT DISTINCT stock.stock_id FROM dataset_table
-#            JOIN stock ON (dataset_table.stock_id = stock.stock_id)
-#            JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
-#            JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
-#            JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-#            JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
-#            WHERE genotypeprop.value @> ? ";
-
-#        my $h2 = $schema->storage->dbh()->prepare($q);
-#        $h2->execute($genotyping_experiment_cvterm_id, $protocol_id, $param);
-
-#        while (my ($selected_id) = $h2->fetchrow_array()){
-#            push @all_selected_stocks, $selected_id
-#        }
-#    }
-
-
     foreach my $param (@formatted_parameters) {
         my $q = "SELECT DISTINCT stock.stock_id FROM stock_table
             JOIN stock ON (stock_table.stock_name = stock.uniquename)
@@ -224,12 +194,11 @@ sub get_selected_stocks {
         my $h2 = $schema->storage->dbh()->prepare($q);
         $h2->execute($genotyping_experiment_cvterm_id, $protocol_id, $param);
 
-        while (my ($selected_id) = $h2->fetchrow_array()){
-            push @all_selected_stocks, $selected_id
+        while (my ($selected_stock_id) = $h2->fetchrow_array()){
+            push @all_selected_stocks, $selected_stock_id
         }
     }
 
-    my @selected_stocks;
     my %count;
     $count{$_}++ foreach @all_selected_stocks;
 
@@ -238,7 +207,8 @@ sub get_selected_stocks {
             push @selected_stocks, $stock_id
         }
     }
-    #    print STDERR "SELECTED STOCKS =".Dumper(\@selected_stocks)."\n";
+
+#        print STDERR "SELECTED STOCKS =".Dumper(\@selected_stocks)."\n";
     my @selected_stocks_details;
 
     if (scalar(@selected_stocks) > 0) {

@@ -50,37 +50,31 @@ sub get_stocks_using_markerset :Path('/ajax/search/search_stocks_using_markerset
 #    print STDERR "STOCK IDS =".Dumper(\@stock_ids)."\n";
 
     my $markerset = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $markerset_id});
-    my $markerset_items_ref = $markerset->retrieve_elements_with_ids($markerset_id);
+    my $markerset_items_ref = $markerset->retrieve_elements($markerset_id);
     my @markerset_items = @{$markerset_items_ref};
 #    print STDERR "MARKERSET ITEMS =".Dumper(\@markerset_items)."\n";
 
-    my @parameters;
-    foreach my $item (@markerset_items){
-        my $param = $item->[1];
-        push @parameters, $param;
-    }
-#    print STDERR "PARAMETERS =".Dumper(\@parameters)."\n";
-    my $genotypes_accessions_search = CXGN::Genotype::SearchStocks->new({
+    my $genotypes_stocks_search = CXGN::Genotype::SearchStocks->new({
         bcs_schema=>$schema,
         stock_list=>\@stock_names,
 #        protocol_id=>$protocol_id,
-        filtering_parameters=>\@parameters,
+        filtering_parameters=>\@markerset_items,
     });
 
-    my $result = $genotypes_accessions_search->get_selected_stocks();
+    my $result = $genotypes_stocks_search->get_selected_stocks();
 
-    my @selected_accessions;
+    my @selected_stocks;
 
     foreach my $r(@$result){
-        my ($selected_id, $selected_uniquename, $marker_dosage_string) = @$r;
-        push @selected_accessions, {
+        my ($selected_id, $selected_uniquename, $params_string) = @$r;
+        push @selected_stocks, {
             stock_id => $selected_id,
             stock_name => $selected_uniquename,
-            genotypes => $marker_dosage_string
+            genotypes => $params_string
         };
     }
 
-    $c->stash->{rest}={data=> \@selected_accessions};
+    $c->stash->{rest}={data=> \@selected_stocks};
 
 }
 
