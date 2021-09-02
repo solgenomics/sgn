@@ -45,20 +45,20 @@ sub get_stocks_using_markerset :Path('/ajax/search/search_stocks_using_markerset
 #    my $protocol_id = $genotype_protocol_ref-> [0];
 
     my $stock_list = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $stock_list_id});
-    my $stock_names_ref = $stock_list->retrieve_elements($stock_list_id);
-    my @stock_names = @{$stock_names_ref};
+    my $stock_names = $stock_list->retrieve_elements($stock_list_id);
+#    my @stock_names = @{$stock_names_ref};
 #    print STDERR "STOCK IDS =".Dumper(\@stock_ids)."\n";
 
     my $markerset = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $markerset_id});
-    my $markerset_items_ref = $markerset->retrieve_elements($markerset_id);
-    my @markerset_items = @{$markerset_items_ref};
+    my $markerset_items = $markerset->retrieve_elements($markerset_id);
+#    my @markerset_items = @{$markerset_items_ref};
 #    print STDERR "MARKERSET ITEMS =".Dumper(\@markerset_items)."\n";
 
     my $genotypes_stocks_search = CXGN::Genotype::SearchStocks->new({
         bcs_schema=>$schema,
-        stock_list=>\@stock_names,
+        stock_list=>$stock_names,
 #        protocol_id=>$protocol_id,
-        filtering_parameters=>\@markerset_items,
+        filtering_parameters=>$markerset_items,
     });
 
     my $result = $genotypes_stocks_search->get_selected_stocks();

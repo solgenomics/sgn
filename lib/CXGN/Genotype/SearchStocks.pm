@@ -64,25 +64,27 @@ sub get_selected_stocks {
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
 
-    my @selected_stocks;
-    my $protocol_id;
-    my $data_type;
+    my $protocol_info = $parameters[0];
+    my $info_ref = decode_json$protocol_info;
+    my %info = %{$info_ref};
+    my $protocol_id = $info{genotyping_protocol_id};
+    my $data_type = $info{genotyping_data_type};
 
     my %chrom_hash;
     foreach my $param (@parameters){
         my $param_ref = decode_json$param;
         my %params = %{$param_ref};
         my $marker_name = $params{marker_name};
-        my $genotyping_protocol_id = $params{genotyping_protocol_id};
-        my $genotyping_data_type = $params{genotyping_data_type};
+#        my $genotyping_protocol_id = $params{genotyping_protocol_id};
+#        my $genotyping_data_type = $params{genotyping_data_type};
 #        print STDERR "DATA TYPE =".Dumper($genotyping_data_type)."\n";
-        if ($genotyping_protocol_id){
-            $protocol_id = $genotyping_protocol_id
-        }
+#        if ($genotyping_protocol_id){
+#            $protocol_id = $genotyping_protocol_id
+#        }
 
-        if ($genotyping_data_type){
-            $data_type = $genotyping_data_type;
-        }
+#        if ($genotyping_data_type){
+#            $data_type = $genotyping_data_type;
+#        }
 
         if ($data_type eq 'Dosage') {
             if ($marker_name){

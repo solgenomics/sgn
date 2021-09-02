@@ -523,12 +523,12 @@ sub retrieve_elements {
     my $self = shift;
     my $list_id = shift;
 
-    my $q = "SELECT content from sgn_people.list_item  WHERE list_id=? ORDER BY list_item_id ASC;";
+    my $q = "SELECT list_item_id, content from sgn_people.list_item  WHERE list_id=? ORDER BY list_item_id ASC;";
 
     my $h = $self->dbh()->prepare($q);
     $h->execute($list_id);
     my @list = ();
-    while (my ($content) = $h->fetchrow_array()) {
+    while (my ($item_id, $content) = $h->fetchrow_array()) {
         push @list, $content;
     }
     return \@list;
