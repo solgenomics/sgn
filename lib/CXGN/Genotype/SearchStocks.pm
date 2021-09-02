@@ -168,22 +168,63 @@ sub get_selected_stocks {
     my @sorted_markers = natsort @formatted_parameters;
     my $genotype_string = join("<br>", @sorted_markers);
 
-    my $number_of_param_sets = @formatted_parameters;
+#    my $number_of_param_sets = @formatted_parameters;
 
-    my $stock_table = "DROP TABLE IF EXISTS stock_table;
-        CREATE TEMP TABLE stock_table(stock_name Varchar(100))";
-    my $s_t = $schema->storage->dbh()->prepare($stock_table);
-    $s_t->execute();
+#    my $stock_table = "DROP TABLE IF EXISTS stock_table;
+#        CREATE TEMP TABLE stock_table(stock_name Varchar(100))";
+#    my $s_t = $schema->storage->dbh()->prepare($stock_table);
+#    $s_t->execute();
 
-    foreach my $st(@stocks){
-        my $added_table = "INSERT INTO stock_table (stock_name) VALUES (?)";
-        my $h = $schema->storage->dbh()->prepare($added_table);
-        $h->execute($st);
-    }
+#    foreach my $st(@stocks){
+#        my $added_table = "INSERT INTO stock_table (stock_name) VALUES (?)";
+#        my $h = $schema->storage->dbh()->prepare($added_table);
+#        $h->execute($st);
+#    }
 
-    my @all_selected_stocks;
+#    my @all_selected_stocks;
+#    foreach my $param (@formatted_parameters) {
+#        my $q = "SELECT DISTINCT stock.stock_id FROM stock_table
+#            JOIN stock ON (stock_table.stock_name = stock.uniquename)
+#            JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+#            JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
+#            JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+#            JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+#            WHERE genotypeprop.value @> ? ";
+
+#        my $h2 = $schema->storage->dbh()->prepare($q);
+#        $h2->execute($genotyping_experiment_cvterm_id, $protocol_id, $param);
+
+#        while (my ($selected_stock_id) = $h2->fetchrow_array()){
+#            push @all_selected_stocks, $selected_stock_id
+#        }
+#    }
+
+#    my %count;
+#    $count{$_}++ foreach @all_selected_stocks;
+
+#    while (my ($stock_id, $value) = each(%count)) {
+#        if ($value == $number_of_param_sets) {
+#            push @selected_stocks, $stock_id
+#        }
+#    }
+
+#        print STDERR "SELECTED STOCKS =".Dumper(\@selected_stocks)."\n";
+    my @selected_stocks_details;
     foreach my $param (@formatted_parameters) {
-        my $q = "SELECT DISTINCT stock.stock_id FROM stock_table
+        my $stock_table = "DROP TABLE IF EXISTS stock_table;
+            CREATE TEMP TABLE stock_table(stock_name Varchar(100))";
+        my $s_t = $schema->storage->dbh()->prepare($stock_table);
+        $s_t->execute();
+
+        foreach my $st(@stocks){
+            my $added_table = "INSERT INTO stock_table (stock_name) VALUES (?)";
+            my $h = $schema->storage->dbh()->prepare($added_table);
+            $h->execute($st);
+        }
+
+        @stocks = ();
+        @selected_stocks_details = ();
+        my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock_table
             JOIN stock ON (stock_table.stock_name = stock.uniquename)
             JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
             JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
@@ -194,35 +235,27 @@ sub get_selected_stocks {
         my $h2 = $schema->storage->dbh()->prepare($q);
         $h2->execute($genotyping_experiment_cvterm_id, $protocol_id, $param);
 
-        while (my ($selected_stock_id) = $h2->fetchrow_array()){
-            push @all_selected_stocks, $selected_stock_id
+        while (my ($selected_stock_id, $selected_stock_name) = $h2->fetchrow_array()){
+            push @selected_stocks_details, [$selected_stock_id, $selected_stock_name, $genotype_string ];
+            push @stocks, $selected_stock_name
         }
     }
 
-    my %count;
-    $count{$_}++ foreach @all_selected_stocks;
+#    my @selected_stocks_details;
 
-    while (my ($stock_id, $value) = each(%count)) {
-        if ($value == $number_of_param_sets) {
-            push @selected_stocks, $stock_id
-        }
-    }
+#    if (scalar(@stocks) > 0) {
+#        my $selected_stocks_sql = join ("," , @stocks);
 
-#        print STDERR "SELECTED STOCKS =".Dumper(\@selected_stocks)."\n";
-    my @selected_stocks_details;
+#        my $q2 = "SELECT stock.stock_id, stock.uniquename FROM stock where stock.stock_id in ($selected_stocks_sql)  ORDER BY stock.stock_id ASC";
+#        my $q2 = "SELECT stock.stock_id, stock.uniquename FROM stock where stock.uniquename in ($selected_stocks_sql)  ORDER BY stock.stock_id ASC";
 
-    if (scalar(@selected_stocks) > 0) {
-        my $selected_stocks_sql = join ("," , @selected_stocks);
+#        my $h4 = $schema->storage->dbh()->prepare($q2);
+#        $h4->execute();
 
-        my $q2 = "SELECT stock.stock_id, stock.uniquename FROM stock where stock.stock_id in ($selected_stocks_sql)  ORDER BY stock.stock_id ASC";
-
-        my $h3 = $schema->storage->dbh()->prepare($q2);
-        $h3->execute();
-
-        while (my ($selected_id, $selected_uniquename) = $h3->fetchrow_array()){
-            push @selected_stocks_details, [$selected_id, $selected_uniquename, $genotype_string ]
-        }
-    }
+#        while (my ($selected_id, $selected_uniquename) = $h4->fetchrow_array()){
+#            push @selected_stocks_details, [$selected_id, $selected_uniquename, $genotype_string ]
+#        }
+#    }
 
     return \@selected_stocks_details;
 
