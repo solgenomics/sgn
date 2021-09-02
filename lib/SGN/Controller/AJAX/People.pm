@@ -146,7 +146,7 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
     while (my $row = $rs2->next()) {
 	my $person_name = $row->first_name." ".$row->last_name();
 	my $delete_link = "";
-	my $add_user_link = '&nbsp;&nbsp;<a href="javascript:add_user_role('.$row->get_column('sp_person_id').", '".$person_name."' )".'"><span style="color:darkgrey;width:8px;height:8px;border:solid;border-width:1px;padding:1px;"><b>+</b></a></span>';
+	my $add_user_link = '&nbsp;&nbsp;<a href="#" onclick="javascript:add_user_role('.$row->get_column('sp_person_id').", \'".$person_name."\')\"><span style=\"color:darkgrey;width:8px;height:8px;border:solid;border-width:1px;padding:1px;\"><b>+</b></a></span>";
 	if ($c->user()->has_role("curator")) {
 	    $delete_link = '<a href="javascript:delete_user_role('.$row->get_column('sp_person_role_id').')"><b>X</b></a>';
 	}
