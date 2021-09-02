@@ -124,6 +124,7 @@ if (!$format) {
 
 my $sp_person_id= CXGN::People::Person->get_person_by_username($dbh, $username);
 
+print STDERR "SP_PERSON_ID = $sp_person_id\n";
 ##Column headers for trial design/s
 #plot_name	accession_name	plot_number	block_number	trial_name	trial_description	trial_location	year	trial_type	is_a_control	rep_number	range_number	row_number	col_number
 
@@ -166,6 +167,8 @@ my %phen_data_by_trial; #
 # CIP format:
 ## Item	Plate ID	Intertek plate/well ID	CIP Number	Breeder ID
 
+my $operator;
+
 foreach my $plot_name (@trial_rows) {
 
     my $accession;
@@ -177,13 +180,13 @@ foreach my $plot_name (@trial_rows) {
     my $range_number;
     my $row_number;
     my $col_number;
-
     
     if ($format eq 'CIP') {
 	$accession = $spreadsheet->value_at($plot_name, "CIP Number");
 	$plot_number = $spreadsheet->value_at($plot_name, "Intertek plate/well ID");
 	$trial_name = $spreadsheet->value_at($plot_name, "Plate ID");
-
+        $operator = $spreadsheet->value_at($plot_name, "Breeder ID");
+	
 	if ($plot_number =~ m/^([A-Ha-h])(\d+)$/) {
 	    $row_number = $1;
 	    $col_number = $2;
@@ -199,8 +202,6 @@ foreach my $plot_name (@trial_rows) {
 	$trial_design_hash{$trial_name}{$plot_number}->{plot_number} = $plot_number;
 	$trial_design_hash{$trial_name}{$plot_number}->{stock_name} = $accession;
 	$trial_design_hash{$trial_name}{$plot_number}->{plot_name} = $plot_name;
-	$trial_design_hash{$trial_name}{$plot_number}->{rep_number} = $rep_number;
-	$trial_design_hash{$trial_name}{$plot_number}->{is_a_control} = $is_a_control;
 	$trial_design_hash{$trial_name}{$plot_number}->{row_number} = $row_number;
 	$trial_design_hash{$trial_name}{$plot_number}->{col_number} = $col_number;
     }
@@ -266,20 +267,26 @@ my $coderef= sub  {
 	my $trial_create = CXGN::Trial::TrialCreate->new({
 	    chado_schema      => $schema,
 	    dbh               => $dbh,
-	    design_type       => 'genotyping_plate_format',
+	    design_type       => 'genotyping_plate',
 	    design            => $trial_design_hash{$trial_name},
 	    program           => $breeding_program->name(),
 	    trial_year        => $year,
 	    trial_description => $trial_name,
 	    trial_location    => $location,
-	    trial_name        => $trial_name
-							 });
-	
+	    trial_name        => $trial_name,
+            operator          => $operator,
+	    owner_id           => $sp_person_id,
+	    is_genotyping      => 1,
+	    genotyping_user_id => $sp_person_id,
+	    genotyping_plate_format => 96,
+	    genotyping_plate_sample_type => 'accession',
+	    
 
+							 });
 	try {
 	    $trial_create->save_trial();
 	} catch {
-	    print STDERR "ERROR SAVING TRIAL!\n";
+	    print STDERR "ERROR SAVING TRIAL! $_\n";
 	};
     }
 };
