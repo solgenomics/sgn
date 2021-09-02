@@ -84,6 +84,7 @@ markerFile  <- grep('marker_effects', outputFiles, value = TRUE)
 #traitPhenoFile <- paste("trait_phenotype_data", traitId, sep = "_")
 modelPhenoFile <- grep('model_phenodata', outputFiles, value = TRUE)
 message('model input trait pheno file ', modelPhenoFile)
+traitRawPhenoFile <- grep('trait_raw_phenodata', outputFiles, value = TRUE)
 varianceComponentsFile <- grep("variance_components", outputFiles, value = TRUE)
 filteredGenoFile       <- grep("filtered_genotype_data", outputFiles, value = TRUE)
 formattedPhenoFile     <- grep("formatted_phenotype_data", inputFiles, value = TRUE)
@@ -163,6 +164,8 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
                                   sep = "\t",
                                   na.strings = c("NA", "", "--", "-", "."),
                                   header = TRUE))
+
+
 }
 
 phenoTrait <- c()
@@ -206,6 +209,12 @@ if (datasetInfo == 'combined populations') {
                                    traitName = traitAbbr,
                                    calcAverages = TRUE)
      }
+
+     keepMetaCols <- c('observationUnitName', 'germplasmName', 'studyDbId', 'locationName',
+                    'studyYear', 'replicate', 'blockNumber')
+
+      traitRawPhenoData <- phenoData %>%
+                                          select(c(keepMetaCols, traitAbbr))
 }
 
 print('phenoTrait')
@@ -666,6 +675,17 @@ if (!is.null(modelPhenoData) & length(modelPhenoFile) != 0) {
            quote = FALSE,
            )
 }
+
+if (!is.null(traitRawPhenoData) & length(traitRawPhenoFile) != 0) {
+
+    fwrite(traitRawPhenoData,
+           file  = traitRawPhenoFile,
+           row.names = FALSE,
+           sep   = "\t",
+           quote = FALSE,
+           )
+}
+
 
 
 if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
