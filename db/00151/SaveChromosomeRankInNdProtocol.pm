@@ -66,6 +66,7 @@ sub patch {
     my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
     my $vcf_map_details_markers_array_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers_array', 'protocol_property')->cvterm_id();
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+    my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
 
     my $q = "SELECT nd_protocol.nd_protocol_id, nd_experiment_stock.stock_id, prop.value, markers_array.value
         FROM nd_protocol
@@ -75,7 +76,7 @@ sub patch {
         JOIN nd_experiment ON(nd_experiment.nd_experiment_id=nd_experiment_protocol.nd_experiment_id AND nd_experiment.type_id=$geno_cvterm_id)
         JOIN nd_experiment_stock ON(nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
         ;";
-    print STDERR Dumper $q;
+    # print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %protocols_hash;
@@ -96,6 +97,60 @@ sub patch {
         }
     }
     print STDERR Dumper \%protocols_hash;
+
+    my $q2 = "SELECT genotypeprop.genotypeprop_id, genotype.genotype_id, genotypeprop.rank, genotypeprop.value->>'CHROM'
+        FROM genotypeprop
+        JOIN genotype ON(genotypeprop.genotype_id=genotype.genotype_id)
+        JOIN nd_experiment_genotype ON(genotype.genotype_id=nd_experiment_genotype.genotype_id)
+        JOIN nd_experiment ON(nd_experiment.nd_experiment_id=nd_experiment_genotype.nd_experiment_id AND nd_experiment.type_id=$geno_cvterm_id)
+        JOIN nd_experiment_stock ON(nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+        JOIN nd_experiment_protocol ON(nd_experiment.nd_experiment_id=nd_experiment_protocol.nd_experiment_id)
+        WHERE stock_id=? AND genotypeprop.type_id=$snp_vcf_cvterm_id AND nd_protocol_id=?;";
+    my $h2 = $schema->storage->dbh()->prepare($q2);
+
+    my %protocol_chrom_rank;
+    while (my($nd_protocol_id, $o) = each %protocols_hash) {
+        my $chroms = $o->{chroms};
+        my $stock_id = $o->{stock_id};
+        $h2->execute($stock_id, $nd_protocol_id);
+        while (my ($genotypeprop_id, $genotype_id, $rank, $chrom) = $h2->fetchrow_array()) {
+            print STDERR "$nd_protocol_id, $stock_id, $genotype_id, $genotypeprop_id, $rank, $chrom \n";
+            $protocol_chrom_rank{$nd_protocol_id}->{$chrom} = $rank;
+        }
+    }
+    print STDERR Dumper \%protocol_chrom_rank;
+
+    my %protocol_chrom_rank_result;
+    while (my($nd_protocol_id, $o) = each %protocols_hash) {
+        my $chroms = $o->{chroms};
+        my %chromosomes;
+        while (my($chrom,$p) = each %$chroms) {
+            my $marker_count = $p->{marker_count};
+            my $rank = $protocol_chrom_rank{$nd_protocol_id}->{$chrom} || 0;
+            $chromosomes{$chrom} = {
+                rank => $rank,
+                marker_count => $marker_count
+            };
+        }
+        $protocol_chrom_rank_result{$nd_protocol_id} = \%chromosomes;
+    }
+    print STDERR Dumper \%protocol_chrom_rank_result;
+
+    my $q3 = "SELECT value,nd_protocolprop_id FROM nd_protocolprop WHERE nd_protocol_id=? AND type_id=$vcf_map_details_id;";
+    my $h3 = $schema->storage->dbh()->prepare($q3);
+
+    my $q4 = "UPDATE nd_protocolprop SET value=? WHERE nd_protocolprop_id=?;";
+    my $h4 = $schema->storage->dbh()->prepare($q4);
+
+    while (my($nd_protocol_id,$chroms) = each %protocol_chrom_rank_result) {
+        $h3->execute($nd_protocol_id);
+        my ($prop_json, $nd_protocolprop_id) = $h3->fetchrow_array();
+        my $prop = decode_json $prop_json;
+        $prop->{chromosomes} = $chroms;
+        my $prop_save = encode_json $prop;
+        $h4->execute($prop_save, $nd_protocolprop_id);
+        print STDERR Dumper $prop_save;
+    }
 
     print "You're done!\n";
 }
