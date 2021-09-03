@@ -31,7 +31,6 @@ solGS.dataset = {
 	if (!Array.isArray(dType)) {
 	    dType = [dType];
 	}
-
 	var dataset = new CXGN.Dataset();
 	var allDatasets = dataset.getDatasets();
 
@@ -40,14 +39,13 @@ solGS.dataset = {
 
 	var dsIds = [];
 
-	for (var i=0; i < allDatasets.length; i++) {
+	for (var i = 0; i < allDatasets.length; i++) {
     	    var id = allDatasets[i][0];
     	    var name = allDatasets[i][1];
     	    var d = dataset.getDataset(id);
 
-	    for (var j=0; j<dType.length; j++) {
-
-		if (d.categories[dType[j]] !== null  && d.categories[dType[j]].length) {
+	    for (var j = 0; j < dType.length; j++) {
+		if (d.categories[dType[j]]  && d.categories[dType[j]].length) {
 
 		    if (!dsIds.includes(id)) {
 
