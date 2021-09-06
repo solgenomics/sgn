@@ -5,14 +5,27 @@ var solGS = solGS || function solGS () {};
 
 solGS.phenoHistogram =  {
 
-    getHistogramData: function () {
+    getTraitPhenoMeansData: function () {
 
 	var params = this.getHistogramParams();
 	var histoData = jQuery.ajax({
             type: 'POST',
             dataType: 'json',
             data: params,
-            url: '/histogram/phenotype/data/',
+            url: '/trait/pheno/means/data/',
+        });
+
+       return histoData;
+    },
+
+    getTraitPhenoRawData: function () {
+
+	var params = this.getHistogramParams();
+	var histoData = jQuery.ajax({
+            type: 'POST',
+            dataType: 'json',
+            data: params,
+            url: '/trait/pheno/raw/data/',
         });
 
        return histoData;
@@ -24,11 +37,13 @@ solGS.phenoHistogram =  {
 	var population   = solGS.getPopulationDetails();
 	var populationId = population.training_pop_id;
 	var comboPopsId  = population.combo_pops_id;
+    var protocolId = jQuery("#genotyping_protocol_id").val();
 
 	var params = {
 	    'trait_id'     : traitId,
 	    'training_pop_id': populationId,
-	    'combo_pops_id'  : comboPopsId
+	    'combo_pops_id'  : comboPopsId,
+        'genotyping_protocol_id': protocolId
 	};
 
 	return params;
@@ -51,11 +66,10 @@ jQuery(document).ready(function() {
 jQuery(document).ready(function () {
 
    var histMsgId = "#pheno_histogram_canvas #histogram_message";
-   solGS.phenoHistogram.getHistogramData().done(function(res) {
+   solGS.phenoHistogram.getTraitPhenoMeansData().done(function(res) {
 
         if (res.status == 'success') {
            var traitData = res.data;
-
            var variation = solGS.histogram.checkDataVariation(traitData);
 
             if (variation.uniq_count == 1) {
@@ -84,7 +98,7 @@ jQuery(document).ready(function () {
 
     });
 
-    solGS.phenoHistogram.getHistogramData().fail(function(res) {
+    solGS.phenoHistogram.getTraitPhenoMeansData().fail(function(res) {
         var msg = "<p>Error occured plotting histogram for this trait dataset.</p>";
         solGS.showMessage(histMsgId, msg);
     });
