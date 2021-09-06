@@ -23,6 +23,22 @@ solGS.histogram =  {
         return traitValues;
     },
 
+    countMissingData: function (traitValues) { 
+       var cnt = 0;
+       traitValues.forEach( function(val) {
+
+        if (val === ""
+             || typeof val == "undefined"
+             || val === null
+             || isNaN(val) == true
+            ) {
+                cnt++;
+            }
+        });
+
+        return cnt;
+    },
+
     extractValues: function (traitData) {
 
         var traitValues = traitData.map( function (d) {
@@ -90,7 +106,7 @@ solGS.histogram =  {
     },
 
     appendBinElemsTable: function(canvas, plotId) {
-        
+
         var binElemsTableDiv = this.binElemsTableSelector(canvas, plotId);
 
         if (!jQuery(binElemsTableDiv).length) {
