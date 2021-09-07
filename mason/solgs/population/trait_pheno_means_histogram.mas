@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-population/trait_phenotype_histogram.mas - displays histogram plot of trait phenotype data
+/solgs/population/trait_pheno_means_histogram.mas - displays histogram plot of accession phenotype means data
 
 =AUTHOR
 
@@ -44,10 +44,6 @@ $pop_id = $trial_id if $trial_id;
 }
 
 </style>
-
-<& /util/import_css.mas, paths => ['/static/css/d3-tip.css'] &>
-
- <& /util/import_javascript.mas, classes => ["d3.d3Min",  "solGS.histogram", "solGS.phenoHistogram"] &>
 
 <div id="pheno_means_histo_canvas">
     <div class="message" id="histogram_message" style="display:none"></div>

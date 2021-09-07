@@ -21,6 +21,7 @@ $combo_pops_id => ''
 
 </%args>
 
+<& /util/import_javascript.mas, classes => ["d3.d3Min",  "solGS.histogram", "solGS.phenoHistogram"] &>
 
 <div id="tabs_phenotype" style="width:100%;height:100%;border-color:green;">
   <ul>
@@ -51,10 +52,13 @@ $combo_pops_id => ''
        trait_id      => $trait_id,
        combo_pops_id => $combo_pops_id,
     &>
+
+    <& trait_pheno_desc_stat.mas,
+     descriptive_stat => $descriptive_stat,
+      &>
+      
   </div>
 
-  <& trait_pheno_desc_stat.mas,
-   descriptive_stat => $descriptive_stat,
-    &>
+
 
 </div>
