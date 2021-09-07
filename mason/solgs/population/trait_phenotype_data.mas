@@ -25,7 +25,8 @@ $combo_pops_id => ''
 <div id="tabs_phenotype" style="width:100%;height:100%;border-color:green;">
   <ul>
     <li> <a href="#tabs_scatter">Phenotype scatter plot</a> </li>
-    <li> <a href="#tabs_histogram">Frequency distribution</a> </li>
+    <li> <a href="#tabs_histogram">Accession phenotype means data distribution</a> </li>
+     <li> <a href="#tabs_raw_histogram">Raw phenotype data distribution</a> </li>
   </ul>
 
   <div id="tabs_scatter">
@@ -36,8 +37,16 @@ $combo_pops_id => ''
       &>
   </div>
 
+  <div id="tabs_raw_histogram">
+    <& trait_pheno_raw_histogram.mas,
+       pop_id        => $pop_id,
+       trait_id      => $trait_id,
+       combo_pops_id => $combo_pops_id,
+    &>
+  </div>
+
   <div id="tabs_histogram">
-    <& trait_phenotype_histogram.mas,
+    <& trait_pheno_means_histogram.mas,
        pop_id        => $pop_id,
        trait_id      => $trait_id,
        combo_pops_id => $combo_pops_id,
