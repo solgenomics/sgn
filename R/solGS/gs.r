@@ -24,7 +24,6 @@ library(jsonlite)
 library(data.table)
 
 
-
 allArgs <- commandArgs()
 
 
@@ -215,6 +214,8 @@ if (datasetInfo == 'combined populations') {
 
       traitRawPhenoData <- phenoData %>%
                                           select(c(keepMetaCols, traitAbbr))
+
+
 }
 
 print('phenoTrait')
@@ -682,6 +683,7 @@ if (!is.null(traitRawPhenoData) & length(traitRawPhenoFile) != 0) {
            file  = traitRawPhenoFile,
            row.names = FALSE,
            sep   = "\t",
+           na = 'NA',
            quote = FALSE,
            )
 }

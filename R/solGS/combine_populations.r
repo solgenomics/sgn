@@ -186,6 +186,7 @@ if (!is.null(traitRawPhenoData) & length(traitRawPhenoFile) != 0) {
            file  = traitRawPhenoFile,
            row.names = FALSE,
            sep   = "\t",
+           na = 'NA',
            quote = FALSE,
            )
 }
