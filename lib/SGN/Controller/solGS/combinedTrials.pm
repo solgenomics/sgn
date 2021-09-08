@@ -1368,7 +1368,7 @@ sub save_common_traits_acronyms {
     $c->stash->{training_pop_id} = $combo_pops_id;
     $c->controller('solGS::Files')->traits_list_file($c, $combo_pops_id);
     my $traits_file = $c->stash->{traits_list_file};
-    my $common_traits = join("\t", @$common_traits);
+    $common_traits = join("\t", @$common_traits);
     write_file($traits_file, {binmode => ':utf8'}, $common_traits) if $traits_file;
 
 }
