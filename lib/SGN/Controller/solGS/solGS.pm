@@ -1234,8 +1234,11 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 }
 
 
-sub model_phenodata_type {
-    my ($self, $c, $model_pheno_file) = @_;
+sub model_pheno_means_type {
+    my ($self, $c) = @_;
+
+    $c->controller("solGS::Files")->model_phenodata_file($c);
+    my $model_pheno_file = $c->{stash}->{model_phenodata_file};
 
     my $mean_type;
     if (-s $model_pheno_file)
@@ -1273,20 +1276,57 @@ sub model_phenodata_type {
 sub model_phenotype_stat {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::Files")->model_phenodata_file($c);
-    my $model_pheno_file = $c->{stash}->{model_phenodata_file};
+    my $pheno_means_desc_stat = $self->model_pheno_means_stat($c);
+    $c->stash->{model_pheno_means_descriptive_stat} = $pheno_means_desc_stat;
 
-    my $model_data = $c->controller("solGS::Utils")->read_file_data($model_pheno_file);
+    my $pheno_raw_desc_stat = $self->model_pheno_raw_stat($c);
+    $c->stash->{model_pheno_raw_descriptive_stat} = $pheno_raw_desc_stat;
+}
 
-    my @desc_stat;
-    my $background_job = $c->stash->{background_job};
 
-    my $pheno_type = $self->model_phenodata_type($c, $model_pheno_file);
+sub model_pheno_means_stat {
+    my ($self, $c) = @_;
 
-    if ($model_data && !$background_job)
+    my $data = $c->controller('solGS::Histogram')->get_trait_pheno_means_data($c);
+
+    my $desc_stat;
+    if ($data && !$c->stash->{background_job})
     {
-	my @pheno_data;
-	foreach (@$model_data)
+        $desc_stat = $self->calc_descriptive_stat($data);
+    }
+
+    my $pheno_type = $self->model_pheno_means_type($c);
+    $desc_stat = [['Phenotype means type', $pheno_type],
+        ['Observation level', 'accession'],
+        @$desc_stat];
+
+   return $desc_stat;
+
+}
+
+
+sub model_pheno_raw_stat {
+    my ($self, $c) = @_;
+
+    my $data = $c->controller("solGS::Histogram")->get_trait_pheno_raw_data($c);
+    my $desc_stat;
+
+    if ($data)
+    {
+        $desc_stat = $self->calc_descriptive_stat($data);
+    }
+
+    $desc_stat = [['Observation level', 'plot'], @$desc_stat];
+    return $desc_stat;
+
+}
+
+
+sub calc_descriptive_stat {
+    my ($self, $data) = @_;
+
+    my @clean_data;
+	foreach (@$data)
 	{
 	    unless (!$_->[0])
 	    {
@@ -1295,22 +1335,22 @@ sub model_phenotype_stat {
 
 		if ($d =~ /\d+/)
 		{
-		    push @pheno_data, $d;
+		    push @clean_data, $d;
 		}
 	    }
 	}
 
-	my $stat = Statistics::Descriptive::Full->new();
-	$stat->add_data(@pheno_data);
+    my $stat = Statistics::Descriptive::Full->new();
+	$stat->add_data(@clean_data);
 
 	my $min  = $stat->min;
 	my $max  = $stat->max;
 	my $mean = $stat->mean;
 	my $med  = $stat->median;
 	my $std  = $stat->standard_deviation;
-	my $cnt  = scalar(@$model_data);
+	my $cnt  = scalar(@$data);
 	my $cv   = ($std / $mean) * 100;
-	my $na   = scalar(@$model_data) - scalar(@pheno_data);
+	my $na   = scalar(@$data) - scalar(@clean_data);
 
 	if ($na == 0) { $na = '--'; }
 
@@ -1320,10 +1360,9 @@ sub model_phenotype_stat {
 	$cv   = $round->round($cv);
 	$cv   = $cv . '%';
 
-	@desc_stat =  (
-	    [ 'Phenotype data type', $pheno_type],
-	    [ 'Total no. of genotypes', $cnt ],
-	    [ 'Genotypes missing data', $na ],
+	my @desc_stat =  (
+	    [ 'Observations count', $cnt ],
+	    [ 'Missing data', $na ],
 	    [ 'Minimum', $min ],
 	    [ 'Maximum', $max ],
 	    [ 'Arithmetic mean', $mean ],
@@ -1331,22 +1370,9 @@ sub model_phenotype_stat {
 	    [ 'Standard deviation', $std ],
 	    [ 'Coefficient of variation', $cv ]
 	    );
-    }
-    else
-    {
-	@desc_stat =  ( [ 'Total no. of genotypes', 'None' ],
-			[ 'Genotypes missing data', 'None' ],
-			[ 'Minimum', 'None' ],
-			[ 'Maximum', 'None' ],
-			[ 'Arithmetic mean', 'None' ],
-			[ 'Median', 'None'],
-			[ 'Standard deviation', 'None' ],
-			[ 'Coefficient of variation', 'None' ]
-	    );
 
-    }
+        return \@desc_stat;
 
-    $c->stash->{descriptive_stat} = \@desc_stat;
 }
 
 
