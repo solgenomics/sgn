@@ -18,7 +18,8 @@ $stocks_no
 $markers_no
 $traits_no =>''
 $trait_id
-$descriptive_stat
+$model_pheno_means_descriptive_stat
+$model_pheno_raw_descriptive_stat =>''
 $selection_prediction_download =>''
 $selection_pop_id => ''
 $selection_pop_name => ''
@@ -88,7 +89,8 @@ $training_pop_url
 <& trait_phenotype_data.mas,
    pop_id           => $training_pop_id,
    trait_id         => $trait_id,
-   descriptive_stat => $descriptive_stat,
+   model_pheno_means_descriptive_stat => $model_pheno_means_descriptive_stat,
+   model_pheno_raw_descriptive_stat => $model_pheno_raw_descriptive_stat
 
  &>
 
