@@ -1276,11 +1276,9 @@ sub model_pheno_means_type {
 sub model_phenotype_stat {
     my ($self, $c) = @_;
 
-    my $pheno_means_desc_stat = $self->model_pheno_means_stat($c);
-    $c->stash->{model_pheno_means_descriptive_stat} = $pheno_means_desc_stat;
+    $c->stash->{model_pheno_means_descriptive_stat} =  $self->model_pheno_means_stat($c);
+    $c->stash->{model_pheno_raw_descriptive_stat} = $self->model_pheno_raw_stat($c);
 
-    my $pheno_raw_desc_stat = $self->model_pheno_raw_stat($c);
-    $c->stash->{model_pheno_raw_descriptive_stat} = $pheno_raw_desc_stat;
 }
 
 
