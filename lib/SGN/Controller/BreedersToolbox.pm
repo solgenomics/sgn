@@ -306,11 +306,17 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
 	return;
     }
 
-    my @file_types = ( 'spreadsheet phenotype file', 'direct phenotyping', 'trial_additional_file_upload', 'brapi observations', 'tablet phenotype file' );
-    my $data = $self->get_file_data($c, \@file_types);
+    my @phenotyping_file_types = ( 'spreadsheet phenotype file', 'direct phenotyping', 'trial_additional_file_upload', 'brapi observations', 'tablet phenotype file' );
+    my $phenotype_files = $self->get_file_data($c, \@phenotyping_file_types);
 
-    $c->stash->{phenotype_files} = $data->{files};
-    $c->stash->{deleted_phenotype_files} = $data->{deleted_files};
+    my @layout_file_types = ('trial upload file');
+    my $layout_files = $self->get_file_data($c, \@layout_file_types);
+
+    print STDERR "layout files are ".Dumper($layout_files)."\n";
+
+    $c->stash->{phenotype_files} = $phenotype_files->{files};
+    $c->stash->{layout_files} = $layout_files->{files};
+    $c->stash->{deleted_phenotype_files} = $phenotype_files->{deleted_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_phenotyping.mas';
 
