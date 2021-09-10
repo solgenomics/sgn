@@ -81,7 +81,7 @@ $training_pop_url
   title       => "Trait phenotype data"
 &>
 
-<& trait_phenotype_data.mas,
+<& /solgs/model/phenotype/trait_phenotype_data.mas,
    pop_id           => $training_pop_id,
    trait_id         => $trait_id,
    model_pheno_means_descriptive_stat => $model_pheno_means_descriptive_stat,
