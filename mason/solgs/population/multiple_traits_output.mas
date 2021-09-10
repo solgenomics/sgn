@@ -81,7 +81,7 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
    selection_pop_analyzed_traits => $selection_pop_analyzed_traits,
 &>
 
-<& genetic_correlation.mas,
+<& /solgs/tools/correlation/genetic_correlation.mas,
      training_pop_analyzed_traits     => $training_pop_analyzed_traits,
      training_pop_id                         => $training_pop_id,
      training_pop_name                    => $training_pop_name,

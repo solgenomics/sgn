@@ -91,8 +91,8 @@ $training_pop_url
 
 </&>
 
-<& /solgs/pca/analysis.mas &>
-<& /solgs/cluster/analysis.mas &>
+<& /solgs/tools/pca/analysis.mas &>
+<& /solgs/tools/cluster/analysis.mas &>
 
 % if ($show_data)
 %{
@@ -120,7 +120,7 @@ $training_pop_url
 &>
 
 
-<& /solgs/kinship/analysis.mas,
+<& /solgs/tools/kinship/analysis.mas,
    pop_id  => $training_pop_id,
   &>
 
