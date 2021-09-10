@@ -37,12 +37,7 @@ $training_pop_url
 </%perl>
 
 
-
-    <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.phenotypeDataFlot",
-                                              "flot.flot", "flot.categories",
-                                              "flot.tooltip", "flot.selection", "flot.navigate",
-                                              "flot.axisLabels", "statistics/simple_statistics"]
-    &>
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "statistics/simple_statistics"] &>
 
 
 <& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
