@@ -39,7 +39,7 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
     my $traits = $ds->retrieve_traits();
     my @trait_info;
     foreach my $t (@$traits) {
-	      my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t });
+	      my $tobj = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $t->[0] });
         push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
     }
 
