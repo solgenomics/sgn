@@ -637,7 +637,7 @@ sub store {
                             $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
                         }
                     }
-                    
+
                     if($additional_info){
                         my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->create({
                             phenotype_id => $phenotype->phenotype_id,
@@ -701,7 +701,8 @@ sub store {
     }
 
     if ($archived_file) {
-        $self->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids);
+        my $upload_file = CXGN::UploadFile->new();
+        $upload_file->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids);
     }
     if (scalar(keys %nd_experiment_md_images) > 0) {
         $self->save_archived_images_metadata(\%nd_experiment_md_images);
@@ -827,42 +828,42 @@ sub check_overwritten_files_status {
     return \@obsoleted_files;
 }
 
-sub save_archived_file_metadata {
-    my $self = shift;
-    my $archived_file = shift;
-    my $archived_file_type = shift;
-    my $experiment_ids = shift;
-    my $md5checksum;
-
-    if ($archived_file ne 'none'){
-        my $upload_file = CXGN::UploadFile->new();
-        my $md5 = $upload_file->get_md5($archived_file);
-        $md5checksum = $md5->hexdigest();
-    }
-
-    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
-    $md_row->insert();
-    my $file_row = $self->metadata_schema->resultset("MdFiles")
-        ->create({
-            basename => basename($archived_file),
-            dirname => dirname($archived_file),
-            filetype => $archived_file_type,
-            md5checksum => $md5checksum,
-            metadata_id => $md_row->metadata_id(),
-        });
-    $file_row->insert();
-
-    foreach my $nd_experiment_id (keys %$experiment_ids) {
-        ## Link the file to the experiment
-        my $experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")
-            ->create({
-                nd_experiment_id => $nd_experiment_id,
-                file_id => $file_row->file_id(),
-            });
-        $experiment_files->insert();
-        #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
-    }
-}
+# sub save_archived_file_metadata {
+#     my $self = shift;
+#     my $archived_file = shift;
+#     my $archived_file_type = shift;
+#     my $experiment_ids = shift;
+#     my $md5checksum;
+#
+#     if ($archived_file ne 'none'){
+#         my $upload_file = CXGN::UploadFile->new();
+#         my $md5 = $upload_file->get_md5($archived_file);
+#         $md5checksum = $md5->hexdigest();
+#     }
+#
+#     my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
+#     $md_row->insert();
+#     my $file_row = $self->metadata_schema->resultset("MdFiles")
+#         ->create({
+#             basename => basename($archived_file),
+#             dirname => dirname($archived_file),
+#             filetype => $archived_file_type,
+#             md5checksum => $md5checksum,
+#             metadata_id => $md_row->metadata_id(),
+#         });
+#     $file_row->insert();
+#
+#     foreach my $nd_experiment_id (keys %$experiment_ids) {
+#         ## Link the file to the experiment
+#         my $experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")
+#             ->create({
+#                 nd_experiment_id => $nd_experiment_id,
+#                 file_id => $file_row->file_id(),
+#             });
+#         $experiment_files->insert();
+#         #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
+#     }
+# }
 
 sub save_archived_images_metadata {
     my $self = shift;

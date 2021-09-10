@@ -648,7 +648,7 @@ sub save_experimental_design_POST : Args(0) {
             }
         }
     }
-    
+
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
@@ -877,13 +877,14 @@ sub upload_trial_file_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
+    # my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_id;
     my $user_name;
     my $error;
     my $save;
+    my %experiment_ids;
 
     print STDERR "Check 2: ".localtime()."\n";
 
@@ -926,10 +927,10 @@ sub upload_trial_file_POST : Args(0) {
 
     print STDERR "Check 3: ".localtime()."\n";
 
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="trial upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
+    # $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    # $upload_metadata{'archived_file_type'}="trial upload file";
+    # $upload_metadata{'user_id'}=$user_id;
+    # $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type);
@@ -1026,6 +1027,9 @@ sub upload_trial_file_POST : Args(0) {
         $c->stash->{rest} = {warnings => $return_warnings, error => $save->{'error'}};
         return;
     } elsif ($save->{'trial_id'}) {
+        $experiment_ids{$save->{trial_id}}=1;
+        my $upload_file = CXGN::UploadFile->new();
+        $upload_file->save_archived_file_metadata($archived_filename_with_path, "trial upload file", \%experiment_ids);
 
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -1062,12 +1066,13 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    my %upload_metadata;
+    # my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_id;
     my $user_name;
     my $error;
+    my %experiment_ids;
 
     # print STDERR "Check 2: ".localtime()."\n";
     print STDERR "Ignore warnings is $ignore_warnings\n";
@@ -1109,10 +1114,10 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     unlink $upload_tempfile;
 
     # print STDERR "Check 3: ".localtime()."\n";
-    $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    $upload_metadata{'archived_file_type'}="trial upload file";
-    $upload_metadata{'user_id'}=$user_id;
-    $upload_metadata{'date'}="$timestamp";
+    # $upload_metadata{'archived_file'} = $archived_filename_with_path;
+    # $upload_metadata{'archived_file_type'}="trial upload file";
+    # $upload_metadata{'user_id'}=$user_id;
+    # $upload_metadata{'date'}="$timestamp";
 
 
     #parse uploaded file with appropriate plugin
@@ -1195,6 +1200,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         if ($current_save->{error}){
             $chado_schema->txn_rollback();
             push @{$save{'errors'}}, $current_save->{'error'};
+        } else {
+            $experiment_ids{$current_save->{trial_id}}=1;
         }
 
       }
@@ -1215,6 +1222,10 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         return;
     # } elsif ($save->{'trial_id'}) {
     } else {
+
+        my $upload_file = CXGN::UploadFile->new();
+        $upload_file->save_archived_file_metadata($archived_filename_with_path, "trial upload file", \%experiment_ids);
+
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});

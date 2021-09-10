@@ -174,6 +174,42 @@ sub archive {
     return $file_destination;
 }
 
+sub save_archived_file_metadata {
+    my $self = shift;
+    my $archived_file = shift;
+    my $archived_file_type = shift;
+    my $experiment_ids = shift;
+    my $md5checksum;
+
+    if ($archived_file ne 'none'){
+        my $md5 = get_md5($archived_file);
+        $md5checksum = $md5->hexdigest();
+    }
+
+    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
+    $md_row->insert();
+    my $file_row = $self->metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($archived_file),
+            dirname => dirname($archived_file),
+            filetype => $archived_file_type,
+            md5checksum => $md5checksum,
+            metadata_id => $md_row->metadata_id(),
+        });
+    $file_row->insert();
+
+    foreach my $nd_experiment_id (keys %$experiment_ids) {
+        ## Link the file to the experiment
+        my $experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")
+            ->create({
+                nd_experiment_id => $nd_experiment_id,
+                file_id => $file_row->file_id(),
+            });
+        $experiment_files->insert();
+        #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
+    }
+}
+
 sub get_md5 {
     my $self = shift;
     my $file_name_and_location = shift;
