@@ -52,6 +52,7 @@ sub get_selected_stocks {
     my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
 
     my $protocol_info = $parameters[0];
     my $info_ref = decode_json$protocol_info;
@@ -170,25 +171,29 @@ sub get_selected_stocks {
             $h->execute($st);
         }
 
+        my $join_type = "JOIN nd_experiment_stock ON (stock1.stock_id = nd_experiment_stock.stock_id)";
+
         @stocks = ();
         @selected_stocks_details = ();
-        my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename FROM stock_table
-            JOIN stock ON (stock_table.stock_name = stock.uniquename)
-            JOIN nd_experiment_stock ON (stock.stock_id = nd_experiment_stock.stock_id)
+        my $q = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
+            JOIN stock AS stock1 ON (stock_table.stock_name = stock1.uniquename) AND stock1.type_id = ?
+            $join_type
+            JOIN stock AS stock2 ON (nd_experiment_stock.stock_id = stock2.stock_id)
+            JOIN cvterm ON (stock2.type_id = cvterm.cvterm_id)
             JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
             JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
             JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
             WHERE genotypeprop.value @> ? ";
 
         my $h2 = $schema->storage->dbh()->prepare($q);
-        $h2->execute($genotyping_experiment_cvterm_id, $protocol_id, $param);
+        $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param);
 
-        while (my ($selected_stock_id, $selected_stock_name) = $h2->fetchrow_array()){
-            push @selected_stocks_details, [$selected_stock_id, $selected_stock_name, $genotype_string ];
-            push @stocks, $selected_stock_name
+        while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type) = $h2->fetchrow_array()){
+            push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $genotype_string ];
+            push @stocks, $selected_accession_name
         }
     }
-
+    print STDERR "SELECTED STOCKS =".Dumper(\@selected_stocks_details)."\n";
     return \@selected_stocks_details;
 
 }

@@ -43,10 +43,13 @@ sub get_stocks_using_markerset :Path('/ajax/search/search_stocks_using_markerset
     my @selected_stocks;
 
     foreach my $r(@$result){
-        my ($selected_id, $selected_uniquename, $params_string) = @$r;
+        my ($selected_id, $selected_uniquename, $selected_sample_id, $selected_sample_name, $sample_type, $params_string) = @$r;
         push @selected_stocks, {
             stock_id => $selected_id,
             stock_name => $selected_uniquename,
+            sample_id => $selected_sample_id,
+            sample_name => $selected_sample_name,
+            sample_type => $sample_type,
             genotypes => $params_string
         };
     }
