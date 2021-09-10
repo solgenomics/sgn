@@ -48,12 +48,24 @@ sub get_selected_stocks {
     my @parameters = @{$filtering_parameters};
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
+    my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
 
     my $protocol_info = $parameters[0];
     my $info_ref = decode_json$protocol_info;
     my %info = %{$info_ref};
     my $protocol_id = $info{genotyping_protocol_id};
     my $data_type = $info{genotyping_data_type};
+
+    my $type_q= "SELECT value->>'sample_observation_unit_type_name'
+    FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
+
+    my $type_h = $schema->storage->dbh()->prepare($type_q);
+    $type_h->execute($protocol_id, $vcf_map_details_id);
+
+    my ($sample_type) = $type_h->fetchrow_array();
 
     my %chrom_hash;
     foreach my $param (@parameters){
