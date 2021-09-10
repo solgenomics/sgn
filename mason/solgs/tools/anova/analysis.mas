@@ -42,7 +42,7 @@ $training_pop_id   => undef,
 
     </div>
 
-    <div id="anova_message"  style="padding-top: 50px;font-weight:bold;text-align:center;color:#A7C942"></div>
+    <div id="anova_message"  class="message"></div>
     <& /solgs/spinner.mas &>
     <div id="anova_table"> </div>
     <input type="hidden" id="trial_id" value="<% $trial_id %>" />

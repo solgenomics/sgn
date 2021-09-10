@@ -72,7 +72,7 @@ my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $tra
 
 <& /solgs/spinner.mas &>
 
-  <div id="gg_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
+  <div id="gg_message"  class="message"></div>
   <div id="gg_plot"></div>
 
 </div>
