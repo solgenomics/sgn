@@ -175,15 +175,15 @@ sub get_selected_stocks {
 
         foreach my $st(@stocks){
             my $added_table = "INSERT INTO stock_table (stock_name) VALUES (?)";
-            my $h = $schema->storage->dbh()->prepare($added_table);
-            $h->execute($st);
+            my $table_h = $schema->storage->dbh()->prepare($added_table);
+            $table_h->execute($st);
         }
 
         @stocks = ();
         @selected_stocks_details = ();
 
         if (($sample_type eq 'accession') || ($sample_type eq 'tissue_sample')) {
-            my $q = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
+            my $q2 = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
                 JOIN stock AS stock1 ON (stock_table.stock_name = stock1.uniquename) AND stock1.type_id = ?
                 $join_type
                 JOIN stock AS stock2 ON (nd_experiment_stock.stock_id = stock2.stock_id)
@@ -193,8 +193,39 @@ sub get_selected_stocks {
                 JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
                 WHERE genotypeprop.value @> ? ";
 
-            my $h2 = $schema->storage->dbh()->prepare($q);
+            my $h2 = $schema->storage->dbh()->prepare($q2);
             $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param);
+
+            while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type) = $h2->fetchrow_array()){
+                push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $genotype_string ];
+                push @stocks, $selected_accession_name
+            }
+        } elsif ($sample_type eq 'stocks') {
+            my $q3 = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
+                JOIN stock AS stock1 ON (stock_table.stock_name = stock1.uniquename) AND stock1.type_id = ?
+                JOIN nd_experiment_stock ON (stock1.stock_id = nd_experiment_stock.stock_id)
+                JOIN stock AS stock2 ON (nd_experiment_stock.stock_id = stock2.stock_id)
+                JOIN cvterm ON (stock2.type_id = cvterm.cvterm_id)
+                JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
+                JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+                WHERE genotypeprop.value @> ?
+
+                UNION ALL
+
+                SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
+                JOIN stock AS stock1 ON (stock_table.stock_name = stock1.uniquename) AND stock1.type_id = ?
+                JOIN stock_relationship ON (stock_relationship.object_id = stock1.stock_id) AND stock_relationship.type_id IN (?,?,?)
+                JOIN nd_experiment_stock ON stock_relationship.subject_id = nd_experiment_stock.stock_id
+                JOIN stock AS stock2 ON (nd_experiment_stock.stock_id = stock2.stock_id)
+                JOIN cvterm ON (stock2.type_id = cvterm.cvterm_id)
+                JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
+                JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+                WHERE genotypeprop.value @> ?";
+
+            my $h3 = $schema->storage->dbh()->prepare($q3);
+            $h3->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param, $accession_cvterm_id, $plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param);
 
             while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type) = $h2->fetchrow_array()){
                 push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $genotype_string ];
