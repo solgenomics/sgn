@@ -158,6 +158,14 @@ sub get_selected_stocks {
     my @sorted_markers = natsort @formatted_parameters;
     my $genotype_string = join("<br>", @sorted_markers);
 
+    my $join_type;
+    if ($sample_type eq 'accession') {
+        $join_type = "JOIN nd_experiment_stock ON (stock1.stock_id = nd_experiment_stock.stock_id)";
+    } elsif ($sample_type eq 'tissue_sample') {
+        $join_type = "JOIN stock_relationship ON (stock_relationship.object_id = stock1.stock_id) AND stock_relationship.type_id = $tissue_sample_of_cvterm_id
+            JOIN nd_experiment_stock ON stock_relationship.subject_id = nd_experiment_stock.stock_id"
+    }
+
     my @selected_stocks_details;
     foreach my $param (@formatted_parameters) {
         my $stock_table = "DROP TABLE IF EXISTS stock_table;
@@ -171,26 +179,27 @@ sub get_selected_stocks {
             $h->execute($st);
         }
 
-        my $join_type = "JOIN nd_experiment_stock ON (stock1.stock_id = nd_experiment_stock.stock_id)";
-
         @stocks = ();
         @selected_stocks_details = ();
-        my $q = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
-            JOIN stock AS stock1 ON (stock_table.stock_name = stock1.uniquename) AND stock1.type_id = ?
-            $join_type
-            JOIN stock AS stock2 ON (nd_experiment_stock.stock_id = stock2.stock_id)
-            JOIN cvterm ON (stock2.type_id = cvterm.cvterm_id)
-            JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
-            JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-            JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
-            WHERE genotypeprop.value @> ? ";
 
-        my $h2 = $schema->storage->dbh()->prepare($q);
-        $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param);
+        if (($sample_type eq 'accession') || ($sample_type eq 'tissue_sample')) {
+            my $q = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
+                JOIN stock AS stock1 ON (stock_table.stock_name = stock1.uniquename) AND stock1.type_id = ?
+                $join_type
+                JOIN stock AS stock2 ON (nd_experiment_stock.stock_id = stock2.stock_id)
+                JOIN cvterm ON (stock2.type_id = cvterm.cvterm_id)
+                JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
+                JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+                WHERE genotypeprop.value @> ? ";
 
-        while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type) = $h2->fetchrow_array()){
-            push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $genotype_string ];
-            push @stocks, $selected_accession_name
+            my $h2 = $schema->storage->dbh()->prepare($q);
+            $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param);
+
+            while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type) = $h2->fetchrow_array()){
+                push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $genotype_string ];
+                push @stocks, $selected_accession_name
+            }
         }
     }
     print STDERR "SELECTED STOCKS =".Dumper(\@selected_stocks_details)."\n";
