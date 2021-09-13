@@ -67,6 +67,7 @@ sub get_selected_stocks {
     $type_h->execute($protocol_id, $vcf_map_details_id);
 
     my ($sample_type) = $type_h->fetchrow_array();
+    print STDERR "SAMPLE TYPE =".Dumper($sample_type)."\n";
 
     my %chrom_hash;
     foreach my $param (@parameters){
@@ -201,7 +202,7 @@ sub get_selected_stocks {
                 push @stocks, $selected_accession_name
             }
         } elsif ($sample_type eq 'stocks') {
-            my $q3 = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
+            my $q2 = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
                 JOIN stock AS stock1 ON (stock_table.stock_name = stock1.uniquename) AND stock1.type_id = ?
                 JOIN nd_experiment_stock ON (stock1.stock_id = nd_experiment_stock.stock_id)
                 JOIN stock AS stock2 ON (nd_experiment_stock.stock_id = stock2.stock_id)
@@ -224,8 +225,8 @@ sub get_selected_stocks {
                 JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
                 WHERE genotypeprop.value @> ?";
 
-            my $h3 = $schema->storage->dbh()->prepare($q3);
-            $h3->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param, $accession_cvterm_id, $plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param);
+            my $h2= $schema->storage->dbh()->prepare($q2);
+            $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param, $accession_cvterm_id, $plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param);
 
             while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type) = $h2->fetchrow_array()){
                 push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $genotype_string ];
