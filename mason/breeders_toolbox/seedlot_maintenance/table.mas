@@ -30,9 +30,28 @@
         <form class="form-horizontal" id="seedlot_maintenance_event_form" name="seedlot_maintenance_event_form">
 
 % if ( $multi_seedlot ) {
+
             <!-- Seedlot (by user-input) -->
             <div class="form-group">
                 <label class="col-sm-3 control-label">Seedlot(s): </label>
+                <div class="col-sm-8">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">Seedlot Name Contains</div>
+                        <div class="panel-body">
+                            <input id="event_filter_seedlot_name_contains" class="form-control" placeholder="part of Seedlot name" />
+                        </div>
+                    </div>
+
+                    <div style="text-align: center"><strong>OR</strong></div>
+                </div>
+                <div class="col-sm-1">
+                    <button id="event_filter_seedlot_name_contains_add" class='btn btn-info btn-sm'>Add</button>
+                </div>
+            </div>
+
+            <!-- Seedlot (by user-input) -->
+            <div class="form-group">
+                <label class="col-sm-3 control-label"></label>
                 <div class="col-sm-8">
                     <div class="panel panel-info">
                         <div class="panel-heading">Enter the name(s) of the Seedlot(s) - one per line</div>
@@ -209,6 +228,7 @@ jQuery(document).ready(function() {
     }
 
     // Click and Change Listeners
+    jQuery("#event_filter_seedlot_name_contains_add").click(addSeedlotNameContainsFilter);
     jQuery("#event_filter_seedlot_names_add").click(addSeedlotNamesFilter);
     jQuery("#event_filter_seedlot_list_add").click(addSeedlotListFilter);
     jQuery("#event_filter_date_add").click(addDateFilter);
@@ -313,7 +333,7 @@ function setupDataTable() {
 
     // Init DataTable
     DT = jQuery('#seedlot_maintenance_events').DataTable({
-        dom: 'Bfrt',
+        dom: 'Brt',
         autoWidth: false,
         pageLength: PAGE_SIZE,
         data: [],
@@ -349,7 +369,18 @@ function getEvents() {
     for ( let i = 0; i < FILTERS.length; i++ ) {
         let f = FILTERS[i];
         if ( f.type_id === 'name' ) {
-            names = names.concat(f.value);
+            if ( f.comp === 'includes' ) {
+                names.push({
+                    value: f.value,
+                    comp: 'IN'
+                });
+            }
+            else if ( f.comp === 'contains' ) {
+                names.push({
+                    value: "%" + f.value + "%",
+                    comp: 'LIKE'
+                });
+            }
         }
         else if ( f.type_id === 'date' ) {
             if ( f.comp === '=' ) {
@@ -394,7 +425,10 @@ function getEvents() {
         }
     }
     if ( !MULTI_SEEDLOT ) {
-        names = ["<% $seedlot_name %>"];
+        names.push({
+            value: "<% $seedlot_name %>",
+            comp: "="
+        });
     }
     let body = {
         filters: {
@@ -605,6 +639,15 @@ function setOperators() {
 
 
 /**
+ * Add a Name Filter - Seedlot name contains user-provided substring
+ */
+function addSeedlotNameContainsFilter() {
+    let substring = jQuery("#event_filter_seedlot_name_contains").val();
+    addFilter('name', 'name', substring, 'contains');
+    return false;
+}
+
+/**
  * Add a Name Filter - from the user-entered list of names
  */
 function addSeedlotNamesFilter() {
@@ -683,7 +726,7 @@ function addOperatorFilter() {
  * @param {string|int} type_id ID of the filter type (cvterm_id, date, operator)
  * @param {string} type_name Name of the filter type (cvterm name, date, operator)
  * @param {string|int} value Value of the filter for comparison (type value, date, operator names)
- * @param {string} comp Comparison used for the filter (eq, lte, lt, gte, gt)
+ * @param {string} comp Comparison used for the filter
  */
 function addFilter(type_id, type_name, value, comp) {
     FILTERS.push({
@@ -713,6 +756,7 @@ function displayFilters() {
     for ( let i = 0; i < FILTERS.length; i++ ) {
         let v = FILTERS[i].value;
         if ( !v ) v = "<em>Any Value</em>";
+        if ( Array.isArray(v) && v.length > 20 ) v = v.slice(0, 20).join(',') + "...";
         html += "<tr>";
         html += "<td>" + FILTERS[i].type_name + "</td>";
         html += "<td>" + FILTERS[i].comp + "</td>";
