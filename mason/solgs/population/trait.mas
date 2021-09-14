@@ -82,11 +82,8 @@ $training_pop_url
 &>
 
 <& /solgs/model/phenotype/trait_phenotype_data.mas,
-   pop_id           => $training_pop_id,
-   trait_id         => $trait_id,
    model_pheno_means_descriptive_stat => $model_pheno_means_descriptive_stat,
    model_pheno_raw_descriptive_stat => $model_pheno_raw_descriptive_stat
-
  &>
 
 </&>

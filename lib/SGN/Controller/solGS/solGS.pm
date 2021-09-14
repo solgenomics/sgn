@@ -407,7 +407,6 @@ sub trait :Path('/solgs/trait') Args() {
     }
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    $c->stash->{pop_id}   = $pop_id;
     $c->stash->{training_pop_id} = $pop_id;
     $c->stash->{trait_id} = $trait_id;
 

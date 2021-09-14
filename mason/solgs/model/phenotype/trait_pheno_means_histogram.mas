@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/population/trait_pheno_means_histogram.mas - displays histogram plot of accession phenotype means data
+/solgs/model/phenotype/trait_pheno_means_histogram.mas - displays histogram plot of accession phenotype means data
 
 =AUTHOR
 
@@ -14,16 +14,10 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$pop_id => ''
-$combo_pops_id => ''
-$trait_id
-$trial_id => ''
-
 </%args>
 
 <%perl>
 
-$pop_id = $trial_id if $trial_id;
 
 </%perl>
 

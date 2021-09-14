@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-population/trait_phenotype_data.mas - displays plots of trait phenotype data.
+/solgs/model/phenotype/trait_phenotype_data.mas - displays plots of trait phenotype data.
 
 =AUTHOR
 
@@ -14,11 +14,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$pop_id => ''
-$trait_id
 $model_pheno_means_descriptive_stat
 $model_pheno_raw_descriptive_stat =>''
-$combo_pops_id => ''
 
 </%args>
 
@@ -31,11 +28,7 @@ $combo_pops_id => ''
   </ul>
 
   <div id="tabs_raw_histogram">
-    <& trait_pheno_raw_histogram.mas,
-       pop_id        => $pop_id,
-       trait_id      => $trait_id,
-       combo_pops_id => $combo_pops_id,
-    &>
+    <& trait_pheno_raw_histogram.mas &>
 
     <& trait_pheno_desc_stat.mas,
      descriptive_stat => $model_pheno_raw_descriptive_stat,
@@ -43,11 +36,7 @@ $combo_pops_id => ''
   </div>
 
   <div id="tabs_means_histogram">
-    <& trait_pheno_means_histogram.mas,
-       pop_id        => $pop_id,
-       trait_id      => $trait_id,
-       combo_pops_id => $combo_pops_id,
-    &>
+    <& trait_pheno_means_histogram.mas &>
 
     <& trait_pheno_desc_stat.mas,
      descriptive_stat => $model_pheno_means_descriptive_stat,

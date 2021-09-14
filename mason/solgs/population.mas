@@ -82,7 +82,7 @@ $training_pop_id = $pop_id;
 
 % if ($training_pop_id !~ /list|dataset/) {
 
-    <& /solgs/anova/analysis.mas,
+    <& /solgs/tools/anova/analysis.mas,
    training_pop_id => $training_pop_id,
   &>
 

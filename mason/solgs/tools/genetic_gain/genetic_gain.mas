@@ -53,7 +53,7 @@ my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $tra
 
 % if ($page =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) {
 
-    <& /solgs/genetic_gain/multi_traits_genetic_gain.mas,
+    <& multi_traits_genetic_gain.mas,
        training_pop_name => $training_pop_name,
       training_pop_id => $training_pop_id,
       training_traits_ids => $training_traits_ids
