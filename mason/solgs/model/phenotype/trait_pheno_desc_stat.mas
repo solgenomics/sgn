@@ -1,8 +1,8 @@
 <%doc>
 
 =head1 NAME
- 
-population/trait_phenotype_scatter.mas - displays scatter plot of trait phenotype data
+
+/solgs/model/phenotype/trait_phenotype_desc_stat.mas - displays descriptive statistics of trait pheno data
 
 =AUTHOR
 
@@ -16,23 +16,19 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $descriptive_stat
 
-
 </%args>
 
 
 <div id="pheno_desc_stat">
-      
-<br/>
+    <br/>
 
-
-<& /page/columnar_table.mas,
-   headings    => [ '',  ''],
-  data         => $descriptive_stat,
-  __alt_freq   => 2,
-  __alt_width  => 1,
-  __alt_offset => 3,
-  __align      => 'l',
-  &>
-
+    <& /page/columnar_table.mas,
+       headings    => [ '',  ''],
+      data         => $descriptive_stat,
+      __alt_freq   => 2,
+      __alt_width  => 1,
+      __alt_offset => 3,
+      __align      => 'l',
+      &>
 
 </div>
