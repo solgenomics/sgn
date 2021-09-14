@@ -129,10 +129,10 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label">Operator: </label>
                 <div class="col-sm-8">
-                    <select class="form-control" id="event_filter_operators" multiple disabled><option>Loading...</option></select>
+                    <input class="form-control" id="event_filter_operator" />
                 </div>
                 <div class="col-sm-1">
-                    <button id="event_filter_operators_add" class='btn btn-info btn-sm'>Add</button>
+                    <button id="event_filter_operator_add" class='btn btn-info btn-sm'>Add</button>
                 </div>
             </div>
 
@@ -233,7 +233,7 @@ jQuery(document).ready(function() {
     jQuery("#event_filter_seedlot_list_add").click(addSeedlotListFilter);
     jQuery("#event_filter_date_add").click(addDateFilter);
     jQuery("#event_filter_type_add").click(addTypeFilter);
-    jQuery("#event_filter_operators_add").click(addOperatorFilter);
+    jQuery("#event_filter_operator_add").click(addOperatorFilter);
     jQuery("#event_filter_type").change(setTypeFilterValues);
     jQuery("#event_filter_submit").click(submitFilter);
     jQuery("#seedlot_maintenance_events_prev").click(getPrevPage);
@@ -464,7 +464,6 @@ function getEvents() {
         },
         complete: function() {
             displayEvents();
-            setOperators();
 
             jQuery("#event_filter_submit").html("Filter");
             jQuery("#event_filter_submit").attr("disabled", false);
@@ -621,22 +620,6 @@ function setTypeFilterValues() {
     jQuery("#event_filter_type_value").html(html);
 }
 
-/**
- * Populate the operators select with the event operators
- */
-function setOperators() {
-    let operators = [];
-    for ( let i = 0; i < EVENTS.length; i++ ) {
-        if ( !operators.includes(EVENTS[i].operator)) operators.push(EVENTS[i].operator);
-    }
-    let html = "";
-    for ( let i = 0; i < operators.length; i++ ) {
-        html += "<option value='" + operators[i] + "'>" + operators[i] + "</option>";
-    }
-    jQuery("#event_filter_operators").html(html);
-    jQuery("#event_filter_operators").attr("disabled", false);
-}
-
 
 /**
  * Add a Name Filter - Seedlot name contains user-provided substring
@@ -715,7 +698,7 @@ function addTypeFilter() {
  * Add an Operator Filter
  */
 function addOperatorFilter() {
-    let operators = jQuery('#event_filter_operators').val();
+    let operators = jQuery('#event_filter_operator').val();
     addFilter('operator', 'operator', operators, '=');
     return false;
 }
