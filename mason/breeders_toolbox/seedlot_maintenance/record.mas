@@ -270,7 +270,7 @@
                 url: '/ajax/breeders/seedlot/maintenance/search',
                 data: JSON.stringify({
                     filters: {
-                        names: [SEEDLOT_NAME], 
+                        names: [{comp: '=', value: SEEDLOT_NAME}],
                         types: [{cvterm_id: cvterm}]
                     }
                 }),
