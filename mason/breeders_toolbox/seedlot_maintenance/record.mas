@@ -26,11 +26,14 @@
             <!-- Seedlot Name -->
             <div class="form-group">
                 <label class="col-sm-3 control-label">Name: </label>
-                <div class="col-sm-7">
+                <div class="col-sm-5">
                     <input class="form-control" id="seedlot_event_name" type="text" value="">
                 </div>
                 <div class="col-sm-2">
-                    <button id="seedlot_event_name_barcode" class="btn btn-default"><span class="glyphicon glyphicon-qrcode"></span> Barcode</button>
+                    <button id="seedlot_event_name_update" class="btn btn-block btn-info"><span class="glyphicon glyphicon-refresh"></span> Update</button>
+                </div>
+                <div class="col-sm-2">
+                    <button id="seedlot_event_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> Barcode</button>
                 </div>
             </div>
 
@@ -108,7 +111,7 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label">Operator: </label>
                 <div class="col-sm-9">
-                    <input class="form-control" id="seedlot_event_operator" type="text" value="<% $operator %>">
+                    <input class="form-control" id="seedlot_event_operator" name="seedlot_event_operator" type="text" value="<% $operator %>">
                 </div>
             </div>
 
@@ -116,7 +119,7 @@
             <div class="form-group">
                 <label class="col-sm-3 control-label">Timestamp: </label>
                 <div class="col-sm-9">
-                    <input class="form-control" id="seedlot_event_timestamp" type="text" value="">
+                    <input class="form-control" id="seedlot_event_timestamp" name="seedlot_event_timestamp" type="text" value="">
                 </div>
             </div>
 
@@ -162,6 +165,7 @@
 
         // Event change / Click listeners
         jQuery('#seedlot_event_name').change(getSeedlotInfo);
+        jQuery('#seedlot_event_name_update').click(getSeedlotInfo);
         jQuery('#seedlot_event_name_barcode').click(scanBarcode);
         jQuery('#seedlot_event_submit').click(submitEvents);
         jQuery('#seedlot_modal_close').click(function() {
@@ -202,7 +206,7 @@
         if ( urlSearchParams.has('seedlot_name') ) {
             let seedlot_name = decodeURIComponent(urlSearchParams.get('seedlot_name'));
             seedlot_name = seedlot_name.includes('seedlot_name=') ? seedlot_name.match(/.*seedlot_name=(.*)/)[1] : seedlot_name;
-            jQuery('#seedlot_event_name').val(seedlot_name);
+            jQuery('input[name="seedlot_event_name"]').val(seedlot_name);
             getSeedlotInfo();
         }
     }
@@ -218,11 +222,15 @@
         let box = "";
         SEEDLOT_NAME = undefined;
         SEEDLOT_ID = undefined;
+
         jQuery.ajax({
             type: 'GET',
             dataType: 'json',
             url: '/ajax/breeders/seedlots?seedlot_name=' + name,
             beforeSend: function() {
+                jQuery('#seedlot_event_name').attr('disabled', true);
+                jQuery('#seedlot_event_name_update').attr('disabled', true);
+                jQuery('#seedlot_event_name_barcode').attr('disabled', true);
                 jQuery(".seedlot_event_info").html("Loading...");
                 jQuery(".seedlot_event_info_cvterm_value").html("");
                 jQuery(".seedlot_event_info_cvterm_notes").html("");
@@ -247,8 +255,13 @@
                 jQuery("#seedlot_event_contents").html(contents);
                 jQuery("#seedlot_event_location").html(location);
                 jQuery("#seedlot_event_box").html(box);
+                jQuery('#seedlot_event_name').attr('disabled', false);
+                jQuery('#seedlot_event_name_update').attr('disabled', false);
+                jQuery('#seedlot_event_name_barcode').attr('disabled', false);
             }
         });
+
+        return false;
     }
 
     /**
@@ -433,7 +446,7 @@
         if ( s <= 9 ) s = '0' + s;
 
         let ts = y + '-' + m + '-' + d + ' ' + h + ':' + i + ':' + s;
-        jQuery("#seedlot_event_timestamp").val(ts);
+        jQuery("input[name='seedlot_event_timestamp']").val(ts);
     }
 
 
