@@ -173,17 +173,18 @@ sub _clean_inputs {
 		my $values = $params->{$_};
 		my $ret_val;
 		if (ref \$values eq 'SCALAR' || ref $values eq 'ARRAY'){
-
-			if (ref \$values eq 'SCALAR') {
+                    if (length $values) {
+			  if (ref \$values eq 'SCALAR') {
 				push @$ret_val, $values;
-			} elsif (ref $values eq 'ARRAY'){
+			  } elsif (ref $values eq 'ARRAY'){
 				$ret_val = $values;
-			}
+			  }
 
-			@$ret_val = grep {$_ ne undef} @$ret_val;
-			@$ret_val = grep {$_ ne ''} @$ret_val;
-			$_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
-			$params->{$_} = $ret_val;
+			  @$ret_val = grep {$_ ne undef} @$ret_val;
+			  @$ret_val = grep {$_ ne ''} @$ret_val;
+			  $_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
+			  $params->{$_} = $ret_val;
+		    }
 		}
 		elsif (ref $values eq 'HASH') {
 			$params->{$_} = $values;
