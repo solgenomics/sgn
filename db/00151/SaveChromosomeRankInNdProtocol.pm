@@ -68,28 +68,36 @@ sub patch {
     my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
     my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
 
-    my $q = "SELECT nd_protocol.nd_protocol_id, nd_experiment_stock.stock_id, prop.value, markers_array.value
+    my $q = "SELECT nd_protocol.nd_protocol_id, markers_array.value
         FROM nd_protocol
-        JOIN nd_protocolprop AS prop ON(prop.nd_protocol_id=nd_protocol.nd_protocol_id AND prop.type_id=$vcf_map_details_id)
         JOIN nd_protocolprop AS markers_array ON(markers_array.nd_protocol_id=nd_protocol.nd_protocol_id AND markers_array.type_id=$vcf_map_details_markers_array_cvterm_id)
-        JOIN nd_experiment_protocol ON(nd_protocol.nd_protocol_id=nd_experiment_protocol.nd_protocol_id)
-        JOIN nd_experiment ON(nd_experiment.nd_experiment_id=nd_experiment_protocol.nd_experiment_id AND nd_experiment.type_id=$geno_cvterm_id)
-        JOIN nd_experiment_stock ON(nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
         ;";
     # print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
+
+    my $q1_1 = "SELECT nd_experiment_stock.stock_id
+	FROM nd_protocol
+	JOIN nd_experiment_protocol ON(nd_protocol.nd_protocol_id=nd_experiment_protocol.nd_protocol_id)
+	JOIN nd_experiment ON(nd_experiment.nd_experiment_id=nd_experiment_protocol.nd_experiment_id AND nd_experiment.type_id=$geno_cvterm_id)
+	JOIN nd_experiment_stock ON(nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+	WHERE nd_protocol.nd_protocol_id=?
+	;";
+    my $h1_1 = $schema->storage->dbh()->prepare($q1_1);
+
     my %protocols_hash;
-    while (my ($nd_protocol_id, $stock_id, $prop_json, $markers_array_json) = $h->fetchrow_array()) {
-        my $prop = $prop_json ? decode_json $prop_json : undef;
+    while (my ($nd_protocol_id, $markers_array_json) = $h->fetchrow_array()) {
         my $markers_array = $markers_array_json ? decode_json $markers_array_json : [];
-        if ($prop && scalar(@$markers_array)>0) {
-            # print STDERR Dumper $prop;
+        if (scalar(@$markers_array)>0) {
             my %unique_chromosomes;
             foreach (@$markers_array) {
                 # print STDERR Dumper $_;
                 $unique_chromosomes{$_->{chrom}}->{marker_count}++;
             }
+
+	    $h1_1->execute($nd_protocol_id);
+	    my ($stock_id) = $h1_1->fetchrow_array();
+
             $protocols_hash{$nd_protocol_id} = {
                 chroms => \%unique_chromosomes,
                 stock_id => $stock_id
@@ -149,7 +157,7 @@ sub patch {
         $prop->{chromosomes} = $chroms;
         my $prop_save = encode_json $prop;
         $h4->execute($prop_save, $nd_protocolprop_id);
-        print STDERR Dumper $prop_save;
+        # print STDERR Dumper $prop_save;
     }
 
     print "You're done!\n";
