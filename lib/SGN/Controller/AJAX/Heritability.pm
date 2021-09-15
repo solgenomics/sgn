@@ -47,6 +47,7 @@ sub shared_phenotypes: Path('/ajax/heritability/shared_phenotypes') : {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
+    print STDERR "***** temppath = $temppath\n";
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
@@ -118,18 +119,22 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     $c->tempfiles_subdir("heritability_files");
     my $heritability_tmp_output = $c->config->{cluster_shared_tempdir}."/heritability_files";
     mkdir $heritability_tmp_output if ! -d $heritability_tmp_output;
+    print STDERR "heritability_files subdir = $heritability_tmp_output\n";
     my ($tmp_fh, $tempfile) = tempfile(
       "h2_download_XXXXX",
       DIR=> $heritability_tmp_output,
     );
 
+    print STDERR "TEMPFILE NOW = $tempfile\n";
+    
     my $pheno_filepath = $tempfile . "_phenotype.txt";
     
-
+    
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
-    my $temppath = $heritability_tmp_output . "/" . $tempfile;
+    #my $temppath = $heritability_tmp_output . "/" . $tempfile;
+    my $temppath = $tempfile;
 
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
 
