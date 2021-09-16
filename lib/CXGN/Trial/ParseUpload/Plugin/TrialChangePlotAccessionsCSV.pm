@@ -15,17 +15,19 @@ sub _validate_with_plugin {
     my $trial_id = $self->get_trial_id();
     my @error_messages;
     my %errors;
-    my %parse_result;
+    my %parse_errors;
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
     open(my $fh, '<', $filename)
-        or die "Could not open file '$filename' $!";
+        or die "Could not open file '$filename' $!"."<br>";
 
     if (!$fh) {
-        $parse_result{'error'} = "Could not read file.";
+        push @error_messages, "Could not read file."."<br>";
         print STDERR "Could not read file.\n";
-        return \%parse_result;
+        $parse_errors{'error_messages'} = \@error_messages;
+        $self->_set_parse_errors(\%parse_errors);
+        return;
     }
 
     my $header_row = <$fh>;
@@ -33,18 +35,22 @@ sub _validate_with_plugin {
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
-        $parse_result{'error'} = "Could not parse header row.";
+        push @error_messages, "Could not parse header row."."<br>";
         print STDERR "Could not parse header.\n";
-        return \%parse_result;
+        $parse_errors{'error_messages'} = \@error_messages;
+        $self->_set_parse_errors(\%parse_errors);
+        return;
     }
 
     my $num_cols = scalar(@columns);
 
-    if ( $columns[0] ne "plot_name" &&
+    if ( $columns[0] ne "plot_name" ||
         $columns[1] ne "accession_name" ) {
-            $parse_result{'error'} = 'File contents incorrect. Header row must contain:  "plot_name","accession_name"';
+            push @error_messages, 'File contents incorrect. Header row must contain:  "plot_name","accession_name"'."<br>";
             print STDERR "File contents incorrect.\n";
-            return \%parse_result;
+            $parse_errors{'error_messages'} = \@error_messages;
+            $self->_set_parse_errors(\%parse_errors);
+            return;
     }
 
     my %seen_plot_names;
@@ -55,15 +61,15 @@ sub _validate_with_plugin {
         if ($csv->parse($row)) {
             @columns = $csv->fields();
         } else {
-            $parse_result{'error'} = "Could not parse row $row.";
+            push @error_messages, "Could not parse row $row."."<br>";
             print STDERR "Could not parse row $row.\n";
-            return \%parse_result;
+            return;
         }
 
         if (scalar(@columns) != $num_cols){
-            $parse_result{'error'} = 'All lines must have same number of columns as header! Error on row: '.$row;
+            push @error_messages, "All lines must have same number of columns as header! Error on row: $row"."<br>";
             print STDERR "Line $row does not have complete columns.\n";
-            return \%parse_result;
+            return;
         }
 
         $seen_plot_names{$columns[0]}++;
@@ -72,6 +78,10 @@ sub _validate_with_plugin {
             $seen_new_plot_names{$columns[2]}++;
         }
     }
+    if (@error_messages) {
+        $parse_errors{'error_messages'} = \@error_messages;
+        $self->_set_parse_errors(\%parse_errors);
+    }
     close($fh);
 
     my @plots = keys %seen_plot_names;
@@ -79,7 +89,6 @@ sub _validate_with_plugin {
     my @plots_missing = @{$plots_validator->validate($schema,'plots',\@plots)->{'missing'}};
 
     if (scalar(@plots_missing) > 0) {
-        $errors{'missing_plots'} = \@plots_missing;
         push @error_messages, "The following plots are not in the database as uniquenames or synonyms:<br>".join(", ",@plots_missing)."<br>";
     }
 
@@ -88,7 +97,6 @@ sub _validate_with_plugin {
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
 
     if (scalar(@accessions_missing) > 0) {
-        $errors{'missing_stocks'} = \@accessions_missing;
         push @error_messages, "The following accessions are not in the database as uniquenames or synonyms:<br>".join(", ",@accessions_missing)."<br>";
     }
 
@@ -114,7 +122,6 @@ sub _validate_with_plugin {
     }
 
     if (@not_valid_names) {
-        $errors{'not_valid_names'} = \@not_valid_names;
         push @error_messages, "The following new plot names already exist in the database:<br>".join(", ", @not_valid_names)."<br>";
     }
     
@@ -146,6 +153,11 @@ sub _validate_with_plugin {
                 $validation = 1;
             }
         }
+        for (@plots_missing) {
+            if ($current_name == $_) {
+                $validation = 1;
+            }
+        }
         if (!$validation) {
             push @plots_in_different_trial, $current_name;
         }
@@ -153,7 +165,6 @@ sub _validate_with_plugin {
     }
 
     if (@plots_in_different_trial) {
-        $errors{'not_valid_names'} = \@plots_in_different_trial;
         push @error_messages, "The following plot names belong to a different trial:<br>".join(", ", @plots_in_different_trial)."<br>";
     }
 

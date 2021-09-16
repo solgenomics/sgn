@@ -107,7 +107,7 @@ $trial_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_replace_accession_dialog" type="button" onclick=location.reload() class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

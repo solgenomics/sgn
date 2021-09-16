@@ -41,30 +41,6 @@ has 'second_accession_selected' => (isa => "Str",
 	is => 'rw',
 );
 
-has 'new_accession' => (isa => "Str",
-	is => 'rw',
-);
-
-has 'old_accession' => (isa => "Str",
-	is => 'rw',
-);
-
-has 'old_plot_id' => (isa => "Int",
-	is => 'rw',
-);
-
-has 'old_plot_name' => (isa => "Str",
-    is => 'rw',
-);
-
-has 'new_plot_name' => (isa => "Str",
-    is => 'rw',
-);
-
-has 'old_accession_id' => (isa => "Int",
-	is => 'rw',
-);
-
 has 'trial_stock_type' => (isa => "Str",
 	is => 'rw',
 	required => 0,
@@ -394,13 +370,13 @@ sub substitute_accession_fieldmap {
 
 sub replace_plot_accession_fieldMap {
 	my $self = shift;
+	my $new_accession = shift;
+	my $old_accession = shift;
+	my $old_plot_id = shift;
+    my $old_plot_name = shift;
 	my $error;
 	my $schema = $self->bcs_schema;
 	my $dbh = $self->bcs_schema->storage->dbh;
-	my $new_accession = $self->new_accession;
-	my $old_accession = $self->old_accession;
-	my $old_plot_id = $self->old_plot_id;
-    my $old_plot_name = $self->old_plot_name;
 
 	print "New Accession: $new_accession, Old Accession: $old_accession, Old Plot Id: $old_plot_id\n";
 
@@ -425,10 +401,10 @@ sub replace_plot_accession_fieldMap {
 
 sub replace_plot_name_fieldMap {
 	my $self = shift;
+	my $old_plot_id = shift;
+	my $new_plot_name = shift;
 	my $error;
 	my $schema = $self->bcs_schema;
-	my $old_plot_id = $self->old_plot_id;
-	my $new_plot_name = $self->new_plot_name;
 
 	my $new_plot_name_validator = CXGN::List::Validate->new();
     my $valid_new_plot_name = @{$new_plot_name_validator->validate($schema,'plots',[$new_plot_name])->{'missing'}};
@@ -452,11 +428,11 @@ sub replace_plot_name_fieldMap {
 
 sub replace_trial_stock_fieldMap {
 	my $self = shift;
+	my $new_stock = shift;
+	my $old_stock_id = shift;
 	my $error;
 	my $schema = $self->bcs_schema;
 	my $dbh = $self->bcs_schema->storage->dbh;
-	my $new_stock = $self->new_accession;
-	my $old_stock_id = $self->old_accession_id;
 	my $trial_id = $self->trial_id;
     my $trial_stock_type = $self->trial_stock_type;
 
