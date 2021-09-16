@@ -100,7 +100,7 @@ sub extract_trait_data :Path('/ajax/heritability/getdata') Args(0) {
 		$line{$keys[$n]}=$fields[$n];
 	    }
 	}
-    print STDERR Dumper(\%line);
+	#print STDERR Dumper(\%line);
 	push @data, \%line;
     }
 
