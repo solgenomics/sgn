@@ -92,7 +92,7 @@ sub extract_trait_data :Path('/ajax/heritability/getdata') Args(0) {
 	chomp;
 
 	my @fields = split "\t";
-	my %line = {};
+	my %line;
 	for(my $n=0; $n <@keys; $n++) {
 	    if (exists($fields[$n]) && defined($fields[$n])) {
 		$line{$keys[$n]}=$fields[$n];
