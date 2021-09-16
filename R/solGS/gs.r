@@ -168,6 +168,7 @@ if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) 
 }
 
 phenoTrait <- c()
+traitRawPhenoData <- c()
 
 if (datasetInfo == 'combined populations') {
 
