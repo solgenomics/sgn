@@ -112,8 +112,8 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
     my $trait_id = $c->req->param('trait_id');
-    print"****************************************************************************\n";
-    print"The dataset is $dataset_id\n";
+    print STDERR "****************************************************************************\n";
+    print STDERR "The dataset is $dataset_id\n";
     print STDERR $dataset_id;
     print STDERR $trait_id;
     $c->tempfiles_subdir("heritability_files");
