@@ -1239,45 +1239,20 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
             my $plot_name = $val->{plot_name};
             my $new_plot_name = $val->{new_plot_name};
 
-
-            my $stockprop_rs = $schema->resultset("Stock::StockRelationship")->search({
-                subject_id => $plot_id,
-                type_id => $plot_of_type_id
-            });
-
-            if ($stockprop_rs->count == 1) {
-                $stockprop_rs->first->delete();
-            }
-            elsif ($stockprop_rs->count > 1) {
-                $c->stash->{rest} = { error => "There should only be one accession linked to the plot via plot_of\n"};
-                return;
-            } else {
-                $c->stash->{rest} = { error => "Plot entry does not exist in database.\n"};
+            my $replace_accession_error = $replace_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $accession_id, $plot_of_type_id);
+            if ($replace_accession_error) {
+                $c->stash->{rest} = { error => $replace_accession_error};
                 return;
             }
-
-            my $new_stockprop_rs = $schema->resultset("Stock::StockRelationship")->create({
-                subject_id => $plot_id,
-                object_id => $accession_id,
-                type_id => $plot_of_type_id
-            });
 
             if ($new_plot_name) {
-                my $stock_rs = $schema->resultset("Stock::Stock")->search({
-                    stock_id => $plot_id,
-                    type_id => $plot_type_id
-                });
-
-                $stock_rs->update({
-                    uniquename => $new_plot_name 
-                });
+                my $replace_plot_name_error = $replace_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $new_plot_name);
+                if ($replace_plot_name_error) {
+                    $c->stash->{rest} = { error => $replace_plot_name_error};
+                    return;
+                }
             }
-
         }
-
-
-        my $layout = $c->stash->{trial_layout};
-        $layout->generate_and_cache_layout();
     };
     eval {
         $schema->txn_do($upload_change_plot_accessions_txn);
@@ -1800,7 +1775,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $old_accession = $c->req->param('old_accession');
     my $new_accession = $c->req->param('new_accession');
-    my $old_plot_id = $c->req->param('old_plot_id');
+    my $plot_id = $c->req->param('old_plot_id');
     my $old_plot_name = $c->req->param('old_plot_name');
     my $new_plot_name = $c->req->param('new_plot_name');
     my $override = $c->req->param('override');
@@ -1827,6 +1802,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     });
 
     my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
+
     if ($c->user()->check_roles("curator") and $return_error) {
         if ($override eq "check") {
             $c->stash->{rest} = { warning => "curator warning" };
@@ -1838,22 +1814,29 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     }
 
 
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $accession_rs = $schema->resultset("Stock::Stock")->search({
+        uniquename => $new_accession
+    });
+    $accession_rs = $accession_rs->next();
+    my $accession_id = $accession_rs->stock_id;
+
     print "Calling Replace Function...............\n";
-    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($new_accession, $old_accession, $old_plot_id, $old_plot_name);
+    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $accession_id, $plot_of_type_id);
     if ($replace_return_error) {
         $c->stash->{rest} = { error => $replace_return_error };
         return;
     }
 
     if ($new_plot_name) {
-        my $replace_plot_name_return_error = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($old_plot_id, $new_plot_name);
+        my $replace_plot_name_return_error = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $new_plot_name);
         if ($replace_plot_name_return_error) {
             $c->stash->{rest} = { error => $replace_plot_name_return_error };
             return;
         }
     }
     
-    print "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotName: $old_plot_name, NewPlotName: $new_plot_name OldPlotId: $old_plot_id\n";
+    print "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotName: $old_plot_name, NewPlotName: $new_plot_name OldPlotId: $plot_id\n";
     $c->stash->{rest} = { success => 1};
 }
 
