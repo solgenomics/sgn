@@ -14,11 +14,14 @@
         <!-- Seedlot to Split -->
         <div class="form-group">
             <label class="col-sm-3 control-label" style="text-align: right">Original Seedlot to Split</label>
-            <div class="col-sm-7">
+            <div class="col-sm-5">
                 <input class="form-control" id="seedlot_split_name" type="text" value="">
             </div>
             <div class="col-sm-2">
-                <button id="seedlot_split_name_barcode" class="btn btn-default"><span class="glyphicon glyphicon-qrcode"></span> Barcode</button>
+                <button id="seedlot_split_name_update" class="btn btn-block btn-info"><span class="glyphicon glyphicon-refresh"></span> Update</button>
+            </div>
+            <div class="col-sm-2">
+                <button id="seedlot_split_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> Barcode</button>
             </div>
         </div>
 
@@ -227,6 +230,7 @@
             return false;
         });
         jQuery('#seedlot_split_name').change(getSeedlotInfo);
+        jQuery('#seedlot_split_name_update').click(getSeedlotInfo);
         jQuery('#seedlot_split_new_create').click(createNewSeedlot);
         jQuery('#seedlot_split_modal_close').click(function() {
             jQuery('#seedlot_split_modal').modal('hide');
@@ -262,6 +266,9 @@
      * - Update the new seedlot properties
      */
     function getSeedlotInfo() {
+        jQuery("#seedlot_split_name").attr("disabled", true);
+        jQuery("#seedlot_split_name_update").attr("disabled", true);
+
         let name = jQuery("#seedlot_split_name").val();
         let contents = "";
         let breeding_program_id = "";
@@ -377,7 +384,9 @@
          */
         function _setNewName(new_name, enabled=true) {
             jQuery("#seedlot_split_new_name").val(new_name);
-            jQuery("#seedlot_split_new_name").prop("disabled", !enabled);
+            jQuery("#seedlot_split_new_name").attr("disabled", !enabled);
+            jQuery("#seedlot_split_name").attr("disabled", !enabled);
+            jQuery("#seedlot_split_name_update").attr("disabled", !enabled);
         }
     }
 
