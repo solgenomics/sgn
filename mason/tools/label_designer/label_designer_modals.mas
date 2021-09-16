@@ -84,13 +84,13 @@
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
                         <center>
-                            <label>Horizontal Gap:</label><br>
+                            <br><label>Horizontal Gap:</label><br>
                             <input class="form-control" placeholder="Horizontal Gap in pixels (72/inch)" type="number" id="horizontal_gap" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
-                            <label>Vertical Gap:</label><br>
+                            <br><label>Vertical Gap:</label><br>
                             <input class="form-control" placeholder="Vertical Gap in pixels (72/inch)" type="number" id="vertical_gap" style="max-width: 100%;">
                         </center>
                     </div>
@@ -100,50 +100,73 @@
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
                         <center>
-                            <br><label>Number of Columns:</label><br>
+                            <br><label>Number of Columns:</label>
                             <input class="form-control" placeholder="Num labels across" type="number" id="number_of_columns" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
-                            <br><label>Number of Rows:</label><br>
+                            <br><label>Number of Rows:</label>
                             <input class="form-control" placeholder="Num labels down" type="number" id="number_of_rows" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
                 </div>
-                <div class="col-md-12 form-inline">
+                <div class="col-md-12">
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
                         <center>
                         <br><label>Sort Labels by:</label>
                             <select class="form-control" id="sort_order" name="sort_by" style="max-width: 100%">
-                            </select><br>
+                            </select>
                         </center>
                     </div>
-                    <div class="col-md-1"></div>
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <center>
                         <br><label>Limit by Rep:</label>
                             <select class="form-control" id="plot_filter" name="plot_filter" style="max-width: 100%">
-                            </select><br>
+                            </select>
                         </center>
                     </div>
                     <div class="col-md-1"></div>
                 </div>
-                <div class="col-md-12 form-inline" id="">
+                <div class="col-md-12">
                     <div class="col-md-1"></div>
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <center>
                             <br><label>Copies per label:</label>
                             <input class="form-control" id="copies_per_plot" name="copies_per_plot" type="number" value="1" style="max-width: 100%;">
                         </center>
                     </div>
-                    <div class="col-md-1"></div>
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <center>
                             <br><label>Total # to download:</label>
                             <input class="form-control" id="label_designer_labels_to_download" name="label_designer_labels_to_download" type="number" placeholder="10" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-10">
+                        <br /><br />
+                        <p><strong>Position of First Label:</strong><br />
+                        Set the column and row number of where to print the first label, if using a sheet that has already been partially used</p>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-12">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <center>
+                            <br><label>Start Column:</label>
+                            <input class="form-control" id="start_col" name="start_col" type="number" value="1" style="max-width: 100%;">
+                        </center>
+                    </div>
+                    <div class="col-md-5">
+                        <center>
+                            <br><label>Start Row:</label>
+                            <input class="form-control" id="start_row" name="start_row" type="number" value="1" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>

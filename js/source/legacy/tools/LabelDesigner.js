@@ -1337,6 +1337,8 @@ function retrievePageParams() {
         label_format: label,
         label_width: label_sizes[label].label_width,
         label_height: label_sizes[label].label_height,
+        start_col: document.getElementById("start_col").value,
+        start_row: document.getElementById("start_row").value,
     }
     return page_params;
 
