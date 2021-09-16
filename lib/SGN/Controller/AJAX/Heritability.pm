@@ -44,8 +44,6 @@ sub shared_phenotypes: Path('/ajax/heritability/shared_phenotypes') : {
     $c->tempfiles_subdir("heritability_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"heritability_files/trait_XXXXX");
 
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
     print STDERR "***** temppath = $temppath\n";
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
@@ -184,9 +182,6 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     copy($figure3file, $figure_path);
     copy($figure4file, $figure_path);
 
-    my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";
-
-    
     my $h2Filebasename = basename($h2File);
     my $h2File_response = "/documents/tempfiles/heritability_files/" . $h2Filebasename;
 
