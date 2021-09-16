@@ -103,7 +103,7 @@ sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
   chomp;
 
   my @fields = split "\t";
-  my %line = {};
+  my %line;
   for(my $n=0; $n <@keys; $n++) {
       if (exists($fields[$n]) && defined($fields[$n])) {
     $line{$keys[$n]}=$fields[$n];
@@ -186,9 +186,11 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
             $AMMIFile,
             $method
     );
-    $cmd->alive;
-    #$cmd->is_cluster(1);
-    $cmd->wait;
+
+    while ($cmd->alive) { 
+	#$cmd->wait;
+	sleep(1);
+    }
 
     my $resultfile = $AMMIFile.".results";
     my $error;
