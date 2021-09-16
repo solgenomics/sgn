@@ -129,6 +129,7 @@ override('retrieve_phenotypes',
 		     $s = join("\t", map { "\"$_\"" } @$line);
 		 }
 		 else {
+		     no warnings;
 		     $s = join("\t", @$line);
 		 }
 		 # $s = "";
