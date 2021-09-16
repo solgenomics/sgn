@@ -96,6 +96,7 @@ sub nirs_matrix {
 	my $nd_protocol_id = shift;
 	my $inputs = shift;
 	my $stock_id_arrayref = $inputs->{observationUnitDbId} || ($inputs->{observationUnitDbIds} || ());
+	my $trial_id = $inputs->{studyDbId} || $inputs->{studyDbIds} || ();
 	my $status = $self->status;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
@@ -104,6 +105,7 @@ sub nirs_matrix {
 	my @nirs_stock_ids;
 	my @data;
 
+	print STDERR Dumper $trial_id;
 #	my @protocol_id_array;
 #	@protocol_id_array[0] = $nd_protocol_id;
 #	my $protocol_id_arrayref = \@protocol_id_array;
@@ -132,32 +134,54 @@ if (! defined($stock_id_arrayref)) {
 		plant_list=>undef
 	});
 	my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
-
+#	print STDERR Dumper $identifier_metadata;
 	my %data_matrix = %$data_matrix;
 
 	foreach (@$stock_id_arrayref) {
-		my @current_row_values;
-		# ordered keys was only included for verifying consistent order
-		#my @ordered_keys;
-		my $current_values = $data_matrix{$_}->{spectra};
-		my %current_values = %$current_values;
-		print STDERR Dumper $current_values;
-		print STDERR Dumper %current_values;
-		foreach my $name (sort keys %current_values) {
-			my $curr_val = $current_values{$name};
-			print STDERR Dumper $curr_val;
-			push @current_row_values, $curr_val;
-			# ordered keys was only included for verifying consistent order
-#			push @ordered_keys, $name;
+
+		my $q = "SELECT nd_experiment_protocol.nd_experiment_id FROM nd_protocol JOIN nd_experiment_protocol ON nd_protocol.nd_protocol_id = nd_experiment_protocol.nd_protocol_id JOIN nd_experiment_stock ON nd_experiment_protocol.nd_experiment_id=nd_experiment_stock.nd_experiment_id WHERE nd_protocol.nd_protocol_id=? AND stock_id=?;";
+		my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+		$h->execute($nd_protocol_id,$_);
+		my @nirs_nd_experiment_ids;
+		while (my ($nirs_nd_experiment_id) = $h->fetchrow_array()) {
+			push @nirs_nd_experiment_ids, $nirs_nd_experiment_id;
 		}
-		print STDERR Dumper @current_row_values;
-		push @data, {
-#			data_matrix=>$data_matrix{$stock_id}->{spectra},
-		#	data_matrix=>$data_matrix,
-			key=>$_,
+
+		my $q = "SELECT project_id FROM nd_experiment_project WHERE nd_experiment_id=?;";
+		my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+		$h->execute($nirs_nd_experiment_ids[0]);
+		my @nirs_project_ids;
+		while (my ($nirs_project_id) = $h->fetchrow_array()) {
+			push @nirs_project_ids, $nirs_project_id;
+		}
+
+		print STDERR Dumper @nirs_nd_experiment_ids;
+		if (@nirs_project_ids[0] == @$trial_id[0]) {
+			my @current_row_values;
 			# ordered keys was only included for verifying consistent order
-#			labels=>\@ordered_keys,
-			row=>\@current_row_values,
+			#my @ordered_keys;
+			my $current_values = $data_matrix{$_}->{spectra};
+			my %current_values = %$current_values;
+	#		print STDERR Dumper $current_values;
+	#		print STDERR Dumper %current_values;
+			foreach my $name (sort keys %current_values) {
+				my $curr_val = $current_values{$name};
+	#			print STDERR Dumper $curr_val;
+				push @current_row_values, $curr_val;
+				# ordered keys was only included for verifying consistent order
+	#			push @ordered_keys, $name;
+			}
+	#		print STDERR Dumper @current_row_values;
+			push @data, {
+	#			data_matrix=>$data_matrix{$stock_id}->{spectra},
+			#	data_matrix=>$data_matrix,
+				ObservationUnitDbId=>$_,
+				nd_experiment_id=>$nirs_nd_experiment_ids[0],
+				StudyDbId=>$nirs_project_ids[0],
+				# ordered keys was only included for verifying consistent order
+	#			labels=>\@ordered_keys,
+				row=>\@current_row_values,
+			};
 		};
 	}
 
