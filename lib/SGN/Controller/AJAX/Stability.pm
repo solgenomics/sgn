@@ -196,7 +196,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $error;
     my $lines;
 
-    if (! -e $resultfile) { 
+    if (! -e $AMMIFile) { 
 	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters."
     }
     else { 
