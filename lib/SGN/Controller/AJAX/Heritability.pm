@@ -192,7 +192,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     my $figure4_response = "/documents/tempfiles/heritability_files/" . $figure4basename;
 
 
-    print $h2File_response;
+    #print STDERR $h2File_response;
         
     $c->stash->{rest} = {
         h2Table => $h2File_response,
