@@ -23,7 +23,7 @@ solGS.histogram =  {
         return traitValues;
     },
 
-    countMissingData: function (traitValues) { 
+    countMissingData: function (traitValues) {
        var cnt = 0;
        traitValues.forEach( function(val) {
 
@@ -176,7 +176,8 @@ solGS.histogram =  {
         var caption = histo.caption;
 
         if (canvas.match(/#/) == null) {canvas = '#' + canvas;}
-        if (plotId.match(/#/) == null) {plotId = '#' + plotId;}
+        //if (plotId.match(/#/) == null) {plotId = '#' + plotId;}
+        plotId = plotId.replace(/#/, '');
 
         if (!values || !values[0]) {
             values = this.extractValues(namedValues);
