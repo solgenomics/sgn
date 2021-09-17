@@ -47,10 +47,11 @@ solGS.heatmap = {
 	if (heatmapCanvasDiv.match(/#/) == null) {heatmapCanvasDiv = '#' + heatmapCanvasDiv;}
 
 
-   heatmapPlotDiv = heatmapPlotDiv.replace(/#/, '');
-	if (!heatmapPlotDiv) {
+
+	if (heatmapPlotDiv) {
+          heatmapPlotDiv = heatmapPlotDiv.replace(/#/, '');
 	//     if (heatmapPlotDiv.match(/#/) == null) {heatmapPlotDiv = '#' + heatmapPlotDiv;}
-	// } else {
+	} else {
 	    heatmapPlotDiv =  "heatmap_plot";
 	}
 	console.log(heatmapCanvasDiv + ' ' + heatmapPlotDiv )

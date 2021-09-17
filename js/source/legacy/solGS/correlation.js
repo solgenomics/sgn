@@ -297,10 +297,17 @@ solGS.correlation = {
                 success: function (response) {
     		if (response.status == 'success') {
 
-                jQuery(canvas).show();
-                solGS.correlation.plotCorrelation(response.data, canvas);
+                    jQuery(canvas).show();
 
-                    if (canvas ===  '#si_canvas') {
+		    var heatmapDiv = 'corr_heatmap';
+
+		    if (canvas === '#si_canvas') {
+			heatmapDiv = '#si_heatmap';
+		    }
+
+                    solGS.correlation.plotCorrelation(response.data, canvas, heatmapDiv);
+
+                    if (canvas === '#si_canvas') {
 
             			var popName   = jQuery("#selected_population_name").val();
             			var corLegDiv = "<div id=\"si_correlation_"
@@ -350,9 +357,9 @@ solGS.correlation = {
     },
 
 
-    plotCorrelation: function (data, canvas) {
+    plotCorrelation: function (data, canvas, heatmapDiv) {
 
-	solGS.heatmap.plot(data, canvas);
+	solGS.heatmap.plot(data, canvas, heatmapDiv);
 
     },
 
