@@ -176,8 +176,7 @@ solGS.histogram =  {
         var caption = histo.caption;
 
         if (canvas.match(/#/) == null) {canvas = '#' + canvas;}
-        //if (plotId.match(/#/) == null) {plotId = '#' + plotId;}
-        plotId = plotId.replace(/#/, '');
+        if (plotId.match(/#/) == null) {plotId = '#' + plotId;}
 
         if (!values || !values[0]) {
             values = this.extractValues(namedValues);
