@@ -2,10 +2,10 @@
 
 =head1 NAME
 
-/solgs/cluster/analysis.mas - cluster analysis template
+/solgs/tools/cluster/analysis.mas - cluster analysis template
 
 To add the cluster analysis interface any where on the website
-add the template '/solgs/cluster/analysis.mas' in your mason template
+add the template '/solgs/tools/cluster/analysis.mas' in your mason template
 and pass any of the arguments listed below.
 Adding the 'data_structure' argument is also recommended.
 A data structure can be any of this: 'list', if of list type; 'dataset', if of dataset type;
@@ -81,7 +81,7 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 % if ($url =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) {
 
-  <& /solgs/cluster/gebvs_cluster.mas,
+  <& gebvs_cluster.mas,
      pop_name => $pop_name,
     pop_id => $pop_id,
     pop_type => $pop_type
@@ -89,18 +89,18 @@ $collapsed = 1 if $url =~ /breeders\/trial/;
 
 %} elsif ($url =~ /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/trials\//) {
 
-    <& /solgs/cluster/cluster_options.mas &>
+    <& cluster_options.mas &>
 
 %} elsif ($url =~ /cluster\/analysis/) {
 
-   <& /solgs/cluster/select_menu.mas &>
+   <& select_menu.mas &>
 
 %} else {
     <input id="run_cluster" class="button" type="button" value="Run Cluster" />
 %}
 
 
-<& /solgs/cluster/plot.mas,
+<& plot.mas,
    pop_id => $pop_id,
   list_id => $list_id,
   dataset_id => $dataset_id,

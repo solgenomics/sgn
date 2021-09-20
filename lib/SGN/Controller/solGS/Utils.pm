@@ -3,8 +3,9 @@ package SGN::Controller::solGS::Utils;
 use Moose;
 use namespace::autoclean;
 
-use File::Slurp qw /write_file read_file/;
+use File::Slurp qw /write_file read_file edit_file/;
 use JSON;
+use List::MoreUtils qw(first_index);
 
 sub convert_arrayref_to_hashref {
     my ($self, $array_ref) = @_;
@@ -45,6 +46,32 @@ sub read_file_data {
 
 }
 
+
+sub read_file_data_cols {
+    my ($self, $file, $cols) = @_;
+
+    my @lines = read_file($file, {binmode => ':utf8'});
+    my @headers =  split(/\t/, shift(@lines));
+    my @h_indices;
+    foreach my  $col (@$cols)
+    {
+        my $index = first_index { $_ eq $col } @headers;
+        push @h_indices, $index;
+    }
+
+	chomp(@lines);
+
+    my @data;
+    foreach my $line (@lines) {
+        my @vals = split(/\t/, $line);
+
+        push @data, [@vals[@h_indices]];
+
+    }
+
+    return \@data;
+
+}
 
 sub structure_downloadable_data {
     my ($self, $file, $row_name) = @_;
@@ -310,7 +337,7 @@ sub require_login {
     my $page = "/" . $c->req->path;
     $c->res->redirect("/solgs/login/message?page=$page");
     $c->detach;
-    
+
 }
 
 ####

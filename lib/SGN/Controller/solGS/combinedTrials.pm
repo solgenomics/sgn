@@ -1368,7 +1368,7 @@ sub save_common_traits_acronyms {
     $c->stash->{training_pop_id} = $combo_pops_id;
     $c->controller('solGS::Files')->traits_list_file($c, $combo_pops_id);
     my $traits_file = $c->stash->{traits_list_file};
-    my $common_traits = join("\t", @$common_traits);
+    $common_traits = join("\t", @$common_traits);
     write_file($traits_file, {binmode => ':utf8'}, $common_traits) if $traits_file;
 
 }
@@ -1435,8 +1435,8 @@ sub combine_trait_data_input {
     $c->controller('solGS::Files')->model_info_file($c);
     my $model_info_file = $c->stash->{model_info_file};
 
-
-
+    $c->controller("solGS::Files")->trait_raw_phenodata_file($c);
+    my $trait_raw_phenodatafile =   $c->stash->{trait_raw_phenodata_file};
     my $input_files = join ("\t",
                             $pheno_files,
                             $geno_files,
@@ -1446,6 +1446,7 @@ sub combine_trait_data_input {
     my $output_files = join ("\t",
                              $combined_pops_pheno_file,
                              $combined_pops_geno_file,
+                             $trait_raw_phenodatafile
         );
 
     my $temp_dir    = $c->stash->{solgs_tempfiles_dir};

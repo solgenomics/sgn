@@ -34,7 +34,7 @@ sub cluster_analysis :Path('/cluster/analysis/') Args() {
         $c->controller('solGS::Utils')->require_login($c);
     }
 
-    $c->stash->{template} = '/solgs/cluster/analysis.mas';
+    $c->stash->{template} = '/solgs/tools/cluster/analysis.mas';
 
 }
 

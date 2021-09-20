@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/selection_index/selection_index_correlation.mas - displays correlation heat map of selection index and trait GEBVs
+/solgs/tools/selection_index/selection_index_correlation.mas - displays correlation heat map of selection index and trait GEBVs
 
 =AUTHOR
 
