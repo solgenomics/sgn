@@ -308,13 +308,15 @@ solGS.correlation = {
                     solGS.correlation.plotCorrelation(response.data, canvas, heatmapDiv);
 
                     if (canvas === '#si_canvas') {
+                        var popName   = jQuery("#selected_population_name").val();
+                        var legendValues = solGS.sIndex.legendParams();
 
-            			var popName   = jQuery("#selected_population_name").val();
-            			var corLegDiv = "<div id=\"si_correlation_"
-                                        + popName.replace(/\s/g, "")
-                                        + "\"></div>";
+                        var popDiv = popName.replace(/\s+/g, '');
+                        var relWtsId = legendValues.params.replace(/[{",}:\s+<b/>]/gi, '');
 
-            			var legendValues = solGS.sIndex.legendParams();
+            			var corLegDiv = `<div id="si_correlation_${popDiv}_${relWtsId}">`;
+
+
             			var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
 
             			jQuery(canvas).append(corLegDivVal).show();
