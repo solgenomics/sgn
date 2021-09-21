@@ -318,7 +318,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $include_lists = $c->req->param("include_lists") || 0;
 
     my @trials;
-    if ($include_lists) { unshift @trials, [ "", "----INDIVIDUAL TRIALS----" ]; }
+    if ($include_lists) { push @trials, [ "", "----INDIVIDUAL TRIALS----" ]; }
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
       foreach (@$field_trials) {
