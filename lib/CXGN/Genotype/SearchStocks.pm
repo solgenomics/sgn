@@ -53,7 +53,7 @@ sub get_selected_stocks {
     my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-
+    print STDERR "STOCK LIST =".Dumper(\@stocks)."\n";
     my $protocol_info = $parameters[0];
     my $info_ref = decode_json$protocol_info;
     my %info = %{$info_ref};
@@ -148,13 +148,24 @@ sub get_selected_stocks {
     }
 
     my @formatted_parameters;
+    my @rank_and_params;
     if (%chrom_hash) {
         foreach my $chromosome (keys %chrom_hash) {
+            my $rank_q= "SELECT value->'chromosomes'->?->>'rank'
+            FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
+
+            my $rank_h = $schema->storage->dbh()->prepare($rank_q);
+            $rank_h->execute($chromosome, $protocol_id, $vcf_map_details_id);
+
+            my ($rank) = $rank_h->fetchrow_array();
+            print STDERR "RANK =".Dumper($rank)."\n";
             my $marker_params = $chrom_hash{$chromosome};
             my $each_chrom_markers_string = encode_json $marker_params;
-            push @formatted_parameters, $each_chrom_markers_string
+            push @formatted_parameters, $each_chrom_markers_string;
+            push @rank_and_params, [$rank, $each_chrom_markers_string]
         }
     }
+        print STDERR "RANK AND PARAMS =".Dumper(\@rank_and_params)."\n";
 
     my @sorted_markers = natsort @formatted_parameters;
     my $genotype_string = join("<br>", @sorted_markers);
@@ -168,7 +179,7 @@ sub get_selected_stocks {
     }
 
     my @selected_stocks_details;
-    foreach my $param (@formatted_parameters) {
+    foreach my $param (@rank_and_params) {
         my $stock_table = "DROP TABLE IF EXISTS stock_table;
             CREATE TEMP TABLE stock_table(stock_name Varchar(100))";
         my $s_t = $schema->storage->dbh()->prepare($stock_table);
@@ -191,11 +202,11 @@ sub get_selected_stocks {
                 JOIN cvterm ON (stock2.type_id = cvterm.cvterm_id)
                 JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
                 JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.rank = ?
                 WHERE genotypeprop.value @> ? ";
 
             my $h2 = $schema->storage->dbh()->prepare($q2);
-            $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param);
+            $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param->[0], $param->[1]);
 
             while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type) = $h2->fetchrow_array()){
                 push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $genotype_string ];
@@ -209,7 +220,7 @@ sub get_selected_stocks {
                 JOIN cvterm ON (stock2.type_id = cvterm.cvterm_id)
                 JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
                 JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.rank = ?
                 WHERE genotypeprop.value @> ?
 
                 UNION ALL
@@ -222,11 +233,11 @@ sub get_selected_stocks {
                 JOIN cvterm ON (stock2.type_id = cvterm.cvterm_id)
                 JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
                 JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
-                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id)
+                JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.rank = ?
                 WHERE genotypeprop.value @> ?";
 
             my $h2= $schema->storage->dbh()->prepare($q2);
-            $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param, $accession_cvterm_id, $plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param);
+            $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param->[0], $param->[1], $accession_cvterm_id, $plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $param->[0], $param->[1]);
 
             while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type) = $h2->fetchrow_array()){
                 push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $genotype_string ];
