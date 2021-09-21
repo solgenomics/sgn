@@ -19,6 +19,7 @@ ok(my $chado_schema = $fix->bcs_schema);
 ok(my $phenome_schema = $fix->phenome_schema);
 ok(my $dbh = $fix->dbh);
 
+$chado_schema->txn_begin();
 # create a location for the trial
 ok(my $trial_location = "test_location_for_trial");
 ok(my $location = $chado_schema->resultset('NaturalDiversity::NdGeolocation')
@@ -153,7 +154,7 @@ ok(my $plot_1_id = $data[0]->[0][0]);
 ok(my $plot_2_id = $data[0]->[1][0]);
 ok(my $accession_1 = "test_stock_for_fieldmap_trial1");
 ok(my $accession_2 = "test_stock_for_fieldmap_trial2");
-
+$chado_schema->txn_rollback();
 # my $fieldmap = CXGN::Trial::FieldMap->new({
 #   bcs_schema => $chado_schema,
 #   trial_id => $trial_id,
