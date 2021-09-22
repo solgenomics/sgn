@@ -407,11 +407,13 @@ sub trait :Path('/solgs/trait') Args() {
     }
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    $protocol_id = $c->stash->{genotyping_protocol_id};
+
     $c->stash->{training_pop_id} = $pop_id;
     $c->stash->{trait_id} = $trait_id;
 
 	my $pop_name;
-	my $pop_link;
+	my $training_pop_page;
     if ($pop_id && $trait_id)
     {
 	$c->controller('solGS::Search')->project_description($c, $pop_id);
@@ -419,23 +421,19 @@ sub trait :Path('/solgs/trait') Args() {
 	$c->stash->{training_pop_name} = $pop_name;
 	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
 
-	$pop_link = qq | <a href="/solgs/population/$pop_id/gp/$protocol_id">$pop_name </a>| ;
+    my $args = {
+      'training_pop_id' => $pop_id,
+      'genotyping_protocol_id' => $protocol_id,
+      'data_set_type' => 'single population'
+    };
+
+    my $training_pop_url = $c->controller('solGS::Path')->training_page_url($args);
+    $training_pop_page= $c->controller('solGS::Path')->create_hyperlink($training_pop_url, $pop_name);
 
 	my $cached = $c->controller('solGS::CachedResult')->check_single_trial_model_output($c, $pop_id, $trait_id, $protocol_id);
 
 	if (!$cached)
 	{
-	    my $training_pop_name = $c->stash->{project_name};
-	    #my $training_pop_desc = $c->stash->{project_desc};
-		my $args = {
-   		  'training_pop_id' => $pop_id,
-   		  'genotyping_protocol_id' => $protocol_id,
-   		  'data_set_type' => 'single population'
-   	  	};
-
-   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
-	    $training_pop_page = qq | <a href="$training_pop_page">$training_pop_name</a> |;
-
 	    $c->stash->{message} = "Cached output for this model does not exist anymore.\n" .
 	     " Please go to $training_pop_page and run the analysis.";
 
@@ -456,8 +454,7 @@ sub trait :Path('/solgs/trait') Args() {
 
 	    $self->model_phenotype_stat($c);
 
-		$c->stash->{training_pop_url} = $pop_link;
-
+		$c->stash->{training_pop_url} = $training_pop_page;
 	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
 	}
     }
