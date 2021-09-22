@@ -20,7 +20,9 @@ name: breedbase build
 on:
   push:
     branches:
+      - develop
       - master
+  workflow_dispatch:
 
 jobs:
   build:
@@ -50,9 +52,24 @@ jobs:
         working-directory: ./breedbase_dockerfile
         run: git submodule update --init --recursive --remote
 
+      - name: Set tag
+        id: vars
+        run: echo ::set-output name=imageName::$(breedinginsight/breedbase:${{ steps.get-latest-tag.outputs.tag }}-$GITHUB_RUN_NUMBER)
+        
       - name: Build Docker and push image
         working-directory: ./breedbase_dockerfile
         run: |
-          docker build . --file Dockerfile --tag breedinginsight/breedbase:${{ steps.get-latest-tag.outputs.tag }}-$GITHUB_RUN_NUMBER --tag breedinginsight/breedbase:latest
-          docker push breedinginsight/breedbase:${{ steps.get-latest-tag.outputs.tag }}-$GITHUB_RUN_NUMBER
+          docker build . --file Dockerfile --tag ${{steps.vars.outputs.imageName}}
+          docker push ${{steps.vars.outputs.imageName}}
+          
+      - name: Tag develop
+        if: steps.extract_branch.outputs.branch == 'develop'
+        run: |
+          docker tag ${{steps.vars.outputs.imageName}} breedinginsight/breedbase:develop
+          docker push breedinginsight/breedbase:develop
+          
+      - name: Tag master
+        if: steps.extract_branch.outputs.branch == 'master'
+        run: |
+          docker tag ${{steps.vars.outputs.imageName}} breedinginsight/breedbase:latest
           docker push breedinginsight/breedbase:latest
