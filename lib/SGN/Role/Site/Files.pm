@@ -230,7 +230,7 @@ sub _default_temp_base {
 sub make_generated_dir {
     my ( $self, $tempdir ) = @_;
 
-    eval { mkpath( "$tempdir" ); };
+    eval { mkpath( readlink($tempdir) || $tempdir ); };
 
     if ($@) { 
 	print STDERR "the following error occurred while attempting to generate $tempdir : $@ (may be ok)\n";

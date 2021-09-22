@@ -1,0 +1,497 @@
+<%args>
+    $timestamp => localtime()
+</%args>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h5 class="panel-title">Split Seedlot</h5>
+    </div>
+    <div class="panel-body">
+        <p>This tool will split an existing Seedlot - keeping the existing Seedlot and creating a new one with the same Accession as the contents.</p>
+        
+        <br />
+
+        <!-- Seedlot to Split -->
+        <div class="form-group">
+            <label class="col-sm-3 control-label" style="text-align: right">Original Seedlot to Split</label>
+            <div class="col-sm-5">
+                <input class="form-control" id="seedlot_split_name" type="text" value="">
+            </div>
+            <div class="col-sm-2">
+                <button id="seedlot_split_name_update" class="btn btn-block btn-info"><span class="glyphicon glyphicon-refresh"></span> Update</button>
+            </div>
+            <div class="col-sm-2">
+                <button id="seedlot_split_name_barcode" class="btn btn-block btn-default"><span class="glyphicon glyphicon-qrcode"></span> Barcode</button>
+            </div>
+        </div>
+
+
+        <br /><br /><br />
+
+
+        <!-- NEW SEEDLOT INFO -->
+        <div id="seedlot_split_new_div" style="display: none">
+
+            <!-- New Seedlot Attributes -->
+            <div id="seedlot_split_new_attributes_panel" class="panel panel-info" style="max-width: 600px; margin: 0 auto">
+                <div class="panel-heading">
+                    <h5 class="panel-title">New Seedlot Attributes</h5>
+                </div>
+                <div class="panel-body">
+
+                    <!-- New Seedlot Name -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Seedlot Name</label>
+                        <div class="col-sm-9">
+                            <input class="form-control" id="seedlot_split_new_name" type="text" value="" placeholder="Required, must be a unique Seedlot name">
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- New Seedlot Contents -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Contents</label>
+                        <div class="col-sm-9">
+                            <input class="form-control" id="seedlot_split_new_contents" type="text" value="" placeholder="Required, must be an existing Accession name">
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- New Seedlot Breeding Program -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Breeding Program</label>
+                        <div class="col-sm-9">
+                            <div id="seedlot_split_new_breeding_program_div"></div>
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- New Seedlot Location -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Location</label>
+                        <div class="col-sm-9">
+                            <input class="form-control" id="seedlot_split_new_location" type="text" value="" placeholder="Required">
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- New Seedlot Box -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Box</label>
+                        <div class="col-sm-9">
+                            <input class="form-control" id="seedlot_split_new_box" type="text" value="" placeholder="Required">
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- New Seedlot Quality Issues -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Quality Issues</label>
+                        <div class="col-sm-9">
+                            <input class="form-control" id="seedlot_split_new_quality_issues" type="text" value="" placeholder="Optional, list quality issues here, or 'ok' for good quality seed">
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- New Seedlot Organization -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Organization</label>
+                        <div class="col-sm-9">
+                            <input class="form-control" id="seedlot_split_new_organization" type="text" value="" placeholder="Optional">
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- New Seedlot Timestamp -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Timestamp</label>
+                        <div class="col-sm-9">
+                            <input class="form-control" id="seedlot_split_new_timestamp" type="text" value="<% $timestamp %>" placeholder="<% $timestamp %>">
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- New Seedlot Description -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Description</label>
+                        <div class="col-sm-9">
+                            <input class="form-control" id="seedlot_split_new_description" type="text" value="" placeholder="Optional">
+                        </div>
+                    </div>
+                
+                </div>
+            </div>
+
+            <br /><br />
+
+            <!-- New Seedlot Contents -->
+            <div id="seedlot_split_new_contents_panel" class="panel panel-info" style="max-width: 600px; margin: 0 auto">
+                <div class="panel-heading">
+                    <h5 class="panel-title">New Seedlot Contents</h5>
+                </div>
+                <div class="panel-body">
+
+                    <!-- Original Seedlot Count -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Original Seedlot Count</label>
+                        <div class="col-sm-9">
+                            <p id="seedlot_split_original_contents_count">&nbsp;</p>
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- Original Seedlot Weight -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">Original Seedlot Weight (g)</label>
+                        <div class="col-sm-9">
+                            <p id="seedlot_split_original_contents_weight">&nbsp;</p>
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- New Seedlot Contents Type -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">New Seedlot Contents Type</label>
+                        <div class="col-sm-9">
+                            <select class="form-control" id="seedlot_split_new_contents_type">
+                                <option value="amount">Amount / Count</option>
+                                <option value="weight">Weight (g)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- New Seedlot Contents Value -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right">New Seedlot Contents Value</label>
+                        <div class="col-sm-9">
+                            <input class="form-control" id="seedlot_split_new_contents_value" value="" placeholder="Required">
+                        </div>
+                    </div>
+
+                    <br /><br />
+
+                    <!-- Add Transaction -->
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="text-align: right"></label>
+                        <div class="col-sm-9">
+                            <p><strong>Subtract initial contents of new seedlot from original seedlot:</strong></p>
+                            <input id="seedlot_split_new_contents_transaction" name="seedlot_split_new_contents_transaction" type="checkbox" data-toggle="toggle">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <br /><br />
+
+            <!-- Create New Seedlot -->
+            <div style="max-width: 400px; margin: 0 auto">
+                <button id="seedlot_split_new_create" class="btn btn-primary btn-block">Create Seedlot</button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Message Modal -->
+<div id="seedlot_split_modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div id="seedlot_split_modal_body" class="modal-body"></div>
+            <div class="modal-footer"><button id="seedlot_split_modal_close" type="button" class="btn btn-default">Close</button></div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+    jQuery(document).ready(function() {
+
+        // Parse Query Arguments
+        parseArgs();
+
+        // Click / Change listeners
+        jQuery('#seedlot_split_name_barcode').click(function() {
+            window.location = "/barcode/read?return=/breeders/seedlot/maintenance?tool=split_seedlot&param=seedlot_name";
+            return false;
+        });
+        jQuery('#seedlot_split_name').change(getSeedlotInfo);
+        jQuery('#seedlot_split_name_update').click(getSeedlotInfo);
+        jQuery('#seedlot_split_new_create').click(createNewSeedlot);
+        jQuery('#seedlot_split_modal_close').click(function() {
+            jQuery('#seedlot_split_modal').modal('hide');
+        });
+
+        // Autocomplete for Seedlot Name input
+        jQuery("#seedlot_split_name").autocomplete({
+            source: '/ajax/stock/seedlot_name_autocomplete',
+        });
+
+        // Breeding Program Select Box
+        get_select_box('breeding_programs', 'seedlot_split_new_breeding_program_div', { 'name' : 'seedlot_split_new_breeding_program_id', 'id' : 'seedlot_split_new_breeding_program_id' });
+
+    });
+
+
+    /**
+     * Parse the query arguments for the seedlot_name
+     * - Populate the seedlot name input with the value
+     */
+    function parseArgs() {
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        if ( urlSearchParams.get('tool') === 'split_seedlot' && urlSearchParams.has('seedlot_name') ) {
+            let seedlot_name = decodeURIComponent(urlSearchParams.get('seedlot_name'));
+            seedlot_name = seedlot_name.includes('seedlot_name=') ? seedlot_name.match(/.*seedlot_name=(.*)/)[1] : seedlot_name;
+            jQuery('#seedlot_split_name').val(seedlot_name);
+            getSeedlotInfo();
+        }
+    }
+
+    /**
+     * Get the details of the Seedlot specified by name
+     * - Update the new seedlot properties
+     */
+    function getSeedlotInfo() {
+        jQuery("#seedlot_split_name").attr("disabled", true);
+        jQuery("#seedlot_split_name_update").attr("disabled", true);
+
+        let name = jQuery("#seedlot_split_name").val();
+        let contents = "";
+        let breeding_program_id = "";
+        let location = "";
+        let box = "";
+        let quality_issues = "";
+        let organization = "";
+        let description = "";
+        let original_count = "&nbsp;";
+        let original_weight = "&nbsp;"
+        jQuery.ajax({
+            type: 'GET',
+            dataType: 'json',
+            url: '/ajax/breeders/seedlots?seedlot_name=' + name,
+            success: function(response) {
+                if ( response && response.data ) {
+                    for ( let i = 0; i < response.data.length; i++ ) {
+                        if ( response.data[i].seedlot_stock_uniquename.toUpperCase() === name.toUpperCase() ) {
+                            let sl = response.data[i];
+                            contents = jQuery(sl.contents_html).first().html();
+                            breeding_program_id = sl.breeding_program_id;
+                            location = sl.location;
+                            box = sl.box;
+                            organization = sl.organization;
+                            original_count = sl.count;
+                            original_weight = sl.weight_gram;
+                            jQuery("#seedlot_split_new_div").css("display", "block");
+                        }
+                    }
+                }
+            },
+            complete: function() {
+                jQuery("#seedlot_split_new_contents").val(contents);
+                jQuery("#seedlot_split_new_breeding_program_id").val(breeding_program_id);
+                jQuery("#seedlot_split_new_location").val(location);
+                jQuery("#seedlot_split_new_box").val(box);
+                jQuery("#seedlot_split_new_quality_issues").val(quality_issues);
+                jQuery("#seedlot_split_new_organization").val(organization);
+                jQuery("#seedlot_split_new_description").val(description);
+                jQuery("#seedlot_split_original_contents_count").html(original_count);
+                jQuery("#seedlot_split_original_contents_weight").html(original_weight);
+                setNewSeedlotName();
+            }
+        });
+    }
+
+    /**
+     * Generate and Set the new Seedlot name
+     * - Get the origin seedlot name
+     * - keep incrementing the ...-LOT{X} suffix until an unused name is found
+     * - popualte the input field for the new Seedlot name
+     */
+    function setNewSeedlotName() {
+        let origin_name = jQuery("#seedlot_split_name").val();
+        _setNewName("Generating...", false)
+        _generateSeedlotName(origin_name);
+
+        /**
+         * Generate the new seedlot name (based on the origin seedlot name)
+         */
+        function _generateSeedlotName(origin_name) {
+            let new_name = _getNextName(origin_name);
+            _seedlotExsists(new_name, function(exists) {
+                if ( exists ) {
+                    _generateSeedlotName(new_name);
+                }
+                else {
+                    _setNewName(new_name);
+                }
+            });
+        }
+
+        /**
+         * Get the next name of the seedlot (increment ...-LOT{X} to the next letter)
+         */
+        function _getNextName(name) {
+            let new_name = name.replace(/-LOT[A-Ya-y]{1}$/, function(a){
+                var c = a.charCodeAt(4);
+                return "-LOT" + String.fromCharCode(++c);
+            });
+            if ( new_name && new_name !== "" && new_name === name ) {
+                new_name = name + "-LOTA";
+            }
+            return new_name;
+        }
+
+        /**
+         * Check if the seedlot name exists (return boolean to callback)
+         */
+        function _seedlotExsists(new_name, callback) {
+            let exists = false;
+            jQuery.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: '/ajax/breeders/seedlots?seedlot_name=' + new_name,
+                success: function(response) {
+                    if ( response && response.data ) {
+                        for ( let i = 0; i < response.data.length; i++ ) {
+                            if ( response.data[i].seedlot_stock_uniquename.toUpperCase() === new_name.toUpperCase() ) {
+                                exists = true;
+                            }
+                        }
+                    }
+                },
+                complete: function() {
+                    return callback(exists);
+                }
+            });
+        }
+
+        /**
+         * Set the new name input field (optionally disable the field)
+         */
+        function _setNewName(new_name, enabled=true) {
+            jQuery("#seedlot_split_new_name").val(new_name);
+            jQuery("#seedlot_split_new_name").attr("disabled", !enabled);
+            jQuery("#seedlot_split_name").attr("disabled", !enabled);
+            jQuery("#seedlot_split_name_update").attr("disabled", !enabled);
+        }
+    }
+
+    /**
+     * Create the new Seedlot
+     */
+    function createNewSeedlot() {
+
+        // Set seedlot request data
+        let data = {
+            'seedlot_name': jQuery("#seedlot_split_new_name").val(),
+            'seedlot_location': jQuery("#seedlot_split_new_location").val(),
+            'seedlot_box_name': jQuery("#seedlot_split_new_box").val(),
+            'seedlot_accession_uniquename': jQuery("#seedlot_split_new_contents").val(),
+            'seedlot_organization': jQuery("#seedlot_split_new_organization").val(),
+            'seedlot_timestamp': jQuery("#seedlot_split_new_timestamp").val(),
+            'seedlot_description': jQuery("#seedlot_split_new_description").val(),
+            'seedlot_breeding_program_id': jQuery("#seedlot_split_new_breeding_program_id").val(),
+            'seedlot_quality': jQuery("#seedlot_split_new_quality_issues").val()
+        };
+        let contents_type = jQuery("#seedlot_split_new_contents_type").val();
+        let contents_value = jQuery("#seedlot_split_new_contents_value").val();
+        data['seedlot_' + contents_type] = contents_value;
+
+        // Add original seedlot stock_id for transaction
+        let add_transaction = jQuery("#seedlot_split_new_contents_transaction").prop("checked");
+        if ( add_transaction ) {
+            data.origin_seedlot_uniquename = jQuery('#seedlot_split_name').val();
+        }
+
+        // Check for required parameters
+        if ( !data.seedlot_name || data.seedlot_name === "" ) {
+            return displayError("Seedlot name required!");
+        }
+        if ( !data.seedlot_location || data.seedlot_location === "" ) {
+            return displayError("Location required!");
+        }
+        if ( !data.seedlot_box_name || data.seedlot_box_name === "" ) {
+            return displayError("Box name required!");
+        }
+        if ( !data.seedlot_accession_uniquename || data.seedlot_accession_uniquename === "" ) {
+            return displayError("Seedlot Contents / Accession required!");
+        }
+        if ( !data.seedlot_breeding_program_id || data.seedlot_breeding_program_id === "" ) {
+            return displayError("Breeding Program required!");
+        }
+        if ( (!data.seedlot_amount || data.seedlot_amount === "") && (!data.seedlot_weight || data.seedlot_weight === "") ) {
+            return displayError("Seedlot contents value required!");
+        }
+        if ( add_transaction && (!data.origin_seedlot_uniquename || data.origin_seedlot_uniquename === "") ) {
+            return displayError("Original Seedlot name required for initial transaction!");
+        }
+
+        // Create the Seedlot
+        jQuery('#working_modal').modal('show');
+        jQuery.ajax({
+            url: '/ajax/breeders/seedlot-create',
+            data: data,
+            success: function(response) {
+                if (response.success === 1) {
+                    displaySuccess("Seedlot successfully created!");
+                }
+                if (response.error) {
+                    let msg = "Could not create Seedlot:<br /><code>" + response.error + "</code>";
+                    displayError(msg);
+                }
+            },
+            error: function(response){
+                displayError("Could not create Seedlot: AJAX error");
+            },
+            complete: function() {
+                jQuery('#working_modal').modal('hide');
+            }
+        });
+
+    }
+
+    /**
+     * Display an error message in a bootstrap modal
+     * @param {string} msg Error message to display (can include HTML)
+     */
+    function displayError(msg) {
+        displayModal("Error", "#a94442", msg);
+    }
+
+    /**
+     * Display a success message in a bootstrap modal
+     * @param {string} msg Success message to display (can include HTML)
+     */
+    function displaySuccess(msg) {
+        displayModal("Success", "#3c763d", msg);
+    }
+
+    /**
+     * Display a message (and any existing messages) in a bootstrap modal
+     * @param {string} title Message title
+     * @param {string} color Message title color
+     * @param {string} msg Message to display (can include HTML)
+     */
+    function displayModal(title, color, msg) {
+        let html = "<h1 style='color: " + color + "'>" + title + "</h1>";
+        html += "<p style='margin: 15px 5px; font-size: 110%;'>" + msg + "</p>";
+
+        jQuery('#seedlot_split_modal_body').html(html);
+        jQuery('#seedlot_split_modal').modal({backdrop: 'static', keyboard: false});
+    }
+
+</script>

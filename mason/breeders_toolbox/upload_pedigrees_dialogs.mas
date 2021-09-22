@@ -110,7 +110,7 @@
 	  <ul>
         <li>progeny name (must exist in the database and can be accession uniquename or accession synonym)</li>
         <li>female parent accession (must exist in the database)</li>
-        <li>type (biparental, self, open, backcross, sib)</li>
+        <li>type (biparental, self, open, backcross, sib, polycross, reselected)</li>
             <ul class="a">
                 <li>cross type descriptions:</li>
                 <ul class="b">
@@ -120,9 +120,10 @@
                     <li>backcross: An individual plant pollinated by one of its parents.</li>
                     <li>sib: Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
                     <li>polycross: Mating between individual female parent from a population and the corresponding male population.</li>
+                    <li>reselected: Selection of a new accession from an existing line (e.g. caused by a mutation).</li>
                 </ul>
             </ul>
-	  </ul>
+      </ul>
 
 	  <h4>Optional fields</h4>
 	  <ul>
@@ -132,7 +133,7 @@
 
 	  <h4>Notes</h4>
 	  <ul>
-	    <li>Always specify the type of the cross (biparental, self, open, sib or polycross).</li>
+	    <li>Always specify the type of the cross (biparental, self, open, sib, backcross, polycross or reselected).</li>
 	    <li>If the type is open and no potential male parent is known, leave the male parent field empty
 	  </ul>
         </div>

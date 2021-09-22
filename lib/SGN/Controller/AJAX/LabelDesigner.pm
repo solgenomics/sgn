@@ -151,8 +151,8 @@ __PACKAGE__->config(
        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$file_prefix-XXXXX", SUFFIX=>".$download_type");
 
        # initialize loop variables
-       my $col_num = 1;
-       my $row_num = 1;
+       my $col_num = $design_params->{'start_col'} || 1;
+       my $row_num = $design_params->{'start_row'} || 1;
        my $key_number = 0;
        my $sort_order = $design_params->{'sort_order'};
 

@@ -1,3 +1,7 @@
+
+
+<& /util/import_css.mas, paths => ['/static/css/solgs/spinner.css'] &>
+
 <div class="multi-spinner-container">
     <div class="multi-spinner">
         <div class="multi-spinner">

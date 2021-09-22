@@ -379,30 +379,8 @@ solGS.submitJob = {
 		    Submit: {
 			click: function(e) {
 
-			    var userEmail = jQuery("#user_email").val();
-			    var analysisName = jQuery('#analysis_name').val();
-			    var analysisType = args.analysis_type;
-			    var userName  = args.user_name;
-			    var dataSetType = args.data_set_type;
-
-			    args['user_email'] = userEmail;
-			    args['analysis_name'] = analysisName;
-			    args['analysis_page'] = page;
-
-			    //args = JSON.stringify(args);
-
-			    var analysisProfile = {
-				'user_name'    : userName,
-				'analysis_name': analysisName,
-				'analysis_page': page,
-				'analysis_type': analysisType,
-				'data_set_type': dataSetType,
-				'arguments'    : args,
-			    };
-
-
-			    solGS.submitJob.checkAnalysisName(analysisName, analysisProfile);
-			    solGS.submitJob.checkEmail(userEmail);
+			var analysisProfile = solGS.submitJob.structureAnalysisProfile(page, args);
+            solGS.submitJob.validateAnalysisInput(analysisProfile);
 
 			},
 			id   :'submit_job',
@@ -423,60 +401,98 @@ solGS.submitJob = {
     },
 
 
-    checkEmail: function(email) {
+    structureAnalysisProfile: function(page, args) {
+        var userEmail = jQuery("#user_email").val();
+        var analysisName = jQuery('#analysis_name').val();
+        var analysisType = args.analysis_type;
+        var userName  = args.user_name;
+        var dataSetType = args.data_set_type;
 
-	if (email == '') {
-	    jQuery("#user_email")
-		.css('border', 'solid #FF0000');
+        args['user_email'] = userEmail;
+        args['analysis_name'] = analysisName;
+        args['analysis_page'] = page;
 
-	    jQuery("#form-feedback-user-email")
-		.text('Please give your email.');
-	}
+        args = JSON.stringify(args);
+
+        var analysisProfile = {
+        'user_name'    : userName,
+        'analysis_name': analysisName,
+        'analysis_page': page,
+        'analysis_type': analysisType,
+        'data_set_type': dataSetType,
+        'arguments'    : args,
+        };
+
+        return analysisProfile;
+    },
+
+
+    validateAnalysisInput: function(analysisProfile) {
+        var analysisName = jQuery('#analysis_name').val();
+
+       var checkName = solGS.submitJob.checkAnalysisName(analysisName);
+
+       checkName.done( function(res) {
+           if (res.analysis_exists) {
+                jQuery("#analysis_name")
+                .css('border', 'solid #FF0000');
+
+                jQuery("#form-feedback-analysis-name")
+                .text('The same name exists or you have not provided a name. Please give a new name.');
+           }
+           else {
+
+               var email = jQuery('#user_email').val();
+               var emailPass = solGS.submitJob.checkEmail(email);
+
+                if (emailPass) {
+                    jQuery("#email-form").dialog('close');
+                    solGS.submitJob.saveAnalysisProfile(analysisProfile);
+                }
+           }
+       });
+
+       checkName.fail( function(res) {
+           var message = 'Error occured submitting the job. Please contact the developers.'
+               + "\n\nHint: " + response.result;
+           solGS.alertMessage(message);
+       });
 
     },
 
 
-    checkAnalysisName: function(name, analysisProfile) {
+    checkEmail: function(email) {
 
-	jQuery.ajax({
+    var emailPass;
+    var emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/i;
+    if (!email.match(emailRegex)) {
+        jQuery("#user_email")
+		.css('border', 'solid #FF0000');
+
+	    jQuery("#form-feedback-user-email")
+		.text('Please fill in a proper email.');
+
+        emailPass = 0;
+
+    } else {
+        emailPass = 1;
+    }
+
+    return emailPass;
+
+    },
+
+
+    checkAnalysisName: function(name) {
+
+	var analysisName = jQuery.ajax({
 	    dataType: 'json',
 	    type    : 'POST',
  	    data    : {'name': name},
-	    url     : '/solgs/check/analysis/name',
-	    success : function(res) {
+	    url     : '/solgs/check/analysis/name'
+    });
 
-		if (res.match > 0) {
-		    jQuery("#analysis_name")
-			.css('border', 'solid #FF0000');
-
-		    jQuery("#form-feedback-analysis-name")
-			.text('The same name exists. Please give a new name.');
-
-		    var email = jQuery('#user_email').val();
-	 	    solGS.submitJob.checkEmail(email);
-
-		} else {
-            
-            if (typeof analysisProfile.arguments !== 'string') {
-		              analysisProfile['arguments'] = JSON.stringify(analysisProfile.arguments);
-            }
-
-		    var email = jQuery('#user_email').val();
-	 	    solGS.submitJob.checkEmail(email);
-
-		    if (email) {
-		    jQuery("#email-form").dialog('close');
-			solGS.submitJob.saveAnalysisProfile(analysisProfile);
-		    }
-		}
-	    },
-	    error: function (response) {
-		var message = 'Error occured submitting the job. Please contact the developers.'
-		    + "\n\nHint: " + response.result;
-		solGS.alertMessage(message);
-	    }
-	});
-
+    return analysisName;
     },
 
 
@@ -916,9 +932,10 @@ solGS.getPopulationDetails = function() {
 
 
 solGS.showMessage = function(divId, msg) {
-     jQuery("#" + divId)
-        .css({"padding-left": '0px'})
-        .html(msg);
+
+    divId = divId.match(/#/) ? divId : '#' + divId;
+
+    jQuery(divId).html(msg).show();
 
 }
 

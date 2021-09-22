@@ -102,14 +102,7 @@ function add_user_role(sp_person_id, person_name) {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response){
-                //console.log(response);
                 jQuery("#working_modal").modal("hide");
-
-             //   var sp_person_html = '<select class="form-control" id="add_person_role_person_select">';
-             //   for (var i=0; i<response.sp_persons.length; i++) {
-             //       sp_person_html = sp_person_html + '<option value="'+response.sp_persons[i][1]+'">'+response.sp_persons[i][0]+'</option>';
-             //   }
-             //   jQuery('#add_person_role_person_select_div').empty().html(sp_person_html);
 
                 var sp_role_html = '<select class="form-control" id="add_person_role_role_select">';
                 for (var i=0; i<response.sp_roles.length; i++) {
@@ -122,38 +115,35 @@ function add_user_role(sp_person_id, person_name) {
                 alert('An error occured: '+response);
             }
         });
-
-
-        jQuery('#add_person_role_submit_button').click( function(e) {
-
-
-        jQuery.ajax ( {
-            url : '/ajax/people/add_person_role?sp_person_id='+jQuery("#sp_person_id").val()+'&sp_role_id='+jQuery("#add_person_role_role_select").val(),
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                //console.log(response);
-                jQuery("#working_modal").modal("hide");
-                if (response.error) {
-                    alert('Error: '+response.error);
-                } else {
-		     jQuery('#manage_user_roles_table').DataTable().ajax.reload();					  
-                    alert('Role Added for User!');
-                }
-            },
-            error: function(response) {
-                jQuery("#working_modal").modal("hide");
-                alert('An error occured: '+response);
-            }
-		});
-
-	
-
-        });
-	
-	
 }
+
+
+
+    jQuery('#add_person_role_submit_button').click( function(e) {
+
+							  
+    jQuery.ajax ( {
+        url : '/ajax/people/add_person_role?sp_person_id='+jQuery("#sp_person_id").val()+'&sp_role_id='+jQuery("#add_person_role_role_select").val(),
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            //console.log(response);
+            jQuery("#working_modal").modal("hide");
+            if (response.error) {
+                alert('Error: '+response.error);
+            } else {
+            jQuery('#manage_user_roles_table').DataTable().ajax.reload();
+                alert('Role Added for User!');
+            }
+        },
+        error: function(response) {
+            jQuery("#working_modal").modal("hide");
+            alert('An error occured: '+response);
+        }
+    });
+});
+	
 
 </script>
 
