@@ -53,7 +53,6 @@ sub get_selected_stocks {
     my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-    print STDERR "STOCK LIST =".Dumper(\@stocks)."\n";
     my $protocol_info = $parameters[0];
     my $info_ref = decode_json$protocol_info;
     my %info = %{$info_ref};
@@ -67,7 +66,6 @@ sub get_selected_stocks {
     $type_h->execute($protocol_id, $vcf_map_details_id);
 
     my ($sample_type) = $type_h->fetchrow_array();
-    print STDERR "SAMPLE TYPE =".Dumper($sample_type)."\n";
 
     my %chrom_hash;
     foreach my $param (@parameters){
@@ -87,7 +85,6 @@ sub get_selected_stocks {
 
                 while (my ($chrom) = $h->fetchrow_array()){
                     if ($chrom) {
-                        print STDERR "CHROMOSOME NO =".Dumper($chrom)."\n";
                         $chrom_hash{$chrom}{$marker_name}{'DS'} = $allele_dosage
                     }
                 }
@@ -117,7 +114,7 @@ sub get_selected_stocks {
                         push @ref_alt_chrom, $chrom
                     }
                 }
-                print STDERR "REF ALT CHROM=" .Dumper(\@ref_alt_chrom). "\n";
+
                 my @nt = ();
 
                 if ($allele_1 ne $allele_2){
@@ -158,14 +155,12 @@ sub get_selected_stocks {
             $rank_h->execute($chromosome, $protocol_id, $vcf_map_details_id);
 
             my ($rank) = $rank_h->fetchrow_array();
-            print STDERR "RANK =".Dumper($rank)."\n";
             my $marker_params = $chrom_hash{$chromosome};
             my $each_chrom_markers_string = encode_json $marker_params;
             push @formatted_parameters, $each_chrom_markers_string;
             push @rank_and_params, [$rank, $each_chrom_markers_string]
         }
     }
-        print STDERR "RANK AND PARAMS =".Dumper(\@rank_and_params)."\n";
 
     my @sorted_markers = natsort @formatted_parameters;
     my $genotype_string = join("<br>", @sorted_markers);
@@ -245,7 +240,7 @@ sub get_selected_stocks {
             }
         }
     }
-    print STDERR "SELECTED STOCKS =".Dumper(\@selected_stocks_details)."\n";
+
     return \@selected_stocks_details;
 
 }
