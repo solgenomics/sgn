@@ -52,6 +52,11 @@ jobs:
         working-directory: ./breedbase_dockerfile
         run: git submodule update --init --recursive --remote
 
+      - name: Extract branch name
+        shell: bash
+        run: echo ::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/})
+        id: extract_branch
+
       - name: Set tag
         id: vars
         run: echo ::set-output name=imageName::$(echo breedinginsight/breedbase:${{ steps.get-latest-tag.outputs.tag }}-$GITHUB_RUN_NUMBER)
