@@ -11,267 +11,60 @@ use Data::Dumper;
 use JSON;
 use Spreadsheet::Read;
 
+use CXGN::Dataset;
+
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
+my $people_schema = $f->people_schema();
 
 my $mech = Test::WWW::Mechanize->new;
 my $response;
 
-$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+# login
+#
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ], 'login with brapi call');
+
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
-is($response->{'userDisplayName'}, 'Jane Doe');
 
-my $trial_id = 137;
-my $data_level = 'plots';
-my $selected_columns = encode_json {'plot_name'=>1,'block_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1,'pedigree'=>1,'location_name'=>1,'trial_name'=>1,'year'=>1,'synonyms'=>1,'tier'=>1,'seedlot_name'=>1,'seed_transaction_operator'=>1,'num_seed_per_plot'=>1};
-my $trait_list = 13;
+is($response->{'userDisplayName'}, 'Jane Doe', 'check login name');
 
-$mech->post_ok('http://localhost:3010/ajax/fieldbook/create', ['trial_id'=>$trial_id, 'data_level'=>$data_level, 'selected_columns'=>$selected_columns, 'trait_list'=>$trait_list] );
-$response = decode_json $mech->content;
-print STDERR Dumper $response;
-my $file_name = $response->{file};
+# create a suitable dataset
+#
+my $ds = CXGN::Dataset->new( { schema=> $schema, people_schema => $people_schema });
 
-my $contents = ReadData ($file_name);
-#print STDERR Dumper $contents;
+$ds->trials( [ 139, 141 ]);
+$ds->store();
 
-my $cells = $contents->[1]->{cell};
-print STDERR Dumper $cells;
-is_deeply($cells, [
-          [],
-          [
-            undef,
-            'plot_name',
-            'test_trial21',
-            'test_trial22',
-            'test_trial23',
-            'test_trial24',
-            'test_trial25',
-            'test_trial26',
-            'test_trial27',
-            'test_trial28',
-            'test_trial29',
-            'test_trial210',
-            'test_trial211',
-            'test_trial212',
-            'test_trial213',
-            'test_trial214',
-            'test_trial215'
-          ],
-          [
-            undef,
-            'accession_name',
-            'test_accession4',
-            'test_accession5',
-            'test_accession3',
-            'test_accession3',
-            'test_accession1',
-            'test_accession4',
-            'test_accession5',
-            'test_accession1',
-            'test_accession2',
-            'test_accession3',
-            'test_accession1',
-            'test_accession5',
-            'test_accession2',
-            'test_accession4',
-            'test_accession2'
-          ],
-          [
-            undef,
-            'plot_number',
-            '1',
-            '2',
-            '3',
-            '4',
-            '5',
-            '6',
-            '7',
-            '8',
-            '9',
-            '10',
-            '11',
-            '12',
-            '13',
-            '14',
-            '15'
-          ],
-          [
-            undef,
-            'block_number',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1',
-            '1'
-          ],
-          [
-            undef,
-            'is_a_control'
-          ],
-          [
-            undef,
-            'rep_number',
-            '1',
-            '1',
-            '1',
-            '2',
-            '1',
-            '2',
-            '2',
-            '2',
-            '1',
-            '3',
-            '3',
-            '3',
-            '2',
-            '3',
-            '3'
-          ],
-          [
-            undef,
-            'row_number'
-          ],
-          [
-            undef,
-            'col_number'
-          ],
-          [
-            undef,
-            'seedlot_name'
-          ],
-          [
-            undef,
-            'seed_transaction_operator'
-          ],
-          [
-            undef,
-            'num_seed_per_plot'
-          ],
-          [
-            undef,
-            'pedigree',
-            'test_accession1/test_accession2',
-            'test_accession3/NA',
-            'NA/NA',
-            'NA/NA',
-            'NA/NA',
-            'test_accession1/test_accession2',
-            'test_accession3/NA',
-            'NA/NA',
-            'NA/NA',
-            'NA/NA',
-            'NA/NA',
-            'test_accession3/NA',
-            'NA/NA',
-            'test_accession1/test_accession2',
-            'NA/NA'
-          ],
-          [
-            undef,
-            'location_name',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location',
-            'test_location'
-          ],
-          [
-            undef,
-            'trial_name',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial',
-            'test_trial'
-          ],
-          [
-            undef,
-            'year',
-            '2014',
-            '2014',
-            '2014',
-            '2014',
-            '2014',
-            '2014',
-            '2014',
-            '2014',
-            '2014',
-            '2014',
-            '2014',
-            '2014',
-            '2014',
-            '2014',
-            '2014'
-          ],
-          [
-            undef,
-            'synonyms',
-            undef,
-            undef,
-            'test_accession3_synonym1',
-            'test_accession3_synonym1',
-            'test_accession1_synonym1',
-            undef,
-            undef,
-            'test_accession1_synonym1',
-            'test_accession2_synonym1,test_accession2_synonym2',
-            'test_accession3_synonym1',
-            'test_accession1_synonym1',
-            undef,
-            'test_accession2_synonym1,test_accession2_synonym2',
-            undef,
-            'test_accession2_synonym1,test_accession2_synonym2'
-          ],
-          [
-            undef,
-            'tier',
-            '/',
-            '/',
-            '/',
-            '/',
-            '/',
-            '/',
-            '/',
-            '/',
-            '/',
-            '/',
-            '/',
-            '/',
-            '/',
-            '/',
-            '/'
-          ]
-        ], 'test fieldbook ajax file contents');
+my $dataset_id = $ds->sp_dataset_id();
 
-done_testing;
+$mech->get_ok('http://localhost:3010/tools/heritability', 'load heritability input page');
+
+$mech->get_ok('http://localhost:3010/ajax/heritability/shared_phenotypes?dataset_id='.$dataset_id, 'get common traits for dataset');
+
+my $sp_data = JSON::Any->decode($mech->content());
+
+my $trait_id = $sp_data->{options}->[0]->[0];
+
+$mech->get_ok('http://localhost:3010/ajax/heritability/generate_results?dataset_id='.$dataset_id.'&trait_id='.$trait_id, 'run the heritability analysis');
+
+my $rdata = JSON::Any->decode($mech->content());
+
+print STDERR "RDATA: ".Dumper($rdata);
+
+# check if file names were returned
+#
+ok($rdata->{figure3}, "figure 3 returned");
+ok($rdata->{figure4}, "figure 4 returned");
+ok($rdata->{h2Table}, "h2Table returned");
+
+# check if files were created
+#
+ok( -e "static/".$rdata->{figure3}, "figure 3 created");
+#ok( -e "static/".$rdata->{figure4}, "figure 4 created");
+ok( -e "static/".$rdata->{h2Table}, "table created");
+
+# remove changes to the database
+#
+$ds->delete();
+
+done_testing();
