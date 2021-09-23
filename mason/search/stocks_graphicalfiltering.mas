@@ -57,12 +57,13 @@ function loadBrAPIData(server,parameters,success){
 
     var data = {
         "pageSize" : 10000000,
+        "includeObservations" : "true",
     };
     d3.entries(parameters).forEach(function(entry){
         data[entry.key] = data[entry.key]||entry.value;
     });
     
-    var brapi_Data = BrAPI("/brapi/v1",'v1.3',auth_token).phenotypes_search(data);
+    var brapi_Data = BrAPI("/brapi/v2",'v2.0',auth_token).search_observationunits(data);
 
     if (currentGFilter!=null){
         $("#stock_search_graphical_filter_results_div").DataTable().destroy();
