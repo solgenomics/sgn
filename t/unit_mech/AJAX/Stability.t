@@ -37,31 +37,33 @@ $ds->store();
 
 my $dataset_id = $ds->sp_dataset_id();
 
-$mech->get_ok('http://localhost:3010/tools/heritability', 'load heritability input page');
+$mech->get_ok('http://localhost:3010/tools/stability', 'load stability input page');
 
-$mech->get_ok('http://localhost:3010/ajax/heritability/shared_phenotypes?dataset_id='.$dataset_id, 'get common traits for dataset');
+$mech->get_ok('http://localhost:3010/ajax/stability/shared_phenotypes?dataset_id='.$dataset_id, 'get common traits for dataset');
 
 my $sp_data = JSON::Any->decode($mech->content());
 
 my $trait_id = $sp_data->{options}->[0]->[0];
 
-$mech->get_ok('http://localhost:3010/ajax/heritability/generate_results?dataset_id='.$dataset_id.'&trait_id='.$trait_id, 'run the heritability analysis');
+$mech->get_ok('http://localhost:3010//ajax/stability/generate_results?dataset_id='.$dataset_id.'&trait_id='.$trait_id."&method_id=AMMI", 'run the AMMI analysis');
 
 my $rdata = JSON::Any->decode($mech->content());
 
-print STDERR "RDATA: ".Dumper($rdata);
-
-# check if file names were returned
+# check if files were created
 #
-ok($rdata->{figure3}, "figure 3 returned");
-ok($rdata->{figure4}, "figure 4 returned");
-ok($rdata->{h2Table}, "h2Table returned");
+ok( -e "static/".$rdata->{figure1}, "AMMI figure 1 created");
+ok( -e "static/".$rdata->{figure2}, "AMMI figure 2 created");
+ok( -e "static/".$rdata->{AMMITable}, "AMMI table created");
+
+$mech->get_ok('http://localhost:3010//ajax/stability/generate_results?dataset_id='.$dataset_id.'&trait_id='.$trait_id."&method_id=GGE", 'run the GGE analysis');
+
+my $rdata2 = JSON::Any->decode($mech->content());
 
 # check if files were created
 #
-ok( -e "static/".$rdata->{figure3}, "figure 3 created");
-#ok( -e "static/".$rdata->{figure4}, "figure 4 created");
-ok( -e "static/".$rdata->{h2Table}, "table created");
+ok( -e "static/".$rdata2->{figure1}, "GGE figure 1 created");
+ok( -e "static/".$rdata2->{figure2}, "GGE figure 2 created");
+ok( -e "static/".$rdata2->{AMMITable}, "GGE table created");
 
 # remove changes to the database
 #

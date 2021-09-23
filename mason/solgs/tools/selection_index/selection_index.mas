@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/selection_index/selection_index.mas - displays a form for calculating selection index of individuals.
+/solgs/tools/selection_index/selection_index.mas - displays a form for calculating selection index of individuals.
 
 =AUTHOR
 
@@ -60,7 +60,7 @@ $training_pop_name
       <input type="hidden" id="selected_population_type" value="" />
     </div>
 
-    <& /solgs/selection_index/selection_index_correlation.mas &>
+    <& selection_index_correlation.mas &>
 
   </div>
 

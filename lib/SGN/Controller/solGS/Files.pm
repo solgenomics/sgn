@@ -85,6 +85,28 @@ sub model_phenodata_file {
     }
 }
 
+sub trait_raw_phenodata_file {
+    my ($self, $c) = @_;
+
+    my $pop_id        = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} ;
+    my $trait_abbr    = $c->stash->{trait_abbr};
+
+    my $id =   "${pop_id}-${trait_abbr}";
+    if ($trait_abbr)
+    {
+	no warnings 'uninitialized';
+
+	my $cache_data = {key       => 'trait_raw_phenodata_' . $id,
+			  file      => 'trait_raw_phenodata_' .  $id . '.txt',
+			  stash_key => 'trait_raw_phenodata_file',
+			  cache_dir => $c->stash->{solgs_cache_dir}
+	};
+
+	$self->cache_file($c, $cache_data);
+    }
+}
+
+
 
 sub model_info_file {
     my ($self, $c) = @_;

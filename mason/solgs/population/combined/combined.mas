@@ -92,7 +92,7 @@ $data_set_type => ''
 
 </&>
 
-<& /solgs/population/correlation.mas,
+<& /solgs/tools/correlation/correlation.mas,
    corre_pop_id  => $training_pop_id,
    data_set_type => $data_set_type
 &>

@@ -331,7 +331,7 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         $person->update_confirm_code($email_reset_token);
         print STDERR "Sending reset link $reset_link\n";
-        $self->send_reset_email_message($c, $pid, $email, $reset_link);
+        $self->send_reset_email_message($c, $pid, $email, $reset_link, $person->{username});
         push @reset_links, $reset_link;
         push @reset_tokens, $email_reset_token;
     }
@@ -385,6 +385,7 @@ sub send_reset_email_message {
     my $pid = shift;
     my $private_email = shift;
     my $reset_link = shift;
+    my $person = shift;
 
     my $subject = "[SGN] E-mail Address Confirmation Request";
     my $main_url = $c->config->{main_production_site_url};
@@ -393,7 +394,7 @@ sub send_reset_email_message {
 
 Hi,
 
-you have requested a password reset on $main_url.
+The user $person has requested a password reset on $main_url.
 
 If this request did not come from you, please let us know.
 

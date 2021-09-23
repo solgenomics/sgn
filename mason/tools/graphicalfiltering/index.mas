@@ -82,7 +82,7 @@ $ajaxRequestString => ""
     var list_id = $("#filter_list_select").val(),
         unit = $("#type_list_select").val(),
         group = $('#accession_group').is(":checked"),
-        brapi = BrAPI("/brapi/v1","v1.3",auth_token);
+        brapi = BrAPI("/brapi/v2","v2.0",auth_token);
     if (!unit) return;
     var list_contents = list.transform2Ids(list_id),
         list_type = list.getListType(list_id);
@@ -93,9 +93,10 @@ $ajaxRequestString => ""
         break;
       case 'trials':
         updateGFilter(group,
-          brapi.phenotypes_search({
+          brapi.search_observationunits({
             "studyDbIds": list_contents,
-            "observationLevel": unit,
+            "observationLevels": [{'levelName': unit }],
+            "includeObservations" : "true",
             "pageSize": 100000
           })
         );

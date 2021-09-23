@@ -297,17 +297,26 @@ solGS.correlation = {
                 success: function (response) {
     		if (response.status == 'success') {
 
-                jQuery(canvas).show();
-                solGS.correlation.plotCorrelation(response.data, canvas);
+                    jQuery(canvas).show();
 
-                    if (canvas ===  '#si_canvas') {
+		    var heatmapDiv = 'corr_heatmap';
 
-            			var popName   = jQuery("#selected_population_name").val();
-            			var corLegDiv = "<div id=\"si_correlation_"
-                                        + popName.replace(/\s/g, "")
-                                        + "\"></div>";
+		    if (canvas === '#si_canvas') {
+			heatmapDiv = '#si_heatmap';
+		    }
 
-            			var legendValues = solGS.sIndex.legendParams();
+                    solGS.correlation.plotCorrelation(response.data, canvas, heatmapDiv);
+
+                    if (canvas === '#si_canvas') {
+                        var popName   = jQuery("#selected_population_name").val();
+                        var legendValues = solGS.sIndex.legendParams();
+
+                        var popDiv = popName.replace(/\s+/g, '');
+                        var relWtsId = legendValues.params.replace(/[{",}:\s+<b/>]/gi, '');
+
+            			var corLegDiv = `<div id="si_correlation_${popDiv}_${relWtsId}">`;
+
+
             			var corLegDivVal = jQuery(corLegDiv).html(legendValues.legend);
 
             			jQuery(canvas).append(corLegDivVal).show();
@@ -350,9 +359,9 @@ solGS.correlation = {
     },
 
 
-    plotCorrelation: function (data, canvas) {
+    plotCorrelation: function (data, canvas, heatmapDiv) {
 
-	solGS.heatmap.plot(data, canvas);
+	solGS.heatmap.plot(data, canvas, heatmapDiv);
 
     },
 
