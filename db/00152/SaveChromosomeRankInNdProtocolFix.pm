@@ -3,11 +3,11 @@
 
 =head1 NAME
 
- SaveChromosomeRankInNdProtocol
+ SaveChromosomeRankInNdProtocolFix
 
 =head1 SYNOPSIS
 
-mx-run SaveChromosomeRankInNdProtocol [options] -H hostname -D dbname -u username [-F]
+mx-run SaveChromosomeRankInNdProtocolFix [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package SaveChromosomeRankInNdProtocol;
+package SaveChromosomeRankInNdProtocolFix;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -85,24 +85,26 @@ sub patch {
 	;";
     my $h1_1 = $schema->storage->dbh()->prepare($q1_1);
 
-    my %protocols_hash;
+    my %unique_chromosomes;
     while (my ($nd_protocol_id, $markers_array_json) = $h->fetchrow_array()) {
         my $markers_array = $markers_array_json ? decode_json $markers_array_json : [];
         if (scalar(@$markers_array)>0) {
-            my %unique_chromosomes;
             foreach (@$markers_array) {
-                # print STDERR Dumper $_;
-                $unique_chromosomes{$_->{chrom}}->{marker_count}++;
+                $unique_chromosomes{$nd_protocol_id}->{$_->{chrom}}->{marker_count}++;
             }
-
-	    $h1_1->execute($nd_protocol_id);
-	    my ($stock_id) = $h1_1->fetchrow_array();
-
-            $protocols_hash{$nd_protocol_id} = {
-                chroms => \%unique_chromosomes,
-                stock_id => $stock_id
-            };
         }
+    }
+    print STDERR Dumper \%unique_chromosomes;
+
+    my %protocols_hash;
+    while (my($nd_protocol_id, $chroms) = each %unique_chromosomes) {
+        $h1_1->execute($nd_protocol_id);
+        my ($stock_id) = $h1_1->fetchrow_array();
+
+        $protocols_hash{$nd_protocol_id} = {
+            chroms => $chroms,
+            stock_id => $stock_id
+        };
     }
     print STDERR Dumper \%protocols_hash;
 
