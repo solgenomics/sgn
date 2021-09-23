@@ -2041,7 +2041,7 @@ sub delete_phenotype_values_and_nd_experiment_md_values {
             my $h4 = $schema->storage->dbh()->prepare($q_nd_exp_files_images_delete);
             $h4->execute();
 
-            open (my $fh, ">", $temp_file_nd_experiment_id ) || die ("\nERROR: the file $temp_file_nd_experiment_id could not be found\n" );
+            open (my $fh, ">", $temp_file_nd_experiment_id ) || print STDERR  ("\nWARNING: the file $temp_file_nd_experiment_id could not be found\n" );
                 foreach (@nd_experiment_ids) {
                     print $fh "$_\n";
                 }
