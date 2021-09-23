@@ -24,7 +24,7 @@ print STDERR "Using tempfile $tempfile\n";
 # create dataset
 my $ds = CXGN::Dataset->new( { people_schema => $f->people_schema(), schema => $f->bcs_schema() });
 
-$ds->years( [ "2016", "2017" ]);
+$ds->years( [ "2014", "2015" ]);
 
 $ds->store();
 
@@ -56,7 +56,7 @@ ok( -e $mm->tempfile().".params", "check existence of parmams file");
 ok( -e $mm->tempfile().".adjustedBLUPs", "check existence of adjustedBLUPs result file");
 ok( -e $mm->tempfile().".BLUPs", "check existence of BLUPs result file");
 
-is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUPs")), 440, "check number of lines in adjustedBLUEs file...");
+is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUPs")), 413, "check number of lines in adjustedBLUEs file...");
 
 
 $mm->fixed_factors( [ "germplasmName" ]  );
@@ -73,10 +73,11 @@ $mm->run_model();
 
 ok( -e $mm->tempfile().".adjustedBLUEs", "check existence of adjustedBLUEs result file");
 ok( -e $mm->tempfile().".BLUEs", "check existence of BLUEs result file");
-is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUEs")), 440, "check number of lines in adjustedBLUPs file...");
+is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUEs")), 413, "check number of lines in adjustedBLUPs file...");
 
 
 # cleanup for next test :-)
+#
 unlink($mm->tempfile().".params");
 unlink($mm->tempfile().".adjustedBLUPs");
 unlink($mm->tempfile().".BLUPs");
@@ -85,4 +86,6 @@ unlink($mm->tempfile().".BLUEs");
 
 $ds->delete();
 
+# phew, we're done!
+#
 done_testing();
