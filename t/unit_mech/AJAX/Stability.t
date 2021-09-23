@@ -65,4 +65,8 @@ ok( -e "static/".$rdata2->{figure1}, "GGE figure 1 created");
 ok( -e "static/".$rdata2->{figure2}, "GGE figure 2 created");
 ok( -e "static/".$rdata2->{AMMITable}, "GGE table created");
 
+# remove changes to the database
+#
+$ds->delete();
+
 done_testing();
