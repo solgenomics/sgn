@@ -948,7 +948,7 @@ sub upload_trial_file_POST : Args(0) {
             #print STDERR Dumper $parse_errors;
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error=$return_error.$error_string."<br>";
+                $return_error .= $error_string."<br>";
             }
         }
 
