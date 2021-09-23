@@ -515,7 +515,7 @@ sub get_dataset_data {
     $dataref->{categories}->{plants} = $self->plants() if $self->plants && scalar(@{$self->plants})>0;
     $dataref->{categories}->{trials} = $self->trials() if $self->trials && scalar(@{$self->trials})>0;
     $dataref->{categories}->{traits} = $self->traits() if $self->traits && scalar(@{$self->traits})>0;
-    @{$dataref->{categories}->{years}} = map { "'".$_."'" } @{$self->years()} if $self->years && scalar(@{$self->years})>0;
+    @{$dataref->{categories}->{years}} = @{$self->years()} if $self->years && scalar(@{$self->years})>0;
     $dataref->{categories}->{breeding_programs} = $self->breeding_programs() if $self->breeding_programs && scalar(@{$self->breeding_programs})>0;
     $dataref->{categories}->{genotyping_protocols} = $self->genotyping_protocols() if $self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0;
     $dataref->{categories}->{trial_designs} = $self->trial_designs() if $self->trial_designs && scalar(@{$self->trial_designs})>0;
@@ -534,7 +534,7 @@ sub _get_dataref {
     $dataref->{plants} = join(",", @{$self->plants()}) if $self->plants && scalar(@{$self->plants})>0;
     $dataref->{trials} = join(",", @{$self->trials()}) if $self->trials && scalar(@{$self->trials})>0;
     $dataref->{traits} = join(",", @{$self->traits()}) if $self->traits && scalar(@{$self->traits})>0;
-    $dataref->{years} = join(",", map { "'".$_."'" } @{$self->years()}) if $self->years && scalar(@{$self->years})>0;
+    $dataref->{years} = join(",",  @{$self->years()}) if $self->years && scalar(@{$self->years})>0;
     $dataref->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->breeding_programs && scalar(@{$self->breeding_programs})>0;
     $dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0;
     $dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->trial_designs && scalar(@{$self->trial_designs})>0;
@@ -935,10 +935,8 @@ retrieves years as a listref of listrefs
 sub retrieve_years {
     my $self = shift;
     my @years;
-    if ($self->years && scalar(@{$self->years})>0) {
-	@years = map { "'".$_."'" } $self->years();
-	print STDERR "YEARS: = ".Dumper(\@years);
-        return \@years;
+    if ($self->years() && scalar(@{$self->years()})>0) {
+	return $self->years();
     }
     else {
         my $criteria = $self->get_dataset_definition();
