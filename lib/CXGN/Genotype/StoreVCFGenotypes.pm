@@ -910,6 +910,7 @@ sub store_metadata {
             $chr_count++;
         }
         print STDERR Dumper \%chromosomes;
+        $new_protocol_info->{chromosomes} = \%chromosomes;
 
         delete($new_protocol_info->{markers});
         delete($new_protocol_info->{markers_array});
@@ -921,8 +922,6 @@ sub store_metadata {
 
         foreach  my $chr_name (sort keys %unique_chromosomes) {
 #            print STDERR "Chromosome: $chr_name\n";
-            $new_protocol_info->{chromosomes} = $chr_name;
-
             my $rank = $chromosomes{$chr_name}->{rank};
             my $nd_protocolprop_markers_json_string = encode_json $nd_protocolprop_markers->{$chr_name};
             my $nd_protocolprop_markers_array_json_string = encode_json $nd_protocolprop_markers_array->{$chr_name};

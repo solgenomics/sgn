@@ -17,6 +17,5 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%args>
 
 <div class="row">
-  <& /solgs/cluster/cluster_options.mas &>
+  <& cluster_options.mas &>
 </div>
-

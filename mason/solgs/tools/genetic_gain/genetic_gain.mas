@@ -53,7 +53,7 @@ my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $tra
 
 % if ($page =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) {
 
-    <& /solgs/genetic_gain/multi_traits_genetic_gain.mas,
+    <& multi_traits_genetic_gain.mas,
        training_pop_name => $training_pop_name,
       training_pop_id => $training_pop_id,
       training_traits_ids => $training_traits_ids
@@ -61,7 +61,7 @@ my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $tra
 
 % } elsif ($page =~ /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//) {
 
-      <& /solgs/genetic_gain/single_trait_genetic_gain.mas,
+      <& single_trait_genetic_gain.mas,
 	 training_pop_id => $training_pop_id,
 	selection_pop_id => $selection_pop_id,
 	trait_id         => $trait_id
@@ -72,7 +72,7 @@ my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $tra
 
 <& /solgs/spinner.mas &>
 
-  <div id="gg_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
+  <div id="gg_message"  class="message"></div>
   <div id="gg_plot"></div>
 
 </div>

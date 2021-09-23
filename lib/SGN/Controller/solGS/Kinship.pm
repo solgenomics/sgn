@@ -27,7 +27,7 @@ __PACKAGE__->config(
 sub kinship_analysis :Path('/kinship/analysis/') Args() {
     my ($self, $c) = @_;
 
-    $c->stash->{template} = '/solgs/kinship/analysis.mas';
+    $c->stash->{template} = '/solgs/tools/kinship/analysis.mas';
 
 }
 

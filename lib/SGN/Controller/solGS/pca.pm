@@ -27,7 +27,7 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
         $c->controller('solGS::Utils')->require_login($c);
     }
 
-	$c->stash->{template} = '/solgs/pca/analysis.mas';
+	$c->stash->{template} = '/solgs/tools/pca/analysis.mas';
 
 }
 

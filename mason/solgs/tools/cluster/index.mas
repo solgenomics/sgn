@@ -51,7 +51,7 @@ my $url = $c->req->path;
 <!--     title       => "Select a list of accessions or trials and run cluster analysis using k-means method", -->
 <!--   &> -->
 
-<& /solgs/cluster/select_menu.mas &>
+<& select_menu.mas &>
     <!-- <& plot.mas &> -->
 
 

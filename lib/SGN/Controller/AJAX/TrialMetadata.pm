@@ -459,8 +459,10 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
         }
         my $percent_missing = '';
-        if ($total_complete_number){
-            $percent_missing = 100 - sprintf("%.2f", ($count/$total_complete_number)*100)."%";
+        if ($total_complete_number > $count){
+            $percent_missing = sprintf("%.2f", 100 -(($count/$total_complete_number)*100))."%";
+        } else {
+            $percent_missing = "0%";
         }
 
         push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );

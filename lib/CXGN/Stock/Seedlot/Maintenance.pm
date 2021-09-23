@@ -65,10 +65,12 @@ sub BUILD {
  Desc:          get all of the (optionally filtered) seedlot maintenance events associated with any of the matching seedlots
  Args:          - filters (optional): a hash of different filter types to apply, with the following keys:
                     - events: an arrayref of event ids
-                    - names: an arrayref of seedlot names
+                    - names: an arrayref of hashes containing name filter options:
+                        - value: a string or array (for IN comp) of seedlot name query params 
+                        - comp: the SQL comparison type (IN, LIKE)
                     - dates: an arrayref of hashes containing date filter options:
                         - date: date in YYYY-MM-DD format
-                        - comp: comparison type (eq, lte, lt, gte, or gt)
+                        - comp: comparison type (LIKE, <=, <, >, >=)
                     - types: an arrayref of hashes containing type/value filter options:
                         - cvterm_id: cvterm_id of maintenance event type
                         - values: (optional, default=any value) array of allowed values
@@ -108,7 +110,11 @@ sub filter_events {
         push(@and, { 'me.stockprop_id' => $filters->{'events'} });
     }
     if ( defined $filters && defined $filters->{'names'} && scalar(@{$filters->{'names'}}) > 0 ) {
-        push(@and, { 'stock.uniquename' => $filters->{'names'} });
+        foreach my $f (@{$filters->{'names'}}) {
+            if ( $f->{value} && $f->{comp} ) {
+                push(@and, { 'stock.uniquename' => { $f->{'comp'} => $f->{'value'} } });
+            }
+        }
     }
     if ( defined $filters && defined $filters->{'dates'} && scalar(@{$filters->{'dates'}}) > 0 ) {
         foreach my $f (@{$filters->{'dates'}}) {

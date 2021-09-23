@@ -81,7 +81,7 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
    selection_pop_analyzed_traits => $selection_pop_analyzed_traits,
 &>
 
-<& genetic_correlation.mas,
+<& /solgs/tools/correlation/genetic_correlation.mas,
      training_pop_analyzed_traits     => $training_pop_analyzed_traits,
      training_pop_id                         => $training_pop_id,
      training_pop_name                    => $training_pop_name,
@@ -91,7 +91,7 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
 &>
 
 
-<& /solgs/genetic_gain/genetic_gain.mas,
+<& /solgs/tools/genetic_gain/genetic_gain.mas,
      training_pop_analyzed_traits                => $training_pop_analyzed_traits,
      training_pop_analyzed_traits_ids            => $training_pop_analyzed_traits_ids,
      training_pop_id                         => $training_pop_id,
@@ -102,19 +102,19 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
 &>
 
 
-<& /solgs/selection_index/selection_index.mas,
-     training_pop_analyzed_traits                => $training_pop_analyzed_traits,
+<& /solgs/tools/selection_index/selection_index.mas,
+     training_pop_analyzed_traits  => $training_pop_analyzed_traits,
      training_pop_id               => $training_pop_id,
-     training_pop_name          => $training_pop_name,
+     training_pop_name             => $training_pop_name,
      selection_pop_id              => $selection_pop_id,
-     selection_pop_name        => $selection_pop_name,
+     selection_pop_name            => $selection_pop_name,
      selection_pop_analyzed_traits => $selection_pop_analyzed_traits,
   &>
 
 
-<& /solgs/cluster/analysis.mas &>
+<& /solgs/tools/cluster/analysis.mas &>
 
-  <& /solgs/kinship/analysis.mas,
+  <& /solgs/tools/kinship/analysis.mas,
      pop_id => $training_pop_id &>
 
 <& /solgs/population/trait_acronyms.mas,

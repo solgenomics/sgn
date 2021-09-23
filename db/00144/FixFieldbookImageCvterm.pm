@@ -14,6 +14,9 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 This patch fixes the fieldbook_image cvterm from showing up in the trait search as an ontology. This term was missing the upper link to its ontology.
+
+Since this cvterm needs to be linked to an internal ontology instead of a crop ontology it is now removed from the database 
+
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -38,8 +41,8 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch fixes the fieldbook_image cvterm from showing up in the trait search as an ontology. This term was missing the upper link to its ontology.
-
+This patch used to fix the fieldbook_image cvterm from showing up in the trait search as an ontology. This term was missing the upper link to its ontology.
+Now it does nothing because it should not be linked to a crop ontology cv. A future patch will remove it from databases that ran the old version of this patch 
 has '+prereq' => (
 	default => sub {
         [],
@@ -57,22 +60,8 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-    print STDERR "Fixing CVTERM fieldbook_image...\n";
+    print STDERR "Doing nothing ...\n";
 
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a', 'relationship')->cvterm_id();
-    my $subject_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'fieldbook_image', 'cassava_trait')->cvterm_id();
-    my $object_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'CGIAR cassava trait ontology', 'cassava_trait')->cvterm_id();
-
-    my $q_check = "SELECT cvterm_relationship_id FROM cvterm_relationship WHERE type_id=? and object_id=? and subject_id=?;";
-    my $check_h = $schema->storage->dbh()->prepare($q_check);
-    $check_h->execute($type_id, $object_id, $subject_id);
-    my ($exists) = $check_h->fetchrow_array();
-
-    if (!$exists) {
-        my $q_ins = "INSERT INTO cvterm_relationship (type_id, object_id, subject_id) VALUES (?,?,?);";
-        my $ins_h = $schema->storage->dbh()->prepare($q_ins);
-        $ins_h->execute($type_id, $object_id, $subject_id);
-    }
 
     print "You're done!\n";
 }
