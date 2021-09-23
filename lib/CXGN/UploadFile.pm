@@ -41,6 +41,18 @@ use File::Basename qw | basename dirname|;
 use Digest::MD5;
 use Data::Dumper;
 
+has 'metadata_schema' => (
+    isa => 'CXGN::Metadata::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'phenome_schema' => (
+    isa => 'CXGN::Phenome::Schema',
+    is => 'rw',
+    required => 1,
+);
+
 has 'tempfile' => (isa => "Str",
     is => 'rw',
     required => 0
@@ -182,7 +194,7 @@ sub save_archived_file_metadata {
     my $md5checksum;
 
     if ($archived_file ne 'none'){
-        my $md5 = get_md5($archived_file);
+        my $md5 = $self->get_md5($archived_file);
         $md5checksum = $md5->hexdigest();
     }
 
@@ -213,8 +225,6 @@ sub save_archived_file_metadata {
 sub get_md5 {
     my $self = shift;
     my $file_name_and_location = shift;
-    #print STDERR $file_name_and_location;
-
     open(my $F, "<", $file_name_and_location) || die "Can't open file $file_name_and_location";
     binmode $F;
     my $md5 = Digest::MD5->new();

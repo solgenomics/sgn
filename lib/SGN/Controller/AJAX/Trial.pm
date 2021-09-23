@@ -872,12 +872,10 @@ sub upload_trial_file_POST : Args(0) {
     my $upload_tempfile = $upload->tempname;
     my $subdirectory = "trial_upload";
     my $archived_filename_with_path;
-    my $md5;
     my $validate_file;
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    # my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_id;
@@ -909,6 +907,8 @@ sub upload_trial_file_POST : Args(0) {
 
     ## Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
         archive_path => $c->config->{archive_path},
@@ -918,7 +918,6 @@ sub upload_trial_file_POST : Args(0) {
         user_role => $c->user->get_object->get_user_type()
     });
     $archived_filename_with_path = $uploader->archive();
-    $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
         return;
@@ -926,11 +925,6 @@ sub upload_trial_file_POST : Args(0) {
     unlink $upload_tempfile;
 
     print STDERR "Check 3: ".localtime()."\n";
-
-    # $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    # $upload_metadata{'archived_file_type'}="trial upload file";
-    # $upload_metadata{'user_id'}=$user_id;
-    # $upload_metadata{'date'}="$timestamp";
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type);
@@ -1028,8 +1022,8 @@ sub upload_trial_file_POST : Args(0) {
         return;
     } elsif ($save->{'trial_id'}) {
         $experiment_ids{$save->{trial_id}}=1;
-        my $upload_file = CXGN::UploadFile->new();
-        $upload_file->save_archived_file_metadata($archived_filename_with_path, "trial upload file", \%experiment_ids);
+
+        $uploader->save_archived_file_metadata($archived_filename_with_path, "trial upload file", \%experiment_ids);
 
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -1061,12 +1055,10 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $upload_tempfile = $upload->tempname;
     my $subdirectory = "trial_upload";
     my $archived_filename_with_path;
-    my $md5;
     my $validate_file;
     my $parsed_file;
     my $parse_errors;
     my %parsed_data;
-    # my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $user_id;
@@ -1097,6 +1089,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
     ## Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
         archive_path => $c->config->{archive_path},
@@ -1106,19 +1100,11 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         user_role => $c->user->get_object->get_user_type()
     });
     $archived_filename_with_path = $uploader->archive();
-    $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {errors => "Could not save file $upload_original_name in archive",};
         return;
     }
     unlink $upload_tempfile;
-
-    # print STDERR "Check 3: ".localtime()."\n";
-    # $upload_metadata{'archived_file'} = $archived_filename_with_path;
-    # $upload_metadata{'archived_file_type'}="trial upload file";
-    # $upload_metadata{'user_id'}=$user_id;
-    # $upload_metadata{'date'}="$timestamp";
-
 
     #parse uploaded file with appropriate plugin
     $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
@@ -1220,11 +1206,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         print STDERR "Errors saving trials: ".@{$save{'errors'}};
         $c->stash->{rest} = {errors => $save{'errors'}};
         return;
-    # } elsif ($save->{'trial_id'}) {
     } else {
-
-        my $upload_file = CXGN::UploadFile->new();
-        $upload_file->save_archived_file_metadata($archived_filename_with_path, "trial upload file", \%experiment_ids);
+        $uploader->save_archived_file_metadata($archived_filename_with_path, "trial upload file", \%experiment_ids);
 
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
