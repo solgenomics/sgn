@@ -84,23 +84,17 @@ function PedigreeViewer(server,auth,version,urlFunc){
             }).map(function(ped_pro_germId){
                 var mother = null, 
                     father = null;
-                if(ped_pro_germId[0].parent1Type=="FEMALE"){
-                    mother = ped_pro_germId[0].parent1DbId;
-                }
-                if(ped_pro_germId[0].parent1Type=="MALE"){
-                    father = ped_pro_germId[0].parent1DbId;
-                }
-                if(ped_pro_germId[0].parent2Type=="FEMALE"){
-                    mother = ped_pro_germId[0].parent2DbId;
-                }
-                if(ped_pro_germId[0].parent2Type=="MALE"){
-                    father = ped_pro_germId[0].parent2DbId;
-                }
+                var i = ped_pro_germId[0].parents.map(function(e) { return e.parentType; }).indexOf('FEMALE');
+                var j = ped_pro_germId[0].parents.map(function(e) { return e.parentType; }).indexOf('MALE');
+
+                if(i>=0) mother = ped_pro_germId[0].parents[i].germplasmDbId;
+                if(j>=0) father = ped_pro_germId[0].parents[j].germplasmDbId;
+
                 return {
                     'id':ped_pro_germId[2],
                     'mother_id':mother,
                     'father_id':father,
-                    'name':ped_pro_germId[1].defaultDisplayName,
+                    'name':ped_pro_germId[1].germplasmName,
                     'children':ped_pro_germId[1].progeny.filter(Boolean).map(function(d){
                         return d.germplasmDbId;
                     })
