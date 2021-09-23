@@ -191,7 +191,7 @@ has 'traits' =>      ( isa => 'Maybe[ArrayRef]',
 =cut
 
 
-has 'years' =>       ( isa => 'Maybe[ArrayRef]',
+has 'years' =>       ( isa => 'Maybe[ArrayRef[Str]]',
 		       is => 'rw',
 		       predicate => 'has_years',
     );
