@@ -229,7 +229,6 @@ sub store_ontology_identifier {
     try {
         $schema->txn_do($coderef);
     } catch {
-	print STDERR "THIS HAPPENED: $_\n";
         return {
             error => $_
         };
@@ -479,7 +478,6 @@ sub store_observation_variable_trait_method_scale {
     try {
         $schema->txn_do($coderef);
     } catch {
-	print STDERR "THIS HAPPENED: $_\n";
         return {
             error => $_
         };
