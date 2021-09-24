@@ -9,6 +9,7 @@ use Data::Dumper;
 use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
+use File::Slurp qw | read_file |;
 use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
@@ -162,4 +163,38 @@ sub trial_lookup : Path('/ajax/breeders/trial_lookup') Args(0) {
     }
 
     $c->stash->{rest} = { trial_id => $trial_id };
+}
+
+sub create_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/create') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my @trial_ids = split(',', $c->req->param('trial_ids'));
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = "entry_numbers_XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".xls";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+
+    my $download = CXGN::Trial::Download->new({
+        bcs_schema => $schema,
+        trial_list => \@trial_ids,
+        filename => $tempfile,
+        format => 'TrialEntryNumbers'
+    });
+    my $error = $download->download();
+
+    $c->stash->{rest} = { file => $tempfile };
+}
+
+sub download_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/download') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $tempfile = $c->req->param('file');
+
+    $c->res->content_type('application/vnd.ms-excel');
+    $c->res->header('Content-Disposition', qq[attachment; filename="entry_number_template.xls"]);
+    my $output = read_file($tempfile);
+    $c->res->body($output);
 }
