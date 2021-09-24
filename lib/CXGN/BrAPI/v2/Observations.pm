@@ -345,15 +345,17 @@ sub observations_store {
         overwrite_values=>$overwrite_values,
         #image_zipfile_path=>$image_zip,
     );
-    my ($verified_warning, $verified_error) = $store_observations->verify();
 
-    if ($verified_error) {
-        print STDERR "Error: $verified_error\n";
-        return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request did not pass the checks.", 500);
-    }
-    if ($verified_warning) {
-        print STDERR "\nWarning: $verified_warning\n";
-    }
+    # TODO: revisit this
+    # my ($verified_warning, $verified_error) = $store_observations->verify();
+    #
+    # if ($verified_error) {
+    #     print STDERR "Error: $verified_error\n";
+    #     return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request did not pass the checks.", 500);
+    # }
+    # if ($verified_warning) {
+    #     print STDERR "\nWarning: $verified_warning\n";
+    # }
 
     my ($stored_observation_error, $stored_observation_success, $stored_observation_details) = $store_observations->store();
 
