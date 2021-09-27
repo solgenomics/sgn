@@ -30,11 +30,11 @@
     
     function pdgtree(){
       //create working nodes from input data (we dont want to modify the input) 
-      
+
       var node_list = _wrap_nodes(data);
       node_list.forEach(function(d){_setNodeLevels(d);});
       _setBestRootNodeLevels(node_list);
-      
+
       //create intermediate nodes for intergenerational links
       var intermediates = {};
       for (var n = node_list.length-1; n > -1; n--) {
