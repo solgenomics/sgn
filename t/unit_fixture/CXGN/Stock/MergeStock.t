@@ -10,43 +10,39 @@ use CXGN::Stock;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema();
-my $dbh = $f->dbh();
 
-$dbh->begin_work();
+$schema->txn_begin();
 
 eval {
     my $this_stock_id = 39041;
     my $other_stock_id = 38844;
     
     my $stock = CXGN::Stock->new( { schema => $schema, stock_id => $this_stock_id } );
-
+    
     my $initial_counts = get_counts($this_stock_id);
     
     # try self merge, should fail:
     my $error = $stock->merge($this_stock_id);
     is($error, "Error: cannot merge stock into itself", "merge stock into itself test");
-
+    
     my $initial_counts_other = get_counts($other_stock_id);
     
     $error = $stock->merge(38844);
     is($error, 1, "merge stock should give no error");
-
+    
     # all data should be transferred, so these need to add up
     my $combined_counts = get_counts($this_stock_id);
-
+	
     $initial_counts_other->{prop_count}++; # take added synonym into account
     
     foreach my $k (keys %$combined_counts) {
 	print STDERR "Checking key $k...\n";
 	is($combined_counts->{$k}, ($initial_counts->{$k} + $initial_counts_other->{$k}), "$k test");
-    }
-    
-    
-
+    }  
 };
 
 print STDERR "ERROR = $@\n";
-$dbh->rollback();
+$schema->txn_rollback();
     
 done_testing();
 
