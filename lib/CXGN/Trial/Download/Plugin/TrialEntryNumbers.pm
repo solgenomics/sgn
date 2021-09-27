@@ -41,12 +41,8 @@ sub verify {
 
 sub download {
     my $self = shift;
-
     my $schema = $self->bcs_schema();
     my @trial_ids = @{$self->trial_list()};
-
-    print STDERR "\n\n\n\n=========> GENERATE ENTRY NUMBERS TEMPLATE FOR TRIALS:\n";
-    print STDERR Dumper \@trial_ids;
 
     my $workbook = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $workbook->add_worksheet();
@@ -57,6 +53,27 @@ sub download {
         $ws->write(0, $n, $column_headers[$n]);
     }
 
+    # Parse each of the Trials to get Accessions
+    my %accession_trial_map = {};                   # Map of accession names -> trial names
+    for my $trial_id (@trial_ids) {
+        my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+        my $trial_name = $trial->get_name();
+        my $stocks = $trial->get_accessions();
+        
+        for my $stock (@$stocks) {
+            my $accession_name = $stock->{'accession_name'};
+            $accession_trial_map{$accession_name}{$trial_name} = 1;
+        }
+    }
+
+    # Add a row for each Accession
+    my $row = 1;
+    foreach my $accession_name (sort keys %accession_trial_map) {
+        my @trial_names = keys %{$accession_trial_map{$accession_name}};
+        $ws->write($row, 0, $accession_name);
+        $ws->write($row, 1, join(',', @trial_names));
+        $row++;
+    }
 
     $workbook->close();
 }
