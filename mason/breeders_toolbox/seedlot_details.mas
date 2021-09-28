@@ -13,6 +13,7 @@ $timestamp
 $box_name=>undef
 $quality => undef
 $owners_string => undef
+$maintenance_enabled => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -55,6 +56,14 @@ $owners_string => undef
 </div>
 
 </&>
+
+% if ( $maintenance_enabled ) {
+    <& /page/page_title.mas, title => 'Maintenance Events' &>
+
+    <&| /page/info_section.mas, title=>"Events Table",  collapsible=>1, collapsed=>0, subtitle=>"[<a href='/breeders/seedlot/maintenance/record?seedlot_name=$uniquename' id='add_seedlot_maintenance_button' >Record Maintenance</a>]" &>
+        <& /breeders_toolbox/seedlot_maintenance/table.mas, seedlot_id => $seedlot_id, seedlot_name => $uniquename &>
+    </&>
+% }
 
 <div class="modal fade" id="add_seedlot_transaction_dialog" name="add_seedlot_transaction_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_transaction_dialog">
   <div class="modal-dialog modal-xl" role="document">

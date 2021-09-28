@@ -5,21 +5,24 @@ $protocol_id
 <input type="checkbox" id="protocol_genotype_data_forbid_cache"> Refresh results
 <hr>
 
-<table id="protocol_genotype_data" width="100%" class="table table-hover table-striped">
-<thead>
-  <tr>
-      <th>Protocol</th>
-      <th>Sample Name</th>
-      <th>Sample Type</th>
-      <th>Accession Name</th>
-      <th>Synonyms</th>
-      <th>Description</th>
-      <th>Number of Marker Scores</th>
-      <th>IGD Number</th>
-      <th>Download</th>
-</tr>
-</thead>
-</table>
+<div style="overflow:scroll">
+    <table id="protocol_genotype_data" width="100%" class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>Protocol</th>
+                <th>Sample Name</th>
+                <th>Sample Type</th>
+                <th>Accession Name</th>
+                <th>Synonyms</th>
+                <th>Description</th>
+                <th>Number of Marker Scores</th>
+                <th>IGD Number</th>
+                <th>Download</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
 
 
 <script>
@@ -49,7 +52,13 @@ jQuery(document).ready(function () {
      }
    });
 
+   jQuery('#genotyping_protocol_genotype_data_detail_page_download_all_vcf').click(function(){
+       window.location.replace("/breeders/download_gbs_action/?protocol_id=<% $protocol_id %>&download_format=VCF&format=accession_ids");
+   });
+   jQuery('#genotyping_protocol_genotype_data_detail_page_download_all_dosagematrix').click(function(){
+       window.location.replace("/breeders/download_gbs_action/?protocol_id=<% $protocol_id %>&download_format=DosageMatrix&format=accession_ids");
+   });
+
 });
 
 </script>
-

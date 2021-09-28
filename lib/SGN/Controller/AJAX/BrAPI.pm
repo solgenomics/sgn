@@ -3816,6 +3816,7 @@ sub observations_PUT {
 			observations => \@all_observations,
 	        user_id => $user_id,
 	        user_type => $user_type,
+	        overwrite => 1,
 	    },$c);
 	} elsif ($version eq 'v1'){
 		my $clean_inputs = $c->stash->{clean_inputs};

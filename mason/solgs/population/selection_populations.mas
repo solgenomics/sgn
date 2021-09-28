@@ -8,13 +8,13 @@ displays list of prediction populations and their GS output.
 
 $result => ''
 $selection_prediction_download
-$analyzed_traits
+$training_pop_analyzed_traits
 $training_pop_id
 $training_pop_name
 $selection_pop_id
 $selection_pop_name => ''
 $list_of_prediction_pops => ''
-$prediction_pop_analyzed_traits => ''
+$selection_pop_analyzed_traits => ''
 
 </%args>
 
@@ -59,7 +59,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
   </div>
 
 
-  <div id="selection_pops_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
+  <div id="selection_pops_message"  class="message"></div>
 
   <div id="selection_populations" style="display:none;">
     <table class="table" id="selection_pops_list" style="text-align:left;">

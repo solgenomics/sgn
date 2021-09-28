@@ -34,83 +34,10 @@ sub cluster_analysis :Path('/cluster/analysis/') Args() {
         $c->controller('solGS::Utils')->require_login($c);
     }
 
-    $c->stash->{template} = '/solgs/cluster/analysis.mas';
+    $c->stash->{template} = '/solgs/tools/cluster/analysis.mas';
 
 }
 
-
-# sub cluster_check_result :Path('/cluster/check/result/') Args() {
-#     my ($self, $c) = @_;
-#
-#     my $training_pop_id  = $c->req->param('training_pop_id');
-#     my $selection_pop_id = $c->req->param('selection_pop_id');
-#     my $combo_pops_id    = $c->req->param('combo_pops_id');
-#     my $protocol_id    = $c->req->param('genotyping_protocol_id');
-#     my @traits_ids  = $c->req->param('training_traits_ids[]');
-#     my $training_traits_code = $c->req->param('training_traits_code');
-#
-#     my $list_id     = $c->req->param('list_id');
-#     my $list_type;
-#     my $list_name;
-#
-#     if ($list_id)
-#     {
-# 	$list_id =~ s/list_//;
-# 	my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-#
-# 	$list_type = $list->type();
-# 	$list_name = $list->name();
-#     }
-#
-#     my $dataset_id     =  $c->req->param('dataset_id');
-#     my $dataset_name   = $c->req->param('dataset_name');
-#     my $data_structure =  $c->req->param('data_structure');
-#     my $k_number       =  $c->req->param('k_number');
-#     my $cluster_type   = $c->req->param('cluster_type');
-#     my $selection_prop = $c->req->param('selection_proportion');
-#     my $sindex_name    = $c->req->param('sindex_name');
-#     $cluster_type      = 'k-means' if !$cluster_type;
-#     my $data_type      =  $c->req->param('data_type');
-#     $data_type         = 'Genotype' if !$data_type;
-#
-#     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-#     $c->stash->{training_pop_id}  = $training_pop_id;
-#     $c->stash->{selection_pop_id} = $selection_pop_id;
-#     $c->stash->{data_structure}   = $data_structure;
-#     $c->stash->{list_id}          = $list_id;
-#     $c->stash->{list_name}        = $list_name;
-#     $c->stash->{list_type}        = $list_type;
-#     $c->stash->{dataset_id}       = $dataset_id;
-#     $c->stash->{dataset_name}     = $dataset_name;
-#     $c->stash->{cluster_type}     = $cluster_type;
-#     $c->stash->{combo_pops_id}    = $combo_pops_id;
-#     $c->stash->{k_number}         = $k_number;
-#     $c->stash->{selection_proportion} = $selection_prop;
-#     $c->stash->{sindex_name}      = $sindex_name;
-#
-#     $c->stash->{training_traits_ids} = \@traits_ids;
-#     $c->stash->{training_traits_code} = $training_traits_code;
-#     $c->stash->{pop_id} = $training_pop_id || $list_id || $combo_pops_id || $dataset_id;
-#
-#     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
-#     $c->stash->{file_id} = $file_id;
-#
-#     $self->check_cluster_output_files($c);
-#     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
-#
-#     my $ret->{result} = undef;
-#
-#     if ($cluster_plot_exists)
-#     {
-# 	$ret = $self->_prepare_response($c);
-#     }
-#
-#     $ret = to_json($ret);
-#     $c->res->content_type('application/json');
-#     $c->res->body($ret);
-#
-# }
-#
 
 sub check_cluster_output_files {
     my ($self, $c) = @_;
@@ -214,7 +141,7 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
 sub cluster_gebvs_file {
     my ($self, $c) = @_;
 
-    $c->controller('solGS::TraitsGebvs')->combined_gebvs_file($c);
+    $c->controller('solGS::Gebvs')->combined_gebvs_file($c);
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
 
     $c->stash->{cluster_gebvs_file} = $combined_gebvs_file;
@@ -792,7 +719,7 @@ sub create_cluster_phenotype_data_query_jobs {
 	}
 
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
-	$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials);
+	$c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, $trials);
 	$c->stash->{cluster_pheno_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
     }
 
@@ -818,7 +745,7 @@ sub create_cluster_genotype_data_query_jobs {
     else
     {
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{cluster_pop_id}];
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
+	$c->controller('solGS::AsyncJob')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
 	$c->stash->{cluster_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
 
@@ -873,7 +800,7 @@ sub run_cluster {
     $self->cluster_r_jobs_file($c);
     $c->stash->{dependent_jobs} = $c->stash->{cluster_r_jobs_file};
 
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 
 }
 
@@ -889,12 +816,12 @@ sub run_cluster_single_core {
 
     foreach my $job (@$queries)
     {
-	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+	$c->controller('solGS::AsyncJob')->submit_job_cluster($c, $job);
     }
 
     foreach my $job (@$r_jobs)
     {
-	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+	$c->controller('solGS::AsyncJob')->submit_job_cluster($c, $job);
     }
 
 }
@@ -909,7 +836,7 @@ sub run_cluster_multi_cores {
     $self->cluster_r_jobs_file($c);
     $c->stash->{dependent_jobs} = $c->stash->{cluster_r_jobs_file};
 
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 
 }
 
@@ -933,7 +860,7 @@ sub cluster_r_jobs {
     $c->stash->{r_temp_file}  = "${cluster_type}-${file_id}";
     $c->stash->{r_script}     = 'R/solGS/cluster.r';
 
-    $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
+    $c->controller('solGS::AsyncJob')->get_cluster_r_job_args($c);
     my $jobs  = $c->stash->{cluster_r_job_args};
 
     if (reftype $jobs ne 'ARRAY')
@@ -989,7 +916,7 @@ sub cluster_combine_gebvs_jobs_file {
 
     my $cluster_type = $c->stash->{cluster_type};
 
-    $c->controller('solGS::TraitsGebvs')->combine_gebvs_jobs($c);
+    $c->controller('solGS::Gebvs')->combine_gebvs_jobs($c);
     my $jobs = $c->stash->{combine_gebvs_jobs};
 
     my $temp_dir = $c->stash->{cluster_temp_dir};

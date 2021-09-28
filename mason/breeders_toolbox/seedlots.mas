@@ -7,6 +7,7 @@ $editable_stock_props_definitions => {}
 $programs
 $locations
 $crossing_trials
+$maintenance_enabled => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -46,8 +47,9 @@ $crossing_trials
 </&>
 
 <%perl>
+    my $maintenance_button = $maintenance_enabled ? ' <button onclick="location.href=\'/breeders/seedlot/maintenance\'" class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_record_maintenance">Seedlot Maintenance</button>' : '';
     my $seedlot_subtitle = !!$c->user() 
-        ? '<div class="btn-group"><button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Create Seedlot(s)&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" name="add_seedlot_button">Add New Seedlot</a></li><li><a href="#" name="seedlot_bulk_upload">Upload Seedlots</a></li><li><a href="#" name="create_seedlots_trial_button">Create Seedlots from Trial</a></li></ul></div> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>'
+        ? '<div class="btn-group"><button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Create Seedlot(s)&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" name="add_seedlot_button">Add New Seedlot</a></li><li><a href="#" name="seedlot_bulk_upload">Upload Seedlots</a></li><li><a href="#" name="create_seedlots_trial_button">Create Seedlots from Trial</a></li></ul></div> <button class="btn btn-sm btn-primary" style="margin:3px" name="seedlot_upload_inventory">Upload Inventory</button>' . $maintenance_button
         : "Login to add or upload seedlots";
 </%perl>
 <&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => $seedlot_subtitle &>
@@ -98,6 +100,12 @@ $crossing_trials
             <label class="col-sm-3 control-label">Location: </label>
             <div class="col-sm-9" >
                 <input class="form-control" id="search_seedlot_form_location" type="text" />
+            </div>
+        </div>
+        <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Box Name: </label>
+            <div class="col-sm-9" >
+                <input class="form-control" id="search_seedlot_form_box_name" type="text" />
             </div>
         </div>
         <div class="form-group form-group-sm">
@@ -208,6 +216,7 @@ jQuery(document).ready(function(){
                      d.minimum_count   = jQuery('#search_seedlot_form_minimum_count').val();
                      d.minimum_weight   = jQuery('#search_seedlot_form_minimum_weight').val();
                      d.location     = jQuery('#search_seedlot_form_location').val();
+                     d.box_name = jQuery('#search_seedlot_form_box_name').val();
                      d.contents_accession = jQuery('#search_seedlot_form_contents_accession').val();
                      d.contents_cross = jQuery('#search_seedlot_form_contents_cross').val();
                      d.exact_accession = jQuery('#exact_accession').is(":checked") ? 1 : 0;

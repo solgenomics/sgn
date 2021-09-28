@@ -1,0 +1,80 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/genetic_gain/genetic_gain.mas - template for multiple traits genetic gain viz.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id => undef
+$training_pop_analyzed_traits => undef
+$training_pop_analyzed_traits_ids => undef
+$selection_pop_analyzed_traits => undef
+$selection_pop_name => undef
+$project_name => undef
+
+$trait_id => undef
+$training_pop_id => undef
+$selection_pop_id => undef
+
+</%args>
+
+<%perl>
+
+my $pop_type = $pop_id =~ /[A-Za-z]/ ? 'list_training' : 'training';
+my $page = $c->req->path;
+$training_pop_id = $pop_id if !$training_pop_id;
+my $training_pop_name = $project_name;
+
+my $training_traits_ids = join(',', @$training_pop_analyzed_traits_ids)  if $training_pop_analyzed_traits_ids;
+
+</%perl>
+
+<& /util/import_javascript.mas, classes => [ "solGS.geneticGain"] &>
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
+
+
+<&| /page/info_section.mas,
+  collapsible => 1,
+   collapsed  => 0,
+  title      => "Check Genetic Gain"
+  &>
+
+
+<div id="gg_canvas">
+
+% if ($page =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) {
+
+    <& multi_traits_genetic_gain.mas,
+       training_pop_name => $training_pop_name,
+      training_pop_id => $training_pop_id,
+      training_traits_ids => $training_traits_ids
+      &>
+
+% } elsif ($page =~ /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\//) {
+
+      <& single_trait_genetic_gain.mas,
+	 training_pop_id => $training_pop_id,
+	selection_pop_id => $selection_pop_id,
+	trait_id         => $trait_id
+	&>
+
+% }
+
+
+<& /solgs/spinner.mas &>
+
+  <div id="gg_message"  class="message"></div>
+  <div id="gg_plot"></div>
+
+</div>
+
+</&>

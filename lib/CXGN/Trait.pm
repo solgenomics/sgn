@@ -596,7 +596,8 @@ sub _fetch_synonyms {
 			push @synonyms, $s->synonym;
 		}
 	}
-	return @synonyms;
+	my @sorted = sort { length $a <=> length $b } @synonyms;
+	return @sorted;
 }
 
 # TODO: common utilities somewhere, used by Location also

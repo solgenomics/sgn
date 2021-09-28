@@ -42,6 +42,7 @@ $design_name => undef
 $phenotypes_fully_uploaded => undef
 $identifier_prefix => 'SGN'
 $genotyping_facility => undef
+$genotype_data_type => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -54,8 +55,9 @@ $genotyping_facility => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Protocols</h4>", info_section_subtitle => 'View basic information about the genotyping protocols used in this genotyping data project.', icon_class => "glyphicon glyphicon-cog", info_section_id => "genotyping_data_project_protocols" &>
 
+% if ($genotype_data_type ne 'pcr_genotype_project') {
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Genotyping Data</h4>", info_section_subtitle => 'View and download genotyping data.', icon_class => "glyphicon glyphicon-map-marker", info_section_id => "genotyping_data_project_data" &>
-
+% }
 % my $data_agreement_link = '<button class="btn btn-sm btn-primary" disabled style="margin:3px">Add/edit data agreement</button>';
 % if ($user_can_modify) { $data_agreement_link = '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_data_agreement">Add/edit data agreement</button>'; }
 

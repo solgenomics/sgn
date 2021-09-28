@@ -27,7 +27,7 @@ sub pca_analysis :Path('/pca/analysis/') Args() {
         $c->controller('solGS::Utils')->require_login($c);
     }
 
-	$c->stash->{template} = '/solgs/pca/analysis.mas';
+	$c->stash->{template} = '/solgs/tools/pca/analysis.mas';
 
 }
 
@@ -347,7 +347,7 @@ sub create_pca_phenotype_data_query_jobs {
     else
     {
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
-	$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials);
+	$c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, $trials);
 	$c->stash->{pca_pheno_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
     }
 
@@ -388,7 +388,7 @@ sub create_pca_genotype_data_query_jobs {
 
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{training_pop_id}] || [$c->stash->{selection_pop_id}];
 
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
+	$c->controller('solGS::AsyncJob')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
 	$c->stash->{pca_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
 
@@ -647,7 +647,7 @@ sub run_pca {
     $self->pca_r_jobs_file($c);
     $c->stash->{dependent_jobs} = $c->stash->{pca_r_jobs_file};
 
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 
 }
 
@@ -663,12 +663,12 @@ sub run_pca_single_core {
 
     foreach my $job (@$queries)
     {
-	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+	$c->controller('solGS::AsyncJob')->submit_job_cluster($c, $job);
     }
 
     foreach my $job (@$r_jobs)
     {
-	$c->controller('solGS::solGS')->submit_job_cluster($c, $job);
+	$c->controller('solGS::AsyncJob')->submit_job_cluster($c, $job);
     }
 
 }
@@ -683,7 +683,7 @@ sub run_pca_multi_cores {
     $self->pca_r_jobs_file($c);
     $c->stash->{dependent_jobs} = $c->stash->{pca_r_jobs_file};
 
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 
 }
 
@@ -706,7 +706,7 @@ sub pca_r_jobs {
     $c->stash->{r_temp_file}  = "pca-${file_id}";
     $c->stash->{r_script}     = 'R/solGS/pca.r';
 
-    $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
+    $c->controller('solGS::AsyncJob')->get_cluster_r_job_args($c);
     my $jobs  = $c->stash->{cluster_r_job_args};
 
     if (reftype $jobs ne 'ARRAY')

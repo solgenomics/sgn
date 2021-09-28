@@ -116,6 +116,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
 #    print STDERR "ORIGINAL SELECTED COLUMNS =".Dumper($original_selected_columns)."\n";
 #    print STDERR "MODIFIED COLUMNS =".Dumper(\%modified_columns)."\n";
     my $include_measured = $c->req->param('include_measured') || '';
+    my $all_stats = $c->req->param('all_stats') || '';
     my $use_synonyms = $c->req->param('use_synonyms') || '';
     my $selected_trait_list_id = $c->req->param('trait_list');
     my @selected_traits;
@@ -148,6 +149,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         treatment_project_ids => $treatment_project_ids,
         selected_columns => $selected_columns,
         include_measured => $include_measured,
+        all_stats => $all_stats,
         use_synonyms => $use_synonyms,
         selected_trait_ids => \@selected_traits,
         trial_stock_type => $trial_stock_type,

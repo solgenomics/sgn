@@ -1386,22 +1386,22 @@ sub high_dimensional_phenotypes_download_file_POST : Args(0) {
     my $ds = CXGN::Dataset->new({
         people_schema => $people_schema,
         schema => $schema,
-        sp_dataset_id => $dataset_id
+        sp_dataset_id => $dataset_id,
     });
-    my $accession_ids = $ds->accessions();
-    my $plot_ids = $ds->plots();
-    my $plant_ids = $ds->plants();
 
-    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
-        bcs_schema=>$schema,
-        nd_protocol_id=>$nd_protocol_id,
-        high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
-        query_associated_stocks=>$query_associated_stocks,
-        accession_list=>$accession_ids,
-        plot_list=>$plot_ids,
-        plant_list=>$plant_ids
-    });
-    my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+    my $high_dimensional_phenotype_identifier_list = [];
+    my ($data_matrix, $identifier_metadata, $identifier_names) = $ds->retrieve_high_dimensional_phenotypes(
+        $nd_protocol_id,
+        $high_dimensional_phenotype_type,
+        $query_associated_stocks,
+        $high_dimensional_phenotype_identifier_list
+    );
+
+    if ($data_matrix->{error}) {
+        $c->stash->{rest} = {error => $data_matrix->{error}};
+        $c->detach();
+    }
+
     # print STDERR Dumper $data_matrix;
     # print STDERR Dumper $identifier_metadata;
     # print STDERR Dumper $identifier_names;
@@ -1552,11 +1552,8 @@ sub high_dimensional_phenotypes_download_relationship_matrix_file_POST : Args(0)
     my $ds = CXGN::Dataset->new({
         people_schema => $people_schema,
         schema => $schema,
-        sp_dataset_id => $dataset_id
+        sp_dataset_id => $dataset_id,
     });
-    my $accession_ids = $ds->accessions();
-    my $plot_ids = $ds->plots();
-    my $plant_ids = $ds->plants();
 
     my $dir = $c->tempfiles_subdir('/high_dimensional_phenotypes_relationship_matrix_download');
     my $temp_data_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'high_dimensional_phenotypes_relationship_matrix_download/downloadXXXX');
@@ -1564,18 +1561,13 @@ sub high_dimensional_phenotypes_download_relationship_matrix_file_POST : Args(0)
     $download_file_link .= '.csv';
     my $download_file_tempfile = $c->config->{basepath}."/".$download_file_link;
 
-    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesRelationshipMatrix->new({
-        bcs_schema=>$schema,
-        nd_protocol_id=>$nd_protocol_id,
-        temporary_data_file=>$temp_data_file,
-        relationship_matrix_file=>$download_file_tempfile,
-        high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
-        query_associated_stocks=>$query_associated_stocks,
-        accession_list=>$accession_ids,
-        plot_list=>$plot_ids,
-        plant_list=>$plant_ids
-    });
-    my ($relationship_matrix_data, $data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+    my ($relationship_matrix_data, $data_matrix, $identifier_metadata, $identifier_names) = $ds->retrieve_high_dimensional_phenotypes_relationship_matrix(
+        $nd_protocol_id,
+        $high_dimensional_phenotype_type,
+        $query_associated_stocks,
+        $temp_data_file,
+        $download_file_tempfile
+    );
     # print STDERR Dumper $relationship_matrix_data;
     # print STDERR Dumper $data_matrix;
     # print STDERR Dumper $identifier_metadata;

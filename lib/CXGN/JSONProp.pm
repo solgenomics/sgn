@@ -51,6 +51,7 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::JSONProp;
 
 use Moose;
+use POSIX;
 
 use Data::Dumper;
 use Bio::Chado::Schema;
@@ -244,6 +245,128 @@ sub get_props {
     }
 
     return \@hashes;
+}
+
+
+=head2 filter_props()
+ 
+ Usage:     my $filtered_props = $JSONPropClass->filter_props({ schema=> $schema, conditions => \%conditions });
+ Desc:      This class method can be used to get props that match the provided search criteria
+ Ret:       a hash with the results metadata and the matching props:
+                page: current page number
+                maxPage: the number of the last page
+                pageSize: (max) number of results per page
+                total: total number of results
+                results: an arrayref of hashes containing the parent_id, prop_id, all of the prop values, and any specified parent fields
+ Args:      schema = Bio::Chado::Schema
+            conditions = (optional, default=unfiltered/all props) a hashref of DBIx where conditions to filter the props by.  
+                If you're filtering by a prop value, you should use the form: "value::json->>'prop_name' => 'prop value'"
+            parent_fields = (optional, default=none) an arrayref of the names of fields from the parent table to include in the results
+                NOTE: if a parent field is used in the search conditions, it should also be included here
+            order_by = (optional) the field to sort the results by:
+                order_by => "stockprop_id"                               // sort by ascending stockprop_id
+                order_by => { "-desc" => "value::json->'timestamp'" }    // sort by descending timestamp in the json value
+            page = (optional, default=1) the page number of results to return
+            pageSize = (optional, default=1000) the number of results to return per page
+ Example:   my $conditions = {
+                '-and' => [ 
+                    { 'stock.uniquename' => [ 'TEST_SEEDLOT_1', 'TEST_SEEDLOT_2' ] },
+                    { 'value::json->>\'timestamp\'' => { '>=' => '2021-06-01 00:00:00' } },
+                    { 'value::json->>\'timestamp\'' => { '<=' => '2021-06-30 24:00:00' } }, 
+                    { 'value::json->>\'operator\'' => [ 'dwaring87' ] }
+                ], 
+                '-or' => [
+                    { 
+                        '-and' => [
+                            { 'value::json->>\'cvterm_id\'' => '78094' }, 
+                            { 'value::json->>\'value\'' => [ 'Successful' ] }
+                        ] 
+                    },
+                    {
+                        '-and' => [
+                            { 'value::json->>\'cvterm_id\'' => '78085' },
+                            { 'value::json->>\'value\'' => [ 'High', 'Medium' ] }
+                        ]
+                    },
+                    { 'value::json->>\'cvterm_id\'' => '78090' }
+                ]
+            };
+            my $filtered_props = $JSONPropClass->filter_props({
+                schema => $schema, 
+                conditions => $conditions, 
+                parent_fields => ["uniquename"],
+                order_by => { "-desc" => "value::json->>'timestamp'" }
+            });
+
+=cut
+
+sub filter_props {
+    my $class = shift;
+    my $args = shift;
+    my $schema = $args->{schema};
+    my $conditions = $args->{conditions};
+    my $parent_fields = $args->{parent_fields};
+    my $order_by = $args->{order_by};
+    my $page = $args->{page} || 1;
+    my $pageSize = $args->{pageSize} || 1000;
+    my $type_id = $class->_prop_type_id();
+
+    # Build the search conditions
+    my @all_conditions = ();
+    push(@all_conditions, { 'me.type_id' => $class->_prop_type_id() });
+    if ( $conditions ) {
+        push(@all_conditions, $conditions);
+    }
+
+    # Build the filter query using a ResultSet
+    my @s = ();
+    my @a = ();
+    foreach my $f (@{$class->allowed_fields()}) {
+        push(@s, "value::json->>'$f'");
+        push(@a, $f);
+    }
+    my $props = $schema->resultset($class->prop_namespace())->search(
+        { '-and' => \@all_conditions },
+        {
+            'prefetch' => defined $parent_fields ? $class->parent_table() : undef,
+            '+select' => \@s,
+            '+as' => \@a,
+            'order_by' => $order_by,
+            'page' => $page,
+            'rows' => $pageSize
+        }
+    );
+    my $pager = $props->pager();
+    my $total = $pager->total_entries();
+
+    # Parse the results
+    my @filtered_props = ();
+    while (my $r = $props->next) {
+        my %p = (
+            $class->prop_primary_key() => $r->get_column($class->prop_primary_key()),
+            $class->parent_primary_key() => $r->get_column($class->parent_primary_key())
+        );
+        foreach my $f (@a) {
+            $p{$f} = $r->get_column($f);
+        }
+        if ( defined $parent_fields ) {
+            my $pt = $class->parent_table();
+            foreach my $pf (@$parent_fields) {
+                $p{$pf} = $r->$pt->$pf;
+            }
+        }
+        push(@filtered_props, \%p);
+    }
+
+    # Return the results and page info
+    my %results = (
+        page => $page,
+        maxPage => int(ceil($total/$pageSize)),
+        total => $total,
+        pageSize => $pageSize,
+        results => \@filtered_props
+    );
+    return \%results;
 }
 
 

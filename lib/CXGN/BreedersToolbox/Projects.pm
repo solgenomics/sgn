@@ -193,7 +193,7 @@ sub get_trials_by_breeding_program {
                 if ($propvalue eq "treatment") {
                     $projects_that_are_treatment_trials{$id} = 1;
                 }
-                if ($propvalue eq "genotype_data_project") {
+                if (($propvalue eq "genotype_data_project") || ($propvalue eq "pcr_genotype_data_project")) {
                     $projects_that_are_genotyping_data_projects{$id} = 1;
                 }
                 if ($propvalue eq "drone_run") {
@@ -325,7 +325,7 @@ sub get_all_locations {
              }
          });
      }
-     
+
      my $json = JSON->new();
      $json->canonical(); # output sorted JSON
      return $json->encode(\@locations);
