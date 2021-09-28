@@ -106,6 +106,8 @@ print STDERR Dumper $parsed_file;
 is_deeply($parsed_file, {'variables' => ['dry matter content|CO_334:0000092','fresh root weight|CO_334:0000012','fresh shoot weight|CO_334:0000016','harvest index|CO_334:0000015','notes'],'data' => {'test_trial23' => {'fresh shoot weight|CO_334:0000016' => ['22','2016-02-11 01:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 01:12:20-0500'],'harvest index|CO_334:0000015' => ['2.8','2016-03-16 01:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 01:12:20-0500']},'test_trial25' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 09:12:20-0500'],'harvest index|CO_334:0000015' => ['4.8','2016-03-16 09:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 09:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['24','2016-02-11 09:12:20-0500']},'test_trial24' => {'fresh shoot weight|CO_334:0000016' => ['23','2016-02-11 11:12:20-0500'],'harvest index|CO_334:0000015' => ['3.8','2016-03-16 11:12:20-0500'],'dry matter content|CO_334:0000092' => ['39','2016-04-27 11:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 11:12:20-0500']},'test_trial22' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 02:12:20-0500'],'notes' => ['testnote2',''],'harvest index|CO_334:0000015' => ['1.8','2016-03-16 02:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 02:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['21','2016-02-11 02:12:20-0500']},'test_trial210' => {'harvest index|CO_334:0000015' => ['9.8','2016-03-16 15:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 15:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 15:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['29','2016-02-11 15:12:20-0500']},'test_trial26' => {'fresh shoot weight|CO_334:0000016' => ['25','2016-02-11 16:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 16:12:20-0500'],'harvest index|CO_334:0000015' => ['5.8','2016-03-16 16:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 16:12:20-0500']},'test_trial211' => {'fresh shoot weight|CO_334:0000016' => ['30','2016-02-11 03:12:20-0500'],'harvest index|CO_334:0000015' => ['10.8','2016-03-16 03:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 03:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 03:12:20-0500']},'test_trial29' => {'fresh root weight|CO_334:0000012' => ['15','2016-01-15 14:12:20-0500'],'harvest index|CO_334:0000015' => ['8.8','2016-03-16 14:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 14:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['28','2016-02-11 14:12:20-0500']},'test_trial28' => {'fresh shoot weight|CO_334:0000016' => ['27','2016-02-11 13:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 13:12:20-0500'],'harvest index|CO_334:0000015' => ['7.8','2016-03-16 13:12:20-0500'],'dry matter content|CO_334:0000092' => ['39','2016-04-27 13:12:20-0500']},'test_trial27' => {'fresh shoot weight|CO_334:0000016' => ['26','2016-02-11 17:12:20-0500'],'harvest index|CO_334:0000015' => ['6.8','2016-03-16 17:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 17:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 17:12:20-0500']},'test_trial21' => {'notes' => ['test note1',''],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 12:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 12:12:20-0500'],'harvest index|CO_334:0000015' => ['0.8','2016-03-16 12:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['20','2016-02-11 12:12:20-0500']},'test_trial212' => {'fresh shoot weight|CO_334:0000016' => ['31','2016-02-11 21:12:20-0500'],'harvest index|CO_334:0000015' => ['11.8','2016-03-16 21:12:20-0500'],'dry matter content|CO_334:0000092' => ['39','2016-04-27 21:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 21:12:20-0500']},'test_trial215' => {'fresh shoot weight|CO_334:0000016' => ['34','2016-02-11 19:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 19:12:20-0500'],'dry matter content|CO_334:0000092' => ['38','2016-04-27 19:12:20-0500'],'harvest index|CO_334:0000015' => ['14.8','2016-03-16 19:12:20-0500']},'test_trial214' => {'fresh shoot weight|CO_334:0000016' => ['33','2016-02-11 23:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 23:12:20-0500'],'dry matter content|CO_334:0000092' => ['30','2016-04-27 23:12:20-0500'],'harvest index|CO_334:0000015' => ['13.8','2016-03-16 23:12:20-0500']},'test_trial213' => {'harvest index|CO_334:0000015' => ['12.8','2016-03-16 22:12:20-0500'],'dry matter content|CO_334:0000092' => ['35','2016-04-27 22:12:20-0500'],'fresh root weight|CO_334:0000012' => ['15','2016-01-15 22:12:20-0500'],'fresh shoot weight|CO_334:0000016' => ['32','2016-02-11 22:12:20-0500']}},'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29']}, "Check parse phenotyping spreadsheet" );
 
 
+
+
 my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
@@ -114,6 +116,35 @@ $phenotype_metadata{'date'}="2016-02-16_01:10:56";
 my %parsed_data = %{$parsed_file->{'data'}};
 my @plots = @{$parsed_file->{'units'}};
 my @traits = @{$parsed_file->{'variables'}};
+
+print STDERR "TRAITS: ".Dumper(\@traits);
+print STDERR "PLOTS: ".Dumper(\@plots);
+
+my %values_by_trait;
+
+foreach my $t (@traits) {
+    foreach my $m (keys %{$t->{data}}) {
+	push @{$values_by_traits->{$t}}, $m->{$t}->[0];
+    }
+}
+
+print STDERR "TRAIT LISTS : ".Dumper(\%values_by_trait);
+
+
+my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
+
+			     trial_id => 137 });
+my %trait_ids;
+my %trait_before;
+foreach my $t (@traits) {
+    $trait_ids{$t} = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'cassava_trait' , $t);
+
+    $trait_before{$t} = $tn->get_phenotypes_for_trait($trait_ids{$t});
+}
+
+print STDERR "TRAITS BEFORE: ".Dumper(\%trait_before);
+
+
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     basepath=>$f->config->{basepath},
@@ -138,8 +169,7 @@ ok(!$verified_error);
 my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
-my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
-				trial_id => 137 });
+
 
 my $traits_assayed  = $tn->get_traits_assayed(); # returns the counts assayed
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
@@ -276,32 +306,34 @@ my $refresh = $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, 
 
 my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-print STDERR Dumper @traits_assayed_sorted;
+print STDERR Dumper \@traits_assayed_sorted;
 my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15, undef, undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload 2' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
-my @pheno_for_trait_check = ('15','15','15','15','15','15','15','15','15','15','15','15','15','15','15'); #,'15','15','15','15','15','15','15','15','15','15','15','15','15','15','15');
+print STDERR Dumper \@pheno_for_trait_sorted;
+my @pheno_for_trait_check = ('15','15','15','15','15','15','15','15','15','15','15','15','15','15','15'); #'15','15','15','15','15','15','15','15','15','15','15','15','15','15','15');
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70666 from phenotyping spreadsheet upload 2' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70668);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
-@pheno_for_trait_check = ('0.8','0.8','1.8','1.8','2.8','2.8','3.8','3.8','4.8','4.8','5.8','5.8','6.8','6.8','7.8');#'7.8','8.8','8.8','9.8','9.8','10.8','10.8','11.8','11.8','12.8','12.8','13.8','13.8','14.8','14.8');
+print STDERR Dumper \@pheno_for_trait_sorted;
+@pheno_for_trait_check = ('0.8','1.8','2.8','3.8','4.8','5.8','6.8','7.8','8.8','9.8','10.8','11.8','12.8','13.8','14.8');
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70668 from phenotyping spreadsheet upload 2' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70741);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
-@pheno_for_trait_check = ('30','30','30','30','30','30','30','30','35','35','35','35','35','35','35'); #'35','38','38','38','38','38','38','38','38','39','39','39','39','39','39');
+print STDERR Dumper \@pheno_for_trait_sorted;
+#@pheno_for_trait_check = ('30','30','30','30','30','30','30','30','35','35','35','35','35','35','35', '35','38','38','38','38','38','38','38','38','39','39','39','39','39','39');
+@pheno_for_trait_check = ('30','30','30','30','35','35','35','35','38','38','38','38','39','39','39');
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70741 from phenotyping spreadsheet upload 2' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70773);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
-@pheno_for_trait_check = ('20','20','21','21','22','22','23','23','24','24','25','25','26','26','27','27','28','28','29','29','30','30','31','31','32','32','33','33','34','34');
+print STDERR Dumper \@pheno_for_trait_sorted;
+#@pheno_for_trait_check = ('20','20','21','21','22','22','23','23','24','24','25','25','26','26','27','27','28','28','29','29','30','30','31','31','32','32','33','33','34','34');
+@pheno_for_trait_check = ('20','21','22','23','24','25','26','27','28','29','30','31','32','33','34');
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload 2' );
 
 
@@ -315,49 +347,49 @@ $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 my $post2_phenotype_count = $phenotype_rs->count();
 my $post2_phenotype_diff = $post2_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post2_phenotype_diff."\n";
-ok($post2_phenotype_diff == 120, "Check num rows in Phenotype table after second addition of phenotyping spreadsheet upload 2");
+is($post2_phenotype_diff, 60, "Check num rows in Phenotype table after second addition of phenotyping spreadsheet upload 2");
 
 $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 my $post2_exp_prop_count = $exp_prop_rs->count();
 my $post2_exp_prop_diff = $post2_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post2_exp_prop_diff."\n";
-ok($post2_exp_prop_diff == 60, "Check num rows in Experimentprop table after second addition of phenotyping spreadsheet upload 2");
+is($post2_exp_prop_diff, 60, "Check num rows in Experimentprop table after second addition of phenotyping spreadsheet upload 2");
 
 $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 my $post2_exp_proj_count = $exp_proj_rs->count();
 my $post2_exp_proj_diff = $post2_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post2_exp_proj_diff."\n";
-ok($post2_exp_proj_diff == 30, "Check num rows in NdExperimentproject table after second addition of phenotyping spreadsheet upload 2");
+is($post2_exp_proj_diff, 30, "Check num rows in NdExperimentproject table after second addition of phenotyping spreadsheet upload 2");
 
 $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 my $post2_exp_stock_count = $exp_stock_rs->count();
 my $post2_exp_stock_diff = $post2_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post2_exp_stock_diff."\n";
-ok($post2_exp_stock_diff == 30, "Check num rows in NdExperimentstock table after second addition of phenotyping spreadsheet upload 2");
+is($post2_exp_stock_diff, 30, "Check num rows in NdExperimentstock table after second addition of phenotyping spreadsheet upload 2");
 
 $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post2_exp_pheno_count = $exp_pheno_rs->count();
 my $post2_exp_pheno_diff = $post2_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post2_exp_pheno_diff."\n";
-ok($post2_exp_pheno_diff == 120, "Check num rows in NdExperimentphenotype table after second addition of phenotyping spreadsheet upload 2");
+is($post2_exp_pheno_diff, 60, "Check num rows in NdExperimentphenotype table after second addition of phenotyping spreadsheet upload 2");
 
 $md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 my $post2_md_count = $md_rs->count();
 my $post2_md_diff = $post2_md_count - $pre_md_count;
 print STDERR "MdMetadata count: ".$post2_md_diff."\n";
-ok($post2_md_diff == 2, "Check num rows in MdMetadata table after second addition of phenotyping spreadsheet upload 2");
+is($post2_md_diff, 2, "Check num rows in MdMetadata table after second addition of phenotyping spreadsheet upload 2");
 
 $md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 my $post2_md_files_count = $md_files_rs->count();
 my $post2_md_files_diff = $post2_md_files_count - $pre_md_files_count;
 print STDERR "MdFiles count: ".$post2_md_files_diff."\n";
-ok($post2_md_files_diff == 2, "Check num rows in MdFiles table after second addition of phenotyping spreadsheet upload 2");
+is($post2_md_files_diff, 2, "Check num rows in MdFiles table after second addition of phenotyping spreadsheet upload 2");
 
 $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 my $post2_exp_md_files_count = $exp_md_files_rs->count();
 my $post2_exp_md_files_diff = $post2_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post2_exp_md_files_diff."\n";
-ok($post2_exp_md_files_diff == 30, "Check num rows in NdExperimentMdFIles table after second addition of phenotyping spreadsheet upload 2");
+is($post2_exp_md_files_diff, 30, "Check num rows in NdExperimentMdFIles table after second addition of phenotyping spreadsheet upload 2");
 
 
 
@@ -389,7 +421,26 @@ ok($parsed_file, "Check if parse parse fieldbook works");
 
 print STDERR Dumper $parsed_file;
 
-is_deeply($parsed_file, {'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29'],'data' => {'test_trial23' => {'dry yield|CO_334:0000014' => ['41','2016-01-07 12:08:27-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:27-0500','johndoe','']},'test_trial212' => {'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:09:02-0500','johndoe',''],'dry yield|CO_334:0000014' => ['42','2016-01-07 12:09:02-0500','johndoe','']},'test_trial28' => {'dry yield|CO_334:0000014' => ['41','2016-01-07 12:08:53-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:53-0500','johndoe','']},'test_trial215' => {'dry matter content|CO_334:0000092' => ['31','2016-01-07 12:09:07-0500','johndoe',''],'dry yield|CO_334:0000014' => ['31','2016-01-07 12:09:07-0500','johndoe','']},'test_trial25' => {'dry matter content|CO_334:0000092' => ['25','2016-01-07 12:08:48-0500','johndoe',''],'dry yield|CO_334:0000014' => ['25','2016-01-07 12:08:48-0500','johndoe','']},'test_trial29' => {'dry matter content|CO_334:0000092' => ['','2016-01-07 12:08:55-0500','johndoe',''],'dry yield|CO_334:0000014' => ['24','2016-01-07 12:08:55-0500','johndoe','']},'test_trial26' => {'dry matter content|CO_334:0000092' => ['','2016-01-07 12:08:49-0500','johndoe',''],'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:49-0500','johndoe','']},'test_trial22' => {'fieldbook_image|CO_334:0010472' => ['/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial22_2016-09-12-11-15-26.jpg','2016-01-07 12:10:25-0500','johndoe',''],'dry yield|CO_334:0000014' => ['45','2016-01-07 12:08:26-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['45','2016-01-07 12:08:26-0500','johndoe','']},'test_trial213' => {'dry matter content|CO_334:0000092' => ['35','2016-01-07 12:09:04-0500','johndoe',''],'dry yield|CO_334:0000014' => ['35','2016-01-07 12:09:04-0500','johndoe','']},'test_trial24' => {'dry yield|CO_334:0000014' => ['14','2016-01-07 12:08:46-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['14','2016-01-07 12:08:46-0500','johndoe','']},'test_trial210' => {'dry yield|CO_334:0000014' => ['12','2016-01-07 12:08:56-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['12','2016-01-07 12:08:56-0500','johndoe','']},'test_trial27' => {'dry matter content|CO_334:0000092' => ['52','2016-01-07 12:08:51-0500','johndoe',''],'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:51-0500','johndoe','']},'test_trial21' => {'dry yield|CO_334:0000014' => ['42','2016-01-07 12:08:24-0500','johndoe',''],'fieldbook_image|CO_334:0010472' => ['/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial21_2016-09-12-11-15-12.jpg','2016-01-07 12:10:24-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:08:24-0500','johndoe','']},'test_trial214' => {'dry yield|CO_334:0000014' => ['32','2016-01-07 12:09:05-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['32','2016-01-07 12:09:05-0500','johndoe','']},'test_trial211' => {'dry matter content|CO_334:0000092' => ['13','2016-01-07 12:08:58-0500','johndoe',''],'dry yield|CO_334:0000014' => ['13','2016-01-07 12:08:58-0500','johndoe','']}},'variables' => ['dry matter content|CO_334:0000092','dry yield|CO_334:0000014','fieldbook_image|CO_334:0010472']}, "Check parse fieldbook");
+is_deeply($parsed_file, {
+    'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29'],
+	'data' =>
+    {
+	'test_trial23' => {'dry yield|CO_334:0000014' => ['41','2016-01-07 12:08:27-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:27-0500','johndoe','']},
+	    'test_trial212' => {'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:09:02-0500','johndoe',''],'dry yield|CO_334:0000014' => ['42','2016-01-07 12:09:02-0500','johndoe','']},
+	    'test_trial28' => {'dry yield|CO_334:0000014' => ['41','2016-01-07 12:08:53-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['41','2016-01-07 12:08:53-0500','johndoe','']},
+	    'test_trial215' => {'dry matter content|CO_334:0000092' => ['31','2016-01-07 12:09:07-0500','johndoe',''],'dry yield|CO_334:0000014' => ['31','2016-01-07 12:09:07-0500','johndoe','']},
+	    'test_trial25' => {'dry matter content|CO_334:0000092' => ['25','2016-01-07 12:08:48-0500','johndoe',''],'dry yield|CO_334:0000014' => ['25','2016-01-07 12:08:48-0500','johndoe','']},
+	    'test_trial29' => {'dry matter content|CO_334:0000092' => ['','2016-01-07 12:08:55-0500','johndoe',''],'dry yield|CO_334:0000014' => ['24','2016-01-07 12:08:55-0500','johndoe','']},
+	    'test_trial26' => {'dry matter content|CO_334:0000092' => ['','2016-01-07 12:08:49-0500','johndoe',''],'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:49-0500','johndoe','']},
+	    'test_trial22' => {'dry yield|CO_334:0000014' => ['45','2016-01-07 12:08:26-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['45','2016-01-07 12:08:26-0500','johndoe','']},
+	    'test_trial213' => {'dry matter content|CO_334:0000092' => ['35','2016-01-07 12:09:04-0500','johndoe',''],'dry yield|CO_334:0000014' => ['35','2016-01-07 12:09:04-0500','johndoe','']},
+	    'test_trial24' => {'dry yield|CO_334:0000014' => ['14','2016-01-07 12:08:46-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['14','2016-01-07 12:08:46-0500','johndoe','']},
+	    'test_trial210' => {'dry yield|CO_334:0000014' => ['12','2016-01-07 12:08:56-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['12','2016-01-07 12:08:56-0500','johndoe','']},
+	    'test_trial27' => {'dry matter content|CO_334:0000092' => ['52','2016-01-07 12:08:51-0500','johndoe',''],'dry yield|CO_334:0000014' => ['0','2016-01-07 12:08:51-0500','johndoe','']},
+	    'test_trial21' => {'dry yield|CO_334:0000014' => ['42','2016-01-07 12:08:24-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['42','2016-01-07 12:08:24-0500','johndoe','']},
+	    'test_trial214' => {'dry yield|CO_334:0000014' => ['32','2016-01-07 12:09:05-0500','johndoe',''],'dry matter content|CO_334:0000092' => ['32','2016-01-07 12:09:05-0500','johndoe','']},
+	    'test_trial211' => {'dry matter content|CO_334:0000092' => ['13','2016-01-07 12:08:58-0500','johndoe',''],'dry yield|CO_334:0000014' => ['13','2016-01-07 12:08:58-0500','johndoe','']}},
+	'variables' => ['dry matter content|CO_334:0000092','dry yield|CO_334:0000014']}, "Check parse fieldbook");
 
 
 $phenotype_metadata{'archived_file'} = $filename;
@@ -446,26 +497,29 @@ print STDERR Dumper \@traits_assayed_sorted;
           'dry yield|CO_334:0000014', [], 15,undef,undef
         ],[
           70741,
-          'dry matter content percentage|CO_334:0000092', [], 43,undef,undef
+          'dry matter content percentage|CO_334:0000092', [], 15,undef,undef
         ],[
           70773,
-          'fresh shoot weight measurement in kg|CO_334:0000016', [], 30,undef,undef
-        ],[
-          77107,
-          'fieldbook_image|CO_334:0010472', [], 2,undef,undef
-        ]);
+			     'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef
+			 ]
+#			 ,[
+#          77107,
+#          'fieldbook_image|CO_334:0010472', [], 2,undef,undef
+			     #        ]
+			 );
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload 3' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
+print STDERR Dumper \@pheno_for_trait_sorted;
 @pheno_for_trait_check = ('0','0','12','13','14','24','25','31','32','35','41','41','42','42','45');
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70727 from phenotyping spreadsheet upload' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70741);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
-@pheno_for_trait_check = ('12','13','14','25','30','30','30','30','30','30','30','30','31','32','35','35','35','35','35','35','35','35','35','38','38','38','38','38','38','38','38','39','39','39','39','39','39','41','41','42','42','45','52');
+print STDERR Dumper \@pheno_for_trait_sorted;
+###@pheno_for_trait_check = ('12','13','14','25','30','30','30','30','30','30','30','30','31','32','35','35','35','35','35','35','35','35','35','38','38','38','38','38','38','38','38','39','39','39','39','39','39','41','41','42','42','45','52');
+@pheno_for_trait_check = ('30','30','30','30','35','35','35','35','38','38','38', '38', '39','39','39');
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70741 from phenotyping spreadsheet upload' );
 
 
@@ -473,55 +527,55 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 45, "Check num rows in NdExperiment table after addition of fieldbook upload");
+is($post1_experiment_diff, 45, "Check num rows in NdExperiment table after addition of fieldbook upload");
 
 $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 150, "Check num rows in Phenotype table after addition of fieldbook upload");
+is($post1_phenotype_diff, 75, "Check num rows in Phenotype table after addition of fieldbook upload"); # was 150
 
 $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 90, "Check num rows in Experimentprop table after addition of fieldbook upload");
+is($post1_exp_prop_diff, 90, "Check num rows in Experimentprop table after addition of fieldbook upload");
 
 $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 45, "Check num rows in NdExperimentproject table after addition of fieldbook upload");
+is($post1_exp_proj_diff, 45, "Check num rows in NdExperimentproject table after addition of fieldbook upload");
 
 $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 45, "Check num rows in NdExperimentstock table after addition of fieldbook upload");
+is($post1_exp_stock_diff, 45, "Check num rows in NdExperimentstock table after addition of fieldbook upload");
 
 $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
 my $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 150, "Check num rows in NdExperimentphenotype table after addition of fieldbook upload");
+is($post1_exp_pheno_diff, 75, "Check num rows in NdExperimentphenotype table after addition of fieldbook upload");
 
 $md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 my $post1_md_count = $md_rs->count();
 my $post1_md_diff = $post1_md_count - $pre_md_count;
 print STDERR "MdMetadata count: ".$post1_md_diff."\n";
-ok($post1_md_diff == 5, "Check num rows in MdMetadata table after addition of fieldbook upload");
+is($post1_md_diff, 5, "Check num rows in MdMetadata table after addition of fieldbook upload");
 
 $md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 my $post1_md_files_count = $md_files_rs->count();
 my $post1_md_files_diff = $post1_md_files_count - $pre_md_files_count;
 print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
-ok($post1_md_files_diff == 3, "Check num rows in MdFiles table after addition of fieldbook upload");
+is($post1_md_files_diff, 3, "Check num rows in MdFiles table after addition of fieldbook upload");
 
 $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 45, "Check num rows in NdExperimentMdFIles table after addition fieldbook upload");
+is($post1_exp_md_files_diff, 45, "Check num rows in NdExperimentMdFIles table after addition fieldbook upload");
 
 
 
@@ -892,47 +946,54 @@ $traits_assayed  = $tn->get_traits_assayed();
 print STDERR Dumper \@traits_assayed_sorted;
 @traits_assayed_check = ([
           70666,
-          'fresh root weight|CO_334:0000012', [], 44,undef,undef
+          'fresh root weight|CO_334:0000012', [], 15,undef,undef
         ],[
           70668,
-          'harvest index variable|CO_334:0000015', [], 45,undef,undef
+          'harvest index variable|CO_334:0000015', [], 15,undef,undef
         ],[
           70727,
           'dry yield|CO_334:0000014', [], 15,undef,undef
         ],[
           70741,
-          'dry matter content percentage|CO_334:0000092', [], 56,undef,undef
+          'dry matter content percentage|CO_334:0000092', [], 15,undef,undef
         ],[
           70773,
-          'fresh shoot weight measurement in kg|CO_334:0000016', [], 45,undef,undef
-        ],[
-          77107,
-          'fieldbook_image|CO_334:0010472', [], 2,undef,undef
-        ]);
+          'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef
+			 ],
+#			 [
+#          77107,
+#          'fieldbook_image|CO_334:0010472', [], ,undef,undef
+			 #        ]
+    );
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload 4' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
-my @pheno_for_trait_check = ('15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','36','37','38','39','40','41','42','43','45','46','47','48','49','50');
+print STDERR Dumper \@pheno_for_trait_sorted;
+#my @pheno_for_trait_check = ('15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','36','37','38','39','40','41','42','43','45','46','47','48','49','50');
+my @pheno_for_trait_check = ('15') x 15;
+
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70666 from phenotyping spreadsheet upload 3' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70668);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
-@pheno_for_trait_check = ('0','0','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','1.8','1.8','2.8','2.8','3.8','3.8','4.8','4.8','5.8','5.8','6.8','6.8','7.8','7.8','8.8','8.8','9.8','9.8','10.8','10.8','11.8','11.8','12.8','12.8','13.8','13.8','14.8','14.8');
+print STDERR Dumper \@pheno_for_trait_sorted;
+#@pheno_for_trait_check = ('0','0','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','1.8','1.8','2.8','2.8','3.8','3.8','4.8','4.8','5.8','5.8','6.8','6.8','7.8','7.8','8.8','8.8','9.8','9.8','10.8','10.8','11.8','11.8','12.8','12.8','13.8','13.8','14.8','14.8');
+@pheno_for_trait_check = ( '0.8', '1.8','2.8','3.8','4.8','5.8', '6.8', '7.8', '8.8', '9.8', '10.8','11.8', '12.8','13.8', '14.8' );
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70668 from phenotyping spreadsheet upload 3' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70741);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
-@pheno_for_trait_check = ('12','13','14','25','30','30','30','30','30','30','30','30','31','32','35','35','35','35','35','35','35','35','35','35','36','37','38','38','38','38','38','38','38','38','38','39','39','39','39','39','39','39','41','41','42','42','42','43','44','45','45','46','47','48','49','52');
+print STDERR Dumper \@pheno_for_trait_sorted;
+#@pheno_for_trait_check = ('12','13','14','25','30','30','30','30','30','30','30','30','31','32','35','35','35','35','35','35','35','35','35','35','36','37','38','38','38','38','38','38','38','38','38','39','39','39','39','39','39','39','41','41','42','42','42','43','44','45','45','46','47','48','49','52');
+@pheno_for_trait_check = ('30', '30', '30', '30', '35', '35', '35', '35', '38', '38', '38', '38', '39', '39', '39');
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70741 from phenotyping spreadsheet upload 3' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70773);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
-@pheno_for_trait_check = ('10','11','12','13','14','15','16','17','18','19','20','20','20','21','21','21','22','22','22','23','23','23','24','24','24','25','25','26','26','27','27','28','28','29','29','30','30','31','31','32','32','33','33','34','34');
+print STDERR Dumper \@pheno_for_trait_sorted;
+#@pheno_for_trait_check = ('10','11','12','13','14','15','16','17','18','19','20','20','20','21','21','21','22','22','22','23','23','23','24','24','24','25','25','26','26','27','27','28','28','29','29','30','30','31','31','32','32','33','33','34','34');
+@pheno_for_trait_check = ( 20,21,22,23,24,25,26,27,28,29,30,31,32,33,34);
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload 3' );
 
 
@@ -940,55 +1001,56 @@ $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 60, "Check num rows in NdExperiment table after addition of datacollector upload");
+is($post1_experiment_diff, 60, "Check num rows in NdExperiment table after addition of datacollector upload");
 
 $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 207, "Check num rows in Phenotype table after addition of datacollector upload");
+#is($post1_phenotype_diff, 207, "Check num rows in Phenotype table after addition of datacollector upload");
+is($post1_phenotype_diff, 75, "Check num rows in Phenotype table after addition of datacollector upload");
 
 $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 120, "Check num rows in Experimentprop table after addition of datacollector upload");
+is($post1_exp_prop_diff, 120, "Check num rows in Experimentprop table after addition of datacollector upload");
 
 $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 60, "Check num rows in NdExperimentproject table after addition of datacollector upload");
+is($post1_exp_proj_diff, 60, "Check num rows in NdExperimentproject table after addition of datacollector upload");
 
 $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 60, "Check num rows in NdExperimentstock table after addition of datacollector upload");
+is($post1_exp_stock_diff, 60, "Check num rows in NdExperimentstock table after addition of datacollector upload");
 
 $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
 my $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 207, "Check num rows in NdExperimentphenotype table after addition of datacollector upload");
+is($post1_exp_pheno_diff, 207, "Check num rows in NdExperimentphenotype table after addition of datacollector upload");
 
 $md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 my $post1_md_count = $md_rs->count();
 my $post1_md_diff = $post1_md_count - $pre_md_count;
 print STDERR "MdMetadata count: ".$post1_md_diff."\n";
-ok($post1_md_diff == 6, "Check num rows in MdMetadata table after addition of datacollector upload");
+is($post1_md_diff, 6, "Check num rows in MdMetadata table after addition of datacollector upload");
 
 $md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 my $post1_md_files_count = $md_files_rs->count();
 my $post1_md_files_diff = $post1_md_files_count - $pre_md_files_count;
 print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
-ok($post1_md_files_diff == 4, "Check num rows in MdFiles table after addition of datacollector upload");
+is($post1_md_files_diff, 4, "Check num rows in MdFiles table after addition of datacollector upload");
 
 $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 60, "Check num rows in NdExperimentMdFIles table after addition datacollector upload");
+is($post1_exp_md_files_diff, 60, "Check num rows in NdExperimentMdFIles table after addition datacollector upload");
 
 
 
@@ -1584,7 +1646,7 @@ $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 
 $traits_assayed  = $tn->get_traits_assayed();
 @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
-print STDERR Dumper \@traits_assayed_sorted;
+print STDERR "TRAITS ASSAYED: ".Dumper \@traits_assayed_sorted;
 @traits_assayed_check = ([
           70666,
           'fresh root weight|CO_334:0000012', [], 59,undef,undef
@@ -1620,19 +1682,19 @@ is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
+print STDERR "PHENOTYPES FOR TRAIT 70666: ". Dumper @pheno_for_trait_sorted;
 @pheno_for_trait_check = ('15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','15','36','37','38','39','40','41','42','43','45','46','47','48','49','50');
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70666 from large phenotyping spreadsheet upload 4' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70668);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
+print STDERR "PHENOTYPES FOR TRAIT 70668: ".Dumper @pheno_for_trait_sorted;
 @pheno_for_trait_check = ('0','0','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','0.8','1.8','1.8','1.8','2.8','2.8','2.8','3.8','3.8','3.8','4.8','4.8','5.8','5.8','5.8','6.8','6.8','6.8','7.8','7.8','7.8','8.8','8.8','8.8','9.8','9.8','9.8','10.8','10.8','10.8','11.8','11.8','11.8','12.8','12.8','12.8','13.8','13.8','13.8','14.8','14.8','14.8');
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70668 from large phenotyping spreadsheet upload 4' );
 
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70741);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
-#print STDERR Dumper @pheno_for_trait_sorted;
+print STDERR "PHENOTYPES FOR TRAIT 70741: ".Dumper @pheno_for_trait_sorted;
 @pheno_for_trait_check = ('12','13','14','25','30','30','30','30','30','30','30','30','30','30','30','30','31','32','35','35','35','35','35','35','35','35','35','35','35','35','35','35','36','37','38','38','38','38','38','38','38','38','38','38','38','38','38','39','39','39','39','39','39','39','39','39','39','41','41','42','42','42','43','44','45','45','46','47','48','49','52');
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70741 from large phenotyping spreadsheet upload 4' );
 
@@ -2549,10 +2611,10 @@ is_deeply(\@traits_assayed_sorted, [
             70773,
             'fresh shoot weight measurement in kg|CO_334:0000016', [], 60,undef,undef
           ],
-          [
-            77107,
-            'fieldbook_image|CO_334:0010472', [], 2,undef,undef
-          ]
+#          [
+ #           77107,
+ #           'fieldbook_image|CO_334:0010472', [], 2,undef,undef
+ #         ]
         ], 'check traits assayed after plant upload' );
 
 
@@ -5599,7 +5661,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 my @data = $phenotypes_search->get_phenotype_matrix();
 print STDERR Dumper \@data;
 is_deeply(\@data, [
-['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber','plantedSeedlotStockDbId','plantedSeedlotStockUniquename','plantedSeedlotCurrentCount','plantedSeedlotCurrentWeightGram','plantedSeedlotBoxName','plantedSeedlotTransactionCount','plantedSeedlotTransactionWeight','plantedSeedlotTransactionDescription','availableGermplasmSeedlotUniquenames','dry matter content percentage|CO_334:0000092','dry yield|CO_334:0000014','fieldbook_image|CO_334:0010472','flower|CO_334:0000111','fresh root weight|CO_334:0000012','fresh shoot weight measurement in kg|CO_334:0000016','harvest index variable|CO_334:0000015','number of planted stakes counting|CO_334:0000159','root number counting|CO_334:0000011','root weight in air|CO_334:0000157','root weight in water|CO_334:0000158','sprout count at one-month|CO_334:0000213','sprouting proportion|CO_334:0000008','top yield|CO_334:0000017','notes'],
+['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber','plantedSeedlotStockDbId','plantedSeedlotStockUniquename','plantedSeedlotCurrentCount','plantedSeedlotCurrentWeightGram','plantedSeedlotBoxName','plantedSeedlotTransactionCount','plantedSeedlotTransactionWeight','plantedSeedlotTransactionDescription','availableGermplasmSeedlotUniquenames','dry matter content percentage|CO_334:0000092','dry yield|CO_334:0000014','flower|CO_334:0000111','fresh root weight|CO_334:0000012','fresh shoot weight measurement in kg|CO_334:0000016','harvest index variable|CO_334:0000015','number of planted stakes counting|CO_334:0000159','root number counting|CO_334:0000011','root weight in air|CO_334:0000157','root weight in water|CO_334:0000158','sprout count at one-month|CO_334:0000213','sprouting proportion|CO_334:0000008','top yield|CO_334:0000017','notes'],
 ['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38857,'test_trial21','1','1','1',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','27','42','/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial21_2016-09-12-11-15-12.jpg','0','15','20','0.8','20','2','3','0.3','18','45','2','test note1 (Operator: janedoe, Time: )'],
 ['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','','plot',38866,'test_trial210','3','1','10',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','29','12',undef,'0','15','29','9.8','0',undef,undef,undef,undef,'45','2',undef],
 ['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','','plot',38867,'test_trial211','3','1','11',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','31','13',undef,'0','15','30','10.8',undef,'4',undef,undef,'0','2','4',undef],
@@ -5696,7 +5758,7 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 my @data = $phenotypes_search->get_phenotype_matrix();
 print STDERR Dumper \@data;
 is_deeply(\@data, [
-['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber','plantedSeedlotStockDbId','plantedSeedlotStockUniquename','plantedSeedlotCurrentCount','plantedSeedlotCurrentWeightGram','plantedSeedlotBoxName','plantedSeedlotTransactionCount','plantedSeedlotTransactionWeight','plantedSeedlotTransactionDescription','availableGermplasmSeedlotUniquenames','dry matter content percentage|CO_334:0000092','dry yield|CO_334:0000014','fieldbook_image|CO_334:0010472','flower|CO_334:0000111','fresh root weight|CO_334:0000012','fresh root yield|CO_334:0000013','fresh shoot weight measurement in kg|CO_334:0000016','harvest index variable|CO_334:0000015','number of planted stakes counting|CO_334:0000159','plant stands harvested counting|CO_334:0000010','root number counting|CO_334:0000011','root weight in air|CO_334:0000157','root weight in water|CO_334:0000158','sprout count at one-month|CO_334:0000213','sprouting proportion|CO_334:0000008','top yield|CO_334:0000017','notes'],
+['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber','plantedSeedlotStockDbId','plantedSeedlotStockUniquename','plantedSeedlotCurrentCount','plantedSeedlotCurrentWeightGram','plantedSeedlotBoxName','plantedSeedlotTransactionCount','plantedSeedlotTransactionWeight','plantedSeedlotTransactionDescription','availableGermplasmSeedlotUniquenames','dry matter content percentage|CO_334:0000092','dry yield|CO_334:0000014','flower|CO_334:0000111','fresh root weight|CO_334:0000012','fresh root yield|CO_334:0000013','fresh shoot weight measurement in kg|CO_334:0000016','harvest index variable|CO_334:0000015','number of planted stakes counting|CO_334:0000159','plant stands harvested counting|CO_334:0000010','root number counting|CO_334:0000011','root weight in air|CO_334:0000157','root weight in water|CO_334:0000158','sprout count at one-month|CO_334:0000213','sprouting proportion|CO_334:0000008','top yield|CO_334:0000017','notes'],
 ['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38857,'test_trial21','1','1','1',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','27','42','/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial21_2016-09-12-11-15-12.jpg','0','15','23','20','0.8','20',undef,undef,'3','0.3','18','12','2','test note1 (Operator: janedoe, Time: )'],
 ['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','','plot',38866,'test_trial210','3','1','10',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','29','12',undef,'0','15',undef,'29','9.8','0',undef,undef,undef,undef,undef,'45','2',undef],
 ['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','','plot',38867,'test_trial211','3','1','11',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,'','31','13',undef,'0','15',undef,'30','10.8',undef,undef,'4',undef,undef,'0','2','4',undef],
