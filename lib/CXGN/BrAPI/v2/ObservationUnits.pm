@@ -522,9 +522,9 @@ sub observationunits_update {
             });
             my $reference_result = $references->store();
         }
-
-        $self->_refresh_matviews($dbh, $c, 5 * 60);
     }
+
+    $self->_refresh_matviews($dbh, $c, 5 * 60);
 
     my @observation_unit_db_ids;
     foreach my $params (@$data) { push @observation_unit_db_ids, $params->{observationUnitDbId}; }
