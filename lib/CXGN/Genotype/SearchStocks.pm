@@ -58,8 +58,9 @@ sub get_selected_stocks {
     my $info_ref = decode_json$protocol_info;
     my %info = %{$info_ref};
     my $protocol_id = $info{genotyping_protocol_id};
+    my $protocol_name = $info{genotyping_protocol_name};
     my $data_type = $info{genotyping_data_type};
-
+    print STDERR "PROTOCOL NAME =".Dumper($protocol_name)."\n";
     my $type_q= "SELECT value->>'sample_observation_unit_type_name'
     FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
 
@@ -69,55 +70,50 @@ sub get_selected_stocks {
     my ($sample_type) = $type_h->fetchrow_array();
 
     my %chrom_hash;
-    foreach my $param (@parameters){
-        my $param_ref = decode_json$param;
+    my @incorrect_marker_names;
+    for (my $i=1; $i<@parameters; $i++) {
+        my $param_ref = decode_json$parameters[$i];
         my %params = %{$param_ref};
         my $marker_name = $params{marker_name};
-
+        print STDERR "MARKER NAME =".Dumper($marker_name)."\n";
         if ($data_type eq 'Dosage') {
-            if ($marker_name){
-                my $allele_dosage = $params{allele_dosage};
+            my $allele_dosage = $params{allele_dosage};
+            my $chrom_key;
+            my $q = "SELECT value->?->>'chrom' AS chromosome_no FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? AND value->?->>'chrom' IS NOT NULL";
 
-                my $chrom_key;
-                my $q = "SELECT value->?->>'chrom' FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
-
-                my $h = $schema->storage->dbh()->prepare($q);
-                $h->execute($marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id);
-
-                while (my ($chrom) = $h->fetchrow_array()){
-                    if ($chrom) {
-                        $chrom_hash{$chrom}{$marker_name}{'DS'} = $allele_dosage
-                    }
-                }
+            my $h = $schema->storage->dbh()->prepare($q);
+            $h->execute($marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id, $marker_name);
+#            if (!$h->fetchrow_array) {
+#                push @incorrect_marker_names, "Marker name: $marker_name is not in genotyping protocol: $protocol_name. \n";
+#            } else {
+            my ($chrom) = $h->fetchrow_array();
+            if ($chrom){
+                print STDERR "CHROMOSOME NO =".Dumper($chrom)."\n";
+                $chrom_hash{$chrom}{$marker_name}{'DS'} = $allele_dosage;
+            } else {
+                push @incorrect_marker_names, "Marker name: $marker_name is not in genotyping protocol: $protocol_name. \n";
             }
         } elsif ($data_type eq 'SNP') {
-            if ($marker_name) {
-                my $allele_1 = $params{allele1};
-                my $allele_2 = $params{allele2};
-                my @allele_param = ($allele_1, $allele_2);
+            my $allele_1 = $params{allele1};
+            my $allele_2 = $params{allele2};
+            my @allele_param = ($allele_1, $allele_2);
 
-                my @ref_alt_chrom = ();
+            my @ref_alt_chrom = ();
+            my $q = "SELECT value->?->>'ref', value->?->>'alt', value->?->>'chrom'
+            FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? AND value->?->>'ref' IS NOT NULL";
 
-                my $q = "SELECT value->?->>'ref', value->?->>'alt', value->?->>'chrom'
-                FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
+            my $h = $schema->storage->dbh()->prepare($q);
+            $h->execute($marker_name, $marker_name, $marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id, $marker_name);
 
-                my $h = $schema->storage->dbh()->prepare($q);
-                $h->execute($marker_name, $marker_name, $marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id);
-
-                while (my ($ref, $alt, $chrom) = $h->fetchrow_array()){
-                    if ($ref) {
-                        push @ref_alt_chrom, $ref
-                    }
-                    if ($alt) {
-                        push @ref_alt_chrom, $alt
-                    }
-                    if ($chrom) {
-                        push @ref_alt_chrom, $chrom
-                    }
+            while (my ($ref, $alt, $chrom) = $h->fetchrow_array()){
+                push @ref_alt_chrom, ($ref, $alt, $chrom);
+                if (!@ref_alt_chrom) {
+                    push @incorrect_marker_names, "Marker name: $marker_name is not in genotyping protocol: $protocol_name. \n";
                 }
+            }
 
-                my @nt = ();
-
+            my @nt = ();
+            if (@ref_alt_chrom) {
                 if ($allele_1 ne $allele_2){
                     foreach my $allele(@allele_param){
                         if (grep{/$allele/}(@ref_alt_chrom)){
@@ -139,12 +135,18 @@ sub get_selected_stocks {
                         $chrom_hash{$ref_alt_chrom[2]}{$marker_name} = {'NT' => $nt_string};
                     } else {
                         last;
-                   }
-               }
+                    }
+                }
             }
         }
     }
 
+    print STDERR "INCORRECT MARKER NAMES =".Dumper(\@incorrect_marker_names)."\n";
+    print STDERR "CHROMOSOME HASH =".Dumper(\%chrom_hash)."\n";
+
+    if (scalar(@incorrect_marker_names) > 0) {
+        return {incorrect_marker_names=> \@incorrect_marker_names};
+    }
     my @formatted_parameters;
     my @rank_and_params;
     if (%chrom_hash) {
