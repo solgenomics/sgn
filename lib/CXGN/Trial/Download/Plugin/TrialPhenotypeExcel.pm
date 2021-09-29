@@ -91,6 +91,8 @@ sub download {
     my $phenotype_min_value = $self->phenotype_min_value();
     my $phenotype_max_value = $self->phenotype_max_value();
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
+    my $average_repeat_measurements = $self->average_repeat_measurements;
+    my $return_only_first_measurement = $self->return_only_first_measurement;
     my $search_type = $self->search_type();
     $self->trial_download_log($trial_id, "trial phenotypes");
 
@@ -121,6 +123,8 @@ sub download {
             trait_contains=>$trait_contains,
             phenotype_min_value=>$phenotype_min_value,
             phenotype_max_value=>$phenotype_max_value,
+            average_repeat_measurements=>$average_repeat_measurements,
+            return_only_first_measurement=>$return_only_first_measurement
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }

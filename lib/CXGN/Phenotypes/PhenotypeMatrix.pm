@@ -2,7 +2,7 @@ package CXGN::Phenotypes::PhenotypeMatrix;
 
 =head1 NAME
 
-CXGN::Phenotypes::PhenotypeMatrix - an object to handle creating the phenotype matrix. Uses SearchFactory to handle searching native database or materialized views.
+CXGN::Phenotypes::PhenotypeMatrix - an object to handle creating the phenotype matrix. Can return average values for repeated measurements on observationunits. Uses SearchFactory to handle searching native database or materialized views.
 
 =head1 USAGE
 
@@ -24,7 +24,9 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     phenotype_min_value=>$phenotype_min_value,
     phenotype_max_value=>$phenotype_max_value,
     limit=>$limit,
-    offset=>$offset
+    offset=>$offset,
+    average_repeat_measurements=>0,
+    return_only_first_measurement=>1
 );
 my @data = $phenotypes_search->get_phenotype_matrix();
 
@@ -43,6 +45,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::SearchFactory;
+use List::Util qw/sum/;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -121,6 +124,18 @@ has 'exclude_phenotype_outlier' => (
     default => 0
 );
 
+has 'average_repeat_measurements' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 0
+);
+
+has 'return_only_first_measurement' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 1
+);
+
 has 'trait_contains' => (
     isa => 'ArrayRef[Str]|Undef',
     is => 'rw'
@@ -150,8 +165,21 @@ sub get_phenotype_matrix {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $include_timestamp = $self->include_timestamp;
+    my $average_repeat_measurements = $self->average_repeat_measurements;
+    my $return_only_first_measurement = $self->return_only_first_measurement;
+
+
+    if ($return_only_first_measurement) {
+        $average_repeat_measurements = 0;
+    }
+
+    if ($average_repeat_measurements) {
+        $include_timestamp = 0;
+    }
+    my %trait_repeat_counter;
 
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
+    print STDERR Dumper [$return_only_first_measurement, $average_repeat_measurements];
 
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         $self->search_type,
@@ -193,9 +221,42 @@ sub get_phenotype_matrix {
             push @line, ('germplasmPedigreeFemaleParentName', 'germplasmPedigreeFemaleParentDbId', 'germplasmPedigreeMaleParentName', 'germplasmPedigreeMaleParentDbId');
         }
 
+        my %trait_plot_counter;
+        foreach my $obs_unit (@$data){
+            my $observations = $obs_unit->{observations};
+            foreach (@$observations){
+                $trait_plot_counter{$obs_unit->{observationunit_stock_id}}->{$_->{trait_name}}++;
+            }
+        }
+        while(my($stock_id, $o) = each %trait_plot_counter) {
+            while(my($trait, $number) = each %$o) {
+                if (exists($trait_repeat_counter{$trait})) {
+                    if ($number > $trait_repeat_counter{$trait}) {
+                        $trait_repeat_counter{$trait} = $number;
+                    }
+                }
+                else {
+                    $trait_repeat_counter{$trait} = $number;
+                }
+            }
+        }
+        print STDERR Dumper \%trait_repeat_counter;
+
         my @sorted_traits = sort keys(%$unique_traits);
         foreach my $trait (@sorted_traits) {
-            push @line, $trait;
+            if (!$average_repeat_measurements && !$return_only_first_measurement) {
+                my $repeat_number = $trait_repeat_counter{$trait};
+                if ($repeat_number > 1) {
+                    for my $i (1..$repeat_number) {
+                        push @line, $trait."|".$i;
+                    }
+                }
+                else {
+                    push @line, $trait;
+                }
+            } else {
+                push @line, $trait;
+            }
         }
         push @line, 'notes';
         push @info, \@line;
@@ -226,31 +287,45 @@ sub get_phenotype_matrix {
             }
 
             my $observations = $obs_unit->{observations};
-#            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
-            my $include_timestamp = $self->include_timestamp;
             my %trait_observations;
             foreach (@$observations){
                 my $collect_date = $_->{collect_date};
                 my $timestamp = $_->{timestamp};
                 if ($include_timestamp && $timestamp) {
-                    $trait_observations{$_->{trait_name}} = "$_->{value},$timestamp";
+                    push @{$trait_observations{$_->{trait_name}}}, "$_->{value},$timestamp";
                 }
                 elsif ($include_timestamp && $collect_date) {
-                    $trait_observations{$_->{trait_name}} = "$_->{value},$collect_date";
+                    push @{$trait_observations{$_->{trait_name}}}, "$_->{value},$collect_date";
                 }
                 else {
-                    $trait_observations{$_->{trait_name}} = $_->{value};
+                    push @{$trait_observations{$_->{trait_name}}}, $_->{value};
                 }
             }
             foreach my $trait (@sorted_traits) {
-                push @line, $trait_observations{$trait};
+                my $obs = $trait_observations{$trait};
+                if ($average_repeat_measurements) {
+                    my $val;
+                    if ($obs) {
+                        $val = sum(@$obs)/scalar(@$obs);
+                    }
+                    push @line, $val;
+                }
+                elsif ($return_only_first_measurement) {
+                    push @line, $obs->[0];
+                }
+                else {
+                    my $repeat_number = $trait_repeat_counter{$trait};
+                    foreach my $i (0..$repeat_number-1) {
+                        push @line, $obs->[$i];
+                    }
+                }
             }
             push @line, $obs_unit->{notes};
             push @info, \@line;
         }
     } else {
         $data = $phenotypes_search->search();
-#        print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
+        #print STDERR Dumper $data;
 
         my %obsunit_data;
         my %traits;
@@ -259,6 +334,24 @@ sub get_phenotype_matrix {
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
         my @unique_obsunit_list = ();
         my %seen_obsunits;
+
+        my %trait_plot_counter;
+        foreach my $d (@$data){
+            $trait_plot_counter{$d->{obsunit_stock_id}}->{$d->{trait_name}}++;
+        }
+        while(my($stock_id, $o) = each %trait_plot_counter) {
+            while(my($trait, $number) = each %$o) {
+                if (exists($trait_repeat_counter{$trait})) {
+                    if ($number > $trait_repeat_counter{$trait}) {
+                        $trait_repeat_counter{$trait} = $number;
+                    }
+                }
+                else {
+                    $trait_repeat_counter{$trait} = $number;
+                }
+            }
+        }
+        print STDERR Dumper \%trait_repeat_counter;
 
         foreach my $d (@$data) {
             my $cvterm = $d->{trait_name};
@@ -271,12 +364,13 @@ sub get_phenotype_matrix {
 
                 my $timestamp_value = $d->{timestamp};
                 my $value = $d->{phenotype_value};
-                #my $cvterm = $trait."|".$cvterm_accession;
+
                 if ($include_timestamp && $timestamp_value) {
-                    $obsunit_data{$obsunit_id}->{$cvterm} = "$value,$timestamp_value";
+                    push @{$obsunit_data{$obsunit_id}->{$cvterm}}, "$value,$timestamp_value";
                 } else {
-                    $obsunit_data{$obsunit_id}->{$cvterm} = $value;
+                    push @{$obsunit_data{$obsunit_id}->{$cvterm}}, $value;
                 }
+
                 $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
 
                 my $synonyms = $d->{synonyms};
@@ -330,9 +424,23 @@ sub get_phenotype_matrix {
         my @line = @metadata_headers;
 
         my @sorted_traits = sort keys(%traits);
+
         foreach my $trait (@sorted_traits) {
-            push @line, $trait;
+            if (!$average_repeat_measurements && !$return_only_first_measurement) {
+                my $repeat_number = $trait_repeat_counter{$trait};
+                if ($repeat_number > 1) {
+                    for my $i (1..$repeat_number) {
+                        push @line, $trait."|".$i;
+                    }
+                }
+                else {
+                    push @line, $trait;
+                }
+            } else {
+                push @line, $trait;
+            }
         }
+
         push @line, 'notes';
         push @info, \@line;
 
@@ -340,7 +448,23 @@ sub get_phenotype_matrix {
             my @line = @{$obsunit_data{$p}->{metadata}};
 
             foreach my $trait (@sorted_traits) {
-                push @line, $obsunit_data{$p}->{$trait};
+                my $obs = $obsunit_data{$p}->{$trait};
+                if ($average_repeat_measurements) {
+                    my $val;
+                    if ($obs) {
+                        $val = sum(@$obs)/scalar(@$obs);
+                    }
+                    push @line, $val;
+                }
+                elsif ($return_only_first_measurement) {
+                    push @line, $obs->[0];
+                }
+                else {
+                    my $repeat_number = $trait_repeat_counter{$trait};
+                    foreach my $i (0..$repeat_number-1) {
+                        push @line, $obs->[$i];
+                    }
+                }
             }
             push @line,  $obsunit_data{$p}->{'notes'};
             push @info, \@line;

@@ -214,6 +214,8 @@ has 'year_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
 has 'include_pedigree_parents' => (isa => 'Bool', is => 'ro', default => 0);
 has 'exclude_phenotype_outlier' => (isa => 'Bool', is => 'ro', default => 0);
+has 'average_repeat_measurements' => (isa => 'Bool', is => 'ro', default => 0);
+has 'return_only_first_measurement' => (isa => 'Bool', is => 'ro', default => 1);
 has 'has_header' => (isa => 'Bool', is => 'ro', default => 1);
 has 'trait_contains' => (isa => 'ArrayRef[Str]|Undef', is => 'rw');
 has 'phenotype_min_value' => (isa => 'Str', is => 'rw');
