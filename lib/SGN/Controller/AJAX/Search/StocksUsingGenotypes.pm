@@ -38,12 +38,28 @@ sub get_stocks_using_markerset :Path('/ajax/search/search_stocks_using_markerset
         filtering_parameters=>$markerset_items,
     });
 
-    my $result = $genotypes_stocks_search->get_selected_stocks();
+    my $result_ref = $genotypes_stocks_search->get_selected_stocks();
+    my %result_hash = %{$result_ref};
+    print STDERR "RESULT HASH =".Dumper(\%result_hash);
+
+    my $incorrect_marker_names_ref = $result_hash{'incorrect_marker_names'};
+    if ($incorrect_marker_names_ref) {
+        my @incorrect_names_array = @$incorrect_marker_names_ref;
+        my $incorrect_names_string = join(",", @incorrect_names_array);
+        $c->stash->{rest} = { error => $incorrect_names_string };
+        $c->detach();
+    }
+
+    my $stocks_ref = $result_hash{'selected_stocks'};
+    my @stocks;
+    if ($stocks_ref) {
+        @stocks = @$stocks_ref;
+    }
 
     my @selected_stocks;
 
-    foreach my $r(@$result){
-        my ($selected_id, $selected_uniquename, $selected_sample_id, $selected_sample_name, $sample_type, $params_string) = @$r;
+    foreach my $st(@stocks){
+        my ($selected_id, $selected_uniquename, $selected_sample_id, $selected_sample_name, $sample_type, $params_string) = @$st;
         push @selected_stocks, {
             stock_id => $selected_id,
             stock_name => $selected_uniquename,

@@ -83,10 +83,8 @@ sub get_selected_stocks {
 
             my $h = $schema->storage->dbh()->prepare($q);
             $h->execute($marker_name, $protocol_id, $vcf_map_details_markers_cvterm_id, $marker_name);
-#            if (!$h->fetchrow_array) {
-#                push @incorrect_marker_names, "Marker name: $marker_name is not in genotyping protocol: $protocol_name. \n";
-#            } else {
             my ($chrom) = $h->fetchrow_array();
+
             if ($chrom){
                 print STDERR "CHROMOSOME NO =".Dumper($chrom)."\n";
                 $chrom_hash{$chrom}{$marker_name}{'DS'} = $allele_dosage;
@@ -244,7 +242,7 @@ sub get_selected_stocks {
         }
     }
 
-    return \@selected_stocks_details;
+    return {selected_stocks=> \@selected_stocks_details};
 
 }
 
