@@ -127,8 +127,7 @@ relationship: has_role CHEBI:64049
 relationship: has_role CHEBI:38161
 relationship: has_role CHEBI:33281
 relationship: has_role CHEBI:78675
-is_a: CHEBI:00000
-
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:6650
@@ -174,7 +173,6 @@ is_a: CHEBI:66873
 relationship: has_role CHEBI:78675
 relationship: variable_of CHEBI:00000
 
-
 [Term]
 id: CHEBI:17234
 name: glucose
@@ -198,7 +196,6 @@ relationship: has_role CHEBI:78675
 is_a: CHEBI:33917
 relationship: variable_of CHEBI:00000
 
-
 [Term]
 id: CHEBI:28757
 name: fructose
@@ -221,7 +218,6 @@ xref: ChemIDplus:30237-26-4 "CAS Registry Number"
 is_a: CHEBI:24973
 relationship: has_role CHEBI:78675
 relationship: variable_of CHEBI:00000
-
 
 [Term]
 id: CHEBI:16638
@@ -344,7 +340,6 @@ relationship: has_role CHEBI:25212
 is_a: CHEBI:35681
 relationship: variable_of CHEBI:00000
 
-
 [Term]
 id: CHEBI:89945
 name: 1-Penten-3-one
@@ -378,7 +373,6 @@ xref: PMID:21386183 "Europe PMC"
 is_a: CHEBI:78840
 relationship: has_functional_parent CHEBI:18308
 relationship: variable_of CHEBI:00000
-
 
 [Term]
 id: CHEBI:40116
@@ -425,8 +419,6 @@ xref: LINCS:LSM-4292
 is_a: CHEBI:20706
 relationship: variable_of CHEBI:00000
 
-
-
 [Term]
 id: CHEBI:48945
 name: 2-methylbutan-1-ol
@@ -465,7 +457,6 @@ is_a: CHEBI:50584
 is_a: CHEBI:15734
 relationship: has_role CHEBI:75772
 relationship: variable_of CHEBI:00000
-
 
 [Term]
 id: CHEBI:88419
@@ -547,7 +538,6 @@ xref: CAS:764-39-6 "ChemIDplus"
 is_a: CHEBI:51688
 is_a: CHEBI:61870
 relationship: variable_of CHEBI:00000
-
 
 [Term]
 id: CHEBI:50569
@@ -897,7 +887,6 @@ is_a: CHEBI:61870
 is_a: CHEBI:51688
 relationship: variable_of CHEBI:00000
 
-
 [Term]
 id: CHEBI:17169
 name: benzaldehyde
@@ -1210,7 +1199,6 @@ relationship: has_role CHEBI:25491
 relationship: has_role CHEBI:76924
 relationship: variable_of CHEBI:00000
 
-
 [Term]
 id: CHEBI:28591
 name: guaiacol
@@ -1511,7 +1499,6 @@ relationship: has_role CHEBI:27311
 relationship: has_role CHEBI:76924
 relationship: variable_of CHEBI:00000
 
-
 [Term]
 id: CHEBI:32325
 name: beta-ionone
@@ -1550,8 +1537,7 @@ xref: PMID:12719936 "Europe PMC"
 is_a: CHEBI:49248
 relationship: has_role CHEBI:22586
 relationship: has_role CHEBI:48318
-is_a:CHEBI:00000
-
+relationship: variable_of CHEBI:00000
 
 [Term]
 id: CHEBI:145352
@@ -1824,7 +1810,6 @@ relationship: has_role CHEBI:24850
 is_a: CHEBI:26596
 relationship: variable_of CHEBI:00000
 
-
 [Term]
 id: CHEBI:44884
 name: pentan-1-ol
@@ -2072,7 +2057,6 @@ is_a: CHEBI:25892
 relationship: has_role CHEBI:75767
 relationship: variable_of CHEBI:00000
 
-
 [Term]
 id: CHEBI:88900
 name: 1-Octen-3-one
@@ -2263,7 +2247,6 @@ relationship: has_role CHEBI:76924
 relationship: has_part CHEBI:139114
 relationship: variable_of CHEBI:00000
 
-
 [Term]
 id: CHEBI:28838
 name: lutein
@@ -2308,7 +2291,6 @@ relationship: has_parent_hydride CHEBI:35147
 relationship: has_role CHEBI:77182
 relationship: has_role CHEBI:76924
 relationship: variable_of CHEBI:00000
-
 
 [Term]
 id: CHEBI:17579
