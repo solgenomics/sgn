@@ -59,10 +59,16 @@ sub download {
         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
         my $trial_name = $trial->get_name();
         my $stocks = $trial->get_accessions();
+        my $existing_entry_numbers = $trial->get_entry_numbers();
         
         for my $stock (@$stocks) {
+            my $stock_id = $stock->{'stock_id'};
             my $accession_name = $stock->{'accession_name'};
-            $accession_trial_map{$accession_name}{$trial_name} = 1;
+            my $value = -1;
+            if ( $existing_entry_numbers && $existing_entry_numbers->{$stock_id} ) {
+                $value = $existing_entry_numbers->{$stock_id};
+            }
+            $accession_trial_map{$accession_name}{$trial_name} = $value;
         }
     }
 
@@ -70,8 +76,16 @@ sub download {
     my $row = 1;
     foreach my $accession_name (sort keys %accession_trial_map) {
         my @trial_names = keys %{$accession_trial_map{$accession_name}};
+        my @existing_entry_numbers;
+        foreach my $trial_name (@trial_names) {
+            my $e = $accession_trial_map{$accession_name}{$trial_name};
+            if ( $e && $e != -1 ) {
+                push(@existing_entry_numbers, $e);
+            }
+        }
         $ws->write($row, 0, $accession_name);
         $ws->write($row, 1, join(',', @trial_names));
+        $ws->write($row, 2, join(',', @existing_entry_numbers));
         $row++;
     }
 
