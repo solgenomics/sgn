@@ -32,19 +32,21 @@ my $logfile = "logfile.$$.txt";
 my $fixture_path = 't/data/fixture/cxgn_fixture.sql';
 
 GetOptions(
-	"carpalways"         => \(my $carpalways = 0),
-	"verbose"            => \$verbose,
-	"nocleanup"          => \$nocleanup,
-	"dumpupdatedfixture" => \$dumpupdatedfixture,
-	"noserver"           => \$noserver,
-	"noparallel"         => \$noparallel,
-	"fixture_path"       => \$fixture_path,
-	"list_config"        => \$list_config,
-	"logfile=s"            => \$logfile
+    "carpalways"         => \(my $carpalways = 0),
+    "verbose"            => \$verbose,
+    "nocleanup"          => \$nocleanup,
+    "dumpupdatedfixture" => \$dumpupdatedfixture,
+    "noserver"           => \$noserver,
+    "noparallel"         => \$noparallel,
+    "fixture_path"       => \$fixture_path,
+    "list_config"        => \$list_config,
+    "logfile=s"            => \$logfile,
+    "env"                => \$print_environment,
     );
 
 require Carp::Always if $carpalways;
 
+if ($print_environment) { print STDERR "CURRENT ENV: ".Dumper(\%ENV); }
 
 my @prove_args = @ARGV;
 if(@prove_args){
