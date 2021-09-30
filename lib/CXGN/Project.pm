@@ -1889,14 +1889,14 @@ sub set_additional_info {
 
 sub get_entry_numbers {
     my $self = shift;
-    return $self->_get_projectprop('project_entry_number_map');
+    my $value = $self->_get_projectprop('project_entry_number_map');
+    return $value ? decode_json($value) : undef;
 }
 
 sub set_entry_numbers {
     my $self = shift;
     my $value = shift;
-    my $json = encode_json($value);
-    $self->_set_projectprop('project_entry_number_map', $json);
+    $self->_set_projectprop('project_entry_number_map', encode_json($value));
 }
 
 sub _get_projectprop {

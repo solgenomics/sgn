@@ -4437,6 +4437,39 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
 # TRIAL ENTRY NUMBERS
 #
 
+#
+# Get an array of entry numbers for the specified trial
+# path param: trial id
+# return: an array of objects, with the following keys:
+#   stock_id = id of the stock
+#   stock_name = uniquename of the stock
+#   entry_number = entry number for the stock in this trial
+#
+sub get_entry_numbers : Chained('trial') PathPart('entry_numbers') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial = $c->stash->{trial};
+
+    # Get Entry Number map (stock_id -> entry number)
+    my $entry_number_map = $trial->get_entry_numbers();
+    my @entry_numbers;
+    if ( $entry_number_map ) {
+
+        # Parse each stock - get its name
+        foreach my $stock_id (keys %$entry_number_map) {
+            my $row = $schema->resultset("Stock::Stock")->find({ stock_id => int($stock_id) });
+            my $stock_name = $row ? $row->uniquename() : 'STOCK NO LONGER EXISTS!';
+            my $entry_number = $entry_number_map->{$stock_id};
+            push(@entry_numbers, { stock_id => int($stock_id), stock_name => $stock_name, entry_number => $entry_number });
+        }
+
+    }
+
+    # Return the array of entry number info
+    $c->stash->{rest} = { entry_numbers => \@entry_numbers };
+}
+
 # 
 # Create an entry number template for the specified trials
 # query param: 'trial_ids' = comma separated list of trial ids
