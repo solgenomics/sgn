@@ -36,6 +36,8 @@ $trial_name => undef
           <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_entry_numbers_form" name="upload_entry_numbers_form">
             <label for="upload_entry_numbers_file" style="display: inline-block;">Entry Numbers File:</label>
             <input class="form-control" type="file" name="upload_entry_numbers_file" id="upload_entry_numbers_file" encoding="multipart/form-data" />
+            <input id="upload_entry_numbers_ignore_warnings_cb" name="upload_entry_numbers_ignore_warnings_cb" type="checkbox" value="">
+            <label for="upload_entry_numbers_ignore_warnings_cb"> Ignore Warnings - check to upload even if there are warnings with the file</label><br>
           </form>
 
           <br /><br />
@@ -71,6 +73,7 @@ jQuery(document).ready(function() {
     jQuery('#upload_entry_numbers_messages_list').empty();
     let formData = new FormData();
     formData.append('upload_entry_numbers_file', jQuery('#upload_entry_numbers_file').prop('files')[0]);
+    formData.append('ignore_warnings', jQuery('#upload_entry_numbers_ignore_warnings_cb').is(':checked'));
 
     jQuery.ajax({
       url: '/ajax/breeders/trial_entry_numbers/upload',

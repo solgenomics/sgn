@@ -4516,7 +4516,9 @@ sub download_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/do
 
 # 
 # Upload an entry number template
-# upload param: 'upload_entry_numbers_file' = Excel file to validate and parse
+# upload params: 
+#   upload_entry_numbers_file: Excel file to validate and parse
+#   ignore_warnings: true to add processed data if warnings exist
 # return: validation errors and warnings or success = 1 if entry numbers sucessfully stored
 #   filename: original upload file name
 #   error: array of error messages
@@ -4530,6 +4532,7 @@ sub upload_entry_number_template_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $upload = $c->req->upload('upload_entry_numbers_file');
+    my $ignore_warnings = $c->req->param('ignore_warnings') eq 'true';
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my (@errors, %response);
 
@@ -4574,14 +4577,17 @@ sub upload_entry_number_template_POST : Args(0) {
     my $parse_errors = $parser->get_parse_errors();
     my $parse_warnings = $parser->get_parse_warnings();
 
+    print STDERR "IGNORE WARNINGS: $ignore_warnings\n";
+
     ## Return with warnings and errors
-    if ( $parse_errors || $parse_warnings || !$parsed_data ) {
+    if ( $parse_errors || (!$ignore_warnings && $parse_warnings) || !$parsed_data ) {
         if ( !$parse_errors && !$parse_warnings ) {
             push(@errors, "Data could not be parsed");
-            $c->stash->{rest} = { error => \@errors };
+            $c->stash->{rest} = { filename => $upload_original_name, error => \@errors };
             return;
         }
         $c->stash->{rest} = {
+            filename => $upload_original_name,
             error => $parse_errors->{'error_messages'}, 
             warning => $parse_warnings->{'warning_messages'},
             missing_accessions => $parse_errors->{'missing_accessions'},
@@ -4596,7 +4602,11 @@ sub upload_entry_number_template_POST : Args(0) {
         $trial->set_entry_numbers($parsed_data->{$trial_id});
     }
 
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = { 
+        success => 1,
+        filename => $upload_original_name, 
+        warning => $parse_warnings->{'warning_messages'} 
+    };
     return;
 }
 

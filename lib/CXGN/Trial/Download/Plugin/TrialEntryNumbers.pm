@@ -75,7 +75,7 @@ sub download {
     # Add a row for each Accession
     my $row = 1;
     foreach my $accession_name (sort keys %accession_trial_map) {
-        my @trial_names = keys %{$accession_trial_map{$accession_name}};
+        my @trial_names = sort(keys %{$accession_trial_map{$accession_name}});
         my @existing_entry_numbers;
         foreach my $trial_name (@trial_names) {
             my $e = $accession_trial_map{$accession_name}{$trial_name};
@@ -83,13 +83,19 @@ sub download {
                 push(@existing_entry_numbers, $e);
             }
         }
+        my @unique_existing_entry_numbers = _uniq(@existing_entry_numbers);
         $ws->write($row, 0, $accession_name);
         $ws->write($row, 1, join(',', @trial_names));
-        $ws->write($row, 2, join(',', @existing_entry_numbers));
+        $ws->write($row, 2, join(',', @unique_existing_entry_numbers));
         $row++;
     }
 
     $workbook->close();
+}
+
+sub _uniq {
+    my %seen;
+    grep !$seen{$_}++, @_;
 }
 
 1;
