@@ -69,8 +69,16 @@ $trial_name => undef
                 <p>Generating Template...</p>
               </div>
 
-              <div id="set_entry_numbers_template" style="max-width: 250px; margin: 50px auto; text-align: center;">
-                <button class="btn btn-primary" id="set_entry_numbers_template_download">Download Template</button>
+              <div id="set_entry_numbers_template">
+                <div class="well">
+                  <p style="margin: 0">Download the generated template and fill in the <strong>entry_number</strong> column for each Accession 
+                  you want to assign an entry number to.  An entry number is not required for each Accession, but each entry number 
+                  should be unique for this set of Trial(s).  Once you have filled out the template, you can upload it to the database 
+                  using the <strong>Upload Template</strong> function.</p>
+                </div>
+                <div style="max-width: 250px; margin: 50px auto; text-align: center">
+                  <button class="btn btn-primary" id="set_entry_numbers_template_download">Download Template</button>
+                </div>
               </div>
             </&>
             <!-- End Generate Template -->

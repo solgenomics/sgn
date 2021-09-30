@@ -54,7 +54,7 @@ sub download {
     }
 
     # Parse each of the Trials to get Accessions
-    my %accession_trial_map = {};                   # Map of accession names -> trial names
+    my %accession_trial_map;  # Map of accession names -> trial names
     for my $trial_id (@trial_ids) {
         my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
         my $trial_name = $trial->get_name();

@@ -7,6 +7,7 @@ $trial_name
 <& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", ] &>
 
 <& /breeders_toolbox/trial/trial_entry_numbers_template_dialog.mas, trial_id=>$trial_id, trial_name=>$trial_name &>
+<& /breeders_toolbox/trial/trial_entry_numbers_upload_dialog.mas, trial_id=>$trial_id, trial_name=>$trial_name &>
 
 <button id="set_entry_numbers_template_btn" class="btn btn-default">Generate Template</button>
 <button id="set_entry_numbers_upload_btn" class="btn btn-default">Upload Template</button>
@@ -15,6 +16,9 @@ $trial_name
     jQuery(document).ready(function() {
         jQuery("#set_entry_numbers_template_btn").click(function() {
             jQuery("#set_entry_numbers_template_dialog").modal("show");
-        })
+        });
+        jQuery("#set_entry_numbers_upload_btn").click(function() {
+            jQuery("#trial_entry_numbers_upload_dialog").modal("show");
+        });
     });
 </script>
