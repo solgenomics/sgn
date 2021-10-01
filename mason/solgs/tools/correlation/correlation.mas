@@ -1,0 +1,62 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/correlation/correlation.mas - correlation output section
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$corre_pop_id
+$data_set_type => undef
+$data_str => undef
+
+</%args>
+
+<%perl>
+</%perl>
+
+<style>
+/* correlation coefficients plot styling */
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.correlation"] &>
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 1,
+      title       => "Phenotypic correlation analysis (Pearson)"
+&>
+
+
+  <div id="correlation_canvas">
+
+      <& /solgs/spinner.mas &>
+
+      <div id="correlation_message"  class="message"></div>
+      <input id="run_pheno_correlation" class="button" type="button" value="Run correlation" />
+      <input type="hidden" id="corre_pop_id" value="<% $corre_pop_id %>" />
+      <input type="hidden" id="data_structure" value="<% $data_str %>" />
+      <input type="hidden" id="data_set_type" value="<% $data_set_type %>" />
+
+</div>
+
+</&>

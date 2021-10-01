@@ -230,7 +230,7 @@ sub store_ontology_identifier {
         $schema->txn_do($coderef);
     } catch {
         return {
-            error => $@
+            error => $_
         };
     };
 }
@@ -308,7 +308,7 @@ sub store_observation_variable_trait_method_scale {
         $parent_observation_variable_cvterm_sth->execute();
         my ($parent_observation_variable_cvterm_id, $parent_observation_variable_cvterm_name) = $parent_observation_variable_cvterm_sth->fetchrow_array();
 
-        my $new_term_observation_variable_dbxref = $schema->resultset("General::Dbxref")->create({
+        my $new_term_observation_variable_dbxref = $schema->resultset("General::Dbxref")->find_or_create({
             db_id => $selected_observation_variable_db_id,
             accession => $observation_variable_new_accession
         });
@@ -479,7 +479,7 @@ sub store_observation_variable_trait_method_scale {
         $schema->txn_do($coderef);
     } catch {
         return {
-            error => $@
+            error => $_
         };
     };
 }

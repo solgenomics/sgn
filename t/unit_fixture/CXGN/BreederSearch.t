@@ -38,10 +38,7 @@ is_deeply($results, {
                                 '2017',
                                 '2017'
                               ],
-                              [
-                                '2020',
-                                '2020'
-                              ]
+
                             ]
              }, 'wizard one category query');
 

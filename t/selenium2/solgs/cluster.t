@@ -718,10 +718,10 @@ $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K
 sleep(2);
 $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
 sleep(2);
+$d->find_element_ok('selection_proportion', 'id', 'select k number')->send_keys('15');
+sleep(2);
 $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
 $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
-sleep(2);
-$d->find_element_ok('selection_proportion', 'id', 'select k number')->send_keys('15');
 sleep(2);
 $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
 sleep(3);
@@ -762,10 +762,10 @@ $d->find_element_ok('cluster_type_select', 'id', 'select k-means')->send_keys('K
 sleep(2);
 $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
 sleep(2);
+$d->find_element_ok('selection_proportion', 'id', 'select k number')->send_keys('15');
+sleep(2);
 $d->find_element_ok('k_number', 'id', 'clear k number')->clear();
 $d->find_element_ok('k_number', 'id', 'select k number')->send_keys('5');
-sleep(2);
-$d->find_element_ok('selection_proportion', 'id', 'select k number')->send_keys('15');
 sleep(2);
 $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
 sleep(10);

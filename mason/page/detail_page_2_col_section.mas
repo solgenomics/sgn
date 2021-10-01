@@ -182,26 +182,26 @@ $analytics_protocol_result_summary => {}
 				     trial_id => $trial_id
 				&>
                                 <!-- Phenotypic correlation analysis -->
-                                <& /solgs/population/correlation.mas,
+                                <& /solgs/tools/correlation/correlation.mas,
                                     corre_pop_id => $trial_id
                                 &>
 
-                                <& /solgs/anova/analysis.mas,
+                                <& /solgs/tools/anova/analysis.mas,
                                     trial_id => $trial_id
                                 &>
 
                                  <!-- Population structure analysis PCA -->
-                                <& /solgs/pca/analysis.mas,
+                                <& /solgs/tools/pca/analysis.mas,
                                     trial_id => $trial_id
                                   &>
 
 				<!-- Clustering -->
-                                <& /solgs/cluster/analysis.mas,
+                                <& /solgs/tools/cluster/analysis.mas,
                                     trial_id => $trial_id
                                   &>
 
 				<!-- kinship and inbreeding-->
-                                <& /solgs/kinship/analysis.mas,
+                                <& /solgs/tools/kinship/analysis.mas,
                                     trial_id => $trial_id
                                 &>
 

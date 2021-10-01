@@ -530,7 +530,9 @@ foreach (@$breeding_programs){
 #print STDERR Dumper \@breeding_program_names;
 is_deeply(\@breeding_program_names, ['test'], "check breeding_program_names");
 
-my $plot_name = $trial_design->{11}->{plot_name};
+print STDERR Dumper($trial_design);
+my $plot_name = $trial_design->{9}->{plot_name};
+print STDERR "PLOT NAME = $plot_name\n";
 my $rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { name => $plot_name });
 is($rs->count(), 1, "check that a single plot was saved for a single name.");
 is($rs->first->name(), $plot_name, 'check that plot name was saved correctly');
@@ -547,13 +549,13 @@ else {
 my $phenotype_count_before_store = $trial->phenotype_count();
 
 ok($trial->phenotype_count() == 0, "trial has no phenotype data");
-my $plotlist_ref = [ $trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name} ];
+my $plotlist_ref = [ $trial_design->{7}->{plot_name}, $trial_design->{8}->{plot_name}, $trial_design->{9}->{plot_name} ];
 
 my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014' ];
 
-my %plot_trait_value = ( $trial_design->{11}->{plot_name} => { 'root number|CO_334:0000011'  => [0,''], 'dry yield|CO_334:0000014' => [30,''] },
-			   $trial_design->{12}->{plot_name} => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''] },
-			   $trial_design->{13}->{plot_name} => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''] },
+my %plot_trait_value = ( $trial_design->{7}->{plot_name} => { 'root number|CO_334:0000011'  => [0,''], 'dry yield|CO_334:0000014' => [30,''] },
+			   $trial_design->{8}->{plot_name} => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''] },
+			   $trial_design->{9}->{plot_name} => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''] },
     );
 
 
@@ -619,9 +621,9 @@ foreach (@$plot_pheno_for_trait) {
 }
 @phenotyped_stocks = sort @phenotyped_stocks;
 @phenotyped_stocks_values = sort @phenotyped_stocks_values;
-my @expected_sorted_stocks = sort ($trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name});
+my @expected_sorted_stocks = sort ($trial_design->{7}->{plot_name}, $trial_design->{8}->{plot_name}, $trial_design->{9}->{plot_name});
 print STDERR Dumper \@phenotyped_stocks;
-#print STDERR Dumper \@expected_sorted_stocks;
+print STDERR Dumper \@expected_sorted_stocks;
 is_deeply(\@phenotyped_stocks, \@expected_sorted_stocks, "check phenotyped stocks");
 is_deeply(\@phenotyped_stocks_values, ['30', '40', '50'], "check phenotyped stocks 2");
 
@@ -697,10 +699,15 @@ foreach (@$trial_plots){
 @trial_plot_names = sort @trial_plot_names;
 print STDERR "Num plots: ".scalar(@trial_plot_names)."\n";
 is(scalar(@trial_plot_names), 9, 'check number of plots');
-my @expected_sorted_plots = sort ($trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name}, $trial_design->{21}->{plot_name}, $trial_design->{22}->{plot_name}, $trial_design->{23}->{plot_name}, $trial_design->{31}->{plot_name}, $trial_design->{32}->{plot_name}, $trial_design->{33}->{plot_name});
-print STDERR Dumper \@trial_plot_names;
-print STDERR Dumper \@expected_sorted_plots;
-is_deeply(\@trial_plot_names, \@expected_sorted_plots, 'Check get_plots');
+
+print STDERR "DESIGN NOW: ".Dumper($trial_design);
+
+
+#my @expected_sorted_plots = sort ($trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name}, $trial_design->{21}->{plot_name}, $trial_design->{22}->{plot_name}, $trial_design->{23}->{plot_name}, $trial_design->{31}->{plot_name}, $trial_design->{32}->{plot_name}, $trial_design->{33}->{plot_name});
+my @expected_sorted_plots = sort ($trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name}, $trial_design->{4}->{plot_name}, $trial_design->{5}->{plot_name}, $trial_design->{6}->{plot_name}, $trial_design->{7}->{plot_name}, $trial_design->{8}->{plot_name}, $trial_design->{9}->{plot_name});
+print STDERR "TRIAL PLOT NAMES: ". Dumper \@trial_plot_names;
+print STDERR "TRIAL SORTED PLOTS: ".Dumper \@expected_sorted_plots;
+is_deeply(\@trial_plot_names, \@expected_sorted_plots, 'Check get_plots 1');
 
 my $trial_controls = $trial->get_controls();
 #print STDERR Dumper $trial_controls;
@@ -717,20 +724,20 @@ my $plants = $trial->get_plants();
 #print STDERR Dumper $plants;
 is(scalar(@$plants), $number_of_plots*3, "check if the right number of plants was created");
 
-my $plantlist_ref = [ $trial_design->{11}->{plot_name}.'_plant_2', $trial_design->{12}->{plot_name}.'_plant_2', $trial_design->{13}->{plot_name}.'_plant_1' ];
+my $plantlist_ref = [ $trial_design->{7}->{plot_name}.'_plant_2', $trial_design->{8}->{plot_name}.'_plant_2', $trial_design->{9}->{plot_name}.'_plant_1' ];
 
 my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014', 'harvest index|CO_334:0000015' ];
 
-my %plant_trait_value = ( $trial_design->{11}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [12,''], 'dry yield|CO_334:0000014' => [30,''], 'harvest index|CO_334:0000015' => [2,''] },
-    $trial_design->{12}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''], 'harvest index|CO_334:0000015' => [3,''] },
-    $trial_design->{13}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
+my %plant_trait_value = ( $trial_design->{7}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [12,''], 'dry yield|CO_334:0000014' => [30,''], 'harvest index|CO_334:0000015' => [2,''] },
+    $trial_design->{8}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''], 'harvest index|CO_334:0000015' => [3,''] },
+    $trial_design->{9}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
 );
 
 my %metadata = ( operator => 'johndoe', date => '20141225' );
 
 my $total_phenotype_count_before_save2 = $trial->total_phenotypes();
 
-my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+my $lp = CXGN::Phenotypes::StorePhenotypes->new({
     basepath=>$f->config->{basepath},
     dbhost=>$f->config->{dbhost},
     dbname=>$f->config->{dbname},
@@ -747,7 +754,7 @@ my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     has_timestamps=>0,
     overwrite_values=>0,
     metadata_hash=>\%metadata,
-);
+});
 $lp->store();
 
 my $total_phenotypes = $trial->total_phenotypes();
@@ -810,8 +817,9 @@ foreach (@$retrieve_plots){
     push @get_plot_names, $_->[1];
 }
 @get_plot_names = sort @get_plot_names;
-#print STDERR Dumper \@get_plot_names;
-is_deeply(\@get_plot_names, \@expected_sorted_plots, "check get_plots");
+print STDERR "PLOT NAMES NOW: ". Dumper \@get_plot_names;
+print STDERR "EXPECTED PLOT NAMES NOW: ".Dumper \@expected_sorted_plots;
+is_deeply(\@get_plot_names, \@expected_sorted_plots, "check get_plots 2");
 
 my @expected_plants;
 foreach (@expected_sorted_plots) {

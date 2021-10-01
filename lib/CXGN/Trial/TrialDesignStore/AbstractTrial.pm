@@ -780,7 +780,7 @@ sub store {
                 $new_plot_id = $plot->stock_id();
                 $new_stock_ids_hash{$plot_name} = $new_plot_id;
 
-                my %design = $self->get_design;
+                my %design = %{$self->get_design()};
                 my $sp_person_id = $self->get_owner_id;
                 my $username = $self->get_operator;
                 my $stock = CXGN::Stock->new({schema=>$chado_schema,stock_id=>$new_plot_id});
