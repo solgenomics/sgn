@@ -482,7 +482,7 @@ $(document).ready(function() {
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
 <table class="table"  cellpadding="10">
   <thead>
-  <tr><td colspan="2"><h4>Download GBS Genotype </h4><p>Select parameter:</p></tr>
+  <tr><td colspan="2"><h4>Download Genotypes </h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
@@ -568,7 +568,7 @@ $(document).ready(function() {
 <form id="gbs_qc" action="/breeders/gbs_qc_action" method="POST">
 <table class="table" cellpadding="10">
   <thead>
-  <tr><td colspan="3"><h4>GBS Genotype QC</h4><p>Select parameter:</p></tr>
+  <tr><td colspan="3"><h4>Genotyping QC</h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Trials
