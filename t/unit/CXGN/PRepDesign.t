@@ -45,13 +45,12 @@ ok($trial_design->set_row_in_design_number($row_in_design_number), "Set rows for
 is_deeply($trial_design->get_row_in_design_number(),$row_in_design_number, "Get rows for trial design");
 ok($trial_design->set_stock_list(\@stock_list), "Set stock names for trial design");
 is_deeply($trial_design->get_stock_list(),\@stock_list, "Get stock names for trial design");
-
 ok($trial_design->set_design_type("p-rep"), "Set design type to p-rep");
 
 
+
  SKIP: {
-     skip "DiGGer not installed, skipping", 5, unless ( -e $ENV{R_LIBS_USER}."/DiGGer");
-     
+     skip "DiGGer not installed, skipping", 6, unless ( -e $ENV{R_LIBS_USER}."/DiGGer");					       
      ok($trial_design->calculate_design(), "Calculate p-rep trial design");
      ok(%design = %{$trial_design->get_design()}, "Get p-rep trial design");
      ok($design{'1'}->{row_number} == 1, "First plot row_number is 1");
