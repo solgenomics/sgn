@@ -40,7 +40,7 @@ sub get_stocks_using_markerset :Path('/ajax/search/search_stocks_using_markerset
 
     my $result_ref = $genotypes_stocks_search->get_selected_stocks();
     my %result_hash = %{$result_ref};
-    print STDERR "RESULT HASH =".Dumper(\%result_hash);
+#    print STDERR "RESULT HASH =".Dumper(\%result_hash);
 
     my $incorrect_marker_names_ref = $result_hash{'incorrect_marker_names'};
     if ($incorrect_marker_names_ref) {

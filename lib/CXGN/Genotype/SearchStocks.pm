@@ -60,7 +60,7 @@ sub get_selected_stocks {
     my $protocol_id = $info{genotyping_protocol_id};
     my $protocol_name = $info{genotyping_protocol_name};
     my $data_type = $info{genotyping_data_type};
-    print STDERR "PROTOCOL NAME =".Dumper($protocol_name)."\n";
+
     my $type_q= "SELECT value->>'sample_observation_unit_type_name'
     FROM nd_protocolprop WHERE nd_protocol_id = ? AND type_id =? ";
 
@@ -75,7 +75,7 @@ sub get_selected_stocks {
         my $param_ref = decode_json$parameters[$i];
         my %params = %{$param_ref};
         my $marker_name = $params{marker_name};
-        print STDERR "MARKER NAME =".Dumper($marker_name)."\n";
+
         if ($data_type eq 'Dosage') {
             my $allele_dosage = $params{allele_dosage};
             my $chrom_key;
@@ -86,7 +86,6 @@ sub get_selected_stocks {
             my ($chrom) = $h->fetchrow_array();
 
             if ($chrom){
-                print STDERR "CHROMOSOME NO =".Dumper($chrom)."\n";
                 $chrom_hash{$chrom}{$marker_name}{'DS'} = $allele_dosage;
             } else {
                 push @incorrect_marker_names, "Marker name: $marker_name is not in genotyping protocol: $protocol_name. \n";
@@ -112,6 +111,23 @@ sub get_selected_stocks {
 
             my @nt = ();
             if (@ref_alt_chrom) {
+                my $q_gt = "SELECT genotypeprop.value->?->>'GT' FROM nd_experiment_protocol
+                    JOIN nd_experiment_genotype ON (nd_experiment_genotype.nd_experiment_id = nd_experiment_protocol.nd_experiment_id)
+                    JOIN genotypeprop ON (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.type_id = ?
+                    where nd_experiment_protocol.nd_protocol_id = ? AND genotypeprop.value->?->>'GT' IS NOT NULL LIMIT 1";
+
+                my $h_gt = $schema->storage->dbh()->prepare($q_gt);
+                $h_gt->execute($marker_name, $vcf_snp_genotyping_cvterm_id, $protocol_id, $marker_name);
+                my ($gt_value) = $h_gt->fetchrow_array();
+                my $separator = ',';
+                my @gt_alleles = split (/\//, $gt_value);
+                if (scalar(@gt_alleles) <= 1){
+                    @gt_alleles = split (/\|/, $gt_value);
+                    if (scalar(@gt_alleles) > 1) {
+                        $separator = '|';
+                    }
+                }
+
                 if ($allele_1 ne $allele_2){
                     foreach my $allele(@allele_param){
                         if (grep{/$allele/}(@ref_alt_chrom)){
@@ -120,7 +136,8 @@ sub get_selected_stocks {
                             } elsif ($allele eq $ref_alt_chrom[1]){
                                 $nt[1] = $allele;
                             }
-                            my $nt_string = join(",", @nt);
+                            my $nt_string = join $separator, @nt;
+
                             $chrom_hash{$ref_alt_chrom[2]}{$marker_name} = {'NT' => $nt_string};
                         } else {
                             last;
@@ -129,7 +146,7 @@ sub get_selected_stocks {
                 } elsif ($allele_1 eq $allele_2){
                     if (grep{/$allele_1/}(@ref_alt_chrom)){
                         @nt = ($allele_1, $allele_2);
-                        my $nt_string = join(",", @nt);
+                        my $nt_string = join $separator, @nt;
                         $chrom_hash{$ref_alt_chrom[2]}{$marker_name} = {'NT' => $nt_string};
                     } else {
                         last;
@@ -138,9 +155,6 @@ sub get_selected_stocks {
             }
         }
     }
-
-    print STDERR "INCORRECT MARKER NAMES =".Dumper(\@incorrect_marker_names)."\n";
-    print STDERR "CHROMOSOME HASH =".Dumper(\%chrom_hash)."\n";
 
     if (scalar(@incorrect_marker_names) > 0) {
         return {incorrect_marker_names=> \@incorrect_marker_names};
