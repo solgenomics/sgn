@@ -6,11 +6,11 @@ use Catalyst::Controller;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
-sub gpcp_input :Path('/tools/gpcp') Args(0) {
+sub gpcp_input :Path('/tools/gcpc') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->stash->{template} = '/tools/gpcp/index.mas';
+    $c->stash->{template} = '/tools/gcpc/index.mas';
 }
 
 1;
