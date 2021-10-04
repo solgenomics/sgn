@@ -531,95 +531,104 @@ print STDERR Dumper $message_hash_remove_image;
 ok($message_hash_remove_image->{status});
 
 #Testing upload of bulk imaging events
-my $bulk_loading_csv = $f->config->{basepath}."/t/data/imagebreed/bulk_loading/BTI_rig_images.xls";
-my $bulk_loading_image_zip = $f->config->{basepath}."/t/data/imagebreed/bulk_loading/BTI_rig_images.zip";
-$ua = LWP::UserAgent->new;
-$ua->timeout(3600);
-my $response_raster = $ua->post(
-        'http://localhost:3010/drone_imagery/upload_drone_imagery_bulk',
-        Content_Type => 'form-data',
-        Content => [
-            "sgn_session_id"=>$sgn_session_id,
-            upload_drone_imagery_bulk_images_zipfile => [ $bulk_loading_image_zip, basename($bulk_loading_image_zip) ],
-            upload_drone_imagery_bulk_imaging_events => [ $bulk_loading_csv, basename($bulk_loading_csv) ],
-        ]
-    );
-
-ok($response_raster->is_success);
-my $message_raster = $response_raster->decoded_content;
-print STDERR Dumper $message_raster;
-ok($message_raster =~ /Successfully uploaded!/);
 
 my $file_previous_geotiff_image_zip = "/home/production/public/static_content/imagebreed/RiceExampleRGBandDSMOrthophotosGeoTIFFs.zip";
 my $file_previous_geojson_zip = "/home/production/public/static_content/imagebreed/RiceExampleGeoJSONs.zip";
 my $file_previous_imaging_events = "/home/production/public/static_content/imagebreed/RiceExampleRGBandDSMGeoJSONImagingEvent.xls";
 
-$ua = LWP::UserAgent->new;
-$ua->timeout(3600);
-my $response_raster = $ua->post(
-        'http://localhost:3010/drone_imagery/upload_drone_imagery_bulk_previous',
-        Content_Type => 'form-data',
-        Content => [
-            "sgn_session_id"=>$sgn_session_id,
-            upload_drone_imagery_bulk_images_zipfile_previous => [ $file_previous_geotiff_image_zip, basename($file_previous_geotiff_image_zip) ],
-            upload_drone_imagery_bulk_geojson_zipfile_previous => [ $file_previous_geojson_zip, basename($file_previous_geojson_zip) ],
-            upload_drone_imagery_bulk_imaging_events_previous => [ $file_previous_imaging_events, basename($file_previous_imaging_events) ],
-        ]
-    );
+my $bulk_loading_csv = $f->config->{basepath}."/t/data/imagebreed/bulk_loading/BTI_rig_images.xls";
+my $bulk_loading_image_zip = $f->config->{basepath}."/t/data/imagebreed/bulk_loading/BTI_rig_images.zip";
 
-ok($response_raster->is_success);
-my $message_raster = $response_raster->decoded_content;
-print STDERR Dumper $message_raster;
-ok($message_raster =~ /Successfully uploaded!/);
 
-my $rasterblue = $f->config->{basepath}."/t/data/imagebreed/RasterBlue.png";
-my $rastergreen = $f->config->{basepath}."/t/data/imagebreed/RasterGreen.png";
-my $rasterred= $f->config->{basepath}."/t/data/imagebreed/RasterRed.png";
-my $rasternir = $f->config->{basepath}."/t/data/imagebreed/RasterNIR.png";
-my $rasterrededge = $f->config->{basepath}."/t/data/imagebreed/RasterRedEdge.png";
-$ua = LWP::UserAgent->new;
-$ua->timeout(3600);
-my $response_raster = $ua->post(
-        'http://localhost:3010/drone_imagery/upload_drone_imagery',
-        Content_Type => 'form-data',
-        Content => [
-            "sgn_session_id"=>$sgn_session_id,
-            "drone_run_field_trial_id"=>$field_trial_id,
-            "drone_run_name"=>"NewStitchedMicasense5BandDroneRunProjectTESTING",
-            "drone_run_type"=>"Aerial Medium to High Res",
-            "drone_run_date"=>"2019/02/01 13:14:15",
-            "drone_run_description"=>"test new drone run",
-            "drone_image_upload_camera_info"=>"micasense_5",
-            "drone_run_imaging_vehicle_id"=>$new_vehicle_id,
-            "drone_run_imaging_vehicle_battery_name"=>"blue",
-            "drone_image_upload_drone_run_band_stitching"=>"no",
-            "drone_run_band_number"=>5,
-            "drone_run_band_name_1"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Blue",
-            "drone_run_band_description_1"=>"raster blue",
-            "drone_run_band_type_1"=>"Blue (450-520nm)",
-            drone_run_band_stitched_ortho_image_1 => [ $rasterblue, basename($rasterblue) ],
-            "drone_run_band_name_2"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Green",
-            "drone_run_band_description_2"=>"raster green",
-            "drone_run_band_type_2"=>"Green (515-600nm)",
-            drone_run_band_stitched_ortho_image_2 => [ $rastergreen, basename($rastergreen) ],
-            "drone_run_band_name_3"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Red",
-            "drone_run_band_description_3"=>"raster red",
-            "drone_run_band_type_3"=>"Red (600-690nm)",
-            drone_run_band_stitched_ortho_image_3 => [ $rasterred, basename($rasterred) ],
-            "drone_run_band_name_4"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_NIR",
-            "drone_run_band_description_4"=>"raster NIR",
-            "drone_run_band_type_4"=>"NIR (780-3000nm)",
-            drone_run_band_stitched_ortho_image_4 => [ $rasternir, basename($rasternir) ],
-            "drone_run_band_name_5"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_RedEdge",
-            "drone_run_band_description_5"=>"raster rededge",
-            "drone_run_band_type_5"=>"Red Edge (690-750nm)",
-            drone_run_band_stitched_ortho_image_5 => [ $rasterrededge, basename($rasterrededge) ],
-        ]
-    );
+ SKIP: {
+     skip 'Some required files not available for these tests', 6, unless ( (-e $file_previous_geotiff_image_zip) && (-e $file_previous_geojson_zip) && (-e $file_previous_imaging_events) && (-e $bulk_loading_csv) && (-e $bulk_loading_image_zip)); 
 
-ok($response_raster->is_success);
-my $message_raster = $response_raster->decoded_content;
-print STDERR Dumper $message_raster;
-ok($message_raster =~ /Successfully uploaded!/);
 
+     $ua = LWP::UserAgent->new;
+     $ua->timeout(3600);
+     my $response_raster = $ua->post(
+	 'http://localhost:3010/drone_imagery/upload_drone_imagery_bulk',
+	 Content_Type => 'form-data',
+	 Content => [
+	     "sgn_session_id"=>$sgn_session_id,
+	     upload_drone_imagery_bulk_images_zipfile => [ $bulk_loading_image_zip, basename($bulk_loading_image_zip) ],
+            upload_drone_imagery_bulk_imaging_events => [ $bulk_loading_csv, basename($bulk_loading_csv) ],
+	 ]
+	 );
+     
+     ok($response_raster->is_success);
+     my $message_raster = $response_raster->decoded_content;
+     print STDERR Dumper $message_raster;
+     ok($message_raster =~ /Successfully uploaded!/);
+     
+     
+     $ua = LWP::UserAgent->new;
+     $ua->timeout(3600);
+     my $response_raster = $ua->post(
+	 'http://localhost:3010/drone_imagery/upload_drone_imagery_bulk_previous',
+	 Content_Type => 'form-data',
+	 Content => [
+	     "sgn_session_id"=>$sgn_session_id,
+	     upload_drone_imagery_bulk_images_zipfile_previous => [ $file_previous_geotiff_image_zip, basename($file_previous_geotiff_image_zip) ],
+	     upload_drone_imagery_bulk_geojson_zipfile_previous => [ $file_previous_geojson_zip, basename($file_previous_geojson_zip) ],
+	     upload_drone_imagery_bulk_imaging_events_previous => [ $file_previous_imaging_events, basename($file_previous_imaging_events) ],
+	 ]
+	 );
+     
+     ok($response_raster->is_success);
+     my $message_raster = $response_raster->decoded_content;
+     print STDERR Dumper $message_raster;
+     ok($message_raster =~ /Successfully uploaded!/);
+     
+     my $rasterblue = $f->config->{basepath}."/t/data/imagebreed/RasterBlue.png";
+     my $rastergreen = $f->config->{basepath}."/t/data/imagebreed/RasterGreen.png";
+     my $rasterred= $f->config->{basepath}."/t/data/imagebreed/RasterRed.png";
+     my $rasternir = $f->config->{basepath}."/t/data/imagebreed/RasterNIR.png";
+     my $rasterrededge = $f->config->{basepath}."/t/data/imagebreed/RasterRedEdge.png";
+     $ua = LWP::UserAgent->new;
+     $ua->timeout(3600);
+     my $response_raster = $ua->post(
+	 'http://localhost:3010/drone_imagery/upload_drone_imagery',
+	 Content_Type => 'form-data',
+	 Content => [
+	     "sgn_session_id"=>$sgn_session_id,
+	     "drone_run_field_trial_id"=>$field_trial_id,
+	     "drone_run_name"=>"NewStitchedMicasense5BandDroneRunProjectTESTING",
+	     "drone_run_type"=>"Aerial Medium to High Res",
+	     "drone_run_date"=>"2019/02/01 13:14:15",
+	     "drone_run_description"=>"test new drone run",
+	     "drone_image_upload_camera_info"=>"micasense_5",
+	     "drone_run_imaging_vehicle_id"=>$new_vehicle_id,
+	     "drone_run_imaging_vehicle_battery_name"=>"blue",
+	     "drone_image_upload_drone_run_band_stitching"=>"no",
+	     "drone_run_band_number"=>5,
+	     "drone_run_band_name_1"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Blue",
+	     "drone_run_band_description_1"=>"raster blue",
+	     "drone_run_band_type_1"=>"Blue (450-520nm)",
+	     drone_run_band_stitched_ortho_image_1 => [ $rasterblue, basename($rasterblue) ],
+	     "drone_run_band_name_2"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Green",
+	     "drone_run_band_description_2"=>"raster green",
+	     "drone_run_band_type_2"=>"Green (515-600nm)",
+	     drone_run_band_stitched_ortho_image_2 => [ $rastergreen, basename($rastergreen) ],
+	     "drone_run_band_name_3"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_Red",
+	     "drone_run_band_description_3"=>"raster red",
+	     "drone_run_band_type_3"=>"Red (600-690nm)",
+	     drone_run_band_stitched_ortho_image_3 => [ $rasterred, basename($rasterred) ],
+	     "drone_run_band_name_4"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_NIR",
+	     "drone_run_band_description_4"=>"raster NIR",
+	     "drone_run_band_type_4"=>"NIR (780-3000nm)",
+	     drone_run_band_stitched_ortho_image_4 => [ $rasternir, basename($rasternir) ],
+	     "drone_run_band_name_5"=>"NewStitchedMicasense5BandDroneRunProjectTESTING_RedEdge",
+	     "drone_run_band_description_5"=>"raster rededge",
+	     "drone_run_band_type_5"=>"Red Edge (690-750nm)",
+	     drone_run_band_stitched_ortho_image_5 => [ $rasterrededge, basename($rasterrededge) ],
+	 ]
+	 );
+     
+     ok($response_raster->is_success);
+     my $message_raster = $response_raster->decoded_content;
+     print STDERR Dumper $message_raster;
+     ok($message_raster =~ /Successfully uploaded!/);
+};
+     
 done_testing();

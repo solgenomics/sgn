@@ -1,4 +1,4 @@
-format-version: 1.2
+format-version: 1.2A
 default-namespace: cxgn_plant_section
 ontology: plant_section
 
@@ -77,3 +77,17 @@ id: SECTION:0000015
 name: leaf from tip shoot
 is_a: SECTION:0000004 ! Leaf
 
+[Term]
+id: SECTION:0000016
+name: 1st branching level
+is_a: SECTION:0000001 ! Plant sub-section
+
+[Term]
+id: SECTION:0000017
+name: 2nd branching level
+is_a: SECTION:0000001 ! Plant sub-section
+
+[Term]
+id: SECTION:0000018
+name: 3rd branching level
+is_a: SECTION:0000001 ! Plant sub-section

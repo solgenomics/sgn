@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/population/sumary.mas - displays project metadata.
+/population/summary.mas - displays project metadata.
 
 =AUTHOR
 
@@ -14,9 +14,13 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$pop_id
-$pop_name
-$pop_desc
+$training_pop_id => ''
+$training_pop_name => ''
+$training_pop_desc => ''
+
+$selection_pop_id => ''
+$selection_pop_name => ''
+$selection_pop_desc => ''
 
 $model_page_url =>''
 $training_pop_url =>''
@@ -36,9 +40,10 @@ $combined_populations => ''
 $owner = 'NA' if !$owner;
 $traits_no = 'NA' if !$traits_no;
 
-$training_pop_url = $pop_name if !$training_pop_url;
-
-my @data_c1 = (['Name', $training_pop_url],  ['Description', $pop_desc], ['Owner', $owner]);
+$training_pop_url = $training_pop_name if !$training_pop_url;
+my $pop_desc = $selection_pop_desc ? $selection_pop_desc : $training_pop_desc;
+my $pop_name = $selection_pop_name ? $selection_pop_name : $training_pop_url;
+my @data_c1 = (['Name', $pop_name],  ['Description', $pop_desc], ['Owner', $owner]);
 my @data_c2 = (['No. of lines', $stocks_no],  ['No. of markers', $markers_no], ['Genotyping version', $protocol_url]);
 
 push @data_c2,  ['No. of traits', $traits_no] if $traits_no > 1;

@@ -943,7 +943,7 @@ jQuery(document).ready( function() {
 
 } else {
         var dataTypeOpts;
-        if (page.match(/cluster\/analysis\/|breeders\/trial\//)) {
+        if (page.match(/cluster\/analysis|breeders\/trial\//)) {
 
     	    dataTypeOpts = ['Genotype', 'Phenotype'];
         } else if (page.match(/solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/trials\//)) {

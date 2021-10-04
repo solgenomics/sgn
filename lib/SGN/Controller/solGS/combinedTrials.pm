@@ -136,9 +136,9 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     my ($self, $c, $combo_pops_id, $gp, $protocol_id) = @_;
 
-    $c->stash->{pop_id} = $combo_pops_id;
     $c->stash->{training_pop_id} = $combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
+    $c->stash->{data_set_type}     = 'combined populations';
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $self->get_combined_pops_list($c, $combo_pops_id);
@@ -210,7 +210,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 
     if ($traits_selection_id =~ /^\d+$/)
     {
-		$c->controller('solGS::TraitsGebvs')->get_traits_selection_list($c, $traits_selection_id);
+		$c->controller('solGS::Gebvs')->get_traits_selection_list($c, $traits_selection_id);
 		@traits_ids = @{$c->stash->{traits_selection_list}} if $c->stash->{traits_selection_list};
     }
 
@@ -273,9 +273,9 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 	$c->stash->{training_pop_page} = $training_pop_page;
 	$c->stash->{training_traits_ids} = \@traits_ids;
     $c->stash->{training_traits_code} = $traits_selection_id;
-    
-	$c->controller('solGS::solGS')->analyzed_traits($c);
-	my $analyzed_traits = $c->stash->{analyzed_traits_ids};
+
+	$c->controller('solGS::Gebvs')->training_pop_analyzed_traits($c);
+	my $analyzed_traits = $c->stash->{training_pop_analyzed_traits_ids};
 
 	$c->stash->{trait_pages} = \@traits_pages;
 
@@ -932,10 +932,10 @@ sub build_model_combined_trials_trait {
 		$c->stash->{prerequisite_jobs}  = $c->stash->{combine_populations_args_file};
 		$c->stash->{prerequisite_type}  = 'combine_populations';
 
-		$c->controller('solGS::solGS')->get_gs_modeling_jobs_args_file($c);
+		$c->controller('solGS::AsyncJob')->get_gs_modeling_jobs_args_file($c);
 		$c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
 
-		$c->controller('solGS::solGS')->run_async($c);
+		$c->controller('solGS::AsyncJob')->run_async($c);
     }
 }
 
@@ -972,10 +972,10 @@ sub combine_data_build_multiple_traits_models {
 
 		$c->stash->{training_pop_id} = $combo_pops_id;
 		$c->stash->{data_set_type} = 'combined populations';
-		$c->controller('solGS::solGS')->get_gs_modeling_jobs_args_file($c);
+		$c->controller('solGS::AsyncJob')->get_gs_modeling_jobs_args_file($c);
 		$c->stash->{dependent_jobs} =  $c->stash->{gs_modeling_jobs_args_file};
 
-		$c->controller('solGS::solGS')->run_async($c);
+		$c->controller('solGS::AsyncJob')->run_async($c);
     }
 
 }
@@ -1012,19 +1012,19 @@ sub predict_selection_pop_combined_pops_model {
     {
 		$c->stash->{training_traits_ids} = \@prediction_traits;
 
-		$c->controller('solGS::solGS')->get_selection_pop_query_args_file($c);
+		$c->controller('solGS::AsyncJob')->get_selection_pop_query_args_file($c);
 		my $pre_req = $c->stash->{selection_pop_query_args_file};
 
 		$c->controller('solGS::Files')->selection_population_file($c, $selection_pop_id);
 
-		$c->controller('solGS::solGS')->get_gs_modeling_jobs_args_file($c);
+		$c->controller('solGS::AsyncJob')->get_gs_modeling_jobs_args_file($c);
 		my $dep_jobs =  $c->stash->{gs_modeling_jobs_args_file};
 
 		$c->stash->{prerequisite_jobs} = $pre_req;
 		$c->stash->{prerequisite_type} = 'selection_pop_download_data';
 		$c->stash->{dependent_jobs} =  $dep_jobs;
 
-		$c->controller('solGS::solGS')->run_async($c);
+		$c->controller('solGS::AsyncJob')->run_async($c);
     }
     else
     {
@@ -1108,7 +1108,7 @@ sub r_combine_populations_args {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
-    my $cluster_files = $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c, $temp_file_template);
+    my $cluster_files = $c->controller('solGS::AsyncJob')->create_cluster_accessible_tmp_files($c, $temp_file_template);
     my $out_file      = $cluster_files->{out_file_temp};
     my $err_file      = $cluster_files->{err_file_temp};
     my $in_file       = $cluster_files->{in_file_temp};
@@ -1125,7 +1125,7 @@ sub r_combine_populations_args {
 		'err_file' => $err_file
     };
 
-    my $job_config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+    my $job_config = $c->controller('solGS::AsyncJob')->create_cluster_config($c, $config_args);
 
     my $cmd = "Rscript --slave $in_file $out_file --args $input_files $output_files";
 
@@ -1152,7 +1152,7 @@ sub get_combine_populations_args_file {
     $self->get_combined_pops_list($c);
     my $trials = $c->stash->{combo_pops_list};
 
-    $c->controller('solGS::solGS')->training_pop_data_query_job_args($c, $trials, $protocol_id);
+    $c->controller('solGS::AsyncJob')->training_pop_data_query_job_args($c, $trials, $protocol_id);
     my $query_jobs = $c->stash->{training_pop_data_query_job_args};
 
     my $preq_jobs = {};
@@ -1368,7 +1368,7 @@ sub save_common_traits_acronyms {
     $c->stash->{training_pop_id} = $combo_pops_id;
     $c->controller('solGS::Files')->traits_list_file($c, $combo_pops_id);
     my $traits_file = $c->stash->{traits_list_file};
-    my $common_traits = join("\t", @$common_traits);
+    $common_traits = join("\t", @$common_traits);
     write_file($traits_file, {binmode => ':utf8'}, $common_traits) if $traits_file;
 
 }
@@ -1435,8 +1435,8 @@ sub combine_trait_data_input {
     $c->controller('solGS::Files')->model_info_file($c);
     my $model_info_file = $c->stash->{model_info_file};
 
-
-
+    $c->controller("solGS::Files")->trait_raw_phenodata_file($c);
+    my $trait_raw_phenodatafile =   $c->stash->{trait_raw_phenodata_file};
     my $input_files = join ("\t",
                             $pheno_files,
                             $geno_files,
@@ -1446,6 +1446,7 @@ sub combine_trait_data_input {
     my $output_files = join ("\t",
                              $combined_pops_pheno_file,
                              $combined_pops_geno_file,
+                             $trait_raw_phenodatafile
         );
 
     my $temp_dir    = $c->stash->{solgs_tempfiles_dir};
@@ -1471,7 +1472,7 @@ sub r_combine_populations  {
     $self->combine_trait_data_input($c);
     $c->stash->{r_script}     = 'R/solGS/combine_populations.r';
 
-    $c->controller('solGS::solGS')->run_r_script($c);
+    $c->controller('solGS::AsyncJob')->run_r_script($c);
 
 }
 

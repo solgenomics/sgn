@@ -38,6 +38,7 @@ subtype 'CrossType',
       $_ eq 'doubled_haploid' ||
       $_ eq 'backcross' ||
       $_ eq 'genetic_transformation' ||
+      $_ eq 'reselected' ||
       $_ eq 'unknown' };
 
 has 'name' => (isa => 'Str',is => 'rw', predicate => 'has_name', required => 1,);

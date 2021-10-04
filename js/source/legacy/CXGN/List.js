@@ -54,7 +54,7 @@ CXGN.List = function () {
 
 
 
-    
+
 
 CXGN.List.prototype = {
 
@@ -783,7 +783,7 @@ CXGN.List.prototype = {
 	var multiple_wrong_case = new Array();
 	var synonym_matches = new Array();
 	var multiple_synonyms = new Array();
-	
+
         var error = 0;
         jQuery.ajax( {
             url: '/list/validate/'+list_id+'/'+type,
@@ -810,7 +810,10 @@ CXGN.List.prototype = {
         if (error === 1 ) { return; }
 
 
-        if (missing.length==0 && wrong_case.length==0) {
+        if (type == 'accessions' && missing.length==0 && wrong_case.length==0) {
+            if (!non_interactive) { alert("This list passed validation."); }
+            return 1;
+        } else if (type != 'accessions' && missing.length == 0) {
             if (!non_interactive) { alert("This list passed validation."); }
             return 1;
         } else {
@@ -821,11 +824,11 @@ CXGN.List.prototype = {
                     var missing_accessions_link = "<button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br /><br />";
 
                     jQuery("#validate_stock_add_missing_accessions").html(missing_accessions_link);
-		    
+
                     var missing_accessions_vals = '';
                     var missing_accessions_vals_for_list = '';
 		    var missing_accessions_for_table = new Array();
-		    
+
                     for(var i=0; i<missing.length; i++) {
 			missing_accessions_for_table.push( [ missing[i], '(not&nbsp;present)' ] );
                         missing_accessions_vals = missing_accessions_vals + missing[i] + '<br/>';
@@ -843,20 +846,20 @@ CXGN.List.prototype = {
 				{ title: 'DB' },
 			    ]
 			});
-		    
-		    
+
+
                     jQuery("#validate_stock_add_missing_accessions_for_list").html(missing_accessions_vals_for_list);
 
                     addToListMenu('validate_stock_add_missing_accessions_for_list_div', 'validate_stock_add_missing_accessions_for_list', {
                         selectText: true,
                         listType: 'accessions'
                     });
-		    
-		    
+
+
 		    var wrong_case_accessions_for_list = '';
 
 		    jQuery('#wrong_case_message_div').html('');
-		    
+
 		    if (wrong_case.length > 0) {
 			//alert(JSON.stringify(wrong_case));
 			jQuery('#wrong_case_table').DataTable( {
@@ -871,7 +874,7 @@ CXGN.List.prototype = {
 			    ]
 			});
 
-			
+
 			jQuery('#adjust_case_action_button').prop('disabled', false);
 
 		    }
@@ -912,14 +915,14 @@ CXGN.List.prototype = {
 				     lo.renderItems('list_item_dialog', list_id);
 
 				     jQuery('#adjust_case_div').html("<br /><br /><h3>Mismatched case</h3><b>The case has been successfully adjusted.</b>");
-				     jQuery('#adjust_case_action_button').prop('disabled', true);    
+				     jQuery('#adjust_case_action_button').prop('disabled', true);
 				 }
 			     }
 		    	 });
 		     });
-		    
+
 		    var synonym_matches_table = new Array();
-		    
+
 		    for(var i=0; i<synonym_matches.length; i++) {
 			synonym_matches_table.push( [ synonym_matches[i]['synonym'], synonym_matches[i]['uniquename'] ] );
 		    }
@@ -937,16 +940,16 @@ CXGN.List.prototype = {
 				else {
 				    var lo = new CXGN.List();
 				    lo.renderItems('list_item_dialog', list_id);
-				    
+
 				    jQuery('#synonym_matches_div').hide();
 				    jQuery('#synonym_message').show();
 				    jQuery('#synonym_message').html("<br /><br /><h3>Synonyms</h3><b>Synonyms have been successfully replaced with uniquenames.</b>");
-				    jQuery('#replace_synonyms_with_uniquenames_button').prop('disabled', true);    
+				    jQuery('#replace_synonyms_with_uniquenames_button').prop('disabled', true);
 				}
 			    }
 		    	});
 		    });
-		    
+
 		    if (synonym_matches.length > 0) {
 			jQuery('#synonym_matches_div').show();
 			jQuery('#synonym_message').html('');
@@ -958,9 +961,9 @@ CXGN.List.prototype = {
 			    bInfo: false,
 			    paging: false,
 			    columns: [
-				
+
 				{ title : 'List elements matching synonym' },
-				{ title : 'Corresponding db names' } 
+				{ title : 'Corresponding db names' }
 			    ]
 			});
 		    }
@@ -982,7 +985,7 @@ CXGN.List.prototype = {
 			    ]
 			});
 		    }
-		    
+
                     jQuery('#validate_accession_error_display').modal("show");
                     //alert("List validation failed. Elements not found: "+ missing.join(","));
                     //return 0;
@@ -1211,8 +1214,11 @@ CXGN.List.prototype = {
             case "plots":
                 new_type = 'plots_2_plot_ids';
                 break;
+            case "seedlots":
+                new_type = 'stocks_2_stock_ids';
+                break;
             default:
-            return { 'error' : "cannot convert the list because of unknown type" };
+                return { 'error' : "cannot convert the list because of unknown type" };
         }
         //if (window.console) console.log("new type = "+new_type);
         var transformed = this.transform(list_id, new_type);
@@ -1781,6 +1787,3 @@ jQuery(document).ready(function() {
     jQuery("#list_dialog").draggable();
     jQuery("#public_list_dialog").draggable();
 });
-
-
-

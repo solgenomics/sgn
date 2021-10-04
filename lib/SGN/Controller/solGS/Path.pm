@@ -136,6 +136,17 @@ sub parse_ids {
 	return $ids;
 }
 
+
+sub clean_base_name {
+    my ($self, $c) = @_;
+
+    my $base = $c->req->base;
+    $base =~ s/:\d+//;
+    $base =~ s/(\/)$//;
+
+   return $base;
+}
+
 ####
 1;
 ####

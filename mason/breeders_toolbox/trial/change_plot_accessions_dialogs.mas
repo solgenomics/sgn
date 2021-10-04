@@ -22,13 +22,15 @@ $trial_id
                         <div class="panel panel-default">
                             <div class="panel-body">
                                 <b>Header:</b><br>
-                                The first row (header) must contain the following:
+                                The first row (header) must contain the columns 'plot_name' and 'accession_name'.<br>
+                                An optional additional column, 'new_plot_name' can be added to change the plot names:<br>
 
-                                <table class="table table-bordered table-hover">
+                                <table style="margin-top: 3%;" class="table table-bordered table-hover">
                                   <tbody>
                                   <tr>
                                     <td>plot_name</td>
                                     <td>accession_name</td>
+                                    <td>new_plot_name (optional)</td>
                                   </tr>
                                   </tbody>
                                 </table>
@@ -37,6 +39,8 @@ $trial_id
                         <b>Required columns:</b><br>
                         <b>plot_name:</b> name of plot to change the accession for<br>
                         <b>accession_name:</b> name of the accession that the plot should be connected to.<br>
+                        <br><b>Optional column:</b><br>
+                        <b>new_plot_name:</b> new name for plot.<br>
                     </div>
 
                     <form class="form-horizontal" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_design_change_accessions_form" name="trial_design_change_accessions_form">
@@ -103,12 +107,39 @@ $trial_id
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_tdfieldmap_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_replace_accession_dialog" type="button" onclick=location.reload() class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal  fade" id="change_accession_error_dialog" name="change_accession_error_dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="change_accsn_err_dialog"><b>Error Changing Plot Accessions</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p3> Accessions were not changed due to these errors:</p3><br><br>
+                    <div style="background-color: light-gray;" class="well well-sm">
+                        <table>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_error_change_accsn" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 
             </div>
         </div>
     </div>
 </div>
+
+
 
 <script>
 
@@ -140,12 +171,12 @@ jQuery(document).ready(function () {
         },
         complete: function (response) {
             jQuery('#working_modal').modal("hide");
-            console.log(response);
             if (response.warning) {
                 jQuery('#trial_design_change_accessions_dialog').modal("hide");
                 jQuery('#td_replace_accession_curator_warning_message').modal("show");
             } else if (response.error) {
-                alert(response.error);
+                jQuery('#change_accession_error_dialog').modal("show");
+                jQuery('#change_accession_error_dialog tbody').html(response.error);
             }
             else {
 	            jQuery('#trial_design_change_accessions_dialog').modal("hide");

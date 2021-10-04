@@ -127,6 +127,12 @@ has 'include_measured'=> (
     default => 'true',
 );
 
+has 'all_stats'=> (
+    is => 'rw',
+    isa => 'Str',
+    default => 'true',
+);
+
 has 'use_synonyms'=> (
     is => 'rw',
     isa => 'Str',
@@ -168,6 +174,7 @@ sub download {
         treatment_project_ids => $self->treatment_project_ids,
         selected_columns => $self->selected_columns,
         include_measured => $self->include_measured,
+        all_stats => $self->all_stats,
         use_synonyms => $self->use_synonyms,
         selected_trait_ids => $self->selected_trait_ids,
         trial_stock_type => $self->trial_stock_type

@@ -2154,4 +2154,69 @@ sub _check_filtered_markers {
     return @all_marker_objects;
 }
 
+
+sub get_pcr_genotype_info {
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $genotype_data_project_list = $self->genotype_data_project_list;
+    my $protocol_id_list = $self->protocol_id_list;
+    my $genotype_id_list = $self->markerprofile_id_list;
+    my $protocol_id = $protocol_id_list->[0];
+    my @where_clause = ();
+#    print STDERR "GENOTYPE ID =".Dumper($genotype_id_list)."\n";
+#    print STDERR "PROTOCOL ID =".Dumper($protocol_id_list)."\n";
+
+    if ($protocol_id_list && scalar(@$protocol_id_list)>0) {
+        my $query = join ("," , @$protocol_id_list);
+        push @where_clause, "nd_protocol.nd_protocol_id in ($query)";
+    }
+
+    if ($genotype_id_list && scalar(@$genotype_id_list)>0) {
+        my $query = join ("," , @$genotype_id_list);
+        push @where_clause, "genotype.genotype_id in ($query)";
+    }
+#    print STDERR "WHERE CLAUSE =".Dumper(\@where_clause)."\n";
+    my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
+
+    my $pcr_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_genotyping', 'genotype_property')->cvterm_id();
+    my $pcr_protocolprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_details', 'protocol_property')->cvterm_id();
+    my $pcr_protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'pcr_marker_protocol', 'protocol_type')->cvterm_id();
+    my $ploidy_level_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "ploidy_level", "stock_property")->cvterm_id();
+
+    my $q1 = "SELECT nd_protocolprop.value->>'marker_names' FROM nd_protocolprop WHERE nd_protocol_id = ? AND nd_protocolprop.type_id = ?";
+    my $h1 = $schema->storage->dbh()->prepare($q1);
+    $h1->execute($protocol_id, $pcr_protocolprop_cvterm_id);
+    my $marker_names = $h1->fetchrow_array();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value, cvterm.name, genotype.genotype_id, genotype.description, genotypeprop.value
+        FROM nd_protocol
+        JOIN nd_experiment_protocol ON (nd_protocol.nd_protocol_id = nd_experiment_protocol.nd_protocol_id)
+        JOIN nd_experiment_genotype ON (nd_experiment_protocol.nd_experiment_id = nd_experiment_genotype.nd_experiment_id)
+        JOIN genotype ON (nd_experiment_genotype.genotype_id = genotype.genotype_id)
+        JOIN genotypeprop ON (genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.type_id = ?
+        JOIN nd_experiment_stock ON (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
+        LEFT JOIN stockprop ON (stockprop.stock_id = stock.stock_id) AND stockprop.type_id = ?
+        JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
+        $where_clause ORDER BY stock.uniquename ASC";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($pcr_genotyping_cvterm_id, $ploidy_level_cvterm_id);
+
+    my @pcr_genotype_data = ();
+    while (my ($stock_id, $stock_name, $ploidy_level, $stock_type, $genotype_id, $genotype_description, $genotype_data, $protocol_id) = $h->fetchrow_array()){
+        push @pcr_genotype_data, [$stock_id, $stock_name, $stock_type, $ploidy_level, $genotype_description, $genotype_id, $genotype_data]
+    }
+
+    my %protocol_genotype_data = (
+        marker_names => $marker_names,
+        protocol_genotype_data => \@pcr_genotype_data
+    );
+
+#    print STDERR "PCR GENOTYPE INFO =".Dumper(\%protocol_genotype_data)."\n";
+
+    return \%protocol_genotype_data;
+
+}
+
 1;

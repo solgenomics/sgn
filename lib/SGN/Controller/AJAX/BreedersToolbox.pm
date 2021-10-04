@@ -351,6 +351,7 @@ sub progress : Path('/ajax/progress') Args(0) {
     print STDERR "Data = ".Dumper($data);
     
     $c->stash->{rest} = { data => $data };
+
 }
 
 sub radarGraph : Path('/ajax/radargraph') Args(0) {
@@ -391,6 +392,8 @@ sub radarGraph : Path('/ajax/radargraph') Args(0) {
         name => $ds_name,
     };
 }
+
+
 
 1;
 

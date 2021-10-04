@@ -1,5 +1,5 @@
 <%args>
-
+$seedlot_maintenance_enabled => 0
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'spin_min', 'ladda_min' ] &>
@@ -400,11 +400,89 @@ $(document).ready(function() {
 <!-- end of code for pedigree download -->
 
 
+
+<!-- start of code for download seedlot matinenance events -->
+
+% if ( $seedlot_maintenance_enabled ) {
+
+<div class="well well-sm">
+  <form id="download_seedlot_maintenance_events" action="/breeders/download_seedlot_maintenance_events_action" method="POST">
+      <table class="table"  cellpadding="10">
+        <thead>
+          <tr><td colspan="2"><h4>Download Seedlot Maintenance Events</h4><p>Select parameters:</p></tr>
+          <tr>
+            <th>Seedlots</th>
+            <th>Format</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>
+            <div id="seedlot_list1"></div>
+          </td>
+          <td>
+            <select class="form-control" id="seedlot_maintenance_events_format" name="file_format">
+                <option value=".xls">XLS</option>
+            </select>
+          </td>
+          <td>
+            <button class="btn btn-primary" type="button" id="seedlot_maintenance_events_download">Download</button>
+            <input type="hidden" id="seedlot_maintenance_events_download_token" name="seedlot_maintenance_events_download_token"/>
+          </td>
+        </tr>
+        </tbody>
+    </table>
+  </form>
+</div>
+
+<script>
+$(document).ready(function() {
+
+    var lo = new CXGN.List();
+
+    $('#seedlot_list1').html(lo.listSelect('seedlot_maintenance_events_list', [ 'seedlots' ], 'select', undefined, undefined));
+
+    $('#seedlot_maintenance_events_download').click(function() {
+
+        var seedlot_list_id = $('#seedlot_maintenance_events_list_list_select').val();
+        if (!seedlot_list_id) {
+            alert("You need to select a seedlot list!");
+            return;
+        }
+
+        var seedlot_validation = 1;
+        if (seedlot_list_id) {
+            seedlot_validation = lo.validate(seedlot_list_id, 'seedlots', true);
+        }
+
+        if (seedlot_validation != 1) {
+            alert("The seedlot list did not pass validation. Please correct the list and try again");
+            return;
+        }
+
+        var ladda = Ladda.create(this);
+        ladda.start();
+        var token = new Date().getTime(); //use the current timestamp as the token name and value
+        manage_dl_with_cookie(token, ladda);
+        jQuery('#seedlot_maintenance_events_download_token').val(token);
+        jQuery('#download_seedlot_maintenance_events').submit();
+
+    });
+});
+
+</script>
+
+% }
+
+<!-- end of code for seedlot maintenance event download -->
+
+
 <div class="well well-sm">
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
 <table class="table"  cellpadding="10">
   <thead>
-  <tr><td colspan="2"><h4>Download GBS Genotype </h4><p>Select parameter:</p></tr>
+  <tr><td colspan="2"><h4>Download Genotypes </h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
@@ -490,7 +568,7 @@ $(document).ready(function() {
 <form id="gbs_qc" action="/breeders/gbs_qc_action" method="POST">
 <table class="table" cellpadding="10">
   <thead>
-  <tr><td colspan="3"><h4>GBS Genotype QC</h4><p>Select parameter:</p></tr>
+  <tr><td colspan="3"><h4>Genotyping QC</h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Trials

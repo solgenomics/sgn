@@ -246,7 +246,7 @@ sub _missing_field_response {
 	my $c = shift;
 	my $field_name = shift;
 	my $prefix = shift;
-	my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, $prefix ? sprintf("%s.%s required", $prefix, $field_name) : $field_name, 400);
+	my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, $prefix ? sprintf("%s.%s required", $prefix, $field_name) : sprintf("%s required", $field_name), 400);
 	_standard_response_construction($c, $response);
 }
 
@@ -2608,9 +2608,22 @@ sub observation_units_POST {
 
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c);
+	# The observation units need an operator, so login required
+	my $force_authenticate = 1;
+	my ($auth,$user_id) = _authenticate_user($c, $force_authenticate);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
+	_validate_request($c, 'ARRAY', $data, [
+		'studyDbId',
+		'observationUnitName',
+		{
+		'observationUnitPosition' => [
+			{
+				'observationLevel' => ['levelName', 'levelCode'],
+			}
+		]
+		}
+	]);
 	my @all_units;
 	foreach my $unit (values %{$data}) {
 		push @all_units, $unit;
@@ -2674,7 +2687,7 @@ sub observation_unit_single_PUT {
     push @all_observations_units, $observationUnits;
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('ObservationUnits');
-    my $brapi_package_result = $brapi_module->observationunits_update(\@all_observations_units);
+    my $brapi_package_result = $brapi_module->observationunits_update(\@all_observations_units, $c);
 
     _standard_response_construction($c, $brapi_package_result);
 }
@@ -3720,6 +3733,7 @@ sub observations_PUT {
 			observations => \@all_observations,
 	        user_id => $user_id,
 	        user_type => $user_type,
+	        overwrite => 1,
 	    },$c);
 	} elsif ($version eq 'v1'){
 		my $clean_inputs = $c->stash->{clean_inputs};

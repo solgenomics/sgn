@@ -43,7 +43,6 @@ use warnings;
 
 use Digest::MD5 qw(md5);
 use String::Random;
-
 use CXGN::Cookie;
 
 use CatalystX::GlobalContext '$c';
@@ -337,6 +336,7 @@ sub login_user {
         if ($disabled) {
             $login_info->{account_disabled} = $disabled;
         }
+
         else {
             $login_info->{user_prefs} = $user_prefs;
             if ($person_id) {
@@ -465,14 +465,14 @@ sub set_sql {
         user_from_cookie =>    #send: session_time_in_secs, cookiestring
 
           "	SELECT 
-				sp_person_id,
+				sp_token.sp_person_id,
 				sgn_people.sp_roles.name as user_type,
 				user_prefs,
-				extract (epoch FROM current_timestamp-last_access_time)>? AS expired 
+				extract (epoch FROM current_timestamp-sp_token.last_access_time)>? AS expired 
 			FROM 
-				sgn_people.sp_person JOIN sgn_people.sp_person_roles using(sp_person_id) join sgn_people.sp_roles using(sp_role_id) 
+				sgn_people.sp_person JOIN sgn_people.sp_person_roles using(sp_person_id) join sgn_people.sp_roles using(sp_role_id) JOIN sgn_people.sp_token on(sgn_people.sp_person.sp_person_id = sgn_people.sp_token.sp_person_id)
 			WHERE 
-				cookie_string=?
+				sp_token.cookie_string=?
                         ORDER BY sp_role_id
                         LIMIT 1",
 
@@ -489,26 +489,27 @@ sub set_sql {
         cookie_string_exists =>
 
           "	SELECT 
-				cookie_string 
+				sgn_people.sp_token.cookie_string 
 			FROM 
-				sgn_people.sp_person 
+				sgn_people.sp_person JOIN sgn_people.sp_token using(sp_person_id) 
 			WHERE 
-				cookie_string=?",
+				sp_token.cookie_string=?",
 
         login =>    #send: cookie_string, sp_person_id
 
-          "	UPDATE 
-				sgn_people.sp_person 
-			SET 
-				cookie_string=?,
-				last_access_time=current_timestamp 
-			WHERE 
-				sp_person_id=?",
+          "	INSERT INTO
+				sgn_people.sp_token(cookie_string, sp_person_id, last_access_time) 
+			VALUES ( 
+				?,
+				?, 
+				current_timestamp
+            )",
+            
 
         logout =>    #send: cookie_string
 
           "	UPDATE 
-				sgn_people.sp_person 
+				sgn_people.sp_token 
 			SET 
 				cookie_string=null,
 				last_access_time=current_timestamp 
@@ -518,7 +519,7 @@ sub set_sql {
         refresh_cookie =>    #send: cookie_string  (updates the timestamp)
 
           "	UPDATE 
-				sgn_people.sp_person 
+				sgn_people.sp_token
 			SET 
 				last_access_time=current_timestamp 
 			WHERE 
@@ -532,11 +533,12 @@ sub set_sql {
 				sgn_people.sp_person
                         JOIN    sgn_people.sp_person_roles USING(sp_person_id)
                         JOIN    sgn_people.sp_roles USING(sp_role_id)
+                        JOIN    sgn_people.sp_token on(sgn_people.sp_person.sp_person_id=sgn_people.sp_token.sp_person_id)
            
 			WHERE 
-				last_access_time IS NOT NULL 
-				AND cookie_string IS NOT NULL 	
-				AND extract(epoch from now()-last_access_time)<? 
+				sp_token.last_access_time IS NOT NULL 
+				AND sp_token.cookie_string IS NOT NULL 	
+				AND extract(epoch from now()-sp_token.last_access_time)<? 
 			GROUP BY 	
 				sp_roles.name",
 
@@ -545,11 +547,11 @@ sub set_sql {
           "	SELECT 
 				sp_roles.name as user_type, username, contact_email 
 			FROM 
-				sgn_people.sp_person JOIN sgn_people.sp_person_roles using(sp_person_id) JOIN sgn_people.sp_roles using (sp_role_id)
+				sgn_people.sp_person JOIN sgn_people.sp_person_roles using(sp_person_id) JOIN sgn_people.sp_roles using (sp_role_id) JOIN sgn_people.sp_token on (sgn_people.sp_person.sp_person_id=sgn_people.sp_token.sp_person_id)
 			WHERE 
-				last_access_time IS NOT NULL 
-				AND cookie_string IS NOT NULL	
-				AND extract(epoch from now()-last_access_time)<?",
+				sp_token.last_access_time IS NOT NULL 
+				AND sp_token.cookie_string IS NOT NULL	
+				AND extract(epoch from now()-sp_token.last_access_time)<?",
 
     };
 

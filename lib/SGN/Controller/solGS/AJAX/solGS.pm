@@ -57,13 +57,12 @@ sub solgs_population_search_autocomplete_GET :Args() {
     while (my $row = $rs->next)
     {
         my $pop_id = $row->id;
-	    my $location = $c->model('solGS::solGS')->project_location($pop_id);
+        my $is_computation = $c->controller('solGS::Search')->check_saved_analysis_trial($c, $pop_id);
 
-		if ($location && $location !~ /computation/i)
+		if (!$is_computation)
 		{
             push @response_list, $row->name;
 		}
-
     }
 
     $c->{stash}->{rest} = \@response_list;
