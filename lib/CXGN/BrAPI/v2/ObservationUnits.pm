@@ -282,6 +282,20 @@ sub search {
             }
         }
 
+        my @plot_image_ids;
+			eval {
+	            my $image_id = CXGN::Stock->new({
+	    			schema => $self->bcs_schema,
+	    			stock_id => $obs_unit->{observationunit_stock_id},
+	    		});
+	    		@plot_image_ids = $image_id->get_image_ids();
+	    	};
+            my @ids;
+            foreach my $arrayimage (@plot_image_ids){
+                push @ids, $arrayimage->[0];
+            }
+        
+
         push @data_window, {
             externalReferences => \@references,
             additionalInfo => $additional_info,
@@ -300,6 +314,7 @@ sub search {
             seedLotName => $obs_unit->{seedlot_uniquename} ? qq|$obs_unit->{seedlot_uniquename}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
+            plotImageDbIds => \@ids,
             treatments => \@brapi_treatments,
             trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
             trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
