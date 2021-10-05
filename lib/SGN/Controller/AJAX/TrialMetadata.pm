@@ -1838,7 +1838,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
     $parser->load_plugin('TrialChangePlotAccessionsCSV');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
-        
+
     if (!$parsed_data) {
         my $return_error = '';
         my $parse_errors;
@@ -2498,7 +2498,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
             return;
         }
     }
-    
+
     print "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotName: $old_plot_name, NewPlotName: $new_plot_name OldPlotId: $plot_id\n";
     $c->stash->{rest} = { success => 1};
 }
@@ -2773,6 +2773,62 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
         $c->detach;;
     }
 
+}
+
+sub edit_management_factor_details : Chained('trial') PathPart('edit_management_factor_details') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $treatment_date = $c->req->param("treatment_date");
+    my $treatment_name = $c->req->param("treatment_name");
+    my $treatment_description = $c->req->param("treatment_description");
+    my $treatment_type = $c->req->param("treatment_type");
+    my $treatment_year = $c->req->param("treatment_year");
+
+    if (my $error = $self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    if (!$treatment_name) {
+        $c->stash->{rest} = { error => 'No treatment name given!' };
+        return;
+    }
+    if (!$treatment_description) {
+        $c->stash->{rest} = { error => 'No treatment description given!' };
+        return;
+    }
+    if (!$treatment_date) {
+        $c->stash->{rest} = { error => 'No treatment date given!' };
+        return;
+    }
+    if (!$treatment_type) {
+        $c->stash->{rest} = { error => 'No treatment type given!' };
+        return;
+    }
+    if (!$treatment_year) {
+        $c->stash->{rest} = { error => 'No treatment year given!' };
+        return;
+    }
+
+    my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $trial_name = $t->get_name();
+
+    if ($trial_name ne $treatment_name) {
+        my $trial_rs = $schema->resultset('Project::Project')->search({name => $treatment_name});
+        if ($trial_rs->count() > 0) {
+            $c->stash->{rest} = { error => 'Please use a different management factor name! That name is already in use.' };
+            return;
+        }
+    }
+
+    $t->set_name($treatment_name);
+    $t->set_management_factor_date($treatment_date);
+    $t->set_management_factor_type($treatment_type);
+    $t->set_description($treatment_description);
+    $t->set_year($treatment_year);
+
+    $c->stash->{rest} = { success => 1 };
 }
 
 sub privileges_denied {
