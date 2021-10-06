@@ -4,16 +4,16 @@ jQuery(document).ready(function (){
     get_select_box('genotyping_protocol','selected_protocol', {'empty':1});
 
     var lo = new CXGN.List();
-    jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a marker set', 'refresh', 'hide_public_lists' ));
+    jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a markerset', 'refresh', 'hide_public_lists' ));
 
     var list = new CXGN.List();
-    jQuery('#selected_marker_set2').html(list.listSelect('selected_marker_set2', ['markers'], 'Select a marker set', 'refresh', undefined));
+    jQuery('#selected_marker_set2').html(list.listSelect('selected_marker_set2', ['markers'], 'Select a markerset', 'refresh', undefined));
 
 
     jQuery("#save_marker_set").click(function(){
         var name = $('#new_marker_set').val();
         if (!name) {
-            alert("Marker set name is required");
+            alert("Markerset name is required");
             return;
         }
 
@@ -49,7 +49,7 @@ jQuery(document).ready(function (){
 
         var protocolAdded = lo.addToList(list_id, markersetProtocolString);
         if (protocolAdded){
-            alert ("Added new marker set: " + name + " for genotyping protocol: " + protocol_name + " ," + "data type: " + data_type);
+            alert ("Added new markerset: " + name + " for genotyping protocol: " + protocol_name + " ," + "data type: " + data_type);
         }
         location.reload();
         return list_id;
@@ -81,7 +81,7 @@ jQuery(document).ready(function (){
     jQuery("#add_marker").click(function(){
         var markerSetID = $('#selected_marker_set1').val();
         if (!markerSetID) {
-            alert("Marker set name is required");
+            alert("Markerset name is required");
             return;
         }
 
@@ -136,7 +136,7 @@ jQuery(document).ready(function (){
     jQuery("#add_parameters").click(function(){
         var markerSetName = $('#selected_marker_set2').val();
         if (!markerSetName) {
-            alert("Marker set name is required");
+            alert("Markerset name is required");
             return;
         }
 
@@ -198,7 +198,7 @@ function show_table() {
         'destroy': true,
         'ajax':{'url': '/marker_sets/available'},
         'columns': [
-            {title: "Marker Set Name", "data": "markerset_name"},
+            {title: "Markerset Name", "data": "markerset_name"},
             {title: "Number of Markers", "data": "number_of_markers"},
             {title: "Description", "data": "description"},
             {title: "", "data": "null", "render": function (data, type, row) {return "<a onclick = 'showMarkersetDetail("+row.markerset_id+")'>Detail</a>" ;}},
@@ -208,7 +208,7 @@ function show_table() {
 }
 
 function removeMarkerSet (markerset_id){
-    if (confirm("Are you sure you want to delete this marker set? This cannot be undone")){
+    if (confirm("Are you sure you want to delete this markerset? This cannot be undone")){
         jQuery.ajax({
             url: '/markerset/delete',
             data: {'markerset_id': markerset_id},
@@ -218,7 +218,7 @@ function removeMarkerSet (markerset_id){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert("The marker set has been deleted.");
+                    alert("The markerset has been deleted.");
                     location.reload();
                 }
                 if (response.error) {
@@ -227,7 +227,7 @@ function removeMarkerSet (markerset_id){
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred deleting marker set');
+                alert('An error occurred deleting markerset');
             }
         });
     }
@@ -258,7 +258,7 @@ function showMarkersetDetail (markerset_id){
         },
         error: function(response){
             jQuery('#working_modal').modal('hide');
-            alert('An error occurred getting marker set detail');
+            alert('An error occurred getting markerset detail');
         }
     });
 }
