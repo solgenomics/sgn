@@ -6,8 +6,10 @@ use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
 use CXGN::List;
+use CXGN::Genotype::Protocol;
 use Data::Dumper;
 use JSON;
+
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
@@ -23,7 +25,6 @@ my $response = decode_json $mech->content;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 #print STDERR $sgn_session_id."\n";
-
 
 my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search({description => 'Cornell Biotech'});
 my $location_id = $location_rs->first->nd_geolocation_id;
@@ -60,43 +61,36 @@ $response = $ua->post(
 #print STDERR Dumper $response;
 ok($response->is_success);
 my $message = $response->decoded_content;
-#print STDERR "MESSAGE: ".$message;
 my $message_hash = decode_json $message;
-#print STDERR Dumper $message_hash;
 is($message_hash->{success}, 1);
 ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
 
 my $protocol_id = $message_hash->{nd_protocol_id};
-#print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
-
 
 #test adding markerset
 $mech->get_ok('http://localhost:3010/list/new?name=test_markerset_1&desc=test');
 $response = decode_json $mech->content;
-#print STDERR "RESPONSE =".Dumper($response)."\n";
 my $markerset_list_id = $response->{list_id};
-print STDERR "MARKERSET LIST ID =".Dumper($markerset_list_id)."\n";
+#print STDERR "MARKERSET LIST ID =".Dumper($markerset_list_id)."\n";
 
 ok($markerset_list_id);
 
-$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.'&element={"genotyping_protocol_name":"2021_genotype_protocol", "genotyping_protocol_id":'.$markerset_list_id.', "genotyping_data_type":"Dosage"}');
+$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.'&element={"genotyping_protocol_name":"2021_genotype_protocol", "genotyping_protocol_id":'.$protocol_id.', "genotyping_data_type":"Dosage"}');
 
 $response = decode_json $mech->content;
-#print STDERR "RESPONSE 1=".Dumper($response)."\n";
+print STDERR "RESPONSE 1=".Dumper($response)."\n";
 
 $mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.'&element={"marker_name":"S1_21594", "allele_dosage":"0"}');
 
 $response = decode_json $mech->content;
-#print STDERR "RESPONSE 2=".Dumper($response)."\n";
+print STDERR "RESPONSE 2=".Dumper($response)."\n";
 
 #create a list of accessions
 $mech->get_ok('http://localhost:3010/list/new?name=accession_list_1&desc=test');
 $response = decode_json $mech->content;
-#print STDERR "RESPONSE =".Dumper($response)."\n";
 my $accession_list_id = $response->{list_id};
-print STDERR "ACCESSION LIST ID =".Dumper($accession_list_id)."\n";
-
+#print STDERR "ACCESSION LIST ID =".Dumper($accession_list_id)."\n";
 ok($accession_list_id);
 
 my @accessions = qw(UG120001 UG120002 UG120003 UG120004 UG120005 UG120006 UG120007 UG120008 UG120009 UG120010 UG120011 UG120012 UG120013 UG120014 UG120015 UG120016 UG120017 UG120018 UG120019 UG120020 UG120021);
@@ -116,7 +110,11 @@ print STDERR "MARKERS =".Dumper($markerset_items)."\n";
 #test searching accessions
 $mech->get_ok('http://localhost:3010/ajax/search/search_stocks_using_markerset?stock_list_id='.$accession_list_id.'&markerset_id='.$markerset_list_id);
 $response = decode_json $mech->content;
-print STDERR "RESPONSE 4=".Dumper($response)."\n";
+#print STDERR "RESPONSE 4=".Dumper($response)."\n";
+my %result_hash = %{$response};
+my $selected_accessions = $result_hash{'data'};
+my $number_of_accessions = scalar@$selected_accessions;
+is($number_of_accessions,9);
 
 
 
