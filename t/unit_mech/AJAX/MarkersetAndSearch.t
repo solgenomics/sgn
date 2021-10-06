@@ -21,10 +21,8 @@ my $mech = Test::WWW::Mechanize->new;
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = decode_json $mech->content;
-#print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
-#print STDERR $sgn_session_id."\n";
 
 my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search({description => 'Cornell Biotech'});
 my $location_id = $location_rs->first->nd_geolocation_id;
@@ -73,18 +71,29 @@ $mech->get_ok('http://localhost:3010/list/new?name=test_markerset_1&desc=test');
 $response = decode_json $mech->content;
 my $markerset_list_id = $response->{list_id};
 #print STDERR "MARKERSET LIST ID =".Dumper($markerset_list_id)."\n";
-
 ok($markerset_list_id);
 
 $mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.'&element={"genotyping_protocol_name":"2021_genotype_protocol", "genotyping_protocol_id":'.$protocol_id.', "genotyping_data_type":"Dosage"}');
-
 $response = decode_json $mech->content;
-print STDERR "RESPONSE 1=".Dumper($response)."\n";
+is($response->[0],'SUCCESS');
 
 $mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.'&element={"marker_name":"S1_21594", "allele_dosage":"0"}');
-
 $response = decode_json $mech->content;
-print STDERR "RESPONSE 2=".Dumper($response)."\n";
+is($response->[0],'SUCCESS');
+
+$mech->get_ok('http://localhost:3010/list/new?name=test_markerset_2&desc=test');
+$response = decode_json $mech->content;
+my $markerset2_list_id = $response->{list_id};
+#print STDERR "MARKERSET LIST ID =".Dumper($markerset_list_id)."\n";
+ok($markerset2_list_id);
+
+$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset2_list_id.'&element={"genotyping_protocol_name":"2021_genotype_protocol", "genotyping_protocol_id":'.$protocol_id.', "genotyping_data_type":"SNP"}');
+$response = decode_json $mech->content;
+is($response->[0],'SUCCESS');
+
+$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset2_list_id.'&element={"marker_name":"S1_21597","allele1":"G","allele2":"G"}');
+$response = decode_json $mech->content;
+is($response->[0],'SUCCESS');
 
 #create a list of accessions
 $mech->get_ok('http://localhost:3010/list/new?name=accession_list_1&desc=test');
@@ -97,25 +106,29 @@ my @accessions = qw(UG120001 UG120002 UG120003 UG120004 UG120005 UG120006 UG1200
 
 my $accession_list = CXGN::List->new( { dbh=>$dbh, list_id => $accession_list_id });
 my $response = $accession_list->add_bulk(\@accessions);
-print STDERR "ACCESSION RESPONSE=".Dumper($response)."\n";
+is($response->{'count'},21);
 
-my $stock_list = CXGN::List->new({dbh => $dbh, list_id => $accession_list_id});
-my $stock_names = $stock_list->retrieve_elements($accession_list_id);
-
-my $markerset = CXGN::List->new({dbh => $dbh, list_id => $markerset_list_id});
-my $markerset_items = $markerset->retrieve_elements($markerset_list_id);
-print STDERR "ACCESSION LIST =".Dumper($stock_names)."\n";
-print STDERR "MARKERS =".Dumper($markerset_items)."\n";
-
-#test searching accessions
+#test searching accessions with dosage
 $mech->get_ok('http://localhost:3010/ajax/search/search_stocks_using_markerset?stock_list_id='.$accession_list_id.'&markerset_id='.$markerset_list_id);
 $response = decode_json $mech->content;
 #print STDERR "RESPONSE 4=".Dumper($response)."\n";
-my %result_hash = %{$response};
-my $selected_accessions = $result_hash{'data'};
-my $number_of_accessions = scalar@$selected_accessions;
-is($number_of_accessions,9);
+my %result_hash1 = %{$response};
+my $selected_accessions_dosage = $result_hash1{'data'};
+my $number_of_accessions_dosage = scalar@$selected_accessions_dosage;
+is($number_of_accessions_dosage,9);
 
+#test searching accessions with snp
+$mech->get_ok('http://localhost:3010/ajax/search/search_stocks_using_markerset?stock_list_id='.$accession_list_id.'&markerset_id='.$markerset2_list_id);
+$response = decode_json $mech->content;
+#print STDERR "RESPONSE 4=".Dumper($response)."\n";
+my %result_hash2 = %{$response};
+my $selected_accessions_snp = $result_hash2{'data'};
+my $number_of_accessions_snp = scalar@$selected_accessions_snp;
+is($number_of_accessions_snp,14);
 
+# Delete genotype protocol after testing
+$mech->get("/ajax/genotyping_protocol/delete/$protocol_id");
+$response = decode_json $mech->content;
+is($response->{'success'}, 1);
 
 done_testing();
