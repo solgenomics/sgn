@@ -4386,7 +4386,7 @@ creation_date: 2018-03-29T15:51:48Z
 [Term]
 id: SP:0000500
 name: Variables
-namespace: Solanaceae_variables
+is_a: SP:0001000 ! Solanaceae phenotype ontology
 
 [Term]
 id: SP:0000706
