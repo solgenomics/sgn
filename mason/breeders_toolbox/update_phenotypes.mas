@@ -1,0 +1,111 @@
+
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
+
+<div class="modal fade" id="update_phenotypes_dialog" name="update_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="updatePhenotypesDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="updatePhenotypesDialog">Update Phenotypes</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /page/explanation.mas, title=>'Template Information' &>
+                <p>
+                <b>File format information</b>
+                <br>
+                <a id="update_phenotypes_format_info">Spreadsheet Format</a>
+                </p>
+            </&>
+
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="update_phenotypes_file_form" name="update_phenotypes_file_form">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Phenotype Spreadsheet: </label>
+                    <div class="col-sm-9" >
+                        <input type="file" id="update_phenotypes_file_input" name="update_phenotypes_file_input" encoding="multipart/form-data" />
+                    </div>
+                </div>
+                <div id="update_phenotypes_verify_status"></div>
+                </div>
+            </form><br/>
+
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-info" name="update_phenotypes_submit_verify" id="update_phenotypes_submit_verify">Verify</button>
+            <button disabled type="button" class="btn btn-primary" name="update_phenotypes_submit_store" id="update_phenotypes_submit_store" title="First Verify Your File">Store</button>
+        </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="update_phenotypes_info_dialog" name="update_phenotypes_info_dialog" tabindex="-1" role="dialog" aria-labelledby="updatePhenotypesInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="updatePhenotypesInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h4>Update Phenotypes spreadsheet must be uploaded in .csv file format</h4>
+
+            <div class="well well-sm">
+                <b>Header:</b>
+                <br/>
+                The first row (header) must contain the following:
+                <br/><br/>
+                <table class="table table-hover table-bordered table-condensed" >
+                    <thead></thead>
+                    <tbody>
+                        <tr>
+                            <td>observationDbId</td>
+                            <td>observationUnitName</td>
+                            <td>trait</td>
+                            <td>updated_value</td>
+                            <td>timestamp</td>
+                            <td>person</td>
+                            <td>location</td>
+                            <td>number</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h4>Notes:</h4>
+            <ul>
+                <li><b>observationDbId</b> and <b>updated_value</b> must be populated, values in other columns are optional.</li>
+            </ul>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
+    jQuery('#update_phenotypes_link').click( function() {
+        jQuery('#update_phenotypes_dialog').modal("show");
+    });
+
+    jQuery("#update_phenotypes_format_info").click( function () {
+        jQuery("#update_phenotypes_info_dialog" ).modal("show");
+    });
+
+});
+
+</script>
