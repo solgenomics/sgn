@@ -1,45 +1,115 @@
 
 =head1
 
-load_cxgn_multi_trials.pl
+load_genotyping_plates.pl
 
 =head1 SYNOPSIS
 
-    load_genotyping_plates.pl  -H [dbhost] -D [dbname] -i inFile -b [breeding program name] -u [username] -l location [-t]
+load_genotyping_plates.pl  -H [dbhost] -D [dbname] -i inFile -b [breeding program name] -u [username] -l location [-t]
 
 =head1 COMMAND-LINE OPTIONS
 
- -H  host name
- -D  database name
- -i infile 
- -u username  (must be in the database) 
- -b breeding program name (must be in the database)  
- -t  Test run . Rolling back at the end.
- -l location
- -y year
+=over 4
+
+=item -H
+
+host name
+
+=item -D
+
+database name
+
+=item -i
+
+infile 
+
+=item -u 
+
+username  (must be in the database) 
+
+=item -b 
+
+breeding program name (must be in the database)  
+
+=item -t
+
+Test run . Rolling back at the end.
+
+=item -l 
+
+location
+
+=item -y 
+
+year
+
+=back
 
 =head2 DESCRIPTION
 
-    Load genotyping plate layouts for many plates
+Load genotyping plate layouts for many plates
 
-
-################################################
 Minimal metadata requirements are
-    trial_name
-    trial_description (can also be built from the trial name, type, year, location)
-    trial_type (read from an input file)
-    trial_location geo_description ( must be in the database - nd_geolocation.description - can  be read from metadata file) 
-    year (can be read from the metadata file ) 
 
-    breeding_program (provide with option -b ) 
+=over 3
 
+=item 
+
+trial_name
+
+=item
+
+trial_description (can also be built from the trial name, type, year, location)
+
+=item
+
+trial_type (read from an input file)
+
+=item 
+
+trial_location geo_description ( must be in the database - nd_geolocation.description - can  be read from metadata file) 
+
+=item
+
+year (can be read from the metadata file ) 
+
+=item
+
+breeding_program (provide with option -b ) 
+
+=back
+
+The infile is an Excel file (.xls format) with the following columns:
+
+=over 3
+
+=item
+
+Item	
+
+=item 
+
+Plate ID	
+
+=item
+
+Intertek plate/well ID	
+
+=item 
+
+accession name
+
+=item
+
+Breeder ID
+
+=back
 
 =head2 AUTHORS
 
-Based on a script by Naama Menda (nm249@cornell.edu), modified by Lukas Mueller <lam87@cornell.edu>
+Based on a script for loading trial data by Naama Menda <nm249@cornell.edu>, November 2016
 
-November 2016
-August 2021
+Modifications for genotype plate loading, Lukas Mueller <lam87@cornell.edu>, August 2021
 
 =cut
 
@@ -186,6 +256,11 @@ foreach my $plot_name (@trial_rows) {
 	$plot_number = $spreadsheet->value_at($plot_name, "Intertek plate/well ID");
 	$trial_name = $spreadsheet->value_at($plot_name, "Plate ID");
         $operator = $spreadsheet->value_at($plot_name, "Breeder ID");
+
+	if (! $accession) {
+	    print STDERR "Ignoring entry for plot_number $plot_number as accession is empty - presumably a check?\n";
+	    next;
+	} # some plates have empty wells - ignore
 	
 	if ($plot_number =~ m/^([A-Ha-h])(\d+)$/) {
 	    $row_number = $1;
