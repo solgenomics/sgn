@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadImages', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
 
 <div class="modal fade" id="upload_images_dialog" name="upload_images_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadImagesDialog">
   <div class="modal-dialog" role="document">
@@ -32,32 +32,26 @@
                         </select>
                     </div>
                 </div>
-                <div id="upload_images_div">
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">Images (.zip): </label>
-                        <div class="col-sm-9" >
-                            <input type="file" id="upload_simple_images_file_input" name="upload_simple_images_file_input" encoding="multipart/form-data" />
-                        </div>
-                    </div>
-                </div>
                 <div id="upload_images_with_associated_phenotypes_div" style="display:none">
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Phenotype Spreadsheet: </label>
                         <div class="col-sm-9" >
-                            <input type="file" id="upload_images_file_input" name="upload_images_file_input" encoding="multipart/form-data" />
+                            <input type="file" id="upload_associated_phenotypes_file_input" name="upload_images_file_input" encoding="multipart/form-data" />
                         </div>
                     </div>
+                </div>
+                <div id="upload_images_div">
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Images (.zip): </label>
                         <div class="col-sm-9" >
-                            <input type="file" id="upload_images_associated_phenotypes_file_input" name="upload_images_associated_images_file_input" encoding="multipart/form-data" />
+                            <input type="file" id="upload_images_file_input" name="upload_simple_images_file_input" encoding="multipart/form-data" />
                         </div>
                     </div>
                 </div>
 
 
 
-                <div id="upload_images_verify_status"></div>
+                <div id="upload_images_status"></div>
                 </div>
             </form><br/>
 
@@ -134,11 +128,9 @@ jQuery(document).ready(function() {
     jQuery('#upload_images_file_format').change(function(){
         if (jQuery(this).val() == 'images_with_associated_phenotypes') {
             jQuery('#upload_images_with_associated_phenotypes_div').show();
-            jQuery('#upload_images_div').hide();
         }
         else {
             jQuery('#upload_images_with_associated_phenotypes_div').hide();
-            jQuery('#upload_images_div').show();
         }
     });
 
