@@ -511,6 +511,7 @@ sub format_date {
 	if ($str_date) {
 		my  $formatted_time = Time::Piece->strptime($str_date, '%Y-%B-%d');
 		$date =  $formatted_time->strftime("%Y-%m-%d");
+		$date .= "T00:00:00Z"; #Provitional addition to make Fieldbook work. Until Fielbook is compatible with more date formats
 	}
 
 	return $date;
