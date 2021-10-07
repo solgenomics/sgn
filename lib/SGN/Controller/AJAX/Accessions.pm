@@ -609,11 +609,11 @@ sub debug {
     my $message = shift;
 
     my $encoding = find_encoding($message);
-    open(my $F, ">> :encoding(UTF-8)", "/tmp/error_log.txt") || die "Can't open error_log.txt";
+#    open(my $F, ">> :encoding(UTF-8)", "/tmp/error_log.txt") || die "Can't open error_log.txt";
 
-    print $F "### Request from ".$c->req->referer()."\n";
-    print $F "### ENCODING: $encoding\n$message\n==========\n";
-    close($F);
+#    print $F "### Request from ".$c->req->referer()."\n";
+#    print $F "### ENCODING: $encoding\n$message\n==========\n";
+#    close($F);
 }
 
 1;
