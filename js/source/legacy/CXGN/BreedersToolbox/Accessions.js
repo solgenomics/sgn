@@ -322,7 +322,7 @@ jQuery(document).ready(function ($) {
 
 	    verify_species_name().then(
 		function(r) {
-		    if (r.error) { alert(r.error); }
+		    if (r.error) { alert('Please correct the species name and try again.'); }
 		    else {
 			for(var i=0; i<accessionsToAdd.length; i++){
 			    infoToAdd.push({
@@ -556,6 +556,8 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
             jQuery('#review_fuzzy_matches_dialog').modal('show');
         } else {
             jQuery('#review_fuzzy_matches_dialog').modal('hide');
+	    alert(JSON.stringify(verifyResponse.absent));
+	    alert(JSON.stringify(infoToAdd));
             if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
                 populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
             } else {
