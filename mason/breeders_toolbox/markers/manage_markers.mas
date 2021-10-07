@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/breeders_toolbox/markers/manage_markers.mas - a mason component to display marker set info, add new marker sets and add filtering parameters in marker sets
+/breeders_toolbox/markers/manage_markers.mas - a mason component to display markerset info, add new markersets and add filtering parameters in markersets
 
 =head1 AUTHOR
 
@@ -14,11 +14,11 @@ Titima Tantikanjana <tt15@cornell.edu>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables','CXGN.BreedersToolbox.MarkerSet'] &>
 
-<& /page/page_title.mas, title=>'Manage Marker Sets' &>
+<& /page/page_title.mas, title=>'Manage Markersets' &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Your Marker Sets</h4>", info_section_subtitle => 'View your marker set info', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_markerset_button">Add New Marker Set</button><button class="btn btn-sm btn-primary" style="margin:3px" id="add_marker_dosage_button">Add Markers to Marker Set</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "marker_set_summary_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Your Markersets</h4>", info_section_subtitle => 'View your markerset info', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_markerset_button">Add New Markerset</button><button class="btn btn-sm btn-primary" style="margin:3px" id="add_marker_dosage_button">Add Markers to Markerset</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "marker_set_summary_section" &>
 
-<& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-search", title => "Using marker set to search for accessions with specific genotype.", button_id => "accession_search_link" &>
+<& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-search", title => "Using markerset to search for accessions with specific genotype.", button_id => "accession_search_link" &>
 
 
 <div class="modal fade" id="add_markerset_dialog" name="add_markerset_dialog" tabindex="-1" role="dialog" aria-labelledby="addMarkerSetDialog">
@@ -26,7 +26,7 @@ Titima Tantikanjana <tt15@cornell.edu>
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addMarkerSetDialog">Add New Marker Set</h4>
+                <h4 class="modal-title" id="addMarkerSetDialog">Add New Markerset</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -38,10 +38,10 @@ Titima Tantikanjana <tt15@cornell.edu>
                                 <div class="col-sm-11">
                                     <div class="form-horizontal">
                                         <div class="form-group">
-                                            <label class="control-label col-sm-4">Marker Set Name:</label>
+                                            <label class="control-label col-sm-4">Markerset Name:</label>
                                                 <div class="col-sm-8" >
                                                     <div class="input-group">
-                                                        <input type="text" class="form-control" id="new_marker_set" placeholder="Enter marker set name">
+                                                        <input type="text" class="form-control" id="new_marker_set" placeholder="Enter markerset name">
                                                     </div>
                                                 </div>
                                         </div>
@@ -83,7 +83,7 @@ Titima Tantikanjana <tt15@cornell.edu>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="save_marker_set" id="save_marker_set">Add Marker Set</button>
+                <button type="button" class="btn btn-primary" name="save_marker_set" id="save_marker_set">Add Markerset</button>
             </div>
         </div>
     </div>
@@ -94,7 +94,7 @@ Titima Tantikanjana <tt15@cornell.edu>
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addMarkerDosageDialog">Add Markers to Marker Set</h4>
+                <h4 class="modal-title" id="addMarkerDosageDialog">Add Markers to Markerset</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -106,7 +106,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                                 <div class="col-sm-11">
                                     <div class="form-horizontal">
                                         <div class="form-group">
-                                            <label class="control-label col-sm-4">Marker Set Name:</label>
+                                            <label class="control-label col-sm-4">Markerset Name:</label>
                                                 <div class="col-sm-8">
                                                     <div class="input-group">
                                                         <select class="form-control" id="selected_marker_set1">
@@ -176,7 +176,7 @@ Titima Tantikanjana <tt15@cornell.edu>
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addVcfParametersDialog">Add VCF Parameters in Marker Set</h4>
+                <h4 class="modal-title" id="addVcfParametersDialog">Add VCF Parameters in Markerset</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -188,7 +188,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                                 <div class="col-sm-11">
                                     <div class="form-horizontal">
                                         <div class="form-group">
-                                            <label class="control-label col-sm-4">Marker Set Name:</label>
+                                            <label class="control-label col-sm-4">Markerset Name:</label>
                                                 <div class="col-sm-8">
                                                     <div class="input-group">
                                                         <select class="form-control" id="selected_marker_set2">
@@ -288,7 +288,7 @@ Titima Tantikanjana <tt15@cornell.edu>
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="markersetDetailDialog">Marker set detail</h4>
+                <h4 class="modal-title" id="markersetDetailDialog">Markerset detail</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
