@@ -1,0 +1,182 @@
+<%args>
+
+</%args>
+
+<style>
+body {
+  padding: 10px;
+}
+.radar-chart .area {
+  fill-opacity: 0.7;
+}
+.radar-chart.focus .area {
+  fill-opacity: 0.3;
+}
+.radar-chart.focus .area.focused {
+  fill-opacity: 0.5;
+}
+</style>
+
+<script type="text/javascript" src="http://d3js.org/d3.v3.js"></script>
+<script src="https://rawgit.com/tpreusse/radar-chart-d3/master/src/radar-chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<& /page/page_title.mas, title => "Radar Graph" &>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+
+<div id="dataset_select_div">[loading...]</div>
+
+//<button class="btn" id="add_to_graph">Add</button>
+//<button class="btn" id="clear_graph_ids">Clear</button>
+//<button class="btn" id="load_data">Load</button>
+
+<br></br>
+
+<div id="current_selected_traits"></div>
+
+<canvas id="radar_chart" width="400" height="400"></canvas>
+
+
+<script>
+var ctx = document.getElementById('radar_chart').getContext('2d');
+const test_data = {
+    labels: [
+        'trait1',
+        'trait2',
+        'trait3',
+        'trait4',
+        'trait5',
+        'trait6',
+        'trait7'
+    ],
+    datasets: [{
+        label: 'My First Dataset',
+        data: [65, 59, 90, 81, 56, 55, 40],
+        fill: true,
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgb(255, 99, 132)',
+        pointHoverRadius: 15,
+        pointBackgroundColor: 'rgb(255, 99, 132)',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: 'rgb(255, 99, 132)'
+    }, {
+        label: 'My Second Dataset',
+        data: [28, 48, 40, 19, 96, 27, 100],
+        fill: true,
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgb(54, 162, 235)',
+        pointHoverRadius: 15,
+        pointBackgroundColor: 'rgb(54, 162, 235)',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: 'rgb(54, 162, 235)'
+    }]
+};
+
+var radar_chart = new Chart(ctx, {
+    type: 'radar',
+    data: test_data,
+    options: {
+        elements: {
+            line: {
+                borderWidth: 3,
+            },
+            point: {
+                pointRadius: 10,
+            },
+        },
+        scales: {
+            r: {
+                pointLabels: {
+                    font: {
+                        family: 'sans-serif',
+                        size: 20,
+                    },
+                    color: 'black'
+                },
+                ticks: {
+                    color: 'black',
+                    font: {
+                        family: 'sans-serif',
+                        size: 15
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: true,
+            }
+        }
+
+    },
+});
+
+var dataset_ids = [];
+jQuery(window).ready(function () {
+    //get_select_box('traits', 'trait_selector_div', { 'name': 'radargraph_traits', 'id': 'cvterm_ids', 'empty': 1 });
+    get_select_box("datasets", "dataset_select_div", { "checkbox_name": "dataset_select_checkbox" });
+});
+
+//jQuery('#add_to_graph').click(function () {
+//    var cvterm_id = jQuery('#radargraph_traits').val();
+//    trait_ids.push(cvterm_id);
+//    document.getElementById("current_selected_traits").innerHTML += trait_ids[trait_ids.length - 1] + " ,   ";
+//})
+
+//jQuery('#clear_graph_ids').click(function () {
+//    trait_ids = [];
+//    document.getElementById("current_selected_traits").innerHTML = "";
+//})
+
+jQuery('#load_data').click(function () {
+    var dataset_ids = get_dataset_id();
+    for (var i = 0; i < dataset_ids.length; i++) {
+        jQuery.ajax({
+            url: '/ajax/radargraph?dataset_id' + dataset_ids[i],
+            success: function (r) {
+                alert(r.data);
+            }
+        })
+    }
+    /*
+    jQuery.ajax({
+        //url: '/ajax/radargraph?cvterm_id=' + trait_ids[i] + '&stock_id=65043',
+        url: '/ajax/radargraph?dataset_id='+0,
+        success: function (r) {
+            //alert(typeof r.data);
+            var data = [];
+            data[i]=r.data;
+            //data[0] = {"axis" : r.data[1], "value" : r.data[4]};
+            //alert(data[0]);
+            //RadarChart.draw(".chart-container", data);
+            alert(data);
+        },
+
+        error: function (e) {
+            alert("....");
+        }
+    })
+*/
+
+})
+
+function get_dataset_id() {
+    var selected_ids = [];
+    jQuery('input[name="dataset_select_checkbox"]:checked').each(function () {
+        selected_ids.push(jQuery(this).val());
+    });
+    if (selected_ids.length < 1) {
+        alert('Please select at least one dataset!');
+        return false;
+    }
+    return selected_ids;
+}
+
+function random_color_generator() {
+    var randomColor = Math.floor(Math.random()*16777215).toString(16);
+    return randomColor;
+}
+
+</script>
