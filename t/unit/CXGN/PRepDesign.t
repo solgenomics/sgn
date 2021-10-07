@@ -48,6 +48,7 @@ is_deeply($trial_design->get_stock_list(),\@stock_list, "Get stock names for tri
 ok($trial_design->set_design_type("p-rep"), "Set design type to p-rep");
 
 
+
  SKIP: {
 
      print STDERR "SKIPPING...\n";
