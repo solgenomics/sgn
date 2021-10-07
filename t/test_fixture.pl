@@ -28,6 +28,7 @@ my $dumpupdatedfixture;
 my $noparallel = 0;
 my $list_config = "";
 my $logfile = "logfile.$$.txt";
+my $print_environment;
 # relative to `sgn/ (or parent of wherever this script is located)
 my $fixture_path = 't/data/fixture/cxgn_fixture.sql';
 
