@@ -337,7 +337,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
     my $plugin = "";
     if ($format eq "xls") {
-        $plugin = "TrialPhenotypeExcel";
+        $plugin = "TrialPhenotypeExcelEntryNumbers";
     }
     if ($format eq "csv") {
         $plugin = "TrialPhenotypeCSV";
