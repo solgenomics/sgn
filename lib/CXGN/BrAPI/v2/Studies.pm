@@ -502,7 +502,9 @@ sub update {
 	my $result = @$data_out[0];
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+
 	return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies result constructed');
+
 }
 
 sub _search {
