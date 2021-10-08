@@ -68,8 +68,10 @@ jQuery(document).ready(function (){
                 markersetType = response.type;
                 if (markersetType == "Dosage") {
                     jQuery("#markerset_dosage_section").show();
+                    jQuery("#markerset_snp_section").hide();
                 } else if (markersetType == "SNP") {
                     jQuery("#markerset_snp_section").show();
+                    jQuery("#markerset_dosage_section").hide();
                 } else {
                     jQuery("#markerset_dosage_section").hide();
                     jQuery("#markerset_snp_section").hide();
