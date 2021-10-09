@@ -221,6 +221,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xls";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
+    my $entry_numbers_option = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
     my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
     my $trait_list = $c->req->param("trait_list");
@@ -337,10 +338,10 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
     my $plugin = "";
     if ($format eq "xls") {
-        $plugin = "TrialPhenotypeExcelEntryNumbers";
+        $plugin = $entry_numbers_option ? "TrialPhenotypeExcelEntryNumbers" : "TrialPhenotypeExcel";
     }
     if ($format eq "csv") {
-        $plugin = "TrialPhenotypeCSV";
+        $plugin = $entry_numbers_option ? "TrialPhenotypeCSVEntryNumbers" : "TrialPhenotypeCSV";
     }
 
     my $temp_file_name;
