@@ -13,6 +13,7 @@ use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::TimeUtils;
 use JSON;
 
 extends 'CXGN::BrAPI::v2::Common';
@@ -501,19 +502,9 @@ sub update {
 	my $result = @$data_out[0];
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+
 	return CXGN::BrAPI::JSONResponse->return_success($result, $pagination, \@data_files, $status, 'Studies result constructed');
-}
 
-sub format_date {
-
-	my $str_date = shift;
-	my $date;
-	if ($str_date) {
-		my  $formatted_time = Time::Piece->strptime($str_date, '%Y-%B-%d');
-		$date =  $formatted_time->strftime("%Y-%m-%d");
-	}
-
-	return $date;
 }
 
 sub _search {
@@ -586,12 +577,12 @@ sub _search {
 
 		my $planting_date;
 		if ($_->{project_planting_date}) {
-			$planting_date = format_date($_->{project_planting_date});
+			$planting_date = CXGN::TimeUtils::date_to_iso_timestamp($_->{project_planting_date});
 			if($planting_date eq "") { $planting_date = undef; }
 		}
 		my $harvest_date;
 		if ($_->{project_harvest_date}) {
-			$harvest_date = format_date($_->{project_harvest_date});
+			$harvest_date = CXGN::TimeUtils::date_to_iso_timestamp($_->{project_harvest_date});
 			if($harvest_date eq "") { $harvest_date = undef;}
 		}
 

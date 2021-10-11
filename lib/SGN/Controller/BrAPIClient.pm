@@ -7,7 +7,7 @@ use JSON;
 
 BEGIN { extends 'Catalyst::Controller' };
 
-sub authorize_client :Path('/brapi/authorize') QueryParam('return_url') { #breedbase.org/brapi/authorize?success_url=fieldbook://&display_name=Field%20Book
+sub authorize_client :Path('/brapi/authorize') QueryParam('redirect_uri') { #breedbase.org/brapi/authorize?success_url=fieldbook://&client_id=Field%20Book
     my $self = shift;
     my $c = shift;
         
@@ -15,35 +15,35 @@ sub authorize_client :Path('/brapi/authorize') QueryParam('return_url') { #breed
     
 	my %authorized_clients = %$authorized_clients;
 	
-    my $return_url = $c->request->param( 'return_url' );
+    my $redirect_uri = $c->request->param( 'redirect_uri' );
 	my @keys = keys %authorized_clients;
-	my $display_name = undef;
+	my $client_id = undef;
 
 	while(my($k, $v) = each %authorized_clients) {
-        if ($return_url =~ m/^$k/) {
-            $display_name = $v;
+        if ($redirect_uri =~ m/^$k/) {
+            $client_id = $v;
             last;
         }
     }
 
-    if (defined $display_name) {
+    if (defined $client_id) {
         if (!$c->user()) {  # redirect to login page
-            $c->res->redirect( uri( path => '/user/login', query => { goto_url => "/brapi/authorize?return_url=$return_url" } ) );
+            $c->res->redirect( uri( path => '/user/login', query => { goto_url => "/brapi/authorize?redirect_uri=$redirect_uri" } ) );
             return;
         } else {
             my $user_name = $c->user()->get_object()->get_username();
-            my $token = CXGN::Login->new($c->dbc->dbh)->get_login_cookie();
-            my $authorize_url = $return_url . ( (index($return_url, '?') != -1)?"&status=200&token=":"?status=200&token=") . $token;
-            my $deny_url = $return_url . "?status=401";
+            my $access_token = CXGN::Login->new($c->dbc->dbh)->get_login_cookie();
+            my $authorize_url = $redirect_uri . ( (index($redirect_uri, '?') != -1)?"&status=200&access_token=":"?status=200&access_token=") . $access_token;
+            my $deny_url = $redirect_uri . "?status=401";
             $c->stash->{authorize_url} = $authorize_url;
             $c->stash->{deny_url} = $deny_url;
             $c->stash->{user_name} = $user_name;
-            $c->stash->{display_name} = $display_name;
+            $c->stash->{client_id} = $client_id;
             $c->stash->{database_name} = $c->config->{project_name};
             $c->stash->{template} = '/brapi/authorize.mas';
         }
     } else {
-        $c->throw_404("No authorized client found with return url $return_url. If you are an app developer please contact the BreedBase development team to become an authorized client.");
+        $c->throw_404("No authorized client found with return url $redirect_uri. If you are an app developer please contact the BreedBase development team to become an authorized client.");
     }
 
 }
