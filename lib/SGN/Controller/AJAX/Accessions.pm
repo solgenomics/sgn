@@ -585,6 +585,7 @@ sub _parse_list_from_json {
   if ($list_json) {
       #my $decoded_list = $json->allow_nonref->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
       debug($c, "LIST_JSON is utf8? ".utf8::is_utf8($list_json)." valid utf8? ".utf8::valid($list_json)."\n");
+      print STDERR "JSON NOW: $list_json\n";
       my $decoded_list = $json->decode($list_json);# _json(encode("UTF-8", $list_json));
      #my $decoded_list = decode_json($list_json);
       
@@ -608,12 +609,12 @@ sub debug {
     my $c = shift;
     my $message = shift;
 
-    my $encoding = find_encoding($message);
-    open(my $F, ">> :encoding(UTF-8)", "/tmp/error_log.txt") || die "Can't open error_log.txt";
+    # my $encoding = find_encoding($message);
+#     open(my $F, ">> :encoding(UTF-8)", "/tmp/error_log.txt") || die "Can't open error_log.txt";
 
-    print $F "### Request from ".$c->req->referer()."\n";
-    print $F "### ENCODING: $encoding\n$message\n==========\n";
-    close($F);
-}
+#     print $F "### Request from ".$c->req->referer()."\n";
+#     print $F "### ENCODING: $encoding\n$message\n==========\n";
+#     close($F);
+ }
 
 1;

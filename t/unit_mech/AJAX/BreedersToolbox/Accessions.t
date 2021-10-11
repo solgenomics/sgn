@@ -36,6 +36,7 @@ is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 
 $mech->post_ok('http://localhost:3010/ajax/accession_list/verify', [ "accession_list"=> '["new_accession1", "test_accession1", "test_accessionx", "test_accessiony", "test_accessionД"]', "do_fuzzy_search"=> "true" ]);
+print STDERR "CONTENTS: ".$mech->content;
 $response = decode_json $mech->content;
 print STDERR Dumper $response->{'fuzzy'};
 print STDERR Dumper $response->{'found'};
@@ -80,7 +81,7 @@ $mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ 'full_info'=>$
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response, {'added' => [[41782,'new_accession1'],[41787,'test_accessionД']],'success' => '1'});
+is_deeply($response, {'added' => [[41782,'new_accession1'],[41784,'test_accessionД']],'success' => '1'});
 
 #Remove added synonym so tests downstream do not fail.
 my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession1'})->stock_id();
