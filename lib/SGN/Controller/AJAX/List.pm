@@ -740,6 +740,24 @@ sub transform :Path('/list/transform/') Args(2) {
 
 }
 
+sub array_transform :Path('/list/array/transform') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $array = $c->req->param("array") ? decode_json $c->req->param("array") : [];
+    my $transform_name = $c->req->param("type");
+
+    my $t = CXGN::List::Transform->new();
+
+    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema"), $transform_name, $array);
+
+    if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
+       $result->{error}  =  "Warning. This array contains elements that cannot be converted.";
+    }
+
+    $c->stash->{rest} = $result;
+
+}
+
 sub replace_elements :Path('/list/item/replace') Args(2) {
     my $self = shift;
     my $c = shift;
@@ -1035,7 +1053,7 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
     my $self = shift;
     my $c = shift;
     my $list_id = $c->req->param("list_id");
-    
+
     my $user_id = $self->get_user($c);
     if (!$user_id) {
         $c->stash->{rest} = { error => "You must be logged in to use lists.", };
@@ -1057,9 +1075,9 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
     my $elements = $list->elements();
 
     print STDERR "Elements: ".Dumper($elements);
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-	
+
     my $data = $lt->transform($schema, 'accessions_2_accession_case', $elements);
 
     print STDERR "Converted data: ".Dumper($data);
@@ -1070,7 +1088,7 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
     }
     my $error_message = "";
     my $replace_count = 0;
-   
+
     foreach my $item (@$elements) {
 	print STDERR "Replacing element $item...\n";
 	if ($data->{mapping}->{$item}) {
@@ -1093,7 +1111,7 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
 	duplicated => $data->{duplicated} || [],
 	mapping => $data->{mapping},
     }
-	
+
 }
 
 sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
@@ -1101,7 +1119,7 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
     my $c = shift;
 
     my $list_id = $c->req->param("list_id");
-    
+
     my $user_id = $self->get_user($c);
     if (!$user_id) {
         $c->stash->{rest} = { error => "You must be logged in to use lists.", };
@@ -1122,22 +1140,22 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
     my $lt = CXGN::List::Transform->new();
     my $elements = $list->elements();
     print STDERR "Elements: ".Dumper($elements);
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-	
+
     my $data = $lt->transform($schema, 'synonyms2accession_uniquename', $elements);
 
     print STDERR "Converted data: ".Dumper($data);
 
     print STDERR Dumper($data);
-    
+
     if (! $data) {
 	$c->stash->{rest} = { error => "No data!" };
 	return;
     }
     my $error_message = "";
     my $replace_count = 0;
-   
+
     foreach my $item (@$elements) {
 	print STDERR "Replacing element $item...\n";
 	if ($data->{mapping}->{$item}) {
@@ -1161,7 +1179,7 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
 	mapping => $data->{mapping},
     }
 
-    
+
 
 
 }
