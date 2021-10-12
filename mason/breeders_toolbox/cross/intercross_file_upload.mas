@@ -24,7 +24,7 @@
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Select Cross Unique ID Format: </label>
                             <div class="col-sm-8">
-                                <select class="form-control" id="cross_id_format_option">
+                                <select class="form-control" id="cross_id_format_option" name="cross_id_format_option">
                                     <option value="">Select your cross unique id format for intercross file</option>
                                     <option value="customized_id">Use your cross unique ID previously stored in the database</option>
                                     <option value="auto_generated_id">Use auto-generated cross unique ID</option>

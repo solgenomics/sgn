@@ -1627,6 +1627,7 @@ sub upload_intercross_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
+    my $cross_id_format = $c->req->param('cross_id_format_option');
     my $upload = $c->req->upload('intercross_file');
     my $parser;
     my $parsed_data;
