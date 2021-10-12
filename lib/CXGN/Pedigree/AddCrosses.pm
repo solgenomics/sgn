@@ -146,6 +146,8 @@ sub add_crosses {
 		my $project_location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project location', 'project_property')->cvterm_id();
 		my $geolocation_rs = $chado_schema->resultset("Project::Projectprop")->find({project_id => $crossing_trial_id, type_id => $project_location_cvterm_id});
 
+        my $cross_identifier_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_identifier', 'stock_property');
+
         @crosses = @{$self->get_crosses()};
         foreach my $pedigree (@crosses) {
             my $experiment;
@@ -325,6 +327,29 @@ sub add_crosses {
                 project_id => $self->get_crossing_trial_id,
             });
 
+            my $identifier_female_id;
+            my $identifier_male_id;
+            if ($female_plant){
+                $identifier_female_id = $female_plant->stock_id();
+            } elsif ($female_plot){
+                $identifier_female_id = $female_plot->stock_id();
+            } else {
+                $identifier_female_id = $female_parent->stock_id();
+            }
+
+            if ($male_plant){
+                $identifier_male_id = $male_plant->stock_id();
+            } elsif ($male_plot){
+                $identifier_male_id = $male_plot->stock_id();
+            } elsif ($male_parent) {
+                $identifier_male_id = $male_parent->stock_id();
+            } else {
+                $identifier_male_id = 'NA'
+            }
+
+            my $cross_identifier = $crossing_trial_id.'_'.$identifier_female_id.'_'.$identifier_male_id;
+            $cross_stock->create_stockprops({$cross_identifier_cvterm->name() => $cross_identifier});
+            print STDERR "CROSS IDENTIFIER =".Dumper($cross_identifier)."\n";
         }
 
     };
