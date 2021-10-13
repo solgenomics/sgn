@@ -1993,12 +1993,20 @@ sub get_cached_file_VCF_compute_from_parents {
                 if ($counter == 0) {
                     $genotype_string .= "#CHROM\t";
                     foreach my $m (@all_marker_objects) {
-                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom} . "\t";
+			my $chrom = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom};
+			if (! $chrom) {
+			    ($chrom) = split /\_/, $m->{name};
+			}
+                        $genotype_string .=  $chrom . "\t";
                     }
                     $genotype_string .= "\n";
                     $genotype_string .= "POS\t";
                     foreach my $m (@all_marker_objects) {
-                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos} . "\t";
+			my $pos = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos};
+			if (! $pos) {
+			    (undef, $pos) = split /\_/, $m->{name};
+			}
+                        $genotype_string .= $pos . "\t";
                     }
                     $genotype_string .= "\n";
                     $genotype_string .= "ID\t";

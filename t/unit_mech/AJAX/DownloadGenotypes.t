@@ -14,7 +14,7 @@ $mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accessi
 my $response = $mech->content;
 
 $response  =~ s/^.*Synonyms/Synonyms/s;
-print STDERR Dumper $response;
+print STDERR "CURRENTLY IN DATABASE: ".Dumper $response;
 
 my $expected_response = 'Synonyms of accessions: 
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	UG120180
