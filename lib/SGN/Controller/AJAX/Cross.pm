@@ -1647,6 +1647,7 @@ sub upload_intercross_file_POST : Args(0) {
     my $user_name;
     my $owner_name;
     my $session_id = $c->req->param("sgn_session_id");
+    my @error_messages;
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -1737,7 +1738,6 @@ sub upload_intercross_file_POST : Args(0) {
         } else {
             @new_cross_identifiers = @intercross_identifier_list;
 #            print STDERR "NEW CROSS IDENTIFIER_2 =".Dumper(\@new_cross_identifiers)."\n";
-
         }
 
         my @new_crosses;
@@ -1747,9 +1747,11 @@ sub upload_intercross_file_POST : Args(0) {
                 foreach my $new_identifier (@new_cross_identifiers) {
                     my $intercross_female_parent = $crosses_hash{$new_identifier}{'intercross_female_parent'};
                     my $intercross_male_parent = $crosses_hash{$new_identifier}{'intercross_male_parent'};
-                    push @error_messages, "Cross between $intercross_female_parent and $intercross_male_parent has no associated cross unique ID";
+                    push @error_messages, "Cross between $intercross_female_parent and $intercross_male_parent has no associated cross unique ID in crossing experiment: $crossing_experiment_name";
                 }
-                $c->stash->{rest} = {error_string => \@error_messages};
+
+                my $formatted_error_messages = join("<br>", @error_messages);
+                $c->stash->{rest} = {error_string => $formatted_error_messages};
                 return;
             } elsif ($cross_id_format eq 'auto_generated_id') {
                 my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
