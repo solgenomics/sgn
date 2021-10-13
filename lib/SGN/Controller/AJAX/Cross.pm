@@ -1733,12 +1733,11 @@ sub upload_intercross_file_POST : Args(0) {
                 if (none {$_ eq $intercross_identifier} @existing_identifier_list) {
                     push @new_cross_identifiers, $intercross_identifier;
                 }
-#                print STDERR "NEW CROSS IDENTIFIER_1 =".Dumper(\@new_cross_identifiers)."\n";
             }
         } else {
             @new_cross_identifiers = @intercross_identifier_list;
-#            print STDERR "NEW CROSS IDENTIFIER_2 =".Dumper(\@new_cross_identifiers)."\n";
         }
+        print STDERR "NEW CROSS IDENTIFIER ARRAY =".Dumper(\@new_cross_identifiers)."\n";
 
         my @new_crosses;
         my %new_stockprop;
@@ -1870,17 +1869,6 @@ sub upload_intercross_file_POST : Args(0) {
                 if (!$cross_add->add_crosses()){
                     $c->stash->{rest} = {error_string => "Error adding crosses",};
                     return;
-                }
-
-                my $cross_identifier_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_identifier', 'stock_property');
-                my $cross_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
-
-                foreach my $new_cross_id (keys %new_stockprop) {
-                    my $cross_rs = $schema->resultset("Stock::Stock")->search({uniquename=> $new_cross_id, type_id => $cross_cvterm_id });
-                    if ($cross_rs->count()== 1) {
-        	            my $cross_stock =  $cross_rs->first();
-                        $cross_stock->create_stockprops({$cross_identifier_cvterm->name() => $new_stockprop{$new_cross_id}});
-                    }
                 }
             }
         }
