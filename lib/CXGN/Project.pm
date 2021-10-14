@@ -1875,6 +1875,30 @@ sub set_additional_info {
     $self->_set_projectprop('project_additional_info', encode_json($value));
 }
 
+=head2 accessors get_entry_numbers(), set_entry_numbers()
+
+ Usage: For field trials, this records a map of stock ids to entry numbers
+ Desc: The value of this projectprop is stored as a JSON object, where the 
+ key is the stock id and the value is the stock entry number
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_entry_numbers {
+    my $self = shift;
+    my $value = $self->_get_projectprop('project_entry_number_map');
+    return $value ? decode_json($value) : undef;
+}
+
+sub set_entry_numbers {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('project_entry_number_map', encode_json($value));
+}
+
 sub _get_projectprop {
     my $self = shift;
     my $term = shift;

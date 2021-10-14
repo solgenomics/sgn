@@ -76,6 +76,16 @@ $dialog_name => undef
             </div>
 
             <div class="form-group">
+                <label class="col-sm-3 control-label">Include Entry Numbers: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_trial_phenotypes_entry_numbers_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label class="col-sm-3 control-label">Suppress User Defined Phenotype Outliers: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_phenotypes_exclude_outliers">
@@ -142,6 +152,7 @@ jQuery(document).ready(function() {
     var speed = jQuery("#download_trial_phenotypes_speed").val();
     var format = jQuery("#download_trial_phenotypes_format").val();
     var timestamp = jQuery("#download_trial_phenotypes_timestamp_option").val();
+    var entry_numbers = jQuery("#download_trial_phenotypes_entry_numbers_option").val();
     var trait_contains = jQuery("#download_trial_phenotype_trait_contains").val();
     var trait_contains_array = trait_contains.split(",");
     var traits = jQuery("#download_trial_phenotypes_traits_select").val();
@@ -151,7 +162,7 @@ jQuery(document).ready(function() {
     var phenotype_max_value = jQuery("#download_trial_phenotype_phenotype_max").val();
     var exclude_phenotype_outlier = jQuery("#download_trial_phenotypes_exclude_outliers").val();
 
-    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&speed="+speed+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_component_list="+JSON.stringify(trait_components)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier);
+    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&speed="+speed+"&format="+format+"&timestamp="+timestamp+"&entry_numbers="+entry_numbers+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_component_list="+JSON.stringify(trait_components)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier);
 
   });
 
