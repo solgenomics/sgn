@@ -43,7 +43,7 @@ jobs:
         id: get-latest-tag
 
       - name: Get breedbase_dockerfile
-        uses: actions/checkout@master
+        uses: actions/checkout@test-cpan-force
         with:
           repository: Breeding-Insight/breedbase_dockerfile
           path: breedbase_dockerfile
