@@ -161,7 +161,6 @@ sub add_crosses {
             my $cross_type = $pedigree->get_cross_type();
             my $cross_name = $pedigree->get_name();
 			my $cross_combination = $pedigree->get_cross_combination();
-            my $crossing_trial_id;
             my $female_plot_name;
             my $male_plot_name;
             my $female_plot;
