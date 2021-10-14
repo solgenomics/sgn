@@ -4,7 +4,6 @@ jQuery( document ).ready( function() {
     jQuery('#upload_images_submit_verify').click( function() {
         jQuery('#working_modal').modal("show");
         var imageFiles = document.getElementById('upload_images_file_input').files;
-        // console.log(JSON.stringify(imageFiles));
         if (imageFiles.length < 1) {
             alert("Please select image files");
         }
@@ -28,7 +27,7 @@ jQuery( document ).ready( function() {
                     for (var i = 0; i < response.missing.length; i++) {
                         message_text += "<li class='list-group-item list-group-item-danger'>";
                         message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
-                        message_text += response.missing[i];
+                        message_text += response.missing[i] + " is not a valid observationUnitName";
                         message_text += "</li>";
                     }
                 } else {
@@ -55,12 +54,6 @@ jQuery( document ).ready( function() {
         var imageFiles = document.getElementById('upload_images_file_input').files;
         var imageData = [];
         var errors = [];
-        // var progress_body = jQuery('#progress_modal').find('.modal-body');
-        // var currentImageDiv = document.createElement('div').setAttribute("id", "current_image");
-        // progress_body.append(currentImageDiv);
-        // var currentImageDisplay = document.getElementById('current_image');
-        // uploadInfo.currentImage = 0;
-        // uploadInfo.totalImages = imageFiles.length;
         jQuery('#progress_modal').modal('show');
         jQuery('#progress_msg').text('Preparing images for upload');
 
@@ -72,6 +65,7 @@ jQuery( document ).ready( function() {
         jQuery.ajax( {
             url: "/list/array/transform",
             method: 'GET',
+            beforeSend: jQuery('#progress_modal').modal('show'),
             data: {
                 "array": JSON.stringify(observationUnitNames),
                 "type": "stocks_2_stock_ids"
@@ -85,43 +79,60 @@ jQuery( document ).ready( function() {
             });
         }).then(function() {
             for (var i = 0; i < imageFiles.length; i++) {
+                console.log("Working on image number "+i);
                 var file = imageFiles[i];
+                var imageDbId;
                 var reader = new FileReader();
                 reader.onload = function(readerEvent) {
                     var listItem = document.createElement("li");
                     listItem.className = "list-group list-group-horizontal col-sm-3";
-                    // console.log("imageData is: "+JSON.stringify(imageData));
                     var imageDatum = imageData.shift();
-                    // console.log("imageDatum is: "+JSON.stringify(imageDatum));
-                    // var imageDatum2 = imageData.shift();
-                    // console.log("imageDatum2 is: "+JSON.stringify(imageDatum2));
                     var imageURL = readerEvent.target.result;
-                    // console.log("Image url is: "+imageURL);
                     imageDatum.imageURL = imageURL;
-                    console.log("imageDatum is: "+JSON.stringify(imageDatum));
                     listItem.innerHTML = "<img class='img-responsive' src='" + imageURL + "' />";
-                    jQuery('#current_task').html(listItem);
-
-                    jQuery('#progress_msg').text('Submitting image '+i+' out of '+imageFiles.length+' images');
-                    var progress = ((i + 1) / imageFiles.length) * 100;
-                    jQuery('#progress_bar').css("width", progress + "%")
-                    .attr("aria-valuenow", progress)
-                    .text(Math.round(progress) + "%");
+                    // jQuery('#current_task').html(listItem);
+                    // jQuery('#progress_msg').text('Submitting image '+i+' out of '+imageFiles.length+' images');
+                    // var progress = ((i + 1) / imageFiles.length) * 100;
+                    // jQuery('#progress_bar').css("width", progress + "%")
+                    // .attr("aria-valuenow", progress)
+                    // .text(Math.round(progress) + "%");
 
                     jQuery.ajax( {
                         url: "/brapi/v2/images",
                         method: 'POST',
-                        async: 'false',
+                        async: false,
                         headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
                         data: JSON.stringify([imageDatum]),
                         contentType: "application/json; charset=utf-8",
                     }).done(function(response){
-                        console.log("Success uploading image: "+imageDatum.imageFileName+" with details: "+JSON.stringify(response));
+                        imageDbId = response.result.data[0].imageDbId;
+
+                    }).then(function() {
+
+                        // PUT Image Content
+                        jQuery('#current_task').html(listItem);
+                        jQuery('#progress_msg').text('Submitting image '+i+' out of '+imageFiles.length+' images');
+                        var progress = ((i + 1) / (imageFiles.length + 1)) * 100;
+                        jQuery('#progress_bar').css("width", progress + "%")
+                        .attr("aria-valuenow", progress)
+                        .text(Math.round(progress) + "%");
+                        console.log("ImageDbId is "+imageDbId);
+                        jQuery.ajax( {
+                            url: "/brapi/v2/images/"+imageDbId+"/imagecontent",
+                            method: 'PUT',
+                            async: false,
+                            headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
+                            data: file,
+                            processData: false,
+                            contentType: file.type
+                        }).done(function(response){
+                            console.log("Success uploading image: "+imageDatum.imageFileName+" with details: "+JSON.stringify(response));
+                        }).fail(function(error){
+                            console.log("error: "+JSON.stringify(error));
+                            errors.push(error);
+                        });
                     }).fail(function(error){
-                        // uploadInfo.error = error;
-                        // sequentialImageSubmit(imageArray, uploadInfo);
                         console.log("error: "+JSON.stringify(error));
-                        // jQuery.Deferred().resolve().promise();
                         errors.push(error);
                     });
 
@@ -143,9 +154,8 @@ jQuery( document ).ready( function() {
 
             }
             jQuery('#upload_images_status').html(message_text);
-            jQuery('#progress_modal').modal('hide');
-
         });
+        jQuery('#progress_modal').modal('hide');
     });
 });
 
