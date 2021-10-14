@@ -47,7 +47,6 @@ jobs:
         with:
           repository: Breeding-Insight/breedbase_dockerfile
           path: breedbase_dockerfile
-          ref: test-cpan-force
 
       - name: Get the submodules
         working-directory: ./breedbase_dockerfile
