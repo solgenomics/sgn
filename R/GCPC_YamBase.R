@@ -15,8 +15,13 @@
 # 10. Format the information needed for output.
 
 
-
-
+#Get Arguments
+args = commandArgs(trailingOnly=TRUE)
+if (length(args)!=2) {
+  stop('Two Arguments are required.')
+}
+phenotype_file= args[1]
+genotype_file= args[2]
 
 
 ################################################################################
@@ -25,7 +30,7 @@
 
 library(sommer)
 library(AGHmatrix)
-Rcpp::sourceCpp("GPCP_polyploids.cpp") # this is called CalcCrossMean.cpp on Github
+Rcpp::sourceCpp("../QuantGenResources/CalcCrossMeans.cpp") # this is called CalcCrossMean.cpp on Github
 
 
 
@@ -39,14 +44,14 @@ Rcpp::sourceCpp("GPCP_polyploids.cpp") # this is called CalcCrossMean.cpp on Git
 # a. Define path with internal YamBase instructions such that the object 'userGeno'
 #    is defined as a VCF file of genotypes.
 
-userGeno <- path
+#userGeno <- path
 
 
 # b. Define path2 with internal YamBase instructions such that the object 'userPheno'
 #    is defined as the phenotype file.
 
-userPheno <- path2
-userPheno <- read.csv("2020_TDr_PHENO.csv", header = TRUE) #testing only
+#userPheno <- path2
+userPheno <- read.csv(phenotype_file, header = TRUE) #testing only
 userPheno <- userPheno[userPheno$Trial == "SCG", ] #testing only-- needs to replaced with 2-stage
 
 
@@ -118,9 +123,9 @@ userNCrosses <- 40
 
 
 # j. The user can input the individuals' sexes and indicate the column
-#    name of the userPheno object which corresponds to sex. The column name 
+#    name of the userPheno object which corresponds to sex. The column name
 #   string should be passed to the 'userSexes' object.
- 
+
 
 userSexes <- c()
 
@@ -129,12 +134,12 @@ userSexes <- c()
 # 3. Read in the genotype data and convert to numeric allele counts.
 ################################################################################
 
-# a. The VCF file object 'userGeno' needs to be converted to a numeric matrix 
+# a. The VCF file object 'userGeno' needs to be converted to a numeric matrix
 #    of allele counts in whic:
 #    Rownames represent the individual genotype IDs
 #    Colnames represent the site IDs
 #    A cell within a given row and column represents the row individual's
-#    genotype at the site in the column. 
+#    genotype at the site in the column.
 
 #   The individual's genotype should be an integer from 0... ploidy to represent
 #   counts of the alternate allele at the site. Diploid example:
@@ -155,8 +160,8 @@ userSexes <- c()
 
 #   TEST temporarily import the genotypes via HapMap:
 
-source("hapMap2numeric.R") # replace and delete
-G <- hapMap2numeric("rotundata_genotypic_IITA_VCF_sequenced_clones_2020_rmMono.hmp.txt") # replace and delete
+source("R/hapMap2numeric.R") # replace and delete
+G <- hapMap2numeric(genotype_file) # replace and delete
 
 
 
@@ -213,7 +218,7 @@ userPheno$f <- f[as.character(userPheno[ , userID])]
 
 # b. Scale the response variables.
 for(i in 1:length(userResponse)){
-  userPheno[ , userResponse[i]] <- (userPheno[ , userResponse[i]] - 
+  userPheno[ , userResponse[i]] <- (userPheno[ , userResponse[i]] -
                                       mean(userPheno[ , userResponse[i]], na.rm = TRUE))/
     sd(userPheno[ , userResponse[i]], na.rm = TRUE)
 }
@@ -238,8 +243,8 @@ userPheno[ , paste(userID, 2, sep = "")] <- userPheno[ , userID]
 userModels <- list()
 
 for(i in 1:length(userResponse)){
-  
-  
+
+
   # check if fixed effects besides f are requested, then paste together
   # response variable and fixed effects
   if(!is.na(userFixed[1])){
@@ -250,8 +255,8 @@ for(i in 1:length(userResponse)){
   if(is.na(userFixed[1])){
     fixedArg <- paste(userResponse[i], " ~ ", "f")
   }
-  
-  
+
+
   # check if random effects besides genotypic additive and dominance effects
   # are requested, then paste together the formula
   if(!is.na(userRandom[1])){
@@ -263,16 +268,16 @@ for(i in 1:length(userResponse)){
   if(is.na(userRandom[1])){
     randArg <- paste("~vs(", userID, ", Gu = A) + vs(", ID2, ", Gu = D)", sep = "")
   }
-  
-  
+
+
   # fit the mixed GBLUP model
   myMod <- mmer(fixed = as.formula(fixedArg),
                 random = as.formula(randArg),
                 rcov = ~units,
                 getPEV = FALSE,
                 data = userPheno)
-  
-  
+
+
   # save the fit model
   userModels[[i]] <- myMod
 }
@@ -307,7 +312,7 @@ userAddEff <- list() # save them in order
 userDomEff <- list() # save them in order
 
 for(i in 1:length(userModels)){
-  
+
   myMod <- userModels[[i]]
 
   # get the additive and dominance effects out of the sommer list
@@ -316,17 +321,17 @@ for(i in 1:length(userModels)){
   subModA <- subModA[[1]]
   subModD <- subMod[[2]]
   subModD <- subModD[[1]]
-  
+
   # backsolve
   addEff <- A.TTinv %*% matrix(subModA[colnames(A.TTinv)], ncol = 1) # these must be reordered to match A.TTinv
   domEff <- D.TTinv %*% matrix(subModD[colnames(D.TTinv)], ncol=1)   # these must be reordered to match D.TTinv
-  
+
   # add f coefficient back into the dominance effects
   subModf <- myMod$Beta
   fCoef <- subModf[subModf$Effect == "f", "Estimate"] # raw f coefficient
   fCoefScal <- fCoef / ncol(G) # divides f coefficient by number of markers
   dirDomEff <- domEff + fCoefScal
-  
+
   # save
   userAddEff[[i]] <- addEff
   userDomEff[[i]] <- dirDomEff
@@ -374,18 +379,16 @@ crossPlan <- calcCrossMean(G,
 # this is incomplete--
 # I need to add the feature for incompatible sexes/it will just be a couple lines
 
-crossPlan <- as.data.frame(crossPlan)
-crossPlan <- crossPlan[order(crossPlan[,3], decreasing = TRUE), ]
-crossPlan[ ,1] <- rownames(G.SCG)[crossPlan[ ,1]]
-crossPlan[ ,2] <- rownames(G.SCG)[crossPlan[ ,2]]
-colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
+#crossPlan <- as.data.frame(crossPlan)
+#crossPlan <- crossPlan[order(crossPlan[,3], decreasing = TRUE), ]
+#crossPlan[ ,1] <- rownames(G.SCG)[crossPlan[ ,1]]
+#crossPlan[ ,2] <- rownames(G.SCG)[crossPlan[ ,2]]
+#colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
 
 ###### look up the sexes in the userPheno object and match them into CrossPlan ######
 ###### remove incompatible sets #####
 
 # subset the number of crosses the user wishes to output
-crossPlan[1:userNCrosses, ] 
-
+crossPlan[1:userNCrosses, ]
+output_file= paste(phenotype_file, ".out", sep="")
 #write.csv(plan2, "IITA_Drotundata_GPCP_2021.csv")
-
-
