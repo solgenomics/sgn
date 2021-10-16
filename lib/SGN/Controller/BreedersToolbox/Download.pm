@@ -342,6 +342,9 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     if ($format eq "csv") {
         $plugin = "TrialPhenotypeCSV";
     }
+    if ($format eq "fieldbook_database") {
+	$plugin = "TrialFieldBookFormat";
+    }
 
     my $temp_file_name;
     my $dir = $c->tempfiles_subdir('download');

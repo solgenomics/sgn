@@ -18,6 +18,7 @@
                     <select class="form-control" id="download_trials_phenotypes_format">
                         <option value="csv">CSV</option>
                         <option value="xls">Excel (xls)</option>
+			<option value="fieldbook_database">Fieldbook Database format</option>
                     </select>
                 </div>
 	        </div>

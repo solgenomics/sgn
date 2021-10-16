@@ -352,7 +352,12 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if ( ($format eq "dartseqcsv") && ($what eq "layout")) {
         $plugin = "GenotypingTrialLayoutDartSeqCSV";
     }
+    if ( ($format eq "fieldbook_database") && ($what =~ /phenotype/) ) {
+	$plugin = "TrialFieldBookFormat";
+    }
 
+    print STDERR "USING PLUGIN : $plugin\n";
+    
     my $trial_name = $trial->get_name();
     my $trial_id = $trial->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');
