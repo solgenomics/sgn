@@ -75,6 +75,7 @@ sub search {
 		[['application/json'],['GET'], 'variables/{observationVariableDbId}',['2.0']],
 		[['application/json'],['POST'],'search/variables',['2.0']],
 		[['application/json'],['GET'], 'search/variables/{searchResultsDbId}',['2.0']],
+        [['application/json'],['GET'], 'events',['2.0']],
 		#genotyping
 		[['application/json'],['GET'], 'calls',['2.0']],
 		[['application/json'],['POST'],'search/calls',['2.0']],
@@ -163,7 +164,7 @@ sub search {
 			service=>$_->[2],
             versions=>$_->[3]
 		};
-		
+
 	}
 
 	my %result = (

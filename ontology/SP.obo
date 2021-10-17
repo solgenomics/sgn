@@ -4386,7 +4386,7 @@ creation_date: 2018-03-29T15:51:48Z
 [Term]
 id: SP:0000500
 name: Variables
-namespace: Solanaceae_variables
+is_a: SP:0001000 ! Solanaceae phenotype ontology
 
 [Term]
 id: SP:0000706
@@ -4409,6 +4409,36 @@ is_a: SP:0000141 ! partial sterility
 is_a: SP:0000142 ! full sterility
 
 [Term]
+id: SP:0000708
+name: fruit glucose/fructose ratio
+def: "total fruit glucose divided by total fruit fructose." [SGN:NM]
+is_a: SP:0000500 ! Variables
+relationship: attribute_of SP:0000167 ! fruit metabolites
+relationship: variable_of SP:0000711 ! derived biochemical metabolites traits
+
+[Term]
+id: SP:0000709
+name: fruit sugars/acids ratio
+def: "sum of fruit sugars (glucose+fructose) divided by the sum of fruit acids (malic + citric acid)." [SGN:NM]
+is_a: SP:0000500 ! Variables
+relationship: attribute_of SP:0000167 ! fruit metabolites
+relationship: variable_of SP:0000711 ! derived biochemical metabolites traits
+
+[Term]
+id: SP:0000710
+name: fruit citric acid/malic acid ratio
+def: "total fruit citric acid divided by total fruit malic acid." [SGN:NM]
+is_a: SP:0000500 ! Variables
+relationship: attribute_of SP:0000167 ! fruit metabolites
+relationship: variable_of SP:0000711 ! derived biochemical metabolites traits
+
+[Term]
+id: SP:0000711
+name: derived biochemical metabolites traits
+def: "metabolite traits calculated from the values of two or more other biochemmical metabolite traits." [SGN:NM]
+is_a: SP:0000019 ! biochemical metabolites
+
+[Term]
 id: SP:0001000
 name: Solanaceae phenotype ontology
 
@@ -4423,4 +4453,3 @@ name: part of
 [Typedef]
 id: variable_of
 name: variable_of
-
