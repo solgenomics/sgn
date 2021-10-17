@@ -81,7 +81,12 @@ $mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ 'full_info'=>$
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response, {'added' => [[41782,'new_accession1'],[41784,'test_accessionД']],'success' => '1'});
+my $acc1 = 'new_accession1';
+my $acc2 = 'test_accessionД';
+my $check1row = $schema->resultset('Stock::Stock')->find({ uniquename => $acc1 });
+my $check2row = $schema->resultset('Stock::Stock')->find({ uniquename => $acc2 });
+
+is_deeply($response, {'added' => [[ $check1row->stock_id(),'new_accession1'],[$check2row->stock_id(),'test_accessionД']],'success' => '1'}, "added accessions check");
 
 #Remove added synonym so tests downstream do not fail.
 my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession1'})->stock_id();
@@ -89,8 +94,8 @@ my $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->remove_synonym('test_accessiony');
 
 #Remove added stocks so tests downstream do not fail
-my $accession_name = encode('utf8', 'test_accessionД');
-$stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_name})->stock_id();
+#my $accession_name = encode('utf8', 'test_accessionД');
+$stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$acc2})->stock_id();
 $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->set_is_obsolete(1) ;
 $stock->store();
