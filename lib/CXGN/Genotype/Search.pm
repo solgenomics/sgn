@@ -1664,9 +1664,10 @@ sub get_cached_file_VCF {
                 $genotype_string .= "#CHROM\t";
                 foreach my $m (@all_marker_objects) {
 		    my $chrom = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom};
+
 		    if (! $chrom) {
 			($chrom) = split /\_/, $m->{name};
-			print STDERR "Warning! No chrom data, using $chrom extracted from $m->{name}\n";
+			#print STDERR "Warning! No chrom data, using $chrom extracted from $m->{name}\n";
 		    }		    
                     #$genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom} . "\t";
 		    $genotype_string .= $chrom ."\t";
@@ -1677,7 +1678,7 @@ sub get_cached_file_VCF {
 		    my $pos = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos};
 		    if (! $pos) {
 			(undef, $pos) = split /\_/, $m->{name};
-			print STDERR "Warning! No position data, using $pos extracted from $m->{name}\n";
+			#print STDERR "Warning! No position data, using $pos extracted from $m->{name}\n";
 		    }
                     #$genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos} . "\t";
 		    $genotype_string .= $pos ."\t";
