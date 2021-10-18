@@ -34,7 +34,7 @@ jQuery( document ).ready( function() {
                     jQuery('#upload_images_submit_store').attr('disabled', false);
                     message_text += "<li class='list-group-item list-group-item-success'>";
                     message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
-                    message_text += "Successfully matched all images to existing observationUnit names. Ready to store images.</li>";
+                    message_text += "Successfully matched all image files to existing observationUnit names. Ready to store images.</li>";
                 }
             }).fail(function(error){
                 jQuery('#upload_images_submit_store').attr('disabled', true);
@@ -86,21 +86,34 @@ jQuery( document ).ready( function() {
 });
 
 
-function showImagePreviews() {
+function showImagePreview() {
     var imageFiles = document.getElementById('upload_images_file_input').files;
+    var file = imageFiles[0];
+    var restCount = imageFiles.length - 1;
     var preview = document.getElementById("preview");
+    preview.innerHTML = "";
 
-    for (var i = 0; i < imageFiles.length; i++) {
-        var file = imageFiles[i];
-        var reader = new FileReader();
-        reader.onload = function(readerEvent) {
-            var listItem = document.createElement("li");
-            listItem.className = "list-group list-group-horizontal col-sm-3";
-            listItem.innerHTML = "<img class='img-responsive' src='" + readerEvent.target.result + "' />";
-            preview.append(listItem);
-        }
-        reader.readAsDataURL(file);
+    // for (var i = 0; i < imageFiles.length; i++) {
+    //     var file = imageFiles[i];
+    var reader = new FileReader();
+    reader.onload = function(readerEvent) {
+        var imagePreview = document.createElement("div");
+        imagePreview.className = "col-sm-4";
+        imagePreview.innerHTML = "<img class='img-responsive' src='" + readerEvent.target.result + "' />";
+        preview.append(imagePreview);
+        var previewText = document.createElement("div");
+        previewText.className = "col-sm-8";
+        previewText.innerHTML =
+        '<p class="font-weight-bold text-center"><b>'+file.name+'</b></p><br>' +
+        '<p class="text-center">and '+restCount+' additional image files selected and ready for verification.</p>';
+        preview.append(previewText);
     }
+    reader.readAsDataURL(file);
+
+
+
+
+    // }
 }
 
 
@@ -148,8 +161,8 @@ function loadImagesSequentially(imageFiles, imageData, currentImage){
     currentImage++;
     console.log("Image number after bumping: "+currentImage);
     // update progress bar
-    jQuery('#progress_msg').html('<p class="form-group text-center"><b>Working on image '+currentImage+' out of '+total+'</b></p>');
-    jQuery('#progress_msg').append('<p class="form-group text-center">'+image.imageFileName+'</p>')
+    jQuery('#progress_msg').html('<p class="form-group text-center">Working on image '+currentImage+' out of '+total+'</p>');
+    jQuery('#progress_msg').append('<p class="form-group text-center"><b>'+image.imageFileName+'</b></p>')
     var progress = (currentImage / total) * 100;
     jQuery('#progress_bar').css("width", progress + "%")
     .attr("aria-valuenow", progress)
