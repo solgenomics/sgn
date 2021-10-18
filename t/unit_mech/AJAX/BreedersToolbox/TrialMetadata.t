@@ -138,7 +138,8 @@ my %design_treatment = (
             'new_treatment_stocks' => ['test_trial22','test_trial29'],
             'new_treatment_type' => 'Fertilizer',
             'new_treatment_year' => '2019',
-            'new_treatment_date' => '2019-July-01'
+            'new_treatment_date' => '2019-July-01',
+            'new_treatment_description' => 'testing'
         }
     }
 );

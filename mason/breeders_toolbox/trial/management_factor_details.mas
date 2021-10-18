@@ -1,6 +1,7 @@
 <%args>
 $trial_id
 $trial_name
+$trial_description
 $year => undef
 $management_factor_date => undef
 $management_factor_type => undef
@@ -15,6 +16,18 @@ $management_factor_type => undef
 %   print "$trial_name";
 % } else {
 %   print "[No Name]";
+% }
+        </div>
+    </td>
+    </tr>
+    <tr>
+    <td><b>Field Management Factor Description</b></td>
+    <td>
+        <div id="management_factor_description">
+% if ($trial_description) {
+%   print "$trial_description";
+% } else {
+%   print "[No Description]";
 % }
         </div>
     </td>
