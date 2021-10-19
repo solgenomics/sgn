@@ -36,6 +36,7 @@ use CXGN::BrAPI::v2::GenomeMaps;
 use CXGN::BrAPI::v2::Germplasm;
 use CXGN::BrAPI::v2::GermplasmAttributes;
 use CXGN::BrAPI::v2::GermplasmAttributeValues;
+use CXGN::BrAPI::v2::Events;
 use CXGN::BrAPI::v2::Images;
 use CXGN::BrAPI::v2::Lists;
 use CXGN::BrAPI::v2::Locations;

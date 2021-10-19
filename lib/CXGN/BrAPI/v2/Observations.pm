@@ -9,6 +9,7 @@ use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileRequest;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::TimeUtils;
 use utf8;
 use JSON;
 
@@ -101,7 +102,7 @@ sub search {
                         observationDbId => $observation_id,
                         observationVariableDbId => qq|$_->{trait_id}|,
                         observationVariableName => $_->{trait_name},
-                        observationTimeStamp => $obs_timestamp,
+                        observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
                         season => \@season,
                         collector => $_->{operator},
                         studyDbId => qq|$obs_unit->{trial_id}|,
@@ -196,7 +197,7 @@ sub detail {
                 observationDbId => qq|$_->{phenotype_id}|,
                 observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
-                observationTimeStamp => $obs_timestamp,
+                observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
                 season => \@season,
                 collector => $_->{operator},
                 studyDbId => qq|$obs_unit->{trial_id}|,

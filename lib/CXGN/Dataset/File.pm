@@ -125,9 +125,11 @@ override('retrieve_phenotypes',
 	     my $s;
 	     foreach my $line (@$phenotypes) {
 		 if ($self->quotes()) {
+		     no warnings; # turn off warnings, otherwise there are a lot of undefined warnings.
 		     $s = join("\t", map { "\"$_\"" } @$line);
 		 }
 		 else {
+		     no warnings;
 		     $s = join("\t", @$line);
 		 }
 		 # $s = "";

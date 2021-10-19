@@ -4111,6 +4111,103 @@ sub observations_search_process {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+=head2 brapi/<version>/events
+ Usage: To retrieve events (events are treatments/management factors in the database)
+ Desc:
+ Request body example:
+ {
+}
+ Response JSON example:
+ {
+     "@context": [
+         "https://brapi.org/jsonld/context/metadata.jsonld"
+     ],
+     "metadata": {
+         "datafiles": [
+             {
+                 "fileDescription": "This is an Excel data file",
+                 "fileMD5Hash": "c2365e900c81a89cf74d83dab60df146",
+                 "fileName": "datafile.xlsx",
+                 "fileSize": 4398,
+                 "fileType": "application/vnd.ms-excel",
+                 "fileURL": "https://wiki.brapi.org/examples/datafile.xlsx"
+             }
+         ],
+         "pagination": {
+             "currentPage": 0,
+             "pageSize": 1000,
+             "totalCount": 10,
+             "totalPages": 1
+         },
+         "status": [
+             {
+                 "message": "Request accepted, response successful",
+                 "messageType": "INFO"
+             }
+         ]
+     },
+     "result": {
+         "data": [
+             {
+                 "additionalInfo": {},
+                 "date": [
+                     "2018-10-08T18:15:11Z",
+                     "2018-11-09T18:16:12Z"
+                 ],
+                 "eventDbId": "8566d4cb",
+                 "eventDescription": "A set of plots was watered",
+                 "eventParameters": [
+                     {
+                         "key": "http://www.example.fr/vocabulary/2018#hasContact,",
+                         "value": "http://www.example.fr/id/agent/marie,",
+                         "valueRdfType": "http://xmlns.com/foaf/0.1/Agent,"
+                     },
+                     {
+                         "key": "fertilizer",
+                         "value": "nitrogen",
+                         "valueRdfType": null
+                     }
+                 ],
+                 "eventType": "Watering",
+                 "eventTypeDbId": "4e7d691e",
+                 "observationUnitDbIds": [
+                     "8439eaff",
+                     "d7682e7a",
+                     "305ae51c"
+                 ],
+                 "studyDbId": "2cc2001f"
+             }
+         ]
+     }
+ }
+ Args:
+ Side Effects:
+=cut
+
+sub events_search  : Chained('brapi') PathPart('events') Args(0) : ActionClass('REST') { }
+
+sub events_search_POST {
+	my $self = shift;
+	my $c = shift;
+	events_search_process($self, $c);
+}
+
+sub events_search_GET {
+	my $self = shift;
+	my $c = shift;
+	events_search_process($self, $c);
+}
+
+sub events_search_process {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Events');
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 =head2 brapi/<version>/images
 
@@ -5173,12 +5270,12 @@ sub save_results {
 
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper($search_type);
-    
+
     #set default value to 100000 to get as much as possible records when page size is not a parameter
     if(!$search_params->{pageSize}) {
     	$brapi_module->{page_size} = 100000;
 	}
-    
+
     my $search_result = $brapi_module->search($search_params,$c);
 
     my $dir = $c->tempfiles_subdir('/brapi_searches');

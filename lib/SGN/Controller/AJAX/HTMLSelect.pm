@@ -315,8 +315,10 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $multiple = $c->req->param("multiple") || 0;
     my $live_search = $c->req->param("live_search") || 0;
     my $include_location_year = $c->req->param("include_location_year");
+    my $include_lists = $c->req->param("include_lists") || 0;
 
     my @trials;
+    if ($include_lists) { push @trials, [ "", "----INDIVIDUAL TRIALS----" ]; }
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
       foreach (@$field_trials) {
@@ -339,6 +341,36 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
         @trials = @trials_redef;
     }
     @trials = sort { $a->[1] cmp $b->[1] } @trials;
+
+    if ($include_lists) {
+        my $lists = CXGN::List::available_lists($c->dbc->dbh(), $c->user()->get_sp_person_id());
+        my $public_lists = CXGN::List::available_public_lists($c->dbc->dbh());
+        my $lt = CXGN::List::Transform->new();
+
+        push @trials, ["", "----YOUR LISTS OF TRIALS----"];
+        foreach my $item (@$lists) {
+            if ( @$item[5] eq "trials" ) {
+                my $list = CXGN::List->new({ dbh=>$c->dbc->dbh(), list_id => @$item[0] });
+                my $list_elements = $list->retrieve_elements_with_ids(@$item[0]);
+                my @list_element_names = map { $_->[1] } @$list_elements;
+                my $transform = $lt->transform($schema, 'projects_2_project_ids', \@list_element_names);
+                my @trial_ids = @{$transform->{transform}};
+                push @trials, [join(',', @trial_ids), @$item[1] . ' (' . @$item[3] . ' trials)'];
+            }
+        }
+
+        push @trials, ["", "----PUBLIC LISTS OF TRIALS----"];
+        foreach my $item (@$public_lists) {
+            if ( @$item[5] eq "trials" ) {
+                my $list = CXGN::List->new({ dbh=>$c->dbc->dbh(), list_id => @$item[0] });
+                my $list_elements = $list->retrieve_elements_with_ids(@$item[0]);
+                my @list_element_names = map { $_->[1] } @$list_elements;
+                my $transform = $lt->transform($schema, 'projects_2_project_ids', \@list_element_names);
+                my @trial_ids = @{$transform->{transform}};
+                push @trials, [join(',', @trial_ids), @$item[1] . ' (' . @$item[3] . ' trials)'];
+            }
+        }
+    }
 
     if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
 

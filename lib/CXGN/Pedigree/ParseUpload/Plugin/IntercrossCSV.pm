@@ -174,7 +174,12 @@ sub _parse_with_plugin {
         my $number_of_flowers = $columns[8];
         my $number_of_seeds = $columns[9];
 
-        my $cross_identifier = $crossing_experiment.'_'.$female_parent.'_'.$male_parent;
+        my $crossing_experiment_id = $schema->resultset("Project::Project")->find({ name => $crossing_experiment })->project_id();
+        my $female_parent_id = $schema->resultset("Stock::Stock")->find({ name => $female_parent })->stock_id();
+        my $male_parent_id = $schema->resultset("Stock::Stock")->find({ name => $male_parent })->stock_id();
+
+        my $cross_identifier = $crossing_experiment_id.'_'.$female_parent_id.'_'.$male_parent_id;
+#        print STDERR "CROSS IDENTIFIER =".Dumper($cross_identifier)."\n";
         $data{'crossing_experiment_name'} = $crossing_experiment;
         $data{'crosses'}{$cross_identifier}{'intercross_female_parent'} = $female_parent;
         $data{'crosses'}{$cross_identifier}{'intercross_male_parent'} = $male_parent;
