@@ -30,29 +30,15 @@ jQuery( document ).ready( function() {
                     var errors = response.missing.map(name => name + " is not a valid observationUnitName");
                     returnMessage = formatMessage(errors, 'error');
                     jQuery('#upload_images_submit_store').attr('disabled', true);
-                    // for (var i = 0; i < response.missing.length; i++) {
-                    //     message_text += "<li class='list-group-item list-group-item-danger'>";
-                    //     message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
-                    //     message_text += response.missing[i] + " is not a valid observationUnitName";
-                    //     message_text += "</li>";
-                    // }
                 } else {
                     jQuery('#upload_images_submit_store').attr('disabled', false);
                     var successText = "Verification complete. All image files match an existing observationUnit. Ready to store images.";
                     returnMessage = formatMessage(successText, 'success');
-                    // message_text += "<li class='list-group-item list-group-item-success'>";
-                    // message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
-                    // message_text += "Successfully matched all image files to existing observationUnit names. Ready to store images.</li>";
                 }
             }).fail(function(error){
                 jQuery('#upload_images_submit_store').attr('disabled', true);
                 returnMessage = formatMessage(error, 'error');
-                // message_text += "<li class='list-group-item list-group-item-danger'>";
-                // message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
-                // message_text += error;
-                // message_text += "</li>";
             }).always(function(){
-                // message_text += "</ul>";
                 jQuery('#upload_images_status').html(returnMessage);
                 jQuery('#working_modal').modal("hide");
             });
@@ -91,7 +77,7 @@ jQuery( document ).ready( function() {
             loadImagesSequentially(imageFiles, imageData, currentImage).done(function(result) {
                 console.log(result);
                 jQuery('#upload_images_status').append(
-                    formatMessage("Success! All "+imageFiles.length+" images successfully uploaded.", 'success')
+                    formatMessage("Success! Upload of all "+imageFiles.length+" images is completed.", 'success')
                 );
             })
             .fail(function(error) {
@@ -100,17 +86,6 @@ jQuery( document ).ready( function() {
                     formatMessage(error, 'error')
                 );
             });
-            // handle success/error
-            // if (result.error) {
-            //     jQuery('#upload_images_status').append(
-            //         formatMessage(result.error, 'error')
-            //     );
-            // }
-            // if (result.success) {
-            //     jQuery('#upload_images_status').append(
-            //         formatMessage(result.success, 'success')
-            //     );
-            // }
         });
     });
 });
@@ -181,12 +156,8 @@ function formatMessage(messageDetails, messageType) {
 
 
 function loadImagesSequentially(imageFiles, imageData, currentImage){
-    // if(uploadInfo.error) {
-    //     return {"error" : uploadInfo.error};
-    // }
     if(currentImage == imageFiles.length) {
         console.log("Image number "+currentImage+" matched number of files "+imageFiles.length);
-        // return {"success" : "All "+imageTotal+" images successfully uploaded."};
         jQuery('#progress_modal').modal('hide');
         return jQuery.Deferred().resolve().promise();
     }
@@ -229,8 +200,6 @@ function loadImagesSequentially(imageFiles, imageData, currentImage){
             return jQuery.Deferred().reject(error);
         });
     }).fail(function(error){
-        // uploadInfo.error = error;
-        // sequentialImageSubmit(imageArray, uploadInfo);
         console.log("error: "+JSON.stringify(error));
         return jQuery.Deferred().reject(error);
     }).then(function() {
