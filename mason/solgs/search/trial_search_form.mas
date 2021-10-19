@@ -40,7 +40,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <div style="color:red" id="form-feedback-search-trials"> </div>
   </div>
 </div>
-  <div id="searched_trials_message"  class="message"</div>
+  <div id="searched_trials_message"  class="message"></div>
   <div id="searched_trials_div" style="display:none;"></div>
  <br />
 
