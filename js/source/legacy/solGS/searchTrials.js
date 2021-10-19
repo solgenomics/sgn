@@ -300,7 +300,7 @@ function displayTrainingPopulations (tableDetails) {
 	    jQuery('#' + divId).html(table).show();
 
 	    jQuery('#' + tableId).dataTable({
-                    'order'        : [[1, "desc"], [4, "desc"]],
+                    'order'        : [[0, "desc"],  [2, "desc"], [3, "desc"]],
 		    'searching'    : true,
 		    'ordering'     : true,
 		    'processing'   : true,
