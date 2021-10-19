@@ -4,6 +4,7 @@ jQuery( document ).ready( function() {
     jQuery('#upload_images_submit_verify').click( function() {
         jQuery('#working_modal').modal("show");
         var imageFiles = document.getElementById('upload_images_file_input').files;
+        var returnMessage;
         if (imageFiles.length < 1) {
             alert("Please select image files");
         }
@@ -12,7 +13,6 @@ jQuery( document ).ready( function() {
             var observationUnitNames = Object.values(fileData).map(function(value) {
                 return value.observationUnitName;
             });
-            var message_text = "<hr><ul class='list-group'>";
             jQuery.ajax( {
                 url: "/list/array/transform",
                 method: 'GET',
@@ -23,28 +23,33 @@ jQuery( document ).ready( function() {
             }).done(function(response) {
                 console.log(JSON.stringify(response));
                 if (response.missing.length > 0) {
+                    var errors = response.missing.map(name => name + " is not a valid observationUnitName");
+                    returnMessage = formatMessage(errors, 'error');
                     jQuery('#upload_images_submit_store').attr('disabled', true);
-                    for (var i = 0; i < response.missing.length; i++) {
-                        message_text += "<li class='list-group-item list-group-item-danger'>";
-                        message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
-                        message_text += response.missing[i] + " is not a valid observationUnitName";
-                        message_text += "</li>";
-                    }
+                    // for (var i = 0; i < response.missing.length; i++) {
+                    //     message_text += "<li class='list-group-item list-group-item-danger'>";
+                    //     message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+                    //     message_text += response.missing[i] + " is not a valid observationUnitName";
+                    //     message_text += "</li>";
+                    // }
                 } else {
                     jQuery('#upload_images_submit_store').attr('disabled', false);
-                    message_text += "<li class='list-group-item list-group-item-success'>";
-                    message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
-                    message_text += "Successfully matched all image files to existing observationUnit names. Ready to store images.</li>";
+                    var successText = "Successfully matched all image files to existing observationUnit names. Ready to store images.";
+                    returnMessage = formatMessage(successText, 'success');
+                    // message_text += "<li class='list-group-item list-group-item-success'>";
+                    // message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
+                    // message_text += "Successfully matched all image files to existing observationUnit names. Ready to store images.</li>";
                 }
             }).fail(function(error){
                 jQuery('#upload_images_submit_store').attr('disabled', true);
-                message_text += "<li class='list-group-item list-group-item-danger'>";
-                message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
-                message_text += error;
-                message_text += "</li>";
+                returnMessage = formatMessage(error, 'error');
+                // message_text += "<li class='list-group-item list-group-item-danger'>";
+                // message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+                // message_text += error;
+                // message_text += "</li>";
             }).always(function(){
-                message_text += "</ul>";
-                jQuery('#upload_images_status').html(message_text);
+                // message_text += "</ul>";
+                jQuery('#upload_images_status').html(returnMessage);
                 jQuery('#working_modal').modal("hide");
             });
         }
@@ -92,9 +97,6 @@ function showImagePreview() {
     var restCount = imageFiles.length - 1;
     var preview = document.getElementById("preview");
     preview.innerHTML = "";
-
-    // for (var i = 0; i < imageFiles.length; i++) {
-    //     var file = imageFiles[i];
     var reader = new FileReader();
     reader.onload = function(readerEvent) {
         var imagePreview = document.createElement("div");
@@ -109,11 +111,6 @@ function showImagePreview() {
         preview.append(previewText);
     }
     reader.readAsDataURL(file);
-
-
-
-
-    // }
 }
 
 
@@ -133,13 +130,28 @@ function parseImageFiles(imageFiles) {
             "imageFileName" : file.name,
             "imageFileSize" : file.size,
             "imageTimeStamp" : timestampWithoutExtension,
-            // "imageURL" : imageURL,
             "mimeType" : file.type,
             "observationUnitName" : justUnitName
         };
         // console.log("Image data is: "+JSON.stringify(fileData));
     }
     return fileData;
+}
+
+
+function formatMessage(message, messageType) {
+    var formattedMessage = "<hr><ul class='list-group'>";
+    var itemClass = messageType == "success" ? "list-group-item-success" : "list-group-item-danger";
+    var glyphicon = messageType == "success" ? "glyphicon glyphicon-ok" : "glyphicon glyphicon-remove";
+    message = Array.isArray(message) ? message : [message];
+
+    for (var i = 0; i < message.length; i++) {
+        formattedMessage += "<li class='list-group-item "itemClass"'>";
+        formattedMessage += "<span class='badge'><span class='"+glyphicon+"'></span></span>";
+        formattedMessage += message[i] + "</li>";
+    }
+    formatMessage += "</ul>";
+    return formattedMessage;
 }
 
 
