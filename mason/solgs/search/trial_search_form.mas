@@ -1,6 +1,6 @@
 <%doc>
 
-=head1 NAME 
+=head1 NAME
 
 /solgs/search/trial_search_form.mas - trail search form
 
@@ -16,8 +16,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 </%args>
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
+<&| /page/info_section.mas,
+    collapsible => 1,
     collapsed   => 0,
     title       => "Search for a training population or create a new one using one or more trials",
   &>
@@ -29,22 +29,20 @@ Isaak Y Tecle (iyt2@cornell.edu)
 	    class="form-control"
 	    placeholder="search for a trial or training population"
 	    size="50" id="population_search_entry"/>
-    
+
     <button type="submit" class="btn btn-success" id="search_training_pop">
       <span class="glyphicon glyphicon-search"></span>
     </button>
-    
+
 <!-- <button id="search_all_training_pops" style="position:absolute;right:20px;" class="btn btn-success" type="submit">  -->
 <!--       <span value="Search for all training populations">Search for all training populations</span>  -->
 <!--     </button> -->
 <div style="color:red" id="form-feedback-search-trials"> </div>
-  </div>  
+  </div>
 </div>
-  <div id="searched_trials_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
+  <div id="searched_trials_message"  class="message"</div>
   <div id="searched_trials_div" style="display:none;"></div>
  <br />
-
-<& /solgs/population/project_details_form.mas &>
 
 <& /solgs/search/combine_trials_table.mas &>
 
