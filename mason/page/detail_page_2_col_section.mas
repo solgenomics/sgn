@@ -348,7 +348,7 @@ $analytics_protocol_result_summary => {}
                                 <& /breeders_toolbox/identifier_generation/list_identifier_generation.mas &>
 % } #End identifier_generation_list
 % if ($info_section_id eq 'management_factor_details'){
-                                <& /breeders_toolbox/trial/management_factor_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, year=>$year, management_factor_type=>$management_factor_type, management_factor_date=>$management_factor_date &>
+                                <& /breeders_toolbox/trial/management_factor_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, year=>$year, management_factor_type=>$management_factor_type, management_factor_date=>$management_factor_date &>
 % } #End management_factor_details
 % if ($info_section_id eq 'management_factor_design'){
                                 <& /breeders_toolbox/trial/design_section_management_factor.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name &>
