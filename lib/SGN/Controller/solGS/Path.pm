@@ -41,6 +41,14 @@ sub training_page_url {
 }
 
 
+sub trial_page_url {
+	my ($self, $trial_id) = @_;
+
+    return "/breeders_toolbox/trial/$trial_id";
+
+}
+
+
 sub selection_page_url {
     my ($self, $args) = @_;
 
