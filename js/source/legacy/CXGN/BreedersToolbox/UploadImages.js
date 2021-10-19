@@ -1,6 +1,10 @@
 
 jQuery( document ).ready( function() {
 
+    document.getElementById('upload_images_file_input').addEventListener('input', function (e) {
+        showImagePreview(this.files);
+    });
+
     jQuery('#upload_images_submit_verify').click( function() {
         jQuery('#working_modal').modal("show");
         var imageFiles = document.getElementById('upload_images_file_input').files;
@@ -34,7 +38,7 @@ jQuery( document ).ready( function() {
                     // }
                 } else {
                     jQuery('#upload_images_submit_store').attr('disabled', false);
-                    var successText = "Successfully matched all image files to existing observationUnit names. Ready to store images.";
+                    var successText = "Verification complete. All image files match an existing observationUnit. Ready to store images.";
                     returnMessage = formatMessage(successText, 'success');
                     // message_text += "<li class='list-group-item list-group-item-success'>";
                     // message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
@@ -83,16 +87,37 @@ jQuery( document ).ready( function() {
                 value.observationUnitDbId = observationUnitDbIds[i];
                 return value;
             });
-            var result = loadImagesSequentially(imageFiles, imageData, currentImage);
+            // var result = loadImagesSequentially(imageFiles, imageData, currentImage);
+            loadImagesSequentially(imageFiles, imageData, currentImage).done(function(result) {
+                console.log(result);
+                jQuery('#upload_images_status').append(
+                    formatMessage("Success! All "+imageFiles.length+" images successfully uploaded.", 'success')
+                );
+            })
+            .fail(function(error) {
+                console.log(error);
+                jQuery('#upload_images_status').append(
+                    formatMessage(error, 'error')
+                );
+            });
             // handle success/error
-
+            // if (result.error) {
+            //     jQuery('#upload_images_status').append(
+            //         formatMessage(result.error, 'error')
+            //     );
+            // }
+            // if (result.success) {
+            //     jQuery('#upload_images_status').append(
+            //         formatMessage(result.success, 'success')
+            //     );
+            // }
         });
     });
 });
 
 
-function showImagePreview() {
-    var imageFiles = document.getElementById('upload_images_file_input').files;
+function showImagePreview(imageFiles) {
+    // var imageFiles = document.getElementById('upload_images_file_input').files;
     var file = imageFiles[0];
     var restCount = imageFiles.length - 1;
     var preview = document.getElementById("preview");
@@ -139,18 +164,18 @@ function parseImageFiles(imageFiles) {
 }
 
 
-function formatMessage(message, messageType) {
+function formatMessage(messageDetails, messageType) {
     var formattedMessage = "<hr><ul class='list-group'>";
     var itemClass = messageType == "success" ? "list-group-item-success" : "list-group-item-danger";
     var glyphicon = messageType == "success" ? "glyphicon glyphicon-ok" : "glyphicon glyphicon-remove";
-    message = Array.isArray(message) ? message : [message];
+    messageDetails = Array.isArray(messageDetails) ? messageDetails : [messageDetails];
 
-    for (var i = 0; i < message.length; i++) {
-        formattedMessage += "<li class='list-group-item "itemClass"'>";
+    for (var i = 0; i < messageDetails.length; i++) {
+        formattedMessage += "<li class='list-group-item "+itemClass+"'>";
         formattedMessage += "<span class='badge'><span class='"+glyphicon+"'></span></span>";
-        formattedMessage += message[i] + "</li>";
+        formattedMessage += messageDetails[i] + "</li>";
     }
-    formatMessage += "</ul>";
+    formattedMessage += "</ul>";
     return formattedMessage;
 }
 
@@ -187,7 +212,7 @@ function loadImagesSequentially(imageFiles, imageData, currentImage){
         data: JSON.stringify([image]),
         contentType: "application/json; charset=utf-8",
     }).done(function(response){
-        console.log("Success uploading image metadata: "+image.imageFileName+" with details: "+JSON.stringify(response));
+        // console.log("Success uploading image metadata: "+image.imageFileName+" with details: "+JSON.stringify(response));
         var imageDbId = response.result.data[0].imageDbId;
         jQuery.ajax( {
             url: "/brapi/v2/images/"+imageDbId+"/imagecontent",
@@ -201,13 +226,13 @@ function loadImagesSequentially(imageFiles, imageData, currentImage){
             console.log("Success uploading image content: "+image.imageFileName+" with details: "+JSON.stringify(response));
         }).fail(function(error){
             console.log("error: "+JSON.stringify(error));
-            jQuery.Deferred().resolve().promise();
+            return jQuery.Deferred().reject(error);
         });
     }).fail(function(error){
         // uploadInfo.error = error;
         // sequentialImageSubmit(imageArray, uploadInfo);
         console.log("error: "+JSON.stringify(error));
-        return jQuery.Deferred().resolve().promise();
+        return jQuery.Deferred().reject(error);
     }).then(function() {
         return loadImagesSequentially(imageFiles, imageData, currentImage);
     });
