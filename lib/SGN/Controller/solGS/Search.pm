@@ -488,9 +488,12 @@ sub projects_links {
 	   	  	};
 
 	   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
+            my $trial_url = $c->controller('solGS::Path')->trial_page_url($pr_id);
+            my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
+
 
 		    push @projects_pages, [$checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|,
-					   $pr_desc, $pr_location, $pr_year
+					   $pr_desc, $pr_location, $pr_year, $trial_link
 			];
 
 		}
@@ -587,8 +590,10 @@ sub format_trait_gs_projects {
 				};
 
 		      	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
+                my $trial_url = $c->controller('solGS::Path')->trial_page_url($pr_id);
+                my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
 
-			   push @formatted_projects, [ $checkbox, qq|<a href="$model_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year];
+			   push @formatted_projects, [ $checkbox, qq|<a href="$model_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $trial_link];
 	       }
 	   }
    }
@@ -636,8 +641,10 @@ sub format_gs_projects {
 		  	  	};
 
 	  	 		my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
+                my $trial_url = $c->controller('solGS::Path')->trial_page_url($pr_id);
+                my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
 
-		   		push @formatted_projects, [ $checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
+		   		push @formatted_projects, [ $checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $trial_link];
 	       }
 	   }
    }
@@ -939,10 +946,13 @@ sub format_selection_pops {
 		  $project_yr = $yr_r->value;
 	      }
 
+          my $trial_url = $c->controller('solGS::Path')->trial_page_url($selection_pop_id);
+          my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
+
 	      $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $selection_pop_id);
 	      my $download_selection = $c->stash->{selection_prediction_download};
 
-	      push @data,  [$selection_pop_link, $desc, $project_yr, $download_selection];
+	      push @data,  [$selection_pop_link, $desc, $project_yr, $trial_link, $download_selection];
           }
         }
     }
