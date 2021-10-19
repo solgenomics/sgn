@@ -353,6 +353,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
     if ( ($format eq "crossing_experiment_xls") && ($what eq "layout")) {
         $plugin = "CrossingExperimentXLS";
+        $what = "crosses";
+        $format = "xls";
     }
 
     my $trial_name = $trial->get_name();

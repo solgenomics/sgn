@@ -696,7 +696,7 @@ sub get_crosses_and_details_in_crossingtrial {
         LEFT JOIN stock AS stock6 ON (stock_relationship5.subject_id = stock6.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship6 ON (stock1.stock_id = stock_relationship6.object_id) AND stock_relationship6.type_id = ?
         LEFT JOIN stock AS stock7 ON (stock_relationship6.subject_id = stock7.stock_id)
-        WHERE nd_experiment_project.project_id = ? ";
+        WHERE nd_experiment_project.project_id = ? ORDER BY cross_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -821,7 +821,7 @@ sub get_cross_progenies_trial {
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
         LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
         WHERE nd_experiment_project.project_id = ? GROUP BY cross_id) AS progeny_count_table
-        ON (cross_table.cross_id = progeny_count_table.cross_id)";
+        ON (cross_table.cross_id = progeny_count_table.cross_id) ORDER BY cross_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
