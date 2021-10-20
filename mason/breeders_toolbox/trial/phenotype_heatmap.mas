@@ -1299,7 +1299,9 @@ jQuery(document).ready( function() {
             url: '/brapi/v2/observationunits/',
             data: stringifiedData,
             success: function(response) {
-                refresh_cache();
+                // refresh_cache();
+                jQuery('#working_modal').modal("hide");
+                jQuery('#fieldplot_layout_success_dialog').modal("show");
                 
             },
             error: function(response) {
@@ -1350,6 +1352,7 @@ jQuery(document).ready( function() {
       jQuery('#working_modal').modal("show");
 
       var new_accession = jQuery('#hm_accession').val();
+      var new_plot_name = jQuery('#hm_new_plot_name').val();
       var old_accession = jQuery('#hm_edit_plot_accession').html();
       var old_plot_id = jQuery('#hm_edit_plot_id').html();
       var old_plot_name = jQuery('#hm_edit_plot_name').html();
@@ -1360,6 +1363,7 @@ jQuery(document).ready( function() {
         dataType: "json",
         data: {
                 'new_accession': new_accession,
+                'new_plot_name': new_plot_name,
                 'old_accession': old_accession,
                 'old_plot_id': old_plot_id,
                 'old_plot_name': old_plot_name,
