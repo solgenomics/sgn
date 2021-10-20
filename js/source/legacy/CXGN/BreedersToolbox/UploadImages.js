@@ -2,6 +2,8 @@
 jQuery( document ).ready( function() {
 
     document.getElementById('upload_images_file_input').addEventListener('input', function (e) {
+        jQuery('#upload_images_status').html('');
+        jQuery('#upload_images_submit_store').attr('disabled', true);
         showImagePreview(this.files);
     });
 
@@ -13,7 +15,14 @@ jQuery( document ).ready( function() {
             alert("Please select image files");
         }
         else {
-            var fileData = parseImageFiles(imageFiles);
+            var [fileData, parseErrors] = parseImageFiles(imageFiles);
+            if (parseErrors.length) {
+                returnMessage = formatMessage(parseErrors, 'error');
+                jQuery('#upload_images_submit_store').attr('disabled', true);
+                jQuery('#upload_images_status').html(returnMessage);
+                jQuery('#working_modal').modal("hide");
+                return;
+            }
             var observationUnitNames = Object.values(fileData).map(function(value) {
                 return value.observationUnitName;
             });
@@ -25,9 +34,10 @@ jQuery( document ).ready( function() {
                     "type": "stocks_2_stock_ids"
                 }
             }).done(function(response) {
-                console.log(JSON.stringify(response));
                 if (response.missing.length > 0) {
-                    var errors = response.missing.map(name => name + " is not a valid observationUnitName");
+                    var errors = response.missing.map(function(name) {
+                        return "<b>" + name + "</b> is not a valid observationUnitName.";
+                    });
                     returnMessage = formatMessage(errors, 'error');
                     jQuery('#upload_images_submit_store').attr('disabled', true);
                 } else {
@@ -54,7 +64,7 @@ jQuery( document ).ready( function() {
         .text(Math.round(currentImage) + "%");
         jQuery('#progress_modal').modal('show');
 
-        var fileData = parseImageFiles(imageFiles);
+        var [fileData, parseErrors] = parseImageFiles(imageFiles);
         var observationUnitNames = Object.values(fileData).map(function(value) {
             return value.observationUnitName;
         });
@@ -118,6 +128,7 @@ function parseImageFiles(imageFiles) {
     // extract observationUnitNames from image filenames
     // e.g. 21BEDS0809HCRH02_25_809_Covington_G3_RootPhoto1_1_2021-05-13-04-50-36
     var fileData = {};
+    var parseErrors = [];
     for (var i = 0; i < imageFiles.length; i++) {
         var file = imageFiles[i];
         var name = file.name;
@@ -126,16 +137,20 @@ function parseImageFiles(imageFiles) {
         var nameWithoutTimestamp = name.substring(0, name.lastIndexOf('_'));
         var nameWithoutNumber = nameWithoutTimestamp.substring(0, nameWithoutTimestamp.lastIndexOf('_'));
         var justUnitName = nameWithoutNumber.substring(0, nameWithoutNumber.lastIndexOf('_'));
-        fileData[file.name] = {
-            "imageFileName" : file.name,
-            "imageFileSize" : file.size,
-            "imageTimeStamp" : timestampWithoutExtension,
-            "mimeType" : file.type,
-            "observationUnitName" : justUnitName
-        };
-        // console.log("Image data is: "+JSON.stringify(fileData));
+        if (justUnitName) {
+            fileData[file.name] = {
+                "imageFileName" : file.name,
+                "imageFileSize" : file.size,
+                "imageTimeStamp" : timestampWithoutExtension,
+                "mimeType" : file.type,
+                "observationUnitName" : justUnitName
+            };
+        } else {
+            parseErrors.push("Filename <b>" + name + "</b> must start with a valid observationUnitName.")
+        }
     }
-    return fileData;
+    // console.log(JSON.stringify(fileData));
+    return [fileData, parseErrors];
 }
 
 
@@ -157,7 +172,7 @@ function formatMessage(messageDetails, messageType) {
 
 function loadImagesSequentially(imageFiles, imageData, currentImage){
     if(currentImage == imageFiles.length) {
-        console.log("Image number "+currentImage+" matched number of files "+imageFiles.length);
+        // console.log("Image number "+currentImage+" matched number of files "+imageFiles.length);
         jQuery('#progress_modal').modal('hide');
         return jQuery.Deferred().resolve().promise();
     }
@@ -165,9 +180,7 @@ function loadImagesSequentially(imageFiles, imageData, currentImage){
     var total = imageFiles.length;
     var file = imageFiles[currentImage];
     var image = imageData[currentImage];
-    console.log("Image number before bumping: "+currentImage);
     currentImage++;
-    console.log("Image number after bumping: "+currentImage);
     // update progress bar
     jQuery('#progress_msg').html('<p class="form-group text-center">Working on image '+currentImage+' out of '+total+'</p>');
     jQuery('#progress_msg').append('<p class="form-group text-center"><b>'+image.imageFileName+'</b></p>')
@@ -184,21 +197,29 @@ function loadImagesSequentially(imageFiles, imageData, currentImage){
         contentType: "application/json; charset=utf-8",
     }).done(function(response){
         // console.log("Success uploading image metadata: "+image.imageFileName+" with details: "+JSON.stringify(response));
-        var imageDbId = response.result.data[0].imageDbId;
-        jQuery.ajax( {
-            url: "/brapi/v2/images/"+imageDbId+"/imagecontent",
-            method: 'PUT',
-            async: false,
-            headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
-            data: file,
-            processData: false,
-            contentType: file.type
-        }).done(function(response){
-            console.log("Success uploading image content: "+image.imageFileName+" with details: "+JSON.stringify(response));
-        }).fail(function(error){
-            console.log("error: "+JSON.stringify(error));
-            return jQuery.Deferred().reject(error);
-        });
+        if (response.result) {
+            var imageDbId = response.result.data[0].imageDbId;
+            jQuery.ajax( {
+                url: "/brapi/v2/images/"+imageDbId+"/imagecontent",
+                method: 'PUT',
+                async: false,
+                headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
+                data: file,
+                processData: false,
+                contentType: file.type
+            }).done(function(response){
+                console.log("Success uploading image content: "+image.imageFileName+" with details: "+JSON.stringify(response));
+            }).fail(function(error){
+                console.log("error: "+JSON.stringify(error));
+                return jQuery.Deferred().reject(error);
+            });
+        } else {
+            var errors = response.metadata.status.flatMap(function(elem) {
+                return elem.messageType == "ERROR" ? elem.message : [];
+            });
+            console.log("handling response errors: "+JSON.stringify(errors));
+            return jQuery.Deferred().reject(errors);
+        }
     }).fail(function(error){
         console.log("error: "+JSON.stringify(error));
         return jQuery.Deferred().reject(error);
