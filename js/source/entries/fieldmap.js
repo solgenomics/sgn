@@ -331,9 +331,9 @@ export function init() {
             var get_plot_message = function(plot) {
                 return plot.observationUnitName;
             }
-            var width = this.meta_data.left_border_selection ? this.meta_data.max_col + 2 : this.meta_data.max_col + 1;
+            var width = this.meta_data.left_border_selection ? this.meta_data.max_col + 3 : this.meta_data.max_col + 2;
             width = this.meta_data.right_border_selection ? width + 1 : width;
-            var height = this.meta_data.top_border_selection ? this.meta_data.max_row + 2 : this.meta_data.max_row + 1;
+            var height = this.meta_data.top_border_selection ? this.meta_data.max_row + 3 : this.meta_data.max_row + 2;
             height = this.meta_data.bottom_border_selection ? height + 1 : height;
             var grid = d3.select("#container_fm")
             .append("svg")
@@ -371,6 +371,29 @@ export function init() {
                     .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY) * 50 + 45; })
                     .text(function(d) { if (d.observationUnitPosition.observationLevel) { return d.observationUnitPosition.observationLevel.levelCode; }});
             plots.select("title").text(function(d) { return get_plot_message(d); }) ;
+
+            var row_label_arr = [];
+            var col_label_arr = [];
+            for (let i = 1; i <= this.meta_data.num_rows; i++) {
+                row_label_arr.push(i);
+            }
+            for (let i = 1; i <= this.meta_data.num_cols; i++) {
+                col_label_arr.push(i);
+            }
+
+            var rowLabels = grid.selectAll(".rowLabels") 
+            .data(row_label_arr)
+            .enter().append("text")
+            .attr("x", ((this.meta_data.left_border_selection ? this.meta_data.min_col - 1 : this.meta_data.min_col) * 50) + 35)
+            .attr("y", function(label) {return (label+1) * 50 + 45})
+            .text(function(label) {return label});
+
+            var colLabels = grid.selectAll(".colLabels") 
+            .data(col_label_arr)
+            .enter().append("text")
+            .attr("x", function(label) {return (label+1) * 50 + 35})
+            .attr("y", ((this.meta_data.top_border_selection ? this.meta_data.min_row - 1 : this.meta_data.min_row) * 50) + 45)
+            .text(function(label) {return label});
         }
 
         load() {
