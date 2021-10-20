@@ -343,8 +343,8 @@ export function init() {
             .data(this.plot_arr);
             plots.append("title");
             plots.enter().append("rect")
-                .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX) * 50 + 15; })
-                .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY) * 50 + 15; })
+                .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + 1) * 50 + 15; })
+                .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + 1) * 50 + 15; })
                 .attr("rx", 4)
                 .attr("class", "col bordered")
                 .attr("width", 50)
@@ -367,8 +367,8 @@ export function init() {
             });
             plots.append("text");
                     plots.enter().append("text")
-                    .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX) * 50 + 25; })
-                    .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY) * 50 + 45; })
+                    .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + 1) * 50 + 25; })
+                    .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + 1) * 50 + 45; })
                     .text(function(d) { if (d.observationUnitPosition.observationLevel) { return d.observationUnitPosition.observationLevel.levelCode; }});
             plots.select("title").text(function(d) { return get_plot_message(d); }) ;
 
@@ -394,7 +394,10 @@ export function init() {
             .attr("x", function(label) {return (label+1) * 50 + 35})
             .attr("y", ((this.meta_data.top_border_selection ? this.meta_data.min_row - 1 : this.meta_data.min_row) * 50) + 45)
             .text(function(label) {return label});
+
+
         }
+
 
         load() {
             d3.select("svg").remove();
