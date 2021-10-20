@@ -351,10 +351,14 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     if ( ($format eq "dartseqcsv") && ($what eq "layout")) {
         $plugin = "GenotypingTrialLayoutDartSeqCSV";
     }
+
+    my @field_crossing_data_order;
     if ( ($format eq "crossing_experiment_xls") && ($what eq "layout")) {
         $plugin = "CrossingExperimentXLS";
         $what = "crosses";
         $format = "xls";
+        my $cross_properties = $c->config->{cross_properties};
+        @field_crossing_data_order = split ',',$cross_properties;
     }
 
     my $trial_name = $trial->get_name();
@@ -378,7 +382,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         include_timestamp => $timestamp_option,
         treatment_project_ids => \@treatment_project_ids,
         selected_columns => $selected_cols,
-        include_measured => $include_measured
+        include_measured => $include_measured,
+        field_crossing_data_order => \@field_crossing_data_order
     });
 
     my $error = $download->download();

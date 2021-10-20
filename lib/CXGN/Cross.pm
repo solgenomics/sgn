@@ -730,7 +730,7 @@ sub get_cross_properties_trial {
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
         LEFT JOIN stockprop AS stockprop1 ON (stock.stock_id = stockprop1.stock_id) AND stockprop1.type_id = ?
         LEFT JOIN stockprop AS stockprop2 ON (stock.stock_id = stockprop2.stock_id) AND stockprop2.type_id = ?
-        WHERE nd_experiment_project.project_id = ?";
+        WHERE nd_experiment_project.project_id = ? ORDER BY stock.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 

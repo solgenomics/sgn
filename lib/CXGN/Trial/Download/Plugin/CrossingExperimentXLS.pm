@@ -61,6 +61,13 @@ sub download {
         $ws->write(0, $col_count, $_);
         $col_count++;
     }
+
+    my $field_crossing_data_order = $self->field_crossing_data_order;
+    my @field_crossing_data_header = @$field_crossing_data_order;
+    print STDERR "FIELD DATA ORDER =".Dumper(\@field_crossing_data_header)."\n";
+    push @header, @field_crossing_data_header;
+#    print STDERR "COMBINED HEADER =".Dumper(\@header)."\n";
+
     my $row_count = 1;
     foreach my $id(@trial_ids) {
         my $crosses = CXGN::Cross->new( {schema => $self->bcs_schema, trial_id => $id });
@@ -68,8 +75,21 @@ sub download {
         my @cross_info = @$cross_info_ref;
         my $progeny_info_ref = $crosses->get_cross_progenies_trial();
         my @progeny_info = @$progeny_info_ref;
-        print STDERR "CROSSES IN EXPERIMENT =".Dumper(\@cross_info)."\n";
-        print STDERR "PROGENIES IN EXPERIMENT =".Dumper(\@progeny_info)."\n";
+
+        my @field_data;
+        my $crossing_data = $crosses->get_cross_properties_trial();
+
+        foreach my $cross (@$crossing_data){
+            my @row = ();
+            my $field_crossing_data_hash = $cross->[3];
+            foreach my $cross_prop (@field_crossing_data_header) {
+                push @row, $field_crossing_data_hash->{$cross_prop};
+            }
+            push @field_data, \@row;
+        }
+#        print STDERR "CROSSES IN EXPERIMENT =".Dumper(\@cross_info)."\n";
+#        print STDERR "PROGENIES IN EXPERIMENT =".Dumper(\@progeny_info)."\n";
+
         for my $i (0 .. $#cross_info) {
             $ws->write($row_count, 0, $cross_info[$i][1]);
             $ws->write($row_count, 1, $cross_info[$1][2]);
