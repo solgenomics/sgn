@@ -1,4 +1,3 @@
-
 <%args>
 $trial_id
 $stockref => undef
@@ -6,7 +5,7 @@ $data_level => 'plot'
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
- <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', 'd3.d3Min.js', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
+<& /util/import_javascript.mas, entries => ['fieldmap'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', 'd3.d3Min.js', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
 
 <style>
     #trait_heatmap {display: inline; }
@@ -18,6 +17,63 @@ $data_level => 'plot'
     #d3legend {display: none; }
     #plot_image_ids {display: none;}
     
+    .grid-item {
+        width: 50px;
+        height: 50px;
+        border-radius: 3px;
+        box-sizing: border-box;
+        line-height: 50px;
+        text-align: center;
+        cursor: pointer;
+        position: relative; 
+    }
+    .tooltip {
+        width: 200px;
+        position: absolute;
+        background-color: darkgreen;
+        color: white;
+        display: none;
+        z-index: 100;
+        border-radius: 50px;
+        top: -50px;
+        left: -75px;
+        pointer-events: none;
+    }
+
+    .grid-item:hover {
+        background-color: green !important;
+    }
+    
+    .filler {
+        width: 50px;
+        height: 50px;
+        border: 2px solid black;
+        background-color: #41b6c4;
+        border-radius: 3px;
+        box-sizing: border-box;
+        line-height: 50px;
+        text-align: center;
+        position: relative; 
+    }
+    .border {
+        width: 50px;
+        height: 50px;
+        border: 2px solid black;
+        background-color: lightgrey;
+        border-radius: 3px;
+        box-sizing: border-box;
+        line-height: 50px;
+        text-align: center;
+        position: relative; 
+    }
+    .corner {
+        width: 50px;
+        height: 50px;
+        background-color:lightgray;
+        border: 3px solid black;
+        box-sizing: border-box;
+    }
+
     #container_heatmap {
         /*border:2px dashed #000;*/
         height: 390px;
@@ -29,9 +85,9 @@ $data_level => 'plot'
     }
     #container_fm {
         /*border:2px dashed #000;*/
-        height: 390px;
+        height: 100%;
         /*width: 390px;*/
-        width: 700px;
+        width: 90%;
         overflow: auto;
         /*overflow: scroll;*/
         display: none;
@@ -62,11 +118,11 @@ $data_level => 'plot'
       .legend li { float: left; margin-right: 10px; }
       .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
 
-      .legend .d3block_even_number { background-color: #c7e9b4; }
-      .legend .d3block_odd_number { background-color: #41b6c4; }
-      .legend .d3checks { background-color: #081d58; }
-      .legend .d3rep_even_number { background-color: red; height: 8px; width: 18px;}
-      .legend .d3rep_odd_number { background-color: green; height: 8px; width: 18px;}
+      .legend .block_even_number { background-color: #c7e9b4; }
+      .legend .block_odd_number { background-color: #41b6c4; }
+      .legend .checks { background-color: #6a5acd; }
+      .legend .rep_even_number { background-color: red;}
+      .legend .rep_odd_number { background-color: green;}
       
       .rotated {
           transform: rotate(-180deg);
@@ -94,7 +150,7 @@ $data_level => 'plot'
         <div class="col-sm-4" id="check_plot_link">
         </div>
     </div>
-    <br/>
+    <br>
     
 </div>
 
@@ -104,20 +160,49 @@ $data_level => 'plot'
 
 
 <div class="well well-sm">
-
-<div class="d3legend" id="d3legend"> <p></br>  &nbsp;&nbsp; <ul class="legend">
-  <li><span class="d3block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
-  <li><span class="d3block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
-  <li><span class="d3checks"></span> Checks</li>
-  <li><span class="d3rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
-  <li><span class="d3rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
-  <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image</li>
-  <li><button type="button" id="rotate_map" class="btn btn-success btn-sm">Rotate Map</button></li>
+  
   <a id="hm_replace_accessions_link"><button class="btn btn-success" type="button" id="hm_replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
 </div>
 
 <div id="container_heatmap" ></div>
-<div id="container_fm" ></div>
+<div>
+    <ul class="legend">
+        <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+        <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+        <li><span class="checks"></span> Checks</li>
+        <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
+        <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+        <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image</li>
+    </ul>
+</div>
+<br><br>
+<div>
+    <div>
+        <button style="margin-left: 2%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
+        <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success">Submit Field Layout</button><br><br>
+        <div style="display: inline;">
+            <label style="margin-left: 2%;" for="invert_rows">Invert Rows</label>
+            <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
+            <label style="margin-left: 3%;" for="top_border_selection">Top Border</label>                       
+            <input type="checkbox" id="top_border_selection" name="top_border_selection" value="yes">
+            <label style="margin-left: 3%;" for="left_border_selection">Left Border</label>                       
+            <input type="checkbox" id="left_border_selection" name="left_border_selection" value="yes">
+            <label style="margin-left: 3%;" for="right_border_selection">Right Border</label>                       
+            <input type="checkbox" id="right_border_selection" name="right_border_selection" value="yes">
+            <label style="margin-left: 3%;" for="bottom_border_selection">Bottom Border</label>                       
+            <input type="checkbox" id="bottom_border_selection" name="bottom_border_selection" value="yes">
+            <label style="margin-left: 3%;">Plot Layout</label>
+            <select name="plot_layout" id="plot_layout">
+                <option value="">--Select Layout--</option>
+                <option value="serpentine">Serpentine</option>
+                <option value="zigzag">Zigzag</option>
+            </select>
+        </div>
+    </div>  
+    <div id="container_fm"></div>
+</div>
+
+
 <div id="trait_heatmap" >loading...</div>
 <div id="container_heatmap_geo" ></div>
 <div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
@@ -134,7 +219,6 @@ $data_level => 'plot'
   <a id="delete_trait" class="btn btn-primary">Delete Selected Trait</a> &nbsp;
 </div> -->
 
-</div>
 
 <div id="delete_field_map_dialog_message" title="Physical Field Map Deletion" style="display:none;">
    <p>
@@ -296,6 +380,7 @@ $data_level => 'plot'
                       <div class="form-group">
                         <label class="col-sm-3 control-label">Plot Name: </label>
                         <div class="col-sm-9" id="hm_edit_plot_name">
+
                         </div>
                       </div>
 
@@ -360,7 +445,29 @@ $data_level => 'plot'
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_replace_accession_dialog" type="button" class="btn btn-default" onclick=location.reload() data-dismiss="modal">Close</button>
+                <button onclick="location.reload()" id="close_hmfieldma_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="fieldplot_layout_success_dialog" name="fieldplot_layout_success_dialog" tabindex="-1" role="dialog" aria-labelledby="fp_success_dialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmDialog"><b>Submit Field Plot Layout</b></h4>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center;" class="container-fluid">
+
+                    <p3> Field Plot layout submitted successfully!</p3>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_fp_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 
             </div>
         </div>
@@ -429,17 +536,72 @@ my $image_ids =  $stockref->{image_ids} || [] ;
     </div>
 </div>
 
+<div class="modal fade" id="change_dimensions_dialog" name="change_dimensions_dialog" tabindex="-1" role="dialog" aria-labelledby="ChangeDimensions">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ChangeDimensions">Change Dimensions</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <label style="margin-left: 15%;">Dimensions: </label>
+                    <div style="display: inline;">
+                        <div style="margin-left: 4%; margin-right: 2%; display: inline-block; width: 10%;">
+                            <label for="row-dims" style="display:block;">Rows</label> 
+                            <input style="width: 100%;" type="text" id="row-dims" name="row-dims">
+                        </div>
+                        x
+                        <div style="margin: 2%; display: inline-block; width: 10%;">
+                            <label for="col-dims" style="display:block">Columns</label> 
+                            <input style="width: 100%;" type="text" id="col-dims" name="col-dims">
+                        </div>
+                    </div><br><br>
+                    <label style="margin-left: 15%; margin-right: 2%;">Filler Accession (Optional): </label>
+                    <input style="width: 20%;" type="text" id="filler_accession">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="submit_dimensions_change" type="button" class="btn btn-primary">Submit</button>
+                <button id="close_dimension_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script defer="defer" type="text/javascript" >
-var trial_id = <% $trial_id %>;
+var trial_id = '<% $trial_id %>';
+var data_level = '<% $data_level %>';
+var FieldMap = window.jsMod['fieldmap'].init();
+FieldMap.set_id(trial_id);
+
+
+
 var value = 'plot';
 var selected;
 var trialStudyDesign;
 var phenotypes_id = [];
 var ctrlFuncDataset;
-jQuery(document).ready( function() {
+var top_border_selection;
+var left_border_selection;
+var right_border_selection;
+var bottom_border_selection;
+var border_accession_name;
+var num_rows;
+var num_cols;
+var changed_dim_rows;
+var changed_dim_cols;
+var num_real_plots;
 
+
+jQuery(document).ready( function() {
+    // document.getElementById("invert_row_checkmark").checked = false;
+    retrieve_additional_info = true;
     var auth_token;
     var require_login = "<%  $c->get_conf('brapi_require_login') %>";
+    auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
+
     if (require_login === '1'){
         auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
         if (!auth_token){
@@ -453,7 +615,7 @@ jQuery(document).ready( function() {
             type: 'POST',
             url: '/brapi/v1/phenotypes-search',
             data: {
-                'observationLevel':'<% $data_level %>',
+                'observationLevel':'plot',
                 'studyDbId':trial_id,
                 'observationVariableDbId':selectedTrait,
                 'pageSize':1000,
@@ -464,6 +626,7 @@ jQuery(document).ready( function() {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response) {
+                console.log(response);
                 var data = response.result.data; 
                 var datasort = data.sort(function(obj1, obj2) {
 	                  // Ascending: first plotNumber less than the previous
@@ -613,8 +776,8 @@ jQuery(document).ready( function() {
             		result.push({plotname:plot_names[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], col:cols[i], pheno:pheno_values[i], plot_msg:plot_popUp, pheno_id:pheno_ids[i]}) ;
                 }
                 
-                var col_max = Math.max.apply(Math,unique_cols);
-                var row_max = Math.max.apply(Math,unique_rows);
+                var max_col = Math.max.apply(Math,unique_cols);
+                var max_row = Math.max.apply(Math,unique_rows);
                 var rep_max = Math.max.apply(Math,replicates);
                 var block_max = Math.max.apply(Math,blocks);
                 var col_length = cols[0]; 
@@ -622,7 +785,7 @@ jQuery(document).ready( function() {
                 var controls = [];
                 var unique_ctrl = [];
                 var plots = plot_mums;
-                var col_max;
+                var max_col;
 
                 if (col_length && row_length) {
                     jQuery("#working_modal").modal("hide");
@@ -630,15 +793,15 @@ jQuery(document).ready( function() {
                     jQuery("#container_heatmap").css({"display": "inline-block", "overflow": "auto"});
                     jQuery("#trait_heatmap").css("display", "none");
                     
-                    var default_width = 50 * col_max;
+                    var default_width = 50 * max_col;
                     var default_Width_used;
                     if (default_width < 684){
                         default_Width_used = 684;
-                    }else { default_Width_used = 50 * col_max; }
+                    }else { default_Width_used = 50 * max_col; }
                     
                   var margin = { top: 50, right: 0, bottom: 100, left: 30 },
                       width = default_Width_used + 30 - margin.left - margin.right,
-                      height = 50 * row_max + 150 - margin.top - margin.bottom,
+                      height = 50 * max_row + 150 - margin.top - margin.bottom,
                      // gridSize = Math.floor(width / 24),
                       gridSize = 50,
                       gridSize2 = 38,
@@ -793,6 +956,7 @@ jQuery(document).ready( function() {
             }
         });
     }
+
     var image = [];
     var image_ids = [];
     function btnClick(n){
@@ -805,509 +969,181 @@ jQuery(document).ready( function() {
     }
     var list_of_checks;
     var checks = {};
+    var data;
+    var additionalInfo = [];
+
+    // function field_map_view() {
+        // checks = {};
+        // jQuery("#ctrldiv").css("display", "none");
+        // console.log(retrieve_additional_info);
+        // if (retrieve_additional_info) {
+        //     jQuery.ajax({
+        //         headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+        //         url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&observationUnitLevelName=plot',
+        //         success: function(response) {
+        //             var plot_objs = response.result.data;
+        //             for (plot of plot_objs) {
+        //                 if (plot.additionalInfo) {
+        //                     top_border_selection = plot.additionalInfo.top_border;
+        //                     left_border_selection = plot.additionalInfo.left_border;
+        //                     right_border_selection = plot.additionalInfo.right_border;
+        //                     bottom_border_selection = plot.additionalInfo.bottom_border;
+
+        //                     FieldMap.check_element(top_border_selection, "top_border_selection");
+        //                     FieldMap.check_element(left_border_selection, "left_border_selection");
+        //                     FieldMap.check_element(right_border_selection, "right_border_selection");
+        //                     FieldMap.check_element(bottom_border_selection, "bottom_border_selection");
+        //                     FieldMap.set_additional_info({
+        //                         'top_border_selection': top_border_selection,
+        //                         'left_border_selection': left_border_selection,
+        //                         'right_border_selection': right_border_selection,
+        //                         'bottom_border_selection': bottom_border_selection,
+        //                     })
+        //                     console.log(plot.additionalInfo);
+        //                 }
+        //             }
+        //         },
+        //         error: function(response) {
+        //             console.log("Error retrieving metadata!");
+        //         }        
+        //     })
+        //     .then(
+        //         function() {
+        //             return jQuery.ajax({
+        //                 //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
+        //                 headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+        //                 url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
+        //                 beforeSend: function() {
+        //                     jQuery("#working_modal").modal("show");
+        //                 },
+        //                 success: function(response) {
+        //                     data = response.result.data;
+        //                     data = data.sort(function(obj1, obj2) {
+        //                         // Ascending: first plotNumber less than the previous
+        //                         return obj1.additionalInfo.plotNumber - obj2.additionalInfo.plotNumber;
+        //                     });
+        //                     console.log('incoming', data);
+        //                     FieldMap.make_map(data);
+        //                     FieldMap.field_view();
+        //                     put_brapi_plots = FieldMap.brapi_plots;
+        //                     console.log("PUT", put_brapi_plots);
+        //                 },
+        //                 error: function(response) {
+        //                     alert('Error displaying fieldmap');   
+        //                 }
+        //             });
+        //         }
+        //     )
+        // } else {
+        //     FieldMap.field_view();
+        //     put_brapi_plots = FieldMap.brapi_plots;
+        // }   
+    // }
+
     function field_map_view() {
-        checks = {};
+        
         jQuery("#ctrldiv").css("display", "none");
-        jQuery.ajax( {
+        jQuery.ajax({
              //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-             url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
+            url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&pageSize=10000',
+            // url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
              },
              success: function(response) {
-                var data = response.result.data;
-                var data = data.sort(function(obj1, obj2) {
-	                  // Ascending: first plotNumber less than the previous
-	                return obj1.additionalInfo.plotNumber - obj2.additionalInfo.plotNumber;
-                });
-                // console.log(data);
-                var rows = [];
-                var cols = [];
-                var blocks = [];
-                var check = [];
-                var accession_ids = [];
-                var accession_names = [];
-                var plot_ids = [];
-                var plot_names = [];
-                var replicates = [];
-                var plot_mums = [];
-                var seedlot_names = [];
-                var design;
-                var plotImageDbIds = [];
-                var plant_names = [];
-                jQuery.each(data, function(key_obj, value_obj) {
-                    jQuery.each(value_obj, function(key, value) {
-                        if (key == 'Y'){
-                            rows.push(value);
-                        }
-                        if (key == 'X'){
-                            cols.push(value);
-                        }
-                        if (key == 'blockNumber'){
-                            blocks.push(value);
-                        }
-                        if (key == 'entryType'){
-                            check.push(value);
-                        }
-                        if (key == 'germplasmDbId'){
-                            accession_ids.push(value);
-                        }
-                        if (key == 'germplasmName'){
-                            accession_names.push(value);
-                        }
-                        if (key == 'observationUnitDbId'){
-                            plot_ids.push(value);
-                        }
-                        if (key == 'observationUnitName'){
-                            plot_names.push(value);
-                        }
-                        if (key == 'replicate'){
-                            replicates.push(value);
-                        }
-                        if (key == 'additionalInfo'){
-                            jQuery.each(value, function(key_add, value_add){
-                                if (key_add == 'plotNumber'){
-                                    plot_mums.push(value_add);
-                                }
-                                if (key_add == 'designType'){
-                                    design = value_add;
-                                    trialStudyDesign = value_add;
-                                }
-                                if (key_add == 'plotImageDbIds'){
-                                    plotImageDbIds.push(value_add);
-                                }
-                                if (key_add == 'plantNames'){
-                                    var s = value_add.length;
-                                    plant_names.push(s); 
-                                }
-                                if (key_add == 'seedLotName'){
-                                    seedlot_names.push(value_add);
-                                }
-                            });
-                        }
-                    });
-                });
-
-                var psudo_rows = [];
-                var map_option = 0;
-                for (i=0; i<plot_names.length; i++){ 
-                    if (rows[i] != '') {}
-                    else if (rows[i] == '') {
-                        map_option = 1;
-            			if (blocks[i] && design != 'splitplot'){
-            				var r = blocks[i];
-            				psudo_rows.push(r);
-            			}
-                        else if (replicates[i] && !blocks[i] && design != 'splitplot'){
-            				var s = replicates[i];
-            				psudo_rows.push(s);
-            			}
-                        else if (design == 'splitplot'){
-                            var s = replicates[i];
-            				psudo_rows.push(s);
-                        }
-            		}
-                }
-
-                var false_coord;
-                if (map_option == 1){
-                    rows = psudo_rows;
-                    false_coord = 'false_coord';
-                }
-                var unique_rows = [];
-                var unique_cols = [];
-                var unique = rows.filter(function(itm, i, rows) {
-                    if (i == rows.indexOf(itm)){
-                        unique_rows.push(itm);
+                data = response.result.data;
+                console.log('DATA', data);
+                if (data[0].additionalInfo) {
+                    FieldMap.check_elements(data[0].additionalInfo);
+                    if (data[0].additionalInfo.plot_layout) {
+                        document.getElementById("plot_layout").value = data[0].additionalInfo.plot_layout;
+                        FieldMap.meta_data.plot_layout = data[0].additionalInfo.plot_layout;
                     }
-                });
+                }
+                FieldMap.filter_data(data);
+                FieldMap.set_meta_data();
+                FieldMap.load();
+
+                // FieldMap.plot_ou_arr.sort(function(plot_ou_1, plot_ou_2) {
+	            //       // Ascending: first plotNumber less than the previous
+	            //     return FieldMap.plot_object[plot_ou_1].observationUnitPosition.observationLevel.levelCode - FieldMap.plot_object[plot_ou_2].observationUnitPosition.observationLevel.levelCode
+                // });
                 
-                function makeArray(count, content) {
-                   var result = [];
-                   var counting = 0;
-                   if(typeof(content) == "function") {
-                       counting = 1;
-                      for(var i=0; i<count; i++) {
-                          result.push(counting);
-                         counting++;
-                      }
-                   } else {
-                       counting = 1;
-                      for(var i=0; i<count; i++) {
-                         result.push(counting);
-                         counting++;
-                      }
-                   }
-                   return result;
-                }
 
-                var psudo_cols = [];
-                var psudo_columns = [];
-                var counts = {};
-                if (map_option == 1){
-                    for (var i = 0; i < rows.length; i++) {
-                        counts[rows[i]] = 1 + (counts[rows[i]] || 0);
-                    }
-                    jQuery.each(counts, function(key, value){
-                        psudo_cols.push(makeArray(value, key));
-                    });
-                    var psudo_columns = [].concat.apply([], psudo_cols);
-                    cols = psudo_columns;
-                }
-                var unique = cols.filter(function(itm, i, cols) {
-                    if (i == cols.indexOf(itm)){
-                        unique_cols.push(itm);
-                    }
-                });
-                
-                var plot_popUp;
-                var result = [];
-                for (var i=0; i<plot_names.length; i++){
-                    if (plant_names[i] < 1) { 
-            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nseedlot:"+seedlot_names[i];
-            		}
-            		else{
-            			plot_popUp = plot_names[i]+"\nplot_No: "+plot_mums[i]+"\nblock_No: "+blocks[i]+"\nrep_No:"+replicates[i]+"\nstock:"+accession_names[i]+"\nnumber_of_plants:"+plant_names[i]+"\nseedlot:"+seedlot_names[i];
-                    }
-            		result.push({plotname:plot_names[i], plot_id:plot_ids[i], stock:accession_names[i], plotn:plot_mums[i], blkn:blocks[i], rep:replicates[i], row:rows[i], plot_image_ids:plotImageDbIds[i], col:cols[i], plot_msg:plot_popUp, seedlot:seedlot_names[i]}) ;
-                }
-                                
-                var col_max = Math.max.apply(Math,unique_cols);
-                var row_max = Math.max.apply(Math,unique_rows);
-                var rep_max = Math.max.apply(Math,replicates);
-                var block_max = Math.max.apply(Math,blocks);          
-                var col_length = cols[0]; 
-                var row_length = rows[0];
-
-
-
-                unique_rows = [];
-                unique_cols = [];
-
-                for (let i=1; i<=row_max; i++){
-                    unique_rows.push(i);
-                }
-
-                for (let i=1; i<=col_max; i++){
-                    unique_cols.push(i);
-                }
-                
-                var controls = [];
-                var unique_ctrl = [];
-                var plots = plot_mums;
-                var stocks = accession_names;
-                for (var i = 0; i < check.length; i++) {
-                    if ( check[i] == "Check") {
-                        var s = stocks[i];
-                        controls.push(s);
-                    }
-                }
-                
-                if (controls){
-                    var unique = controls.filter(function(itm, i, controls) {
-                        if (i == controls.indexOf(itm)){
-                            unique_ctrl.push(itm);
-                        }
-                    });
-                    
-                    list_of_checks = unique_ctrl;
-                    for (var i = 0; i < stocks.length; i++) {
-                        for (var n = 0; n < unique_ctrl.length; n++){
-                            if ( unique_ctrl[n] == stocks[i]) {
-                                var p = plots[i];
-                                var s = stocks[i];
-                                checks[p] = s;
-                            }
-                        }
-                    }
-                }
-                
-                design_type = design;
-                if (col_length && row_length) {
-                    jQuery("#working_modal").modal("hide");
-                    jQuery("#chart_fm").css({"display": "inline-block"});
-                    jQuery("#container_fm").css({"display": "inline-block", "overflow": "auto"});
-                    jQuery("#trait_heatmap").css("display", "none");
-                    jQuery("#d3legend").css("display", "inline-block");
-                    jQuery("#container_heatmap").css("display", "none");
-                    jQuery("#trait_heatmap").css("display", "none");
-
-                  var margin = { top: 50, right: 0, bottom: 100, left: 30 },
-                      width = 50 * col_max + 30 - margin.left - margin.right,
-                      height = 50 * row_max + 100 - margin.top - margin.bottom,
-                      gridSize = 50,
-                      legendElementWidth = gridSize*2,
-                      buckets = 9,
-                      colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
-                      rows = unique_rows,
-                      columns = unique_cols.sort((a,b)=>a-b);
-                      datasets = result;
-                     
-                  var svg = d3.select("#container_fm").append("svg")
-                      .attr("width", width + margin.left + margin.right)
-                      .attr("height", height + margin.top + margin.bottom)
-                      .append("g")
-                      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-                                        
-                  var rowLabels = svg.selectAll(".rowLabel")
-                      .data(rows)
-                      .enter().append("text")
-                        .text(function (d) { return d; })
-                        .attr("x", 0 )
-                        .attr("y", function (d, i) { return i * gridSize; })
-                        .style("text-anchor", "end")
-                        .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
-                        .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "rowLabel mono axis axis-workweek" : "rowLabel mono axis"); });
-
-                  var columnLabels = svg.selectAll(".columnLabel")
-                      .data(columns)
-                      .enter().append("text")
-                        .text(function(d) { return d; })
-                        .attr("x", function(d, i) { return i * gridSize; })
-                        .attr("y", 0 )
-                        .style("text-anchor", "middle")
-                        .attr("transform", "translate(" + gridSize / 2 + ", -6)")
-                        .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });                
-                       
-                    var heatmapChart = function(datasets) {
-                        datasets.forEach(function(d) { 
-                            d.row = +d.row;
-                            d.col = +d.col;
-                            d.blkn = +d.blkn;   
-                        });
-                    
-                        var cards = svg.selectAll(".col")
-                        .data(datasets, function(d) {return d.row+':'+d.col;});
-
-                        cards.append("title");
-                        var image_icon = function (d, i){
-                            image = d.plot_image_ids; 
-                            var plot_image;
-                            if (image.length > 0){
-                                plot_image = "/static/css/images/plot_images.png"; 
-                            }else{
-                                plot_image = "";
-                            }
-                            return plot_image;
-                        }
-                      
-                        var colors = function (d, i){
-                            if (block_max == 1){
-                                color = '#41b6c4';
-                            }
-                            else if (block_max > 1){
-                                if (d.blkn % 2 == 0){
-                                    color = '#c7e9b4';
-                                }
-                                else{
-                                    color = '#41b6c4'
-                                }
-                            }
-                            else{
-                                color = '#c7e9b4';
-                            }
-                            if (unique_ctrl) {
-                                for (var i = 0; i < unique_ctrl.length; i++) {
-                                    if ( unique_ctrl[i] == d.stock) {
-                                        color = '#081d58';
-                                    }
-                                }
-                            }
-                            return color;
-                        }
-                        
-                        var strokes = function (d, i){
-                            var stroke;
-                            if (rep_max == 1){
-                              stroke = 'green';
-                            }
-                            else if (rep_max > 1){
-                                if (d.rep % 2 == 0){
-                                    stroke = 'red';
-                                }
-                                else{
-                                    stroke = 'green'
-                                }
-                            }
-                            else{
-                                stroke = 'red';
-                            }
-                            return stroke;
-                          }
-                          
-                          function clickcancel() {
-                            var event = d3.dispatch('click', 'dblclick');
-                            function cc(selection) {
-                                var down,
-                                    tolerance = 5,
-                                    last,
-                                    wait = null;
-                                function dist(a, b) {
-                                    return Math.sqrt(Math.pow(a[0] - b[0], 2), Math.pow(a[1] - b[1], 2));
-                                }
-                                selection.on('mousedown', function() {
-                                    down = d3.mouse(document.body);
-                                    last = +new Date();
-                                });
-                                selection.on('mouseup', function() {
-                                    if (dist(down, d3.mouse(document.body)) > tolerance) {
-                                        return;
-                                    } else {
-                                        if (wait) {
-                                            window.clearTimeout(wait);
-                                            wait = null;
-                                            event.dblclick(d3.event);
-                                        } else {
-                                            wait = window.setTimeout((function(e) {
-                                                return function() {
-                                                    event.click(e);
-                                                    wait = null;
-                                                };
-                                            })(d3.event), 300);
-                                        }
-                                    }
-                                });
-                            };
-                            return d3.rebind(cc, event, 'on');
-                          }
-                        var cc = clickcancel();
-                      
-                      cards.enter().append("rect")
-                          .attr("x", function(d) { return (d.col - 1) * gridSize; })
-                          .attr("y", function(d) { return (d.row - 1) * gridSize; })
-                          .attr("rx", 4)
-                          .attr("ry", 4)
-                          .attr("class", "col bordered")
-                          .attr("width", gridSize)
-                          .attr("height", gridSize)
-                          .style("stroke-width", 2)
-                          .style("stroke", strokes)
-                          .style("fill", colors)
-                          
-                          .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); })
-                          .on("mouseout", function(d) { 
-                                                          var cards = svg.selectAll(".col")
-                                                              .data(datasets, function(d) {return d.row+':'+d.col;});
-
-                                                          cards.append("title");
-                                                          
-                                                          cards.enter().append("rect")
-                                                            .attr("x", function(d) { return (d.col - 1) * gridSize; })
-                                                            .attr("y", function(d) { return (d.row - 1) * gridSize; })
-                                                            .attr("rx", 4)
-                                                            .attr("ry", 4)
-                                                            .attr("class", "col bordered")
-                                                            .attr("width", gridSize)
-                                                            .attr("height", gridSize)
-                                                            .style("stroke-width", 2)
-                                                            .style("stroke", strokes)
-                                                            .style("fill", colors); 
-                                                            
-                                                            cards.style("fill", colors) ;                          
-
-                                                            cards.select("title").text(function(d) { return d.plot_msg; }) ;
-                                                            
-                                                            cards.exit().remove();
-                                                            //console.log('out');
-                                                            })                                
-                            .call(cc);                                
-                                                       
-                            cc.on("dblclick", function(el) { var me = d3.select(el.srcElement);
-                                                             var d = me.data()[0];
-                                                              window.location.href = '/stock/'+d.plot_id+'/view';
-                                                            });
-                            cc.on("click", function(el) {  
-                                                           var me = d3.select(el.srcElement);
-                                                           var d = me.data()[0];
-                                                           image_ids = d.plot_image_ids;
-                                                           var replace_accession = d.stock;
-                                                           var replace_plot_id = d.plot_id;
-                                                           var replace_plot_name = d.plotname;
-                                                           var replace_plot_number = d.plotn;
-                                                           
-                                                           jQuery('#plot_image_ids').html(image_ids);
-                                                           jQuery('#hm_replace_accessions_link').find('button').trigger('click');
-                                                           jQuery("#hm_replace_accessions_link").on("click", function(){ btnClick(image_ids); });
-                                                           jQuery('#hm_edit_plot_information').html('<b>Selected Plot Information: </b>');
-                                                           jQuery('#hm_edit_plot_name').html(replace_plot_name);
-                                                           jQuery('#hm_edit_plot_number').html(replace_plot_number);
-                                                           old_plot_id = jQuery('#hm_edit_plot_id').html(replace_plot_id);
-                                                           old_plot_accession = jQuery('#hm_edit_plot_accession').html(replace_accession);
-                                                           jQuery('#hm_replace_plot_accessions_dialog').modal('show');
-                                                           
-                                                           new jQuery.ajax({
-                                                             type: 'POST',
-                                                             url: '/ajax/breeders/trial/<% $trial_id %>/retrieve_plot_images',
-                                                             dataType: "json",
-                                                             data: {
-                                                                     'image_ids': JSON.stringify(image_ids),
-                                                                     'plot_name': replace_plot_name,
-                                                                     'plot_id': replace_plot_id,
-                                                             },
-                                                             success: function (response) {
-                                                               jQuery('#working_modal').modal("hide");
-                                                               var images = response.image_html;
-                                                               if (response.error) {
-                                                                 alert("Error Retrieving Plot Images: "+response.error);
-                                                               }
-                                                               else {
-                                                                 jQuery("#show_plot_image_ids").html(images);
-                                                                
-                                                                // jQuery('#view_plot_image_dialog').modal("show"); 
-                                                               }
-                                                             },
-                                                             error: function () {
-                                                               jQuery('#working_modal').modal("hide");
-                                                               alert('An error occurred retrieving plot images');
-                                                             }
-                                                           });
-                                                       
-                                                          });
-                                                          
-                      //cards.transition().duration(1000)
-                      cards.style("fill", colors) ;  
-
-                      cards.select("title").text(function(d) { return d.plot_msg; }) ;
-                      
-                      cards.append("text");
-                      cards.enter().append("text")
-                        .attr("x", function(d) { return (d.col - 1) * gridSize + 10; })
-                        .attr("y", function(d) { return (d.row - 1) * gridSize + 20 ; })
-                        .text(function(d) { return d.plotn; });
-                      
-                      cards.select("text").text(function(d) { return d.plotn; }) ;
-                         
-                      cards.append("image");
-                      cards.enter().append("image")
-                        .attr("xlink:href", image_icon)
-                        .attr("x", function(d) { return (d.col - 1) * gridSize + 2; })
-                        .attr("y", function(d) { return (d.row - 1) * gridSize + 3 ; })
-                        .attr('width', 10)
-                        .attr('height', 10)
-                                                  
-                      cards.exit().remove();
-                    
-                    } ; 
-                  
-                    heatmapChart(datasets);
-                    if (false_coord){
-                        alert("Psudo row and column numbers have been used in displaying the heat map. Plots row and column numbers were generated from block_number and displayed in zigzag format. You can upload row and column numbers for this trial to reflect the field layout.");
-                    }
-                }
-                else  {
-                    jQuery("#working_modal").modal("hide");
-                    jQuery("#container_heatmap").css("display", "none");
-                    jQuery("#trait_heatmap").css("display", "none");
-                    jQuery("#trial_no_rowColMSG").css("display", "inline-block");
-                }
-             },
-             error: function(reponse) {
+            },
+            error: function(response) {
                 alert('Error displaying traits assayed heatmap');   
-             }
-        });    
+            }
+        })
+        // .then(
+        //     function() {
+        //         return FieldMap.plot_ou_arr.forEach(function (plot_ou) {
+        //             jQuery.ajax({
+        //                 headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},            
+        //                 url: '/brapi/v2/images?observationUnitDbId='+plot_ou,
+        //                 // url: '/brapi/v2/studies?studyDbId='+trial_id+'&pageSize=10000',
+        //                 success: function(response) {
+        //                     var image_list = [];
+        //                     jQuery.each(response.result.data, function(image_data) {
+        //                         image_list.push(image_data.imageDbId);
+        //                     });
+        //                     FieldMap.plot_object[plot_ou].plotImageDbIds = image_list;
+        //                 },
+        //                 error: function(response) {
+        //                     alert('error retrieving plot images'); 
+        //                 }
+        //             });
+        //         });
+        //     }
+        // )
+        // .then(
+        //     function() {
+        //         return jQuery.ajax({
+        //             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+        //             url: '/brapi/v2/studies?studyDbId='+trial_id,
+        //             success: function (response) {
+        //                 var design_type = (response.result.data[0].experimentalDesign.description);
+        //                 for (let plot of FieldMap.plot_arr) {
+        //                     plot['designType'] = design_type; 
+        //                 };
+        //             },
+        //             error: function (response) {
+        //                 alert('error retrieving field design');
+        //             }
+        //         });
+        //     }
+        // )
+        // .then(
+        //     function() {
+        //         return FieldMap.plot_ou_arr.forEach(function (plot_ou) {
+        //             var seedLotDbId = FieldMap.plot_object[plot_ou].seedLotDbId;
+        //             if (seedLotDbId) {
+        //                 jQuery.ajax({
+        //                     headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+        //                     url: '/brapi/v2/seedlots?seedLotDbId='+seedLotDbId,
+        //                     success: function(response) {
+        //                         FieldMap.plot_object[plot_ou].seedLotName = response.result.data[0].seedLotName;
+        //                     },
+        //                     error: function(response) {
+        //                         alert('error retrieving seedlot names');
+        //                     }   
+        //                 })
+        //             } else {
+        //                 FieldMap.plot_object[plot_ou].seedLotName = null;
+        //             }
+        //         }) 
+        //     }
+        // )
+        .then(
+            function() {
+                    console.log(FieldMap.plot_object);
+                    // FieldMap.state.retrieve = true;
+                    num_real_plots = Object.keys(FieldMap.plot_object).length;
+            }
+        )
     }
-    
+
 
     function geo_field_map_view(){
 
@@ -1347,6 +1183,87 @@ jQuery(document).ready( function() {
         }
     }); 
     
+    jQuery('#change_dimensions_button').click(function() {
+        jQuery("#change_dimensions_dialog").modal("show");
+        jQuery("#row-dims").val(FieldMap.meta_data.num_rows);
+        jQuery("#col-dims").val(FieldMap.meta_data.num_cols);
+    })
+
+    jQuery('#submit_dimensions_change').click(function() {
+        jQuery('#working_modal').modal("show");
+        jQuery("#change_dimensions_dialog").modal("hide");
+        retrieve_additional_info = false;
+        changed_dim_rows = jQuery("#row-dims").val();
+        changed_dim_cols = jQuery("#col-dims").val();
+        var filler_accession_name = jQuery("#filler_accession").val() || "";
+        if (changed_dim_rows * changed_dim_cols < num_real_plots) {
+            jQuery('#working_modal').modal("hide");
+            alert('Those are not valid dimensions.\nPlease pick dimensions for a plot size equal to or larger than your current plot.');
+        } else {
+            FieldMap.meta_data.filler_accession_name = filler_accession_name;
+            FieldMap.meta_data.num_rows = changed_dim_rows;
+            FieldMap.meta_data.num_cols = changed_dim_cols;
+            jQuery('#working_modal').modal("hide");
+            FieldMap.load();
+        }
+    })
+
+    jQuery("#border_accession_form").submit( function() {
+        event.preventDefault();
+    });
+
+    jQuery("#plot_layout").change(function() {
+        FieldMap.meta_data.plot_layout = jQuery("#plot_layout").val();
+        FieldMap.load();
+    });
+
+    jQuery("#submit_border_selection").click(function() {
+        jQuery("#add_border_dialog").modal("hide");
+        FieldMap.change_border_selection();
+        FieldMap.load();
+    });
+
+    jQuery("#top_border_selection").change(function() {
+        FieldMap.meta_data.top_border_selection = document.getElementById("top_border_selection").checked;
+        FieldMap.load();
+    });
+
+    jQuery("#left_border_selection").change(function() {
+        FieldMap.meta_data.left_border_selection = document.getElementById("left_border_selection").checked;
+        FieldMap.load();
+    });
+
+    jQuery("#right_border_selection").change(function() {
+        FieldMap.meta_data.right_border_selection = document.getElementById("right_border_selection").checked;
+        FieldMap.load();
+    });
+
+    jQuery("#bottom_border_selection").change(function() {
+        FieldMap.meta_data.bottom_border_selection = document.getElementById("bottom_border_selection").checked;
+        FieldMap.load();
+    });
+
+    jQuery("#invert_row_checkmark").change(function() {
+        FieldMap.meta_data.invert_row_checkmark = document.getElementById("invert_row_checkmark").checked;
+        FieldMap.load();
+    });
+    jQuery('#submit_fieldmap').click( function() {
+        var answer = window.confirm(`You are about to save this plot layout to the database.
+        Filler plots will be added to your trial if they exist in the display below. Are you sure you would like to continue?`);
+        if (answer) {
+            submit_fieldmap_metadata();
+        } else {
+            jQuery('#working_modal').modal("hide");
+        }
+
+        
+    });
+
+
+    jQuery('#close_fp_success_dialog').click(function() {
+        location.reload();
+    })
+
     jQuery("#hm_view_plot_image_submit").click( function() {
         jQuery("#view_plot_image_dialog").modal("show");
     });
@@ -1369,12 +1286,70 @@ jQuery(document).ready( function() {
       hm_replace_plotAccession_fieldMap('override');
     });
 
+    function submit_fieldmap_metadata() {
+        jQuery('#working_modal').modal("show");
+        let plot_object = FieldMap.format_brapi_put_object();
+        // let filler_plot_object = FieldMap.format_brapi_post_object();
+        // var stringifiedPostData = JSON.stringify(filler_plot_object);
+        var stringifiedData = JSON.stringify(plot_object);            
+        new jQuery.ajax({
+            type: 'PUT',
+            contentType: 'application/json',
+            headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+            url: '/brapi/v2/observationunits/',
+            data: stringifiedData,
+            success: function(response) {
+                refresh_cache();
+                
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal("hide");
+                alert('Error saving fieldmap layout.');
+            },
+        });
+        // if (FieldMap.meta_data.post) {
+        // //     new jQuery.ajax({
+        // //     type: 'POST',
+        // //     contentType: 'application/json',
+        // //     headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+        // //     url: '/brapi/v2/observationunits/',
+        // //     data: stringifiedData,
+        // //     success: function(response) {
+        // //         refresh_cache();
+                
+        // //     },
+        // //     error: function(response) {
+        // //         jQuery('#working_modal').modal("hide");
+        // //         alert('Error saving fieldmap layout.');
+        // //     },
+        // // });
+        // })
+    };
+
+
+    function refresh_cache() {
+        new jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/breeders/trial/<% $trial_id %>/regenerate_cache',
+            dataType: "json",
+            data: {
+                'trial_id': trial_id,
+            },
+            success: function (response) {
+                jQuery('#working_modal').modal("hide");
+                jQuery('#fieldplot_layout_success_dialog').modal("show");
+            },
+            error: function (response) {
+                console.log(response);
+            }
+        })
+    }
+
     function hm_replace_plotAccession_fieldMap(override) {
       jQuery('#hm_replace_plot_accessions_dialog').modal("hide");
       jQuery('#working_modal').modal("show");
 
       var new_accession = jQuery('#hm_accession').val();
-      var new_plot_name = jQuery('#hm_new_plot_name').val();
       var old_accession = jQuery('#hm_edit_plot_accession').html();
       var old_plot_id = jQuery('#hm_edit_plot_id').html();
       var old_plot_name = jQuery('#hm_edit_plot_name').html();
@@ -1385,7 +1360,6 @@ jQuery(document).ready( function() {
         dataType: "json",
         data: {
                 'new_accession': new_accession,
-                'new_plot_name': new_plot_name,
                 'old_accession': old_accession,
                 'old_plot_id': old_plot_id,
                 'old_plot_name': old_plot_name,
