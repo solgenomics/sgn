@@ -87,10 +87,10 @@ sub download {
             }
             push @all_field_data, \@row;
         }
-        print STDERR "CROSSES IN EXPERIMENT =".Dumper(\@cross_info)."\n";
-        print STDERR "PROGENIES IN EXPERIMENT =".Dumper(\@progeny_info)."\n";
-        print STDERR "SEEDLOT IN EXPERIMENT =".Dumper(\@seedlot_info)."\n";
-        print STDERR "CROSSING DATA IN EXPERIMENT =".Dumper($crossing_data)."\n";
+#        print STDERR "CROSSES IN EXPERIMENT =".Dumper(\@cross_info)."\n";
+#        print STDERR "PROGENIES IN EXPERIMENT =".Dumper(\@progeny_info)."\n";
+#        print STDERR "SEEDLOT IN EXPERIMENT =".Dumper(\@seedlot_info)."\n";
+#        print STDERR "CROSSING DATA IN EXPERIMENT =".Dumper($crossing_data)."\n";
 
         my @all_rows;
         for my $i (0 .. $#cross_info) {
