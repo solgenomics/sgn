@@ -47,7 +47,7 @@ ok($trial_design->set_stock_list(\@stock_list), "Set stock names for trial desig
 is_deeply($trial_design->get_stock_list(),\@stock_list, "Get stock names for trial design");
 ok($trial_design->set_design_type("p-rep"), "Set design type to p-rep");
 
-print STDERR "PATH: ".$ENV{R_LIBS_USER}."/DiGGer\n";
+
 
  SKIP: {
 

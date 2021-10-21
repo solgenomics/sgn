@@ -1,0 +1,10 @@
+{
+  "issuer": "",
+  "authorization_endpoint": "<% $site %>/brapi/authorize",
+  "jwks_uri": "",
+  "token_endpoint": "",
+  "grant_types_supported": ["implicit"],
+  "response_types_supported": ["token"],
+  "subject_types_supported": ["public"],
+  "id_token_signing_alg_values_supported": []
+}

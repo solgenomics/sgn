@@ -91,7 +91,7 @@ $d->while_logged_in_as("submitter", sub {
    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
    sleep(2);
    $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
-   sleep(120);
+   sleep(130);
    $d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
    sleep(20);
    $d->driver->go_back();
