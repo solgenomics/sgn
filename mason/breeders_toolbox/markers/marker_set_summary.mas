@@ -1,0 +1,17 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/markers/marker_set_summary.mas - a mason component to display markerset info
+
+=head1
+
+=cut
+
+</%doc>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<table class="table table-hover table-bordered" id="marker_sets">
+
+</table>

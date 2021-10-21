@@ -4,6 +4,7 @@ use Moose;
 use Data::Dumper;
 use Bio::Chado::Schema;
 use CXGN::Trial;
+use CXGN::Trial::TrialLookup;
 use Math::Round::Var;
 use File::Temp 'tempfile';
 use Text::CSV;
@@ -18,6 +19,7 @@ use CXGN::UploadFile;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
 use File::Basename qw | basename dirname|;
+use File::Slurp qw | read_file |;
 use List::MoreUtils qw | :all !before !after |;
 use Try::Tiny;
 use CXGN::BreederSearch;
@@ -4494,6 +4496,184 @@ sub trial_calculate_numerical_derivative : Chained('trial') PathPart('calculate_
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = {success => 1};
+}
+
+
+#
+# TRIAL ENTRY NUMBERS
+#
+
+#
+# Get an array of entry numbers for the specified trial
+# path param: trial id
+# return: an array of objects, with the following keys:
+#   stock_id = id of the stock
+#   stock_name = uniquename of the stock
+#   entry_number = entry number for the stock in this trial
+#
+sub get_entry_numbers : Chained('trial') PathPart('entry_numbers') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial = $c->stash->{trial};
+
+    # Get Entry Number map (stock_id -> entry number)
+    my $entry_number_map = $trial->get_entry_numbers();
+    my @entry_numbers;
+    if ( $entry_number_map ) {
+
+        # Parse each stock - get its name
+        foreach my $stock_id (keys %$entry_number_map) {
+            my $row = $schema->resultset("Stock::Stock")->find({ stock_id => int($stock_id) });
+            my $stock_name = $row ? $row->uniquename() : 'STOCK NO LONGER EXISTS!';
+            my $entry_number = $entry_number_map->{$stock_id};
+            push(@entry_numbers, { stock_id => int($stock_id), stock_name => $stock_name, entry_number => $entry_number });
+        }
+
+    }
+
+    # Return the array of entry number info
+    $c->stash->{rest} = { entry_numbers => \@entry_numbers };
+}
+
+# 
+# Create an entry number template for the specified trials
+# query param: 'trial_ids' = comma separated list of trial ids
+# return: 'file' = path to tempfile of excel template
+#
+sub create_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/create') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my @trial_ids = split(',', $c->req->param('trial_ids'));
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $dir = $c->tempfiles_subdir('download');
+    my $temp_file_name = "entry_numbers_XXXX";
+    my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    $rel_file = $rel_file . ".xls";
+    my $tempfile = $c->config->{basepath}."/".$rel_file;
+
+    my $download = CXGN::Trial::Download->new({
+        bcs_schema => $schema,
+        trial_list => \@trial_ids,
+        filename => $tempfile,
+        format => 'TrialEntryNumbers'
+    });
+    my $error = $download->download();
+
+    $c->stash->{rest} = { file => $tempfile };
+}
+
+# 
+# Download an entry number template
+# query param: 'file' = path of entry number template tempfile to download
+# return: contents of excel file
+#
+sub download_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/download') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $tempfile = $c->req->param('file');
+
+    $c->res->content_type('application/vnd.ms-excel');
+    $c->res->header('Content-Disposition', qq[attachment; filename="entry_number_template.xls"]);
+    my $output = read_file($tempfile);
+    $c->res->body($output);
+}
+
+# 
+# Upload an entry number template
+# upload params: 
+#   upload_entry_numbers_file: Excel file to validate and parse
+#   ignore_warnings: true to add processed data if warnings exist
+# return: validation errors and warnings or success = 1 if entry numbers sucessfully stored
+#   filename: original upload file name
+#   error: array of error messages
+#   warning: array of warning messages
+#   missing_accessions: array of stock names not found in the database
+#   missing_trials: array of trial names not found in database
+#   success: set to `1` if file successfully validated and stored
+#
+sub upload_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/upload') : ActionClass('REST') { }
+sub upload_entry_number_template_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $upload = $c->req->upload('upload_entry_numbers_file');
+    my $ignore_warnings = $c->req->param('ignore_warnings') eq 'true';
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my (@errors, %response);
+
+    my $subdirectory = "trial_entry_numbers";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Make sure user is logged in
+    if ( !$c->user() ) {
+        push(@errors, "You need to be logged in to upload entry numbers.");
+        $c->stash->{rest} = { filename => $upload_original_name, error => \@errors };
+        return;
+    }
+    
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_role = $c->user->get_object->get_user_type();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    if ( !$archived_filename_with_path ) {
+        push(@errors, "Could not save file $upload_original_name in archive");
+        $c->stash->{rest} = { filename => $upload_original_name, error => \@errors };
+        return;
+    }
+    unlink $upload_tempfile;
+
+    ## Parse the uploaded file
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('TrialEntryNumbers');
+    my $parsed_data = $parser->parse();
+    my $parse_errors = $parser->get_parse_errors();
+    my $parse_warnings = $parser->get_parse_warnings();
+
+    print STDERR "IGNORE WARNINGS: $ignore_warnings\n";
+
+    ## Return with warnings and errors
+    if ( $parse_errors || (!$ignore_warnings && $parse_warnings) || !$parsed_data ) {
+        if ( !$parse_errors && !$parse_warnings ) {
+            push(@errors, "Data could not be parsed");
+            $c->stash->{rest} = { filename => $upload_original_name, error => \@errors };
+            return;
+        }
+        $c->stash->{rest} = {
+            filename => $upload_original_name,
+            error => $parse_errors->{'error_messages'}, 
+            warning => $parse_warnings->{'warning_messages'},
+            missing_accessions => $parse_errors->{'missing_accessions'},
+            missing_trials => $parse_errors->{'missing_trials'}
+        };
+        return;
+    }
+
+    ## Process the parsed data
+    foreach my $trial_id (keys %$parsed_data) {
+        my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+        $trial->set_entry_numbers($parsed_data->{$trial_id});
+    }
+
+    $c->stash->{rest} = { 
+        success => 1,
+        filename => $upload_original_name, 
+        warning => $parse_warnings->{'warning_messages'} 
+    };
+    return;
 }
 
 1;

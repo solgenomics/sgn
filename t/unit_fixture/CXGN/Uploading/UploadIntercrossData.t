@@ -41,7 +41,8 @@ $response = $ua->post(
     Content_Type => 'form-data',
     Content => [
         "intercross_file" => [ $file, 'intercross_upload.csv', Content_Type => 'text/plain', ],
-        "sgn_session_id" => $sgn_session_id
+        "sgn_session_id" => $sgn_session_id,
+        "cross_id_format_option" => 'auto_generated_id'
     ]
 );
 ok($response->is_success);

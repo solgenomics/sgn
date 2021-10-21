@@ -171,10 +171,10 @@ sub search {
     $sth->execute();
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
-        # foreach (@$synonym){
-        #     $_ =~ s/ EXACT \[\]//;
-        #     $_ =~ s/\"//g;
-        # }
+        foreach (@$synonym){
+            $_ =~ s/ EXACT \[\]//;
+            $_ =~ s/\"//g;
+        }
 
         my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
         my $categories = $trait->categories;
@@ -311,10 +311,10 @@ sub detail {
     $sth->execute();
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $accession, $synonym, $obsolete, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
-        # foreach (@$synonym){
-        #     $_ =~ s/ EXACT \[\]//;
-        #     $_ =~ s/\"//g;
-        # }
+        foreach (@$synonym){
+            $_ =~ s/ EXACT \[\]//;
+            $_ =~ s/\"//g;
+        }
         my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
         my $categories = $trait->categories;
         my @brapi_categories = split '/', $categories;
