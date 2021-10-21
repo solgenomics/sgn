@@ -773,7 +773,7 @@ sub get_seedlots_from_crossingtrial {
         JOIN stock as stock1 on (nd_experiment_stock.stock_id = stock1.stock_id)
         LEFT JOIN stock_relationship ON (stock1.stock_id = stock_relationship.subject_id) and stock_relationship.type_id = ?
         LEFT JOIN stock as stock2 ON (stock_relationship.object_id = stock2.stock_id)
-        WHERE nd_experiment_project.project_id = ?";
+        WHERE nd_experiment_project.project_id = ? ORDER BY stock1.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 

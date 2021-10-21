@@ -19,6 +19,7 @@ my $download = CXGN::Trial::Download->new({
     trial_id => $c->stash->{trial_id},
     filename => $tempfile,
     format => $plugin,
+    field_crossing_data_order => \@field_crossing_data_order
 });
 my $error = $download->download();
 my $file_name = $trial_id . "_" . "$what" . ".$format";
@@ -55,18 +56,16 @@ sub download {
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
 
-    my @header = ('Cross Unique ID', 'Cross Combination', 'Cross Type', 'Female Parent', 'Female Ploidy', 'Male Parent', 'Male Ploidy', 'Female Plot', 'Male Plot', 'Female Plant', 'Male Plant', 'Family Name', 'Number of Progenies');
+    my @header = ('Cross Unique ID', 'Cross Combination', 'Cross Type', 'Female Parent', 'Female Ploidy', 'Male Parent', 'Male Ploidy', 'Female Plot', 'Male Plot', 'Female Plant', 'Male Plant', 'Seedlot Name', 'Family Name', 'Number of Progenies');
+    my $field_crossing_data_order = $self->field_crossing_data_order;
+    my @field_crossing_data_header = @$field_crossing_data_order;
+    push @header, @field_crossing_data_header;
+
     my $col_count = 0;
     foreach (@header){
         $ws->write(0, $col_count, $_);
         $col_count++;
     }
-
-    my $field_crossing_data_order = $self->field_crossing_data_order;
-    my @field_crossing_data_header = @$field_crossing_data_order;
-    print STDERR "FIELD DATA ORDER =".Dumper(\@field_crossing_data_header)."\n";
-    push @header, @field_crossing_data_header;
-#    print STDERR "COMBINED HEADER =".Dumper(\@header)."\n";
 
     my $row_count = 1;
     foreach my $id(@trial_ids) {
@@ -75,8 +74,9 @@ sub download {
         my @cross_info = @$cross_info_ref;
         my $progeny_info_ref = $crosses->get_cross_progenies_trial();
         my @progeny_info = @$progeny_info_ref;
-
-        my @field_data;
+        my $seedlot_info_ref = $crosses->get_seedlots_from_crossingtrial();
+        my @seedlot_info = @$seedlot_info_ref;
+        my @all_field_data;
         my $crossing_data = $crosses->get_cross_properties_trial();
 
         foreach my $cross (@$crossing_data){
@@ -85,25 +85,30 @@ sub download {
             foreach my $cross_prop (@field_crossing_data_header) {
                 push @row, $field_crossing_data_hash->{$cross_prop};
             }
-            push @field_data, \@row;
+            push @all_field_data, \@row;
         }
-#        print STDERR "CROSSES IN EXPERIMENT =".Dumper(\@cross_info)."\n";
-#        print STDERR "PROGENIES IN EXPERIMENT =".Dumper(\@progeny_info)."\n";
+        print STDERR "CROSSES IN EXPERIMENT =".Dumper(\@cross_info)."\n";
+        print STDERR "PROGENIES IN EXPERIMENT =".Dumper(\@progeny_info)."\n";
+        print STDERR "SEEDLOT IN EXPERIMENT =".Dumper(\@seedlot_info)."\n";
+        print STDERR "CROSSING DATA IN EXPERIMENT =".Dumper($crossing_data)."\n";
 
+        my @all_rows;
         for my $i (0 .. $#cross_info) {
-            $ws->write($row_count, 0, $cross_info[$i][1]);
-            $ws->write($row_count, 1, $cross_info[$1][2]);
-            $ws->write($row_count, 2, $cross_info[$i][3]);
-            $ws->write($row_count, 3, $cross_info[$i][5]);
-            $ws->write($row_count, 4, $cross_info[$i][6]);
-            $ws->write($row_count, 5, $cross_info[$i][8]);
-            $ws->write($row_count, 6, $cross_info[$i][9]);
-            $ws->write($row_count, 7, $cross_info[$i][11]);
-            $ws->write($row_count, 8, $cross_info[$i][13]);
-            $ws->write($row_count, 9, $cross_info[$i][15]);
-            $ws->write($row_count, 10, $cross_info[$i][17]);
-            $ws->write($row_count, 11, $progeny_info[$i][4]);
-            $ws->write($row_count, 12, $progeny_info[$i][5]);
+            my @each_row = ();
+            push @each_row, ($cross_info[$i][1], $cross_info[$i][2], $cross_info[$i][3], $cross_info[$i][5], $cross_info[$i][6], $cross_info[$i][8], $cross_info[$i][9], $cross_info[$i][11], $cross_info[$i][13], $cross_info[$i][15], $cross_info[$i][17], $seedlot_info[$i][3], $progeny_info[$i][4], $progeny_info[$i][5]);
+            my $each_cross_id_data_ref = $all_field_data[$i];
+            my @each_cross_id_data = @$each_cross_id_data_ref;
+            for my $j (0 .. $#each_cross_id_data) {
+                push @each_row, $all_field_data[$i][$j];
+            }
+            push @all_rows, \@each_row;
+        }
+#        print STDERR "ALL ROWS =".Dumper(\@all_rows)."\n";
+
+        for my $k (0 .. $#cross_info) {
+            for my $l (0 .. $#header) {
+                $ws->write($row_count, $l, $all_rows[$k][$l]);
+            }
             $row_count++;
         }
     }
