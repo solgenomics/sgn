@@ -50,10 +50,10 @@ sub check_cluster_output_files {
 
     if ($cluster_type =~ /k-means/i)
     {
-	$self->kcluster_result_file($c);
+	$self->cluster_result_file($c);
 	$cluster_result_file = $c->stash->{"${cluster_type}_result_file"};
 
-	$self->kcluster_plot_kmeans_file($c);
+	$self->cluster_plot_file($c);
 	$cluster_plot_file = $c->stash->{"${cluster_type}_plot_file"};
     }
     else
@@ -352,7 +352,7 @@ sub combined_cluster_trials_data_file {
 }
 
 
-sub kcluster_result_file {
+sub cluster_result_file {
     my ($self, $c) = @_;
 
     my $file_id = $c->stash->{file_id};
@@ -369,7 +369,7 @@ sub kcluster_result_file {
 }
 
 
-sub kcluster_plot_kmeans_file {
+sub cluster_plot_file {
     my ($self, $c) = @_;
 
     my $file_id = $c->stash->{file_id};
@@ -455,12 +455,12 @@ sub prep_cluster_download_files {
 
   my $cluster_type = $c->stash->{cluster_type};
 
-  $self->kcluster_plot_kmeans_file($c);
+  $self->cluster_plot_file($c);
   my $plot_file = $c->stash->{"${cluster_type}_plot_file"};
   $c->controller('solGS::Files')->copy_file($plot_file, $base_tmp_dir);
   $plot_file = catfile($tmp_dir, basename($plot_file));
 
-  $self->kcluster_result_file($c);
+  $self->cluster_result_file($c);
   my $clusters_file = $c->stash->{"${cluster_type}_result_file"};
   $c->controller('solGS::Files')->copy_file($clusters_file, $base_tmp_dir);
   $clusters_file =  catfile($tmp_dir, basename($clusters_file));
@@ -489,10 +489,10 @@ sub cluster_output_files {
 
     if ($cluster_type =~/k-means/i)
     {
-	$self->kcluster_result_file($c);
+	$self->cluster_result_file($c);
 	$result_file = $c->stash->{"${cluster_type}_result_file"};
 
-	$self->kcluster_plot_kmeans_file($c);
+	$self->cluster_plot_file($c);
 	$plot_kmeans_file = $c->stash->{"${cluster_type}_plot_file"};
 
 	#$self->kcluster_plot_pam_file($c);

@@ -563,7 +563,7 @@ sub check_cluster_output {
         my $result_file;
         if ($cluster_type =~/k-means/i)
         {
-            $c->controller('solGS::Cluster')->kcluster_result_file($c);
+            $c->controller('solGS::Cluster')->cluster_result_file($c);
             $result_file = $c->stash->{'k-means_result_file'};
         }
         else
