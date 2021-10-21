@@ -124,6 +124,7 @@ solGS.cluster = {
 	// + '<option value="heirarchical">Heirarchical</option>'
 	var clusterTypeGroup  = '<select class="form-control" id="cluster_type_select">'
 	    + '<option value="k-means">K-Means</option>'
+        + '<option value="hierarchical">Hierarchical</option>'
 	    +  '</select>';
 
 	return clusterTypeGroup;
@@ -666,7 +667,6 @@ if (document.URL.match(/cluster\/analysis/)) {
 	var dataType    = jQuery('#'+selectId + ' #cluster_data_type_select').val();
 	var clusterType = jQuery('#'+selectId + ' #cluster_type_select').val();
 	var kNumber     = jQuery('#'+selectId + ' #k_number').val();
-
 	var selectionProp = jQuery('#'+selectId + ' #selection_proportion').val()
 
 	if (selectionProp) {
@@ -769,7 +769,6 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    } else {
 		jQuery('#cluster_div #cluster_options #selection_proportion_div').hide();
 	    }
-
 	});
 
 	jQuery(".cluster_dropdown").bind('click', function(e) {
@@ -827,6 +826,22 @@ jQuery(document).ready( function() {
         }
     }
 
+});
+
+
+jQuery(document).ready(function() {
+
+    jQuery("#cluster_type_opts").change(function() {
+            var clusterType = jQuery('#cluster_type_select').val();
+            console.log(`cluster type ${clusterType}`)
+            if (clusterType.match(/hierarchical/i)) {
+                console.log('hide k number option')
+                jQuery('#cluster_div #cluster_options #k_number_div').hide();
+            } else {
+                console.log('show k number option')
+                jQuery('#cluster_div #cluster_options #k_number_div').show();
+            }
+    });
 });
 
 
