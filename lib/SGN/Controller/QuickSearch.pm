@@ -15,6 +15,7 @@ use CXGN::Tools::Identifiers qw/ identifier_url identifier_namespace /;
 use CXGN::Tools::Text qw/to_tsquery_string trim/;
 use SGN::Model::Cvterm;
 use Bio::Chado::Schema;
+use CXGN::Marker::SearchMatView;
 use Data::Dumper;
 
 =head1 NAME
@@ -49,7 +50,8 @@ my %searches = (
     clone      => { function => \&quick_clone_search, exact => 1 },
     est        => { function => \&quick_est_search,   exact => 1 },
     microarray => { function => \&quick_array_search, exact => 1 },
-    marker     => { function => \&quick_marker_search  },
+    # marker   => { function => \&quick_marker_search  },
+    marker     => { function => \&quick_mapped_geno_marker_search },
     manual_annotations    => { function => \&quick_manual_annotation_search    },
     automatic_annotations => { function => \&quick_automatic_annotation_search },
     sgn_pages  => { function => \&quick_page_search },
@@ -176,7 +178,7 @@ sub redirect_if_only_one_possible : Private {
          ),
        );
 
-    if( @possible_urls == 1 ) {
+    if( @possible_urls == 1 && $possible_urls[0] ne '' ) {
         $c->log->debug("redirecting to only possible url: $possible_urls[0]") if $c->debug;
         $c->res->redirect( $possible_urls[0] );
         return;
@@ -387,6 +389,35 @@ sub quick_marker_search {
             "$count marker identifiers"
           ];
     }
+    return $marker_link;
+}
+
+sub quick_mapped_geno_marker_search {
+    my $self = shift;
+    my $db = shift;
+    my $term = shift;
+    my $schema = shift;
+
+    my $count = 0;
+    my $marker_link = [undef, "0 marker identifiers"];
+
+    # Get count of mapped markers
+    my $mapped_count = CXGN::Marker::Tools::marker_name_to_ids($db,$term);
+    $count = $count + $mapped_count;
+
+    # Get count of genotyped markers
+    my $msearch = CXGN::Marker::SearchMatView->new(bcs_schema => $schema);
+    my $results = $msearch->query({ name => $term, name_match => 'exact' });
+    my $genotyped_count = $results->{counts}->{markers};
+    $count = $count + $genotyped_count;
+
+    if ( $count != 0 ) {
+        $marker_link = [
+            "/search/variants/results?marker_name=$term&marker_name_match=exactly",
+            "$count marker identifiers"
+        ];
+    }
+
     return $marker_link;
 }
 

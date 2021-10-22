@@ -18,7 +18,7 @@ my $geno = CXGN::Genotype::GRM->new({
     download_format=>'matrix', #either 'matrix', 'three_column', or 'heatmap'
     minor_allele_frequency=>0.01,
     marker_filter=>0.6,
-    individuals_filter=>0.8
+    individuals_filter=>0.8,
 });
 RECOMMENDED
 $geno->download_grm();
@@ -129,6 +129,24 @@ has 'individuals_filter' => (
     default => sub{0.80}
 );
 
+has 'return_imputed_matrix' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
+has 'return_inverse' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 0
+);
+
+has 'ensure_positive_definite' => (
+    isa => 'Bool',
+    is => 'ro',
+    default => 1
+);
+
 has 'accession_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw'
@@ -185,6 +203,9 @@ sub get_grm {
     my $protocol_id = $self->protocol_id();
     my $get_grm_for_parental_accessions = $self->get_grm_for_parental_accessions();
     my $grm_tempfile = $self->grm_temp_file();
+    my $return_inverse = $self->return_inverse();
+    my $ensure_positive_definite = $self->ensure_positive_definite();
+    my $return_imputed_matrix = $self->return_imputed_matrix();
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -199,6 +220,7 @@ sub get_grm {
     my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_grm";
     mkdir $tmp_output_dir if ! -d $tmp_output_dir;
     my ($grm_tempfile_out_fh, $grm_tempfile_out) = tempfile("download_grm_out_XXXXX", DIR=> $tmp_output_dir);
+    my ($grm_imputed_tempfile_out_fh, $grm_imputed_tempfile_out) = tempfile("download_grm_out_XXXXX", DIR=> $tmp_output_dir);
     my ($temp_out_file_fh, $temp_out_file) = tempfile("download_grm_tmp_XXXXX", DIR=> $tmp_output_dir);
 
     my @individuals_stock_ids;
@@ -412,26 +434,40 @@ sub get_grm {
         #    ';
         #}
         #else {
-        $cmd .= 'A <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'mean\', n.core='.$number_system_cores.', return.imputed=FALSE);
-        ';
-        #}
-        # Ensure positive definite matrix. Taken from Schaeffer
-        $cmd .= 'E = eigen(A);
-        ev = E\$values;
-        U = E\$vectors;
-        no = dim(A)[1];
-        nev = which(ev < 0);
-        wr = 0;
-        k=length(nev);
-        if(k > 0){
-            p = ev[no - k];
-            B = sum(ev[nev])*2.0;
-            wr = (B*B*100.0)+1;
-            val = ev[nev];
-            ev[nev] = p*(B-val)*(B-val)/wr;
-            A = U%*%diag(ev)%*%t(U);
+        if (!$return_imputed_matrix) {
+            $cmd .= 'A <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'mean\', n.core='.$number_system_cores.', return.imputed=FALSE);
+            ';
         }
-        ';
+        else {
+            $cmd .= 'A_list <- A.mat(mat, min.MAF='.$maf.', max.missing='.$marker_filter.', impute.method=\'mean\', n.core='.$number_system_cores.', return.imputed=TRUE);
+            A <- A_list\$A;
+            imputed <- A_list\$imputed;
+            write.table(imputed, file=\''.$grm_imputed_tempfile_out.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
+            ';
+        }
+        #}
+        if ($ensure_positive_definite) {
+            # Ensure positive definite matrix. Taken from Schaeffer
+            $cmd .= 'E = eigen(A);
+            ev = E\$values;
+            U = E\$vectors;
+            no = dim(A)[1];
+            nev = which(ev < 0);
+            wr = 0;
+            k=length(nev);
+            if(k > 0){
+                p = ev[no - k];
+                B = sum(ev[nev])*2.0;
+                wr = (B*B*100.0)+1;
+                val = ev[nev];
+                ev[nev] = p*(B-val)*(B-val)/wr;
+                A = U%*%diag(ev)%*%t(U);
+            }
+            ';
+        }
+        if ($return_inverse) {
+            $cmd .= 'A <- solve(A);';
+        }
         $cmd .= 'write.table(A, file=\''.$grm_tempfile_out.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
         print STDERR Dumper $cmd;
 
@@ -501,7 +537,14 @@ sub grm_cache_key {
     my $maf = $self->minor_allele_frequency();
     my $marker_filter = $self->marker_filter();
     my $individuals_filter = $self->individuals_filter();
-    my $key = md5_hex($accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."_$datatype");
+    my $q_params = $accessions.$plots.$protocol.$genotypeprophash.$protocolprophash.$protocolpropmarkerhash.$self->get_grm_for_parental_accessions().$self->return_only_first_genotypeprop_for_stock()."_MAF$maf"."_mfilter$marker_filter"."_ifilter$individuals_filter"."_$datatype";
+    if ($self->return_inverse()) {
+        $q_params .= $self->return_inverse();
+    }
+    if (!$self->ensure_positive_definite()) {
+        $q_params .= $self->ensure_positive_definite();
+    }
+    my $key = md5_hex($q_params);
     return $key;
 }
 
@@ -514,9 +557,12 @@ sub download_grm {
     my $web_cluster_queue_config = shift;
     my $basepath_config = shift;
     my $download_format = $self->download_format();
+    my $return_imputed_matrix = $self->return_imputed_matrix();
     my $grm_tempfile = $self->grm_temp_file();
 
-    my $key = $self->grm_cache_key("download_grm_v03".$download_format);
+    my $return_imputed_matrix_key = $return_imputed_matrix ? '_returnimputed' : '';
+
+    my $key = $self->grm_cache_key("download_grm_v03".$download_format.$return_imputed_matrix_key);
     $self->_cache_key($key);
     $self->cache( Cache::File->new( cache_root => $self->cache_root() ));
 

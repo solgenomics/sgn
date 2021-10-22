@@ -547,7 +547,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my @error_status;
     my @warning_status;
 
-    my $parser = CXGN::Phenotypes::ParseUpload->new(); 
+    my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $validate_type = "highdimensionalphenotypes spreadsheet transcriptomics";
     my $metadata_file_type = "transcriptomics spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
@@ -899,7 +899,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         values_hash=>\%parsed_data_agg_coalesced,
         has_timestamps=>0,
         metadata_hash=>\%phenotype_metadata
-    
+
     });
 
     my $warning_status;
@@ -1271,18 +1271,6 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         }
     }
 
-    my $protocol_equipment_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_type');
-    my $protocol_equipment_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_equipment_description');
-    my $protocol_data_process_desc = $c->req->param('upload_metabolomics_spreadsheet_protocol_data_process_description');
-    my $protocol_phenotype_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_phenotype_type');
-    my $protocol_phenotype_units = $c->req->param('upload_metabolomics_spreadsheet_protocol_phenotype_units');
-    my $protocol_chromatography_system_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_system_brand');
-    my $protocol_chromatography_column_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_chromatography_column_brand');
-    my $protocol_ms_brand = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_brand');
-    my $protocol_ms_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_type');
-    my $protocol_ms_instrument_type = $c->req->param('upload_metabolomics_spreadsheet_protocol_ms_instrument_type');
-    my $protocol_ms_ion_mode = $c->req->param('upload_metabolomics_spreadsheet_protocol_ion_mode');
-
     if (!$protocol_id) {
         my %metabolomics_protocol_prop = (
             header_column_names => \@metabolites,
@@ -1398,25 +1386,30 @@ sub high_dimensional_phenotypes_download_file_POST : Args(0) {
     my $ds = CXGN::Dataset->new({
         people_schema => $people_schema,
         schema => $schema,
-        sp_dataset_id => $dataset_id
+        sp_dataset_id => $dataset_id,
     });
-    my $accession_ids = $ds->accessions();
-    my $plot_ids = $ds->plots();
-    my $plant_ids = $ds->plants();
 
-    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
-        bcs_schema=>$schema,
-        nd_protocol_id=>$nd_protocol_id,
-        high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
-        query_associated_stocks=>$query_associated_stocks,
-        accession_list=>$accession_ids,
-        plot_list=>$plot_ids,
-        plant_list=>$plant_ids
-    });
-    my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+    my $high_dimensional_phenotype_identifier_list = [];
+    my ($data_matrix, $identifier_metadata, $identifier_names) = $ds->retrieve_high_dimensional_phenotypes(
+        $nd_protocol_id,
+        $high_dimensional_phenotype_type,
+        $query_associated_stocks,
+        $high_dimensional_phenotype_identifier_list
+    );
+
+    if ($data_matrix->{error}) {
+        $c->stash->{rest} = {error => $data_matrix->{error}};
+        $c->detach();
+    }
+
     # print STDERR Dumper $data_matrix;
     # print STDERR Dumper $identifier_metadata;
     # print STDERR Dumper $identifier_names;
+
+    if ($data_matrix->{error}) {
+        $c->stash->{rest} = {error => $data_matrix->{error}};
+        $c->detach();
+    }
 
     my $dir = $c->tempfiles_subdir('/high_dimensional_phenotypes_download');
     my $download_file_link = $c->tempfile( TEMPLATE => 'high_dimensional_phenotypes_download/downloadXXXX');
@@ -1559,11 +1552,8 @@ sub high_dimensional_phenotypes_download_relationship_matrix_file_POST : Args(0)
     my $ds = CXGN::Dataset->new({
         people_schema => $people_schema,
         schema => $schema,
-        sp_dataset_id => $dataset_id
+        sp_dataset_id => $dataset_id,
     });
-    my $accession_ids = $ds->accessions();
-    my $plot_ids = $ds->plots();
-    my $plant_ids = $ds->plants();
 
     my $dir = $c->tempfiles_subdir('/high_dimensional_phenotypes_relationship_matrix_download');
     my $temp_data_file = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'high_dimensional_phenotypes_relationship_matrix_download/downloadXXXX');
@@ -1571,18 +1561,13 @@ sub high_dimensional_phenotypes_download_relationship_matrix_file_POST : Args(0)
     $download_file_link .= '.csv';
     my $download_file_tempfile = $c->config->{basepath}."/".$download_file_link;
 
-    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesRelationshipMatrix->new({
-        bcs_schema=>$schema,
-        nd_protocol_id=>$nd_protocol_id,
-        temporary_data_file=>$temp_data_file,
-        relationship_matrix_file=>$download_file_tempfile,
-        high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
-        query_associated_stocks=>$query_associated_stocks,
-        accession_list=>$accession_ids,
-        plot_list=>$plot_ids,
-        plant_list=>$plant_ids
-    });
-    my ($relationship_matrix_data, $data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+    my ($relationship_matrix_data, $data_matrix, $identifier_metadata, $identifier_names) = $ds->retrieve_high_dimensional_phenotypes_relationship_matrix(
+        $nd_protocol_id,
+        $high_dimensional_phenotype_type,
+        $query_associated_stocks,
+        $temp_data_file,
+        $download_file_tempfile
+    );
     # print STDERR Dumper $relationship_matrix_data;
     # print STDERR Dumper $data_matrix;
     # print STDERR Dumper $identifier_metadata;

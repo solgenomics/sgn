@@ -96,11 +96,15 @@ $trial_stock_type => undef
                                  <input id="create_fieldbook_include_measured_<% $download_type %>" type="checkbox" data-toggle="toggle">
                             </div>
                             <label class="col-sm-3 control-label">Include summary of overall accession performance (for a list of traits): </label>
-                            <div class="col-sm-3" >
+                            <div class="col-sm-2" >
                                 <div id="create_fieldbook_with_trait_list_<% $download_type %>">
                                 </div>
                             </div>
-                            <label class="col-sm-2 control-label">Use trait synonyms: </label>
+                            <label class="col-sm-1 control-label">Include all stats: </label>
+                            <div class="col-sm-1" >
+                                 <input id="create_fieldbook_all_stats_<% $download_type %>" type="checkbox" checked data-toggle="toggle">
+                            </div>
+                            <label class="col-sm-1 control-label">Use trait synonyms: </label>
                             <div class="col-sm-1" >
                                  <input id="create_fieldbook_use_synonyms_<% $download_type %>" type="checkbox" checked data-toggle="toggle">
                             </div>
@@ -129,7 +133,7 @@ $trial_stock_type => undef
         <div class="container-fluid">
             <p>
               <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-              The field book layout file was saved successfully
+              The field book layout file(s) were saved successfully
             </p>
             <div id="tablet_field_layout_get_file_<% $download_type %>"></div>
         </div>
@@ -152,7 +156,15 @@ var has_tissue_samples_<% $download_type %> = 0;
 jQuery(document).ready(function() {
 
     if(jQuery("#html_select_trial_for_create_fieldbook_<% $download_type %>").length == 0) {
-        get_select_box('trials', 'select_trial_for_create_fieldbook_<% $download_type %>', { 'name' : 'html_select_trial_for_create_fieldbook_<% $download_type %>', 'id' : 'html_select_trial_for_create_fieldbook_<% $download_type %>' });
+        get_select_box(
+            'trials', 
+            'select_trial_for_create_fieldbook_<% $download_type %>', 
+            { 
+                'name' : 'html_select_trial_for_create_fieldbook_<% $download_type %>', 
+                'id' : 'html_select_trial_for_create_fieldbook_<% $download_type %>',
+                'include_lists' : 1
+            }
+        );
     }
 
     jQuery(document).on('change', '#html_select_trial_for_create_fieldbook_<% $download_type %>', function() {
@@ -197,98 +209,107 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#create_fieldbook_data_level_<% $download_type %>').on('change', function(){
-        var selected_trial_id = parseInt(jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val());
+        var selected_trial_ids = jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val().split(',');
         var level = jQuery('#create_fieldbook_data_level_<% $download_type %>').val();
         if (level == 'plots'){
             show_available_columns_<% $download_type %>('plots');
         } else {
-            new jQuery.ajax({
-                type: 'POST',
-                url: '/ajax/breeders/trial/'+selected_trial_id+'/has_plants',
-                dataType: "json",
-                beforeSend: function() {
-                    jQuery("#working_modal").modal("show");
-                },
-                success: function (response) {
-                    //console.log(response);
-                    jQuery("#working_modal").modal("hide");
-                    if(response.has_plants == 0){
-                        has_plants_<% $download_type %> = 0;
-                        if (level == 'plants'){
-                            alert('This trial does not have '+level);
-                            show_available_columns_<% $download_type %>('plots');
-                            jQuery('#create_fieldbook_data_level_<% $download_type %>').val('plots');
+            let warned = false;
+            for ( let i = 0; i < selected_trial_ids.length; i++ ) {
+                let trial_id = parseInt(selected_trial_ids[i]);
+                if ( trial_id && trial_id !== '' ) {
+                    new jQuery.ajax({
+                        type: 'POST',
+                        url: '/ajax/breeders/trial/'+trial_id+'/has_plants',
+                        dataType: "json",
+                        beforeSend: function() {
+                            jQuery("#working_modal").modal("show");
+                        },
+                        success: function (response) {
+                            //console.log(response);
+                            jQuery("#working_modal").modal("hide");
+                            if(response.has_plants == 0){
+                                has_plants_<% $download_type %> = 0;
+                                if (!warned && level == 'plants'){
+                                    alert('This trial does not have '+level);
+                                    show_available_columns_<% $download_type %>('plots');
+                                    jQuery('#create_fieldbook_data_level_<% $download_type %>').val('plots');
+                                    warned = true;
+                                }
+                            } else {
+                                has_plants_<% $download_type %> = 1;
+                                if (level == 'plants'){
+                                    show_available_columns_<% $download_type %>(level);
+                                }
+                            }
+                        },
+                        error: function () {
+                            jQuery("#working_modal").modal("hide");
+                            alert('An error occurred checking trial for plants or subplots.');
                         }
-                    } else {
-                        has_plants_<% $download_type %> = 1;
-                        if (level == 'plants'){
-                            show_available_columns_<% $download_type %>(level);
+                    });
+                    new jQuery.ajax({
+                        type: 'POST',
+                        url: '/ajax/breeders/trial/'+trial_id+'/has_subplots',
+                        dataType: "json",
+                        beforeSend: function() {
+                            jQuery("#working_modal").modal("show");
+                        },
+                        success: function (response) {
+                            //console.log(response);
+                            jQuery("#working_modal").modal("hide");
+                            if(response.has_subplots == 0){
+                                has_subplots_<% $download_type %> = 0;
+                                if (!warned && level == 'subplots'){
+                                    alert('This trial does not have '+level);
+                                    show_available_columns_<% $download_type %>('plots');
+                                    jQuery('#create_fieldbook_data_level_<% $download_type %>').val('plots');
+                                    warned = true;
+                                }
+                            } else {
+                                has_subplots_<% $download_type %> = 1;
+                                if (level == 'subplots'){
+                                    show_available_columns_<% $download_type %>(level);
+                                }
+                            }
+                        },
+                        error: function () {
+                            jQuery("#working_modal").modal("hide");
+                            alert('An error occurred checking trial for plants or subplots.');
                         }
-                    }
-                },
-                error: function () {
-                    jQuery("#working_modal").modal("hide");
-                    alert('An error occurred checking trial for plants or subplots.');
+                    });
+                    new jQuery.ajax({
+                        type: 'POST',
+                        url: '/ajax/breeders/trial/'+trial_id+'/has_tissue_samples',
+                        dataType: "json",
+                        beforeSend: function() {
+                            jQuery("#working_modal").modal("show");
+                        },
+                        success: function (response) {
+                            //console.log(response);
+                            jQuery("#working_modal").modal("hide");
+                            if(response.has_tissue_samples == 0){
+                                has_tissue_samples_<% $download_type %> = 0;
+                                if (!warned && level == 'field_trial_tissue_samples'){
+                                    alert('This trial does not have '+level);
+                                    show_available_columns_<% $download_type %>('plots');
+                                    jQuery('#create_fieldbook_data_level_<% $download_type %>').val('plots');
+                                    warned = true;
+                                }
+                            } else {
+                                has_tissue_samples_<% $download_type %> = 1;
+                                if (level == 'field_trial_tissue_samples'){
+                                    show_available_columns_<% $download_type %>(level);
+                                }
+                            }
+                        },
+                        error: function () {
+                            jQuery("#working_modal").modal("hide");
+                            alert('An error occurred checking trial for plants or subplots.');
+                        }
+                    });
                 }
-            });
-            new jQuery.ajax({
-                type: 'POST',
-                url: '/ajax/breeders/trial/'+selected_trial_id+'/has_subplots',
-                dataType: "json",
-                beforeSend: function() {
-                    jQuery("#working_modal").modal("show");
-                },
-                success: function (response) {
-                    //console.log(response);
-                    jQuery("#working_modal").modal("hide");
-                    if(response.has_subplots == 0){
-                        has_subplots_<% $download_type %> = 0;
-                        if (level == 'subplots'){
-                            alert('This trial does not have '+level);
-                            show_available_columns_<% $download_type %>('plots');
-                            jQuery('#create_fieldbook_data_level_<% $download_type %>').val('plots');
-                        }
-                    } else {
-                        has_subplots_<% $download_type %> = 1;
-                        if (level == 'subplots'){
-                            show_available_columns_<% $download_type %>(level);
-                        }
-                    }
-                },
-                error: function () {
-                    jQuery("#working_modal").modal("hide");
-                    alert('An error occurred checking trial for plants or subplots.');
-                }
-            });
-            new jQuery.ajax({
-                type: 'POST',
-                url: '/ajax/breeders/trial/'+selected_trial_id+'/has_tissue_samples',
-                dataType: "json",
-                beforeSend: function() {
-                    jQuery("#working_modal").modal("show");
-                },
-                success: function (response) {
-                    //console.log(response);
-                    jQuery("#working_modal").modal("hide");
-                    if(response.has_tissue_samples == 0){
-                        has_tissue_samples_<% $download_type %> = 0;
-                        if (level == 'field_trial_tissue_samples'){
-                            alert('This trial does not have '+level);
-                            show_available_columns_<% $download_type %>('plots');
-                            jQuery('#create_fieldbook_data_level_<% $download_type %>').val('plots');
-                        }
-                    } else {
-                        has_tissue_samples_<% $download_type %> = 1;
-                        if (level == 'field_trial_tissue_samples'){
-                            show_available_columns_<% $download_type %>(level);
-                        }
-                    }
-                },
-                error: function () {
-                    jQuery("#working_modal").modal("hide");
-                    alert('An error occurred checking trial for plants or subplots.');
-                }
-            });
+            }
         }
 
     });
@@ -455,48 +476,72 @@ function include_column_<% $download_type %>(name){
 % if ($download_type eq 'Fieldbook'){
 
 function show_fieldbook_treatments_<% $download_type %>(){
-    var selected_trial_id = parseInt(jQuery("#html_select_trial_for_create_fieldbook_<% $download_type %>").val());
-    get_select_box('treatments', 'create_fieldbook_treatment_<% $download_type %>', { 'name':'html_select_treatment_create_fieldbook_<% $download_type %>', 'id':'html_select_treatment_create_fieldbook_<% $download_type %>', 'trial_id':selected_trial_id, 'empty':1 });
+    var selected_trial_id = jQuery("#html_select_trial_for_create_fieldbook_<% $download_type %>").val();
+    if ( selected_trial_id && !selected_trial_id.includes(',') ) {
+        jQuery("#management_factore").show();
+        get_select_box('treatments', 'create_fieldbook_treatment_<% $download_type %>', { 'name':'html_select_treatment_create_fieldbook_<% $download_type %>', 'id':'html_select_treatment_create_fieldbook_<% $download_type %>', 'trial_id':selected_trial_id, 'empty':1 });
+    }
+    else {
+        jQuery("#management_factore").hide();
+    }
 }
 
 function open_create_fieldbook_dialog_<% $download_type %>() {
     var trial_stock_type = "<% $trial_stock_type %>";
-    new jQuery.ajax({
-        type: 'POST',
-        url: '/ajax/fieldbook/create',
-        dataType: "json",
-        data: {
-            'trial_id': parseInt(jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val()),
-            'data_level': jQuery('#create_fieldbook_data_level_<% $download_type %>').val(),
-            'treatment_project_id': jQuery("#html_select_treatment_create_fieldbook_<% $download_type %>").val(),
-            'selected_columns':JSON.stringify(selected_columns_<% $download_type %>),
-            'include_measured': jQuery('#create_fieldbook_include_measured_<% $download_type %>').prop('checked'),
-            'use_synonyms': jQuery('#create_fieldbook_use_synonyms_<% $download_type %>').prop('checked'),
-            'trait_list':jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val(),
-            'trial_stock_type': trial_stock_type
-        },
-        beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        success: function (response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error){
-                alert(response.error);
-            }
-            else if (response.error_string) {
-                alert(response.error_string);
-            } else {
-                jQuery('#tablet_field_layout_get_file_<% $download_type %>').html('<a href="/fieldbook/trial_download/'+response.file_id+'">'+response.file+'</a>')
-                jQuery("#tablet_field_layout_saved_dialog_message_<% $download_type %>").modal("show");
+    let trial_ids = jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val().split(',');
+    
+    jQuery("#working_modal").modal("show");
+    for ( let i = 0; i < trial_ids.length; i++ ) {
+        let trial_id = trial_ids[i];
+        new jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/fieldbook/create',
+            dataType: "json",
+            data: {
+                'trial_id': parseInt(trial_id),
+                'data_level': jQuery('#create_fieldbook_data_level_<% $download_type %>').val(),
+                'treatment_project_id': jQuery("#html_select_treatment_create_fieldbook_<% $download_type %>").val(),
+                'selected_columns':JSON.stringify(selected_columns_<% $download_type %>),
+                'include_measured': jQuery('#create_fieldbook_include_measured_<% $download_type %>').prop('checked'),
+                'all_stats': jQuery('#create_fieldbook_all_stats_<% $download_type %>').prop('checked'),
+                'use_synonyms': jQuery('#create_fieldbook_use_synonyms_<% $download_type %>').prop('checked'),
+                'trait_list':jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val(),
+                'trial_stock_type': trial_stock_type
+            },
+            success: function (response) {
+                if (response.error){
+                    jQuery("#working_modal").modal("hide");
+                    alert(response.error);
+                }
+                else if (response.error_string) {
+                    jQuery("#working_modal").modal("hide");
+                    alert(response.error_string);
+                } else {
+                    _finish(response.file_id, response.file)
+                }
+            },
+            error: function () {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred creating the field book.');
                 jQuery('#create_fieldbook_dialog_<% $download_type %>').modal("hide");
             }
-        },
-        error: function () {
+        });
+    }
+
+    let count = 0;
+    let total = trial_ids.length;
+    let html = "<ul>";
+    function _finish(file_id, file_path) {
+        count++;
+        html += '<li><a href="/fieldbook/trial_download/'+file_id+'">'+file_path+'</a></li>';
+        if ( count === total ) {
+            html += "</ul>";
             jQuery("#working_modal").modal("hide");
-            alert('An error occurred creating the field book.');
+            jQuery('#tablet_field_layout_get_file_<% $download_type %>').html(html);
+            jQuery("#tablet_field_layout_saved_dialog_message_<% $download_type %>").modal("show");
             jQuery('#create_fieldbook_dialog_<% $download_type %>').modal("hide");
         }
-    });
+    }
 }
 
 % } elsif ($download_type eq 'TrialLayout') {
@@ -507,7 +552,7 @@ function show_fieldbook_treatments_<% $download_type %>(){
 }
 
 function open_create_fieldbook_dialog_<% $download_type %>() {
-    var trial_id = parseInt(jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val());
+    var trial_ids = jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val().split(',');
     var data_level = jQuery('#create_fieldbook_data_level_<% $download_type %>').val();
     var selected_columns = JSON.stringify(selected_columns_<% $download_type %>);
     var trait_list_id = jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val();
@@ -515,7 +560,10 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
     var include_measurements = jQuery('#create_fieldbook_include_measured_<% $download_type %>').prop('checked');
     console.log(format);
     //Calls SGN::Controller:BreedersToolbox::Trial
-    window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id+"&include_measured="+include_measurements);
+    for ( let i = 0; i < trial_ids.length; i++ ) {
+        let trial_id = parseInt(trial_ids[i]);
+        window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id+"&include_measured="+include_measurements);
+    }
 }
 
 % } elsif ($download_type eq 'TrialFieldMapLayout') {
@@ -525,12 +573,15 @@ function show_fieldbook_treatments_<% $download_type %>(){
 }
 
 function open_create_fieldbook_dialog_<% $download_type %>() {
-    var trial_id = parseInt(jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val());
+    var trial_ids = jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val().split(',');
     var data_level = 'plot_fieldMap';
     var selected_columns_TrialFieldMapLayout = {'row_number':1,'col_number':1,'accession_name':1};
     var selected_columns = JSON.stringify(selected_columns_TrialFieldMapLayout);
     var format = jQuery('#create_fieldbook_format_<% $download_type %>').val();
-    window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns);
+    for ( let i = 0; i < trial_ids.length; i++ ) {
+        let trial_id = parseInt(trial_ids[i]);
+        window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns);
+    }
 }
 
 % }

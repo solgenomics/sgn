@@ -78,13 +78,12 @@ jQuery(document).ready(function($) {
         $("#create_cross").modal("show");
 
         $("#cross_type").change(function() { // show cross_type specific inputs depending on cross type selected
-            $("#get_maternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross"));
-            $("#get_paternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross"));
-            $("#exact_parents").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross"));
+            $("#get_maternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross") || ($("#cross_type").val() == "sib"));
+            $("#get_paternal_parent").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross") || ($("#cross_type").val() == "sib"));
+            $("#exact_parents").toggle(($("#cross_type").val() == "biparental") || ($("#cross_type").val() == "backcross") || ($("#cross_type").val() == "sib"));
             $("#get_selfed_parent").toggle($("#cross_type").val() == "self");
             $("#get_open_maternal_parent").toggle($("#cross_type").val() == "open");
             $("#get_open_paternal_population").toggle($("#cross_type").val() == "open");
-            $("#get_sib_parent").toggle($("#cross_type").val() == "sib");
             $("#get_bulk_maternal_population").toggle($("#cross_type").val() == "bulk");
             $("#get_bulk_paternal_parent").toggle($("#cross_type").val() == "bulk");
             $("#get_bulk_selfed_population").toggle($("#cross_type").val() == "bulk_self");
@@ -280,9 +279,8 @@ jQuery(document).ready(function($) {
                 paternal = $("#open_paternal_population").val();
                 break;
             case 'sib':
-                var sibParent = $("#sib_parent").val();
-                maternal = sibParent;
-                paternal = sibParent;
+                maternal = $("#maternal_parent").val();
+                paternal = $("#paternal_parent").val();
                 break;
             case 'bulk':
                 maternal = $("#bulk_maternal_population").val();

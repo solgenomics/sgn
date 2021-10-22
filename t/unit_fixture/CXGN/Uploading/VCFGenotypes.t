@@ -68,9 +68,10 @@ $response = $ua->post(
         ]
     );
 
-#print STDERR Dumper $response;
+print STDERR Dumper $response;
 ok($response->is_success);
 my $message = $response->decoded_content;
+
 my $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'missing_stocks' => ['KBH2014_076','KBH2014_1155','KBH2014_124','KBH2014_1241','KBH2014_1463','KBH2014_286','KBH2014_740','KBH2014_968','KBH2015_080','KBH2015_383','KBH2015_BULK','SRLI1_26','SRLI1_52','SRLI1_66','SRLI1_78','SRLI1_90','SRLI2_33','SRLI2_70','UKG1502_022','UKG1503_004','UKG15OP07_038'],'error_string' => 'The following stocks are not in the database: KBH2014_076,KBH2014_1155,KBH2014_124,KBH2014_1241,KBH2014_1463,KBH2014_286,KBH2014_740,KBH2014_968,KBH2015_080,KBH2015_383,KBH2015_BULK,SRLI1_26,SRLI1_52,SRLI1_66,SRLI1_78,SRLI1_90,SRLI2_33,SRLI2_70,UKG1502_022,UKG1503_004,UKG15OP07_038<br>'});
@@ -101,6 +102,7 @@ $response = $ua->post(
 #print STDERR Dumper $response;
 ok($response->is_success);
 $message = $response->decoded_content;
+print STDERR "MESSAGE: ".$message;
 $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 is($message_hash->{success}, 1);
@@ -222,7 +224,7 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     bcs_schema=>$schema,
     people_schema=>$people_schema,
     protocol_id_list=>[$protocol_id],
-    
+
 });
 my ($total_count, $data) = $genotypes_search->get_genotype_info();
 is($total_count, 63);
@@ -311,7 +313,6 @@ $response = $ua->post(
             "upload_genotype_vcf_facility_select"=>"IGD",
             "upload_genotype_vcf_project_description"=>"Intertek SNP project 1",
             "upload_genotype_vcf_protocol_name"=>"Intertek SNP protocol 1",
-            "upload_genotype_vcf_include_lab_numbers"=>1,
             "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
             "upload_genotype_add_new_accessions"=>1, #IDEALLY THIS is set to 0
         ]
@@ -326,6 +327,15 @@ ok($message_hash->{nd_protocol_id});
 
 my $file = $f->config->{basepath}."/t/data/genotype_data/testset_GT-AD-DP-GQ-DS-PL.h5";
 
+
+SKIP: {
+
+    my $skip_hdf5_tests = ! (has_java() && (free_memory() > 12));
+
+    print STDERR "SKIP HDF5 TESTS: $skip_hdf5_tests\n";
+    
+    skip "No java installed or not enough memory", 7 if $skip_hdf5_tests;
+    
 #test upload with file where sample names are not in the database
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
@@ -350,6 +360,9 @@ $response = $ua->post(
     );
 
 $message = $response->decoded_content;
+
+print STDERR "ANOTHER MESSAGE: ".Dumper($message);
+
 my $message_hash_tassel = decode_json $message;
 print STDERR Dumper $message_hash_tassel;
 is($message_hash_tassel->{success}, 1);
@@ -391,7 +404,7 @@ my $vcf_response_string_expected = '##INFO=<ID=VCFDownload, Description=\'VCFv4.
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
 ##INFO=<ID=AF,Number=.,Type=Float,Description="Allele Frequency">
 ##FORMAT=<ID=DS,Number=1,Type=Float,Description="estimated ALT dose [P(RA) + P(AA)]">
-## Synonyms of accessions: 
+## Synonyms of accessions:
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	KBH2014_076	KBH2014_1155
 1 	21594 	S1_21594	G	A	.	PASS	AR2=0.29;DR2=0.342;AF=0.375	GT:AD:DP:GQ:DS:PL:NT	./.:0,0:0:.:1:.:	0/0:1,0:1:66:0:0,3,36:G,G
 1 	21597 	S1_21597	G	A	.	PASS	AR2=0;DR2=0.065;AF=0.001	GT:AD:DP:GQ:DS:PL:NT	0/0:6,0:6:98:0:0,18,216:G,G	0/0:5,0:5:96:0:0,15,180:G,G
@@ -484,7 +497,7 @@ my $vcf_response_string_expected = '##INFO=<ID=VCFDownload, Description=\'VCFv4.
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
 ##INFO=<ID=AF,Number=.,Type=Float,Description="Allele Frequency">
 ##FORMAT=<ID=DS,Number=1,Type=Float,Description="estimated ALT dose [P(RA) + P(AA)]">
-## Synonyms of accessions: 
+## Synonyms of accessions:
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	KBH2014_076	KBH2014_1155
 1 	21594 	S1_21594	G	A	.	PASS	AR2=0.29;DR2=0.342;AF=0.375	GT:AD:DP:GQ:DS:PL:NT	./.:0,0:0:.:1:.:	0/0:1,0:1:66:0:0,3,36:G,G
 1 	21597 	S1_21597	G	A	.	PASS	AR2=0;DR2=0.065;AF=0.001	GT:AD:DP:GQ:DS:PL:NT	0/0:6,0:6:98:0:0,18,216:G,G	0/0:5,0:5:96:0:0,15,180:G,G
@@ -719,4 +732,28 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {success=>1});
 
+}
+
+
 done_testing();
+
+sub free_memory {
+    my @lines = `free -h`;
+    my ($label, $total, $used, $free) = split /\s+/, $lines[1];
+    $free =~ m/\D+(\d+).*/;
+    $free = $1;
+    print STDERR "FREE MEMORY DETECTED: $free\n";
+    return $free;
+}
+
+sub has_java {
+    my @lines = `java -version`;
+    if ($lines[0]=~/java version/) {
+       return 1;
+    }
+    else {
+    	return 0;
+    }
+}
+       
+    

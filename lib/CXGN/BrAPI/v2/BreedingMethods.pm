@@ -27,21 +27,36 @@ sub search {
 	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
 	$h->execute($female_parent_cvterm_id);
 
-	while (my ($cross_type) = $h->fetchrow_array()) {
-		push @crosstypes, $cross_type;
+	# while (my ($cross_type) = $h->fetchrow_array()) {
+	# 	push @crosstypes, $cross_type;
+	# }
+
+ #    foreach (@crosstypes){
+ #    	my $id = $_;
+ #    	$id =~ s/ /_/g;
+
+ #        push @data, {
+ #            abbreviation=>$_,
+ #            breedingMethodDbId=>$id,
+ #            breedingMethodName=>$_,
+ #            description=>$_,
+ #        };
+ #    }
+
+    while (my ($cross_type) = $h->fetchrow_array()) {
+
+    	if ($cross_type){
+    		my $cross_name = $cross_type;
+    		$cross_name =~ s/ /_/g;
+
+	    	push @data, {
+	            abbreviation=>$cross_name,
+	            breedingMethodDbId=>$cross_type,
+	            breedingMethodName=>$cross_name,
+	            description=>$cross_name,
+	        };
+    	}
 	}
-
-    foreach (@crosstypes){
-    	my $id = $_;
-    	$id =~ s/ /_/g;
-
-        push @data, {
-            abbreviation=>$_,
-            breedingMethodDbId=>$id,
-            breedingMethodName=>$_,
-            description=>$_,
-        };
-    }
 
     my %result = (data => \@data);
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);

@@ -186,7 +186,15 @@ sub search {
 	my $limit = $page_size;
 	my $offset = $page*$page_size;
 	my $total_count = 0;
-	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join WHERE $and_where_clause ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
+	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, array_agg(cvtermsynonym.synonym ORDER BY CHAR_LENGTH(cvtermsynonym.synonym)), count(cvterm.cvterm_id) OVER() AS full_count
+		FROM cvterm JOIN dbxref USING(dbxref_id)
+		JOIN db using(db_id) JOIN cvtermsynonym using(cvterm_id)
+		JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id)
+		JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id)
+		$join WHERE $and_where_clause
+		GROUP BY cvterm.cvterm_id, db.name, db.db_id, dbxref.accession
+		ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
+
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
 	$sth->execute();
 
@@ -194,7 +202,7 @@ sub search {
 	my $supported_crop = $c->config->{'supportedCrop'};
 	my $production_url = $c->config->{'main_production_site_url'};
 
-	while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $accession, $count) = $sth->fetchrow_array()) {
+	while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $accession, $synonym, $count) = $sth->fetchrow_array()) {
 		$total_count = $count;
 		my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
 		my $categories = $trait->categories;
@@ -216,7 +224,6 @@ sub search {
 		# Note: Breedbase does not have a concept of 'methods'.
 		# Note: Breedbase does not have a concept of 'scale'. The values populated in scale are values from cvprop.
 		# Note: Breedbase does not have a created date stored from ontology variables.
-		# Note: Breedbase does not have synonyms, or abbreviations for its traits.
 
 		push @data, {
 		    contextOfUse => [],
@@ -259,7 +266,7 @@ sub search {
             scientist => '',
             status => JSON::true,
             submissionTimestamp => undef,
-            synonyms => [],
+            synonyms => $synonym,
 			trait => {
 			    alternativeAbbreviations => [],
 			    attribute => $cvterm_name,
@@ -270,7 +277,7 @@ sub search {
                 name => $cvterm_name,
                 ontologyReference => \%ontologyReference,
                 status => '',
-                synonyms => [],
+                synonyms => $synonym,
 				traitDbId => $trait->term, #qq|$cvterm_id|,
 				traitName => $cvterm_name,
 				xref => $db_name.":".$accession
@@ -343,7 +350,7 @@ sub convert_datatype_to_brapi {
 
 	if ($num_brapi_categories > 0) {
 		# If the trait has categories, convert to Ordinal. Better to assume ordering,
-		# than lack of ordering. 
+		# than lack of ordering.
 		$trait_format = "Ordinal";
 	}
 	elsif ($trait_format eq "qualitative") {

@@ -1,0 +1,1369 @@
+<%args>
+$timestamp => localtime()
+</%args>
+
+<div class="modal falde" id="create_seedlots_trial_dialog" name="create_seedlots_trial_dialog" tabindex="-1" aria-labelledby="create_seedlots_trial_dialog_title">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="create_seedlots_trial_dialog_title">Create Seedlots from a Trial</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <!-- CREATE SEEDLOTS WORKFLOW -->
+                    <&| /util/workflow.mas, id=> "create_seedlots_trial_workflow" &>
+                        
+                        
+                        <!-- STEP 1: Intro -->
+                        <&| /util/workflow.mas:step, title=> "Intro" &>
+                            <& /page/page_title.mas, title=>"Introduction" &>
+                            <p>
+                                This workflow will guide you through the process of creating seedlots from the accessions 
+                                in a field trial.  You can create one new seedlot for each plot or unique accession 
+                                in the trial.  You can also set the initial contents (count or weight) of the seedlot 
+                                as the value of a recorded trait from the trial.
+                            </p>
+                            <br/><br/>
+                            <center>
+                                <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <!-- STEP 2: Select Trial -->
+                        <&| /util/workflow.mas:step, title=> "Select Trial" &>
+                            <& /page/page_title.mas, title=>"Select a Field Trial" &>
+                            <p>
+                                Enter the name of the field trial from which to create the seedlots:
+                            </p>
+                            <br /><br />
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Trial: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="create_seedlots_trial_name" placeholder="Trial Name..." value="">
+                                </div>
+                            </div>
+                            <br /><br /><br /><br />
+                            <br/><br/>
+                            <center>
+                                <button id="create_seedlots_trial_complete_select_trial" class="btn btn-primary">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <!-- STEP 3: Select Seedlots -->
+                        <&| /util/workflow.mas:step, title=> "Select Seedlots" &>
+                            <& /page/page_title.mas, title=>"Select Seedlots" &>
+
+                            <p>
+                                Seedlots can be generated from either each <strong>plot</strong> or <strong>accession</strong> in this trial.
+                            </p>
+                            <ul>
+                                <li>If you select <strong>plots</strong>: <span id="create_seedlots_trial_plot_count"></span> seedlots will be created</li>
+                                <li>If you select <strong>accessions</strong>: <span id="create_seedlots_trial_accession_count"></span> seedlots will be created</li>
+                            </ul>
+
+                            <br /><br />
+
+                            <div class="form-group">
+                                <div class="col-sm-3"></div>
+                                <div class="col-sm-6" >
+                                    <select id="create_seedlots_trial_stock_type" class="form-control">
+                                        <option value="plots">Plots</option>
+                                        <option value="accessions">Accessions</option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-3"></div>
+                            </div>
+                            
+                            <br/><br/><br /><br />
+                            <center>
+                                <button id="create_seedlots_trial_complete_select_stock_type" class="btn btn-primary">Go to Next Step</button>
+                            </center>
+                        </&>
+
+                        <!-- STEP 4: Name Seedlots -->
+                        <&| /util/workflow.mas:step, title=> "Name Seedlots" &>
+                            <& /page/page_title.mas, title=>"Name Seedlots" &>
+
+                            <p>
+                                Enter a template for naming each new seedlot.  The following variables (surrounded by curly braces) can be used in the template and the value of that variable will be replaced.
+                            </p>
+                            <ul>
+                                <li><code>trial_name</code></li>
+                                <li><code>accession_name</code></li>
+                                <li class="plot_level_variable"><code>plot_number</code></li>
+                                <li class="plot_level_variable"><code>rep</code></li>
+                                <li class="plot_level_variable"><code>block</code></li>
+                                <li><code>index</code> - an incrementing index number, starting with 1</li>
+                            </ul>
+
+                            <br /><br />
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Name Template: </label>
+                                <div class="col-sm-7" >
+                                    <input class="form-control" id="create_seedlots_trial_name_template" value="">
+                                </div>
+                                <div class="col-sm-2">
+                                    <button id="create_seedlots_trial_name_update" type="button" class="btn btn-primary btn-block" disabled>Update</button>
+                                </div>
+                            </div>
+
+                            <br /><br /><br />
+
+                            <center>
+                                <button id="create_seedlots_trial_complete_name_seedlots" class="btn btn-primary">Go to Next Step</button>
+                            </center>
+
+                            <br /><br />
+
+                            <h4>Seedlot Names</h4>
+                            <table id="create_seedlots_trial_name_table" class="table table-striped table-hover"></table>
+                        </&>
+
+                        <!-- STEP 5: Seedlot Contents -->
+                        <&| /util/workflow.mas:step, title=> "Set Contents" &>
+                            <& /page/page_title.mas, title=>"Set Seedlot Contents" &>
+
+                            <p>
+                                Each seedlot needs to have its initial contents (either a count or a weight) set.  You 
+                                can either set the same initial value for each seedlot, use the value from one of the 
+                                traits recorded for this trial, or compute a new value from the recorded traits for this 
+                                trial.  If you are creating a seedlot for each accession and select a trait or a computed 
+                                value as their initial value, then the sum of the trait values for each of the accession's 
+                                plots will be used.  The contents of each seedlot can be modified in the table below 
+                                before its creation.
+                            </p>
+
+                            <br /><br />
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Contents Type: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="create_seedlots_trial_contents_type">
+                                        <option value="amount">Amount / Count</option>
+                                        <option value="weight">Weight</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <br /><br />
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Contents Value: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="create_seedlots_trial_contents_value">
+                                        <option value="constant">Constant Value</option>
+                                        <option value="trait">Trait Value</option>
+                                        <option value="computed">Computed Value from Traits</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <br /><br />
+
+                            <div class="form-group" id="create_seedlots_trial_contents_constant_form">
+                                <label class="col-sm-3 control-label" style="text-align: right">Constant: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="create_seedlots_trial_contents_constant" value="1">
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="create_seedlots_trial_contents_trait_form" style="display: none">
+                                <label class="col-sm-3 control-label" style="text-align: right">Trait: </label>
+                                <div class="col-sm-9" >
+                                    <select class="form-control" id="create_seedlots_trial_contents_trait"></select>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="create_seedlots_trial_contents_computed_form" style="display: none">
+                                <label class="col-sm-3 control-label" style="text-align: right">Trait Variables: </label>
+                                <div class="col-sm-9">
+                                    <p>
+                                        Use the following variables as substitutions for the trait values to compute a new value 
+                                        for the initial seedlot contents.  If you are creating one seedlot <strong>per plot</strong>, then 
+                                        the single plot trait value will be used in the computation.  If you are creating one seedlot 
+                                        <strong>per accession</strong>, then the sum of the trait values for each plot of that accession 
+                                        will be used in the computation.
+                                    </p>
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Variable</th>
+                                                <th>Trait</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="create_seedlots_trial_contents_computed_table"></tbody>
+                                    </table>
+                                </div>
+
+                                <label class="col-sm-3 control-label" style="text-align: right">Contents Formula: </label>
+                                <div class="col-sm-9">
+                                    <input class="form-control" id="create_seedlots_trial_contents_computed_formula" value="" placeholder="{trait_1}/10">
+                                    <p>
+                                        <strong>NOTE:</strong> The formula is evaluated using javascript, so any basic operators (+-*/) or 
+                                        javascript Math functions (Math.abs(x)) can be used.
+                                    </p>
+                                </div>
+
+                                <div class="col-sm-12" style="text-align: center; margin: 25px 0">
+                                    <button id="create_seedlots_trial_complete_computed_compute" class="btn btn-primary" disabled>Compute</button>
+                                </div>
+                            </div>
+
+                            <br /><br />
+
+                            <center>
+                                <button id="create_seedlots_trial_complete_set_contents" class="btn btn-primary">Go to Next Step</button>
+                            </center>
+
+                            <br /><br />
+
+                            <h4>Seedlot Contents</h4>
+                            <table id="create_seedlots_trial_contents_table" class="table table-striped table-hover"></table>
+                        </&>
+
+                        <!-- STEP 6: Seedlot Metadata -->
+                        <&| /util/workflow.mas:step, title=> "Set Metadata" &>
+                            <& /page/page_title.mas, title=>"Set Seedlot Metadata" &>
+
+                            <p>
+                                The following metadata is required for each seedlot.  Fill out the form at the top 
+                                apply the metadata to all of the seedlots.  Then, each seedlot can be manually 
+                                modified in the table below.
+                            </p>
+
+                            <br /><br />
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Breeding Program: </label>
+                                <div class="col-sm-9" >
+                                    <div id="create_seedlots_trial_breeding_program_div"></div>
+                                </div>
+                            </div>
+
+                            <br /><br />
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Location: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control create_seedlots_trial_metadata_input" id="create_seedlots_trial_location" value="" placeholder="Required">
+                                </div>
+                            </div>
+
+                            <br /><br />
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Box Name: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control create_seedlots_trial_metadata_input" id="create_seedlots_trial_box_name" value="" placeholder="Required">
+                                </div>
+                            </div>
+
+                            <br /><br />
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Quality Issues: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control create_seedlots_trial_metadata_input" id="create_seedlots_trial_quality_issues" value="" placeholder="Optional, list quality issues here, or 'ok' for good quality seed">
+                                </div>
+                            </div>
+
+                            <br /><br />
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Organization: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control create_seedlots_trial_metadata_input" id="create_seedlots_trial_organization" value="" placeholder="Optional">
+                                </div>
+                            </div>
+
+                            <br /><br />
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Timestamp: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control create_seedlots_trial_metadata_input" id="create_seedlots_trial_timestamp" value="<% $timestamp %>" placeholder="<% $timestamp %>">
+                                </div>
+                            </div>
+
+                            <br /><br />
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label" style="text-align: right">Description: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control create_seedlots_trial_metadata_input" id="create_seedlots_trial_description" value="" placeholder="Optional">
+                                </div>
+                            </div>
+
+                            <br /><br /><br />
+
+                            <center>
+                                <button id="create_seedlots_trial_update_metadata" class="btn btn-primary">Update</button>
+                            </center>
+
+                            <br />
+
+                            <center>
+                                <button id="create_seedlots_trial_complete_set_metadata" class="btn btn-primary" disabled>Go to Next Step</button>
+                            </center>
+
+                            <br /><br />
+
+                            <h4>Seedlot Metadata</h4>
+                            <table id="create_seedlots_trial_metadata_table" class="table table-striped table-hover"></table>
+                        </&>
+
+                        <!-- STEP 7: Confirm -->
+                        <&| /util/workflow.mas:step, title=> "Confirm" &>
+                            <& /page/page_title.mas, title=>"Confirm Seedlots" &>
+
+                            <p>
+                                Confirm the attributes for the new seedlots in the table below.  If something 
+                                is incorrect, navigate to the previous step and correct the information.  Once 
+                                all the information is correct, continue to the next step to create the seedlots.
+                            </p>
+
+                            <br /><br />
+
+                            <center>
+                                <button id="create_seedlots_trial_complete_confirm_seedlots" class="btn btn-primary">
+                                    <span class="glyphicon glyphicon-ok"></span>&nbsp;Create Seedlots
+                                </button>
+                            </center>
+
+                            <br /><br />
+
+                            <h4>Seedlots to Create</h4>
+                            <table id="create_seedlots_trial_confirm_table" class="table table-striped table-hover"></table>
+                        </&>
+
+                        <!-- STEP 8: Create -->
+                        <&| /util/workflow.mas:step, title=> "Create" &>
+                            <& /page/page_title.mas, title=>"Create Seedlots" &>
+
+                            <br /><br />
+                            
+                            <div id="create_seedlots_trial_uploading">
+                                <p id="create_seedlots_trial_status"><strong>Creating Seedlots...</strong></p>
+                                <div class="progress">
+                                    <div id="create_seedlots_trial_progress" class="progress-bar" role="progressbar" aria-valuenow="70"
+                                    aria-valuemin="0" aria-valuemax="100" style="width:70%">
+                                        <span class="sr-only">70% Complete</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="create_seedlots_trial_results"></div>
+
+                            <br /><br />
+
+                            <h4>Seedlot Progress</h4>
+                            <table id="create_seedlots_trial_results_table" class="table table-striped table-hover"></table>
+                        </&>
+
+                    </&>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+
+</style>
+
+
+<script type="text/javascript">
+    let TRIAL_ID;
+    let BREEDING_PROGRAM_ID;
+    let ACCESSIONS;
+    let PLOTS;
+    let TRAITS;
+    let TRAIT_DATA;
+    let SEEDLOTS;
+    const UPLOAD_BATCH_SIZE = 5;
+
+    jQuery(document).ready(function() {
+
+        // Click / Change Listeners
+        jQuery('[name="create_seedlots_trial_button"]').click( function() {
+            jQuery('#create_seedlots_trial_dialog').modal('show');
+        });
+        jQuery("#create_seedlots_trial_complete_select_trial").click(completeSelectTrial);
+        jQuery("#create_seedlots_trial_complete_select_stock_type").click(completeSelectStockType);
+        jQuery("#create_seedlots_trial_name_template").keyup(function() {
+            jQuery("#create_seedlots_trial_name_update").attr("disabled", false);
+            jQuery("#create_seedlots_trial_complete_name_seedlots").attr("disabled", true);
+        });
+        jQuery("#create_seedlots_trial_name_update").click(updateSeedlotNames);
+        jQuery(document).on('keyup', '.create_seedlots_trial_name_seedlot', function() {
+            let el = jQuery(this);
+            let index = el.data("index");
+            let name = el.val();
+            SEEDLOTS[index].name = name;
+        });
+        jQuery("#create_seedlots_trial_complete_name_seedlots").click(completeNameSeedlots);
+        jQuery("#create_seedlots_trial_contents_value").change(function() {
+            let val = jQuery("#create_seedlots_trial_contents_value").val();
+            jQuery("#create_seedlots_trial_contents_constant_form").css("display", val === "constant" ? "block" : "none");
+            jQuery("#create_seedlots_trial_contents_trait_form").css("display", val === "trait" ? "block" : "none");
+            jQuery("#create_seedlots_trial_contents_computed_form").css("display", val === "computed" ? "block" : "none");
+            jQuery("#create_seedlots_trial_complete_set_contents").attr("disabled", val === "computed");
+        });
+        jQuery("#create_seedlots_trial_contents_value").change(updateSeedlotContents);
+        jQuery("#create_seedlots_trial_contents_constant").keyup(updateSeedlotContents);
+        jQuery("#create_seedlots_trial_contents_trait").change(function() {
+            let id = jQuery("#create_seedlots_trial_contents_trait").val();
+            let name = jQuery("#create_seedlots_trial_contents_trait option:selected").text();
+            if ( id && name ) {
+                updateSeedlotContents();
+            }
+        });
+        jQuery("#create_seedlots_trial_contents_computed_formula").keyup(function() {
+            jQuery("#create_seedlots_trial_complete_computed_compute").attr("disabled", false);
+            jQuery("#create_seedlots_trial_complete_set_contents").attr("disabled", true);
+        });
+        jQuery("#create_seedlots_trial_complete_computed_compute").click(updateSeedlotContents);
+        jQuery(document).on('keyup', '.create_seedlots_trial_contents_seedlot', function() {
+            let el = jQuery(this);
+            let index = el.data("index");
+            let contents = el.val();
+            SEEDLOTS[index].contents = contents;
+        });
+        jQuery("#create_seedlots_trial_complete_set_contents").click(completeSeedlotContents);
+        jQuery("#create_seedlots_trial_update_metadata").click(function() { updateSeedlotMetadata() });
+        jQuery(document).on('change', "#create_seedlots_trial_breeding_program_id", function() {
+            jQuery("#create_seedlots_trial_update_metadata").attr("disabled", false);
+            jQuery("#create_seedlots_trial_complete_set_metadata").attr("disabled", true);
+        });
+        jQuery(".create_seedlots_trial_metadata_input").keyup(function() {
+            jQuery("#create_seedlots_trial_update_metadata").attr("disabled", false);
+            jQuery("#create_seedlots_trial_complete_set_metadata").attr("disabled", true);
+        });
+        jQuery(document).on('change', '.create_seedlots_trial_metadata_input_seedlot_breeding_program', function() {
+            let el = jQuery(this);
+            let sel = el.find("option:selected");
+            let index = el.data("index");
+            let id = el.val();
+            let name = sel.text();
+            SEEDLOTS[index].metadata.breeding_program = { id: id, name: name };
+        });
+        jQuery(document).on('keyup', '.create_seedlots_trial_metadata_input_seedlot', function() {
+            let el = jQuery(this);
+            let index = el.data("index");
+            let prop = el.data("prop");
+            let value = el.val();
+            SEEDLOTS[index].metadata[prop] = value;
+        });
+        jQuery("#create_seedlots_trial_complete_set_metadata").click(completeSeedlotMetadata);
+        jQuery("#create_seedlots_trial_complete_confirm_seedlots").click(completeSeedlotConfirmation);
+
+        // Autocomplete
+        jQuery("#create_seedlots_trial_name").autocomplete({
+            source: '/ajax/trials/trial_autocomplete'
+        });
+        jQuery("#create_seedlots_trial_location").autocomplete({
+            source: '/ajax/stock/geolocation_autocomplete',
+        });
+
+        // Breeding Program Select Box
+        get_select_box('breeding_programs', 'create_seedlots_trial_breeding_program_div', { 'name' : 'create_seedlots_trial_breeding_program_id', 'id' : 'create_seedlots_trial_breeding_program_id' });
+
+    });
+
+
+
+    // 
+    // WORKFLOW FUNCTIONS
+    //
+
+    /**
+     * Complete the Select Trial step
+     * - Get details of selected trial
+     */
+    function completeSelectTrial() {
+
+        // Make sure trial name was entered
+        let trial_name = jQuery("#create_seedlots_trial_name").val();
+        if ( !trial_name || trial_name === '' ) {
+            alert("Enter a trial name to continue");
+            return;
+        }
+
+        // Display working modal and disable button
+        jQuery('#working_modal').modal("show");
+        jQuery("#create_seedlots_trial_complete_select_trial").attr("disabled", true);
+
+        // Get Trial ID
+        getTrialID(trial_name, function(trial_id) {
+            if ( trial_id ) {
+                TRIAL_ID = trial_id;
+
+                // Get the trial details
+                getTrialDetails(trial_id, function(breeding_program_id, accessions, plots, traits) {
+                    if ( breeding_program_id && accessions && plots ) {
+                        BREEDING_PROGRAM_ID = breeding_program_id;
+                        ACCESSIONS = accessions;
+                        PLOTS = plots;
+                        TRAITS = traits ? traits : [];
+                        if ( traits ) {
+                            getTraitData(function() {
+                                _finish(true);
+                            });
+                        }
+                        else {
+                            _finish(true);
+                        }
+                    }
+                    else {
+                        _finish();
+                    }
+                });
+
+            }
+            else {
+                _finish();
+            }
+        });
+        
+
+        /**
+         * Hide the working modal, renable the button, and continue (if complete)
+         */
+        function _finish(complete) {
+            jQuery('#working_modal').modal("hide");
+            jQuery("#create_seedlots_trial_complete_select_trial").attr("disabled", false);
+            jQuery("#create_seedlots_trial_plot_count").html(PLOTS ? PLOTS.length : '');
+            jQuery("#create_seedlots_trial_accession_count").html(ACCESSIONS ? ACCESSIONS.length : '');
+            if ( complete ) {
+                Workflow.complete('#create_seedlots_trial_complete_select_trial');
+                Workflow.focus("#create_seedlots_trial_workflow", 2);
+            }
+        }
+    }
+
+    /**
+     * Complete the stock type selection step
+     * - Setup the initial Seedlots
+     */
+    function completeSelectStockType() {
+        let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
+
+        // Hide the plot-level variables, if stock type is not plots
+        jQuery(".plot_level_variable").css("display", stock_type === "plots" ? "list-item" : "none");
+        jQuery("#create_seedlots_trial_name_template").val(
+            stock_type === "plots" ? 
+            "{trial_name}-{accession_name}-{rep}" : 
+            "{trial_name}-{accession_name}"
+        );
+
+        // Build the Seedlots
+        SEEDLOTS = [];
+        if ( stock_type === 'plots' ) {
+            for ( let i = 0; i < PLOTS.length; i++ ) {
+                SEEDLOTS.push({
+                    plot: PLOTS[i].plot,
+                    accession: PLOTS[i].accession,
+                    name: ""
+                });
+            }
+        }
+        else if ( stock_type === 'accessions' ) {
+            for ( let i = 0; i < ACCESSIONS.length; i++ ) {
+                SEEDLOTS.push({
+                    accession: ACCESSIONS[i],
+                    name: ""
+                });
+            }
+        }
+        else {
+            alert("ERROR: unknown seedlot stock type!");
+        }
+
+        Workflow.complete('#create_seedlots_trial_complete_select_stock_type');
+        Workflow.focus("#create_seedlots_trial_workflow", 3);
+        updateSeedlotNames();
+    }
+
+    /**
+     * Complete the seedlot name step
+     * - Make sure names are unique
+     * - Setup trait information
+     */
+    function completeNameSeedlots() {
+
+        // Make sure Seedlot names are unique
+        let unique = true;
+        let names = [];
+        for ( let i = 0; i < SEEDLOTS.length; i++ ) {
+            if ( names.includes(SEEDLOTS[i].name) ) {
+                alert("Seedlot names must be unique - '" + SEEDLOTS[i].name + "' is used more than once");
+                return;
+            }
+            names.push(SEEDLOTS[i].name);
+        }
+
+        // Set trait values
+        let html = "<option value=''>Choose trait...</option>";
+        for ( let i = 0; i < TRAITS.length; i++ ) {
+            html += "<option value='" + TRAITS[i].id + "'>" + TRAITS[i].name + "</option>";
+        }
+        jQuery("#create_seedlots_trial_contents_trait").html(html);
+
+        Workflow.complete('#create_seedlots_trial_complete_name_seedlots');
+        Workflow.focus("#create_seedlots_trial_workflow", 4);
+        updateSeedlotContents();
+
+    }
+
+    /**
+     * Complete the seedlot contents step
+     */
+    function completeSeedlotContents() {
+        jQuery("#create_seedlots_trial_breeding_program_id").val(BREEDING_PROGRAM_ID);
+        Workflow.complete('#create_seedlots_trial_complete_set_contents');
+        Workflow.focus("#create_seedlots_trial_workflow", 5);
+        updateSeedlotMetadata(true);
+    }
+
+    /**
+     * Complete the seedlot metadata step
+     */
+    function completeSeedlotMetadata() {
+        Workflow.complete('#create_seedlots_trial_complete_set_metadata');
+        Workflow.focus("#create_seedlots_trial_workflow", 6);
+        updateSeedlotDetails();
+    }
+
+    /**
+     * Complete the seedlot confirmation step
+     * - Start uploading Seedlots to DB
+     */
+    function completeSeedlotConfirmation() {
+        Workflow.complete('#create_seedlots_trial_complete_confirm_seedlots');
+        Workflow.focus("#create_seedlots_trial_workflow", 7);
+        startSeedlotUpload(displayUploadResults);
+    }
+
+
+
+    //
+    // HELPER FUNCTIONS
+    // 
+
+
+    /**
+     * Set the name of each seedlot - using the template and replacing the values
+     * then update the table displaying the results
+     */
+    function updateSeedlotNames() {
+        let trial_name = jQuery("#create_seedlots_trial_name").val();
+        let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
+        let name_template = jQuery("#create_seedlots_trial_name_template").val();
+
+        let html = "<thead></tr>";
+        if ( stock_type === 'accessions' ) html += "<th>Trial Name</th>";
+        html += "<th>Accession Name</th>";
+        if ( stock_type === "plots" ) html += "<th>Plot Number</th>";
+        if ( stock_type === "plots" ) html += "<th>Rep</th>";
+        if ( stock_type === "plots" ) html += "<th>Block</th>";
+        html += "<th>Seedlot Name</th>";
+        html += "</tr></thead>";
+
+        for ( let i = 0; i < SEEDLOTS.length; i++ ) {
+            index = i+1;
+            let name = name_template
+                .replace("{trial_name}", trial_name)
+                .replace("{accession_name}", SEEDLOTS[i].accession.name)
+                .replace("{index}", index);
+            if ( stock_type === "plots" ) {
+                name = name
+                    .replace("{plot_number}", SEEDLOTS[i].plot.number)
+                    .replace("{rep}", SEEDLOTS[i].plot.rep)
+                    .replace("{block}", SEEDLOTS[i].plot.block);
+            }
+            SEEDLOTS[i].name = name;
+
+            html += "<tr>";
+            if ( stock_type === 'accessions' ) html += "<td>" + trial_name + "</td>";
+            html += "<td>" + SEEDLOTS[i].accession.name + "</td>";
+            if ( stock_type === 'plots' ) html += "<td>" + SEEDLOTS[i].plot.number + "</td>";
+            if ( stock_type === 'plots' ) html += "<td>" + SEEDLOTS[i].plot.rep + "</td>";
+            if ( stock_type === 'plots' ) html += "<td>" + SEEDLOTS[i].plot.block + "</td>";
+            html += "<td><input class='form-control create_seedlots_trial_name_seedlot' data-index='" + i + "' value='" + name + "'></td>";
+            html += "</tr>";
+        }
+
+        jQuery("#create_seedlots_trial_name_table").html(html);
+        jQuery("#create_seedlots_trial_complete_name_seedlots").attr("disabled", false);
+        jQuery("#create_seedlots_trial_name_update").attr("disabled", true);
+    }
+
+    /**
+     * Calculate the seedlot contents and update the table displaying the results
+     */
+    function updateSeedlotContents() {
+        let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
+        let contents_type = jQuery("#create_seedlots_trial_contents_type").val();
+        let value = jQuery("#create_seedlots_trial_contents_value").val();
+        let constant = jQuery("#create_seedlots_trial_contents_constant").val();
+        let trait_id = jQuery("#create_seedlots_trial_contents_trait").val();
+        let formula = jQuery("#create_seedlots_trial_contents_computed_formula").val();
+
+        let html = "<thead></tr>";
+        html += "<th>Seedlot Name</th>";
+        html += "<th>Contents</th>";
+        html += "</tr></thead>";
+
+        for ( let i = 0; i < SEEDLOTS.length; i++ ) {
+            let contents = 0;
+            
+            // Set contents value
+            if ( value === 'constant' ) {
+                contents = constant;
+            }
+            else if ( value === 'trait' && TRAIT_DATA ) {
+                contents = _getTraitData(i, trait_id);
+            }
+            else if ( value === 'computed' && TRAIT_DATA && formula && formula !== "" ) {
+                let seedlot_formula = formula;
+                for ( let j = 0; j < TRAITS.length; j++ ) {
+                    let variable = TRAITS[j].variable;
+                    let variable_trait_id = TRAITS[j].id;
+                    if ( formula.includes('{' + variable + '}') ) {
+                        let variable_value = _getTraitData(i, variable_trait_id);
+                        seedlot_formula = seedlot_formula.replaceAll('{' + variable + '}', variable_value);
+                    }
+                }
+                try {
+                    let eval_value = eval(seedlot_formula);
+                    if ( eval_value ) contents = eval_value;
+                } 
+                catch (e) {}
+            }
+        
+            html += "<tr>";
+            html += "<td>" + SEEDLOTS[i].name + "</td>";
+            html += "<td><input class='form-control create_seedlots_trial_contents_seedlot' data-index='" + i + "' value='" + contents + "'></td>";
+            html +=" </tr>";
+
+            SEEDLOTS[i].contents = contents;
+        }
+
+        jQuery("#create_seedlots_trial_contents_table").html(html);
+        jQuery("#create_seedlots_trial_complete_computed_compute").attr("disabled", true);
+        jQuery("#create_seedlots_trial_complete_set_contents").attr("disabled", false);
+
+
+        /**
+         * Get the value of the specified trait for the specified seedlot
+         * If 'stock_type' == 'accessions', then the sum of the plots is returned
+         */
+        function _getTraitData(seedlot_index, trait_id) {
+            let contents = 0;
+            for ( let j = 0; j < TRAIT_DATA.length; j++ ) {
+                if ( TRAIT_DATA[j].trait_id + '' === trait_id + '' ) {
+                
+                    // Sum plots of the same accession
+                    if ( stock_type === 'accessions' ) {
+                        if ( SEEDLOTS[seedlot_index].accession.id === TRAIT_DATA[j].accession_id ) {
+                            try {
+                                contents = contents + parseFloat(TRAIT_DATA[j].trait_value);
+                            }
+                            catch (e) {}
+                        }
+                    }
+
+                    // Use the plot value
+                    else if ( stock_type === 'plots' ) {
+                        if ( SEEDLOTS[seedlot_index].plot.id === TRAIT_DATA[j].plot_id ) {
+                            contents = TRAIT_DATA[j].trait_value;
+                        }
+                    }
+                    
+                }
+            }
+            return contents;
+        }
+    }
+
+    /**
+     * Set the seedlot metadata and update the table displaying the individual metadata
+     */
+    function updateSeedlotMetadata(quiet) {
+        let p_id = jQuery("#create_seedlots_trial_breeding_program_id").val();
+        let p_name = jQuery("#create_seedlots_trial_breeding_program_id option:selected").text();
+        let l = jQuery("#create_seedlots_trial_location").val();
+        let b = jQuery("#create_seedlots_trial_box_name").val();
+        let q = jQuery("#create_seedlots_trial_quality_issues").val();
+        let o = jQuery("#create_seedlots_trial_organization").val();
+        let t = jQuery("#create_seedlots_trial_timestamp").val();
+        let d = jQuery("#create_seedlots_trial_description").val();
+
+        // Check for required fields
+        if ( !p_id || p_id === '' ) {
+            if (!quiet) alert("Breeding Program is required");
+            return;
+        }
+        if ( !l || l === '' ) {
+            if (!quiet) alert("Location is required");
+            return;
+        }
+        if ( !b || b === '' ) {
+            if (!quiet) alert("Box Name is required");
+            return;
+        }
+
+        // Build Table
+        let html = "<thead><tr>";
+        html += "<th>Seedlot Name</th>";
+        html += "<th>Metadata</th>";
+        html += "</tr></thead>";
+
+        for ( let i = 0; i < SEEDLOTS.length; i++ ) {
+            let p_select = jQuery("#create_seedlots_trial_breeding_program_id").html();
+
+            html += "<tr>";
+            html += "<td>" + SEEDLOTS[i].name + "</td>";
+            html += "<td>";
+            html += "<strong>Breeding Program:</strong><select class='form-control  create_seedlots_trial_metadata_input_seedlot_breeding_program' data-index='" + i + "'>" + p_select + "</select><br />";
+            html += "<strong>Location:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='location' data-index='" + i + "' value='" + l + "'><br />";
+            html += "<strong>Box Name:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='box_name' data-index='" + i + "' value='" + b + "'><br />";
+            html += "<strong>Quality Issues:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='quality_issues' data-index='" + i + "' value='" + q + "'><br />";
+            html += "<strong>Organization:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='organization' data-index='" + i + "' value='" + o + "'><br />";
+            html += "<strong>Timestamp:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='timestamp' data-index='" + i + "' value='" + t + "'><br />";
+            html += "<strong>Description:</strong><input class='form-control create_seedlots_trial_metadata_input_seedlot' data-prop='description' data-index='" + i + "' value='" + d + "'><br />";
+            html += "</td>";
+            html += "</tr>";
+
+            SEEDLOTS[i].metadata = {
+                breeding_program: {
+                    id: p_id,
+                    name: p_name,
+                },
+                location: l,
+                box_name: b,
+                quality_issues: q,
+                organization: o,
+                timestamp: t,
+                description: d
+            }
+        }
+
+        jQuery("#create_seedlots_trial_metadata_table").html(html);
+        jQuery(".create_seedlots_trial_metadata_input_seedlot_breeding_program").val(p_id);
+        jQuery("#create_seedlots_trial_update_metadata").attr("disabled", true);
+        jQuery("#create_seedlots_trial_complete_set_metadata").attr("disabled", false);
+    }
+
+
+    /**
+     * Build the table of Seedlot details for the user to confirm
+     */
+    function updateSeedlotDetails() {
+        let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
+        let contents_type = jQuery("#create_seedlots_trial_contents_type").val();
+
+        let html = "<thead><tr>";
+        html += "<th>Seedlot Name</th>";
+        html += "<th>Breeding Program</th>";
+        html += "<th>Source Accession</th>";
+        if ( stock_type === 'plots' ) html += "<th>Source Plot</th>";
+        if ( contents_type === 'amount' ) html += "<th>Contents (Amount)</th>";
+        if ( contents_type === 'weight' ) html += "<th>Contents (Weight)</th>";
+        html += "<th>Location</th>";
+        html += "<th>Box Name</th>";
+        html += "<th>Quality Issues</th>";
+        html += "<th>Organization</th>";
+        html += "<th>Timestamp</th>";
+        html += "<th>Description</th>";
+        html += "</tr></thead>";
+
+        for ( let i = 0; i < SEEDLOTS.length; i++ ) {
+            html += "<tr>";
+            html += "<td>" + SEEDLOTS[i].name + "</td>";
+            html += "<td>" + SEEDLOTS[i].metadata.breeding_program.name + "</td>";
+            html += "<td>" + SEEDLOTS[i].accession.name + "</td>";
+            if ( stock_type === 'plots' ) html += "<td>" + SEEDLOTS[i].plot.name + "</td>";
+            html += "<td>" + SEEDLOTS[i].contents + "</td>";
+            html += "<td>" + SEEDLOTS[i].metadata.location + "</td>";
+            html += "<td>" + SEEDLOTS[i].metadata.box_name + "</td>";
+            html += "<td>" + SEEDLOTS[i].metadata.quality_issues + "</td>";
+            html += "<td>" + SEEDLOTS[i].metadata.organization + "</td>";
+            html += "<td>" + SEEDLOTS[i].metadata.timestamp + "</td>";
+            html += "<td>" + SEEDLOTS[i].metadata.description + "</td>";
+            html += "</tr>";
+        }
+
+        jQuery("#create_seedlots_trial_confirm_table").html(html);
+    }
+
+
+    /**
+     * Upload each of the Seedlots to the Database in batches of up to 
+     * UPLOAD_BATCH_SIZE seedlots per batch
+     * @param {Function} callback Callback function(errors, success_count)
+     */
+    function startSeedlotUpload(callback) {
+        let stock_type = jQuery("#create_seedlots_trial_stock_type").val();
+        let contents_type = jQuery("#create_seedlots_trial_contents_type").val();
+        jQuery("#create_seedlots_trial_status").html("<strong>Creating Seedlots...</strong>");
+        jQuery("#create_seedlots_trial_progress").css('width', '0%').attr('aria-valuenow', 0);
+        jQuery("#create_seedlots_trial_results").empty();
+
+        // Create Results table
+        let html = "<thead><tr>";
+        html += "<th>Seedlot</th>";
+        html += "<th>Progress</th>";
+        html += "</tr></thead>";
+        html += "<tbody id='create_seedlots_trial_results_table_body'></tbody>";
+        for ( let i = 0; i < SEEDLOTS.length; i++ ) {
+            let status_id = "create_seedlots_trial_results_row_" + i;
+            html += "<tr><td>" + SEEDLOTS[i].name + "</td><td id='" + status_id + "'>Pending...</td>";
+            SEEDLOTS[i].status_id = status_id;
+        }
+        jQuery("#create_seedlots_trial_results_table").html(html);
+
+        // Information to return
+        let upload_count = 0;                                           // Count of successfully created/uploaded seedlots
+        let errors = [];                                                // Array of errors encountered during upload
+
+        // Set counts of seedlots and batches
+        let seedlot_count = 0;                                          // Count of completed seedlots
+        let seedlot_total = SEEDLOTS.length;                            // Total number of seedlots
+        let seedlot_batch_count;                                        // Count of completed seedlots, in current batch
+        let seedlot_batch_total;                                        // Total number of seedlots, in current batch
+        let batch_count = 0                                             // Count of completed batches
+        let batch_total = Math.ceil(seedlot_total/UPLOAD_BATCH_SIZE);   // Total number of batches
+
+        // Start the first batch
+        _uploadBatch();
+
+        /**
+         * Upload a batch of Seedlots (max set with UPLOAD_BATCH_SIZE)
+         * - when the seedlot is complete, call _finishSeedlot()
+         */
+        function _uploadBatch() {
+            let seedlot_batch_start = batch_count*UPLOAD_BATCH_SIZE;
+            let seedlot_batch_end = seedlot_batch_start+UPLOAD_BATCH_SIZE;
+            if ( seedlot_batch_end > seedlot_total ) seedlot_batch_end = seedlot_total;
+            seedlot_batch_count = 0;
+            seedlot_batch_total = seedlot_batch_end - seedlot_batch_start;
+            for ( let seedlot_index = seedlot_batch_start; seedlot_index < seedlot_batch_end; seedlot_index++ ) {
+                _uploadSeedlot(seedlot_index, function() {
+                    let p = ((seedlot_count+1)/seedlot_total)*100;
+                    jQuery("#create_seedlots_trial_progress").css('width', p+'%').attr('aria-valuenow', p);
+                    _finishSeedlot();
+                });
+            }
+        }
+
+        /**
+         * Upload the specified seedlot
+         */
+        function _uploadSeedlot(seedlot_index, callback) {
+            let seedlot = SEEDLOTS[seedlot_index];
+            _setStatusInfo(seedlot.status_id, "Creating...");
+
+            // Set seedlot request data
+            let data = {
+                'seedlot_name': seedlot.name,
+                'seedlot_location': seedlot.metadata.location,
+                'seedlot_box_name': seedlot.metadata.box_name,
+                'seedlot_accession_uniquename': seedlot.accession.name,
+                'seedlot_organization': seedlot.metadata.organization,
+                'seedlot_timestamp': seedlot.metadata.timestamp,
+                'seedlot_description': seedlot.metadata.description,
+                'seedlot_breeding_program_id': seedlot.metadata.breeding_program.id,
+                'seedlot_quality': seedlot.metadata.quality_issues,
+                'no_refresh': 1
+            };
+            if ( stock_type === 'plots' ) data['seedlot_plot_uniquename'] = seedlot.plot.name;
+            if ( contents_type === 'amount' ) data['seedlot_amount'] = seedlot.contents;
+            if ( contents_type === 'weight' ) data['seedlot_weight'] = seedlot.contents;
+
+            jQuery.ajax({
+                url: '/ajax/breeders/seedlot-create',
+                data: data,
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success === 1) {
+                        upload_count++;
+                        _setStatusComplete(seedlot.status_id);
+                    }
+                    if (response.error) {
+                        errors.push({
+                            index: seedlot_index,
+                            seedlot: seedlot,
+                            error: response.error
+                        });
+                        _setStatusError(seedlot.status_id, response.error);
+                    }
+                },
+                error: function(response){
+                    let msg = "AJAX error";
+                    errors.push({
+                        index: seedlot_index,
+                        seedlot: seedlot,
+                        error: msg
+                    });
+                    _setStatusError(seedlot.status_id, msg);
+                },
+                complete: function() {
+                    return callback();
+                }
+            });
+        }
+
+        /**
+         * Display an info message for the specified seedlot
+         */
+        function _setStatusInfo(id, info) {
+            jQuery("#" + id).html(info);
+        }
+
+        /**
+         * Display a complete message for the specified seedlot
+         */
+        function _setStatusComplete(id) {
+            jQuery("#" + id).html("<strong><span class='glyphicon glyphicon-ok-sign text-success'></span></strong>&nbsp;Seedlot Created!");
+        }
+
+        /**
+         * Display an error message for the specified seedlot
+         */
+        function _setStatusError(id, error) {
+            jQuery("#" + id).html("<strong><span class='glyphicon glyphicon-exclamation-sign text-danger'></span>&nbsp;ERROR:</strong> " + error);
+        }
+
+        /**
+         * Finished uploading a seedlot
+         * - when all of the batch's seedlots have been uploaded, call _finishBatch()
+         */
+        function _finishSeedlot() {
+            seedlot_count++;
+            seedlot_batch_count++;
+            if ( seedlot_batch_count >= seedlot_batch_total ) {
+                _finishBatch();
+            }
+        }
+
+        /**
+         * Finished uploading a batch of seedlots
+         * - when all of the batches are complete, refresh the matviews
+         * - if there are remaining batches, start the next batch
+         */
+        function _finishBatch() {
+            batch_count++;
+            if ( batch_count >= batch_total ) {
+                jQuery.ajax({
+                    url: '/ajax/breeder/refresh?matviews=stockprop'
+                });
+                if ( callback ) return callback(errors, upload_count);
+            }
+            else {
+                _uploadBatch();
+            }
+        }
+    }
+
+    /**
+     * Display the status results message
+     * @param {Object[]} errors List of upload errors
+     * @param {int} upload_count Count of successfully uploaded seedlots
+     */
+    function displayUploadResults(errors, upload_count) {
+        jQuery("#create_seedlots_trial_status").html("<strong>Upload Complete</strong>");
+        jQuery("#create_seedlots_trial_progress").css('width', '100%').attr('aria-valuenow', 100);
+
+        let html = "<br /><br />";
+        if ( !errors || errors.length === 0 ) {
+            html += "<div class='alert-success' role='alert'>";
+            html += "<strong><span class='glyphicon glyphicon-ok-sign'></span></strong>&nbsp;";
+            html += upload_count + " seedlots successfully created!";
+            html += "</div>";
+        }
+        if ( errors && errors.length > 0 ) {
+            html += "<div class='alert-danger' role='alert'>"
+            html += "<strong><span class='glyphicon glyphicon-exclamation-sign'></span>&nbsp; " + errors.length + " errors encountered!<br />";
+            html += "See below for which seedlots failed and more details<br />";
+            if ( upload_count > 0 ) html += "<br /><strong><span class='glyphicon glyphicon-ok-sign'></span>&nbsp; " + upload_count + " seedlots successfully created";
+            html += "</div>";
+        }
+
+        jQuery("#create_seedlots_trial_results").html(html);
+    }
+
+
+    //
+    // DB QUERY FUNCTIONS
+    //
+
+    /**
+     * Query the database for the trial id (by name)
+     * @param {string} trial_name Trial Name
+     * @param {Function} callback Callback function(trial_id)
+     */
+    function getTrialID(trial_name, callback) {
+        let trial_id;
+        jQuery.ajax({
+            type: "GET",
+            url: '/ajax/breeders/trial_lookup',
+            data: {
+                name: trial_name
+            },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                }
+                else if ( response.trial_id ) {
+                    trial_id = response.trial_id;
+                }
+                else {
+                    alert('Could not lookup trial');
+                }
+            },
+            error: function(response){
+                alert('Could not lookup trial');
+            },
+            complete: function() {
+                return callback(trial_id);
+            }
+        });
+    }
+
+    /**
+     * Get required metadata for the Trial:
+     * - Breeding Program ID
+     * - Accessions
+     * - Plots
+     * - Traits
+     * @param {int} trial_id Trial ID
+     * @param {function} callback Callback function(breeding_program_id, accessions, plots, traits)
+     */
+    function getTrialDetails(trial_id, callback) {
+        let count = 0;
+        let total = 4;
+
+        let breeding_program_id, accessions, plots, traits;
+
+        _getBreedingProgram();
+        _getAccessions();
+        _getPlots();
+        _getTraits();
+
+        function _getBreedingProgram(callback) {
+            jQuery.ajax({
+                type: "GET",
+                url: '/breeders/programs_by_trial/' + trial_id,
+                success: function(response) {
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else if ( response.projects ) {
+                        breeding_program_id = response.projects[0][0];
+                    }
+                    else {
+                        alert('Could not lookup trial breeding program');
+                    }
+                },
+                error: function(response){
+                    alert('Could not lookup trial breeding program');
+                },
+                complete: function() {
+                    _finish();
+                }
+            });
+        }
+
+        function _getAccessions(callback) {
+            jQuery.ajax({
+                type: "GET",
+                url: '/ajax/breeders/trial/' + trial_id + '/accessions',
+                success: function(response) {
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else if ( response.accessions ) {
+                        accessions = [];
+                        for ( let i = 0; i < response.accessions[0].length; i++ ) {
+                            accessions.push({
+                                id: response.accessions[0][i].stock_id, 
+                                name: response.accessions[0][i].accession_name
+                            });
+                        }
+                    }
+                    else {
+                        alert('Could not lookup trial accessions');
+                    }
+                },
+                error: function(response){
+                    alert('Could not lookup trial accessions');
+                },
+                complete: function() {
+                    _finish();
+                }
+            });
+        }
+
+        function _getPlots(callback) {
+            jQuery.ajax({
+                type: "GET",
+                url: '/ajax/breeders/trial/' + trial_id + '/layout',
+                success: function(response) {
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else if ( response.design ) {
+                        plots = [];
+                        for (const [plot, info] of Object.entries(response.design)) {
+                            plots.push({
+                                plot: {
+                                    id: info.plot_id,
+                                    number: info.plot_number,
+                                    name: info.plot_name,
+                                    rep: info.rep_number,
+                                    block: info.block_number
+                                },
+                                accession: {
+                                    name: info.accession_name,
+                                    id: info.accession_id
+                                }
+                            });
+                        }
+                    }
+                    else {
+                        alert('Could not lookup trial plots');
+                    }
+                },
+                error: function(response){
+                    alert('Could not lookup trial plots');
+                },
+                complete: function() {
+                    _finish();
+                }
+            });
+        }
+
+        function _getTraits(callback) {
+            jQuery.ajax({
+                type: "GET",
+                url: '/ajax/breeders/trial/' + trial_id + '/traits_assayed?stock_type=plot',
+                success: function(response) {
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else if ( response.traits_assayed ) {
+                        traits = [];
+                        let html = "";
+                        for ( let i = 0; i < response.traits_assayed[0].length; i++ ) {
+                            let id = response.traits_assayed[0][i][0];
+                            let name = response.traits_assayed[0][i][1];
+                            let variable = "trait_" + parseInt(i+1);
+                            traits.push({
+                                id: id,
+                                name: name,
+                                variable: variable
+                            });
+                            html += "<tr><td><code>{" + variable + "}</code></td>";
+                            html += "<td>" + name + "</td></tr>";
+                        }
+                        jQuery("#create_seedlots_trial_contents_computed_table").html(html);
+                    }
+                    else {
+                        alert('Could not lookup trial traits');
+                    }
+                },
+                error: function(response){
+                    alert('Could not lookup trial traits');
+                },
+                complete: function() {
+                    _finish();
+                }
+            });
+        }
+        
+        function _finish() {
+            count++;
+            if ( count >= total ) {
+                return callback(breeding_program_id, accessions, plots, traits);
+            }
+        }
+    }
+
+    /**
+     * Set the plot-level trait data for all of the traits
+     * @param {function} callback Callback function()
+     */
+    function getTraitData(callback) {
+        TRAIT_DATA = [];
+        
+        let count = 0;
+        let total = TRAITS.length;
+        for ( let i = 0; i < TRAITS.length; i++ ) {
+            _getTraitData(TRAITS[i].id, TRAITS[i].name);
+        }
+
+        function _getTraitData(trait_id, trait_name) {
+            jQuery.ajax({
+                type: "GET",
+                url: '/ajax/breeders/trial/' + TRIAL_ID + '/trait_phenotypes/?trait=' + trait_id + '&display=plot',
+                success: function(response) {
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else if ( response.status && response.status === 'success' && response.data ) {
+                        _parseTraitData(response.data, trait_id, trait_name);
+                    }
+                    else {
+                        alert('Could not get trait data');
+                    }
+                },
+                error: function(response){
+                    alert('Could not get trait data');
+                },
+                complete: function() {
+                    _finish();
+                }
+            });
+        }
+
+        function _parseTraitData(data, trait_id, trait_name) {
+            let accession_id_col, plot_id_col, trait_col;
+            let headers = data[0];
+            for ( let i = 0; i < headers.length; i++ ) {
+                if ( headers[i] === 'germplasmDbId' ) accession_id_col = i;
+                if ( headers[i] === 'observationUnitDbId' ) plot_id_col = i;
+                if ( headers[i] === trait_name ) trait_col = i;
+            }
+            for ( let i = 1; i < data.length; i++ ) {
+                TRAIT_DATA.push({
+                    accession_id: data[i][accession_id_col],
+                    plot_id: data[i][plot_id_col],
+                    trait_id: trait_id,
+                    trait_value: data[i][trait_col]
+                });
+            }
+        }
+
+        function _finish() {
+            count++;
+            if ( count >= total ) {
+                return callback();
+            }
+        }
+    }
+</script>
+
+<style>
+    .alert-success, .alert-danger {
+        padding: 15px !important;
+        margin-bottom: 20px !important;
+        border: 1px solid transparent !important;
+        border-radius: 4px !important;
+    }
+</style>

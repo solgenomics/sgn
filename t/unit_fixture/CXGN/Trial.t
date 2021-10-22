@@ -42,7 +42,8 @@ is_deeply($result, [
             'year' => '2017',
             'description' => 'Copy of trial with postcomposed phenotypes from cassbase.',
             'trial_name' => 'CASS_6Genotypes_Sampling_2015',
-            'trial_type' => 'Preliminary Yield Trial',
+		'trial_type' => 'Preliminary Yield Trial',
+		'trial_type_value' => 'Preliminary Yield Trial',
             'trial_type_name' => 'Preliminary Yield Trial',
             'trial_type_id' => 76515,
             'folder_description' => undef,
@@ -53,7 +54,9 @@ is_deeply($result, [
             'folder_name' => undef,
             'trial_id' => 165,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
             'genotyping_facility_status' => undef,
@@ -66,7 +69,8 @@ is_deeply($result, [
             'genotyping_plate_format' => undef,
             'trial_type_name' => 'Clonal Evaluation',
             'trial_name' => 'Kasese solgs trial',
-            'trial_type' => 'Clonal Evaluation',
+		'trial_type' => 'Clonal Evaluation',
+		'trial_type_value' => '1',
             'folder_description' => undef,
             'trial_type_id' => 77106,
             'project_planting_date' => '',
@@ -81,14 +85,17 @@ is_deeply($result, [
             'project_harvest_date' => '',
             'breeding_program_name' => 'test',
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
             'description' => 'new_test_cross',
             'year' => undef,
             'genotyping_plate_format' => undef,
             'trial_type_name' => undef,
-            'trial_type' => undef,
+		'trial_type' => undef,
+		'trial_type_value' => undef,
             'trial_name' => 'new_test_cross',
             'folder_description' => undef,
             'trial_type_id' => undef,
@@ -109,7 +116,9 @@ is_deeply($result, [
             'breeding_program_id' => 134,
             'design' => undef,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
             'genotyping_facility_plate_id' => undef,
@@ -121,7 +130,8 @@ is_deeply($result, [
             'trial_type_id' => undef,
             'folder_description' => undef,
             'trial_name' => 'test_t',
-            'trial_type' => undef,
+		'trial_type' => undef,
+		'trial_type_value' => undef,
             'trial_type_name' => undef,
             'year' => '2016',
             'genotyping_plate_format' => undef,
@@ -137,7 +147,9 @@ is_deeply($result, [
             'design' => 'CRD',
             'breeding_program_id' => 134,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
             'genotyping_facility_status' => undef,
@@ -147,7 +159,8 @@ is_deeply($result, [
             'design' => 'CRD',
             'trial_type_name' => undef,
             'trial_name' => 'test_trial',
-            'trial_type' => undef,
+		'trial_type' => undef,
+		'trial_type_value' => undef,
             'description' => 'test trial',
             'year' => '2014',
             'genotyping_plate_format' => undef,
@@ -165,7 +178,9 @@ is_deeply($result, [
             'project_harvest_date' => '2017-July-21',
             'location_id' => '23',
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           },
           {
             'genotyping_facility_submitted' => undef,
@@ -174,7 +189,8 @@ is_deeply($result, [
             'breeding_program_id' => 134,
             'design' => 'CRD',
             'folder_description' => undef,
-            'trial_type_id' => undef,
+		'trial_type_id' => undef,
+		'trial_type_value' => undef,
             'folder_name' => undef,
             'genotyping_facility' => undef,
             'project_planting_date' => '',
@@ -193,7 +209,9 @@ is_deeply($result, [
             'project_harvest_date' => '',
             'breeding_program_name' => 'test',
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
+
           }
         ], 'trial search test 1');
 
@@ -203,7 +221,7 @@ $trial_search = CXGN::Trial::Search->new({
     program_list=>['test'],
 });
 ($result, $total_count) = $trial_search->search();
-# print STDERR "SELECTED TRIAL =".Dumper($result)."\n";
+print STDERR "SELECTED TRIAL =".Dumper($result)."\n";
 is_deeply($result, [
           {
             'genotyping_facility_status' => undef,
@@ -227,11 +245,13 @@ is_deeply($result, [
             'trial_type_id' => 76515,
             'breeding_program_name' => 'test',
             'breeding_program_description' => 'test',
-            'location_name' => 'test_location',
+		'location_name' => 'test_location',
+		'trial_type_value' => 'Preliminary Yield Trial',
             'location_id' => '23',
             'project_harvest_date' => '',
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           },
           {
             'project_harvest_date' => '',
@@ -244,7 +264,8 @@ is_deeply($result, [
             'description' => 'This trial was loaded into the fixture to test solgs.',
             'trial_type' => 'Clonal Evaluation',
             'trial_name' => 'Kasese solgs trial',
-            'trial_type_name' => 'Clonal Evaluation',
+		'trial_type_name' => 'Clonal Evaluation',
+		'trial_type_value' => '1',
             'trial_type_id' => 77106,
             'folder_description' => undef,
             'genotyping_facility_plate_id' => undef,
@@ -259,7 +280,8 @@ is_deeply($result, [
             'genotyping_plate_sample_type' => undef,
             'genotyping_facility_submitted' => undef,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           },
           {
             'genotyping_facility_plate_id' => undef,
@@ -287,7 +309,9 @@ is_deeply($result, [
             'breeding_program_id' => 134,
             'design' => undef,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'trial_type_value' => undef,
+		'additional_info' => undef
           },
           {
             'design' => 'CRD',
@@ -302,7 +326,8 @@ is_deeply($result, [
             'location_name' => 'test_location',
             'trial_type' => undef,
             'trial_name' => 'test_t',
-            'trial_type_name' => undef,
+		'trial_type_name' => undef,
+		'trial_type_value' => undef,
             'genotyping_plate_format' => undef,
             'year' => '2016',
             'description' => 'test tets',
@@ -315,7 +340,8 @@ is_deeply($result, [
             'trial_type_id' => undef,
             'folder_description' => undef,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           },
           {
             'design' => 'CRD',
@@ -323,7 +349,8 @@ is_deeply($result, [
             'genotyping_facility_submitted' => undef,
             'genotyping_facility_status' => undef,
             'genotyping_plate_sample_type' => undef,
-            'breeding_program_name' => 'test',
+		'breeding_program_name' => 'test',
+		'trial_type_value' => undef,
             'breeding_program_description' => 'test',
             'location_name' => 'test_location',
             'location_id' => '23',
@@ -343,14 +370,16 @@ is_deeply($result, [
             'genotyping_plate_format' => undef,
             'year' => '2014',
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           },
           {
             'breeding_program_description' => 'test',
             'location_name' => 'test_location',
             'location_id' => '23',
             'project_harvest_date' => '',
-            'breeding_program_name' => 'test',
+		'breeding_program_name' => 'test',
+		 'trial_type_value' => undef,
             'description' => 'another trial for solGS',
             'year' => '2014',
             'genotyping_plate_format' => undef,
@@ -371,7 +400,8 @@ is_deeply($result, [
             'genotyping_plate_sample_type' => undef,
             'genotyping_facility_submitted' => undef,
             'sampling_facility' => undef,
-            'sampling_trial_sample_type' => undef,
+		'sampling_trial_sample_type' => undef,
+		'additional_info' => undef
           }
         ], 'trial search test 2');
 
@@ -413,8 +443,10 @@ is_deeply(\@all_project_types, [
           'genotyping_trial',
           'grafting_trial',
           'health_status_trial',
-          'heterosis_trial',
-          'phenotyping_trial',
+	      'heterosis_trial',
+	      	      'misc_trial',
+	      'phenotyping_trial',
+
           'pollinating_trial',
           'storage_trial'
         ], "check get_all_project_types");
@@ -498,7 +530,9 @@ foreach (@$breeding_programs){
 #print STDERR Dumper \@breeding_program_names;
 is_deeply(\@breeding_program_names, ['test'], "check breeding_program_names");
 
-my $plot_name = $trial_design->{11}->{plot_name};
+print STDERR Dumper($trial_design);
+my $plot_name = $trial_design->{9}->{plot_name};
+print STDERR "PLOT NAME = $plot_name\n";
 my $rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { name => $plot_name });
 is($rs->count(), 1, "check that a single plot was saved for a single name.");
 is($rs->first->name(), $plot_name, 'check that plot name was saved correctly');
@@ -515,17 +549,19 @@ else {
 my $phenotype_count_before_store = $trial->phenotype_count();
 
 ok($trial->phenotype_count() == 0, "trial has no phenotype data");
-my $plotlist_ref = [ $trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name} ];
+my $plotlist_ref = [ $trial_design->{7}->{plot_name}, $trial_design->{8}->{plot_name}, $trial_design->{9}->{plot_name} ];
 
 my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014' ];
 
-my %plot_trait_value = ( $trial_design->{11}->{plot_name} => { 'root number|CO_334:0000011'  => [0,''], 'dry yield|CO_334:0000014' => [30,''] },
-			   $trial_design->{12}->{plot_name} => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''] },
-			   $trial_design->{13}->{plot_name} => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''] },
+my %plot_trait_value = ( $trial_design->{7}->{plot_name} => { 'root number|CO_334:0000011'  => [0,''], 'dry yield|CO_334:0000014' => [30,''] },
+			   $trial_design->{8}->{plot_name} => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''] },
+			   $trial_design->{9}->{plot_name} => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''] },
     );
 
 
 my %metadata = ( operator => 'johndoe', date => '20141223' );
+
+my $total_phenotypes_before_store = $trial->total_phenotypes();
 
 my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     basepath=>$f->config->{basepath},
@@ -554,7 +590,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 #print STDERR "Total phentoypes: $total_phenotypes\n";
 #print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3508, "total phenotype data");
+is($total_phenotypes, $total_phenotypes_before_store + 6, "total phenotype data");
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -585,9 +621,9 @@ foreach (@$plot_pheno_for_trait) {
 }
 @phenotyped_stocks = sort @phenotyped_stocks;
 @phenotyped_stocks_values = sort @phenotyped_stocks_values;
-my @expected_sorted_stocks = sort ($trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name});
+my @expected_sorted_stocks = sort ($trial_design->{7}->{plot_name}, $trial_design->{8}->{plot_name}, $trial_design->{9}->{plot_name});
 print STDERR Dumper \@phenotyped_stocks;
-#print STDERR Dumper \@expected_sorted_stocks;
+print STDERR Dumper \@expected_sorted_stocks;
 is_deeply(\@phenotyped_stocks, \@expected_sorted_stocks, "check phenotyped stocks");
 is_deeply(\@phenotyped_stocks_values, ['30', '40', '50'], "check phenotyped stocks 2");
 
@@ -663,10 +699,15 @@ foreach (@$trial_plots){
 @trial_plot_names = sort @trial_plot_names;
 print STDERR "Num plots: ".scalar(@trial_plot_names)."\n";
 is(scalar(@trial_plot_names), 9, 'check number of plots');
-my @expected_sorted_plots = sort ($trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name}, $trial_design->{21}->{plot_name}, $trial_design->{22}->{plot_name}, $trial_design->{23}->{plot_name}, $trial_design->{31}->{plot_name}, $trial_design->{32}->{plot_name}, $trial_design->{33}->{plot_name});
-print STDERR Dumper \@trial_plot_names;
-print STDERR Dumper \@expected_sorted_plots;
-is_deeply(\@trial_plot_names, \@expected_sorted_plots, 'Check get_plots');
+
+print STDERR "DESIGN NOW: ".Dumper($trial_design);
+
+
+#my @expected_sorted_plots = sort ($trial_design->{11}->{plot_name}, $trial_design->{12}->{plot_name}, $trial_design->{13}->{plot_name}, $trial_design->{21}->{plot_name}, $trial_design->{22}->{plot_name}, $trial_design->{23}->{plot_name}, $trial_design->{31}->{plot_name}, $trial_design->{32}->{plot_name}, $trial_design->{33}->{plot_name});
+my @expected_sorted_plots = sort ($trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name}, $trial_design->{4}->{plot_name}, $trial_design->{5}->{plot_name}, $trial_design->{6}->{plot_name}, $trial_design->{7}->{plot_name}, $trial_design->{8}->{plot_name}, $trial_design->{9}->{plot_name});
+print STDERR "TRIAL PLOT NAMES: ". Dumper \@trial_plot_names;
+print STDERR "TRIAL SORTED PLOTS: ".Dumper \@expected_sorted_plots;
+is_deeply(\@trial_plot_names, \@expected_sorted_plots, 'Check get_plots 1');
 
 my $trial_controls = $trial->get_controls();
 #print STDERR Dumper $trial_controls;
@@ -683,18 +724,20 @@ my $plants = $trial->get_plants();
 #print STDERR Dumper $plants;
 is(scalar(@$plants), $number_of_plots*3, "check if the right number of plants was created");
 
-my $plantlist_ref = [ $trial_design->{11}->{plot_name}.'_plant_2', $trial_design->{12}->{plot_name}.'_plant_2', $trial_design->{13}->{plot_name}.'_plant_1' ];
+my $plantlist_ref = [ $trial_design->{7}->{plot_name}.'_plant_2', $trial_design->{8}->{plot_name}.'_plant_2', $trial_design->{9}->{plot_name}.'_plant_1' ];
 
 my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014', 'harvest index|CO_334:0000015' ];
 
-my %plant_trait_value = ( $trial_design->{11}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [12,''], 'dry yield|CO_334:0000014' => [30,''], 'harvest index|CO_334:0000015' => [2,''] },
-    $trial_design->{12}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''], 'harvest index|CO_334:0000015' => [3,''] },
-    $trial_design->{13}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
+my %plant_trait_value = ( $trial_design->{7}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [12,''], 'dry yield|CO_334:0000014' => [30,''], 'harvest index|CO_334:0000015' => [2,''] },
+    $trial_design->{8}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''], 'harvest index|CO_334:0000015' => [3,''] },
+    $trial_design->{9}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
 );
 
 my %metadata = ( operator => 'johndoe', date => '20141225' );
 
-my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+my $total_phenotype_count_before_save2 = $trial->total_phenotypes();
+
+my $lp = CXGN::Phenotypes::StorePhenotypes->new({
     basepath=>$f->config->{basepath},
     dbhost=>$f->config->{dbhost},
     dbname=>$f->config->{dbname},
@@ -711,7 +754,7 @@ my $lp = CXGN::Phenotypes::StorePhenotypes->new(
     has_timestamps=>0,
     overwrite_values=>0,
     metadata_hash=>\%metadata,
-);
+});
 $lp->store();
 
 my $total_phenotypes = $trial->total_phenotypes();
@@ -720,7 +763,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 print STDERR "Total phentoypes: $total_phenotypes\n";
 print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3517, "total phenotype data");
+is($total_phenotypes, $total_phenotype_count_before_save2 + 9, "total phenotype data");
 is($trial_phenotype_count, 15, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -774,8 +817,9 @@ foreach (@$retrieve_plots){
     push @get_plot_names, $_->[1];
 }
 @get_plot_names = sort @get_plot_names;
-#print STDERR Dumper \@get_plot_names;
-is_deeply(\@get_plot_names, \@expected_sorted_plots, "check get_plots");
+print STDERR "PLOT NAMES NOW: ". Dumper \@get_plot_names;
+print STDERR "EXPECTED PLOT NAMES NOW: ".Dumper \@expected_sorted_plots;
+is_deeply(\@get_plot_names, \@expected_sorted_plots, "check get_plots 2");
 
 my @expected_plants;
 foreach (@expected_sorted_plots) {
@@ -881,7 +925,9 @@ my $error = $trial->set_project_type("77106");
 
 is($trial->get_project_type()->[1], "Clonal Evaluation", "set type test");
 
+print STDERR "DELETING PROJECT ENTRY... ";
 $trial->delete_project_entry();
+print STDERR "Done.\n";
 
 my $deleted_trial;
 eval {

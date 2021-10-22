@@ -23,6 +23,7 @@ jQuery(document).ready(function ($) {
     var list = new CXGN.List();
 
     var design_json;
+    var trial_id;
     var stock_list_id;
     var stock_list;
     var check_stock_list_id;
@@ -40,6 +41,8 @@ jQuery(document).ready(function ($) {
     var crbd_checks_list_seedlot_hash = {};
     var unrep_list_seedlot_hash = {};
     var rep_list_seedlot_hash = {};
+    var plants_per_plot;
+    var inherits_plot_treatments;
 
     jQuery('#create_trial_validate_form_button').click(function(){
         create_trial_validate_form();
@@ -55,8 +58,9 @@ jQuery(document).ready(function ($) {
         var stock_type = $("#select_stock_type").val();
         var plot_width = $("#add_project_plot_width").val();
         var plot_length = $("#add_project_plot_length").val();
+        plants_per_plot = $("#add_plant_entries").val();
+        inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
 
-        
         if (trial_name === '') {
             alert("Please supply a trial name");
         }
@@ -81,8 +85,11 @@ jQuery(document).ready(function ($) {
         else if (plot_length > 13){
             alert("Please check the plot length is too high");
         }
+        else if (plants_per_plot > 500) {
+            alert("Please no more than 500 plants per plot.");
+        }
         else if (description === '') {
-            alert("Please suplly a description!");
+            alert("Please supply a description!");
         }
         else if (design_type === '') {
             alert("Please select a design type");
@@ -491,20 +498,41 @@ jQuery(document).ready(function ($) {
         var col_number=$('#col_number').val();
        // alert(row_number);
 
-        // accession stock type
-        var accession_list_id = $('#select_list_list_select').val();
-        var control_accession_list_id = $('#list_of_checks_section_list_select').val();
-        var control_accession_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
+        var accession_list_id = '';
+        var control_accession_list_id = '';
+        var control_accession_list_id_crbd = '';
+        var cross_list_id = '';
+        var control_cross_list_id = '';
+        var control_cross_list_id_crbd = '';
+        var family_name_list_id = '';
+        var control_family_name_list_id = '';
+        var control_family_name_list_id_crbd = '';
+        var replicated_accession_list_id = '';
+        var unreplicated_accession_list_id = '';
+        var replicated_cross_list_id = '';
+        var unreplicated_cross_list_id = '';
+        var replicated_family_name_list_id = '';
+        var unreplicated_family_name_list_id = '';
 
-        // cross stock type
-        var cross_list_id = $('#select_cross_list_list_select').val();
-        var control_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
-        var control_cross_list_id_crbd = $('#crbd_list_of_cross_checks_section_list_select').val();
-
-        // family_name stock type
-        var family_name_list_id = $('#select_family_name_list_list_select').val();
-        var control_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
-        var control_family_name_list_id_crbd = $('#crbd_list_of_family_name_checks_section_list_select').val();
+        if (trial_stock_type == "accession"){
+            accession_list_id = $('#select_list_list_select').val();
+            control_accession_list_id = $('#list_of_checks_section_list_select').val();
+            control_accession_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
+            replicated_accession_list_id = $('#list_of_rep_accession_list_select').val();
+            unreplicated_accession_list_id = $('#list_of_unrep_accession_list_select').val();
+        } else if (trial_stock_type == "cross") {
+            cross_list_id = $('#select_cross_list_list_select').val();
+            control_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
+            control_cross_list_id_crbd = $('#crbd_list_of_cross_checks_section_list_select').val();
+            replicated_cross_list_id = $('#list_of_rep_cross_list_select').val();
+            unreplicated_cross_list_id = $('#list_of_unrep_cross_list_select').val();
+        } else if (trial_stock_type == "family_name") {
+            family_name_list_id = $('#select_family_name_list_list_select').val();
+            control_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
+            control_family_name_list_id_crbd = $('#crbd_list_of_family_name_checks_section_list_select').val();
+            replicated_family_name_list_id = $('#list_of_rep_family_name_list_select').val();
+            unreplicated_family_name_list_id = $('#list_of_unrep_family_name_list_select').val();
+        }
 
         var stock_list;
         var stock_list_array;
@@ -546,8 +574,6 @@ jQuery(document).ready(function ($) {
             control_list_crbd = JSON.stringify(control_list_crbd_array);
         }
 
-
-
         var design_type = $('#select_design_method').val();
         if (design_type == "") {
             var design_type = $('#select_multi-design_method').val();
@@ -562,20 +588,6 @@ jQuery(document).ready(function ($) {
         var fieldmap_col_number = $('#fieldMap_col_number').val();
         var fieldmap_row_number = $('#fieldMap_row_number').val();
         var plot_layout_format = $('#plot_layout_format').val();
-
-        // accession stock_type
-        var replicated_accession_list_id = $('#list_of_rep_accession_list_select').val();
-        var unreplicated_accession_list_id = $('#list_of_unrep_accession_list_select').val();
-
-        // cross stock_type
-        var replicated_cross_list_id = $('#list_of_rep_cross_list_select').val();
-        var unreplicated_cross_list_id = $('#list_of_unrep_cross_list_select').val();
-
-        // family_name stock_type
-        var replicated_family_name_list_id = $('#list_of_rep_family_name_list_select').val();
-        var unreplicated_family_name_list_id = $('#list_of_unrep_family_name_list_select').val();
-
-
         var row_in_design_number = $('#no_of_row_in_design').val();
         var col_in_design_number = $('#no_of_col_in_design').val();
         var no_of_rep_times = $('#no_of_rep_times').val();
@@ -956,6 +968,34 @@ jQuery(document).ready(function ($) {
             alert('Accession list, seedlot list, cross list or family name list is not valid!');
             return;
         }
+    });
+
+    $(document).on('change', '#select_stock_type', function () {
+
+        var stock_type = jQuery('#select_stock_type').val();
+
+        //add lists to the list select and list of checks select dropdowns based on stock type.
+        if (stock_type == "accession"){
+            document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh', undefined);
+            document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
+            document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh', undefined);
+            document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh', undefined);
+        } else if (stock_type == "cross") {
+            document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], '', 'refresh', undefined);
+            document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("crbd_list_of_cross_checks_section").innerHTML = list.listSelect("crbd_list_of_cross_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
+            document.getElementById("list_of_unrep_cross").innerHTML = list.listSelect("list_of_unrep_cross", [ 'crosses' ], "Required: e.g. 200", 'refresh', undefined);
+            document.getElementById("list_of_rep_cross").innerHTML = list.listSelect("list_of_rep_cross", [ 'crosses' ], "Required: e.g. 119", 'refresh', undefined);
+        } else if (stock_type == "family_name") {
+            document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_family_name_list", [ 'family_names' ], '', 'refresh', undefined);
+            document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("crbd_list_of_family_name_checks_section").innerHTML = list.listSelect("crbd_list_of_family_name_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
+            document.getElementById("list_of_unrep_family_name").innerHTML = list.listSelect("list_of_unrep_family_name", [ 'family_names' ], "Required: e.g. 200", 'refresh', undefined);
+            document.getElementById("list_of_rep_family_name").innerHTML = list.listSelect("list_of_rep_family_name", [ 'family_names' ], "Required: e.g. 119", 'refresh', undefined);
+        }
+
     });
 
     $(document).on('change', '#select_design_method', function () {
@@ -1898,6 +1938,32 @@ jQuery(document).ready(function ($) {
       }
     });
 
+
+    function add_plants_per_plot() {
+        if (plants_per_plot && plants_per_plot != 0) {
+            jQuery.ajax( {
+                url: '/ajax/breeders/trial/'+trial_id+'/create_plant_entries/',
+                type: 'POST',
+                data: {
+                  'plants_per_plot' : plants_per_plot,
+                  'inherits_plot_treatments' : inherits_plot_treatments,
+                },
+                success: function(response) {
+                    console.log(response);
+                  if (response.error) {
+                    alert(response.error);
+                  }
+                  else {
+                    jQuery('#add_plants_dialog').modal("hide");
+                  }
+                },
+                error: function(response) {
+                  alert(response);
+                },
+              });
+        }
+    }
+
     function save_experimental_design(design_json) {
         var list = new CXGN.List();
         var name = jQuery('#new_trial_name').val();
@@ -2018,6 +2084,7 @@ jQuery(document).ready(function ($) {
                 'use_same_layout' : use_same_layout
             },
             success: function (response) {
+                trial_id = response.trial_id;
                 jQuery('#working_modal').modal("hide");
                 if (response.error) {
                     alert(response.error);
@@ -2027,6 +2094,7 @@ jQuery(document).ready(function ($) {
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
                     Workflow.check_complete("#trial_design_workflow");
+                    add_plants_per_plot();
                 }
             },
             error: function () {
@@ -2043,7 +2111,7 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery('#new_trial_confirm_submit').click(function () {
-            save_experimental_design(design_json);
+        save_experimental_design(design_json);
     });
 
     $('#redo_trial_layout_button').click(function () {
@@ -2053,30 +2121,6 @@ jQuery(document).ready(function ($) {
 
     function open_project_dialog() {
         $('#add_project_dialog').modal("show");
-
-        //add lists to the list select and list of checks select dropdowns.
-        document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh', undefined);
-        document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh', undefined);
-        document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh', undefined);
-
-        document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], '', 'refresh', undefined);
-        document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'accessions' ], '', 'refresh', undefined);
-
-        document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_family_name_list", [ 'family_names' ], '', 'refresh', undefined);
-        document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'accessions' ], '', 'refresh', undefined);
-
-        //add lists to the list select and list of checks select dropdowns for CRBD.
-        document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
-        document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh', undefined);
-        document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh', undefined);
-
-        document.getElementById("crbd_list_of_cross_checks_section").innerHTML = list.listSelect("crbd_list_of_cross_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
-        document.getElementById("list_of_unrep_cross").innerHTML = list.listSelect("list_of_unrep_cross", [ 'crosses' ], "Required: e.g. 200", 'refresh', undefined);
-        document.getElementById("list_of_rep_cross").innerHTML = list.listSelect("list_of_rep_cross", [ 'crosses' ], "Required: e.g. 119", 'refresh', undefined);
-
-        document.getElementById("crbd_list_of_family_name_checks_section").innerHTML = list.listSelect("crbd_list_of_family_name_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
-        document.getElementById("list_of_unrep_family_name").innerHTML = list.listSelect("list_of_unrep_family_name", [ 'family_names' ], "Required: e.g. 200", 'refresh', undefined);
-        document.getElementById("list_of_rep_family_name").innerHTML = list.listSelect("list_of_rep_family_name", [ 'family_names' ], "Required: e.g. 119", 'refresh', undefined);
 
         //add a blank line to location select dropdown that dissappears when dropdown is opened
         $("#add_project_location").prepend("<option value=''></option>").val('');

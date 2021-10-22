@@ -1,0 +1,202 @@
+<%args>
+
+</%args>
+
+<style>
+
+.button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  -webkit-transition-duration: 0.4s; /* Safari */
+  transition-duration: 0.4s;
+}
+.button1 {border-radius: 8px;}
+
+.button1:hover {
+  box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24),0 17px 50px 0 rgba(0,0,0,0.19);
+}
+
+.text-center {
+  text-align: center;
+}
+
+</style>
+
+<script type="text/javascript" src="http://d3js.org/d3.v3.js"></script>
+<script src="https://rawgit.com/tpreusse/radar-chart-d3/master/src/radar-chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<& /page/page_title.mas, title => "Radar Graph" &>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+
+<div id="dataset_select_div">[loading...]</div>
+
+
+<div class="text-center">
+<button class="button button1" id="load_data">Render Graph</button>
+</div>
+<br></br>
+
+<div id="current_selected_traits"></div>
+
+<canvas id="radar_chart" width="400" height="400"></canvas>
+
+
+<script>
+var ctx = document.getElementById('radar_chart').getContext('2d');
+var radar_data = { labels: [], datasets: [] };
+var labeled;
+
+var radar_chart = new Chart(ctx, {
+    type: 'radar',
+    data: radar_data,
+    options: {
+        elements: {
+            line: {
+                borderWidth: 3,
+            },
+            point: {
+                pointRadius: 8,
+            },
+        },
+        scales: {
+            r: {
+                angleLines: {
+                    color: 'black'
+                },
+                grid: {
+                    color: 'black'
+                },
+                pointLabels: {
+                    font: {
+                        family: 'sans-serif',
+                        size: 20,
+                    },
+                    color: 'black'
+                },
+                ticks: {
+                    color: 'black',
+                    font: {
+                        family: 'sans-serif',
+                        size: 15
+                    }
+                }
+            }
+        },
+
+    },
+});
+
+jQuery(window).ready(function () {
+    get_select_box("datasets", "dataset_select_div", { "checkbox_name": "dataset_select_checkbox" });
+});
+
+jQuery('#load_data').click(function () {
+    labeled = false;
+    var dataset_ids = get_dataset_id();
+    radar_chart.data.datasets = [];
+    radar_chart.data.labels = [];
+
+    for (var i = 0; i < dataset_ids.length; i++) {
+        jQuery.ajax({
+            url: '/ajax/radargraph?dataset_id=' + dataset_ids[i],
+            success: function (r) {
+                get_labels(r.data);
+                format_data(r.data, r.name);
+            }
+        })
+    }
+})
+
+/**
+ * Pushes the input into the dataset as an array of values
+ * @param {*} input Data from the AJAX request
+ */
+function format_data(input, dataset_name) {
+    var data = [];
+    var trait_indices = input[0].indexOf("availableGermplasmSeedlotUniquenames") + 1;
+
+    for (var i = trait_indices; i < trait_indices + (input[0].length - trait_indices - 1); i++) {
+        var temp = [];
+        for (var j = 1; j < input.length; j++) {
+            temp.push(input[j][i] / 1.0);
+        }
+        data.push(Math.round((get_avg(temp)) * 10) / 10);
+    }
+
+    var rgb_col = colors[Math.floor(Math.random() * colors.length)]
+    var rgba_col = colors_alpha[colors.indexOf(rgb_col)]
+
+
+    var set = {
+        label: dataset_name,
+        data: data,
+        fill: true,
+        backgroundColor: rgba_col,
+        borderColor: rgb_col,
+        pointHoverRadius: 13,
+        pointBackgroundColor: rgb_col,
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: rgb_col
+    }
+
+    radar_chart.data.datasets.push(set);
+    radar_chart.update();
+}
+
+/**
+ * Returns the average of an array
+ * @param {*} data Array of numbers
+ * @returns Average value
+ */
+function get_avg(data) {
+    const total = data.reduce((acc, c) => acc + c, 0);
+    return total * 1.0 / data.length * 1.0;
+}
+
+/**
+ * Returns the selected dataset ids
+ * @returns Dataset ids
+ */
+
+function get_dataset_id() {
+    var selected_ids = [];
+    jQuery('input[name="dataset_select_checkbox"]:checked').each(function () {
+        selected_ids.push(jQuery(this).val());
+    });
+    if (selected_ids.length < 1) {
+        alert('Please select at least one dataset!');
+        return false;
+    }
+    return selected_ids;
+}
+
+/**
+ * If the labels have not been set for the chart, 
+ * this function will push all labels to the chart
+ * @param {*} input The data returned from the ajax request
+ */
+function get_labels(input) {
+    if (!labeled) {
+        var trait_indices = input[0].indexOf("availableGermplasmSeedlotUniquenames") + 1;
+
+        for (var i = trait_indices; i < trait_indices + (input[0].length - trait_indices - 1); i++) {
+            radar_chart.data.labels.push(input[0][i]);
+        }
+        radar_chart.update();
+        labeled = true;
+    }
+}
+
+var colors = ['rgb(0,0,0)','rgb(255, 99, 132)','rgb(34,139,34)','rgb(30,144,255)'];
+var colors_alpha = ['rgba(0,0,0,0.2)','rgba(255, 99, 132,0.2)','rgba(34,139,34,0.2)','rgba(30,144,255,0.2)'];
+</script>

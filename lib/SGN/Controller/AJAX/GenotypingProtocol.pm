@@ -119,6 +119,10 @@ sub genotyping_protocol_delete_GET : Args(1) {
     my $async_delete = CXGN::Tools::Run->new();
     $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
 
+    # Rebuild and refresh the materialized_markerview table
+    my $async_refresh = CXGN::Tools::Run->new();
+    $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+
     $c->stash->{rest} = { success => 1 };
 }
 

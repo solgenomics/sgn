@@ -37,7 +37,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('combined trials');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(200);
@@ -74,7 +74,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('Test DMCP model combo');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(350);
@@ -88,7 +88,7 @@ $d->while_logged_in_as("submitter", sub {
     #$d->get('/solgs/model/combined/populations/2804608595/trait/70741/gp/1', 'combo trials tr pop page');
    # sleep(2);
    my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
-   my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+   my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
    sleep(2);
    $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
    sleep(120);
@@ -106,7 +106,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(5);
     $d->find_element_ok('Download GEBVs', 'partial_link_text',  'download gebvs')->click();
     sleep(3);
@@ -114,7 +114,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     my $sel_pred = $d->find_element('Marker Effects', 'partial_link_text', 'scroll to marker effects');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('Marker Effects', 'partial_link_text', 'expand marker effects')->click();
     sleep(2);
@@ -135,7 +135,7 @@ $d->while_logged_in_as("submitter", sub {
 	sleep(2);
 	$d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('Test DMCP selection pred combo trials model');
 	sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
 	$d->find_element_ok('submit_job', 'id', 'submit')->click();
 	sleep(360);
@@ -149,7 +149,7 @@ $d->while_logged_in_as("submitter", sub {
 	sleep(5);
 
 	my $sel_pred = $d->find_element('Check Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(90);
@@ -172,7 +172,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('clones list sel pred');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -190,7 +190,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
 
 	my $sel_pred = $d->find_element('Check Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(90);
@@ -214,7 +214,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('dataset clones sel pred');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -234,7 +234,7 @@ $d->while_logged_in_as("submitter", sub {
 #$d->get('/solgs/combined/model/2804608595/selection/dataset_5/trait/70741/gp/1', 'combo trials tr pop page');
 
 	my $sel_pred = $d->find_element('Check Genetic Gain', 'partial_link_text', 'scroll to GEBvs');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $sel_pred);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
     sleep(2);
     $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
     sleep(60);
@@ -263,7 +263,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('Test DMCP-FRW modeling combo trials');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -284,7 +284,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('Test DMCP-FRW selection pred naccri');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -309,7 +309,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('clones list dmc-frw sel pred');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -334,7 +334,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('dataset clones sel pred2');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
@@ -379,7 +379,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('combined trait trials');
     sleep(2);
-	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(200);

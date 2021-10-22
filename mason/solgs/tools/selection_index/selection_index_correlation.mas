@@ -1,0 +1,17 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/selection_index/selection_index_correlation.mas - displays correlation heat map of selection index and trait GEBVs
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+    <div id="si_correlation_canvas" style="clear:both"> </div>
+    <& /solgs/spinner.mas &>
+    <div id="si_correlation_message"  class="message"> </div>

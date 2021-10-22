@@ -296,7 +296,6 @@ $data_level => 'plot'
                       <div class="form-group">
                         <label class="col-sm-3 control-label">Plot Name: </label>
                         <div class="col-sm-9" id="hm_edit_plot_name">
-
                         </div>
                       </div>
 
@@ -323,6 +322,13 @@ $data_level => 'plot'
                         <label class="col-sm-3 control-label">Enter New Accession: </label>
                         <div class="col-sm-9" >
                           <input class="form-control" id="hm_accession" name="hm_accession"></input>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">New Plot Name:<br> (Optional) </label>
+                        <div class="col-sm-9">
+                          <input class="form-control" id="hm_new_plot_name" name="hm_new_plot_name"></input>
                         </div>
                       </div>
 
@@ -354,7 +360,7 @@ $data_level => 'plot'
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_hmfieldma_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_replace_accession_dialog" type="button" class="btn btn-default" onclick=location.reload() data-dismiss="modal">Close</button>
 
             </div>
         </div>
@@ -458,7 +464,6 @@ jQuery(document).ready( function() {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response) {
-                console.log(response);
                 var data = response.result.data; 
                 var datasort = data.sort(function(obj1, obj2) {
 	                  // Ascending: first plotNumber less than the previous
@@ -812,12 +817,11 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 var data = response.result.data;
-                console.log(data);
                 var data = data.sort(function(obj1, obj2) {
 	                  // Ascending: first plotNumber less than the previous
 	                return obj1.additionalInfo.plotNumber - obj2.additionalInfo.plotNumber;
                 });
-                console.log(data);
+                // console.log(data);
                 var rows = [];
                 var cols = [];
                 var blocks = [];
@@ -1370,6 +1374,7 @@ jQuery(document).ready( function() {
       jQuery('#working_modal').modal("show");
 
       var new_accession = jQuery('#hm_accession').val();
+      var new_plot_name = jQuery('#hm_new_plot_name').val();
       var old_accession = jQuery('#hm_edit_plot_accession').html();
       var old_plot_id = jQuery('#hm_edit_plot_id').html();
       var old_plot_name = jQuery('#hm_edit_plot_name').html();
@@ -1380,6 +1385,7 @@ jQuery(document).ready( function() {
         dataType: "json",
         data: {
                 'new_accession': new_accession,
+                'new_plot_name': new_plot_name,
                 'old_accession': old_accession,
                 'old_plot_id': old_plot_id,
                 'old_plot_name': old_plot_name,

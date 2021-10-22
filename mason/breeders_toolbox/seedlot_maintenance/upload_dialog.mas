@@ -1,0 +1,282 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
+
+<div class="modal fade" id="upload_maintenance_event_upload_modal" name="upload_maintenance_event_upload_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Upload Seedlot Maintenance Events</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p><strong>Select an Excel (.xls) file with the Seedlot Maintenance Events to upload</strong></p>
+                    <p><strong>Requirements:</strong></p>
+                    <ul>
+                        <li>
+                            The Maintenance Events are associated with Seedlots, so the name of the Seedlot in the file must match an existing Seedlot in the database.    
+                            If a Seedlot is not yet in the database, go to the <a href='/breeders/seedlots/'>Manage Seedlots</a> page to create it first.
+                        </li>
+                        <li>
+                            The name of the Maintenance Event must be a valid event type.  Valid event types include:
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Event Type Name</th>
+                                        <th>Event Type Values</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="maintenece_event_terms"></tbody>
+                            </table>
+                        </li>
+                    </ul>
+                    <&| /page/explanation.mas, title=>'Template Information' &>
+                        <p>
+                        <b>File format information</b>
+                        <br>
+                        <a id="maintenance_event_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                        </p>
+                    </&>
+                    <br />
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_maintenance_events_form" name="upload_maintenance_events_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Upload File: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" type="file" name="maintenance_events_upload_file" id="maintenance_events_upload_file" encoding="multipart/form-data" />
+                            </div>
+                        </div>
+                    </form>
+                    <br /><br />
+                    <div id="maintenance_events_upload_messages">
+                        <ul id="maintenance_events_upload_messages_list" class='list-group'></ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="maintenance_events_submit" id="maintenance_events_submit">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template Info Modal -->
+<div class="modal fade" id="maintenance_event_upload_spreadsheet_format_modal" name="maintenance_event_upload_spreadsheet_format_modal" tabindex="-1" role="dialog" aria-labelledby="uploadMaintenanceInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadMaintenanceInfoDialog">Upload Seedlot Maintenance Event Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <strong>Seedlot Maintenance Events may be uploaded in an Excel file (.xls)</strong>
+                    <br />
+                    (.xlsx format not supported)
+                    <br /><br />
+                    <strong>Header:</strong>
+                    <br />
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                            <tbody>
+                                <tr>
+                                    <td>seedlot</td>
+                                    <td>type</td>
+                                    <td>value</td>
+                                    <td>notes</td>
+                                    <td>operator</td>
+                                    <td>timestamp</td>
+                                </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Fields:</b>
+                    <ul>
+                        <li>seedlot (name of the seedlot, must match an existing seedlot))</li>
+                        <li>type (name of the maintenance event type, must match an existing term)</li>
+                        <li>value (value of the event)</li>
+                        <li>notes (optional, additional comments about the event)</li>
+                        <li>operator (username of the person recording the event)</li>
+                        <li>timestamp (date/time of when the event is recorded in 'YYYY-MM-DD HH:MM:SS' format)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    div.center {
+        text-align: center
+    }
+</style>
+
+<script type="text/javascript">
+
+    jQuery(document).ready(function() {
+
+        // Setup functions
+        getValidEventTypes();
+
+        // Click Listeners
+        jQuery('#maintenance_event_upload_spreadsheet_format_info').click(function() {
+            jQuery('#maintenance_event_upload_spreadsheet_format_modal').modal('show');
+        });
+        jQuery('#maintenance_events_submit').click(uploadMaintenanceEvents);
+
+    });
+
+
+    /**
+     * Get the maintenance event ontology and populate the table of valid names and values
+     */
+    function getValidEventTypes() {
+        let html = "";
+        jQuery.ajax({
+            type: 'GET',
+            dataType: 'json',
+            url: '/ajax/breeders/seedlot/maintenance/ontology',
+            success: function(data) {
+                if ( data && data.ontology ) {
+                    for ( let i = 0; i < data.ontology.length; i++ ) {
+                        for ( let j = 0; j < data.ontology[i].children.length; j++ ) {
+                            let name = data.ontology[i].children[j].name;
+                            let values = [];
+                            if ( data.ontology[i].children[j].children ) {
+                                for ( let k = 0; k < data.ontology[i].children[j].children.length; k++ ) {
+                                    values.push(data.ontology[i].children[j].children[k].name);
+                                }
+                            }
+                            if ( values.length === 0 ) values.push('<em>Any Value</em>');
+                            html += "<tr><td>" + name + "</td><td>" + values.join(', ') + "</td></tr>";
+                        }
+                    }
+                }
+            },
+            complete: function() {
+                jQuery("#maintenece_event_terms").html(html);
+            }
+        });
+    }
+
+    /**
+     * Upload the Excel file and process the results
+     */
+    function uploadMaintenanceEvents() {
+        let file = jQuery('#maintenance_events_upload_file').val();
+        if ( !file || file === '' ) {
+            alert("Please select your upload file");
+            return false;
+        }
+
+        // Setup working modal
+        jQuery('#working_msg').html("Uploading Seedlot Maintenance Events File");
+        jQuery('#working_modal_progress').css('width', 0).attr('aria-valuenow', 0);
+        jQuery('#working_modal_progress_div').css('display', 'block');
+        jQuery('#working_modal').modal("show");
+        jQuery('#maintenance_events_upload_messages_list').empty();
+
+        // Build the FormData to pass as POST arguments
+        let formData = new FormData();
+        formData.append('file', jQuery('#maintenance_events_upload_file').prop('files')[0]);
+
+        // Make the POST request
+        jQuery.ajax({
+            url: '/ajax/breeders/seedlot/maitenance/upload',
+            type: 'POST',
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false,
+            xhr: function () {
+                var myXhr = jQuery.ajaxSettings.xhr();
+                if (myXhr.upload) {
+                    myXhr.upload.addEventListener('progress', function (e) {
+                        if (e.lengthComputable) {
+                            let prog = (e.loaded / e.total)*100;
+                            jQuery('#working_modal_progress').css('width', prog + "%").attr('aria-valuenow', prog);
+                            if ( prog >= 100 ) {
+                               jQuery('#working_msg').html("Uploading Seedlot Maintenance Events File");
+                            }
+                        }
+                    }, false);
+                }
+                return myXhr;
+            },
+            success: function(response) {
+                handleUploadResponse(response);
+            },
+            error: function(e) {
+                console.log(e);
+                alert("ERROR: Could not upload file!");
+            },
+            complete: function() {
+                jQuery('#working_msg').html("");
+                jQuery('#working_modal_progress').css('width', 0).attr('aria-valuenow', 0);
+                jQuery('#working_modal_progress_div').css('display', 'none');
+                jQuery('#working_modal').modal("hide");
+            }
+        });
+    }
+
+
+    /**
+     * Handle the Upload Response
+     * - display success message, if no errors
+     * - display error messages, if errors encountered
+     */
+    function handleUploadResponse(response) {
+        if ( response && response.success && response.success === 1 ) {
+            add_message("success", "Seedlot Maintenace Events successfully stored!");
+            if ( getEvents ) getEvents();
+        }
+        else if ( response && response.error ) {
+            let html = "<strong>The Seedlot Maintenance Events could not be stored due to the following error(s):</strong><br />" + response.error;
+            add_message("error", html);
+        }
+        else {
+            add_message("error", "The Seedlot Maintenance Events were not stored due to an unknown error!");
+        }
+    }
+
+
+    /**
+    * Add Message to Upload step
+    * @param {string} type Message Type (success, error)
+    * @param {string} message Message Text
+    */
+    function add_message(type, message) {
+        let html = "";
+        let class_name = "danger";
+        let icon_name = "remove";
+        
+        if ( type === "success" ) {
+            class_name = "success";
+            icon_name = "ok";
+        }
+        else if ( type === "warning" ) {
+            class_name = "warning";
+            icon_name = "asterisk";
+        }
+        else if ( type === "info" ) {
+            class_name = "info";
+            icon_name = "info-sign";
+        }
+
+        html += "<li class='list-group-item list-group-item-" + class_name + "'>";
+        html += "<span class='badge'><span class='glyphicon glyphicon-" + icon_name + "'></span></span>";
+        html += message;
+        html += "</li>";
+
+        jQuery('#maintenance_events_upload_messages_list').append(html);
+    }
+
+</script>

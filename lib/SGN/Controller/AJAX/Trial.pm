@@ -461,7 +461,13 @@ sub generate_experimental_design_POST : Args(0) {
     };
 }
 
-
+sub test_controller : Path('ajax/trial/test_controller/') : ActionClass('REST') {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{rest} = {success => $c};
+    $c->stash->{rest} = {error => $c};
+    return $c;
+}
 
 sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { }
 
@@ -471,6 +477,7 @@ sub save_experimental_design_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
+    my $save;
 
     print STDERR "Saving trial... :-)\n";
 
@@ -575,7 +582,6 @@ sub save_experimental_design_POST : Args(0) {
         my %trial_info_hash = (
             chado_schema => $chado_schema,
             dbh => $dbh,
-            owner_id => $user_id,
             design => $trial_location_design,
             program => $breeding_program,
             trial_year => $c->req->param('year'),
@@ -587,6 +593,7 @@ sub save_experimental_design_POST : Args(0) {
             trial_has_plant_entries => $c->req->param('has_plant_entries'),
             trial_has_subplot_entries => $c->req->param('has_subplot_entries'),
             operator => $user_name,
+            owner_id => $user_id,
             field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross,
             field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped,
             field_trial_from_field_trial => \@add_project_trial_source,
@@ -611,7 +618,6 @@ sub save_experimental_design_POST : Args(0) {
             return;
         }
 
-        my $save;
         try {
             $save = $trial_create->save_trial();
         } catch {
@@ -642,11 +648,11 @@ sub save_experimental_design_POST : Args(0) {
             }
         }
     }
-
+    
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = {success => "1",};
+    $c->stash->{rest} = {success => "1", trial_id => $save->{'trial_id'}};
     return;
 }
 
@@ -877,6 +883,7 @@ sub upload_trial_file_POST : Args(0) {
     my $user_id;
     my $user_name;
     my $error;
+    my $save;
 
     print STDERR "Check 2: ".localtime()."\n";
 
@@ -941,7 +948,7 @@ sub upload_trial_file_POST : Args(0) {
             #print STDERR Dumper $parse_errors;
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error=$return_error.$error_string."<br>";
+                $return_error .= $error_string."<br>";
             }
         }
 
@@ -961,7 +968,6 @@ sub upload_trial_file_POST : Args(0) {
 
     #print STDERR Dumper $parsed_data;
 
-    my $save;
     my $coderef = sub {
 
         my %trial_info_hash = (
@@ -977,7 +983,8 @@ sub upload_trial_file_POST : Args(0) {
             design => $parsed_data,
             program => $program,
             upload_trial_file => $upload,
-            operator => $c->user()->get_object()->get_username(),
+            operator => $user_name,
+            owner_id => $user_id,
             field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross,
             field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped,
             field_trial_from_field_trial => \@add_project_trial_source,
@@ -1024,7 +1031,7 @@ sub upload_trial_file_POST : Args(0) {
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-        $c->stash->{rest} = {warnings => $return_warnings, success => "1"};
+        $c->stash->{rest} = {warnings => $return_warnings, success => "1", trial_id => $save->{'trial_id'}};
         return;
     }
 
@@ -1159,7 +1166,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             design => $trial_design->{'design_details'},
             program => $trial_design->{'breeding_program'},
             upload_trial_file => $upload,
-            operator => $c->user()->get_object()->get_username()
+            operator => $user_name,
+            owner_id => $user_id
         );
 
         if ($trial_design->{'trial_type'}){
@@ -1211,7 +1219,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
-        $c->stash->{rest} = {success => "1"};
+        $c->stash->{rest} = {success => "1",};
         return;
     }
 

@@ -191,7 +191,7 @@ has 'traits' =>      ( isa => 'Maybe[ArrayRef]',
 =cut
 
 
-has 'years' =>       ( isa => 'Maybe[ArrayRef]',
+has 'years' =>       ( isa => 'Maybe[ArrayRef[Str]]',
 		       is => 'rw',
 		       predicate => 'has_years',
     );
@@ -289,29 +289,28 @@ sub BUILD {
 
     if ($self->has_sp_dataset_id()) {
         print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
-	my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
-	if (!$row) { die "The dataset with id ".$self->sp_dataset_id()." does not exist"; }
-	my $dataset = JSON::Any->decode($row->dataset());
-	$self->data($dataset);
-	$self->name($row->name());
-	$self->description($row->description());
-	$self->sp_person_id($row->sp_person_id());
-	$self->accessions($dataset->{categories}->{accessions});
-	$self->plots($dataset->{categories}->{plots});
-	$self->plants($dataset->{categories}->{plants});
-	$self->trials($dataset->{categories}->{trials});
-	$self->traits($dataset->{categories}->{traits});
-	$self->years($dataset->{categories}->{years});
-	$self->locations($dataset->{categories}->{locations});
-	$self->breeding_programs($dataset->{categories}->{breeding_programs});
-	$self->genotyping_protocols($dataset->{categories}->{genotyping_protocols});
-	$self->trial_designs($dataset->{categories}->{trial_designs});
-	$self->trial_types($dataset->{categories}->{trial_types});
-	$self->category_order($dataset->{category_order});
-	$self->is_live($dataset->{is_live});
-	$self->is_public($dataset->{is_public});
+        my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
+        if (!$row) { die "The dataset with id ".$self->sp_dataset_id()." does not exist"; }
+        my $dataset = JSON::Any->decode($row->dataset());
+        $self->data($dataset);
+        $self->name($row->name());
+        $self->description($row->description());
+        $self->sp_person_id($row->sp_person_id());
+        $self->accessions($dataset->{categories}->{accessions});
+        $self->plots($dataset->{categories}->{plots});
+        $self->plants($dataset->{categories}->{plants});
+        $self->trials($dataset->{categories}->{trials});
+        $self->traits($dataset->{categories}->{traits});
+        $self->years($dataset->{categories}->{years});
+        $self->locations($dataset->{categories}->{locations});
+        $self->breeding_programs($dataset->{categories}->{breeding_programs});
+        $self->genotyping_protocols($dataset->{categories}->{genotyping_protocols});
+        $self->trial_designs($dataset->{categories}->{trial_designs});
+        $self->trial_types($dataset->{categories}->{trial_types});
+        $self->category_order($dataset->{category_order});
+        $self->is_live($dataset->{is_live});
+        $self->is_public($dataset->{is_public});
     }
-
     else { print STDERR "Creating empty dataset object\n"; }
 
 }
@@ -344,8 +343,8 @@ sub get_datasets_by_user {
     while (my $row = $rs->next()) {
 	$found = 0;
 	for (@datasets_id) {
-	    if ( $_ == $row->sp_dataset_id() ) { 
-	        $found = 1; 
+	    if ( $_ == $row->sp_dataset_id() ) {
+	        $found = 1;
 	    }
 	}
         if (!$found) {
@@ -405,18 +404,18 @@ sub set_dataset_public {
 
 sub set_dataset_private {
     my $self = shift;
-    
+
     my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
-    
+
     if (! $row) {
         return "The specified dataset does not exist";
-    } else { 
+    } else {
         eval {
            $row->is_public(0);
            $row->sp_person_id($self->sp_person_id());
            $row->sp_dataset_id($self->sp_dataset_id());
            $row->update();
-        }; 
+        };
         if ($@) {
             return "An error occurred, $@";
         } else {
@@ -455,28 +454,26 @@ sub exists_dataset_name {
 =head1 METHODS
 
 
-=head2 to_hashref() 
+=head2 to_hashref()
 
 
 =cut
- 
-sub to_hashref { 
+
+sub to_hashref {
     my $self = shift;
 
     my $dataref = $self->get_dataset_data();
 
     my $json = JSON::Any->encode($dataref);
-    
-    my $data = { 
-	name => $self->name(),
-	description => $self->description(),
-	sp_person_id => $self->sp_person_id(),
-	dataset => $json,
+
+    my $data = {
+        name => $self->name(),
+        description => $self->description(),
+        sp_person_id => $self->sp_person_id(),
+        dataset => $json,
     };
 
     return $data;
-
-
 }
 
 =head2 store()
@@ -513,17 +510,17 @@ sub store {
 sub get_dataset_data {
     my $self = shift;
     my $dataref;
-    $dataref->{categories}->{accessions} = $self->accessions() if $self->has_accessions();
-    $dataref->{categories}->{plots} = $self->plots() if $self->has_plots();
-		$dataref->{categories}->{plants} = $self->plants() if $self->has_plants();
-    $dataref->{categories}->{trials} = $self->trials() if $self->has_trials();
-    $dataref->{categories}->{traits} = $self->traits() if $self->has_traits();
-    $dataref->{categories}->{years} = $self->years() if $self->has_years();
-    $dataref->{categories}->{breeding_programs} = $self->breeding_programs() if $self->has_breeding_programs();
-		$dataref->{categories}->{genotyping_protocols} = $self->genotyping_protocols() if $self->has_genotyping_protocols();
-		$dataref->{categories}->{trial_designs} = $self->trial_designs() if $self->has_trial_designs();
-		$dataref->{categories}->{trial_types} = $self->trial_types() if $self->has_trial_types();
-    $dataref->{categories}->{locations} = $self->locations() if $self->has_locations();
+    $dataref->{categories}->{accessions} = $self->accessions() if $self->accessions && scalar(@{$self->accessions})>0;
+    $dataref->{categories}->{plots} = $self->plots() if $self->plots && scalar(@{$self->plots})>0;
+    $dataref->{categories}->{plants} = $self->plants() if $self->plants && scalar(@{$self->plants})>0;
+    $dataref->{categories}->{trials} = $self->trials() if $self->trials && scalar(@{$self->trials})>0;
+    $dataref->{categories}->{traits} = $self->traits() if $self->traits && scalar(@{$self->traits})>0;
+    @{$dataref->{categories}->{years}} = @{$self->years()} if $self->years && scalar(@{$self->years})>0;
+    $dataref->{categories}->{breeding_programs} = $self->breeding_programs() if $self->breeding_programs && scalar(@{$self->breeding_programs})>0;
+    $dataref->{categories}->{genotyping_protocols} = $self->genotyping_protocols() if $self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0;
+    $dataref->{categories}->{trial_designs} = $self->trial_designs() if $self->trial_designs && scalar(@{$self->trial_designs})>0;
+    $dataref->{categories}->{trial_types} = $self->trial_types() if $self->trial_types && scalar(@{$self->trial_types})>0;
+    $dataref->{categories}->{locations} = $self->locations() if $self->locations && scalar(@{$self->locations})>0;
     $dataref->{category_order} = $self->category_order();
     return $dataref;
 }
@@ -532,17 +529,17 @@ sub _get_dataref {
     my $self = shift;
     my $dataref;
 
-    $dataref->{accessions} = join(",", @{$self->accessions()}) if $self->has_accessions();
-    $dataref->{plots} = join(",", @{$self->plots()}) if $self->has_plots();
-    $dataref->{plants} = join(",", @{$self->plants()}) if $self->has_plants();
-    $dataref->{trials} = join(",", @{$self->trials()}) if $self->has_trials();
-    $dataref->{traits} = join(",", @{$self->traits()}) if $self->has_traits();
-    $dataref->{years} = join(",", @{$self->years()}) if $self->has_years();
-    $dataref->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->has_breeding_programs();
-    $dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->has_genotyping_protocols();
-    $dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->has_trial_designs();
-    $dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->has_trial_types();
-    $dataref->{locations} = join(",", @{$self->locations()}) if $self->has_locations();
+    $dataref->{accessions} = join(",", @{$self->accessions()}) if $self->accessions && scalar(@{$self->accessions})>0;
+    $dataref->{plots} = join(",", @{$self->plots()}) if $self->plots && scalar(@{$self->plots})>0;
+    $dataref->{plants} = join(",", @{$self->plants()}) if $self->plants && scalar(@{$self->plants})>0;
+    $dataref->{trials} = join(",", @{$self->trials()}) if $self->trials && scalar(@{$self->trials})>0;
+    $dataref->{traits} = join(",", @{$self->traits()}) if $self->traits && scalar(@{$self->traits})>0;
+    $dataref->{years} = join(",", map { "'".$_."'" } @{$self->years()}) if $self->years && scalar(@{$self->years})>0;
+    $dataref->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->breeding_programs && scalar(@{$self->breeding_programs})>0;
+    $dataref->{genotyping_protocols} = join(",", @{$self->genotyping_protocols()}) if $self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0;
+    $dataref->{trial_designs} = join(",", @{$self->trial_designs()}) if $self->trial_designs && scalar(@{$self->trial_designs})>0;
+    $dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->trial_types && scalar(@{$self->trial_types})>0;
+    $dataref->{locations} = join(",", @{$self->locations()}) if $self->locations && scalar(@{$self->locations})>0;
     return $dataref;
 }
 
@@ -575,11 +572,23 @@ sub retrieve_genotypes {
     my $end_position = shift;
     my $marker_name_list = shift || [];
 
+    my $accessions = $self->retrieve_accessions();
+    my @accession_ids;
+    foreach (@$accessions) {
+        push @accession_ids, $_->[0];
+    }
+
+    my $trials = $self->retrieve_trials();
+    my @trial_ids;
+    foreach (@$trials) {
+        push @trial_ids, $_->[0];
+    }
+
     my $genotypes_search = CXGN::Genotype::Search->new(
         bcs_schema => $self->schema(),
         people_schema=>$self->people_schema,
-        accession_list => $self->accessions(),
-        trial_list => $self->trials(),
+        accession_list => \@accession_ids,
+        trial_list => \@trial_ids,
         protocol_id_list => [$protocol_id],
         chromosome_list => $chromosome_list,
         start_position => $start_position,
@@ -602,16 +611,35 @@ retrieves phenotypes as a listref of listrefs
 
 sub retrieve_phenotypes {
     my $self = shift;
-	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
-		search_type=>'MaterializedViewTable',
-		bcs_schema=>$self->schema(),
-		data_level=>$self->data_level(),
-		trait_list=>$self->traits(),
-		trial_list=>$self->trials(),
-		accession_list=>$self->accessions(),
+
+    my $accessions = $self->retrieve_accessions();
+    my @accession_ids;
+    foreach (@$accessions) {
+        push @accession_ids, $_->[0];
+    }
+
+    my $trials = $self->retrieve_trials();
+    my @trial_ids;
+    foreach (@$trials) {
+        push @trial_ids, $_->[0];
+    }
+
+    my $traits = $self->retrieve_traits();
+    my @trait_ids;
+    foreach (@$traits) {
+        push @trait_ids, $_->[0];
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+        search_type=>'MaterializedViewTable',
+        bcs_schema=>$self->schema(),
+        data_level=>$self->data_level(),
+        trait_list=>\@trait_ids,
+        trial_list=>\@trial_ids,
+        accession_list=>\@accession_ids,
         exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
-	);
-	my @data = $phenotypes_search->get_phenotype_matrix();
+    );
+    my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;
 }
 
@@ -624,14 +652,32 @@ retrieves phenotypes as a hashref representation
 sub retrieve_phenotypes_ref {
     my $self = shift;
 
+    my $accessions = $self->retrieve_accessions();
+    my @accession_ids;
+    foreach (@$accessions) {
+        push @accession_ids, $_->[0];
+    }
+
+    my $trials = $self->retrieve_trials();
+    my @trial_ids;
+    foreach (@$trials) {
+        push @trial_ids, $_->[0];
+    }
+
+    my $traits = $self->retrieve_traits();
+    my @trait_ids;
+    foreach (@$traits) {
+        push @trait_ids, $_->[0];
+    }
+
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         'MaterializedViewTable',
         {
             bcs_schema=>$self->schema(),
             data_level=>$self->data_level(),
-            trait_list=>$self->traits(),
-            trial_list=>$self->trials(),
-            accession_list=>$self->accessions(),
+            trait_list=>\@trait_ids,
+            trial_list=>\@trial_ids,
+            accession_list=>\@accession_ids,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
         }
     );
@@ -660,19 +706,96 @@ sub retrieve_high_dimensional_phenotypes {
         die "Must provide the high dimensional phenotype type!\n";
     }
 
+    my $accessions = $self->retrieve_accessions();
+    my @accession_ids;
+    foreach (@$accessions) {
+        push @accession_ids, $_->[0];
+    }
+
+    my $plots = $self->retrieve_plots();
+    my @plot_ids;
+    foreach (@$plots) {
+        push @plot_ids, $_->[0];
+    }
+
+    my $plants = $self->retrieve_plants();
+    my @plant_ids;
+    foreach (@$plants) {
+        push @plant_ids, $_->[0];
+    }
+
     my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
         bcs_schema=>$self->schema(),
         nd_protocol_id=>$nd_protocol_id,
         high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
         query_associated_stocks=>$query_associated_stocks,
         high_dimensional_phenotype_identifier_list=>$high_dimensional_phenotype_identifier_list,
-        accession_list=>$self->accessions(),
-        plot_list=>$self->plots(),
-        plant_list=>$self->plants(),
+        accession_list=>\@accession_ids,
+        plot_list=>\@plot_ids,
+        plant_list=>\@plant_ids,
     });
     my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
 
     return ($data_matrix, $identifier_metadata, $identifier_names);
+}
+
+=head2 retrieve_high_dimensional_phenotypes_relationship_matrix()
+
+retrieves high-dimensional phenotypes relationship matrix (NIRS, transcriptomics, and metabolomics) as a hashref representation. Will return both the data-matrix and the identifier metadata (transcripts and metabolites)
+
+=cut
+
+sub retrieve_high_dimensional_phenotypes_relationship_matrix {
+    my $self = shift;
+    my $nd_protocol_id = shift;
+    my $high_dimensional_phenotype_type = shift; #NIRS, Transcriptomics, or Metabolomics
+    my $query_associated_stocks = shift || 1;
+    my $temp_data_file = shift;
+    my $download_file_tempfile = shift;
+
+    if (!$nd_protocol_id) {
+        die "Must provide the protocol id!\n";
+    }
+    if (!$high_dimensional_phenotype_type) {
+        die "Must provide the high dimensional phenotype type!\n";
+    }
+
+    my $accessions = $self->retrieve_accessions();
+    my @accession_ids;
+    foreach (@$accessions) {
+        push @accession_ids, $_->[0];
+    }
+
+    my $plots = $self->retrieve_plots();
+    my @plot_ids;
+    foreach (@$plots) {
+        push @plot_ids, $_->[0];
+    }
+
+    my $plants = $self->retrieve_plants();
+    my @plant_ids;
+    foreach (@$plants) {
+        push @plant_ids, $_->[0];
+    }
+
+    my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesRelationshipMatrix->new({
+        bcs_schema=>$self->schema,
+        nd_protocol_id=>$nd_protocol_id,
+        temporary_data_file=>$temp_data_file,
+        relationship_matrix_file=>$download_file_tempfile,
+        high_dimensional_phenotype_type=>$high_dimensional_phenotype_type,
+        query_associated_stocks=>$query_associated_stocks,
+        accession_list=>\@accession_ids,
+        plot_list=>\@plot_ids,
+        plant_list=>\@plant_ids
+    });
+    my ($relationship_matrix_data, $data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+    # print STDERR Dumper $relationship_matrix_data;
+    # print STDERR Dumper $data_matrix;
+    # print STDERR Dumper $identifier_metadata;
+    # print STDERR Dumper $identifier_names;
+
+    return ($relationship_matrix_data, $data_matrix, $identifier_metadata, $identifier_names);
 }
 
 =head2 retrieve_accessions()
@@ -684,14 +807,19 @@ retrieves accessions as a listref of listref [stock_id, uniquname]
 sub retrieve_accessions {
     my $self = shift;
     my $accessions;
-    if ($self->has_accessions()) {
-	return $self->accessions();
+    if ($self->accessions() && scalar(@{$self->accessions()})>0) {
+        my @stocks;
+        my $stock_rs = $self->schema->resultset("Stock::Stock")->search({'stock_id' => { -in => $self->accessions }});
+        while (my $a = $stock_rs->next()) {
+            push @stocks, [$a->stock_id, $a->uniquename];
+        }
+        return \@stocks;
     }
     else {
-	my $criteria = $self->get_dataset_definition();
-	push @$criteria, "accessions";
+        my $criteria = $self->get_dataset_definition();
+        push @$criteria, "accessions";
 
-	$accessions = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("accessions"));
+        $accessions = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("accessions"));
     }
     return $accessions->{results};
 }
@@ -705,13 +833,18 @@ Retrieves plots as a listref of listrefs.
 sub retrieve_plots {
     my $self = shift;
     my $plots;
-    if ($self->has_plots()) {
-	return $self->plots();
+    if ($self->plots && scalar(@{$self->plots})>0) {
+        my @stocks;
+        my $stock_rs = $self->schema->resultset("Stock::Stock")->search({'stock_id' => {-in => $self->plots}});
+        while (my $a = $stock_rs->next()) {
+            push @stocks, [$a->stock_id, $a->uniquename];
+        }
+        return \@stocks;
     }
     else {
-	my $criteria = $self->get_dataset_definition();
-	push @$criteria, "plots";
-	$plots = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("plots"));
+        my $criteria = $self->get_dataset_definition();
+        push @$criteria, "plots";
+        $plots = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("plots"));
     }
     return $plots->{results};
 }
@@ -725,13 +858,18 @@ Retrieves plants as a listref of listrefs.
 sub retrieve_plants {
     my $self = shift;
     my $plants;
-    if ($self->has_plants()) {
-	return $self->plants();
+    if ($self->plants && scalar(@{$self->plants})>0) {
+        my @stocks;
+        my $stock_rs = $self->schema->resultset("Stock::Stock")->search({'stock_id' => {-in => $self->plants}});
+        while (my $a = $stock_rs->next()) {
+            push @stocks, [$a->stock_id, $a->uniquename];
+        }
+        return \@stocks;
     }
     else {
-	my $criteria = $self->get_dataset_definition();
-	push @$criteria, "plants";
-	$plants = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("plants"));
+        my $criteria = $self->get_dataset_definition();
+        push @$criteria, "plants";
+        $plants = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("plants"));
     }
     return $plants->{results};
 }
@@ -745,13 +883,18 @@ retrieves trials as a listref of listrefs.
 sub retrieve_trials {
     my $self = shift;
     my $trials;
-    if ($self->has_trials()) {
-        return $self->trials();
+    if ($self->trials && scalar(@{$self->trials})>0) {
+        my @projects;
+        my $rs = $self->schema->resultset("Project::Project")->search({'project_id' => {-in => $self->trials}});
+        while (my $a = $rs->next()) {
+            push @projects, [$a->project_id, $a->name];
+        }
+        return \@projects;
     }
     else {
-	my $criteria = $self->get_dataset_definition();
-	push @$criteria, "trials";
-	$trials = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trials"));
+        my $criteria = $self->get_dataset_definition();
+        push @$criteria, "trials";
+        $trials = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trials"));
     }
     print STDERR "TRIALS: ".Dumper($trials);
     return $trials->{results};
@@ -766,13 +909,18 @@ retrieves traits as a listref of listrefs.
 sub retrieve_traits {
     my $self = shift;
     my $traits;
-    if ($self->has_traits()) {
-	return $self->traits();
+    if ($self->traits && scalar(@{$self->traits})>0) {
+        my @cvterms;
+        my $rs = $self->schema->resultset("Cv::Cvterm")->search({'cvterm_id' => {-in => $self->traits}});
+        while (my $a = $rs->next()) {
+            push @cvterms, [$a->cvterm_id, $a->name];
+        }
+        return \@cvterms;
     }
     else {
-	my $criteria = $self->get_dataset_definition();
-	push @$criteria, "traits";
-	$traits = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("traits"));
+        my $criteria = $self->get_dataset_definition();
+        push @$criteria, "traits";
+        $traits = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("traits"));
     }
     return $traits->{results};
 
@@ -787,18 +935,18 @@ retrieves years as a listref of listrefs
 sub retrieve_years {
     my $self = shift;
     my @years;
-    if ($self->has_years()) {
+    if ($self->years() && scalar(@{$self->years()})>0) {
 	return $self->years();
     }
     else {
-	my $criteria = $self->get_dataset_definition();
-	push @$criteria, "years";
-	my $year_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("years"));
-	my $year_list = $year_data->{result};
+        my $criteria = $self->get_dataset_definition();
+        push @$criteria, "years";
+        my $year_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("years"));
+        my $year_list = $year_data->{result};
 
-	foreach my $y (@$year_list) {
-	    push @years, $y->[0];
-	}
+        foreach my $y (@$year_list) {
+            push @years, $y->[0];
+        }
     }
     return \@years;
 }
@@ -812,18 +960,18 @@ retrieves years as a listref of listrefs
 sub retrieve_locations {
     my $self = shift;
     my @locations;
-    if ($self->has_locations()) {
-	return $self->locations();
+    if ($self->locations && scalar(@{$self->locations})>0) {
+        return $self->locations();
     }
     else {
-	my $criteria = $self->get_dataset_definition();
-	push @$criteria, "locations";
-	my $location_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("locations"));
-	my $location_list = $location_data->{result};
+        my $criteria = $self->get_dataset_definition();
+        push @$criteria, "locations";
+        my $location_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("locations"));
+        my $location_list = $location_data->{result};
 
-	foreach my $y (@$location_list) {
-	    push @locations, $y->[0];
-	}
+        foreach my $y (@$location_list) {
+            push @locations, $y->[0];
+        }
     }
     return \@locations;
 }
@@ -841,21 +989,21 @@ sub retrieve_locations {
 
 sub retrieve_breeding_programs {
     my $self = shift;
-		my @breeding_programs;
-		if ($self->has_breeding_programs()) {
-	return $self->breeding_programs();
-		}
-		else {
-	my $criteria = $self->get_dataset_definition();
-	push @$criteria, "breeding_programs";
-	my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("breeding_programs"));
-	my $breeding_program_list = $breeding_program_data->{result};
+    my @breeding_programs;
+    if ($self->breeding_programs && scalar(@{$self->breeding_programs})>0) {
+        return $self->breeding_programs();
+    }
+    else {
+        my $criteria = $self->get_dataset_definition();
+        push @$criteria, "breeding_programs";
+        my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("breeding_programs"));
+        my $breeding_program_list = $breeding_program_data->{result};
 
-	foreach my $y (@$breeding_program_list) {
-			push @breeding_programs, $y->[0];
-	}
-		}
-		return \@breeding_programs;
+        foreach my $y (@$breeding_program_list) {
+            push @breeding_programs, $y->[0];
+        }
+    }
+    return \@breeding_programs;
 }
 
 =head2 retrieve_genotyping_protocols
@@ -871,21 +1019,21 @@ sub retrieve_breeding_programs {
 
 sub retrieve_genotyping_protocols {
     my $self = shift;
-		my @genotyping_protocols;
-		if ($self->has_genotyping_protocols()) {
-	return $self->genotyping_protocols();
-		}
-		else {
-	my $criteria = $self->get_dataset_definition();
-	push @$criteria, "genotyping_protocols";
-	my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("genotyping_protocols"));
-	my $breeding_program_list = $breeding_program_data->{result};
+    my @genotyping_protocols;
+    if ($self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0) {
+        return $self->genotyping_protocols();
+    }
+    else {
+        my $criteria = $self->get_dataset_definition();
+        push @$criteria, "genotyping_protocols";
+        my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("genotyping_protocols"));
+        my $breeding_program_list = $breeding_program_data->{result};
 
-	foreach my $y (@$breeding_program_list) {
-			push @genotyping_protocols, $y->[0];
-	}
-		}
-		return \@genotyping_protocols;
+        foreach my $y (@$breeding_program_list) {
+            push @genotyping_protocols, $y->[0];
+        }
+    }
+    return \@genotyping_protocols;
 }
 
 =head2 retrieve_trial_designs
@@ -901,21 +1049,21 @@ sub retrieve_genotyping_protocols {
 
 sub retrieve_trial_designs {
     my $self = shift;
-		my @trial_designs;
-		if ($self->has_trial_designs()) {
-	return $self->trial_designs();
-		}
-		else {
-	my $criteria = $self->get_dataset_definition();
-	push @$criteria, "trial_designs";
-	my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trial_designs"));
-	my $breeding_program_list = $breeding_program_data->{result};
+    my @trial_designs;
+    if ($self->trial_designs && scalar(@{$self->trial_designs})>0) {
+        return $self->trial_designs();
+    }
+    else {
+        my $criteria = $self->get_dataset_definition();
+        push @$criteria, "trial_designs";
+        my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trial_designs"));
+        my $breeding_program_list = $breeding_program_data->{result};
 
-	foreach my $y (@$breeding_program_list) {
-			push @trial_designs, $y->[0];
-	}
-		}
-		return \@trial_designs;
+        foreach my $y (@$breeding_program_list) {
+            push @trial_designs, $y->[0];
+        }
+    }
+    return \@trial_designs;
 }
 
 
@@ -932,21 +1080,21 @@ sub retrieve_trial_designs {
 
 sub retrieve_trial_types {
     my $self = shift;
-		my @trial_types;
-		if ($self->has_trial_types()) {
-	return $self->trial_types();
-		}
-		else {
-	my $criteria = $self->get_dataset_definition();
-	push @$criteria, "trial_types";
-	my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trial_types"));
-	my $breeding_program_list = $breeding_program_data->{result};
+    my @trial_types;
+    if ($self->trial_types && scalar(@{$self->trial_types})>0) {
+        return $self->trial_types();
+    }
+    else {
+        my $criteria = $self->get_dataset_definition();
+        push @$criteria, "trial_types";
+        my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trial_types"));
+        my $breeding_program_list = $breeding_program_data->{result};
 
-	foreach my $y (@$breeding_program_list) {
-			push @trial_types, $y->[0];
-	}
-		}
-		return \@trial_types;
+        foreach my $y (@$breeding_program_list) {
+            push @trial_types, $y->[0];
+        }
+    }
+    return \@trial_types;
 }
 
 
@@ -954,43 +1102,41 @@ sub get_dataset_definition  {
     my $self = shift;
     my @criteria;
 
-    if ($self->has_accessions()) {
-	push @criteria, "accessions";
+    if ($self->accessions && scalar(@{$self->accessions})>0) {
+        push @criteria, "accessions";
     }
-    if ($self->has_plots()) {
-	push @criteria, "plots";
+    if ($self->plots && scalar(@{$self->plots})>0) {
+        push @criteria, "plots";
     }
-		if ($self->has_plants()) {
-	push @criteria, "plants";
+    if ($self->plants && scalar(@{$self->plants})>0) {
+        push @criteria, "plants";
     }
-    if ($self->has_trials()) {
-	push @criteria, "trials";
+    if ($self->trials && scalar(@{$self->trials})>0) {
+        push @criteria, "trials";
     }
-    if ($self->has_traits()) {
-	push @criteria, "traits";
+    if ($self->traits && scalar(@{$self->traits})>0) {
+        push @criteria, "traits";
     }
-    if ($self->has_years()) {
-	push @criteria, "years";
+    if ($self->years && scalar(@{$self->years})>0) {
+        push @criteria, "years";
     }
-    if ($self->has_locations()) {
-	push @criteria, "locations";
+    if ($self->locations && scalar(@{$self->locations})>0) {
+        push @criteria, "locations";
     }
-		if ($self->has_breeding_programs()) {
-	push @criteria, "breeding_programs";
-		}
-		if ($self->has_genotyping_protocols()) {
-	push @criteria, "genotyping_protocols";
-		}
-		if ($self->has_trial_types()) {
-	push @criteria, "trial_types";
-		}
-		if ($self->has_trial_designs()) {
-	push @criteria, "trial_designs";
-		}
-
+    if ($self->breeding_programs && scalar(@{$self->breeding_programs})>0) {
+        push @criteria, "breeding_programs";
+    }
+    if ($self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0) {
+        push @criteria, "genotyping_protocols";
+    }
+    if ($self->trial_types && scalar(@{$self->trial_types})>0) {
+        push @criteria, "trial_types";
+    }
+    if ($self->trial_designs && scalar(@{$self->trial_designs})>0) {
+        push @criteria, "trial_designs";
+    }
 
     return \@criteria;
-
 }
 
 =head2 delete()

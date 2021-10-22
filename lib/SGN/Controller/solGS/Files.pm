@@ -85,6 +85,28 @@ sub model_phenodata_file {
     }
 }
 
+sub trait_raw_phenodata_file {
+    my ($self, $c) = @_;
+
+    my $pop_id        = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} ;
+    my $trait_abbr    = $c->stash->{trait_abbr};
+
+    my $id =   "${pop_id}-${trait_abbr}";
+    if ($trait_abbr)
+    {
+	no warnings 'uninitialized';
+
+	my $cache_data = {key       => 'trait_raw_phenodata_' . $id,
+			  file      => 'trait_raw_phenodata_' .  $id . '.txt',
+			  stash_key => 'trait_raw_phenodata_file',
+			  cache_dir => $c->stash->{solgs_cache_dir}
+	};
+
+	$self->cache_file($c, $cache_data);
+    }
+}
+
+
 
 sub model_info_file {
     my ($self, $c) = @_;
@@ -143,9 +165,9 @@ sub filtered_selection_genotype_file {
 
 
 sub formatted_phenotype_file {
-    my ($self, $c) = @_;
+    my ($self, $c, $pop_id) = @_;
 
-    my $pop_id = $c->stash->{pop_id};
+    $pop_id = $c->stash->{pop_id} if $pop_id;
     $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
 
     my $cache_data = { key       => 'formatted_phenotype_data_' . $pop_id,
@@ -286,7 +308,7 @@ sub relationship_matrix_file {
 
     $self->cache_file($c, $cache_data);
 
-    my $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
+   $cache_data = {key    => 'relationship_matrix_json_' . $file_id ,
 		      file      => 'relationship_matrix_json_' . $file_id . '.txt',
 		      stash_key => 'relationship_matrix_json_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}
@@ -325,7 +347,7 @@ sub relationship_matrix_adjusted_file {
 
     $self->cache_file($c, $cache_data);
 
-    my $cache_data = {key    => 'relationship_matrix_adjusted_json_' . $file_id ,
+    $cache_data = {key    => 'relationship_matrix_adjusted_json_' . $file_id ,
 		      file      => 'relationship_matrix_adjusted_json_' . $file_id . '.txt',
 		      stash_key => 'relationship_matrix_adjusted_json_file',
 		      cache_dir => $c->stash->{kinship_cache_dir}

@@ -1715,10 +1715,10 @@ sub get_stock_trait_list :Chained('/stock/get_stock') PathPart('datatables/trait
 
     my @formatted_list;
     foreach my $t (@trait_list) {
-	#print STDERR Dumper($t);
-	push @formatted_list, [ '<a href="/cvterm/'.$t->[0].'/view">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $t->[3]), sprintf("%3.1f", $t->[4]) ];
+	print STDERR Dumper($t);
+	push @formatted_list, [ '<a href="/cvterm/'.$t->[0].'/view">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $t->[3]), sprintf("%3.1f", $t->[4]), sprintf("%.0f", $t->[5])];
     }
-    #print STDERR Dumper(\@formatted_list);
+    print STDERR Dumper(\@formatted_list);
 
     $c->stash->{rest} = { data => \@formatted_list };
 }

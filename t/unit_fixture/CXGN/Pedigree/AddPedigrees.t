@@ -54,8 +54,16 @@ ok(my $male_parent4 = Bio::GeneticRelationships::Individual->new(name => 'XG1202
 ok($pedigree4->set_female_parent($female_parent4), "Set a female parent for a pedigree");
 ok($pedigree4->set_male_parent($male_parent4), "Set a male parent for a pedigree");
 
+# reselected
+#
+ok(my $pedigree5 = Bio::GeneticRelationships::Pedigree->new(name => "UG120082", cross_type => "reselected"),"Create pedigree object");
+ok(my $female_parent5 = Bio::GeneticRelationships::Individual->new(name => 'UG120081'),"Create individual for pedigree");
+ok(my $male_parent5 = Bio::GeneticRelationships::Individual->new(name => 'UG120081'),"Create individual for pedigree");
+ok($pedigree5->set_female_parent($female_parent5), "Set a female parent for a pedigree");
+ok($pedigree5->set_male_parent($male_parent5), "Set a male parent for a pedigree");
+
 my @pedigrees;
-for my $p ($pedigree, $pedigree2, $pedigree3, $pedigree4) {
+for my $p ($pedigree, $pedigree2, $pedigree3, $pedigree4, $pedigree5) {
     push (@pedigrees, $p);
 }
 

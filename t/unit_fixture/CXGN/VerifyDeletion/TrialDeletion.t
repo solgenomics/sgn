@@ -63,6 +63,9 @@ print STDERR Dumper $response;
 is_deeply($response, {'success' => 1});
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$project_id.'/delete/layout');
+
+sleep(30); # deletion script takes time... (?)
+
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'message' => 'Successfully deleted trial data.','success' => 1}, 'test trial layout + entry deletion');
