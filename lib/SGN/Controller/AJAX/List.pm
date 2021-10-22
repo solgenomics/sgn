@@ -1012,7 +1012,7 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-        $c->stash->{rest} = { error => "You must be logged in to use lists.", };
+        $c->stash->{rest} = { error => "You must be logged in to use markerset.", };
         return;
     }
 
@@ -1020,10 +1020,10 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
     my @marker_sets;
     foreach my $list (@$lists){
         my ($id, $name, $desc, $item_count, $type_id, $type, $public) = @$list;
-#        push @marker_sets, [$name, $item_count, $desc];
         push @marker_sets, {
+            markerset_id => $id,
             markerset_name => $name,
-            number_of_markers => $item_count,
+            number_of_markers => $item_count - 1,
             description => $desc,
         }
     }
@@ -1031,11 +1031,103 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
     $c->stash->{rest} = {data => \@marker_sets};
 }
 
+
+sub delete_markerset : Path('/markerset/delete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+    	$c->stash->{rest} = { error => 'You must be logged in to delete markerset.', };
+    	return;
+    }
+
+    my $markerset_id = $c->req->param("markerset_id");
+
+    my $error = $self->check_user($c, $markerset_id);
+    if ($error) {
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
+
+    $error = CXGN::List::delete_list($c->dbc->dbh(), $markerset_id);
+
+    if (!$error){
+        $c->stash->{rest} = { success => 1 };
+    }
+    else {
+        $c->stash->{rest} = { error => $error };
+    }
+
+}
+
+
+sub get_markerset_items :Path('/markerset/items') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $markerset_id = $c->req->param("markerset_id");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+    	$c->stash->{rest} = { error => 'You must be logged in to use markerset.', };
+    	return;
+    }
+
+    my $markerset = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $markerset_id});
+    my $markerset_items_ref = $markerset->retrieve_elements_with_ids($markerset_id);
+
+    my @items;
+    foreach my $markerset_item (@$markerset_items_ref){
+        my ($id, $name) = @$markerset_item;
+        push @items, {
+            item_id => $id,
+            item_name => $name,
+        }
+    }
+
+    $c->stash->{rest} = {success => 1, data => \@items};
+
+}
+
+
+sub get_markerset_type :Path('/markerset/type') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $markerset_id = $c->req->param("markerset_id");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+    	$c->stash->{rest} = { error => 'You must be logged in to use markerset.', };
+    	return;
+    }
+
+    my $markerset = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $markerset_id});
+    my $markerset_items_ref = $markerset->retrieve_elements($markerset_id);
+    my @markerset_items = @{$markerset_items_ref};
+
+    my $type;
+    foreach my $item (@markerset_items){
+        my $item_ref = decode_json$item;
+        my %item_hash = %{$item_ref};
+        my $markerset_type = $item_hash{genotyping_data_type};
+
+        if ($markerset_type){
+            $type = $markerset_type;
+        }
+    }
+#    print STDERR "MARKERSET TYPE =".Dumper($type)."\n";
+    $c->stash->{rest} = {success => 1, type => $type};
+
+}
+
+
 sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
     my $self = shift;
     my $c = shift;
     my $list_id = $c->req->param("list_id");
-    
+
     my $user_id = $self->get_user($c);
     if (!$user_id) {
         $c->stash->{rest} = { error => "You must be logged in to use lists.", };
@@ -1057,9 +1149,9 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
     my $elements = $list->elements();
 
     print STDERR "Elements: ".Dumper($elements);
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-	
+
     my $data = $lt->transform($schema, 'accessions_2_accession_case', $elements);
 
     print STDERR "Converted data: ".Dumper($data);
@@ -1070,7 +1162,7 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
     }
     my $error_message = "";
     my $replace_count = 0;
-   
+
     foreach my $item (@$elements) {
 	print STDERR "Replacing element $item...\n";
 	if ($data->{mapping}->{$item}) {
@@ -1093,7 +1185,7 @@ sub adjust_case : Path('/ajax/list/adjust_case') Args(0) {
 	duplicated => $data->{duplicated} || [],
 	mapping => $data->{mapping},
     }
-	
+
 }
 
 sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
@@ -1101,7 +1193,7 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
     my $c = shift;
 
     my $list_id = $c->req->param("list_id");
-    
+
     my $user_id = $self->get_user($c);
     if (!$user_id) {
         $c->stash->{rest} = { error => "You must be logged in to use lists.", };
@@ -1122,22 +1214,22 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
     my $lt = CXGN::List::Transform->new();
     my $elements = $list->elements();
     print STDERR "Elements: ".Dumper($elements);
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-	
+
     my $data = $lt->transform($schema, 'synonyms2accession_uniquename', $elements);
 
     print STDERR "Converted data: ".Dumper($data);
 
     print STDERR Dumper($data);
-    
+
     if (! $data) {
 	$c->stash->{rest} = { error => "No data!" };
 	return;
     }
     my $error_message = "";
     my $replace_count = 0;
-   
+
     foreach my $item (@$elements) {
 	print STDERR "Replacing element $item...\n";
 	if ($data->{mapping}->{$item}) {
@@ -1160,9 +1252,6 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
 	duplicated => $data->{duplicated} || [],
 	mapping => $data->{mapping},
     }
-
-    
-
 
 }
 

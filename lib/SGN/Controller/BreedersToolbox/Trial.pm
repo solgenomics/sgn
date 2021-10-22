@@ -75,7 +75,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{trial_name} = $trial->get_name();
     $c->stash->{trial_owner} = $trial->get_owner_link();
-        
+
     my $trial_type_data = $trial->get_project_type();
     my $trial_type_name = $trial_type_data ? $trial_type_data->[1] : '';
     $c->stash->{trial_type} = $trial_type_name;
@@ -105,7 +105,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{user_can_modify} = ($user->check_roles("submitter") && $user->check_roles($c->stash->{breeding_program_name})) || $user->check_roles("curator") ;
 
 
-    
+
     $c->stash->{year} = $trial->get_year();
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
@@ -267,7 +267,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $what = shift;
     print STDERR Dumper $c->req->params();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-
     my $user = $c->user();
     if (!$user) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -353,6 +352,15 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         $plugin = "GenotypingTrialLayoutDartSeqCSV";
     }
 
+    my @field_crossing_data_order;
+    if ( ($format eq "crossing_experiment_xls") && ($what eq "layout")) {
+        $plugin = "CrossingExperimentXLS";
+        $what = "crosses";
+        $format = "xls";
+        my $cross_properties = $c->config->{cross_properties};
+        @field_crossing_data_order = split ',',$cross_properties;
+    }
+
     my $trial_name = $trial->get_name();
     my $trial_id = $trial->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');
@@ -374,7 +382,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         include_timestamp => $timestamp_option,
         treatment_project_ids => \@treatment_project_ids,
         selected_columns => $selected_cols,
-        include_measured => $include_measured
+        include_measured => $include_measured,
+        field_crossing_data_order => \@field_crossing_data_order
     });
 
     my $error = $download->download();

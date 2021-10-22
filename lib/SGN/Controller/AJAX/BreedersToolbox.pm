@@ -351,8 +351,8 @@ sub progress : Path('/ajax/progress') Args(0) {
     print STDERR "Data = ".Dumper($data);
     
     $c->stash->{rest} = { data => $data };
-
 }
+
 
 sub radarGraph : Path('/ajax/radargraph') Args(0) {
     my $self = shift;
@@ -384,16 +384,20 @@ sub radarGraph : Path('/ajax/radargraph') Args(0) {
     my $trait_list = $ds->retrieve_phenotypes();
     my $ds_name = $ds->name();
 
-    print STDERR "Dataset Id = $dataset_id\n";
-    print STDERR "Trait List = ".Dumper($trait_list);
+    #print STDERR "Dataset Id = $dataset_id\n";
+    #print STDERR "Trait List = ".Dumper($trait_list);
 
     $c->stash->{rest} = {
         data => \@$trait_list, 
         name => $ds_name,
     };
+
+
+    #print STDERR "Dataset Id = $dataset_id\n";
+    #print STDERR "Trait List = ".Dumper($trait_list);
+
+
 }
-
-
 
 1;
 

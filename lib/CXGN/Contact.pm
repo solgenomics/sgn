@@ -111,6 +111,26 @@ sub send_email {
                   -body       => $body
               );
 
+            } elsif ( $smtp_server ) {
+
+              my ($mail,$error) = Email::Send::SMTP::Gmail->new(
+                  -smtp  => $smtp_server,
+                  -layer => $smtp_layer,
+                  -port  => $smtp_port,
+                  -auth  => 'none'
+              );
+
+              if ($mail == -1) {
+                print STDERR "CXGN::Contact: SMTP error: $error\n";
+              };
+
+              $mail->send(
+                  -from       => $smtp_from,
+                  -to         => $mailto,
+                  -subject    => $subject,
+                  -body       => $body
+              );
+              
             } else {
 
               my %mail = (
