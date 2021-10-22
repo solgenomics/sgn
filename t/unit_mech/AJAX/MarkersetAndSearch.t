@@ -43,12 +43,12 @@ $response = $ua->post(
             "upload_genotypes_species_name_input"=>"Manihot esculenta",
             "upload_genotype_vcf_project_name"=>"test_genotype_project",
             "upload_genotype_location_select"=>$location_id,
-            "upload_genotype_year_select"=>"2021",
+            "upload_genotype_year_select"=>"2015",
             "upload_genotype_breeding_program_select"=>$breeding_program_id,
             "upload_genotype_vcf_observation_type"=>"accession",
             "upload_genotype_vcf_facility_select"=>"IGD",
             "upload_genotype_vcf_project_description"=>"Test uploading",
-            "upload_genotype_vcf_protocol_name"=>"2021_genotype_protocol",
+            "upload_genotype_vcf_protocol_name"=>"2015_genotype_protocol",
             "upload_genotype_vcf_include_igd_numbers"=>0,
             "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
             "upload_genotype_add_new_accessions"=>0,
@@ -73,7 +73,7 @@ my $markerset_list_id = $response->{list_id};
 #print STDERR "MARKERSET LIST ID =".Dumper($markerset_list_id)."\n";
 ok($markerset_list_id);
 
-$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.'&element={"genotyping_protocol_name":"2021_genotype_protocol", "genotyping_protocol_id":'.$protocol_id.', "genotyping_data_type":"Dosage"}');
+$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.'&element={"genotyping_protocol_name":"2015_genotype_protocol", "genotyping_protocol_id":'.$protocol_id.', "genotyping_data_type":"Dosage"}');
 $response = decode_json $mech->content;
 is($response->[0],'SUCCESS');
 
@@ -87,7 +87,7 @@ my $markerset2_list_id = $response->{list_id};
 #print STDERR "MARKERSET LIST ID =".Dumper($markerset_list_id)."\n";
 ok($markerset2_list_id);
 
-$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset2_list_id.'&element={"genotyping_protocol_name":"2021_genotype_protocol", "genotyping_protocol_id":'.$protocol_id.', "genotyping_data_type":"SNP"}');
+$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset2_list_id.'&element={"genotyping_protocol_name":"2015_genotype_protocol", "genotyping_protocol_id":'.$protocol_id.', "genotyping_data_type":"SNP"}');
 $response = decode_json $mech->content;
 is($response->[0],'SUCCESS');
 
