@@ -691,12 +691,12 @@ is($after_deleting_experiment, $before_deleting_experiment);
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$crossing_trial2_id.'/delete_all_crosses_in_crossingtrial');
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$crossing_trial_id.'/delete_all_crosses_in_crossingtrial');
 
-my $after_delete_all_crosses_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
+my $after_delete_all_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $after_delete_all_crosses_in_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->search({})->count();
 my $after_delete_all_crosses_in_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->search({})->count();
 my $stocks_after_delete_all_crosses = $schema->resultset("Stock::Stock")->search({})->count();
 
-is($after_delete_all_crosses_crosses, $before_adding_cross + 1); #one cross cannot be deleted because progenies have associated data
+is($after_delete_all_crosses, $before_adding_cross + 1); #one cross cannot be deleted because progenies have associated data
 is($after_delete_all_crosses_in_experiment, $before_adding_cross_in_experiment + 1); #one cross cannot be deleted because progenies have associated data
 
 # nd_experiment_stock has 38 more rows after adding plants for testing uploading crosses with plant info
