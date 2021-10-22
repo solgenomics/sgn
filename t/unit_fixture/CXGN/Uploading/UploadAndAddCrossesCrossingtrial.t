@@ -18,6 +18,9 @@ use Bio::GeneticRelationships::Pedigree;
 use CXGN::Cross;
 use CXGN::Pedigree::AddCrossTissueSamples;
 use LWP::UserAgent;
+use CXGN::Trial::Download;
+use Spreadsheet::WriteExcel;
+use Spreadsheet::Read;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -88,7 +91,7 @@ my $after_adding_cross_in_experiment_stock = $schema->resultset("NaturalDiversit
 is($after_adding_cross, $before_adding_cross + 1);
 is($after_adding_stocks, $before_adding_stocks + 1);
 is($after_adding_stockprop, $before_adding_stockprop + 1);
-is($after_adding_stockprop_all, $before_adding_stockprop_all + 1);
+is($after_adding_stockprop_all, $before_adding_stockprop_all + 2);
 is($after_adding_relationship, $before_adding_relationship + 4);
 is($after_adding_cross_in_experiment, $before_adding_cross_in_experiment + 1);
 is($after_adding_cross_in_experiment_stock, $before_adding_cross_in_experiment_stock + 1);
@@ -568,6 +571,69 @@ my %data3 = %$response;
 my $result3 = $data3{data};
 my $number_of_result3 = @$result3;
 is($number_of_result3, 1);
+
+#test crossing experiment download
+my @cross_properties = ("Tag Number", "Pollination Date", "Number of Bags", "Number of Flowers", "Number of Fruits", "Number of Seeds");
+my $tempfile = "/tmp/test_download_crossing_experiment.xls";
+my $format = 'CrossingExperimentXLS';
+my $create_spreadsheet = CXGN::Trial::Download->new({
+    bcs_schema => $f->bcs_schema,
+    trial_list => [$crossing_trial2_id],
+    filename => $tempfile,
+    format => $format,
+    field_crossing_data_order => \@cross_properties
+});
+
+$create_spreadsheet->download();
+my $contents = ReadData $tempfile;
+
+my $columns = $contents->[1]->{'cell'};
+my @column_array = @$columns;
+my $number_of_columns = scalar @column_array;
+#print STDERR "COLUMNS =".Dumper ($columns)."\n";
+
+ok(scalar($number_of_columns) == 21, "check number of columns.");
+is_deeply($contents->[1]->{'cell'}->[1], [
+    undef,
+    'Cross Unique ID',
+    'test_backcross1',
+    'test_backcross2',
+    'test_backcross3',
+    'test_cross_upload1',
+    'test_cross_upload2',
+    'test_cross_upload3',
+    'test_cross_upload4',
+    'test_cross_upload5',
+    'test_cross_upload6'
+], "check column 1");
+
+is_deeply($contents->[1]->{'cell'}->[3], [
+    undef,
+    'Cross Type',
+    'backcross',
+    'backcross',
+    'backcross',
+    'biparental',
+    'self',
+    'biparental',
+    'self',
+    'biparental',
+    'self'
+], "check column 3");
+
+is_deeply($contents->[1]->{'cell'}->[4], [
+    undef,
+    'Female Parent',
+    'test_add_cross',
+    'test_add_cross',
+    'test_add_cross',
+    'UG120001',
+    'UG120001',
+    'UG120001',
+    'UG120001',
+    'TMEB419',
+    'TMEB419'
+], "check column 4");
 
 #test deleting crossing
 my $before_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
