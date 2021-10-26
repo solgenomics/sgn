@@ -99,10 +99,14 @@ $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$acc2})->stock
 $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->set_is_obsolete(1) ;
 $stock->store();
+my @stock_ids;
+push @stock_ids, $stock_id;
+
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'new_accession1'})->stock_id();
 $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->set_is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
 
 #remove added population so tets downstreadm do not fail
 my $population = $schema->resultset("Stock::Stock")->find({uniquename => 'population_ajax_test_1'});
@@ -160,6 +164,8 @@ is($stock->accessionNumber, 'ITC00001');
 is_deeply($stock->synonyms, ['new_test_accession_synonym1','new_test_accession_synonym2','new_test_accession_synonym3']);
 $stock->is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
+
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'new_test_accession02'})->stock_id();
 $stock = CXGN::Stock::Accession->new(schema=>$schema,stock_id=>$stock_id);
 is($stock->organization_name, 'test_organization');
@@ -168,6 +174,8 @@ is($stock->countryOfOriginCode, 'Nigeria');
 is($stock->accessionNumber, 'ITC00002');
 $stock->is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
+
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'new_test_accession03'})->stock_id();
 $stock = CXGN::Stock::Accession->new(schema=>$schema,stock_id=>$stock_id);
 is($stock->organization_name, 'test_organization');
@@ -177,6 +185,8 @@ is($stock->countryOfOriginCode, 'Nigeria');
 is($stock->accessionNumber, 'ITC00003');
 $stock->is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
+
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'new_test_accession04'})->stock_id();
 $stock = CXGN::Stock::Accession->new(schema=>$schema,stock_id=>$stock_id);
 is($stock->organization_name, 'test_organization');
@@ -185,15 +195,30 @@ is($stock->countryOfOriginCode, 'Nigeria');
 is($stock->accessionNumber, 'ITC00004');
 $stock->is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
+
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'IITA-TMS-IBA010749'})->stock_id();
 $stock = CXGN::Stock::Accession->new(schema=>$schema,stock_id=>$stock_id);
 is($stock->population_name, 'test_population');
 is_deeply($stock->synonyms, ['IITA-TMS-IBA010746_synonym1','IITA-TMS-IBA010746_synonym2']);
 $stock->is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
 
 #remove added population so tets downstreadm do not fail
 $population = $schema->resultset("Stock::Stock")->find({uniquename => 'test_population'});
 $population->delete();
+
+
+# Delete stocks created
+my $dbh = $schema->storage->dbh;
+my $q = "delete from phenome.stock_owner where stock_id=?";
+my $h = $dbh->prepare($q);
+
+foreach (@stock_ids){
+    my $row  = $schema->resultset('Stock::Stock')->find({stock_id=>$_});
+    $h->execute($_);
+    $row->delete();
+}
 
 done_testing();
