@@ -65,6 +65,7 @@ ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
 
 my $protocol_id = $message_hash->{nd_protocol_id};
+my $project_id = $message_hash->{project_id};
 
 #test adding markerset
 $mech->get_ok('http://localhost:3010/list/new?name=test_markerset_1&desc=test');
@@ -130,5 +131,11 @@ is($number_of_accessions_snp,14);
 $mech->get("/ajax/genotyping_protocol/delete/$protocol_id");
 $response = decode_json $mech->content;
 is($response->{'success'}, 1);
+
+#Delete created list
+CXGN::List::delete_list($schema->storage->dbh, $markerset_list_id);
+CXGN::List::delete_list($schema->storage->dbh, $markerset2_list_id);
+CXGN::List::delete_list($schema->storage->dbh, $accession_list_id);
+$schema->resultset("Project::Project")->find({project_id=>$project_id})->delete();
 
 done_testing();
