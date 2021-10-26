@@ -740,6 +740,24 @@ sub transform :Path('/list/transform/') Args(2) {
 
 }
 
+sub array_transform :Path('/list/array/transform') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $array = $c->req->param("array") ? decode_json $c->req->param("array") : [];
+    my $transform_name = $c->req->param("type");
+
+    my $t = CXGN::List::Transform->new();
+
+    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema"), $transform_name, $array);
+
+    if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
+       $result->{error}  =  "Warning. This array contains elements that cannot be converted.";
+    }
+
+    $c->stash->{rest} = $result;
+
+}
+
 sub replace_elements :Path('/list/item/replace') Args(2) {
     my $self = shift;
     my $c = shift;
@@ -1252,7 +1270,6 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
 	duplicated => $data->{duplicated} || [],
 	mapping => $data->{mapping},
     }
-
 }
 
 #########

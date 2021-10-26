@@ -415,10 +415,11 @@ sub image_metadata_store {
         my $mimetype = _get_mimetype($_->{'image_file_ext'});
         my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $_->{'image_id'});
         my @cvterms = $image->get_cvterms();
-        my $url = $hostname . $image->get_image_url('medium');
-        my $filename = $image->get_filename();
-        my $size = (stat($filename))[7];
-        my ($width, $height) = imgsize($filename);
+
+        # my $url = $hostname . $image->get_image_url('medium');
+        # my $filename = $image->get_filename();
+        # my $size = (stat($filename))[7];
+        # my ($width, $height) = imgsize($filename);
 
         # Process cvterms
         my @cvterm_names;
@@ -447,12 +448,12 @@ sub image_metadata_store {
             externalReferences => [],
             imageDbId => qq|$_->{'image_id'}|,
             imageFileName => $_->{'image_original_filename'},
-            imageFileSize => $size,
-            imageHeight => $height,
-            imageWidth => $width,
+            # imageFileSize => $size,
+            # imageHeight => $height,
+            # imageWidth => $width,
             imageName => $_->{'image_name'},
             imageTimeStamp => $_->{'image_modified_date'},
-            imageURL => $url,
+            # imageURL => $url,
             mimeType => _get_mimetype($_->{'image_file_ext'}),
             observationUnitDbId => qq|$_->{'stock_id'}|,
             # location and linked phenotypes are not yet available for images in the db
