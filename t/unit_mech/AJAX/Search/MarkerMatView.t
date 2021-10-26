@@ -155,4 +155,6 @@ $mech->get("/ajax/genotyping_protocol/delete/$vcf_protocol_id");
 my $delete_results = decode_json($mech->content);
 is($delete_results->{'success'}, 1, "Delete genotype protocol");
 
+$schema->resultset("Project::Project")->find({project_id=>$vcf_project_id})->delete();
+
 done_testing();
