@@ -16,6 +16,7 @@ use strict;
 
 use Mail::Sendmail;
 use Email::Send::SMTP::Gmail;
+use Data::Dumper;
 
 use CXGN::Apache::Request;
 use CXGN::Tools::Text;
@@ -141,6 +142,8 @@ sub send_email {
               );
               $mail{'Reply-To'} = $replyto;
 
+	      print STDERR "MAIL = ".Dumper(\%mail);
+	      
               if ( sendmail(%mail) ) {
                   print STDERR "CXGN::Contact: Email notification sent from $mailfrom to $mailto.\n";
               }
