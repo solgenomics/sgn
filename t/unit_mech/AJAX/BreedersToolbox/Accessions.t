@@ -137,12 +137,12 @@ is_deeply($message_hash->{'found'}, [], 'check verify fuzzy match response conte
 is(scalar @{$message_hash->{'absent'}}, 4, 'check verify fuzzy match response content');
 is_deeply($message_hash->{'found_organisms'}, [{'unique_name' => 'Manihot esculenta','matched_string' => 'Manihot esculenta'}], 'check verify fuzzy match response content');
 
-my @full_info;
+my @full_info2;
 foreach (keys %{$message_hash->{'full_data'}}){
-    push @full_info, $message_hash->{'full_data'}->{$_};
+    push @full_info2, $message_hash->{'full_data'}->{$_};
 }
 
-$mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ 'full_info'=>$json->encode(\@full_info), 'allowed_organisms'=>$json->encode(['Manihot esculenta']) ]);
+$mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ 'full_info'=>$json->encode(\@full_info2), 'allowed_organisms'=>$json->encode(['Manihot esculenta']) ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
