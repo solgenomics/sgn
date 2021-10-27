@@ -2404,12 +2404,17 @@ sub _delete_management_factors_experiments {
     my $management_factor_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $management_factors = $self->get_treatments;
     foreach (@$management_factors){
+
+	print STDERR "Instantiating trail with trial_id $_->[0]... ";
         my $m = CXGN::Trial->new({
             bcs_schema => $self->bcs_schema,
             metadata_schema => $self->metadata_schema,
             phenome_schema => $self->phenome_schema,
             trial_id => $_->[0]
-        });
+				 });
+
+	print STDERR "Done\n";
+	
         my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>$management_factor_type_id, 'project.project_id'=>$m->get_trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
         if ($nde_rs->count != 1){
             die "Management factor ".$m->get_name." does not have exactly one ndexperiment of type treatment_experiment!"
@@ -2460,16 +2465,17 @@ sub delete_project_entry {
         {
             on_connect_do => ['SET search_path TO public,phenome;']
         });
-    my $project_owner_row = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
-    if ($project_owner_row) { $project_owner_row->delete(); }
+    
     eval {
-	    my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
-	    $row->delete();
+	my $project_owner_row = $project_owner_schema->resultset('ProjectOwner')->find( { project_id=> $self->get_trial_id() });
+	if ($project_owner_row) { $project_owner_row->delete(); }	
+	my $row = $self->bcs_schema->resultset("Project::Project")->find( { project_id=> $self->get_trial_id() });
+	$row->delete();
         print STDERR "deleted project ".$self->get_trial_id."\n";
     };
     if ($@) {
-	    print STDERR "An error occurred during deletion: $@\n";
-	    return $@;
+	print STDERR "An error occurred during deletion: $@\n";
+	return $@;
     }
 }
 
