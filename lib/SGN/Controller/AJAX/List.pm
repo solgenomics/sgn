@@ -740,18 +740,17 @@ sub transform :Path('/list/transform/') Args(2) {
 
 }
 
-sub array_transform :Path('/list/array/transform') Args(0) {
+sub temp_transform :Path('/list/transform/temp') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $array = $c->req->param("array") ? decode_json $c->req->param("array") : [];
-    my $transform_name = $c->req->param("type");
+    my $type = $c->req->param("type");
+    my $items = $c->req->param("items") ? decode_json $c->req->param("items") : [];
 
     my $t = CXGN::List::Transform->new();
-
-    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema"), $transform_name, $array);
+    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema"), $type, $items);
 
     if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
-       $result->{error}  =  "Warning. This array contains elements that cannot be converted.";
+       $result->{error}  =  "Warning. This temporary list contains elements that cannot be converted.";
     }
 
     $c->stash->{rest} = $result;

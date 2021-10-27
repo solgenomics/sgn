@@ -27,11 +27,11 @@ jQuery( document ).ready( function() {
                 return value.observationUnitName;
             });
             jQuery.ajax( {
-                url: "/list/array/transform",
+                url: "/list/transform/temp",
                 method: 'GET',
                 data: {
-                    "array": JSON.stringify(observationUnitNames),
-                    "type": "stocks_2_stock_ids"
+                    "type": "stocks_2_stock_ids",
+                    "items": JSON.stringify(observationUnitNames),
                 }
             }).done(function(response) {
                 if (response.missing.length > 0) {
@@ -70,11 +70,11 @@ jQuery( document ).ready( function() {
         });
 
         jQuery.ajax( {
-            url: "/list/array/transform",
+            url: "/list/transform/temp",
             method: 'GET',
             data: {
-                "array": JSON.stringify(observationUnitNames),
-                "type": "stocks_2_stock_ids"
+                "type": "stocks_2_stock_ids",
+                "items": JSON.stringify(observationUnitNames),
             }
         }).done(function(response) {
 
