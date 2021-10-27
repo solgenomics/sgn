@@ -624,7 +624,7 @@ sub validate : Path('/list/validate') Args(2) {
 # - Validate the temp list
 # - Return lists of missing and existing items
 #
-# PATH: POST /list/validate/temp
+# PATH: GET /list/validate/temp
 #
 # BODY:
 #   type: the name of a supported list type (accessions, trials, seedlots, etc...)
