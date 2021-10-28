@@ -2,6 +2,7 @@ package SGN::Controller::AJAX::LabelDesigner;
 
 use Moose;
 use CXGN::Stock;
+use CXGN::List;
 use CXGN::List::Transform;
 use Data::Dumper;
 use Try::Tiny;
@@ -16,8 +17,52 @@ use CXGN::Trial::TrialLayout;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
 use CXGN::Cross;
+use CXGN::Stock::Seedlot;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
+
+#
+# DEFINE ADDITIONAL LABEL PROPERTIES FOR LIST ITEMS HERE
+# - The first-level hash key defines the list type
+# - The second-level hash key defines the propery name (displayed in the label designer)
+# - The value of the second-level hash is a subroutine that calculates the 
+#   property value for a single list item.  It accepts the following arguments:
+#       - $c = catalyst context
+#       - $schema = Bio::Chado::Schema
+#       - $list_id = the id of the List
+#       - $list_item_id = the id of the List Item
+#       - $list_item_name = the name/content of the List Item
+#   and returns the property value
+#
+my %LIST_ADDITIONAL_PROPERTIES = (
+
+    'seedlots' => {
+
+        'seedlot contents' => sub {
+            my ($c, $schema, $list_id, $list_item_id, $list_item_name) = @_;
+            my $t = CXGN::List::Transform->new();
+            my $tr = $t->can_transform("stocks", "stock_ids");
+            my $id_hash = $t->transform($schema, $tr, [$list_item_name]);
+            my ($seedlot_id) = @{$id_hash->{transform}};
+            my $seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_id);
+            my $ac = $seedlot->accession();
+            my $cr = $seedlot->cross();
+            return $ac ? $ac->[1] : $cr ? $cr->[1] : "";
+        },
+
+        'seedlot box' => sub {
+            my ($c, $schema, $list_id, $list_item_id, $list_item_name) = @_;
+            my $t = CXGN::List::Transform->new();
+            my $tr = $t->can_transform("stocks", "stock_ids");
+            my $id_hash = $t->transform($schema, $tr, [$list_item_name]);
+            my ($seedlot_id) = @{$id_hash->{transform}};
+            my $seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_id);
+            return $seedlot->box_name();
+        }
+
+    }
+
+);
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -85,12 +130,52 @@ __PACKAGE__->config(
             }
         }
 
+        # Get additional List properties
+        if ( $data_type eq 'Lists' ) {
+            my $list_fields = get_additional_list_fields($c, $source_id, $longest_hash{'list_item_id'}, $longest_hash{'list_item_name'});
+            %longest_hash = (%longest_hash, %$list_fields);
+        }
+
         $c->stash->{rest} = {
             fields => \%longest_hash,
             reps => \%reps,
             num_units => $num_units
         };
    }
+
+    sub get_additional_list_fields {
+        my $c = shift;
+        my $list_id = shift;
+        my $list_item_id = shift;
+        my $list_item_name = shift;
+        my $schema = $c->dbic_schema('Bio::Chado::Schema');
+        my $dbh = $schema->storage->dbh();
+
+        if ( !$list_id || $list_id eq '' ) {
+            die "List ID not provided!";
+        }
+
+        my $list;
+        my $list_type;
+        eval {
+            $list = CXGN::List->new({ dbh => $dbh, list_id => $list_id });
+            $list_type = $list->type();
+        };
+        if ( $@ || !$list ) {
+            die "List not found!"
+        }
+
+        my %fields;
+        my $properties = $LIST_ADDITIONAL_PROPERTIES{$list_type};
+        if ( $properties ) {
+            while (my ($name, $calc) = each (%$properties)) {
+                my $value = &$calc($c, $schema, $list_id, $list_item_id, $list_item_name);
+                $fields{$name} = $value;
+            }
+        }
+
+        return \%fields;
+    }
 
    sub label_designer_download : Path('/tools/label_designer/download') : ActionClass('REST') { }
 
