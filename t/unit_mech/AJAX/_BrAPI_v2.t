@@ -124,11 +124,11 @@ print STDERR Dumper $response;
 #18
 is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'message' => 'search result constructed','messageType' => 'INFO'}],'pagination' => {'totalCount' => 1,'currentPage' => 0,'pageSize' => 10,'totalPages' => 1},'datafiles' => []},'result' => {'data' => [{'observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011','germplasmDbId' => '41283','studyDbId' => '165','observationTimeStamp' => undef,'collector' => 'johndoe','value' => '39.84365','observationVariableDbId' => '77557','observationDbId' => '740337','observationUnitName' => 'CASS_6Genotypes_103','externalReferences' => undef,'observationUnitDbId' => '41284','season' => [{'seasonDbId' => '2017','season' => '2017','year' => '2017'}],'uploadedBy' => 'johndoe','germplasmName' => 'IITA-TMS-IBA980581','additionalInfo' => undef}]}});
 
-$data = '{ "738292":  { "observationUnitDbId": "39467",  "collector": "Jane Doe", "observationTimeStamp": "2019-01-01T14:47:23-0700", "observationVariableDbId":"70741", "season": "2011",  "value": "555", "observationUnitName" : "KASESE_TP2013_1013"}}';
-#it need same variable and unit, only updates values or collector
-$resp = $ua->put("http://localhost:3010/brapi/v2/observations/", Content => $data);
-$response = decode_json $resp->{_content};
-print STDERR Dumper $response;
+# $data = '{ "738292":  { "observationUnitDbId": "39467",  "collector": "Jane Doe", "observationTimeStamp": "2019-01-01T14:47:23-0700", "observationVariableDbId":"70741", "season": "2011",  "value": "555", "observationUnitName" : "KASESE_TP2013_1013"}}';
+# #it need same variable and unit, only updates values or collector
+# $resp = $ua->put("http://localhost:3010/brapi/v2/observations/", Content => $data);
+# $response = decode_json $resp->{_content};
+# print STDERR Dumper $response;
 #19 Test will be fixed when repeted and modified obsverations are allowed
 #is_deeply($response, {'metadata' => {'pagination' => {'currentPage' => 0,'totalCount' => 1,'pageSize' => 10,'totalPages' => 1},'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Observations','messageType' => 'INFO'},{'messageType' => 'info','message' => 'Request structure is valid'},{'messageType' => 'info','message' => 'Request data is valid'},{'messageType' => 'info','message' => 'File for incoming brapi obserations saved in archive.'},{'messageType' => 'INFO','message' => 'All values in your file are now saved in the database! The following previously uploaded files are now obsolete because all values from them were overwritten by your upload:  '}]},'result' => {'data' => [{'germplasmName' => 'UG120170','observationVariableName' => 'fresh shoot weight measurement in kg','observationUnitName' => 'KASESE_TP2013_1013','observationTimeStamp' => '2019-01-01T14:47:23-0700','germplasmDbId' => 39019,'collector' => 'Jane Doe','observationDbId' => 738292,'studyDbId' => 139,'observationLevel' => 'plot','observationUnitDbId' => 39467,'observationVariableDbId' => '70773','value' => '555','uploadedBy' => 41}]}});
 
