@@ -7,53 +7,71 @@ jQuery( document ).ready( function() {
         showImagePreview(this.files);
     });
 
+
     jQuery('#upload_images_submit_verify').click( function() {
         jQuery('#working_modal').modal("show");
-        var imageFiles = document.getElementById('upload_images_file_input').files;
-        var returnMessage;
-        if (imageFiles.length < 1) {
-            alert("Please select image files");
-        }
-        else {
-            var [fileData, parseErrors] = parseImageFiles(imageFiles);
-            if (parseErrors.length) {
-                returnMessage = formatMessage(parseErrors, 'error');
-                jQuery('#upload_images_submit_store').attr('disabled', true);
-                jQuery('#upload_images_status').html(returnMessage);
+        var type = jQuery('#upload_images_file_format').val();
+        if (type == 'images') {
+            var imageFiles = document.getElementById('upload_images_file_input').files;
+            if (imageFiles.length < 1) {
                 jQuery('#working_modal').modal("hide");
-                return;
+                alert("Please select image files");
+                return false;
             }
-            var observationUnitNames = Object.values(fileData).map(function(value) {
-                return value.observationUnitName;
-            });
+            var returnMessage = verifyImageFiles(imageFiles);
+            if (returnMessage.error) {
+                jQuery('#upload_images_submit_store').attr('disabled', true);
+                jQuery('#upload_images_status').html(returnMessage.error);
+            } else {
+                jQuery('#upload_images_submit_store').attr('disabled', false);
+                jQuery('#upload_images_status').html(returnMessage.success);
+            }
+        } else { //handle associated phenotypes
+
+            var phenoFile =  document.getElementById('upload_associated_phenotypes_file_input').files[0];
+            var zipFile =  document.getElementById('upload_images_zip_file_input').files[0];
+            if (!(phenoFile instanceof File)) {
+                jQuery('#working_modal').modal("hide");
+                alert("Please select a phenotype spreadsheet");
+                return false;
+            } else if (!(zipFile instanceof File)) {
+                jQuery('#working_modal').modal("hide");
+                alert('Please select an image zipfile');
+                return false;
+            }
+            var formData = new FormData();
+            formData.append('upload_spreadsheet_phenotype_file_format', 'associated_images');
+            formData.append('upload_spreadsheet_phenotype_file_input', phenoFile);
+            formData.append('upload_spreadsheet_phenotype_associated_images_file_input', zipFile);
+            var returnMessage;
             jQuery.ajax( {
-                url: "/list/transform/temp",
-                method: 'GET',
-                data: {
-                    "type": "stocks_2_stock_ids",
-                    "items": JSON.stringify(observationUnitNames),
-                }
-            }).done(function(response) {
-                if (response.missing.length > 0) {
-                    var errors = response.missing.map(function(name) {
-                        return "<b>" + name + "</b> is not a valid observationUnitName.";
-                    });
-                    returnMessage = formatMessage(errors, 'error');
-                    jQuery('#upload_images_submit_store').attr('disabled', true);
-                } else {
+                url: "/ajax/phenotype/upload_verify/spreadsheet",
+                method: 'POST',
+                async: false,
+                data: formData,
+                contentType: false,
+                processData: false,
+            }).done(function(response){
+                if (response.success) {
+                    returnMessage = formatMessage(response.success, 'success');
                     jQuery('#upload_images_submit_store').attr('disabled', false);
-                    var successText = "Verification complete. All image files match an existing observationUnit. Ready to store images.";
-                    returnMessage = formatMessage(successText, 'success');
+                    jQuery('#upload_images_status').html(returnMessage);
+                } else if (response.error) {
+                    returnMessage = formatMessage(response.error, 'error');
+                    jQuery('#upload_images_submit_store').attr('disabled', true);
+                    jQuery('#upload_images_status').html(returnMessage);
                 }
             }).fail(function(error){
-                jQuery('#upload_images_submit_store').attr('disabled', true);
                 returnMessage = formatMessage(error, 'error');
-            }).always(function(){
+                jQuery('#upload_images_submit_store').attr('disabled', true);
                 jQuery('#upload_images_status').html(returnMessage);
-                jQuery('#working_modal').modal("hide");
             });
         }
+
+        jQuery('#working_modal').modal("hide");
+
     });
+
 
     jQuery('#upload_images_submit_store').click( function() {
         var imageFiles = document.getElementById('upload_images_file_input').files;
@@ -64,7 +82,7 @@ jQuery( document ).ready( function() {
         .text(Math.round(currentImage) + "%");
         jQuery('#progress_modal').modal('show');
 
-        var [fileData, parseErrors] = parseImageFiles(imageFiles);
+        var [fileData, parseErrors] = parseImageFilenames(imageFiles);
         var observationUnitNames = Object.values(fileData).map(function(value) {
             return value.observationUnitName;
         });
@@ -124,7 +142,7 @@ function showImagePreview(imageFiles) {
 }
 
 
-function parseImageFiles(imageFiles) {
+function parseImageFilenames(imageFiles) {
     // extract observationUnitNames from image filenames
     // e.g. 21BEDS0809HCRH02_25_809_Covington_G3_RootPhoto1_1_2021-05-13-04-50-36
     var fileData = {};
@@ -167,6 +185,45 @@ function formatMessage(messageDetails, messageType) {
     }
     formattedMessage += "</ul>";
     return formattedMessage;
+}
+
+function verifyImageFiles(imageFiles) {
+  var [fileData, parseErrors] = parseImageFilenames(imageFiles);
+  var returnMessage;
+  if (parseErrors.length) {
+      return { "error" : formatMessage(parseErrors, 'error') };
+      // jQuery('#upload_images_submit_store').attr('disabled', true);
+      // jQuery('#upload_images_status').html(returnMessage);
+      // jQuery('#working_modal').modal("hide");
+      // return;
+  }
+  var observationUnitNames = Object.values(fileData).map(function(value) {
+      return value.observationUnitName;
+  });
+  jQuery.ajax( {
+      url: "/list/transform/temp",
+      method: 'GET',
+      data: {
+          "type": "stocks_2_stock_ids",
+          "items": JSON.stringify(observationUnitNames),
+      }
+  }).done(function(response) {
+      if (response.missing.length > 0) {
+          var errors = response.missing.map(function(name) {
+              return "<b>" + name + "</b> is not a valid observationUnitName.";
+          });
+          return { "error" : formatMessage(errors, 'error') };
+          // jQuery('#upload_images_submit_store').attr('disabled', true);
+      } else {
+          // jQuery('#upload_images_submit_store').attr('disabled', false);
+          var successText = "Verification complete. All image files match an existing observationUnit. Ready to store images.";
+          return { "success" : formatMessage(successText, 'success') };
+      }
+  }).fail(function(error){
+      // jQuery('#upload_images_submit_store').attr('disabled', true);
+      return { "error" : formatMessage(error, 'error') };
+  });
+
 }
 
 
