@@ -11,6 +11,7 @@ jQuery( document ).ready( function() {
     jQuery('#upload_images_submit_verify').click( function() {
         jQuery('#working_modal').modal("show");
         var type = jQuery('#upload_images_file_format').val();
+        var returnMessage;
         if (type == 'images') {
             var imageFiles = document.getElementById('upload_images_file_input').files;
             if (imageFiles.length < 1) {
@@ -18,16 +19,9 @@ jQuery( document ).ready( function() {
                 alert("Please select image files");
                 return false;
             }
-            var returnMessage = verifyImageFiles(imageFiles);
-            if (returnMessage.error) {
-                jQuery('#upload_images_submit_store').attr('disabled', true);
-                jQuery('#upload_images_status').html(returnMessage.error);
-            } else {
-                jQuery('#upload_images_submit_store').attr('disabled', false);
-                jQuery('#upload_images_status').html(returnMessage.success);
-            }
-        } else { //handle associated phenotypes
+            returnMessage = verifyImageFiles(imageFiles);
 
+        } else { // verify associated phenotypes format
             var phenoFile =  document.getElementById('upload_associated_phenotypes_file_input').files[0];
             var zipFile =  document.getElementById('upload_images_zip_file_input').files[0];
             if (!(phenoFile instanceof File)) {
@@ -39,82 +33,106 @@ jQuery( document ).ready( function() {
                 alert('Please select an image zipfile');
                 return false;
             }
-            var formData = new FormData();
-            formData.append('upload_spreadsheet_phenotype_file_format', 'associated_images');
-            formData.append('upload_spreadsheet_phenotype_file_input', phenoFile);
-            formData.append('upload_spreadsheet_phenotype_associated_images_file_input', zipFile);
-            var returnMessage;
-            jQuery.ajax( {
-                url: "/ajax/phenotype/upload_verify/spreadsheet",
-                method: 'POST',
-                async: false,
-                data: formData,
-                contentType: false,
-                processData: false,
-            }).done(function(response){
-                if (response.success) {
-                    returnMessage = formatMessage(response.success, 'success');
-                    jQuery('#upload_images_submit_store').attr('disabled', false);
-                    jQuery('#upload_images_status').html(returnMessage);
-                } else if (response.error) {
-                    returnMessage = formatMessage(response.error, 'error');
+            submitAssociatedPhenotypes(phenoFile, zipFile, "/ajax/phenotype/upload_verify/spreadsheet").done(function(returnMessage) {
+                if (returnMessage.error.length) {
                     jQuery('#upload_images_submit_store').attr('disabled', true);
-                    jQuery('#upload_images_status').html(returnMessage);
+                    jQuery('#upload_images_status').html(
+                        formatMessage(returnMessage.error, "error")
+                    );
+                } else {
+                    jQuery('#upload_images_submit_store').attr('disabled', false);
+                    jQuery('#upload_images_status').html(
+                        formatMessage(returnMessage.success, "success")
+                    );
                 }
-            }).fail(function(error){
-                returnMessage = formatMessage(error, 'error');
-                jQuery('#upload_images_submit_store').attr('disabled', true);
-                jQuery('#upload_images_status').html(returnMessage);
             });
         }
 
         jQuery('#working_modal').modal("hide");
-
     });
 
 
     jQuery('#upload_images_submit_store').click( function() {
-        var imageFiles = document.getElementById('upload_images_file_input').files;
-        var currentImage = 0;
-        jQuery('#progress_msg').text('Preparing images for upload');
-        jQuery('#progress_bar').css("width", currentImage + "%")
-        .attr("aria-valuenow", currentImage)
-        .text(Math.round(currentImage) + "%");
-        jQuery('#progress_modal').modal('show');
+        var type = jQuery('#upload_images_file_format').val();
+        if (type == 'images') {
+            var imageFiles = document.getElementById('upload_images_file_input').files;
+            var currentImage = 0;
+            jQuery('#progress_msg').text('Preparing images for upload');
+            jQuery('#progress_bar').css("width", currentImage + "%")
+            .attr("aria-valuenow", currentImage)
+            .text(Math.round(currentImage) + "%");
+            jQuery('#progress_modal').modal('show');
 
-        var [fileData, parseErrors] = parseImageFilenames(imageFiles);
-        var observationUnitNames = Object.values(fileData).map(function(value) {
-            return value.observationUnitName;
-        });
+            var [fileData, parseErrors] = parseImageFilenames(imageFiles);
+            var observationUnitNames = Object.values(fileData).map(function(value) {
+                return value.observationUnitName;
+            });
 
-        jQuery.ajax( {
-            url: "/list/transform/temp",
-            method: 'GET',
-            data: {
-                "type": "stocks_2_stock_ids",
-                "items": JSON.stringify(observationUnitNames),
+            jQuery.ajax( {
+                url: "/list/transform/temp",
+                method: 'GET',
+                data: {
+                    "type": "stocks_2_stock_ids",
+                    "items": JSON.stringify(observationUnitNames),
+                }
+            }).done(function(response) {
+
+                var observationUnitDbIds = response.transform;
+                var imageData = Object.values(fileData).map(function(value, i) {
+                    value.observationUnitDbId = observationUnitDbIds[i];
+                    return value;
+                });
+                // var result = loadImagesSequentially(imageFiles, imageData, currentImage);
+                loadImagesSequentially(imageFiles, imageData, currentImage).done(function(result) {
+                    console.log(result);
+                    jQuery('#upload_images_status').append(
+                        formatMessage("Success! Upload of all "+imageFiles.length+" images is completed.", 'success')
+                    );
+                })
+                .fail(function(error) {
+                    console.log(error);
+                    jQuery('#upload_images_status').append(
+                        formatMessage(error, 'error')
+                    );
+                });
+            });
+        } else { // store associated phenotypes format
+            jQuery('#working_modal').modal("show");
+            var phenoFile =  document.getElementById('upload_associated_phenotypes_file_input').files[0];
+            var zipFile =  document.getElementById('upload_images_zip_file_input').files[0];
+            if (!(phenoFile instanceof File)) {
+                jQuery('#working_modal').modal("hide");
+                alert("Please select a phenotype spreadsheet");
+                return false;
+            } else if (!(zipFile instanceof File)) {
+                jQuery('#working_modal').modal("hide");
+                alert('Please select an image zipfile');
+                return false;
             }
-        }).done(function(response) {
-
-            var observationUnitDbIds = response.transform;
-            var imageData = Object.values(fileData).map(function(value, i) {
-                value.observationUnitDbId = observationUnitDbIds[i];
-                return value;
+            submitAssociatedPhenotypes(phenoFile, zipFile, "/ajax/phenotype/upload_store/spreadsheet").done(function(returnMessage) {
+                if (returnMessage.error.length) {
+                    jQuery('#upload_images_submit_store').attr('disabled', true);
+                    jQuery('#upload_images_status').html(
+                        formatMessage(returnMessage.error, "error")
+                    );
+                } else {
+                    jQuery('#upload_images_submit_store').attr('disabled', false);
+                    jQuery('#upload_images_status').html(
+                        formatMessage(returnMessage.success, "success")
+                    );
+                }
             });
-            // var result = loadImagesSequentially(imageFiles, imageData, currentImage);
-            loadImagesSequentially(imageFiles, imageData, currentImage).done(function(result) {
-                console.log(result);
-                jQuery('#upload_images_status').append(
-                    formatMessage("Success! Upload of all "+imageFiles.length+" images is completed.", 'success')
-                );
-            })
-            .fail(function(error) {
-                console.log(error);
-                jQuery('#upload_images_status').append(
-                    formatMessage(error, 'error')
-                );
-            });
-        });
+            // returnMessage = submitAssociatedPhenotypes(phenoFile, zipFile, "/ajax/phenotype/upload_store/spreadsheet");
+            // console.log("Return message is "+JSON.stringify(returnMessage));
+            // if (returnMessage.error) {
+            //     jQuery('#upload_images_submit_store').attr('disabled', true);
+            //     jQuery('#upload_images_status').html(returnMessage.error);
+            // } else {
+            //     jQuery('#upload_images_submit_store').attr('disabled', false);
+            //     jQuery('#upload_images_status').html(returnMessage.success);
+            // }
+            jQuery('#working_modal').modal("hide");
+        }
     });
 });
 
@@ -192,10 +210,6 @@ function verifyImageFiles(imageFiles) {
   var returnMessage;
   if (parseErrors.length) {
       return { "error" : formatMessage(parseErrors, 'error') };
-      // jQuery('#upload_images_submit_store').attr('disabled', true);
-      // jQuery('#upload_images_status').html(returnMessage);
-      // jQuery('#working_modal').modal("hide");
-      // return;
   }
   var observationUnitNames = Object.values(fileData).map(function(value) {
       return value.observationUnitName;
@@ -213,17 +227,41 @@ function verifyImageFiles(imageFiles) {
               return "<b>" + name + "</b> is not a valid observationUnitName.";
           });
           return { "error" : formatMessage(errors, 'error') };
-          // jQuery('#upload_images_submit_store').attr('disabled', true);
       } else {
-          // jQuery('#upload_images_submit_store').attr('disabled', false);
           var successText = "Verification complete. All image files match an existing observationUnit. Ready to store images.";
           return { "success" : formatMessage(successText, 'success') };
       }
   }).fail(function(error){
-      // jQuery('#upload_images_submit_store').attr('disabled', true);
       return { "error" : formatMessage(error, 'error') };
   });
 
+}
+
+function submitAssociatedPhenotypes (phenoFile, zipFile, url) {
+    console.log("submitting files for verification to url "+url);
+    var formData = new FormData();
+    formData.append('upload_spreadsheet_phenotype_file_format', 'associated_images');
+    formData.append('upload_spreadsheet_phenotype_file_input', phenoFile);
+    formData.append('upload_spreadsheet_phenotype_associated_images_file_input', zipFile);
+
+    return jQuery.ajax( {
+        url: url,
+        method: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+    }).done(function(response){
+        console.log("finished verification, response is "+JSON.stringify(response));
+        return response;
+        // if (response.success) {
+        //     return { "success": formatMessage(response.success, 'success') };
+        // } else if (response.error) {
+        //     return { "error": formatMessage(response.error, 'error') };
+        // }
+    }).fail(function(error){
+        return { "error": error };
+        // return { "error": formatMessage(error, 'error') };
+    });
 }
 
 
