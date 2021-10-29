@@ -17,49 +17,82 @@ use CXGN::Trial::TrialLayout;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayoutDownload;
 use CXGN::Cross;
-use CXGN::Stock::Seedlot;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 #
-# DEFINE ADDITIONAL LABEL PROPERTIES FOR LIST ITEMS HERE
+# DEFINE ADDITIONAL LABEL DATA FOR LIST ITEMS HERE
 # This info is used to provide additional properties for list items of 
 # specific types to the label designer.
 # - The first-level hash key defines the list type
 # - The second-level hash key defines the propery name (displayed in the label designer)
 # - The value of the second-level hash is a subroutine that calculates the 
-#   property value for a single list item.  It accepts the following arguments:
+#   property value(s) for the specified list item(s)
+#   It accepts the following arguments:
 #       - $c = catalyst context
 #       - $schema = Bio::Chado::Schema
+#       - $dbh = DB Handle
 #       - $list_id = the id of the List
-#       - $list_item_id = the id of the List Item
-#       - $list_item_name = the name/content of the List Item
-#   and returns the property value
+#       - $list_item_ids = arrayref of list item ids
+#       - $list_item_names = arrayref of list item names
+#       - $list_item_db_ids = arrayref of original db ids of list items (stock ids, project ids, etc)
+#   and returns a hashref of property values (key = list item id, value = property value)
 #
-my %LIST_ADDITIONAL_PROPERTIES = (
+my %ADDITIONAL_LIST_DATA = (
 
     'seedlots' => {
 
+        '_transform' => 'stocks_2_stock_ids',
+
         'seedlot contents' => sub {
-            my ($c, $schema, $list_id, $list_item_id, $list_item_name) = @_;
-            my $t = CXGN::List::Transform->new();
-            my $tr = $t->can_transform("stocks", "stock_ids");
-            my $id_hash = $t->transform($schema, $tr, [$list_item_name]);
-            my ($seedlot_id) = @{$id_hash->{transform}};
-            my $seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_id);
-            my $ac = $seedlot->accession();
-            my $cr = $seedlot->cross();
-            return $ac ? $ac->[1] : $cr ? $cr->[1] : "";
+            my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
+            my %values;
+            my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+            my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+            
+            my $rs = $schema->resultset("Stock::StockRelationship")->search({
+                'me.object_id' => { in => $list_item_db_ids },
+                'me.type_id' => $type_id,
+                'subject.type_id' => $accession_type_id
+            }, { 
+                'join' => 'subject',
+                '+select' => ['subject.uniquename'],
+                '+as' => ['subject_uniquename']
+            });
+            while ( my $row = $rs->next() ) {
+                my $seedlot_id = $row->object_id();
+                my $accession_name = $row->get_column('subject_uniquename');
+                for my $index (0 .. $#$list_item_db_ids ) {
+                    if ( $list_item_db_ids->[$index] eq $seedlot_id ) {
+                        $values{$list_item_ids->[$index]} = $accession_name;
+                    }
+                }
+            }
+
+            return \%values;
         },
 
         'seedlot box' => sub {
-            my ($c, $schema, $list_id, $list_item_id, $list_item_name) = @_;
-            my $t = CXGN::List::Transform->new();
-            my $tr = $t->can_transform("stocks", "stock_ids");
-            my $id_hash = $t->transform($schema, $tr, [$list_item_name]);
-            my ($seedlot_id) = @{$id_hash->{transform}};
-            my $seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot_id);
-            return $seedlot->box_name();
+            my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
+            my %values;
+            my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'location_code', 'stock_property')->cvterm_id();
+
+            my $rs = $schema->resultset("Stock::Stockprop")->search({
+                'me.stock_id' => { in => $list_item_db_ids },
+                'me.type_id' => $type_id
+            });
+            while ( my $row = $rs->next() ) {
+                my $seedlot_id = $row->stock_id();
+                my $box = $row->value();
+                for my $index (0 .. $#$list_item_db_ids ) {
+                    if ( $list_item_db_ids->[$index] eq $seedlot_id ) {
+                        $values{$list_item_ids->[$index]} = $box;
+                    }
+                }
+            }
+
+            return \%values;
         }
 
     }
@@ -132,7 +165,14 @@ __PACKAGE__->config(
             }
         }
 
-        print STDERR Dumper \%longest_hash;
+        # Get additional list data for just the longest item
+        if ( $data_type eq 'Lists' ) {
+            my $additional_list_data = get_additional_list_data($c, $source_id, $longest_hash{'list_item_id'}, $longest_hash{'list_item_name'});
+            if ( $additional_list_data ) {
+                my $fields = $additional_list_data->{$longest_hash{'list_item_id'}};
+                %longest_hash = (%longest_hash, %$fields);
+            }
+        }
 
         $c->stash->{rest} = {
             fields => \%longest_hash,
@@ -140,40 +180,6 @@ __PACKAGE__->config(
             num_units => $num_units
         };
    }
-
-    sub get_additional_list_fields {
-        my $c = shift;
-        my $list_id = shift;
-        my $list_item_id = shift;
-        my $list_item_name = shift;
-        my $schema = $c->dbic_schema('Bio::Chado::Schema');
-        my $dbh = $schema->storage->dbh();
-
-        if ( !$list_id || $list_id eq '' ) {
-            die "List ID not provided!";
-        }
-
-        my $list;
-        my $list_type;
-        eval {
-            $list = CXGN::List->new({ dbh => $dbh, list_id => $list_id });
-            $list_type = $list->type();
-        };
-        if ( $@ || !$list ) {
-            die "List not found!"
-        }
-
-        my %fields;
-        my $properties = $LIST_ADDITIONAL_PROPERTIES{$list_type};
-        if ( $properties ) {
-            while (my ($name, $calc) = each (%$properties)) {
-                my $value = &$calc($c, $schema, $list_id, $list_item_id, $list_item_name);
-                $fields{$name} = $value;
-            }
-        }
-
-        return \%fields;
-    }
 
    sub label_designer_download : Path('/tools/label_designer/download') : ActionClass('REST') { }
 
@@ -211,7 +217,7 @@ __PACKAGE__->config(
 
        my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 2.83 per mm (72 per inch)
 
-       my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id);
+       my ($trial_num, $design) = get_data($c, $schema, $data_type, $data_level, $source_id, 1);
 
        my $label_params = $design_params->{'label_elements'};
 
@@ -562,6 +568,7 @@ sub get_data {
     my $data_type = shift;
     my $data_level = shift;
     my $id = shift;
+    my $include_additional_list_data = shift;
     my $num_trials = 1;
     my $design;
 
@@ -588,10 +595,14 @@ sub get_data {
     }
     if ($data_level eq "list") {
         my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
+        my $additional_list_data = {};
+        if ( $include_additional_list_data ) {
+            $additional_list_data = get_additional_list_data($c, $id);
+        }
         foreach my $item (@{$list_data}) {
             my $list_fields = { 'list_item_name' => $item->[1], 'list_item_id' => $item->[0] };
-            my $additional_list_fields = get_additional_list_fields($c, $id, $item->[0], $item->[1]);
-            $design->{$item->[0]} = { %$list_fields, %$additional_list_fields };
+            my $additional_list_fields = $additional_list_data->{$item->[0]};
+            $design->{$item->[0]} = { %$list_fields, $additional_list_fields ? %$additional_list_fields : () };
         }
     }
     elsif ($data_level eq "plate") {
@@ -698,6 +709,78 @@ sub get_data {
 
 #    print STDERR "Design is ".Dumper($design)."\n";
     return $num_trials, $design;
+}
+
+sub get_additional_list_data {
+    my $c = shift;
+    my $list_id = shift;
+    my $list_item_id = shift;
+    my $list_item_name = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $dbh = $schema->storage->dbh();
+
+    if ( !$list_id || $list_id eq '' ) {
+        die "List ID not provided!";
+    }
+
+    my $list;
+    my $list_type;
+    my $list_type_data_def;
+    eval {
+        $list = CXGN::List->new({ dbh => $dbh, list_id => $list_id });
+        $list_type = $list->type();
+        $list_type_data_def = $ADDITIONAL_LIST_DATA{$list_type};
+    };
+    if ( $@ || !$list ) {
+        die "List not found!"
+    }
+
+    # No additional list data defined for list type...
+    if ( !$list_type_data_def ) {
+        return {};
+    }
+
+    # Set arrays of List Item IDs and Names
+    my @list_item_ids;
+    my @list_item_names;
+    if ( $list_item_id && $list_item_name ) {
+        push(@list_item_ids, $list_item_id);
+        push(@list_item_names, $list_item_name);
+    }
+    else {
+        my $list_elements = $list->retrieve_elements_with_ids($list_id);
+        @list_item_names = map { $_->[1] } @$list_elements;
+        @list_item_ids = map { $_->[0] } @$list_elements;
+    }
+
+    # Set original DB IDs (stock ids, project ids, etc) of List Items
+    my @list_item_db_ids;
+    my $transform = $list_type_data_def->{'_transform'};
+    if ( $transform ) {
+        my $lt = CXGN::List::Transform->new();
+        my $tr = $lt->transform($schema, $transform, \@list_item_names);
+        @list_item_db_ids = @{$tr->{transform}};
+    }
+
+    # Calculate list properties
+    # - organized by property name, list item id
+    my %fields_by_prop;
+    while ( my ($name, $calc) = each (%$list_type_data_def) ) {
+        if ( $name =~ /^(?!_).*/ ) {
+            $fields_by_prop{$name} = &$calc($c, $schema, $dbh, $list_id, \@list_item_ids, \@list_item_names, \@list_item_db_ids);
+        }
+    }
+
+    # Reorganize list properties
+    # - organized by list item id, property name
+    my %fields;
+    foreach my $list_item_id (@list_item_ids) {
+        foreach my $name (keys %fields_by_prop) {
+            $fields{$list_item_id}{$name} = $fields_by_prop{$name}{$list_item_id};
+        }
+    }
+
+    return \%fields;
 }
 
 #########
