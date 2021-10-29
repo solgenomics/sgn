@@ -23,6 +23,8 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 
 #
 # DEFINE ADDITIONAL LABEL PROPERTIES FOR LIST ITEMS HERE
+# This info is used to provide additional properties for list items of 
+# specific types to the label designer.
 # - The first-level hash key defines the list type
 # - The second-level hash key defines the propery name (displayed in the label designer)
 # - The value of the second-level hash is a subroutine that calculates the 
@@ -591,7 +593,9 @@ sub get_data {
     if ($data_level eq "list") {
         my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
         foreach my $item (@{$list_data}) {
-            $design->{$item->[0]} = { 'list_item_name' => $item->[1], 'list_item_id' => $item->[0] };
+            my $list_fields = { 'list_item_name' => $item->[1], 'list_item_id' => $item->[0] };
+            my $additional_list_fields = get_additional_list_fields($c, $id, $item->[0], $item->[1]);
+            $design->{$item->[0]} = { %$list_fields, %$additional_list_fields };
         }
     }
     elsif ($data_level eq "plate") {
