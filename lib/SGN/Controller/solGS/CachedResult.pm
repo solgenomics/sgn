@@ -560,18 +560,9 @@ sub check_cluster_output {
         $c->stash->{file_id} = $file_id;
 
         my $cluster_type = $c->stash->{cluster_type};
-        my $result_file;
-        if ($cluster_type =~/k-means/i)
-        {
-            $c->controller('solGS::Cluster')->cluster_result_file($c);
-            $result_file = $c->stash->{'k-means_result_file'};
-        }
-        else
-        {
-            $self->hierarchical_result_file($c);
-            $result_file = $c->stash->{hierarchical_result_file};
-        }
-
+        $c->controller('solGS::Cluster')->cluster_result_file($c);
+        my $result_file = $c->stash->{"${cluster_type}_result_file"};
+    
     	if (-s $result_file)
     	{
     	    return 1;
