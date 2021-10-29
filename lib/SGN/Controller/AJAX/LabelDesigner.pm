@@ -132,11 +132,7 @@ __PACKAGE__->config(
             }
         }
 
-        # Get additional List properties
-        if ( $data_type eq 'Lists' ) {
-            my $list_fields = get_additional_list_fields($c, $source_id, $longest_hash{'list_item_id'}, $longest_hash{'list_item_name'});
-            %longest_hash = (%longest_hash, %$list_fields);
-        }
+        print STDERR Dumper \%longest_hash;
 
         $c->stash->{rest} = {
             fields => \%longest_hash,
