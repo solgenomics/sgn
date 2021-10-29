@@ -26,20 +26,23 @@ solGS.cluster = {
      var sIndexName;
      var selectionProp;
      var traitsCode;
+     var clusterType;
 
      if (urlArgs) {
           var args = urlArgs.split(/\/+/);
 
+
          clusterPopId = args[1];
-         dataType = args[3];
-         kNumber = args[5];
+         clusterType = args[3];
+         dataType = args[5];
+         kNumber = args[7];
 
          if (urlArgs.match(/traits/)) {
-            traitsCode = args[7];
+            traitsCode = args[9];
         }
 
         if (urlArgs.match(/selPop/)) {
-            selectionProp = args[9];
+            selectionProp = args[11];
          }
 
          protocolId = args.pop();
@@ -73,7 +76,7 @@ solGS.cluster = {
          'dataset_id': datasetId,
          'data_structure': dataStr,
          'genotyping_protocol_id': protocolId,
-         'cluster_type': 'k-means'
+         'cluster_type': clusterType
          };
 
          var reg = /\.+-\.+/;
@@ -95,12 +98,11 @@ solGS.cluster = {
             alert('The list is empty. Please select a list with content.' );
 	} else {
 
-            var tableId = "list_cluster_populations_table";
+            var tableId = "cluster_populations_list_table";
             var clusterTable = jQuery('#' + tableId).doesExist();
-
             if (clusterTable == false) {
 		clusterTable = this.getClusterPopsTable(tableId);
-		jQuery("#list_cluster_populations").append(clusterTable).show();
+		jQuery("#cluster_populations_list").append(clusterTable).show();
             }
 
 	    var addRow = this.selectRow(selectId, selectName, dataStr);
@@ -116,41 +118,81 @@ solGS.cluster = {
 
     selectRowId: function (selectId) {
 
-	var rowId = 'cluster_row_select_' + selectId;
-	return rowId;
+    	var rowId = 'row_' + selectId;
+    	return rowId;
     },
 
-    createClusterTypeSelect: function() {
-	// + '<option value="heirarchical">Heirarchical</option>'
-	var clusterTypeGroup  = '<select class="form-control" id="cluster_type_select">'
-	    + '<option value="k-means">K-Means</option>'
-        + '<option value="hierarchical">Hierarchical</option>'
-	    +  '</select>';
 
-	return clusterTypeGroup;
+
+    createClusterTypeSelect: function(rowId) {
+        var clusterTypeId = this.clusterTypeSelectId(rowId);
+
+    	var clusterTypeGroup  = '<div id="cluster_type_opts"><select class="form-control" id="' + clusterTypeId + '">'
+    	    + '<option value="k-means">K-Means</option>'
+            + '<option value="hierarchical">Hierarchical</option>'
+    	    +  '</select></div>';
+
+    	return clusterTypeGroup;
 
     },
 
-    createDataTypeSelect: function(opts) {
-	var dataTypeGroup = '<select class="form-control" id="cluster_data_type_select">';
+    clusterTypeSelectId: function(rowId) {
+        if (document.URL.match(/cluster\/analysis/) && rowId) {
+            return `cluster_type_select_${rowId}`;
+        } else {
+             return 'cluster_type_select';
+        }
 
-	for (var i=0; i < opts.length; i++) {
+    },
 
-	    dataTypeGroup += '<option value="'
-		+ opts[i] + '">'
-		+ opts[i]
-		+ '</option>';
-	}
-	  dataTypeGroup +=  '</select>';
+    clusterDataTypeSelectId: function(rowId) {
+        if (document.URL.match(/cluster\/analysis/) && rowId) {
+          return `cluster_data_type_select_${rowId}`;
+        } else {
+             return 'cluster_data_type_select';
+        }
 
-	return dataTypeGroup;
+    },
+
+    clusterKnumSelectId: function(rowId) {
+        if (document.URL.match(/cluster\/analysis/) && rowId) {
+            return `k_number_select_${rowId}`;
+        } else {
+            return 'k_number_select';
+        }
+
+    },
+
+    clusterSelPropSelectId: function(rowId) {
+        if (document.URL.match(/cluster\/analysis/) && rowId) {
+            return `selection_prop_select_${rowId}`;
+        } else {
+            return 'selection_prop_select';
+        }
+
+    },
+
+
+    createDataTypeSelect: function(opts, rowId) {
+        var clusterDataTypeId = this.clusterDataTypeSelectId(rowId);
+	    var dataTypeGroup = '<select class="form-control" id="' + clusterDataTypeId + '">';
+
+    	for (var i=0; i < opts.length; i++) {
+
+    	    dataTypeGroup += '<option value="'
+    		+ opts[i] + '">'
+    		+ opts[i]
+    		+ '</option>';
+    	}
+    	  dataTypeGroup +=  '</select>';
+
+    	return dataTypeGroup;
      },
 
 
     selectRow: function(selectId, selectName, dataStr) {
 
-    	var rowId = this.selectRowId(selectId);
-    	var clusterTypeOpts = this.createClusterTypeSelect();
+    	var clusterTypeOpts = this.createClusterTypeSelect(selectId);
 
     	var dataTypeOpts;
     	var url = document.URL;
@@ -168,15 +210,16 @@ solGS.cluster = {
     	    dataTypeOpts = ['Genotype', 'GEBV', 'Phenotype'];
     	}
 
-    	var dataTypeOpts=  this.createDataTypeSelect(dataTypeOpts);
+    	var dataTypeOpts=  this.createDataTypeSelect(dataTypeOpts, selectId);
 
-    	var kNum = '<input class="form-control" type="text" placeholder="No. of clusters?" id="k_number" />';
+        var kNumId = this.clusterKnumSelectId(selectId);
+    	var kNum = '<input class="form-control" type="text" placeholder="No. of clusters?" id="' + kNumId +'"/>';
 
         var onClickVal =  '<button type="button" id="run_cluster" class="btn btn-success" onclick="solGS.cluster.runCluster('
                 + selectId + ",'" + selectName + "'" +  ",'" + dataStr
             + "'" + ')">Run Cluster</button>';
 
-    	var row = '<tr name="' + dataStr + '"' + ' id="' + rowId +  '">'
+    	var row = '<tr name="' + dataStr + '"' + ' id="' + selectId +  '">'
     	    + '<td>' + selectName + '</td>'
             + '<td>' + dataStr + '</td>'
             + '<td>' + clusterTypeOpts + '</td>'
@@ -211,7 +254,7 @@ solGS.cluster = {
     clusterResult: function(clusterArgs) {
 
 	var clusterType = clusterArgs.cluster_type;
-	var kNumber     = clusterArgs.k_number;
+	var kNumber     = clusterArgs.k_number || 'undefined';
 	var dataType    = clusterArgs.data_type;
 	var selectionProp = clusterArgs.selection_proportion;
 	var selectId     = clusterArgs.select_id;
@@ -231,7 +274,6 @@ solGS.cluster = {
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
 	}
-
 
 	if (!trainingTraitsIds) {
         var traitId = jQuery('#trait_id').val();
@@ -353,7 +395,7 @@ solGS.cluster = {
   var page;
   var fileId = clusterPopId;
 if (document.URL.match(/cluster\/analysis/)) {
-   page =  '/cluster/analysis/' + clusterPopId + '/dtype/' + dataType + '/k/' + kNumber;
+   page =  '/cluster/analysis/' + clusterPopId +'/ct/' + clusterType + '/dt/' + dataType + '/k/' + kNumber;
    if (dataType.match(/genotype/i)) {
       page = page + '/gp/' + protocolId;
   }
@@ -365,10 +407,10 @@ if (document.URL.match(/cluster\/analysis/)) {
          fileId = popDetails.training_pop_id + '-' + clusterPopId;
         }
        if (sIndexName) {
-          page =  '/cluster/analysis/' + fileId + '/dtype/' + sIndexName + '/k/' + kNumber;
+          page =  '/cluster/analysis/' + fileId +'/ct/' + clusterType + '/dt/' + sIndexName + '/kn/' + kNumber;
 
         } else {
-           page =  '/cluster/analysis/' + fileId + '/dtype/' + dataType + '/k/' + kNumber;
+           page =  '/cluster/analysis/' + fileId +'/ct/' + clusterType + '/dt/' + dataType + '/kn/' + kNumber;
 
         if (traitsCode) {
            page = page + '/traits/' + traitsCode;
@@ -377,9 +419,9 @@ if (document.URL.match(/cluster\/analysis/)) {
        }
 
        if (selectionProp) {
-              page = page + '/selProp/' + selectionProp;
+              page = page + '/sp/' + selectionProp;
        } else {
-             page = page + '/selProp/' + 'undefined' ;
+             page = page + '/sp/' + 'undefined' ;
        }
 
            page = page + '/gp/' + protocolId;
@@ -417,6 +459,7 @@ if (document.URL.match(/cluster\/analysis/)) {
     	       args = JSON.stringify(args);
         }
 
+        console.log(`checkcachedcluster: args -- ${args}`)
     	jQuery.ajax({
     	    type    : 'POST',
     	    dataType: 'json',
@@ -484,6 +527,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 
 
     runClusterAnalysis: function(clusterArgs) {
+        var clusterType = clusterArgs.cluster_type;
     if (typeof clusterArgs !== 'string') {
         clusterArgs = JSON.stringify(clusterArgs);
     }
@@ -491,7 +535,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 	if (clusterArgs) {
 
 	    jQuery("#cluster_message")
-		.html("Running K-means clustering... please wait...it may take minutes")
+		.html(`Running ${clusterType} clustering... please wait...this may take minutes.`)
 		.show();
 
         jQuery("#cluster_canvas .multi-spinner-container").show();
@@ -660,15 +704,24 @@ if (document.URL.match(/cluster\/analysis/)) {
 
 	var url = document.URL;
 
-	if(url.match(/cluster\/analysis/)) {
-	    selectId = this.selectRowId(selectId);
-	}
+	// if(url.match(/cluster\/analysis/)) {
+	//     selectId = this.selectRowId(selectId);
+	// }
 
-	var dataType    = jQuery('#'+selectId + ' #cluster_data_type_select').val();
-	var clusterType = jQuery('#'+selectId + ' #cluster_type_select').val();
-	var kNumber     = jQuery('#'+selectId + ' #k_number').val();
-	var selectionProp = jQuery('#'+selectId + ' #selection_proportion').val()
 
+    var clusterTypeId = this.clusterTypeSelectId(selectId);
+    var kNumId = this.clusterKnumSelectId(selectId);
+    var dataTypeId = this.clusterDataTypeSelectId(selectId);
+    var selectionPropId = this.clusterSelPropSelectId(selectId);
+
+  console.log(`clusterinOPtions: datatypeid -- ${dataTypeId} -- clustertypeid -- ${clusterTypeId} -- knumberid -- ${kNumId}  selection propid -- ${selectionPropId}`)
+    console.log(`clusteringoptions: selectId -- ${selectId} -- clusterTYpeId -- ${clusterTypeId}`)
+	var dataType    = jQuery('#' + dataTypeId).val();
+	var clusterType = jQuery('#' + clusterTypeId).val();
+	var kNumber     = jQuery('#' + kNumId).val();
+	var selectionProp = jQuery('#' + selectionPropId).val()
+
+    console.log(`clusterinOPtions: datatype -- ${dataType} -- clustertype -- ${clusterType} -- knumber -- ${kNumber}  selection prop -- ${selectionProp}`)
 	if (selectionProp) {
 	    selectionProp = selectionProp.replace(/%/, '');
 	    selectionProp = selectionProp.replace(/\s+/g, '');
@@ -710,7 +763,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 	var trainingPopIdName = JSON.stringify(modelData);
 
 	var  popsList =  '<dl id="cluster_selected_population" class="cluster_dropdown">'
-            + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
+            + '<dt> <a href="#"><span>Select a population</span></a></dt>'
             + '<dd><ul>'
             + '<li>'
             + '<a href="#">' + modelData.name + '<span class=value>' + trainingPopIdName + '</span></a>'
@@ -831,15 +884,20 @@ jQuery(document).ready( function() {
 
 jQuery(document).ready(function() {
 
-    jQuery("#cluster_type_opts").change(function() {
-            var clusterType = jQuery('#cluster_type_select').val();
-            console.log(`cluster type ${clusterType}`)
+    jQuery("#cluster_div").on('change', '#cluster_type_opts', function() {
+        var rowId = jQuery(this).closest('tr').attr('id');
+
+        var clusterTypeId = solGS.cluster.clusterTypeSelectId(rowId);
+        var kNumId = solGS.cluster.clusterKnumSelectId(rowId);
+
+            var clusterType = jQuery('#' + clusterTypeId).val();
+
             if (clusterType.match(/hierarchical/i)) {
-                console.log('hide k number option')
                 jQuery('#cluster_div #cluster_options #k_number_div').hide();
+                jQuery('#'+kNumId).prop('disabled', true);
             } else {
-                console.log('show k number option')
                 jQuery('#cluster_div #cluster_options #k_number_div').show();
+                 jQuery('#'+kNumId).prop('disabled', false);
             }
     });
 });
@@ -910,7 +968,7 @@ jQuery(document).ready( function() {
 	}
 
 	var clusterOptsId = 'cluster_options';
-	var clusterOpts = solGS.cluster.clusteringOptions(clusterOptsId);
+	var clusterOpts = solGS.cluster.clusteringOptions(selectId);
 
 	// if (clusterOpts.selection_proportion) {
 	//     selectId = selectName;
