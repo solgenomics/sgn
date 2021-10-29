@@ -48,20 +48,20 @@ sub check_cluster_output_files {
     my $cluster_result_file;
     my $cluster_plot_file;
 
-    if ($cluster_type =~ /k-means/i)
-    {
+    # if ($cluster_type =~ /k-means/i)
+    # {
 	$self->cluster_result_file($c);
 	$cluster_result_file = $c->stash->{"${cluster_type}_result_file"};
 
 	$self->cluster_plot_file($c);
 	$cluster_plot_file = $c->stash->{"${cluster_type}_plot_file"};
-    }
-    else
-    {
-	$self->hierarchical_result_file($c);
-	$cluster_plot_file = $c->stash->{hierarchical_dendrogram_file};
-    }
-
+    # }
+    # else
+    # {
+	# $self->hierarchical_result_file($c);
+	# $cluster_plot_file = $c->stash->{hierarchical_dendrogram_file};
+    # }
+print STDERR "\ntype: $cluster_type - result file: $cluster_result_file -- plot_file: $cluster_plot_file\n";
     if (-s $cluster_plot_file)
     {
 	$c->stash->{"${cluster_type}_plot_exists"} = 1;
@@ -336,14 +336,14 @@ sub combined_cluster_trials_data_file {
     my $file_name;
     my $tmp_dir = $c->stash->{cluster_temp_dir};
 
-    if ($cluster_type =~ /k-means/i)
-    {
+    # if ($cluster_type =~ /k-means/i)
+    # {
 	$file_name = "combined_${cluster_type}_data_file_${file_id}";
-    }
-    else
-    {
-	$file_name = "combined_hierarchical_data_file_${file_id}";
-    }
+    # }
+    # else
+    # {
+	# $file_name = "combined_hierarchical_data_file_${file_id}";
+    # }
 
     my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $file_name);
 
@@ -487,8 +487,8 @@ sub cluster_output_files {
     my $plot_pam_file;
     my $plot_kmeans_file;
 
-    if ($cluster_type =~/k-means/i)
-    {
+    # if ($cluster_type =~/k-means/i)
+    # {
 	$self->cluster_result_file($c);
 	$result_file = $c->stash->{"${cluster_type}_result_file"};
 
@@ -497,12 +497,12 @@ sub cluster_output_files {
 
 	#$self->kcluster_plot_pam_file($c);
 	#$plot_pam_file = $c->stash->{"${cluster_type}_plot_pam_file"};
-    }
-    else
-    {
-	$self->hierarchical_result_file($c);
-	$result_file = $c->stash->{hierarchical_result_file};
-    }
+    # }
+    # else
+    # {
+	# $self->hierarchical_result_file($c);
+	# $result_file = $c->stash->{hierarchical_result_file};
+    # }
 
     $c->stash->{analysis_type} = $cluster_type;
     ###$c->stash->{pop_id} = $file_id;
@@ -858,7 +858,14 @@ sub cluster_r_jobs {
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
     $c->stash->{r_temp_file}  = "${cluster_type}-${file_id}";
-    $c->stash->{r_script}     = 'R/solGS/cluster.r';
+
+    if ($cluster_type =~ /k-means/i) {
+        $c->stash->{r_script}     = 'R/solGS/kclustering.r';
+    }
+    else
+    {
+        $c->stash->{r_script}     = 'R/solGS/hclustering.r';
+    }
 
     $c->controller('solGS::AsyncJob')->get_cluster_r_job_args($c);
     my $jobs  = $c->stash->{cluster_r_job_args};
