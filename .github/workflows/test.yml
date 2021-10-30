@@ -5,27 +5,41 @@ on:
       - '**.md'
 
 jobs:
-  test:
+  test_breedbase:
     runs-on: ubuntu-latest
+    container:
+      image: breedbase/breedbase:v0.31
+      env:
+        HOME: /root
+        MODE: 'TESTING'
+        PGPASSWORD: postgres
+        SGN_TEST_SERVER: http://test_breedbase:3010
+        SGN_REMOTE_SERVER_ADDR: selenium
+      volumes:
+        - ${{ github.workspace }}:/home/production/cxgn/sgn
+        - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+
+    services:
+      breedbase_db:
+        image: postgres:12.8
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      selenium:
+        image: selenium/standalone-firefox:3.141.59-20210607
+        options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
 
     steps:
-      - name: Checkout breedbase_dockerfile
-        uses: actions/checkout@v2
-        with:
-          repository: solgenomics/breedbase_dockerfile
-          # TODO: omit after merged into master
-          ref: fix/prod-npm-git-submodule
-    
-      - name: Remove sgn submodule
-        run: git rm cxgn/sgn
-    
       - name: Checkout sgn
         uses: actions/checkout@v2
-        with:
-          path: cxgn/sgn
     
-      - name: Initialize/update submodules
-        run: git submodule update --init
-
       - name: Run tests
-        run: docker compose -f docker-compose.test.yml run --use-aliases test_breedbase
+        run: /entrypoint.sh t/unit t/unit_fixture t/unit_mech t/selenium2
+
+
