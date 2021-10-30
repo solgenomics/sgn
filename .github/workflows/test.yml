@@ -1,0 +1,31 @@
+on:
+  push: # TODO: switch to "pull_request"
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout breedbase_dockerfile
+        uses: actions/checkout@v2
+        with:
+          repository: solgenomics/breedbase_dockerfile
+          # TODO: omit after merged into master
+          ref: fix/prod-npm-git-submodule
+    
+      - name: Remove sgn submodule
+        run: git rm cxgn/sgn
+    
+      - name: Checkout sgn
+        uses: actions/checkout@v2
+        with:
+          path: cxgn/sgn
+    
+      - name: Initialize/update submodules
+        run: git submodule update --init
+
+      - name: Run tests
+        run: docker compose -f docker-compose.test.yml run --use-aliases test_breedbase
