@@ -1,5 +1,5 @@
 on:
-  push: # TODO: switch to "pull_request"
+  pull_request:
     paths-ignore:
       - 'docs/**'
       - '**.md'
