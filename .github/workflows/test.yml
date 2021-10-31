@@ -18,10 +18,7 @@ jobs:
       volumes:
         - ${{ github.workspace }}:/home/production/cxgn/sgn
         - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
-      options: >-
-        --device=/dev/tty
-        --network-alias test_breedbase
-        --tty
+      options: --network-alias test_breedbase
 
     services:
       breedbase_db:
@@ -45,5 +42,6 @@ jobs:
     
       - name: Run tests
         run: /entrypoint.sh t/unit t/unit_fixture t/unit_mech t/selenium2
-
-
+        # work around run_all_patches.pl "what the heck - no TTY??" error
+        # https://github.com/actions/runner/issues/241#issuecomment-842566950
+        shell: 'script --flush --quiet --return --command "bash --noprofile --norc -eo pipefail {0}"'
