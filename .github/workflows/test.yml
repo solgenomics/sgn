@@ -18,6 +18,7 @@ jobs:
       volumes:
         - ${{ github.workspace }}:/home/production/cxgn/sgn
         - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+      options: --network-alias test_breedbase
 
     services:
       breedbase_db:
