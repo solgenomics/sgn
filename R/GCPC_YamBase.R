@@ -30,6 +30,7 @@ genotype_file= args[2]
 
 library(sommer)
 library(AGHmatrix)
+library(VariantAnnotation) # Bioconductor package
 Rcpp::sourceCpp("../QuantGenResources/CalcCrossMeans.cpp") # this is called CalcCrossMean.cpp on Github
 
 
@@ -156,17 +157,16 @@ userPheno$Sex <- sample(c("M", "F"), size = nrow(userPheno), replace = TRUE, pro
 #    Users need to pre-process their VCF to remove these (e.g. in TASSEL or R)
 #    I can put an error message into this script if a user tries to input
 #    monomorphic or biallelic sites which could be communicated through the GUI.
+#    It's also possible to filter them here.
 
-#   VCF format is notoriously flexible/variable and to my knowledge it is not
-#   considered best practice to parse VCFs with custom scripts. There are a lot
-#   of different styles within VCF that technically meet its specifications but
-#   cause scripts to break. I am checking in with someone from Ploidyverse
-#   to find out best practice for this.
+#  Import VCF with VariantAnnotation package and extract matrix of dosages
+myVCF <- readVcf(genotype_file)
+G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
+
 
 #   TEST temporarily import the genotypes via HapMap:
-
-source("R/hapMap2numeric.R") # replace and delete
-G <- hapMap2numeric(genotype_file) # replace and delete
+#source("R/hapMap2numeric.R") # replace and delete
+#G <- hapMap2numeric(genotype_file) # replace and delete
 
 
 
