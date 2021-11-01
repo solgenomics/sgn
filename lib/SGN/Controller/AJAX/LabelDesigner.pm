@@ -27,6 +27,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 # specific types to the label designer.
 # - The first-level hash key defines the list type
 # - The second-level hash key defines the propery name (displayed in the label designer)
+#   NOTE: Each list type needs to define (as '_transform') the list transform plugin name used to convert the list item names to database ids
 # - The value of the second-level hash is a subroutine that calculates the 
 #   property value(s) for the specified list item(s)
 #   It accepts the following arguments:
@@ -41,9 +42,33 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 #
 my %ADDITIONAL_LIST_DATA = (
 
+    'accessions' => {
+
+        '_transform' => 'stocks_2_stock_ids',
+
+        'accession id' => sub {
+            my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
+            my %values;
+            for my $index (0 .. $#$list_item_ids ) {
+                $values{$list_item_ids->[$index]} = $list_item_db_ids->[$index];
+            }
+            return \%values;
+        }
+
+    },
+
     'seedlots' => {
 
         '_transform' => 'stocks_2_stock_ids',
+
+        'seedlot id' => sub {
+            my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
+            my %values;
+            for my $index (0 .. $#$list_item_ids ) {
+                $values{$list_item_ids->[$index]} = $list_item_db_ids->[$index];
+            }
+            return \%values;
+        },
 
         'seedlot contents' => sub {
             my ($c, $schema, $dbh, $list_id, $list_item_ids, $list_item_names, $list_item_db_ids) = @_;
