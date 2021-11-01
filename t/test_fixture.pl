@@ -249,6 +249,7 @@ $SIG{KILL} = sub { kill 9, $server_pid, $prove_pid };
 
 print STDERR "# Start prove (PID $prove_pid)... \n";
 waitpid $prove_pid, 0;
+my $prove_pid_exit_status = $? >> 8;
 print STDERR "# Prove finished, stopping web server PID $server_pid... ";
 
 END { kill 15, $server_pid if $server_pid }
@@ -284,6 +285,7 @@ else {
     print STDERR "# --nocleanup option: not removing db or files.\n";
 }
 print STDERR "# Test run complete.\n\n";
+exit($prove_pid_exit_status); # exit with non-zero exit status if any tests failed
 
 
 
