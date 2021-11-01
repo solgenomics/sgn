@@ -50,11 +50,12 @@ my %ADDITIONAL_LIST_DATA = (
             my %values;
             my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
             my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+            my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
             
             my $rs = $schema->resultset("Stock::StockRelationship")->search({
                 'me.object_id' => { in => $list_item_db_ids },
                 'me.type_id' => $type_id,
-                'subject.type_id' => $accession_type_id
+                'subject.type_id' => { in => [$accession_type_id, $cross_type_id] }
             }, { 
                 'join' => 'subject',
                 '+select' => ['subject.uniquename'],
