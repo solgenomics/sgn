@@ -271,7 +271,7 @@ function createTrialsTable (tableId) {
 
     var table = '<table id="' + tableId +  '" class="table" style="width:100%;text-align:left">';
     table    += '<thead><tr>';
-    table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>';
+    table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th><th>More details</th>';
    // table    += '<th id="color_tip" title="You can combine Trials with matching color."><span class="glyphicon glyphicon-question-sign"></span></th>';
     table    += '</tr></thead>';
     table    += '</table>';
@@ -300,7 +300,7 @@ function displayTrainingPopulations (tableDetails) {
 	    jQuery('#' + divId).html(table).show();
 
 	    jQuery('#' + tableId).dataTable({
-                    'order'        : [[1, "desc"], [4, "desc"]],
+                    'order'        : [[0, "desc"],  [2, "desc"], [3, "desc"]],
 		    'searching'    : true,
 		    'ordering'     : true,
 		    'processing'   : true,

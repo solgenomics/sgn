@@ -28,23 +28,26 @@ my $dumpupdatedfixture;
 my $noparallel = 0;
 my $list_config = "";
 my $logfile = "logfile.$$.txt";
+my $print_environment;
 # relative to `sgn/ (or parent of wherever this script is located)
 my $fixture_path = 't/data/fixture/cxgn_fixture.sql';
 
 GetOptions(
-	"carpalways"         => \(my $carpalways = 0),
-	"verbose"            => \$verbose,
-	"nocleanup"          => \$nocleanup,
-	"dumpupdatedfixture" => \$dumpupdatedfixture,
-	"noserver"           => \$noserver,
-	"noparallel"         => \$noparallel,
-	"fixture_path"       => \$fixture_path,
-	"list_config"        => \$list_config,
-	"logfile=s"            => \$logfile
+    "carpalways"         => \(my $carpalways = 0),
+    "verbose"            => \$verbose,
+    "nocleanup"          => \$nocleanup,
+    "dumpupdatedfixture" => \$dumpupdatedfixture,
+    "noserver"           => \$noserver,
+    "noparallel"         => \$noparallel,
+    "fixture_path"       => \$fixture_path,
+    "list_config"        => \$list_config,
+    "logfile=s"            => \$logfile,
+    "env"                => \$print_environment,
     );
 
 require Carp::Always if $carpalways;
 
+if ($print_environment) { print STDERR "CURRENT ENV: ".Dumper(\%ENV); }
 
 my @prove_args = @ARGV;
 if(@prove_args){
@@ -116,7 +119,7 @@ print STDERR "Done.\n";
 if (! $ENV{TEST_DB_NAME}) {
     my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path;
     print STDERR "# Loading database fixture... $database_fixture_dump ... ";
-    system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
+    system("createdb -h $config->{dbhost} -U postgres -T template0 -E UTF8 --no-password $dbname");
     # will emit an error if web_usr role already exists, but that's OK
     system("psql -h $config->{dbhost} -U postgres $dbname -c \"CREATE USER web_usr PASSWORD '$db_user_password'\"");
     system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
