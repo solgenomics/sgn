@@ -4,7 +4,7 @@ $roles => undef
 $is_curator => undef
 </%args>
 
-<& /util/import_javascript.mas, entries => [ "manage_user_roles" ] &>
+<& /util/import_javascript.mas,  classes => [ 'jquery','jqueryui' ] &>
 
 <& /page/page_title.mas, title=>"Manage User Roles" &>
 
@@ -69,7 +69,7 @@ $is_curator => undef
 
 <table id="manage_teams_table" class="table table-bordered">
 <thead>
-<tr><th>Team</th><th>Description</th><th>Stage Gate</th><th>Team Members</th><th>Delete</th></tr>
+<tr><th width="120">Team</th><th width="200">Description</th><th width="60">Stage Gate</th><th>Team Members</th><th width="40">Delete</th></tr>
 </thead>
 <tbody>
 </tbody>
@@ -91,12 +91,12 @@ $is_curator => undef
             <div class="form-group">
                 <label class="col-sm-3 control-label">Team Name</label>
                 <div class="col-sm-9" >
-		  <input type="text" id="team_name"></input>
+		  <input class="form-control" type="text" id="team_name"></input>
 		</div>
 		
 		<label class="col-sm-3 control-label">Responsibilities</label>
 		<div class="col-sm-9" >
-		  <input type="text" id="team_description"></input>
+		  <input class="form-control" type="text" id="team_description"></input>
 		</div>
 	    </div>
 	</div>
@@ -119,17 +119,20 @@ $is_curator => undef
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addTeamMemberDialog">Add Team Member</h4>
+        <h4 class="modal-title" id="addTeamMemberDialog">Add Team Member for team <span id="team_name">.</span></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
             <div class="form-group">
                 <label class="col-sm-3 control-label">Member</label>
                 <div class="col-sm-9" >
-                    <div id="add_person_select_div">
-                    [LOADING...]
-                    </div>
+                  <input class="form-control" type="text" name="add_member_input"  id="add_member_input" ></input>
                 </div>
+		<label class="col-sm-3 control-label">Management Role</label>
+		<div class="col-sm-9" >
+                  <input class="form-control" name="add_member_management_role" id="add_member_management_role_input" />
+                </div>
+
 	        </div>
 	       </form><br/>
          
@@ -159,8 +162,18 @@ jQuery(document).ready(function() {
        ajax : '/ajax/roles/list'
    });
 
- 
+
+   jQuery('#manage_teams_table').DataTable( {
+       ajax : '/ajax/teams/list'
+   });
+
+
 });
+
+
+
+ 
+
 
 
 jQuery('#add_new_team').click( function(e) { 
@@ -205,15 +218,27 @@ function add_user_role(sp_person_id, person_name) {
         });
 }
 
+function open_add_team_member_dialog(sp_team_id, team_name) {
+    $('#add_team_member_dialog').modal("show");
 
+    $('#sp_team_id').val(sp_team_id);
+    $('#team_name').html(team_name);
+    $('#add_member_input').autocomplete({
+       source: '/ajax/people/autocomplete'
+    });
+}
 
-    jQuery('#add_person_role_submit_button').click( function(e) {
 
 							  
+    jQuery('#add_person_role_submit_button').click( function(e) {
+
+
     jQuery.ajax ( {
         url : '/ajax/people/add_person_role?sp_person_id='+jQuery("#sp_person_id").val()+'&sp_role_id='+jQuery("#add_person_role_role_select").val(),
         beforeSend: function() {
-            jQuery("#working_modal").modal("show");
+          jQuery("#working_modal").modal("show");
+
+							  
         },
         success: function(response){
             //console.log(response);
@@ -234,7 +259,7 @@ function add_user_role(sp_person_id, person_name) {
 	
 
 
-    jQuery('#add_team_submit_button').click( function(e) {
+  jQuery('#add_team_submit_button').click( function(e) {
 
       jQuery.ajax ( {
         url : '/ajax/people/add_team?name='+jQuery("#team_name").val()+'&description='+jQuery("#team_description").val(),
@@ -257,7 +282,33 @@ function add_user_role(sp_person_id, person_name) {
         }
     });
 });
-	
+
+jQuery('#add_team_member_submit_button').click( function(e) {
+
+      jQuery.ajax ( {
+        url : '/ajax/teams/add_member?sp_person_id='+jQuery("#add_member_input").val()+'&management_role='+jQuery("#management_role").val()+'sp_team_id='+jQuery("#sp_team_id").val(),
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response){
+            //console.log(response);
+            jQuery("#working_modal").modal("hide");
+            if (response.error) {
+                alert('Error: '+response.error);
+            } else {
+            jQuery('#manage_teams_table').DataTable().ajax.reload();
+                alert('Successfully added new team member!');
+            }
+        },
+        error: function(response) {
+            jQuery("#working_modal").modal("hide");
+            alert('An error occured: '+response);
+        }
+    });
+});
+
+
+							  
 
 </script>
 

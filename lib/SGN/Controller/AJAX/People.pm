@@ -240,6 +240,164 @@ sub delete :Chained('roles') PathPart('delete/association') Args(1) {
 }
 
 
+sub teams :Chained('/') PathPart('ajax/teams') CaptureArgs(0) {
+    my $self = shift;
+    my $c = shift;
+}
+
+sub list_teams :Chained('teams') PathPart('list') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    
+    if (! $c->user()) {
+	$c->stash->{rest} = { error => "You must be logged in to use this function." };
+	return;
+    }
+
+    my $schema = $c->dbic_schema("CXGN::People::Schema");
+
+#    my %teams;
+#    my $rs1 = $schema->resultset("SpRole")->search( { } );
+#    while (my $row = $rs1->next()) {
+#	$roles{$row->sp_role_id} = $row->name();
+#    }
+    
+    my $rs2 = $schema->resultset("SpTeam")->search(
+	{ },
+	{ join => 'sp_person_teams',
+	  '+select' => ['sp_person_teams.sp_person_id', 'sp_person_teams.sp_person_team_id' ],
+	  '+as'     => ['sp_person_id', 'sp_person_team_id' ],
+	  order_by => 'sp_person_id' });
+    
+    my @data;
+    my %hash;
+
+    my $default_color = "#0275d8";
+    
+    while (my $row = $rs2->next()) {
+	my $team_name = $row->name();
+	my $team_description = $row->description();
+	my $delete_link = "";
+	my $add_user_link = '&nbsp;&nbsp;<a href="#" onclick="javascript:open_add_team_member_dialog('.$row->get_column('sp_team_id').", \'".$team_name."\')\"><span style=\"color:darkgrey;width:8px;height:8px;border:solid;border-width:1px;padding:1px;\"><b>+</b></a></span>";
+#	if ($c->user()->has_role("curator")) {
+#	    $delete_link = '<a href="javascript:delete_user_role('.$row->get_column('sp_person_role_id').')"><b>X</b></a>';
+#	}
+	
+#	else {
+	    $delete_link = "X";
+#	}
+	
+#	$hash{$row->sp_person_id}->{userlink} = '<a href="/solpeople/personal-info.pl?sp_person_id='.$row->sp_person_id().'">'.$row->first_name()." ".$row->last_name().'</a>';
+
+#	my $role_name = $roles{$row->get_column('sp_role_id')};
+
+	my $sp_person_id = $row->get_column('sp_person_id');
+	print STDERR "PERSON ID: $sp_person_id\n";
+	
+	my $person = $schema->resultset("SpPerson")->find( { sp_person_id => $sp_person_id });
+
+	if ($person) { 
+	    my $first_name = $person->first_name();
+	    my $last_name = $person->last_name();
+
+	    my $username = $first_name." ".$last_name;
+	
+#	if (! $c->user()->has_role("curator")) {
+#	    # only show breeding programs
+#	    if ($role_name !~ /curator|user|submitter/) {
+#		$hash{$row->sp_person_id}->{userroles} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:10px;background-color:'.$default_color.'"><b>'.$role_name."</b></span>";
+#	    }
+#	}
+#	else {
+	    my $color =  $default_color;
+	    $hash{$row->sp_team_id}->{team_members} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:6px;background-color:'.$color.'"><b>'. $delete_link."&nbsp;&nbsp; ".$username."</b></span>";
+
+#	}
+	}
+	$hash{$row->sp_team_id}->{team_name} = $row->name();
+	$hash{$row->sp_team_id}->{team_description} = $row->description();
+	$hash{$row->sp_team_id}->{team_stage_gate} = "[not yet]";
+	$hash{$row->sp_team_id}->{team_delete} = 'X';
+	$hash{$row->sp_team_id}->{team_members} .= $add_user_link." ".$hash{$row->sp_team_id}->{team_members};
+    }
+
+
+    foreach my $k (keys %hash) {
+	$hash{$k}->{userroles} .= $hash{$k}->{add_user_link};
+	push @data, [ $hash{$k}->{team_name}, $hash{$k}->{team_description}, $hash{$k}->{team_stage_gate}, $hash{$k}->{team_members}, $hash{$k}->{team_delete} ];
+    }
+    
+    $c->stash->{rest} = { data => \@data };
+}
+
+
+sub add_team :Path('/ajax/people/add_team') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+     if (! $c->user()) {
+	$c->stash->{rest} = { error => "You must be logged in to use this function." };
+	return;
+    }
+    
+    my $name = $c->req->param("name");
+    my $description = $c->req->param("description");
+    my $stage_gate_id = $c->req->param("stage_gate_id");
+    
+    my $schema = $c->dbic_schema("CXGN::People::Schema");
+
+    eval { 
+	my $rs = $schema->resultset("SpTeam")->find_or_create(
+	    {
+		name => $name,
+		description => $description,
+		sp_stage_gate_id => $stage_gate_id,
+	    });
+
+    };
+
+    if ($@) { 
+	$c->stash->{rest} = { error =>  "An error occurred! $@\n" };
+	return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+sub add_team_member :Path('/ajax/teams/add_member') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (! $c->user()) {
+	$c->stash->{rest} = { error => "You must be logged in to use this function." };
+	return;
+    }
+    
+    my $sp_person_id = $c->req->param('sp_person_id');
+    my $management_role = $c->req->param('management_role');
+    my $sp_team_id = $c->req->param("sp_team_id");
+
+    my $schema = $c->dbic_schema("CXGN::People::Schema");
+
+    eval {
+	my $rs = $schema->resultset("SpPersonTeam")->find_or_create(
+	    {
+		sp_team_id => $sp_team_id,
+		sp_person_id => $sp_person_id,
+	    });
+    };
+
+    if ($@) {
+	$c->stash->{rest} = { error => "An error occurred trying to add a team member ($@)" };
+    }
+    else {
+	$c->stash->{rest} = { message => "success" };
+    }
+    
+		
+
+}
 
 
 ###
