@@ -409,7 +409,7 @@ jQuery(document).ready(function () {
         _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
     });
 
-    parseArgs();
+    parseArgs(editable_stockprops_search);
     _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
@@ -499,11 +499,21 @@ jQuery(document).ready(function () {
 
 });
 
-function parseArgs() {
+function parseArgs(editable_stockprops_search) {
   const params = new URLSearchParams(window.location.search);
   if ( params.has('any_name') ) {
     jQuery('#any_name').val(params.get('any_name'));
     jQuery('#stock_type_select').val(0);
+  }
+  if ( params.has('stock_type') ) {
+    var type = params.get('stock_type');
+    var value =  jQuery("#stock_type_select option[title="+ type +"]").val();
+    jQuery('#stock_type_select').val(value);
+
+  }
+  if ( params.has('prop') & params.has('value') ) {
+    editable_stockprops_search[params.get('prop')] = {"matchtype": "exactly"};
+    editable_stockprops_search[params.get('prop')]["value"] = params.get('value');
   }
 }
 
