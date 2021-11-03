@@ -76,7 +76,9 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 	my @fail = ();
 	if (length($username) < 7) {
 	    push @fail, "Username is too short. Username must be 7 or more characters";
-	} else {
+	} elsif ( $username =~ /\s/ ) {
+        push @fail, "Username must not contain spaces";
+    } else {
 	    # does user already exist?
 	    #
 	    my $existing_login = CXGN::People::Login -> get_login($c->dbc()->dbh(), $username);
