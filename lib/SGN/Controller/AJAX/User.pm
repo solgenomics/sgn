@@ -142,9 +142,6 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     my $subject="[$project_name] Email Address Confirmation Request";
     my $body=<<END_HEREDOC;
 
-Please do *NOT* reply to this message. The return address is not valid.
-Use the contact form instead ($host/contact/form).
-
 This message is sent to confirm the email address for community user
 \"$username\"
 
@@ -155,6 +152,10 @@ $host/user/confirm?username=$username&confirm_code=$confirm_code
 
 Thank you,
 $project_name Team
+
+Please do *NOT* reply to this message. If you have any trouble confirming your 
+email address or have any other questions, please use the contact form instead:
+$host/contact/form
 
 END_HEREDOC
 
