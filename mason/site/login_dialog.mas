@@ -2,7 +2,7 @@
 <!-- Login Dialog -->
 
 <%args>
-$goto_url => ''
+$goto_url => '/'
 </%args>
 
 <div class="modal fade" id="site_login_dialog" name="site_login_dialog" tabindex="-1" role="dialog" aria-labelledby="site_login_dialog_title">
@@ -239,11 +239,11 @@ jQuery(document).ready( function() {
                     alert(r.error);
                     return;
                 }
-                if (r.goto_url) { 
+                if (r.goto_url && r.goto_url !== "" ) { 
                     location.href=r.goto_url;
                 }
                 else {
-                    location.reload();
+                    location.href='/';
                 }
             }
         });
