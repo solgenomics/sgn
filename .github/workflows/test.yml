@@ -8,7 +8,7 @@ jobs:
   test_breedbase:
     runs-on: ubuntu-latest
     container:
-      image: breedbase/breedbase:v0.31
+      image: breedbase/breedbase:v0.33
       env:
         HOME: /root
         MODE: 'TESTING'
@@ -33,7 +33,7 @@ jobs:
           --health-retries 5
 
       selenium:
-        image: selenium/standalone-firefox:3.141.59-20210607
+        image: selenium/standalone-firefox:3.141.59
         options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
 
     steps:
