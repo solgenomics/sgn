@@ -300,7 +300,8 @@ my $store_args = {
     user_id=>$sp_person_id,
     archived_filename=>$archived_filename_with_path,
     archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-    temp_file_sql_copy=>$opt_B
+    temp_file_sql_copy=>$opt_B,
+    genotyping_data_type=>'SNP'
 };
 
 if ($opt_c eq 'VCF') {
