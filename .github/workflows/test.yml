@@ -40,8 +40,11 @@ jobs:
       - name: Checkout sgn
         uses: actions/checkout@v2
     
-      - name: Run tests
-        run: /entrypoint.sh t/unit t/unit_fixture t/unit_mech t/selenium2
+      - name: Run unit tests
+        run: prove --recurse t/unit
+
+      - name: Run fixture tests
+        run: /entrypoint.sh t/unit_fixture t/unit_mech t/selenium2
         # work around run_all_patches.pl "what the heck - no TTY??" error
         # https://github.com/actions/runner/issues/241#issuecomment-842566950
         shell: 'script --flush --quiet --return --command "bash --noprofile --norc -eo pipefail {0}"'
