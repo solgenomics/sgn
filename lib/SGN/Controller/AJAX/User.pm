@@ -105,6 +105,12 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 	if ($email_address !~ m/[^\@]+\@[^\@]+/) {
 	    push @fail, "Email address is invalid.";
 	}
+    if ( $email_address ) {
+        my @person_ids = CXGN::People::Login->get_login_by_email($c->dbc()->dbh(), $email_address);
+        if ( scalar(@person_ids) > 0 ) {
+            push @fail, "Email address is already associated with an account.";
+        }
+    }
 	unless($first_name) {
 	    push @fail,"You must enter a first name or initial.";
 	}
