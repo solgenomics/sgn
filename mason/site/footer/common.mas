@@ -59,9 +59,10 @@
 	  <center>
 		  <div id="progress_msg"></div>
 		  <div class="progress">
-		    <div id="progress_bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+		    <div id="progress_bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
 		  </div>
 	  </center>
+	  <ul id="current_task" class="form-group list-unstyled"></ul>
         </div>
       </div>
       <div class="modal-footer">

@@ -3,6 +3,7 @@ package CXGN::Trial::TrialDesignStore::GenotypingTrial;
 
 use Moose;
 use Try::Tiny;
+use Data::Dumper;
 
 BEGIN { extends 'CXGN::Trial::TrialDesignStore::AbstractTrial';}
 
@@ -93,6 +94,8 @@ sub validate_design {
     if(scalar(@accession_names)<1){
         $error .= "You cannot create a trial with less than one accession.";
     }
+
+    print STDERR "Creating trial with accessions: ". Dumper(\@accession_names);
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();

@@ -37,7 +37,7 @@ sub get_all_locations :Path("/ajax/location/all") Args(0) {
 
     my $location = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
-    my $all_locations = $location->get_location_geojson();
+    my $all_locations = $location->get_location_geojson_data();
     #print STDERR "Returning with all locations: ".$all_locations."\n";
     $c->stash->{rest} = { data => $all_locations };
 }

@@ -1,216 +1,328 @@
+<%doc>
 
-<%args>
+=head1 NAME
 
+/breeders_toolbox/markers/manage_markers.mas - a mason component to display markerset info, add new markersets and add filtering parameters in markersets
 
-</%args>
+=head1 AUTHOR
+
+Titima Tantikanjana <tt15@cornell.edu>
+
+=cut
+
+</%doc>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables','CXGN.BreedersToolbox.MarkerSet'] &>
 
-<& /page/page_title.mas, title=>'Manage Marker Sets' &>
+<& /page/page_title.mas, title=>'Manage Markersets' &>
+
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Your Markersets</h4>", info_section_subtitle => 'View your markerset info', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_markerset_button">Add New Markerset</button><button class="btn btn-sm btn-primary" style="margin:3px" id="add_marker_dosage_button">Add Markers to Markerset</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "marker_set_summary_section" &>
+
+<& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-search", title => "Using markerset to search for accessions with specific genotype.", button_id => "accession_search_link" &>
 
 
-<&| /page/info_section.mas, title=>'Add new marker set'&>
-
-<div class="row">
-    <div class="col-sm-1">
-    </div>
-    <div class="col-sm-12 well">
-        <div class="row">
-            <div class="col-sm-11">
-                <div class="form-horizontal">
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Marker Set Name:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="new_marker_set" placeholder="Enter marker set name">
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Genotyping protocol:</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <select class="form-control" id="selected_protocol">
-                                    </select>
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Description:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="marker_set_desc" placeholder="Enter description">
-                                        <div class="input-group-btn">
-                                            <button class="btn btn-info" id="save_marker_set" name="save_marker_set"> Add new marker set </button>
+<div class="modal fade" id="add_markerset_dialog" name="add_markerset_dialog" tabindex="-1" role="dialog" aria-labelledby="addMarkerSetDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addMarkerSetDialog">Add New Markerset</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-1">
+                        </div>
+                        <div class="col-sm-12 well">
+                            <div class="row">
+                                <div class="col-sm-11">
+                                    <div class="form-horizontal">
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Markerset Name:</label>
+                                                <div class="col-sm-8" >
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="new_marker_set" placeholder="Enter markerset name">
+                                                    </div>
+                                                </div>
                                         </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Genotyping protocol:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="selected_protocol">
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Data type:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="genotyping_data_type">
+                                                        <option value="">Select genotyping data type</option>
+                                                        <option value="SNP">SNP</option>
+                                                        <option value="Dosage">Dosage</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Description:</label>
+                                                <div class="col-sm-8" >
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="marker_set_desc" placeholder="Enter description">
+                                                    </div>
+                                                </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="save_marker_set" id="save_marker_set">Add Markerset</button>
             </div>
         </div>
     </div>
 </div>
 
-</&>
-
-<&| /page/info_section.mas, title=>'Add markers and allele dosages in marker set', collapsible=>1, collapsed=>0 &>
-
-<div class="row">
-    <div class="col-sm-1">
-    </div>
-    <div class="col-sm-12 well">
-        <div class="row">
-            <div class="col-sm-11">
-                <div class="form-horizontal">
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Marker Set Name:</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <select class="form-control" id="selected_marker_set1">
-                                    </select>
+<div class="modal fade" id="add_marker_dosage_dialog" name="add_marker_dosage_dialog" tabindex="-1" role="dialog" aria-labelledby="addMarkerDosageDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addMarkerDosageDialog">Add Markers to Markerset</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-1">
+                        </div>
+                        <div class="col-sm-12 well">
+                            <div class="row">
+                                <div class="col-sm-11">
+                                    <div class="form-horizontal">
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Markerset Name:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="selected_marker_set1">
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Marker Name:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="marker_name" placeholder="Enter marker name">
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group" id = "markerset_dosage_section" style="display:none">
+                                            <label class="control-label col-sm-4">Allele Dosage:</label>
+                                                <div class="col-sm-8" >
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="allele_dosage">
+                                                            <option value="">Select Allele Dosage</option>
+                                                            <option value="0">0</option>
+                                                            <option value="1">1</option>
+                                                            <option value="2">2</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group" id = "markerset_snp_section" style="display:none">
+                                            <label class="control-label col-sm-4">Specify Alleles:</label>
+                                                <div class="col-sm-4" >
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="allele_1">
+                                                            <option value="">Select Allele 1</option>
+                                                            <option value="A">A</option>
+                                                            <option value="C">C</option>
+                                                            <option value="G">G</option>
+                                                            <option value="T">T</option>
+                                                        </select>
+                                                        <select class="form-control" id="allele_2">
+                                                            <option value="">Select Allele 2</option>
+                                                            <option value="A">A</option>
+                                                            <option value="C">C</option>
+                                                            <option value="G">G</option>
+                                                            <option value="T">T</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Marker Name:</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="marker_name" placeholder="Enter marker name">
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Allele Dosage:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <select class="form-control" id="allele_dosage">
-                                        <option value="">Select Allele Dosage</option>
-                                        <option value="0">0</option>
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
-                                    </select>
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4"></label>
-                            <div class="col-sm-8" >
-                                <button class="btn btn-info" id="add_marker" name="add_marker">Add marker</button>
-                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="add_marker" id="add_marker">Add Marker</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--
+<div class="modal fade" id="add_vcf_parameters_dialog" name="add_vcf_parameters_dialog" tabindex="-1" role="dialog" aria-labelledby="addVcfParametersDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addVcfParametersDialog">Add VCF Parameters in Markerset</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-1">
+                        </div>
+                        <div class="col-sm-12 well">
+                            <div class="row">
+                                <div class="col-sm-11">
+                                    <div class="form-horizontal">
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Markerset Name:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="selected_marker_set2">
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Chromosome:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="chromosome_number" placeholder="Enter chromosome no.">
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Start Position:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="start_position" placeholder="Enter an integer value">
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">End Position:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="end_position" placeholder="Enter an integer value">
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Marker Name:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="marker_name2" placeholder="Enter marker name">
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">SNP alleles:</label>
+                                                <div class="col-sm-8" >
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="snp_allele">
+                                                            <option value="">Select SNP Alleles</option>
+                                                            <option value="AA">AA</option>
+                                                            <option value="TT">TT</option>
+                                                            <option value="GG">GG</option>
+                                                            <option value="CC">CC</option>
+                                                            <option value="AT">AT</option>
+                                                            <option value="AG">AG</option>
+                                                            <option value="AC">AC</option>
+                                                            <option value="TG">TG</option>
+                                                            <option value="TC">TC</option>
+                                                            <option value="GC">GC</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">Quality (greater than):</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="quality" placeholder="Enter an integer value">
+                                                    </div>
+                                                </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-4">FILTER:</label>
+                                                <div class="col-sm-8" >
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="filter_status">
+                                                            <option value="">Select filter status</option>
+                                                            <option value="PASS">PASS</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="add_parameters" id="add_parameters">Add Filtering Parameters</button>
+            </div>
+        </div>
+    </div>
+</div>
+-->
+
+<div class="modal fade" id="markerset_detail_dialog" name="markerset_detail_dialog" tabindex="-1" role="dialog" aria-labelledby="markersetDetailDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="markersetDetailDialog">Markerset detail</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <table id="markerset_detail_table" width="100%" class="table table-hover table-striped">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-</&>
+<script>
 
-<&| /page/info_section.mas, title=>'Add filtering parameters based on VCF fields in marker set', collapsible=>1, collapsed=>0 &>
+jQuery(document).ready(function(){
 
-<div class="row">
-    <div class="col-sm-1">
-    </div>
-    <div class="col-sm-12 well">
-        <div class="row">
-            <div class="col-sm-11">
-                <div class="form-horizontal">
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Marker Set Name:</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <select class="form-control" id="selected_marker_set2">
-                                    </select>
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Chromosome:</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="chromosome_number" placeholder="Enter chromosome no.">
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Start Position:</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="start_position" placeholder="Enter an integer value">
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">End Position:</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="end_position" placeholder="Enter an integer value">
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Marker Name:</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="marker_name2" placeholder="Enter marker name">
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">SNP allele:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <select class="form-control" id="snp_allele">
-                                        <option value="">Select SNP Allele</option>
-                                        <option value="A">A</option>
-                                        <option value="T">T</option>
-                                        <option value="G">G</option>
-                                        <option value="C">C</option>
-                                    </select>
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Quality (greater than):</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="quality" placeholder="Enter an integer value">
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">FILTER:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <select class="form-control" id="filter_status">
-                                        <option value="">Select filter status</option>
-                                        <option value="PASS">PASS</option>
-                                    </select>
-                                </div>
-                            </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label col-sm-4"></label>
-                            <div class="col-sm-8" >
-                                <button class="btn btn-info" id="add_parameters" name="add_parameters">Add Parameters</button>
-                            </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    jQuery("#add_new_markerset_button").click(function(){
+        jQuery("#add_markerset_dialog").modal("show");
+    });
 
-</&>
+    jQuery("#add_marker_dosage_button").click(function(){
+        jQuery("#add_marker_dosage_dialog").modal("show");
+    });
 
+    jQuery('#accession_search_link').click(function () {
+        location.href = '/search/stocks_using_genotypes';
+    });
 
+});
 
-<&| /page/info_section.mas, title => 'Your Marker Sets' , collapsible=>1, collapsed=>0&>
-
-    <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
-
-    <table id="marker_sets" width="100%" class="table table-hover table-striped">
-
-    </table>
-</&>
+</script>

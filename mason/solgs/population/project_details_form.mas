@@ -6,7 +6,7 @@ a general format for projects details presentation.
 
 
 <div id="all_trials_div" style="display:none;"></div>
-<div id="all_trials_search_message" style="padding: 10px 10px 10px 10px; font-weight:bold; text-align:center; text-transform:uppercase; color:#A7C942">
+<div id="all_trials_search_message" class="message">
  <!-- Searching for GS trials...  -->
 </div>
 
@@ -15,9 +15,4 @@ a general format for projects details presentation.
   <input  class="button" type="button" id="done_selecting"  value="Select"/>
 </div>
 
-
-
 <input type="hidden" id="genotyping_protocol_id" value="" />
-
-
-

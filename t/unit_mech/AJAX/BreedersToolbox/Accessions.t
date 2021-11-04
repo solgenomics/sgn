@@ -36,6 +36,7 @@ is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 
 $mech->post_ok('http://localhost:3010/ajax/accession_list/verify', [ "accession_list"=> '["new_accession1", "test_accession1", "test_accessionx", "test_accessiony", "test_accessionД"]', "do_fuzzy_search"=> "true" ]);
+print STDERR "CONTENTS: ".$mech->content;
 $response = decode_json $mech->content;
 print STDERR Dumper $response->{'fuzzy'};
 print STDERR Dumper $response->{'found'};
@@ -80,7 +81,12 @@ $mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ 'full_info'=>$
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response, {'added' => [[41785,'new_accession1'],[41787,'test_accessionД']],'success' => '1'});
+my $acc1 = 'new_accession1';
+my $acc2 = 'test_accessionД';
+my $check1row = $schema->resultset('Stock::Stock')->find({ uniquename => $acc1 });
+my $check2row = $schema->resultset('Stock::Stock')->find({ uniquename => $acc2 });
+
+is_deeply($response, {'added' => [[ $check1row->stock_id(),'new_accession1'],[$check2row->stock_id(),'test_accessionД']],'success' => '1'}, "added accessions check");
 
 #Remove added synonym so tests downstream do not fail.
 my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession1'})->stock_id();
@@ -88,15 +94,19 @@ my $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->remove_synonym('test_accessiony');
 
 #Remove added stocks so tests downstream do not fail
-my $accession_name = encode('utf8', 'test_accessionД');
-$stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_name})->stock_id();
+#my $accession_name = encode('utf8', 'test_accessionД');
+$stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$acc2})->stock_id();
 $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->set_is_obsolete(1) ;
 $stock->store();
+my @stock_ids;
+push @stock_ids, $stock_id;
+
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'new_accession1'})->stock_id();
 $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->set_is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
 
 #remove added population so tets downstreadm do not fail
 my $population = $schema->resultset("Stock::Stock")->find({uniquename => 'population_ajax_test_1'});
@@ -127,12 +137,12 @@ is_deeply($message_hash->{'found'}, [], 'check verify fuzzy match response conte
 is(scalar @{$message_hash->{'absent'}}, 4, 'check verify fuzzy match response content');
 is_deeply($message_hash->{'found_organisms'}, [{'unique_name' => 'Manihot esculenta','matched_string' => 'Manihot esculenta'}], 'check verify fuzzy match response content');
 
-my @full_info;
+my @full_info2;
 foreach (keys %{$message_hash->{'full_data'}}){
-    push @full_info, $message_hash->{'full_data'}->{$_};
+    push @full_info2, $message_hash->{'full_data'}->{$_};
 }
 
-$mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ 'full_info'=>$json->encode(\@full_info), 'allowed_organisms'=>$json->encode(['Manihot esculenta']) ]);
+$mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ 'full_info'=>$json->encode(\@full_info2), 'allowed_organisms'=>$json->encode(['Manihot esculenta']) ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
@@ -154,6 +164,8 @@ is($stock->accessionNumber, 'ITC00001');
 is_deeply($stock->synonyms, ['new_test_accession_synonym1','new_test_accession_synonym2','new_test_accession_synonym3']);
 $stock->is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
+
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'new_test_accession02'})->stock_id();
 $stock = CXGN::Stock::Accession->new(schema=>$schema,stock_id=>$stock_id);
 is($stock->organization_name, 'test_organization');
@@ -162,6 +174,8 @@ is($stock->countryOfOriginCode, 'Nigeria');
 is($stock->accessionNumber, 'ITC00002');
 $stock->is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
+
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'new_test_accession03'})->stock_id();
 $stock = CXGN::Stock::Accession->new(schema=>$schema,stock_id=>$stock_id);
 is($stock->organization_name, 'test_organization');
@@ -171,6 +185,8 @@ is($stock->countryOfOriginCode, 'Nigeria');
 is($stock->accessionNumber, 'ITC00003');
 $stock->is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
+
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'new_test_accession04'})->stock_id();
 $stock = CXGN::Stock::Accession->new(schema=>$schema,stock_id=>$stock_id);
 is($stock->organization_name, 'test_organization');
@@ -179,15 +195,30 @@ is($stock->countryOfOriginCode, 'Nigeria');
 is($stock->accessionNumber, 'ITC00004');
 $stock->is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
+
 $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'IITA-TMS-IBA010749'})->stock_id();
 $stock = CXGN::Stock::Accession->new(schema=>$schema,stock_id=>$stock_id);
 is($stock->population_name, 'test_population');
 is_deeply($stock->synonyms, ['IITA-TMS-IBA010746_synonym1','IITA-TMS-IBA010746_synonym2']);
 $stock->is_obsolete(1) ;
 $stock->store();
+push @stock_ids, $stock_id;
 
 #remove added population so tets downstreadm do not fail
 $population = $schema->resultset("Stock::Stock")->find({uniquename => 'test_population'});
 $population->delete();
+
+
+# Delete stocks created
+my $dbh = $schema->storage->dbh;
+my $q = "delete from phenome.stock_owner where stock_id=?";
+my $h = $dbh->prepare($q);
+
+foreach (@stock_ids){
+    my $row  = $schema->resultset('Stock::Stock')->find({stock_id=>$_});
+    $h->execute($_);
+    $row->delete();
+}
 
 done_testing();

@@ -1543,6 +1543,19 @@ sub get_management_factor_type {
     }
 }
 
+sub set_management_factor_type {
+    my $self = shift;
+    my $management_factor_type = shift;
+
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $self->get_mangement_factor_type_cvterm_id()
+    });
+
+    $row->value($management_factor_type);
+    $row->update();
+}
+
 =head2 accessors get_phenotypes_fully_uploaded(), set_phenotypes_fully_uploaded()
 
  Usage: When a trial's phenotypes have been fully upload, the user can set a projectprop called 'phenotypes_fully_uploaded' with a value of 1
@@ -1875,6 +1888,30 @@ sub set_additional_info {
     $self->_set_projectprop('project_additional_info', encode_json($value));
 }
 
+=head2 accessors get_entry_numbers(), set_entry_numbers()
+
+ Usage: For field trials, this records a map of stock ids to entry numbers
+ Desc: The value of this projectprop is stored as a JSON object, where the 
+ key is the stock id and the value is the stock entry number
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_entry_numbers {
+    my $self = shift;
+    my $value = $self->_get_projectprop('project_entry_number_map');
+    return $value ? decode_json($value) : undef;
+}
+
+sub set_entry_numbers {
+    my $self = shift;
+    my $value = shift;
+    $self->_set_projectprop('project_entry_number_map', encode_json($value));
+}
+
 sub _get_projectprop {
     my $self = shift;
     my $term = shift;
@@ -1913,10 +1950,10 @@ sub get_owner_link {
     foreach my $sp_person_id (@sp_person_ids) {
 	my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
 	$h->execute($sp_person_id);
-	my ( $first_name, $last_name )  = $h->fetchrow_array(); 
+	my ( $first_name, $last_name )  = $h->fetchrow_array();
 	my $create_date = ${ $owners }{$sp_person_id};
-	
-	$link .= '<a href="/solpeople/personal-info.pl?sp_person_id='.$sp_person_id. '">' . $first_name . " " . $last_name .  "</a> ". $create_date . "<br />"; 
+
+	$link .= '<a href="/solpeople/personal-info.pl?sp_person_id='.$sp_person_id. '">' . $first_name . " " . $last_name .  "</a> ". $create_date . "<br />";
     }
     return $link;
 }
@@ -2306,8 +2343,8 @@ sub _delete_field_layout_experiment {
         push @all_stock_ids, @subplot_ids;
     }
 
-    my $phenome_schema = CXGN::Phenome::Schema->connect( sub { 
-            $self->bcs_schema->storage->dbh() 
+    my $phenome_schema = CXGN::Phenome::Schema->connect( sub {
+            $self->bcs_schema->storage->dbh()
         },
         {
             on_connect_do => ['SET search_path TO public,phenome;']
@@ -2315,7 +2352,7 @@ sub _delete_field_layout_experiment {
     foreach my $s (@all_stock_ids) {
         my $stock_owner_rs = $phenome_schema->resultset('StockOwner')->search({stock_id=>$s});
         while (my $stock_row = $stock_owner_rs->next) {
-            $stock_row->delete();   
+            $stock_row->delete();
         }
         my $stock_delete_rs = $self->bcs_schema->resultset('Stock::Stock')->search({stock_id=>$s});
         while (my $r = $stock_delete_rs->next){
@@ -2417,8 +2454,8 @@ sub delete_project_entry {
         return 'This crossing trial has been linked to field trials already, and cannot be easily deleted.';
     }
 
-    my $project_owner_schema = CXGN::Phenome::Schema->connect( sub { 
-            $self->bcs_schema->storage->dbh() 
+    my $project_owner_schema = CXGN::Phenome::Schema->connect( sub {
+            $self->bcs_schema->storage->dbh()
         },
         {
             on_connect_do => ['SET search_path TO public,phenome;']
@@ -3022,9 +3059,9 @@ sub create_plant_entities {
                 my $plant_name = $parent_plot_name."_plant_$plant_index_number";
                 #print STDERR "... ... creating plant $plant_name...\n";
 
-                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, 
-                $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, 
-                $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, 
+                $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name,
+                $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm,
+                $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
                 $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username);
             }
         }
@@ -3274,9 +3311,9 @@ sub create_plant_subplot_entities {
                     my $plant_name = $subplot."_plant_$plant_index_number";
                     print STDERR "... ... ... creating plant $plant_name...\n";
 
-                    $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, 
-                    $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm, 
-                    $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, 
+                    $self->_save_plant_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name,
+                    $parent_plot, $plant_name, $plant_cvterm, $plant_index_number, $plant_index_number_cvterm, $block_cvterm, $plot_number_cvterm,
+                    $replicate_cvterm, $plant_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
                     $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $plant_owner, $plant_owner_username,
                     $parent_subplot, $plant_subplot_relationship_cvterm);
                 }
@@ -3968,9 +4005,9 @@ sub create_subplot_entities {
                 my $subplot_name = $parent_plot_name."_subplot_$subplot_index_number";
                 #print STDERR "... ... creating subplot $subplot_name...\n";
 
-                $self->_save_subplot_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name, 
-                $parent_plot, $subplot_name, $subplot_cvterm, $subplot_index_number, $subplot_index_number_cvterm, $block_cvterm, $plot_number_cvterm, 
-                $replicate_cvterm, $subplot_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments, 
+                $self->_save_subplot_entry($chado_schema, $accession_cvterm, $cross_cvterm, $family_name_cvterm, $parent_plot_organism, $parent_plot_name,
+                $parent_plot, $subplot_name, $subplot_cvterm, $subplot_index_number, $subplot_index_number_cvterm, $block_cvterm, $plot_number_cvterm,
+                $replicate_cvterm, $subplot_relationship_cvterm, $field_layout_experiment, $field_layout_cvterm, $inherits_plot_treatments, $treatments,
                 $plot_relationship_cvterm, \%treatment_plots, \%treatment_experiments, $treatment_cvterm, $subplot_owner, $subplot_owner_username);
             }
         }
@@ -4345,7 +4382,7 @@ sub get_trial_stock_count {
 
 	my $accessions = $self->get_accessions();
 	my $stock_count = scalar(@{$accessions});
-	
+
 	return $stock_count;
 }
 

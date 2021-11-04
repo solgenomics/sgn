@@ -30,6 +30,7 @@ genotype_file= args[2]
 
 library(sommer)
 library(AGHmatrix)
+library(VariantAnnotation) # Bioconductor package
 Rcpp::sourceCpp("../QuantGenResources/CalcCrossMeans.cpp") # this is called CalcCrossMean.cpp on Github
 
 
@@ -72,7 +73,7 @@ userFixed <- c("Year") # for testing only
 #    to this vector, 'userRandom'.
 
 userRandom <- c()
-userRandom <- "Block"
+userRandom <- "Block" # for testing only
 
 
 # e. The user should be able to indicate which of the userPheno column names
@@ -81,7 +82,7 @@ userRandom <- "Block"
 #    should be passed to this vector, userID.
 
 userID <- c()
-userID <- "Accession" # testing only
+userID <- "Accession" # for testing only
 
 
 # f. The user must indicate the ploidy level of their organism, and the integer
@@ -92,7 +93,7 @@ userID <- "Accession" # testing only
 #    provided.
 
 userPloidy <- c()
-userPloidy <- 2 #TEST for testing only
+userPloidy <- 2 # for testing only
 
 # if(userPloidy %in% c(2, 4, 6) != TRUE){
 #   stop("Only ploidies of 2, 4, and 6 are supported currently. \n
@@ -105,30 +106,35 @@ userPloidy <- 2 #TEST for testing only
 #    to this vector, 'userResponse'.
 
 userResponse <- c()
-userResponse <- c("YIELD", "DMC", "OXBI") # testing only
+userResponse <- c("YIELD", "DMC", "OXBI") # for testing only
 
 
 # h. The user must indicate weights for each response. The order of the vector
 #    of response weights must match the order of the responses in userResponse.
 
 userWeights <- c()
-userWeights <- c(1, 0.8, 0.2) # for YIELD, DMC, and OXBI respectively
+userWeights <- c(1, 0.8, 0.2) # for YIELD, DMC, and OXBI respectively; for testing only
 
 
 # i. The user can indicate the number of crosses they wish to output.
 #    The maximum possible is a full diallel.
 
 userNCrosses <- c()
-userNCrosses <- 40
+userNCrosses <- 40 # for testing only
 
 
-# j. The user can input the individuals' sexes and indicate the column
+# j. The user can (optionally) input the individuals' sexes and indicate the column
 #    name of the userPheno object which corresponds to sex. The column name
-#   string should be passed to the 'userSexes' object.
+#   string should be passed to the 'userSexes' object. If the user does not wish
+#   to remove crosses with incompatible sexes (e.g. because the information is not available),
+#   then userSexes should be set to NA.
 
 
 userSexes <- c()
-
+userSexes <- "Sex" # for testing only
+userPheno$Sex <- sample(c("M", "F"), size = nrow(userPheno), replace = TRUE, prob = c(0.7, 0.3)) # for testing only
+# Please note that for the test above, sex is sampled randomly for each entry, so the same accession can have
+# different sexes. This does not matter for the code or testing.
 
 ################################################################################
 # 3. Read in the genotype data and convert to numeric allele counts.
@@ -151,17 +157,16 @@ userSexes <- c()
 #    Users need to pre-process their VCF to remove these (e.g. in TASSEL or R)
 #    I can put an error message into this script if a user tries to input
 #    monomorphic or biallelic sites which could be communicated through the GUI.
+#    It's also possible to filter them here.
 
-#   VCF format is notoriously flexible/variable and to my knowledge it is not
-#   considered best practice to parse VCFs with custom scripts. There are a lot
-#   of different styles within VCF that technically meet its specifications but
-#   cause scripts to break. I am checking in with someone from Ploidyverse
-#   to find out best practice for this.
+#  Import VCF with VariantAnnotation package and extract matrix of dosages
+myVCF <- readVcf(genotype_file)
+G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
+
 
 #   TEST temporarily import the genotypes via HapMap:
-
-source("R/hapMap2numeric.R") # replace and delete
-G <- hapMap2numeric(genotype_file) # replace and delete
+#source("R/hapMap2numeric.R") # replace and delete
+#G <- hapMap2numeric(genotype_file) # replace and delete
 
 
 
@@ -362,10 +367,18 @@ for(i in 1:length(userWeights)){
 # 9. Predict the crosses.
 ################################################################################
 
-crossPlan <- calcCrossMean(G,
-                       ai,
-                       di,
-                       userPloidy)
+# If the genotype matrix provides information about individuals for which
+# cross prediction is not desired, then the genotype matrix must be subset
+# for use in calcCrossMean(). calcCrossMean will return predicted cross
+# values for all individuals in the genotype file otherwise.
+
+GP <- G[rownames(G) %in% userPheno[ , userID], ]
+
+
+crossPlan <- calcCrossMean(GP,
+                           ai,
+                           di,
+                           userPloidy)
 
 
 
@@ -376,19 +389,34 @@ crossPlan <- calcCrossMean(G,
 # 10. Format the information needed for output.
 ################################################################################
 
-# this is incomplete--
-# I need to add the feature for incompatible sexes/it will just be a couple lines
+# Add option to remove crosses with incompatible sexes.
 
-#crossPlan <- as.data.frame(crossPlan)
-#crossPlan <- crossPlan[order(crossPlan[,3], decreasing = TRUE), ]
-#crossPlan[ ,1] <- rownames(G.SCG)[crossPlan[ ,1]]
-#crossPlan[ ,2] <- rownames(G.SCG)[crossPlan[ ,2]]
-#colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
+if(!is.na(userSexes)){
+  
+  # Reformat the cross plan
+  crossPlan <- as.data.frame(crossPlan)
+  crossPlan <- crossPlan[order(crossPlan[,3], decreasing = TRUE), ] # orders the plan by predicted merit
+  crossPlan[ ,1] <- rownames(GP)[crossPlan[ ,1]] # replaces internal ID with genotye file ID
+  crossPlan[ ,2] <- rownames(GP)[crossPlan[ ,2]] # replaces internal ID with genotye file ID
+  colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
+  
+  # Look up the parent sexes and subset
+  crossPlan$P1Sex <- userPheno[match(crossPlan$Parent1, userPheno$Accession), userSexes] # get sexes ordered by Parent1
+  crossPlan$P2Sex <- userPheno[match(crossPlan$Parent2, userPheno$Accession), userSexes] # get sexes ordered by Parent2
+  crossPlan <- crossPlan[crossPlan$P1Sex != crossPlan$P2Sex, ] # remove crosses with same-sex parents
+  
+  
+  # subset the number of crosses the user wishes to output
+  crossPlan[1:userNCrosses, ]
+  output_file= paste(phenotype_file, ".out", sep="")
+  
+}
 
-###### look up the sexes in the userPheno object and match them into CrossPlan ######
-###### remove incompatible sets #####
 
-# subset the number of crosses the user wishes to output
-crossPlan[1:userNCrosses, ]
-output_file= paste(phenotype_file, ".out", sep="")
-#write.csv(plan2, "IITA_Drotundata_GPCP_2021.csv")
+if(is.na(userSexes)){
+  
+  # only subset the number of crosses the user wishes to output
+  crossPlan[1:userNCrosses, ]
+  output_file= paste(phenotype_file, ".out", sep="")
+  
+}

@@ -2394,6 +2394,24 @@ relationship: has_role CHEBI:173084
 relationship: has_role CHEBI:22586
 relationship: variable_of CHEBI:00000
 
+[Term]
+id: CHEBI:180667
+name: isovaleronitrile
+def: "An aliphatic nitrile that is 2-methylpropane substituted by a cyano group at position 1."
+is_a: CHEBI:80291
+is_a: CHEBI:134179
+relationship: has_role CHEBI:76924
+relationship: variable_of CHEBI:00000
+
+[Term]
+id: CHEBI:180668
+name: 3-methyl-1-nitrobutane
+def: "A primary nitroalkane that is 2-methylbutane substituted by a nitro group at position 4. It is a herbivore-induced plant volatile found in the leaves of Oenothera biennis."
+is_a: CHEBI:133972
+is_a: CHEBI:134179
+relationship: has_role CHEBI:76924
+relationship: variable_of CHEBI:00000
+
 [Typedef]
 id: has_part
 name: has part

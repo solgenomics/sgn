@@ -1,0 +1,206 @@
+
+<%args>
+$trial_id => undef
+$trial_name => undef
+</%args>
+
+<div class="modal fade" id="set_entry_numbers_template_dialog" name="set_entry_numbers_template_dialog" tabindex="-1" role="dialog" aria-labelledby="setEntryNumbersDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="setEntryNumbersDialog">Generate Entry Numbers Template</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+          <&| /util/workflow.mas, id=> "set_entry_numbers_workflow" &>
+            
+            <!-- Step 1: Intro -->
+            <&| /util/workflow.mas:step, title=> "Intro" &>
+              <& /page/page_title.mas, title=>"Generate Entry Numbers Template" &>
+              <div class="well">
+                  <p>This workflow will generate an Excel spreadsheet which can be used to upload entry numbers (numbers assigned to acccessions in a set of trials).  In the first step, select one or more trials you want to assign accession entry numbers.  Then, download the Excel template containing the selected trials' accessions.  Once you have the entry numbers filled in, use the <strong>Upload Template</strong> function to upload the accession numbers to the database.</p>
+              </div>
+
+              <div class="center">
+                <button class="btn btn-primary" id="set_entry_numbers_intro_step">Start</button>
+              </div>
+            </&>
+            <!-- End Intro -->
+
+            <!-- Step 2: Select Trials -->
+            <&| /util/workflow.mas:step, title=> "Select Trials" &>
+              <& /page/page_title.mas, title=>"Select Trial(s) to assign Entry Numbers" &>
+              <p>
+                <strong>Select Trial(s):</strong> 
+                Select one or more individual Trials or a List of Trials to assign entry numbers.
+              </p>
+
+% if ( $trial_id && $trial_name ) {
+              <div id="set_entry_numbers_trial_preselected">
+                <div class="row">
+                  <div class="col-md-8">
+                    <select class="form-control" disabled>
+                      <option value="<% $trial_id %>"><% $trial_name %></option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <button id="set_entry_numbers_selection_change" class="btn btn-primary btn-block">Change Trial Selections</button>
+                  </div>
+                </div>
+              </div>
+              <div id="set_entry_numbers_trial_select_div" style="display: none"></div>
+% } else {
+              <div id="set_entry_numbers_trial_select_div" style="display: block"></div>
+% }
+              <br /><br />
+
+              <div class="center">
+                <button class="btn btn-primary" id="set_entry_numbers_select_trials_step">Go to Next Step</button>
+              </div>
+            </&>
+            <!-- End Select Trials -->
+
+            <!-- Step 2: Generate Template -->
+            <&| /util/workflow.mas:step, title=> "Download Template" &>
+              <& /page/page_title.mas, title=>"Download Entry Number Template" &>
+              <div id="set_entry_numbers_template_loading" style="max-width: 250px; margin: 50px auto; text-align: center;">
+                <p>Generating Template...</p>
+              </div>
+
+              <div id="set_entry_numbers_template">
+                <div class="well">
+                  <p style="margin: 0">Download the generated template and fill in the <strong>entry_number</strong> column for each Accession 
+                  you want to assign an entry number to.  An entry number is not required for each Accession, but each entry number 
+                  should be unique for this set of Trial(s).  Once you have filled out the template, you can upload it to the database 
+                  using the <strong>Upload Template</strong> function.</p>
+                </div>
+                <div style="max-width: 250px; margin: 50px auto; text-align: center">
+                  <button class="btn btn-primary" id="set_entry_numbers_template_download">Download Template</button>
+                </div>
+              </div>
+            </&>
+            <!-- End Generate Template -->
+
+          </&>
+          <!-- End Workdlow -->
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="set_entry_numbers_cancel_button" id="set_entry_numbers_cancel_button" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  jQuery(document).ready(function() {
+    
+    // Complete Step Functions
+    jQuery('#set_entry_numbers_intro_step').click(complete_intro_step);
+    jQuery('#set_entry_numbers_select_trials_step').click(complete_select_trials_step);
+
+    // Listeners
+    jQuery('#set_entry_numbers_selection_change').click(function() {
+      jQuery('#set_entry_numbers_trial_preselected').hide();
+      jQuery('#set_entry_numbers_trial_select_div').show();
+    });
+    jQuery('#set_entry_numbers_template_download').click(function() {
+      let file = jQuery(this).data("file");
+      if ( file ) {
+        window.open('/ajax/breeders/trial_entry_numbers/download?file=' + file);
+      }
+    });
+
+  });
+
+
+  /**
+   * Complete the Intro Step
+   * - Load the Trial Select box for Step 2
+   */
+  function complete_intro_step() {
+
+    // Load Trial Select Box
+    get_select_box('trials', 'set_entry_numbers_trial_select_div', { 
+      'name': 'set_entry_numbers_trial_select_select', 
+      'id': 'set_entry_numbers_trial_select_select', 
+      'multiple': 1, 
+      'size': 7, 
+      'include_lists': 1 
+    });
+    
+    // Proceeed to Next Step
+    Workflow.complete('#set_entry_numbers_intro_step');
+    Workflow.focus('#set_entry_numbers_workflow', 1);
+  }
+
+  /**
+   * Complete the Select Trials Step
+   * - Verify at least one trial has been selected
+   * - Start Loading Trial Accessions
+   */
+  function complete_select_trials_step() {
+
+    // Get Selected Trial(s)
+    let trials = [];
+    if( jQuery('#set_entry_numbers_trial_preselected').is(':visible') ) {
+      trials.push(<% $trial_id %>);
+    }
+    else {
+      jQuery("#set_entry_numbers_trial_select_select option:checked").each(function(i) {
+        let value = jQuery(this).val();
+        if ( value && value !== '' ) {
+          trials = trials.concat(value.split(','));
+        }
+      });
+    }
+    
+    // Verify at least one trial is selected
+    if ( trials.length === 0 ) {
+      return alert("Please select at least one Trial");
+    }
+
+    // Generate the Upload Template
+    generateTemplate(trials);
+    
+    // Proceeed to Next Step
+    Workflow.complete('#set_entry_numbers_select_trials_step');
+    Workflow.focus('#set_entry_numbers_workflow', 2);
+  }
+
+
+  /**
+   * Send request to generate the entry number template
+   * - Set the download file from the response
+   * - Display the download button
+   * @param {Array} trials Array of selected Trial IDs
+   */
+  function generateTemplate(trials) {
+    jQuery.ajax({
+      type: "GET",
+      url: "/ajax/breeders/trial_entry_numbers/create?trial_ids=" + trials.join(','),
+      beforeSend: function() {
+        jQuery("#set_entry_numbers_template_loading").show();
+        jQuery("#set_entry_numbers_template").hide();
+      }
+    })
+    .done(function(resp) {
+      jQuery("#set_entry_numbers_template_loading").hide();
+      if ( resp.file ) {
+        jQuery("#set_entry_numbers_template_download").data("file", resp.file);
+        jQuery("#set_entry_numbers_template").show();
+      }
+      else {
+        console.log(resp);
+        alert("ERROR: Could not generate upload template!");
+      }
+    })
+    .fail(function() {
+      jQuery("#set_entry_numbers_template_loading").hide();
+      alert("ERROR: Could not generate upload template!");
+    });
+  }
+</script>

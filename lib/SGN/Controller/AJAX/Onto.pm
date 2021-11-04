@@ -389,14 +389,45 @@ sub parents_GET  {
     my ($db_name, $accession) = split ":", $c->request->param('node');
     my $dbxref;
     my %response;
-    my $db = $schema->resultset('General::Db')->search({ 'upper(name)' => uc($db_name) })->first();
+    my $db = $schema->resultset('General::Db')->search(
+	{ 'upper(me.name)'   => uc($db_name), 
+	  'cvterm.name'      => {'!=', undef },
+	  'dbxrefs.accession' => $accession
+	},
+	{join   =>  { 'dbxrefs'  => 'cvterm' }
+	}
+	);
+    my $db_id;
     if (!$db || !$accession) {
-        #not sure we need here to send an error key, since cache is usually called after parents (? )
-        $response{error} = "Did not pass a legal ontology term ID! ( $db_name : $accession)";
-        $c->stash->{rest} = \%response;
-        return;
+	#not sure we need here to send an error key, since cache is usually called after parents (? )
+	$response{error} = "Did not pass a legal ontology term ID! ( $db_name : $accession)";
+	$c->stash->{rest} = \%response;
+	return;
+    } elsif ( $db->count > 1 ) {
+	$response{error} = "Found more than one db row for  db.name $db_name : check your database";
+	$c->stash->{rest} = \%response;
+	return;
     }
-    $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
+    $db_id=$db->next->db_id;
+    my $sql = 'IS NOT NULL ';
+    my $dbxref_rs = $schema->resultset('General::Dbxref')->search(
+	{ 'me.accession' => $accession,
+	  'db_id'       => $db_id,
+	  'cvterm.cvterm_id' => \$sql 
+  
+	},
+	{ join =>  'cvterm'    },
+	);
+
+    if ($dbxref_rs->count >1 ) {
+	while (my $d = $dbxref_rs->next() ) { print STDERR "DBXREF = " . $d->dbxref_id . " CVTERM = " . $d->cvterm->cvterm_id . "NAME = " . $d->cvterm->name . " \n\n" ; }  
+	$response{error} = "Found more than one dbxref row for  accession  $accession : check your database";
+	$c->stash->{rest} = \%response;
+	return;
+    } else {
+	$dbxref = $dbxref_rs->next();
+    }
+    #print STDERR "***Onto.pm:   My db_name  = $db_name , accession = $accession, db = " . $db_name . "db id = " . $db_id . " cvterm = " . $dbxref->cvterm->cvterm_id . "\n\n";
     if (!$dbxref) {
         $response{error} = "Could not find term $db_name : $accession in the database! Check your input and try again";
         $c->stash->{rest} = \%response;
@@ -598,18 +629,45 @@ sub cache_GET {
         $c->stash->{rest} = \%response;
         return;
     }
+    
+###############
+    my $db = $schema->resultset('General::Db')->search(
+	{ 'upper(me.name)'   => uc($db_name),
+	  'cvterm.name'      => {'!=', undef },
+	  'dbxrefs.accession' => $accession
+	},
+	{join   =>  { 'dbxrefs'  => 'cvterm' }
+	}
+	);
+    my ($db_id, $dbxref);
+    $db_id=$db->next->db_id;
+    my $sql = 'IS NOT NULL ';
+    my $dbxref_rs = $schema->resultset('General::Dbxref')->search(
+	{ 'me.accession' => $accession,
+	  'db_id'       => $db_id,
+	  'cvterm.cvterm_id' => \$sql
 
-    my $db = $schema->resultset('General::Db')->search({ name => $db_name })->first();
-    my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
-    if (!$dbxref) {
-        $response{error} = "Did not find ontology term $db_name : $accession in the database. Please try again. If you think this term should exist please contact sgn-feedback\@sgn.cornell.edu";
-        $c->stash->{rest} = \%response;
-        return;
+	},
+	{ join =>  'cvterm'    },
+	);
+
+    if ($dbxref_rs->count >1 ) {
+	while (my $d = $dbxref_rs->next() ) { print STDERR "DBXREF = " . $d->dbxref_id . " CVTERM = " . $d->cvterm->cvterm_id . "NAME = " . $d->cvterm->name . " \n\n" ; }
+	$response{error} = "Found more than one dbxref row for  accession  $accession : check your database";
+	$c->stash->{rest} = \%response;
+	return;
+    } else {
+	$dbxref = $dbxref_rs->next();
     }
-
+    if (!$dbxref) {
+	$response{error} = "Did not find ontology term $db_name : $accession in the database. Please try again. If you think this term should exist please contact sgn-feedback\@sgn.cornell.edu";
+	$c->stash->{rest} = \%response;
+	return;
+    }
+    ######################
     my $cvterm = $dbxref->cvterm;
     if (!$cvterm) {
-        $response{error} = "Did not find ontology term $db_name : $accession in the database. This may be an internal database issue. Please contact sgn-feedback\@sgn.cornell.edu and we will fic this error ASAP";
+        $response{error} = "Did not find ontology term $db_name : $accession in the database. This may be an internal database issue. Please contact sgn-feedback\@sgn.cornell.edu and we will fix this error ASAP";
         $c->stash->{rest} = \%response;
         return;
     }

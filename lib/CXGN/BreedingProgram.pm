@@ -302,7 +302,7 @@ sub get_locations_with_details {
     my $program_name = $project_obj->name;
 #    print STDERR "PROGRAM NAME =".Dumper($program_name)."\n";
     my $obj = CXGN::BreedersToolbox::Projects->new({schema => $schema});
-    my $all_locations = decode_json $obj->get_location_geojson();
+    my $all_locations = $obj->get_location_geojson_data();
 
     my @program_locations;
     foreach my $location_hash (@$all_locations) {

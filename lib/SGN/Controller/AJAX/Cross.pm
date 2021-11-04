@@ -1627,6 +1627,7 @@ sub upload_intercross_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
+    my $cross_id_format = $c->req->param('cross_id_format_option');
     my $upload = $c->req->upload('intercross_file');
     my $parser;
     my $parsed_data;
@@ -1646,6 +1647,7 @@ sub upload_intercross_file_POST : Args(0) {
     my $user_name;
     my $owner_name;
     my $session_id = $c->req->param("sgn_session_id");
+    my @error_messages;
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -1731,144 +1733,143 @@ sub upload_intercross_file_POST : Args(0) {
                 if (none {$_ eq $intercross_identifier} @existing_identifier_list) {
                     push @new_cross_identifiers, $intercross_identifier;
                 }
-#                print STDERR "NEW CROSS IDENTIFIER_1 =".Dumper(\@new_cross_identifiers)."\n";
             }
         } else {
             @new_cross_identifiers = @intercross_identifier_list;
-#            print STDERR "NEW CROSS IDENTIFIER_2 =".Dumper(\@new_cross_identifiers)."\n";
-
         }
+        print STDERR "NEW CROSS IDENTIFIER ARRAY =".Dumper(\@new_cross_identifiers)."\n";
 
         my @new_crosses;
         my %new_stockprop;
         if (scalar(@new_cross_identifiers) > 0) {
-            my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-            my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-            my $plant_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-            my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-            my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+            if ($cross_id_format eq 'customized_id') {
+                foreach my $new_identifier (@new_cross_identifiers) {
+                    my $intercross_female_parent = $crosses_hash{$new_identifier}{'intercross_female_parent'};
+                    my $intercross_male_parent = $crosses_hash{$new_identifier}{'intercross_male_parent'};
+                    push @error_messages, "Cross between $intercross_female_parent and $intercross_male_parent has no associated cross unique ID in crossing experiment: $crossing_experiment_name";
+                }
 
-            my $generated_cross_unique_id;
+                my $formatted_error_messages = join("<br>", @error_messages);
+                $c->stash->{rest} = {error_string => $formatted_error_messages};
+                return;
+            } elsif ($cross_id_format eq 'auto_generated_id') {
+                my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+                my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+                my $plant_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+                my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+                my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
 
-            if (%existing_identifier_hash) {
-                my @existing_cross_unique_ids = values %existing_identifier_hash;
-                my @sorted_existing_cross_unique_ids = natsort @existing_cross_unique_ids;
-                $generated_cross_unique_id = $sorted_existing_cross_unique_ids[-1];
-            } else {
-                $generated_cross_unique_id = $crossing_experiment_name.'_'.'0';
-            }
-#            print STDERR "STARTING GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
+                my $generated_cross_unique_id;
 
-            foreach my $new_identifier (@new_cross_identifiers) {
-                $generated_cross_unique_id =~ s/(\d+)$/$1 + 1/e;
-#                print STDERR "GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
-                my $validate_new_cross_rs = $schema->resultset("Stock::Stock")->search({uniquename=> $generated_cross_unique_id});
-                if ($validate_new_cross_rs->count() > 0) {
-                    $c->stash->{rest} = {error_string => "Error creating new cross unique id",};
+                if (%existing_identifier_hash) {
+                    my @existing_cross_unique_ids = values %existing_identifier_hash;
+                    my @sorted_existing_cross_unique_ids = natsort @existing_cross_unique_ids;
+                    $generated_cross_unique_id = $sorted_existing_cross_unique_ids[-1];
+                } else {
+                    $generated_cross_unique_id = $crossing_experiment_name.'_'.'0';
+                }
+#                print STDERR "STARTING GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
+
+                foreach my $new_identifier (@new_cross_identifiers) {
+                    $generated_cross_unique_id =~ s/(\d+)$/$1 + 1/e;
+#                    print STDERR "GENERATED CROSS UNIQUE ID =".Dumper($generated_cross_unique_id)."\n";
+                    my $validate_new_cross_rs = $schema->resultset("Stock::Stock")->search({uniquename=> $generated_cross_unique_id});
+                    if ($validate_new_cross_rs->count() > 0) {
+                        $c->stash->{rest} = {error_string => "Error creating new cross unique id",};
+                        return;
+                    }
+
+                    my $intercross_cross_type = $crosses_hash{$new_identifier}{'cross_type'};
+                    my $cross_type;
+                    if ($intercross_cross_type eq 'BIPARENTAL') {
+                        $cross_type = 'biparental';
+                    } elsif ($intercross_cross_type eq 'SELF') {
+                        $cross_type = 'self';
+                    } elsif ($intercross_cross_type eq 'OPEN') {
+                        $cross_type = 'open';
+                    } elsif ($intercross_cross_type eq 'POLY') {
+                        $cross_type = 'polycross';
+                    }
+
+                    my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $generated_cross_unique_id, cross_type =>$cross_type);
+
+                    my $intercross_female_parent = $crosses_hash{$new_identifier}{'intercross_female_parent'};
+                    my $intercross_female_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->stock_id();
+                    my $intercross_female_type_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->type_id();
+
+                    my $female_parent_name;
+                    my $female_parent_stock_id;
+
+                    if ($intercross_female_type_id == $plot_stock_type_id) {
+                        $female_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_female_stock_id, type_id=>$plot_of_type_id})->object_id();
+                        $female_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id})->uniquename();
+                        my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_female_parent);
+                        $pedigree->set_female_plot($female_plot_individual);
+                    } elsif ($intercross_female_type_id == $plant_stock_type_id) {
+                        $female_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_female_stock_id, type_id=>$plant_of_type_id})->object_id();
+                        $female_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id})->uniquename();
+                        my $female_plant_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_female_parent);
+                        $pedigree->set_female_plant($female_plant_individual);
+                    } else {
+                        $female_parent_name = $intercross_female_parent;
+                    }
+
+                    my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent_name);
+                    $pedigree->set_female_parent($female_parent_individual);
+
+                    my $intercross_male_parent = $crosses_hash{$new_identifier}{'intercross_male_parent'};
+                    my $male_parent_name;
+                    if ($intercross_male_parent) {
+                        my $male_parent_stock_id;
+                        my $intercross_male_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->stock_id();
+                        my $intercross_male_type_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->type_id();
+
+                        if ($intercross_male_type_id == $plot_stock_type_id) {
+                            $male_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_male_stock_id, type_id=>$plot_of_type_id})->object_id();
+                            $male_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id})->uniquename();
+                            my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_male_parent);
+                            $pedigree->set_male_plot($male_plot_individual);
+                        } elsif ($intercross_male_type_id == $plant_stock_type_id) {
+                            $male_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_male_stock_id, type_id=>$plant_of_type_id})->object_id();
+                            $male_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id})->uniquename();
+                            my $male_plant_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_male_parent);
+                            $pedigree->set_male_plant($male_plant_individual);
+                        } else {
+                            $male_parent_name = $intercross_male_parent
+                        }
+
+                        my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent_name);
+                        $pedigree->set_male_parent($male_parent_individual);
+                    }
+
+                    my $cross_combination = $female_parent_name.'/'.$male_parent_name;
+                    $pedigree->set_cross_combination($cross_combination);
+
+                    push @new_crosses, $pedigree;
+
+                    $new_stockprop{$generated_cross_unique_id} = $new_identifier;
+                    $existing_identifier_hash{$new_identifier} = $generated_cross_unique_id;
+                }
+
+                my $cross_add = CXGN::Pedigree::AddCrosses->new({
+                    chado_schema => $schema,
+                    phenome_schema => $phenome_schema,
+                    metadata_schema => $metadata_schema,
+                    dbh => $dbh,
+                    crossing_trial_id => $crossing_experiment_id,
+                    crosses => \@new_crosses,
+                    user_id => $user_id
+                });
+
+                if (!$cross_add->validate_crosses()){
+                    $c->stash->{rest} = {error_string => "Error validating crosses",};
                     return;
                 }
 
-                my $intercross_cross_type = $crosses_hash{$new_identifier}{'cross_type'};
-                my $cross_type;
-                if ($intercross_cross_type eq 'BIPARENTAL') {
-                    $cross_type = 'biparental';
-                } elsif ($intercross_cross_type eq 'SELF') {
-                    $cross_type = 'self';
-                } elsif ($intercross_cross_type eq 'OPEN') {
-                    $cross_type = 'open';
-                } elsif ($intercross_cross_type eq 'POLY') {
-                    $cross_type = 'polycross';
+                if (!$cross_add->add_crosses()){
+                    $c->stash->{rest} = {error_string => "Error adding crosses",};
+                    return;
                 }
-
-                my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name => $generated_cross_unique_id, cross_type =>$cross_type);
-
-                my $intercross_female_parent = $crosses_hash{$new_identifier}{'intercross_female_parent'};
-                my $intercross_female_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->stock_id();
-                my $intercross_female_type_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_female_parent})->type_id();
-
-                my $female_parent_name;
-                my $female_parent_stock_id;
-
-                if ($intercross_female_type_id == $plot_stock_type_id) {
-                    $female_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_female_stock_id, type_id=>$plot_of_type_id})->object_id();
-                    $female_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id})->uniquename();
-                    my $female_plot_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_female_parent);
-                    $pedigree->set_female_plot($female_plot_individual);
-                } elsif ($intercross_female_type_id == $plant_stock_type_id) {
-                    $female_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_female_stock_id, type_id=>$plant_of_type_id})->object_id();
-                    $female_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id})->uniquename();
-                    my $female_plant_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_female_parent);
-                    $pedigree->set_female_plant($female_plant_individual);
-                } else {
-                    $female_parent_name = $intercross_female_parent;
-                }
-
-                my $female_parent_individual = Bio::GeneticRelationships::Individual->new(name => $female_parent_name);
-                $pedigree->set_female_parent($female_parent_individual);
-
-                my $intercross_male_parent = $crosses_hash{$new_identifier}{'intercross_male_parent'};
-                my $male_parent_name;
-                if ($intercross_male_parent) {
-                    my $male_parent_stock_id;
-                    my $intercross_male_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->stock_id();
-                    my $intercross_male_type_id = $schema->resultset("Stock::Stock")->find({uniquename => $intercross_male_parent})->type_id();
-
-                    if ($intercross_male_type_id == $plot_stock_type_id) {
-                        $male_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_male_stock_id, type_id=>$plot_of_type_id})->object_id();
-                        $male_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id})->uniquename();
-                        my $male_plot_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_male_parent);
-                        $pedigree->set_male_plot($male_plot_individual);
-                    } elsif ($intercross_male_type_id == $plant_stock_type_id) {
-                        $male_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({subject_id=>$intercross_male_stock_id, type_id=>$plant_of_type_id})->object_id();
-                        $male_parent_name = $schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id})->uniquename();
-                        my $male_plant_individual = Bio::GeneticRelationships::Individual->new(name => $intercross_male_parent);
-                        $pedigree->set_male_plant($male_plant_individual);
-                    } else {
-                        $male_parent_name = $intercross_male_parent
-                    }
-
-                    my $male_parent_individual = Bio::GeneticRelationships::Individual->new(name => $male_parent_name);
-                    $pedigree->set_male_parent($male_parent_individual);
-                }
-
-                my $cross_combination = $female_parent_name.'/'.$male_parent_name;
-                $pedigree->set_cross_combination($cross_combination);
-
-                push @new_crosses, $pedigree;
-
-                $new_stockprop{$generated_cross_unique_id} = $new_identifier;
-                $existing_identifier_hash{$new_identifier} = $generated_cross_unique_id;
-            }
-
-            my $cross_add = CXGN::Pedigree::AddCrosses->new({
-                chado_schema => $schema,
-                phenome_schema => $phenome_schema,
-                metadata_schema => $metadata_schema,
-                dbh => $dbh,
-                crossing_trial_id => $crossing_experiment_id,
-                crosses => \@new_crosses,
-                user_id => $user_id
-            });
-
-            if (!$cross_add->validate_crosses()){
-                $c->stash->{rest} = {error_string => "Error validating crosses",};
-                return;
-            }
-
-            if (!$cross_add->add_crosses()){
-                $c->stash->{rest} = {error_string => "Error adding crosses",};
-                return;
-            }
-        }
-
-        my $cross_identifier_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_identifier', 'stock_property');
-        my $cross_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
-
-        foreach my $new_cross_id (keys %new_stockprop) {
-            my $cross_rs = $schema->resultset("Stock::Stock")->search({uniquename=> $new_cross_id, type_id => $cross_cvterm_id });
-            if ($cross_rs->count()== 1) {
-        	    my $cross_stock =  $cross_rs->first();
-                $cross_stock->create_stockprops({$cross_identifier_cvterm->name() => $new_stockprop{$new_cross_id}});
             }
         }
 

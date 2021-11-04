@@ -6,6 +6,7 @@ use lib 't/lib';
 use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
+use CXGN::People::Person;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -13,6 +14,7 @@ use JSON;
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
+my $schema = $f->bcs_schema;
 my $mech = Test::WWW::Mechanize->new;
 my $response;
 
@@ -61,5 +63,16 @@ $mech->get_ok('http://localhost:3010/ajax/user/login?username=testusername&passw
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{message}, 'Login successful');
+
+#Delete user
+END {
+	my $dbh = $schema->storage->dbh;
+	if( $dbh and  my $u_id = CXGN::People::Person->get_person_by_username( $dbh, "testusername" ) ) {
+		my $q = "delete from sgn_people.sp_token where sp_person_id=?";
+		my $h = $dbh->prepare($q);
+		$h->execute($u_id);
+		CXGN::People::Person->new( $dbh, $u_id )->hard_delete;
+    }
+}
 
 done_testing;

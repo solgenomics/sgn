@@ -1,0 +1,47 @@
+on:
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+
+jobs:
+  test_breedbase:
+    runs-on: ubuntu-latest
+    container:
+      image: breedbase/breedbase:v0.31
+      env:
+        HOME: /root
+        MODE: 'TESTING'
+        PGPASSWORD: postgres
+        SGN_TEST_SERVER: http://test_breedbase:3010
+        SGN_REMOTE_SERVER_ADDR: selenium
+      volumes:
+        - ${{ github.workspace }}:/home/production/cxgn/sgn
+        - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+      options: --network-alias test_breedbase
+
+    services:
+      breedbase_db:
+        image: postgres:12.8
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      selenium:
+        image: selenium/standalone-firefox:3.141.59-20210607
+        options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
+
+    steps:
+      - name: Checkout sgn
+        uses: actions/checkout@v2
+    
+      - name: Run tests
+        run: /entrypoint.sh t/unit t/unit_fixture t/unit_mech t/selenium2
+        # work around run_all_patches.pl "what the heck - no TTY??" error
+        # https://github.com/actions/runner/issues/241#issuecomment-842566950
+        shell: 'script --flush --quiet --return --command "bash --noprofile --norc -eo pipefail {0}"'

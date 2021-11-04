@@ -16,6 +16,7 @@ use strict;
 
 use Mail::Sendmail;
 use Email::Send::SMTP::Gmail;
+use Data::Dumper;
 
 use CXGN::Apache::Request;
 use CXGN::Tools::Text;
@@ -111,6 +112,26 @@ sub send_email {
                   -body       => $body
               );
 
+            } elsif ( $smtp_server ) {
+
+              my ($mail,$error) = Email::Send::SMTP::Gmail->new(
+                  -smtp  => $smtp_server,
+                  -layer => $smtp_layer,
+                  -port  => $smtp_port,
+                  -auth  => 'none'
+              );
+
+              if ($mail == -1) {
+                print STDERR "CXGN::Contact: SMTP error: $error\n";
+              };
+
+              $mail->send(
+                  -from       => $smtp_from,
+                  -to         => $mailto,
+                  -subject    => $subject,
+                  -body       => $body
+              );
+              
             } else {
 
               my %mail = (
@@ -121,6 +142,8 @@ sub send_email {
               );
               $mail{'Reply-To'} = $replyto;
 
+	      print STDERR "MAIL = ".Dumper(\%mail);
+	      
               if ( sendmail(%mail) ) {
                   print STDERR "CXGN::Contact: Email notification sent from $mailfrom to $mailto.\n";
               }
