@@ -5,6 +5,8 @@ use Moose;
 use IO::File;
 use Data::Dumper;
 use HTML::Entities;
+use CXGN::People::Roles;
+use CXGN::BreedingProgram;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -57,6 +59,7 @@ sub logout :Path('/ajax/user/logout') Args(0) {
 sub new_account :Path('/ajax/user/new') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     print STDERR "Adding new account...\n";
     if ($c->config->{is_mirror}) {
@@ -66,8 +69,18 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     }
 
 
-    my ($first_name, $last_name, $username, $password, $confirm_password, $email_address, $organization)
-	= map { $c->req->params->{$_} } (qw|first_name last_name username password confirm_password email_address organization|);
+    my ($first_name, $last_name, $username, $password, $confirm_password, $email_address, $organization, $breeding_program_ids)
+	= map { $c->req->params->{$_} } (qw|first_name last_name username password confirm_password email_address organization breeding_programs|);
+
+    # Set organization from breeding programs, if provided
+    my @breeding_program_names;
+    if ( !$organization && $breeding_program_ids ) {
+        foreach my $breeding_program_id (@$breeding_program_ids) {
+            my $breeding_program = CXGN::BreedingProgram->new({ schema=> $schema , program_id => $breeding_program_id });
+            push(@breeding_program_names, $breeding_program->get_name());
+        }
+        $organization = join(', ', @breeding_program_names);
+    }
 
     if ($username) {
 	#
@@ -144,6 +157,30 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     $new_person->set_first_name($first_name);
     $new_person->set_last_name($last_name);
     $new_person->store();
+
+    # Add user to breeding programs
+    if ( $c->config->{user_registration_join_breeding_programs} ) {
+        my $person_roles = CXGN::People::Roles->new({ bcs_schema => $schema });
+        my $sp_roles = $person_roles->get_sp_roles();
+        my %roles = map {$_->[0] => $_->[1]} @$sp_roles;
+        foreach my $breeding_program_name (@breeding_program_names) {
+            my $role_id = $roles{$breeding_program_name};
+            if ( !$role_id ) {
+		        my $error = $person_roles->add_sp_role($breeding_program_name);
+                if ( $error ) {
+                    print STDERR "ERROR: Could not create role $breeding_program_name [$error]\n";
+                }
+                else {
+                    my $new_sp_roles = $person_roles->get_sp_roles();
+                    my %new_roles = map {$_->[0] => $_->[1]} @$new_sp_roles;
+                    $role_id = $new_roles{$breeding_program_name};
+                }
+            }
+            if ( $role_id ) {
+                my $add_role = $person_roles->add_sp_person_role($person_id, $role_id);
+            }
+        }
+    }
 
     my $host = $c->config->{main_production_site_url};
     my $project_name = $c->config->{project_name};
