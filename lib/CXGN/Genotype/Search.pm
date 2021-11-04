@@ -1657,16 +1657,31 @@ sub get_cached_file_VCF {
 
             $unique_germplasm{$geno->{germplasmDbId}}++;
 
+	    #print STDERR "GENO = ".Dumper($geno);
+	    
             my $genotype_string = "";
             if ($counter == 0) {
                 $genotype_string .= "#CHROM\t";
                 foreach my $m (@all_marker_objects) {
-                    $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom} . "\t";
+		    my $chrom = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom};
+
+		    if (! $chrom) {
+			($chrom) = split /\_/, $m->{name};
+			#print STDERR "Warning! No chrom data, using $chrom extracted from $m->{name}\n";
+		    }		    
+                    #$genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom} . "\t";
+		    $genotype_string .= $chrom ."\t";
                 }
                 $genotype_string .= "\n";
                 $genotype_string .= "POS\t";
                 foreach my $m (@all_marker_objects) {
-                    $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos} . "\t";
+		    my $pos = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos};
+		    if (! $pos) {
+			(undef, $pos) = split /\_/, $m->{name};
+			#print STDERR "Warning! No position data, using $pos extracted from $m->{name}\n";
+		    }
+                    #$genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos} . "\t";
+		    $genotype_string .= $pos ."\t";
                 }
                 $genotype_string .= "\n";
                 $genotype_string .= "ID\t";
@@ -1979,12 +1994,20 @@ sub get_cached_file_VCF_compute_from_parents {
                 if ($counter == 0) {
                     $genotype_string .= "#CHROM\t";
                     foreach my $m (@all_marker_objects) {
-                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom} . "\t";
+			my $chrom = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{chrom};
+			if (! $chrom) {
+			    ($chrom) = split /\_/, $m->{name};
+			}
+                        $genotype_string .=  $chrom . "\t";
                     }
                     $genotype_string .= "\n";
                     $genotype_string .= "POS\t";
                     foreach my $m (@all_marker_objects) {
-                        $genotype_string .= $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos} . "\t";
+			my $pos = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{pos};
+			if (! $pos) {
+			    (undef, $pos) = split /\_/, $m->{name};
+			}
+                        $genotype_string .= $pos . "\t";
                     }
                     $genotype_string .= "\n";
                     $genotype_string .= "ID\t";

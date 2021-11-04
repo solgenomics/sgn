@@ -512,7 +512,7 @@ sub structure_output_details {
 	my $mail_list = $self->mailing_list($c);
 
 	$output_details->{analysis_profile}  = $analysis_data;
-	$output_details->{contact_page}      = $base . 'contact/form';
+	$output_details->{contact_page}      = $base . '/contact/form';
 	$output_details->{data_set_type}     = $c->stash->{data_set_type};
 	$output_details->{analysis_log_file} = $log_file;
 	$output_details->{host}              = qq | $base |;

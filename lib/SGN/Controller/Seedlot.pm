@@ -34,7 +34,7 @@ sub seedlots :Path('/breeders/seedlots') :Args(0) {
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{crossing_trials} = $projects->get_crossing_trials();
-    $c->stash->{locations} = JSON::XS->new->decode($projects->get_location_geojson());
+    $c->stash->{locations} = $projects->get_location_geojson_data();
     $c->stash->{programs} = $breeding_programs;
     $c->stash->{maintenance_enabled} = defined $c->config->{seedlot_maintenance_event_ontology_root} && $c->config->{seedlot_maintenance_event_ontology_root} ne '';
     $c->stash->{template} = '/breeders_toolbox/seedlots.mas';

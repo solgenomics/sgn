@@ -363,22 +363,22 @@ sub radarGraph : Path('/ajax/radargraph') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $dbh = $schema->storage->dbh();
 
-=pod
-    my $stock_id = $c->req->param("stock_id");
-    my $cvterm_id = $c->req->param("cvterm_id");
 
-    my $q = 'select accessions.uniquename, cvterm.name, cvterm.cvterm_id, accessions.stock_id, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(*) 
-            from cvterm 
-            join phenotype on(cvalue_id=cvterm_id) 
-            join nd_experiment_phenotype using(phenotype_id) 
-            join nd_experiment_stock using(nd_experiment_id) 
-            join stock using(stock_id) 
-            join stock_relationship on(subject_id=stock.stock_id) 
-            join stock as accessions on(stock_relationship.object_id=accessions.stock_id) 
-            where stock.type_id=76393 and accessions.stock_id=? and cvterm.cvterm_id=? and phenotype.value ~ \'^[0-9]+\.?[0-9]*$\' 
-            group by accessions.uniquename, cvterm.name, cvterm.cvterm_id, accessions.stock_id;';
-    my $h = $dbh->prepare($q);
-=cut
+    # my $stock_id = $c->req->param("stock_id");
+    # my $cvterm_id = $c->req->param("cvterm_id");
+
+    # my $q = 'select accessions.uniquename, cvterm.name, cvterm.cvterm_id, accessions.stock_id, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(*) 
+    #         from cvterm 
+    #         join phenotype on(cvalue_id=cvterm_id) 
+    #         join nd_experiment_phenotype using(phenotype_id) 
+    #         join nd_experiment_stock using(nd_experiment_id) 
+    #         join stock using(stock_id) 
+    #         join stock_relationship on(subject_id=stock.stock_id) 
+    #         join stock as accessions on(stock_relationship.object_id=accessions.stock_id) 
+    #         where stock.type_id=76393 and accessions.stock_id=? and cvterm.cvterm_id=? and phenotype.value ~ \'^[0-9]+\.?[0-9]*$\' 
+    #         group by accessions.uniquename, cvterm.name, cvterm.cvterm_id, accessions.stock_id;';
+    # my $h = $dbh->prepare($q);
+
 
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
     my $trait_list = $ds->retrieve_phenotypes();

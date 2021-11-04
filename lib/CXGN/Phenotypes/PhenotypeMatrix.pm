@@ -202,7 +202,7 @@ sub get_phenotype_matrix {
 
         foreach my $obs_unit (@$data){
             my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
-            my $synonyms = $obs_unit->{synonyms};
+            my $synonyms = $obs_unit->{germplasm_synonyms};
             my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
             my $available_germplasm_seedlots = $obs_unit->{available_germplasm_seedlots};
             my %available_germplasm_seedlots_uniquenames;

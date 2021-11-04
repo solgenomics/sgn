@@ -10,7 +10,7 @@ library("dplyr")
 ########################################
 args = commandArgs(trailingOnly = TRUE)
 
-pheno <- read.table(args[1], sep = "\t", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE)
+pheno <- read.table(args[1], sep = "\t", header = TRUE, stringsAsFactors = FALSE, check.names = FALSE, comment.char = "")
 colnames(pheno)
 
 #### Current script accepts genotype data with markers as rows and accessions as columns

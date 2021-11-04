@@ -64,7 +64,7 @@ $response = $ua->post(
         "upload_genotype_vcf_project_name" => "MatView Test Genotype Project",
         "upload_genotype_vcf_project_description" => "A test genotype project for the materialized_markervew matview",
         "upload_genotype_location_select" => $location_id,
-        "upload_genotype_year_select" => "2020",
+        "upload_genotype_year_select" => "2017",
         "upload_genotype_breeding_program_select" => $breeding_program_id,
         "upload_genotype_vcf_observation_type" => "accession",
         "upload_genotype_vcf_facility_select" => "IGD",
@@ -154,5 +154,7 @@ $organism_rs->delete();
 $mech->get("/ajax/genotyping_protocol/delete/$vcf_protocol_id");
 my $delete_results = decode_json($mech->content);
 is($delete_results->{'success'}, 1, "Delete genotype protocol");
+
+$schema->resultset("Project::Project")->find({project_id=>$vcf_project_id})->delete();
 
 done_testing();

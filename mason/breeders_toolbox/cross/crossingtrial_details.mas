@@ -127,3 +127,4 @@ $identifier_prefix
         </div>
     </div>
 </div>
+<a href="/breeders/trial/<% $trial_id %>/download/layout?format=crossing_experiment_xls&dataLevel=cross" class="btn btn-default">Download Crosses in this Crossing Experiment</a>

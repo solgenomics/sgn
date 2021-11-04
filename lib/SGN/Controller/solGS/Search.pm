@@ -447,6 +447,42 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 }
 
 
+sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1) {
+    my ($self, $c, $tr_pop_id) = @_;
+
+    my @traits_ids = $c->req->param('training_traits_ids[]');
+    $c->stash->{training_traits_ids} = \@traits_ids;
+    $c->stash->{training_pop_id} = $tr_pop_id;
+    my $protocol_id = $c->req->param('genotyping_protocol_id');
+
+    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+
+    $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $tr_pop_id);
+    my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
+
+    my $ret->{result} = 0;
+
+    if (-s $pred_pops_file)
+    {
+	$self->list_of_prediction_pops($c, $tr_pop_id);
+	my $selection_pops_ids = $c->stash->{selection_pops_ids};
+	my $formatted_selection_pops = $c->stash->{list_of_prediction_pops};
+
+	$c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $tr_pop_id, $selection_pops_ids->[0]);
+	my $selection_pop_traits = $c->stash->{selection_pop_analyzed_traits_ids};
+
+	$ret->{selection_traits} = $selection_pop_traits;
+	$ret->{data} = $formatted_selection_pops;
+    }
+
+    $ret = to_json($ret);
+
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
+}
+
+
 sub projects_links {
     my ($self, $c, $pr_rs) = @_;
 
@@ -488,9 +524,12 @@ sub projects_links {
 	   	  	};
 
 	   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
+            my $trial_url = $c->controller('solGS::Path')->trial_page_url($pr_id);
+            my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
+
 
 		    push @projects_pages, [$checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|,
-					   $pr_desc, $pr_location, $pr_year
+					   $pr_desc, $pr_location, $pr_year, $trial_link
 			];
 
 		}
@@ -587,8 +626,10 @@ sub format_trait_gs_projects {
 				};
 
 		      	my $model_page = $c->controller('solGS::Path')->model_page_url($args);
+                my $trial_url = $c->controller('solGS::Path')->trial_page_url($pr_id);
+                my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
 
-			   push @formatted_projects, [ $checkbox, qq|<a href="$model_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year];
+			   push @formatted_projects, [ $checkbox, qq|<a href="$model_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $trial_link];
 	       }
 	   }
    }
@@ -636,8 +677,10 @@ sub format_gs_projects {
 		  	  	};
 
 	  	 		my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
+                my $trial_url = $c->controller('solGS::Path')->trial_page_url($pr_id);
+                my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
 
-		   		push @formatted_projects, [ $checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
+		   		push @formatted_projects, [ $checkbox, qq|<a href="$training_pop_page" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $trial_link];
 	       }
 	   }
    }
@@ -939,10 +982,13 @@ sub format_selection_pops {
 		  $project_yr = $yr_r->value;
 	      }
 
+          my $trial_url = $c->controller('solGS::Path')->trial_page_url($selection_pop_id);
+          my $trial_link = $c->controller('solGS::Path')->create_hyperlink($trial_url, 'View');
+
 	      $c->controller('solGS::Download')->selection_prediction_download_urls($c, $training_pop_id, $selection_pop_id);
 	      my $download_selection = $c->stash->{selection_prediction_download};
 
-	      push @data,  [$selection_pop_link, $desc, $project_yr, $download_selection];
+	      push @data,  [$selection_pop_link, $desc, $project_yr, $trial_link, $download_selection];
           }
         }
     }
