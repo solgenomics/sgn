@@ -202,6 +202,7 @@ sub nirs_matrix {
 #	my @protocol_id_array;
 #	@protocol_id_array[0] = $nd_protocol_id;
 #	my $protocol_id_arrayref = \@protocol_id_array;
+my $high_dim_tissue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_type', 'stock_property')->cvterm_id();
 
 #	my $high_dim_nirs_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
 if (! defined($stock_id_arrayref)) {
@@ -266,6 +267,13 @@ if (! defined($stock_id_arrayref)) {
 					push @nirs_project_ids, $nirs_project_id;
 				}
 
+				my $q = "SELECT value FROM nd_protocol JOIN nd_experiment_protocol ON nd_protocol.nd_protocol_id = nd_experiment_protocol.nd_protocol_id JOIN nd_experiment_stock ON nd_experiment_protocol.nd_experiment_id=nd_experiment_stock.nd_experiment_id JOIN stockprop ON nd_experiment_stock.stock_id=stockprop.stock_id WHERE nd_protocol.nd_protocol_id = ? and stockprop.type_id = ? and stockprop.stock_id = ?;";
+				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+				$h->execute($nd_protocol_id,$high_dim_tissue_cvterm_id,$_);
+				my @stock_tissue_types;
+				while (my ($stock_tissue_type) = $h->fetchrow_array()) {
+					push @stock_tissue_types, $stock_tissue_type;
+				}
 
 if (defined($trial_id)) {
 
@@ -294,6 +302,7 @@ if (defined($trial_id)) {
 				sampleDbId=>$_,
 #				nd_experiment_id=>$nirs_nd_experiment_ids[0],
 				studyDbId=>$nirs_project_ids[0],
+				tissue_type=>@stock_tissue_types[0],
 				# ordered keys was only included for verifying consistent order
 	#			labels=>\@ordered_keys,
 				row=>\@current_row_values,
@@ -323,6 +332,7 @@ if (defined($trial_id)) {
 			sampleDbId=>$_,
 #				nd_experiment_id=>$nirs_nd_experiment_ids[0],
 			studyDbId=>$nirs_project_ids[0],
+			tissue_type=>@stock_tissue_types[0],
 			# ordered keys was only included for verifying consistent order
 #			labels=>\@ordered_keys,
 			row=>\@current_row_values,
