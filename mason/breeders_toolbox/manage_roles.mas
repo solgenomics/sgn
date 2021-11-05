@@ -119,11 +119,12 @@ $is_curator => undef
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addTeamMemberDialog">Add Team Member for team <span id="team_name">.</span></h4>
+        <h4 class="modal-title" id="addTeamMemberDialog">Add Team Member for team <span id="team_name_for_member">.</span></h4>
       </div>
-      <div class="modal-body">
+      <div class="modal-body ui-front">
         <div class="container-fluid">
-            <div class="form-group">
+          <div class="form-group">
+	    <input type="hidden" id="sp_team_id_for_member" name="sp_team_id_for_member" />
                 <label class="col-sm-3 control-label">Member</label>
                 <div class="col-sm-9" >
                   <input class="form-control" type="text" name="add_member_input"  id="add_member_input" ></input>
@@ -162,19 +163,10 @@ jQuery(document).ready(function() {
        ajax : '/ajax/roles/list'
    });
 
-
    jQuery('#manage_teams_table').DataTable( {
        ajax : '/ajax/teams/list'
    });
-
-
 });
-
-
-
- 
-
-
 
 jQuery('#add_new_team').click( function(e) { 
   jQuery('#add_team_dialog').modal("show");
@@ -221,8 +213,8 @@ function add_user_role(sp_person_id, person_name) {
 function open_add_team_member_dialog(sp_team_id, team_name) {
     $('#add_team_member_dialog').modal("show");
 
-    $('#sp_team_id').val(sp_team_id);
-    $('#team_name').html(team_name);
+    $('#sp_team_id_for_member').val(sp_team_id);
+    $('#team_name_for_member').html(team_name);
     $('#add_member_input').autocomplete({
        source: '/ajax/people/autocomplete'
     });
@@ -230,51 +222,49 @@ function open_add_team_member_dialog(sp_team_id, team_name) {
 
 
 							  
-    jQuery('#add_person_role_submit_button').click( function(e) {
+   jQuery('#add_person_role_submit_button').click( function(e) {
 
 
-    jQuery.ajax ( {
-        url : '/ajax/people/add_person_role?sp_person_id='+jQuery("#sp_person_id").val()+'&sp_role_id='+jQuery("#add_person_role_role_select").val(),
-        beforeSend: function() {
-          jQuery("#working_modal").modal("show");
-
-							  
-        },
-        success: function(response){
-            //console.log(response);
-            jQuery("#working_modal").modal("hide");
-            if (response.error) {
-                alert('Error: '+response.error);
-            } else {
-            jQuery('#manage_user_roles_table').DataTable().ajax.reload();
-                alert('Role Added for User!');
-            }
-        },
-        error: function(response) {
-            jQuery("#working_modal").modal("hide");
-            alert('An error occured: '+response);
-        }
+   jQuery.ajax ( {
+       url : '/ajax/people/add_person_role?sp_person_id'+jQuery("#sp_person_id").val()+'&sp_role_id='+jQuery("#add_person_role_role_select").val(),
+       beforeSend: function() {
+           jQuery("#working_modal").modal("show");							  
+       },
+       success: function(response){
+          //console.log(response);
+          jQuery("#working_modal").modal("hide");
+          if (response.error) {
+              alert('Error: '+response.error);
+          } else {
+              jQuery('#manage_user_roles_table').DataTable().ajax.reload();
+              alert('Role Added for User!');
+          }
+       },
+       error: function(response) {
+           jQuery("#working_modal").modal("hide");
+           alert('An error occured: '+response);
+       }
     });
 });
 	
 
 
-  jQuery('#add_team_submit_button').click( function(e) {
+jQuery('#add_team_submit_button').click( function(e) {
 
-      jQuery.ajax ( {
-        url : '/ajax/people/add_team?name='+jQuery("#team_name").val()+'&description='+jQuery("#team_description").val(),
-        beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        success: function(response){
-            //console.log(response);
-            jQuery("#working_modal").modal("hide");
-            if (response.error) {
-                alert('Error: '+response.error);
-            } else {
-            jQuery('#manage_user_roles_table').DataTable().ajax.reload();
-                alert('Successfully added team!');
-            }
+   jQuery.ajax ( {
+       url : '/ajax/people/add_team?name='+jQuery("#team_name").val()+'&description='+jQuery("#team_description").val(),
+       beforeSend: function() {
+           jQuery("#working_modal").modal("show");
+       },
+       success: function(response){
+           //console.log(response);
+           jQuery("#working_modal").modal("hide");
+           if (response.error) {
+               alert('Error: '+response.error);
+           } else {
+           jQuery('#manage_teams_table').DataTable().ajax.reload();
+               alert('Successfully added team!');
+           }
         },
         error: function(response) {
             jQuery("#working_modal").modal("hide");
@@ -286,7 +276,7 @@ function open_add_team_member_dialog(sp_team_id, team_name) {
 jQuery('#add_team_member_submit_button').click( function(e) {
 
       jQuery.ajax ( {
-        url : '/ajax/teams/add_member?sp_person_id='+jQuery("#add_member_input").val()+'&management_role='+jQuery("#management_role").val()+'sp_team_id='+jQuery("#sp_team_id").val(),
+        url : '/ajax/teams/add_member?team_member_name='+jQuery("#add_member_input").val()+'&management_role='+jQuery("#management_role").val()+'&sp_team_id_for_member='+jQuery("#sp_team_id_for_member").val(),
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
         },
@@ -306,9 +296,6 @@ jQuery('#add_team_member_submit_button').click( function(e) {
         }
     });
 });
-
-
-							  
 
 </script>
 

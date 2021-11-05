@@ -148,7 +148,7 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
 	my $delete_link = "";
 	my $add_user_link = '&nbsp;&nbsp;<a href="#" onclick="javascript:add_user_role('.$row->get_column('sp_person_id').", \'".$person_name."\')\"><span style=\"color:darkgrey;width:8px;height:8px;border:solid;border-width:1px;padding:1px;\"><b>+</b></a></span>";
 	if ($c->user()->has_role("curator")) {
-	    $delete_link = '<a href="javascript:delete_user_role('.$row->get_column('sp_person_role_id').')"><b>X</b></a>';
+	    $delete_link = '<a style="color:white" href="javascript:delete_user_role('.$row->get_column('sp_person_role_id').')"><b>X</b></a>';
 	}
 	
 	else {
@@ -270,15 +270,19 @@ sub list_teams :Chained('teams') PathPart('list') Args(0) {
 	  order_by => 'sp_person_id' });
     
     my @data;
-    my %hash;
+    my %hash = ();
 
     my $default_color = "#0275d8";
-    
+
     while (my $row = $rs2->next()) {
 	my $team_name = $row->name();
+	my $sp_team_id = $row->get_column('sp_team_id');
 	my $team_description = $row->description();
 	my $delete_link = "";
-	my $add_user_link = '&nbsp;&nbsp;<a href="#" onclick="javascript:open_add_team_member_dialog('.$row->get_column('sp_team_id').", \'".$team_name."\')\"><span style=\"color:darkgrey;width:8px;height:8px;border:solid;border-width:1px;padding:1px;\"><b>+</b></a></span>";
+
+	print STDERR "TEAM NAME = $team_name ($sp_team_id)\n";
+	
+	$hash{$row->sp_team_id}->{add_user_link} = '&nbsp;&nbsp;<a href="#" onclick="javascript:open_add_team_member_dialog('.$sp_team_id.', \''.$team_name.'\')"><span style="color:darkgrey;width:8px;height:8px;border:solid;border-width:1px;padding:1px;"><b>+</b></a></span>';
 #	if ($c->user()->has_role("curator")) {
 #	    $delete_link = '<a href="javascript:delete_user_role('.$row->get_column('sp_person_role_id').')"><b>X</b></a>';
 #	}
@@ -296,12 +300,14 @@ sub list_teams :Chained('teams') PathPart('list') Args(0) {
 	
 	my $person = $schema->resultset("SpPerson")->find( { sp_person_id => $sp_person_id });
 
+	
 	if ($person) { 
 	    my $first_name = $person->first_name();
 	    my $last_name = $person->last_name();
 
 	    my $username = $first_name." ".$last_name;
-	
+
+	    print STDERR "Adding $username...\n";
 #	if (! $c->user()->has_role("curator")) {
 #	    # only show breeding programs
 #	    if ($role_name !~ /curator|user|submitter/) {
@@ -311,21 +317,23 @@ sub list_teams :Chained('teams') PathPart('list') Args(0) {
 #	else {
 	    my $color =  $default_color;
 	    $hash{$row->sp_team_id}->{team_members} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:6px;background-color:'.$color.'"><b>'. $delete_link."&nbsp;&nbsp; ".$username."</b></span>";
-
-#	}
+	    
+	    #	}
 	}
 	$hash{$row->sp_team_id}->{team_name} = $row->name();
 	$hash{$row->sp_team_id}->{team_description} = $row->description();
 	$hash{$row->sp_team_id}->{team_stage_gate} = "[not yet]";
 	$hash{$row->sp_team_id}->{team_delete} = 'X';
-	$hash{$row->sp_team_id}->{team_members} .= $add_user_link." ".$hash{$row->sp_team_id}->{team_members};
     }
 
-
+    
     foreach my $k (keys %hash) {
-	$hash{$k}->{userroles} .= $hash{$k}->{add_user_link};
+	print STDERR "Building info for index $k...\n";
+	$hash{$k}->{team_members} = $hash{$k}->{team_members}." ".$hash{$k}->{add_user_link};
 	push @data, [ $hash{$k}->{team_name}, $hash{$k}->{team_description}, $hash{$k}->{team_stage_gate}, $hash{$k}->{team_members}, $hash{$k}->{team_delete} ];
     }
+
+    print STDERR "DATA: ".Dumper(\@data);
     
     $c->stash->{rest} = { data => \@data };
 }
@@ -374,18 +382,34 @@ sub add_team_member :Path('/ajax/teams/add_member') Args(0) {
 	return;
     }
     
-    my $sp_person_id = $c->req->param('sp_person_id');
+    my $team_member_name = $c->req->param('team_member_name');
     my $management_role = $c->req->param('management_role');
-    my $sp_team_id = $c->req->param("sp_team_id");
+    my $sp_team_id = $c->req->param("sp_team_id_for_member");
 
+    print STDERR "RECEIVED INFO: $team_member_name, $management_role, $sp_team_id!\n";
+    
     my $schema = $c->dbic_schema("CXGN::People::Schema");
 
     eval {
-	my $rs = $schema->resultset("SpPersonTeam")->find_or_create(
-	    {
-		sp_team_id => $sp_team_id,
-		sp_person_id => $sp_person_id,
-	    });
+	my($first_name, $last_name) = split /\s*\,\s*|\s*$/, $team_member_name;
+
+	print STDERR "Searching name: $first_name, $last_name.\n";
+	
+	my $prs = $schema->resultset("SpPerson")->search( { first_name => $first_name, last_name => $last_name });
+	if ($prs->count() > 1) {
+	    die "Too many people with name $team_member_name in the database.";
+	}
+	elsif ($prs->count() == 0) {
+	    die "No such person $team_member_name in the database.";
+	}
+	else {
+	    my $row = $prs->next();
+	    my $rs = $schema->resultset("SpPersonTeam")->find_or_create(
+		{
+		    sp_team_id => $sp_team_id,
+		    sp_person_id => $row->sp_person_id(),
+		});
+	}
     };
 
     if ($@) {
@@ -398,6 +422,65 @@ sub add_team_member :Path('/ajax/teams/add_member') Args(0) {
 		
 
 }
+
+sub remove_team_member :Chained('teams') PathPart('delete/association') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_team_id = shift;
+    
+    if (! $c->user()) {
+	$c->stash->{rest} = { error => "You must be logged in to use this function." };
+	return;
+    }
+
+    if (! $c->user()->has_role("curator")) {
+	$c->stash->{rest} = { error => "You don't have the necessary privileges for maintaining user roles." };
+	return;
+    }
+
+    my $schema = $c->dbic_schema("CXGN::People::Schema");
+    
+    my $row = $schema->resultset("SpPersonTeam")->find( { sp_person_team_id => $sp_person_team_id } );
+
+    if (!$row) {
+	$c->stash->{rest} = { error => 'The relationship does not exist.' };
+	return;
+    }
+    $row->delete();
+
+    $c->stash->{rest} = { message => "Member associated with team has been deleted." };
+}
+
+sub delete_tem :Chained('teams') PathPart('delete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_team_id = shift;
+
+    if (! $c->user()) {
+	$c->stash->{rest} = { error => "You must be logged in to use this function." };
+	return;
+    }
+
+    if (! $c->user()->has_role("curator")) {
+	$c->stash->{rest} = { error => "You don't have the necessary privileges for maintaining user roles." };
+	return;
+    }
+
+    my $schema = $c->dbic_schema("CXGN::People::Schema");
+    
+    my $row = $schema->resultset("SpTeam")->find( { sp_team_id => $sp_team_id } );
+
+    if (!$row) {
+	$c->stash->{rest} = { error => 'The specified team does not exist.' };
+	return;
+    }
+    $row->delete();
+
+
+
+}
+
+
 
 
 ###

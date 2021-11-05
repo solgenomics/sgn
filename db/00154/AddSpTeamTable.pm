@@ -74,7 +74,8 @@ CREATE TABLE sgn_people.sp_teams (
 
 CREATE TABLE sgn_people.sp_person_team (
   sp_person_team_id serial primary key,
-  sp_person_id bigint references sgn_people.sp_person,
+  sp_person_id bigint references sgn_people.sp_person NOT NULL ON DELETE CASCADE,
+  sp_team_id bigint references sgn_people.sp_team NOT NULL ON DELETE CASCADE,
   functional_role varchar(100)
 );
 
