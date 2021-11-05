@@ -73,6 +73,9 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 	= map { $c->req->params->{$_} } (qw|first_name last_name username password confirm_password email_address organization breeding_programs|);
 
     # Set organization from breeding programs, if provided
+    if (ref($breeding_program_ids) ne 'ARRAY') {
+        $breeding_program_ids = [$breeding_program_ids];
+    }
     my @breeding_program_names;
     if ( !$organization && $breeding_program_ids ) {
         foreach my $breeding_program_id (@$breeding_program_ids) {
