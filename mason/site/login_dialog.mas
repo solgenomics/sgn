@@ -27,21 +27,27 @@ $goto_url => '/'
                         <br />
                         <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" value="secretpw"/>
 % } else {
-                        <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" />
+                        <div class="input-group">
+                            <input class="form-control" id="username" name="username" placeholder="Username" type="text" tabindex="1" />
+                            <span class="input-group-btn">
+                                <button id="forgot_username_modal_show" class="btn btn-default" type="button" tabindex="4">&nbsp;<span class="glyphicon glyphicon-question-sign"></span>&nbsp;</button>
+                            </span>
+                        </div>
                         <br />
-                        <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" />
+                        <div class="input-group">
+                            <input class="form-control" id="password" name="password" placeholder="Password" type="password" tabindex="2" />
+                            <span class="input-group-btn">
+                                <button id="reset_password_modal_show" class="btn btn-default" type="button" tabindex="5">&nbsp;<span class="glyphicon glyphicon-question-sign"></span>&nbsp;</button>
+                            </span>
+                        </div>
 % }
                         <br />
-                        <div style="margin-bottom:40px">
-                            <a class="btn btn-default btn-sm" id="reset_password_modal_show" style="float:left">Forgot password?</a>
-                            <a class="btn btn-default btn-sm" id="new_user_modal_show" style="float:right">New User</a>
-                        </div>
 
                         <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
 
                         <div>
-                            <button class="btn btn-secondary" id="cancel_login" type="reset" style="float:left" >Reset</button>
-                            <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right">Login</button>
+                            <button class="btn btn-default" id="new_user_modal_show" style="float:left" tabindex="6">New User</a>
+                            <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right" tabindex="3">Login</button>
                         </div>
                     </div>
                 </form>
@@ -50,6 +56,35 @@ $goto_url => '/'
 %  if (!$c->config->{require_login}) {
                 <button id="close_site_login_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
 %  }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="site_login_forgot_username_dialog" name="site_login_forgot_username_dialog" tabindex="-1" role="dialog" aria-labelledby="site_login_forgot_username_dialog_title">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align:center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h3 class="modal-title" id="site_login_forgot_username_dialog_title">Forgot Username</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    If you've forgotten your username, enter your email address below. An email will be sent with any account username(s) associated with your email address.
+                </div>
+                <br />
+                <div style="white-space:nowrap">
+                    <form id="forgot_username_form" name="forgot_username_form" style="white-space:nowrap">
+                        <div style="white-space:nowrap; align:center">
+                            <label class="textlabel">Email Address</label>
+                            <input class="form-control" style="width:200px; white-space:nowrap; float:center" id="forgot_username_email" name="forgot_username_email" /><br />
+                            <button type="submit" class="btn btn-primary" id="submit_forgot_username_email" style="float:center" >Get Username(s)</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_site_login_forgot_username_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
             </div>
         </div>
     </div>
@@ -186,6 +221,31 @@ $goto_url => '/'
 <script>
 jQuery(document).ready( function() { 
 
+    jQuery("#site_login_dialog").on('shown.bs.modal', function() {
+        jQuery("#username").focus();
+    });
+
+    jQuery('#forgot_username_modal_show').click(function() {
+        jQuery('#site_login_forgot_username_dialog').modal('show');
+    });
+
+    jQuery('#forgot_username_form').submit(function(event) {
+        event.preventDefault();
+        var form_data = jQuery('#forgot_username_form').serialize();
+        jQuery.ajax( {
+            url: '/ajax/user/forgot_username',
+            data: form_data,
+            error: function(r) { alert('An error occurred! Sorry!');  },
+            success: function(r) {
+                if (r.error) { alert(r.error); }
+                else { 
+                    alert(r.message);
+                    jQuery('#site_login_forgot_username_dialog').modal('hide');
+                }
+            }
+        });
+    });
+
     jQuery('#reset_password_modal_show').click(function(){
         event.preventDefault();
         jQuery('#site_login_reset_password_dialog').modal('show');
@@ -202,7 +262,7 @@ jQuery(document).ready( function() {
                 if (r.error) { alert(r.error); }
                 else { 
                     alert(r.message);
-                    window.history.back();
+                    jQuery('#site_login_reset_password_dialog').modal('hide');
                 }
             }
         });
@@ -212,7 +272,9 @@ jQuery(document).ready( function() {
         event.preventDefault();
         jQuery('#site_login_new_user_dialog').modal('show');
     });
-    get_select_box('breeding_programs', 'breeding_programs_div', { 'name': 'breeding_programs', 'id': 'breeding_programs', 'default': -1, 'multiple': 1 });
+    jQuery("#site_login_new_user_dialog").on('shown.bs.modal', function() {
+        get_select_box('breeding_programs', 'breeding_programs_div', { 'name': 'breeding_programs', 'id': 'breeding_programs', 'default': -1, 'multiple': 1 });
+    });
 
     jQuery('#new_account_form').submit(function(event) {
         event.preventDefault();
@@ -235,7 +297,7 @@ jQuery(document).ready( function() {
                 }
             }
         });
-   });
+    });
 
     jQuery('#login_form').submit( function(event) { 
         event.preventDefault();

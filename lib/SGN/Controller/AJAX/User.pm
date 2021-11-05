@@ -351,6 +351,21 @@ END_HEREDOC
    CXGN::Contact::send_email($subject, $body, $private_email);
 }
 
+
+sub forgot_username : Path('/ajax/user/forgot_username') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $email = $c->req->param('forgot_username_email');
+    my @person_ids = CXGN::People::Login->get_login_by_email($c->dbc->dbh(), $email);
+    $self->send_forgot_username_email_message($c, $email, \@person_ids);
+
+    $c->stash->{rest} = {
+        message => "Username email sent. Please check your email for a message containing the username(s) of any accounts associated with your email address."
+    };
+}
+
+
 sub reset_password :Path('/ajax/user/reset_password') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -424,6 +439,45 @@ sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(
 }
 
 
+sub send_forgot_username_email_message {
+    my $self = shift;
+    my $c = shift;
+    my $email = shift;
+    my $person_ids = shift;
+
+    my @usernames;
+    foreach my $pid (@$person_ids) {
+        my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
+        push(@usernames, $person->get_username());
+    }
+    my $username_message = @usernames > 0 ? "The following username(s) are associated with your email address: " . join(', ', @usernames)
+        : "There are no accounts associated with your email address.";
+
+    my $project_name = $c->config->{project_name};
+    my $subject = "[$project_name] Forgot Username Request";
+    my $main_url = $c->config->{main_production_site_url};
+
+    my $body = <<END_HEREDOC;
+
+Hi,
+
+You have requested the username(s) for accounts associated with this email address on $main_url.
+
+$username_message
+
+If this request did not come from you, please let us know.
+
+To contact us, please do NOT reply to this message; rather, use the contact form ($main_url/contact/form) instead.
+
+Thank you.
+
+Your friends at $project_name
+
+END_HEREDOC
+
+   CXGN::Contact::send_email($subject, $body, $email);
+}
+
 sub send_reset_email_message {
     my $self = shift;
     my $c = shift;
@@ -432,7 +486,8 @@ sub send_reset_email_message {
     my $reset_link = shift;
     my $person = shift;
 
-    my $subject = "[SGN] E-mail Address Confirmation Request";
+    my $project_name = $c->config->{project_name};
+    my $subject = "[$project_name] Password Reset Request";
     my $main_url = $c->config->{main_production_site_url};
 
     my $body = <<END_HEREDOC;
