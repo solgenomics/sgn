@@ -77,10 +77,13 @@ sub extract_trait_data :Path('/ajax/gcpc/getdata') Args(0) {
 
     my $F;
     if (! open($F, "<", $temppath)) {
-  $c->stash->{rest} = { error => "Can't find data." };
-  return;
+	$c->stash->{rest} = { error => "Can't find data." };
+	return;
     }
-
+    
+    
+    open(my $G, ">", $temppath.".hmp") || die "Can't open $temppath.hmp"; 
+    
     my $header = <$F>;
     chomp($header);
     print STDERR Dumper($header);
@@ -93,20 +96,71 @@ sub extract_trait_data :Path('/ajax/gcpc/getdata') Args(0) {
     }
     my @data = ();
 
-    while (<$F>) {
-  chomp;
+    my %nuconv = (
+	'A/A' => 'A',
+	'G/G' => 'G',
+	'T/T' => 'T',
+	'C/C' => 'C',
+	'A/G' => 'R',
+	'G/A' => 'R',
+	'C/T' => 'Y',
+	'T/C' => 'Y',
+	'G/C' => 'S',
+	'C/G' => 'S',
+	'A/T' => 'W',
+	'T/A' => 'W',
+	'G/T' => 'K',
+	'T/G' => 'K',
+	'A/C' => 'M',
+	'C/A' => 'M',
+	'./.' => 'N',
+	);
 
-  my @fields = split "\t";
-  my %line;
-  for(my $n=0; $n <@keys; $n++) {
-      if (exists($fields[$n]) && defined($fields[$n])) {
-    $line{$keys[$n]}=$fields[$n];
-      }
-  }
-  #print STDERR Dumper(\%line);
-  push @data, \%line;
+	
+
+    while (<$F>) {
+	chomp;
+	my %line;    
+	my @fields = split /\t/;
+
+	for(my $n=0; $n <@keys; $n++) {
+	    if (exists($fields[$n]) && defined($fields[$n])) {
+		$line{$keys[$n]}=$fields[$n];
+	    }
+	}
+	push @data, \%line;
     }
 
+    print STDERR Dumper(\%line);
+
+    foreach my $line (@data) {
+	my @formats = split /\:/, $line->{FORMAT};
+	my $gtindex = 0;
+	for(my $n =0; $n<@formats; $n++) {
+	    if ($format[$n] eq 'GT') {
+		$gtindex=$n;
+	    }
+	}
+
+	for(my $gt = 0; $gt < @keys; $gt++) {
+	    my @scores = split /\:/, $fields[$gt];
+	    my $genotype;
+	    if ($scores[$gtindex] eq '0/0') {
+		$genotype = $line->{REF}."/".$line->{REF};
+	    }
+	    if ($scores[$gtindex] eq '0/1') {
+		$genotype = $line->{REF}."/".$line->{ALT};
+	    }
+	    if ($scores[$gtindex] eq '1/1') {
+		$genotype = $line->{ALT}."/".$line->{ALT};
+	    }
+
+	    my $genotype_hmp = $nuconv{$genotype};
+	}
+	
+	print $G $line->{ID}."\n";
+    
+    }
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
@@ -150,6 +204,42 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     my $genotype_data_ref = $ds->retrieve_genotypes($geno_filepath);
 
+    open(my $F, "<", $geno_filepath) || die "Can't open file $geno_filepath\n";
+    open(my $G, ">", $geno_filepath.".hmp") || die "Can't open ".$geno_filepath.".hmp for writing\n";
+
+
+	 
+	 
+    #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT
+    while(my $line = <$F>) { 
+	chomp($line);
+
+	if ($line =~ m/^\#\#/) {
+	    next();
+	}
+
+	if ($line =~ m/\#CHROM/) {
+	    my($chrom_header, $pos_header, $id_header, $ref_header, $alt_header, $qual_header, $filter_header, $info_header, $format_header, @genotype_ids) = split /\t/, $line;
+	    
+	    print $G join("\t", (qw | rs allels chrom pos strand assembly center protLSID assayLSID panelLSID QCcode |, @genotype_ids))."\n";
+	}
+
+	else { 
+	    my($chrom, $pos, $id, $ref, $alt, $qual, $filter, $info, $format, @genotypes) = split /\t/, $line;
+	    
+	    my @formats = split /\:/, $format;
+	    
+	    my $gt_index = -1;
+	    for(my $n=0; $n++; $n<@formats) {
+		if ($n eq "GT") {
+		    $gt_index = $n;
+		}
+	    }
+	    if ($gt_index == -1) { die "Can't find GT for line with id $id.\n"; }
+	    
+	    print $G join("\t", ($chrom."_".$pos, $ref."/".$alt, $chrom, $pos, '+', 'NA', 'NA', 'NA'))."\n";
+	}
+    }
 
     
     my $AMMIFile = $tempfile . "_" . "AMMIFile.png";
