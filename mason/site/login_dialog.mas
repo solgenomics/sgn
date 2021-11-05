@@ -212,7 +212,7 @@ jQuery(document).ready( function() {
         event.preventDefault();
         jQuery('#site_login_new_user_dialog').modal('show');
     });
-    get_select_box('breeding_programs', 'breeding_programs_div', { 'name' : 'breeding_programs', 'id' : 'breeding_programs', 'multiple':1 });
+    get_select_box('breeding_programs', 'breeding_programs_div', { 'name': 'breeding_programs', 'id': 'breeding_programs', 'default': -1, 'multiple': 1 });
 
     jQuery('#new_account_form').submit(function(event) {
         event.preventDefault();
