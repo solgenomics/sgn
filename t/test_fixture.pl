@@ -150,7 +150,7 @@ system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_po
 
 if ($dumpupdatedfixture){
     print STDERR "Dumping new updated fixture with all patches run on it to t/data/fixture/cxgn_fixture.sql\n";
-    system("pg_dump -U postgres $dbname > t/data/fixture/cxgn_fixture.sql");
+    system("pg_dump -h $config->{dbhost} -U postgres $dbname > t/data/fixture/cxgn_fixture.sql");
 }
 
 print STDERR "Done.\n";
