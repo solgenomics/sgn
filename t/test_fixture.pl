@@ -26,6 +26,7 @@ my $nocleanup;
 my $noserver;
 my $dumpupdatedfixture;
 my $noparallel = 0;
+my $nopatch;
 my $list_config = "";
 my $logfile = "logfile.$$.txt";
 my $print_environment;
@@ -39,6 +40,7 @@ GetOptions(
     "dumpupdatedfixture" => \$dumpupdatedfixture,
     "noserver"           => \$noserver,
     "noparallel"         => \$noparallel,
+    "nopatch"            => \$nopatch,
     "fixture_path"       => \$fixture_path,
     "list_config"        => \$list_config,
     "logfile=s"            => \$logfile,
@@ -141,7 +143,9 @@ print $NEWCONF $new_conf;
 close($NEWCONF);
 
 #run fixture and db patches.
-system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $dbhost -d $dbname -e janedoe -s 145");
+if (! $nopatch) {
+    system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $dbhost -d $dbname -e janedoe -s 145");
+}
 
 # run the materialized views creation script
 #
@@ -352,6 +356,8 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
   --noserver     Do not start webserver (if running unit_fixture tests only)
 
   --noparallel   Do not run the server in parallel mode.
+
+  --nopatch      Do not run fixture and database patches
 
   --fixture_path specify a path to the fixture different from the default
                  (t/data/fixture/cxgn_fixture.pl). Note: You can also set the env
