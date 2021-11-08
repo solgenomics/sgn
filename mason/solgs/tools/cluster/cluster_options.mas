@@ -23,7 +23,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 	 id="cluster_type_opts"
 	 value="">
     </div>
-    
+
     <div style="padding-right: 1px; padding-left:1px;"
 	 class="form-group col-sm-2"
 	 id="cluster_data_type_opts"
@@ -37,15 +37,15 @@ Isaak Y Tecle (iyt2@cornell.edu)
     	     placeholder="selection %?"
     	     id="selection_proportion"/>
     </div>
-    
-    <div style="padding-right:1px; padding-left:1px;"
+
+    <div id="k_number_div" style="padding-right:1px; padding-left:1px;"
 	 class="form-group col-sm-1">
       <input class="form-control"
 	     type="text"
 	     placeholder="K No.?"
 	     id="k_number"/>
     </div>
-    
+
     <div style="padding-right:1px; padding-left:1px;"
 	 class=" form-group  col-sm-1">
       <input class="btn btn-success"
@@ -57,6 +57,3 @@ Isaak Y Tecle (iyt2@cornell.edu)
   </div>
 
 </div>
- 
-
-  

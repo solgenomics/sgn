@@ -392,8 +392,8 @@ solGS.cluster = {
 
         var traitsCode;
 
-  var page;
-  var fileId = clusterPopId;
+var page;
+var fileId = clusterPopId;
 if (document.URL.match(/cluster\/analysis/)) {
    page =  '/cluster/analysis/' + clusterPopId +'/ct/' + clusterType + '/dt/' + dataType + '/k/' + kNumber;
    if (dataType.match(/genotype/i)) {
@@ -427,7 +427,7 @@ if (document.URL.match(/cluster\/analysis/)) {
            page = page + '/gp/' + protocolId;
     }
 }
-    var clusterArgs =  {'training_pop_id': popDetails.training_pop_id,
+    var clusterArgs = {'training_pop_id': popDetails.training_pop_id,
        'selection_pop_id': popDetails.selection_pop_id,
        'combo_pops_id': popDetails.combo_pops_id,
        'training_traits_ids': trainingTraitsIds,
@@ -446,7 +446,7 @@ if (document.URL.match(/cluster\/analysis/)) {
        'genotyping_protocol_id': protocolId,
         'analysis_type': 'cluster analysis',
         'analysis_page': page
-          };
+        };
 
 	    this.checkCachedCluster(page, clusterArgs);
 	}
@@ -890,15 +890,15 @@ jQuery(document).ready(function() {
         var clusterTypeId = solGS.cluster.clusterTypeSelectId(rowId);
         var kNumId = solGS.cluster.clusterKnumSelectId(rowId);
 
-            var clusterType = jQuery('#' + clusterTypeId).val();
-
-            if (clusterType.match(/hierarchical/i)) {
-                jQuery('#cluster_div #cluster_options #k_number_div').hide();
-                jQuery('#'+kNumId).prop('disabled', true);
-            } else {
-                jQuery('#cluster_div #cluster_options #k_number_div').show();
-                 jQuery('#'+kNumId).prop('disabled', false);
-            }
+        var clusterType = jQuery('#' + clusterTypeId).val();
+        console.log(`cluster type ${clusterType} -- k num id ${kNumId}`)
+        if (clusterType.match(/hierarchical/i)) {
+            jQuery('#k_number_div').hide();
+            jQuery('#'+kNumId).prop('disabled', true);
+        } else {
+            jQuery('#k_number_div').show();
+            jQuery('#'+kNumId).prop('disabled', false);
+        }
     });
 });
 
