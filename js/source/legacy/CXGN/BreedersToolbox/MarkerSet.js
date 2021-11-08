@@ -81,53 +81,55 @@ jQuery(document).ready(function (){
     });
 
     jQuery("#add_marker").click(function(){
+        var markerInfo = {};
+
         var markerSetID = $('#selected_marker_set1').val();
-        if (!markerSetID) {
+        if (markerSetID == '') {
             alert("Markerset name is required");
             return;
         }
 
-        var markerName = $('#marker_name').val();
-        if (!markerName) {
-            alert("Marker name is required");
-            return;
+        if (markersetType == "Dosage") {
+            var markerNameDosage = $('#marker_name_dosage').val();
+            var dosage = $('#allele_dosage').val();
+
+            if (markerNameDosage == '') {
+                alert("Marker name is required");
+                return;
+            }
+            if (dosage == '') {
+                alert("Please indicate a dosage");
+                return;
+            }
+
+            markerInfo.marker_name = markerNameDosage;
+            markerInfo.allele_dosage = dosage;
         }
 
-        var dosage = $('#allele_dosage').val();
-        var allele1 = $('#allele_1').val();
-        var allele2 = $('#allele_2').val();
+        if (markersetType == "SNP") {
+            var markerNameSNP = $('#marker_name_snp').val();
+            var allele1 = $('#allele_1').val();
+            var allele2 = $('#allele_2').val();
 
-        if ((markersetType == "Dosage") && (dosage == '')) {
-            alert("Please indicate a dosage");
-            return;
+            if (markerNameSNP == '') {
+                alert("Marker name is required");
+                return;
+            }
+            if ((allele1 == '') || ( allele2 == '')) {
+                alert("Please indicate SNP alleles");
+                return;
+            }
+
+            markerInfo.marker_name = markerNameSNP;
+            markerInfo.allele1 = allele1;
+            markerInfo.allele2 = allele2;
         }
 
-        if ((markersetType == 'SNP') && ((allele1 == '') || ( allele2 == ''))) {
-            alert("Please indicate SNP alleles");
-            return;
-        }
+        var markerInfoString = JSON.stringify(markerInfo);
 
-        var markerDosage = {};
-
-        markerDosage.marker_name = markerName;
-
-        if (dosage){
-            markerDosage.allele_dosage = dosage;
-        }
-
-        if (allele1){
-            markerDosage.allele1 = allele1;
-        }
-
-        if (allele2){
-            markerDosage.allele2 = allele2;
-        }
-
-        var markerDosageString = JSON.stringify(markerDosage);
-
-        var markerAdded = lo.addToList(markerSetID, markerDosageString);
+        var markerAdded = lo.addToList(markerSetID, markerInfoString);
         if (markerAdded){
-            alert("Added "+markerDosageString);
+            alert("Added "+markerInfoString);
         }
 
         location.reload();
