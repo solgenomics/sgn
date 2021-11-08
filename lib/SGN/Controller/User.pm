@@ -80,7 +80,6 @@ sub confirm_user :Path('/user/confirm') Args(0) {
 }
 
 sub confirm_failure {
-    my $self = shift;
     my $c = shift;
     my $reason = shift;
 
