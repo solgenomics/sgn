@@ -18,10 +18,37 @@ export function init() {
         }
 
         format_brapi_post_object() {
-            let brapi_post_plots = {};
+            let brapi_post_plots = [];
+            let count = 1;
             for (let plot of this.plot_arr.filter(plot => plot.type == "filler")) {
-                console.log(plot);
+                brapi_post_plots.push({
+                    "additionalInfo": {
+                        "invert_row_checkmark": document.getElementById("invert_row_checkmark").checked,
+                        "top_border_selection": this.meta_data.top_border_selection || false,
+                        "left_border_selection": this.meta_data.left_border_selection || false,
+                        "right_border_selection": this.meta_data.right_border_selection || false,
+                        "bottom_border_selection": this.meta_data.bottom_border_selection || false,
+                        "plot_layout": this.meta_data.plot_layout || "serpentine",
+                        "type": "filler",
+                    },
+                    "germplasmDbId": this.meta_data.filler_accession_id,
+                    "germplasmName": this.meta_data.filler_accession_name,
+                    "observationUnitName": this.trial_id + " filler " + count,
+                    "observationUnitPosition": {
+                        "observationLevel": {
+                            "levelCode": parseInt(this.meta_data.max_level_code) + count,
+                            "levelName": "plot",
+                            "levelOrder": 2
+                        },
+                        "positionCoordinateX": plot.observationUnitPosition.positionCoordinateX,
+                        "positionCoordinateY": plot.observationUnitPosition.positionCoordinateY,
+                    },
+                    "trialDbId": this.trial_id,
+                    "studyDbId": this.trial_id,
+                });
+                count++;
             }
+            return brapi_post_plots;
         }
 
         format_brapi_put_object() {
@@ -85,6 +112,45 @@ export function init() {
 
         }
 
+        get_planting_order() {
+            var planting_order_arr = Object.values(this.plot_object);
+            console.log(planting_order_arr);
+            let temp_planting_arr = [];
+            for (let i = 0; i < this.meta_data.num_rows; i++) {
+                temp_planting_arr.push([...planting_order_arr.slice(i * this.meta_data.num_cols, (i * this.meta_data.num_cols + this.meta_data.num_cols))])
+                if (this.meta_data.plot_layout == "serpentine" && i % 2 == 1) {
+                    temp_planting_arr[i].reverse();
+                }
+            }
+
+            let final_planting_arr = [];
+            for (let i = 0; i < this.meta_data.num_cols; i++) {
+                let row_coord;
+                for (let j = 0; j < this.meta_data.num_rows; j++) {
+                    if (this.meta_data.planting_order_layout == "serpentine" && i % 2 == 1) {
+                        row_coord = this.meta_data.num_rows - j - 1;
+                    } else {
+                        row_coord = j;
+                    }
+                    final_planting_arr.push(temp_planting_arr[row_coord][i]);
+                }
+            }
+            console.log('final', final_planting_arr);
+            var csv = ['PlotNumber', 'PlotName', 'AccessionName',].join(',');
+            csv += "\n";
+            final_planting_arr.forEach(function(plot) {
+                    csv += [plot.observationUnitPosition.observationLevel.levelCode, plot.observationUnitName, plot.germplasmName].join(',');
+                    csv += "\n";
+            });
+    
+            var hiddenElement = document.createElement('a');
+            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+            hiddenElement.target = '_blank';
+            
+            hiddenElement.download = `Trial_${this.trial_id}_PlantingOrder.csv`;
+            hiddenElement.click();    
+        }
+
         set_meta_data() {
             // this.plot_arr = JSON.parse(JSON.stringify(Object.values(this.plot_object)));
             this.plot_arr = Object.values(this.plot_object);
@@ -93,18 +159,22 @@ export function init() {
             var min_row = 100000;
             var max_col = 0;
             var max_row = 0;
+            var max_level_code = 0;
             for (let plot of this.plot_arr) {
                 max_col = plot.observationUnitPosition.positionCoordinateX > max_col ? plot.observationUnitPosition.positionCoordinateX : max_col;
                 min_col = plot.observationUnitPosition.positionCoordinateX < min_col ? plot.observationUnitPosition.positionCoordinateX : min_col;
                 max_row = plot.observationUnitPosition.positionCoordinateY > max_row ? plot.observationUnitPosition.positionCoordinateY : max_row;
                 min_row = plot.observationUnitPosition.positionCoordinateY < min_row ? plot.observationUnitPosition.positionCoordinateY : min_row;
+                max_level_code = parseInt(plot.observationUnitPosition.observationLevel.levelCode) > max_level_code ? plot.observationUnitPosition.observationLevel.levelCode : max_level_code;
             }
+            console.log('max level code', max_level_code);
             this.meta_data.min_row = min_row;
             this.meta_data.max_row = max_row;
             this.meta_data.min_col = min_col;
             this.meta_data.max_col = max_col;
             this.meta_data.num_rows = max_row - min_row + 1;
             this.meta_data.num_cols = max_col - min_col + 1;
+            this.meta_data.max_level_code = max_level_code;
             console.log('dims', this.meta_data);
         }
 
@@ -247,10 +317,10 @@ export function init() {
                     return true; 
                 }
                 if (plot.type == "data") {
-                    var image_ids = plot.imageDbIds || [];
+                    var image_ids = plot.plotImageDbIds || [];
                     var replace_accession = plot.germplasmName;
                     var replace_plot_id = plot.observationUnitDbId;
-                    var replace_plot_name = plot.observationUnitName;
+                    var replace_plot_name = plot.observationUnitName;plot
                     var replace_plot_number = plot.observationUnitPosition.observationLevel.levelCode;
 
                     jQuery('#plot_image_ids').html(image_ids);
@@ -303,11 +373,11 @@ export function init() {
                         color = "#6a5acd";
                     } else if (plot.observationUnitPosition.observationLevelRelationships[1].levelCode % 2 == 0) {
                         color = "#c7e9b4";
+                    } else if (plot.additionalInfo && plot.additionalInfo.type == "filler") {
+                        color = "lightgrey";    
                     } else {
                         color = "#41b6c4";
                     }
-                } else if (plot.type == "filler") {
-                    color = "#41b6c4";
                 } else {
                     color = "lightgrey";
                 }
@@ -335,6 +405,8 @@ export function init() {
             width = this.meta_data.right_border_selection ? width + 1 : width;
             var height = this.meta_data.top_border_selection ? this.meta_data.max_row + 3 : this.meta_data.max_row + 2;
             height = this.meta_data.bottom_border_selection ? height + 1 : height;
+            var row_increment = this.meta_data.invert_row_checkmark ? 1 : 0;
+            row_increment = this.meta_data.top_border_selection ? row_increment : row_increment - 1;
             var grid = d3.select("#container_fm")
             .append("svg")
             .attr("width", width * 50 + 20 + "px")
@@ -344,7 +416,7 @@ export function init() {
             plots.append("title");
             plots.enter().append("rect")
                 .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + 1) * 50 + 15; })
-                .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + 1) * 50 + 15; })
+                .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 15; })
                 .attr("rx", 4)
                 .attr("class", "col bordered")
                 .attr("width", 50)
@@ -365,12 +437,33 @@ export function init() {
                     window.open('/stock/'+d.observationUnitDbId+'/view');        
                 }
             });
+
             plots.append("text");
                     plots.enter().append("text")
                     .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + 1) * 50 + 25; })
-                    .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + 1) * 50 + 45; })
-                    .text(function(d) { if (d.observationUnitPosition.observationLevel) { return d.observationUnitPosition.observationLevel.levelCode; }});
+                    .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 45; })
+                    .text(function(d) { if (d.type == "data") { return d.observationUnitPosition.observationLevel.levelCode; }});
             plots.select("title").text(function(d) { return get_plot_message(d); }) ;
+
+            var image_icon = function (d){
+                var image = d.plotImageDbIds || []; 
+                var plot_image;
+                if (image.length > 0){
+                    plot_image = "/static/css/images/plot_images.png"; 
+                }else{
+                    plot_image = "";
+                }
+                return plot_image;
+            }
+
+            plots.enter().append("image")
+            .attr("xlink:href", image_icon)
+            .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + 1) * 50 + 42; })
+            .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 15; })
+            .attr("width", 20)
+            .attr("height", 20);
+                                      
+            plots.exit().remove();
 
             var row_label_arr = [];
             var col_label_arr = [];
@@ -380,22 +473,27 @@ export function init() {
             for (let i = 1; i <= this.meta_data.num_cols; i++) {
                 col_label_arr.push(i);
             }
+            var col_labels_row = this.meta_data.min_row - 1;
+            if (!this.meta_data.invert_row_checkmark) {
+                col_labels_row = this.meta_data.bottom_border_selection ? this.meta_data.max_row + 2 : this.meta_data.max_row + 1;
+                col_labels_row = this.meta_data.top_border_selection ? col_labels_row : col_labels_row - 1;
+                row_label_arr.reverse();
+            }
+            
 
             var rowLabels = grid.selectAll(".rowLabels") 
             .data(row_label_arr)
             .enter().append("text")
             .attr("x", ((this.meta_data.left_border_selection ? this.meta_data.min_col - 1 : this.meta_data.min_col) * 50) + 35)
-            .attr("y", function(label) {return (label+1) * 50 + 45})
-            .text(function(label) {return label});
+            .attr("y", function(label) {return (label+row_increment) * 50 + 45})
+            .text(function(label, i) {return i+1});
 
             var colLabels = grid.selectAll(".colLabels") 
             .data(col_label_arr)
             .enter().append("text")
-            .attr("x", function(label) {return (label+1) * 50 + 35})
-            .attr("y", ((this.meta_data.top_border_selection ? this.meta_data.min_row - 1 : this.meta_data.min_row) * 50) + 45)
+            .attr("x", function(label) {return (label+1) * 50 + 30})
+            .attr("y", (col_labels_row * 50) + 45)
             .text(function(label) {return label});
-
-
         }
 
 

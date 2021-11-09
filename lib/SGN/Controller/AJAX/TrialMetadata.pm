@@ -2508,6 +2508,20 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     $c->stash->{rest} = { success => 1};
 }
 
+sub accession_exists : Chained('trial') PathPart('accession_exists') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $accession_name = $c->req->param('accession_name');
+    my $rs = $schema->resultset("Stock::Stock")->search({uniquename=> $accession_name });
+    if (!$rs->first()) {
+        $c->stash->{rest} = { error => "Error: $accession_name is not a valid accession in the database." };
+        return;
+    }
+    my $accession_id = $rs->first()->stock_id();
+    $c->stash->{rest} = { success => $accession_id};
+}
+
 sub replace_well_accession : Chained('trial') PathPart('replace_well_accessions') Args(0) {
   my $self = shift;
   my $c = shift;
