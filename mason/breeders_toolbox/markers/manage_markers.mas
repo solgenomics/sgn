@@ -115,6 +115,16 @@ Titima Tantikanjana <tt15@cornell.edu>
                                                 </div>
                                             </div>
                                         </div>
+                                        <div id = "markerset_download_section" style="display:none">
+                                            <div class="form-group">
+                                                <label class="control-label col-sm-4">Marker Name:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="marker_name_download" placeholder="Enter marker name">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <div id = "markerset_dosage_section" style="display:none">
                                             <div class="form-group">
                                                 <label class="control-label col-sm-4">Marker Name:</label>
