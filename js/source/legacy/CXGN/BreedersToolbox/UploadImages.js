@@ -1,4 +1,4 @@
-0
+
 jQuery( document ).ready( function() {
 
     document.getElementById('upload_images_file_input').addEventListener('input', function (e) {
@@ -321,10 +321,10 @@ function loadSingleImage(imageFiles, imageData, uploadStatus){
     currentImage++;
     jQuery('#progress_msg').html('<p class="form-group text-center">Working on image '+currentImage+' out of '+total+'</p>');
     jQuery('#progress_msg').append('<p class="form-group text-center"><b>'+image.imageFileName+'</b></p>')
-    var progress = (currentImage / total) * 100;
+    var progress = Math.round((currentImage / total) * 100)
     jQuery('#progress_bar').css("width", progress + "%")
     .attr("aria-valuenow", progress)
-    .text(Math.round(progress) + "%");
+    .text(progress + "%");
 
     return jQuery.ajax( {
         url: "/brapi/v2/images",
