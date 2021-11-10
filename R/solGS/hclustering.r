@@ -19,6 +19,7 @@ library(stringi)
 library(phenoAnalysis)
 library(ape)
 library(ggtree)
+library(treeio)
 
 allArgs <- commandArgs()
 
@@ -193,21 +194,28 @@ distMat <- clusterData %>%
 
 distMat <- round(distMat, 3)
 
- hClust <- distMat  %>%
+hClust <- distMat  %>%
                 hclust(., method="complete")
 
-# clusteredData <- clusteredData %>%
-#     mutate_if(is.numeric, funs(round(., 2))) %>%
-#     arrange(Cluster)
-distTable <- data.frame(as.matrix(distMat))
-print(head(distTable))
 
-png(plotFile, height=600, width=600)
-    ggtree(hClust, layout = "circular") +
-    geom_tiplab(size  =3)
+distTable <- data.frame(as.matrix(distMat))
+# print(head(distTable))
+
+clustTree <- ggtree(hClust,  layout = "rectangular", color = 'blue')
+xMax <- ggplot_build(clustTree)$layout$panel_scales_x[[1]]$range$range[2]
+xMax <- xMax + 0.05
+
+clustTree <- clustTree +
+ggplot2::xlim(0, xMax) +
+geom_tiplab(size  = 3) +
+geom_text(aes(x=branch, label=round(branch.length, 2)))
+
+png(plotFile, height=600, width=800)
+    clustTree
 dev.off()
 
-cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
+
+# cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
 
 if (length(genoFiles) > 1) {
     fwrite(genoData,
@@ -217,14 +225,19 @@ if (length(genoFiles) > 1) {
        )
 }
 
-if (length(resultFile) != 0 ) {
-    fwrite(distTable,
-       file      = resultFile,
-       sep       = "\t",
-       row.names = TRUE,
-       quote     = FALSE,
-       )
-}
+# if (length(resultFile) != 0 ) {
+#     fwrite(clustTreeData,
+#        file      = resultFile,
+#        sep       = "\t",
+#        row.names = TRUE,
+#        quote     = FALSE,
+#        )
+# }
+
+newickF <- as.phylo(hClust)
+write.tree(phy = newickF,
+file = resultFile
+)
 
 ####
 q(save = "no", runLast = FALSE)
