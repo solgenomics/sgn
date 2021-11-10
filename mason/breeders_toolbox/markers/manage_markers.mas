@@ -117,11 +117,9 @@ Titima Tantikanjana <tt15@cornell.edu>
                                         </div>
                                         <div id = "markerset_download_section" style="display:none">
                                             <div class="form-group">
-                                                <label class="control-label col-sm-4">Marker Name:</label>
+                                                <label class="control-label col-sm-4">Marker Name(s):</label>
                                                 <div class="col-sm-8">
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" id="marker_name_download" placeholder="Enter marker name">
-                                                    </div>
+                                                    <textarea class="form-control" id="marker_name_download" placeholder="To add more than one marker, separate marker names using a new line."></textarea>
                                                 </div>
                                             </div>
                                         </div>

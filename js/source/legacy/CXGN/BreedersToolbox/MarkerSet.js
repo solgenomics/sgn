@@ -111,6 +111,12 @@ jQuery(document).ready(function (){
 
             markerInfo.marker_name = markerNameDosage;
             markerInfo.allele_dosage = dosage;
+            var markerInfoString = JSON.stringify(markerInfo);
+
+            var markerAdded = lo.addToList(markerSetID, markerInfoString);
+            if (markerAdded){
+                alert("Added "+markerInfoString);
+            }
         }
 
         if (markersetType == "SNP") {
@@ -130,9 +136,16 @@ jQuery(document).ready(function (){
             markerInfo.marker_name = markerNameSNP;
             markerInfo.allele1 = allele1;
             markerInfo.allele2 = allele2;
+            var markerInfoString = JSON.stringify(markerInfo);
+
+            var markerAdded = lo.addToList(markerSetID, markerInfoString);
+            if (markerAdded){
+                alert("Added "+markerInfoString);
+            }
         }
 
         if (markersetType == "Download") {
+            var markerNameArray = [];
             var markerNameDownload = $('#marker_name_download').val();
 
             if (markerNameDownload == '') {
@@ -140,14 +153,18 @@ jQuery(document).ready(function (){
                 return;
             }
 
-            markerInfo.marker_name = markerNameDownload;
-        }
+            var markerNames = markerNameDownload.split("\n");
 
-        var markerInfoString = JSON.stringify(markerInfo);
+            for (let i = 0; i < markerNames.length; i++) {
+                markerInfo.marker_name = markerNames[i];
+                markerInfoString = JSON.stringify(markerInfo);
+                markerNameArray.push(markerInfoString);
+            }
+            var markerAdded = lo.addBulk(markerSetID, markerNameArray);
+            if (markerAdded){
+                alert("Added "+markerNameArray);
+            }
 
-        var markerAdded = lo.addToList(markerSetID, markerInfoString);
-        if (markerAdded){
-            alert("Added "+markerInfoString);
         }
 
         location.reload();
