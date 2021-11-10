@@ -71,7 +71,8 @@ sub extract_trait_data :Path('/ajax/gcpc/getdata') Args(0) {
     my $trait = $c->req->param("trait");
 
     $file = basename($file);
-
+    my @data;
+    
     my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/gcpc_files/".$file);
     print STDERR Dumper($temppath);
 
