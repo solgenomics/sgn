@@ -573,23 +573,36 @@ sub retrieve_genotypes {
     my $marker_name_list = shift || [];
 
     my $accessions = $self->retrieve_accessions();
+
+    print STDERR "ACCESSIONS: ".Dumper($accessions);
+    
     my @accession_ids;
     foreach (@$accessions) {
         push @accession_ids, $_->[0];
     }
 
+    print STDERR "ACCESSION IDS: ".Dumper(\@accession_ids);
+    
     my $trials = $self->retrieve_trials();
     my @trial_ids;
     foreach (@$trials) {
         push @trial_ids, $_->[0];
     }
 
+    my $genotyping_protocol_ref = $self->retrieve_genotyping_protocols();
+    my @protocols;
+    foreach my $p (@$genotyping_protocol_ref) {
+	push @protocols, $p->[0];
+			       	    
+    }
+    
+    
     my $genotypes_search = CXGN::Genotype::Search->new(
         bcs_schema => $self->schema(),
         people_schema=>$self->people_schema,
         accession_list => \@accession_ids,
         trial_list => \@trial_ids,
-        protocol_id_list => [$protocol_id],
+        protocol_id_list => \@protocols,
         chromosome_list => $chromosome_list,
         start_position => $start_position,
         end_position => $end_position,
