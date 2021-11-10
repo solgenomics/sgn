@@ -19,14 +19,14 @@ jQuery( document ).ready( function() {
                 alert("Please select image files");
                 return false;
             }
-            var [fileData, parseErrors] = parseImageFilenames(imageFiles);
+            var [fileData, unitType, transformType, parseErrors] = parseImageFilenames(imageFiles);
             if (parseErrors.length) {
                 // console.log("parseErrors are "+JSON.stringify(parseErrors));
                 reportVerifyResult({ "error" : parseErrors });
                 jQuery('#working_modal').modal("hide");
                 return;
             }
-            verifyImageFiles(fileData).then(function(result) {
+            verifyImageFiles(fileData, unitType, transformType).then(function(result) {
                 // console.log("result is "+JSON.stringify(result));
                 reportVerifyResult(result);
             });
@@ -62,21 +62,26 @@ jQuery( document ).ready( function() {
             .text("0%");
             jQuery('#progress_modal').modal('show');
 
-            var [fileData, parseErrors] = parseImageFilenames(imageFiles);
-            var observationUnitNames = Object.values(fileData).map(function(value) {
-                return value.observationUnitName;
+            var [fileData, unitType, transformType, parseErrors] = parseImageFilenames(imageFiles);
+            var observationUnits = Object.values(fileData).map(function(value) {
+                return value.observationUnit;
             });
 
             jQuery.ajax( {
                 url: "/list/transform/temp",
                 method: 'GET',
                 data: {
-                    "type": "stocks_2_stock_ids",
-                    "items": JSON.stringify(observationUnitNames),
+                    "type": transformType,
+                    "items": JSON.stringify(observationUnits),
                 }
             }).done(function(response) {
+                var observationUnitDbIds;
+                if (unitType == "observationUnitName") {
+                    observationUnitDbIds = response.transform;
+                } else {
+                    observationUnitDbIds = observationUnits;
+                }
 
-                var observationUnitDbIds = response.transform;
                 var imageData = Object.values(fileData).map(function(value, i) {
                     value.observationUnitDbId = observationUnitDbIds[i];
                     return value;
@@ -173,10 +178,17 @@ function reportStoreResult(result) {
 
 
 function parseImageFilenames(imageFiles) {
-    // extract observationUnitNames from image filenames
+    // extract observationUnits from image filenames
     // e.g. 21BEDS0809HCRH02_25_809_Covington_G3_RootPhoto1_1_2021-05-13-04-50-36
     var fileData = {};
+    var unitType = '';
+    var transformType = '';
     var parseErrors = [];
+
+    var id_format = /^[0-9]+$/;
+    var id_count = 0;
+    var name_count = 0;
+
     for (var i = 0; i < imageFiles.length; i++) {
         var file = imageFiles[i];
         var name = file.name;
@@ -184,21 +196,34 @@ function parseImageFilenames(imageFiles) {
         var timestampWithoutExtension = timestamp.substr(0, timestamp.lastIndexOf('.'));
         var nameWithoutTimestamp = name.substring(0, name.lastIndexOf('_'));
         var nameWithoutNumber = nameWithoutTimestamp.substring(0, nameWithoutTimestamp.lastIndexOf('_'));
-        var justUnitName = nameWithoutNumber.substring(0, nameWithoutNumber.lastIndexOf('_'));
-        if (justUnitName) {
+        var justUnit = nameWithoutNumber.substring(0, nameWithoutNumber.lastIndexOf('_'));
+        justUnit.match(id_format) ? id_count++ : name_count++;
+        if (justUnit) {
             fileData[file.name] = {
                 "imageFileName" : file.name,
                 "imageFileSize" : file.size,
                 "imageTimeStamp" : timestampWithoutExtension,
                 "mimeType" : file.type,
-                "observationUnitName" : justUnitName
+                "observationUnit" : justUnit
             };
         } else {
-            parseErrors.push("Filename <b>" + name + "</b> must start with a valid observationUnitName.")
+            parseErrors.push("Filename <b>" + name + "</b> must start with a valid observationUnitName or observationUnitDbId.")
         }
     }
+
+    if (id_count > 0 && name_count > 0) {
+        parseErrors.push("Image filenames include a mix of observationUnitDbIds and observationUnitNames. Please load files with only one naming pattern at a time.");
+    }
+
+    if (id_count > 0) {
+        unitType = "observationUnitDbId";
+        transformType = "stock_ids_2_stocks";
+    } else {
+        unitType = "observationUnitName";
+        transformType = "stocks_2_stock_ids";
+    }
     // console.log(JSON.stringify(fileData));
-    return [fileData, parseErrors];
+    return [fileData, unitType, transformType, parseErrors];
 }
 
 
@@ -218,22 +243,24 @@ function formatMessage(messageDetails, messageType) {
 }
 
 
-function verifyImageFiles(fileData) {
-  var observationUnitNames = Object.values(fileData).map(function(value) {
-      return value.observationUnitName;
-  });
-  return jQuery.ajax( {
+function verifyImageFiles(fileData, unitType, transformType) {
+
+    var observationUnits = Object.values(fileData).map(function(value) {
+        return value.observationUnit;
+    });
+
+    return jQuery.ajax( {
       url: "/list/transform/temp",
       method: 'GET',
       data: {
-          "type": "stocks_2_stock_ids",
-          "items": JSON.stringify(observationUnitNames),
+          "type": transformType,
+          "items": JSON.stringify(observationUnits),
       }
-  }).then(function(response) {
+    }).then(function(response) {
       // console.log("response is "+JSON.stringify(response));
       if (response.missing.length > 0) {
           var errors = response.missing.map(function(name) {
-              return "<b>" + name + "</b> is not a valid observationUnitName.";
+              return "<b>" + name + "</b> is not a valid "+unitType;
           });
           console.log("Errors are "+errors);
           return { "error" : errors };
@@ -241,10 +268,9 @@ function verifyImageFiles(fileData) {
           var successText = "Verification complete. All image files match an existing observationUnit. Ready to store images.";
           return { "success" : successText };
       }
-  }).fail(function(error){
+    }).fail(function(error){
        return { "error" : error };
-  });
-
+    });
 }
 
 
