@@ -183,7 +183,7 @@ $dataset_id => undef
                 <tr>
                     <td colspan="12">
                         <span class="glyphicon glyphicon-info-sign" title="You can use either chromosome or markers (markerset) to filter genotyping data. You cannot use both criteria at the same time."></span>
-                        <span>Filtering by Chromosome or Markerset</span>
+                        <span>Filter by Chromosome or Markerset</span>
                     </td>
                 </tr>
                 <tr>
@@ -202,12 +202,12 @@ $dataset_id => undef
                 </tr>
                 <tr>
                     <td colspan="6">
-                        <span>Marker Set Filter</span>
+                        <span>Markerset Filter</span>
                         <select class="wizard-download-genotypes-marker-set-list-id form-control input-sm" id="wizard-download-genotypes-marker-set-list-id"></select>
                     </td>
                     <td colspan="6">
                         <br/>
-                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">Manage Marker Sets</button>
+                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">Manage Markersets</button>
                     </td>
                 </tr>
                 <tr>
@@ -223,7 +223,7 @@ $dataset_id => undef
                 </tr>
                 <tr>
                     <td colspan="6">
-                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, use the chromosome, start position, end position, and marker set options. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats."></span>
+                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, use the chromosome, start position, end position, and markerset options. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats."></span>
                         <span>Download Genotypes</span><br/>
                         <button class="wizard-download-genotypes btn btn-sm btn-primary">
                             <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
