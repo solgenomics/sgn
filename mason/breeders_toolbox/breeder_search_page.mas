@@ -181,31 +181,45 @@ $dataset_id => undef
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
             <table class="table">
                 <tr>
-                  <td colspan="4">
-                    <span>Chromosome</span>
-                    <select class="wizard-download-genotypes-chromosome-number form-control input-sm"></select>
-                  </td>
-                  <td colspan="4">
-                    <span>Start Position</span>
-                    <input placeholder="" type="number" class="wizard-download-genotypes-start-position form-control input-sm">
-                  </td>
-                  <td colspan="4">
-                    <span>End Position</span>
-                    <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control input-sm">
-                  </td>
+                    <td colspan="12">
+                        <span class="glyphicon glyphicon-info-sign" title="You can use either chromosome or markers (markerset) to filter genotyping data. You cannot use both criteria at the same time."></span>
+                        <span>Filtering by Chromosome or Markerset</span>
+                    </td>
                 </tr>
                 <tr>
-                  <td colspan="6">
-                    <span>Genotypes Download Format</span>
-                    <select class="wizard-download-genotypes-format form-control input-sm" >
-                        <option value="VCF">VCF File Format</option>
-                        <option value="DosageMatrix">Dosage Matrix File Format (.tsv)</option>
-                    </select>
-                  </td>
-                  <td colspan="6">
-                    <span>Marker Set Filter</span>
-                    <select class="wizard-download-genotypes-marker-set-list-id form-control input-sm" id="wizard-download-genotypes-marker-set-list-id"></select>
-                  </td>
+                    <td colspan="4">
+                        <span>Chromosome</span>
+                        <select class="wizard-download-genotypes-chromosome-number form-control input-sm"></select>
+                    </td>
+                    <td colspan="4">
+                        <span>Start Position</span>
+                        <input placeholder="" type="number" class="wizard-download-genotypes-start-position form-control input-sm">
+                    </td>
+                    <td colspan="4">
+                        <span>End Position</span>
+                        <input placeholder="" type="number" class="wizard-download-genotypes-end-position form-control input-sm">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="6">
+                        <span>Marker Set Filter</span>
+                        <select class="wizard-download-genotypes-marker-set-list-id form-control input-sm" id="wizard-download-genotypes-marker-set-list-id"></select>
+                    </td>
+                    <td colspan="6">
+                        <br/>
+                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">Manage Marker Sets</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="6">
+                        <span>Genotypes Download Format</span>
+                        <select class="wizard-download-genotypes-format form-control input-sm" >
+                            <option value="VCF">VCF File Format</option>
+                            <option value="DosageMatrix">Dosage Matrix File Format (.tsv)</option>
+                        </select>
+                    </td>
+                    <td colspan="6">
+                    </td>
                 </tr>
                 <tr>
                     <td colspan="6">
@@ -217,10 +231,6 @@ $dataset_id => undef
                         </button>
                     </td>
                     <td colspan="6">
-                        <br/>
-                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">
-                            Manage Marker Sets
-                        </button>
                     </td>
                 </tr>
             </table>
