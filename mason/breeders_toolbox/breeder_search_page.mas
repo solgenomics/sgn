@@ -217,7 +217,7 @@ $dataset_id => undef
                         </button>
                     </td>
                     <td colspan="6">
-                        <span>Marker Set Filter</span><br/>
+                        <br/>
                         <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">
                             Manage Marker Sets
                         </button>
