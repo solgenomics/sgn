@@ -17,6 +17,7 @@ library(ggfortify)
 library(tibble)
 library(stringi)
 library(phenoAnalysis)
+library(ggplot2)
 library(ape)
 library(ggtree)
 library(treeio)
@@ -86,9 +87,9 @@ extractGenotype <- function(inputFiles) {
             genoData <- fread(filteredGenoFile, header = TRUE)
         }
 
-        genoData <- unique(genoData, by = 'V1')
+        genoData <- unique(genoData, by = "V1")
         genoData <- data.frame(genoData)
-        genoData <- column_to_rownames(genoData, 'V1')
+        genoData <- column_to_rownames(genoData, "V1")
     }
 
     if (is.null(genoData)) {
@@ -103,7 +104,7 @@ extractGenotype <- function(inputFiles) {
 
         message("No. of geno missing values, ", sum(is.na(genoData)))
         if (sum(is.na(genoData)) > 0) {
-            genoDataMissing <- c('yes')
+            genoDataMissing <- c("yes")
             genoData <- na.roughfix(genoData)
         }
 
@@ -115,7 +116,7 @@ set.seed(235)
 
 clusterDataNotScaled <- c()
 
-if (grepl('genotype', dataType, ignore.case = TRUE)) {
+if (grepl("genotype", dataType, ignore.case = TRUE)) {
     clusterData <- extractGenotype(inputFiles)
 
     pca    <- prcomp(clusterData, retx = TRUE)
@@ -125,14 +126,14 @@ if (grepl('genotype', dataType, ignore.case = TRUE)) {
 
     varProp        <- variances[3, ]
     varProp        <- data.frame(t(varProp))
-    names(varProp) <- c('cumVar')
+    names(varProp) <- c("cumVar")
 
     selectPcs <- varProp %>% filter(cumVar <= 0.9)
     pcsCnt    <- nrow(selectPcs)
 
-    reportNotes <- paste0('Before clustering this dataset, principal component analysis (PCA) was done on it. ', "\n")
-    reportNotes <- paste0(reportNotes, 'Based on the PCA, ', pcsCnt, ' PCs are used to cluster this dataset. ', "\n")
-    reportNotes <- paste0(reportNotes, 'They explain 90% of the variance in the original dataset.', "\n")
+    reportNotes <- paste0("Before clustering this dataset, principal component analysis (PCA) was done on it. ", "\n")
+    reportNotes <- paste0(reportNotes, "Based on the PCA, ", pcsCnt, " PCs are used to cluster this dataset. ", "\n")
+    reportNotes <- paste0(reportNotes, "They explain 90% of the variance in the original dataset.", "\n")
 
     scores   <- data.frame(pca$x)
     scores   <- scores[, 1:pcsCnt]
@@ -145,29 +146,29 @@ if (grepl('genotype', dataType, ignore.case = TRUE)) {
     clusterData <- scores
 } else {
 
-    if (grepl('gebv', dataType, ignore.case = TRUE)) {
+    if (grepl("gebv", dataType, ignore.case = TRUE)) {
         gebvsFile <- grep("combined_gebvs", inputFiles,  value = TRUE)
         gebvsData <- data.frame(fread(gebvsFile, header = TRUE))
 
         clusterNa   <- gebvsData %>% filter_all(any_vars(is.na(.)))
         clusterData <- column_to_rownames(gebvsData, 'V1')
-    } else if (grepl('phenotype', dataType, ignore.case = TRUE)) {
+    } else if (grepl("phenotype", dataType, ignore.case = TRUE)) {
 
         metaFile <- grep("meta", inputFiles,  value = TRUE)
 
         clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
 
         if (!is.na(predictedTraits) & length(predictedTraits) > 1) {
-            clusterData <- rownames_to_column(clusterData, var = 'germplasmName')
+            clusterData <- rownames_to_column(clusterData, var = "germplasmName")
             clusterData <- clusterData %>% select(c(germplasmName, predictedTraits))
-            clusterData <- column_to_rownames(clusterData, var = 'germplasmName')
+            clusterData <- column_to_rownames(clusterData, var = "germplasmName")
         }
     }
 
     clusterDataNotScaled <- na.omit(clusterData)
 
     clusterData <- scale(clusterDataNotScaled, center=TRUE, scale=TRUE)
-    reportNotes <- paste0(reportNotes, 'Note: Data was standardized before clustering.', "\n")
+    reportNotes <- paste0(reportNotes, "Note: Data was standardized before clustering.", "\n")
 }
 
 sIndexFile <- grep("selection_index", inputFiles, value = TRUE)
@@ -178,14 +179,14 @@ if (length(sIndexFile) != 0) {
     selectionProp <- selectionProp * 0.01
     selectedIndexGenotypes <- sIndexData %>% top_frac(selectionProp)
 
-    selectedIndexGenotypes <- column_to_rownames(selectedIndexGenotypes, var = 'V1')
+    selectedIndexGenotypes <- column_to_rownames(selectedIndexGenotypes, var = "V1")
 
     if (!is.null(selectedIndexGenotypes)) {
         clusterData <- rownames_to_column(clusterData, var = "germplasmName")
         clusterData <- clusterData %>%
             filter(germplasmName %in% rownames(selectedIndexGenotypes))
 
-        clusterData <- column_to_rownames(clusterData, var = 'germplasmName')
+        clusterData <- column_to_rownames(clusterData, var = "germplasmName")
     }
 }
 
@@ -199,23 +200,24 @@ hClust <- distMat  %>%
 
 
 distTable <- data.frame(as.matrix(distMat))
-# print(head(distTable))
 
-clustTree <- ggtree(hClust,  layout = "rectangular", color = 'blue')
+clustTree <- ggtree(hClust,  layout = "circular", color = "#96CA2D")
 xMax <- ggplot_build(clustTree)$layout$panel_scales_x[[1]]$range$range[2]
-xMax <- xMax + 0.05
+xMax <- xMax + 0.02
 
+ # ggplot2::xlim(0, xMax)
 clustTree <- clustTree +
-ggplot2::xlim(0, xMax) +
-geom_tiplab(size  = 3) +
-geom_text(aes(x=branch, label=round(branch.length, 2)))
+    geom_tiplab(size = 2.5, color = "blue")
 
-png(plotFile, height=600, width=800)
-    clustTree
+
+# geom_text(aes(x = branch, label = round(branch.length, 2)))
+
+png(plotFile, height = 700, width = 850)
+   print(clustTree)
 dev.off()
 
 
-# cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
+cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
 
 if (length(genoFiles) > 1) {
     fwrite(genoData,
