@@ -135,7 +135,6 @@ export function init() {
                     final_planting_arr.push(temp_planting_arr[row_coord][i]);
                 }
             }
-            console.log('final', final_planting_arr);
             var csv = ['PlotNumber', 'PlotName', 'AccessionName',].join(',');
             csv += "\n";
             final_planting_arr.forEach(function(plot) {
@@ -149,6 +148,10 @@ export function init() {
             
             hiddenElement.download = `Trial_${this.trial_id}_PlantingOrder.csv`;
             hiddenElement.click();    
+        }
+
+        get_harvesting_order() {
+            console.log(this.plot_arr);
         }
 
         set_meta_data() {
@@ -399,7 +402,17 @@ export function init() {
             }
 
             var get_plot_message = function(plot) {
-                return plot.observationUnitName;
+                if (plot.type != "data") {
+                    return "Plot Name: " + plot.observationUnitName;
+                } else {
+                    return ` 
+                        Plot Name: ${plot.observationUnitName}
+                        Plot Number: ${plot.observationUnitPosition.observationLevel.levelCode}
+                        Block Number: ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}
+                        Rep Number: ${plot.observationUnitPosition.observationLevelRelationships[2].levelCode}
+                        Accession Name: ${plot.germplasmName}
+                    `
+                }
             }
             var width = this.meta_data.left_border_selection ? this.meta_data.max_col + 3 : this.meta_data.max_col + 2;
             width = this.meta_data.right_border_selection ? width + 1 : width;
@@ -411,6 +424,13 @@ export function init() {
             .append("svg")
             .attr("width", width * 50 + 20 + "px")
             .attr("height", height * 50 + 20 + "px");
+            
+            var tooltip = d3.select("#container_fm")
+            .append('div')
+            .attr('id', 'tooltip')
+            .attr('class', 'tooltip')
+            .attr('style', 'position: absolute; opacity: 0;');
+            
             var plots = grid.selectAll("plots")
             .data(this.plot_arr);
             plots.append("title");
@@ -424,9 +444,17 @@ export function init() {
                 .style("stroke-width", 2)
                 .style("stroke", function(d) { return get_stroke_color(d)})
                 .style("fill", function(d) {return get_plot_color(d)})
-                .on("mouseover", function(d) { if (d.observationUnitPosition.observationLevel) { d3.select(this).style('fill', 'green').style('cursor', 'pointer'); }})
+                .on("mouseover", function(d) { if (d.observationUnitPosition.observationLevel) { 
+                    d3.select(this).style('fill', 'green').style('cursor', 'pointer'); 
+                    d3.select('#tooltip')
+                    .style('opacity', .9)
+                    .style('left', ((d.observationUnitPosition.positionCoordinateX + 1) * 50 + 100) + 'px')
+                    .style('top', ((d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 535) + 'px')
+                    .text(get_plot_message(d))
+                }})
                 .on("mouseout", function(d) { 
                     d3.select(this).style('fill', get_plot_color(d)).style('cursor', 'default')
+                    d3.select('#tooltip').style('opacity', 0)
                     plots.exit().remove();
                 }).call(cc);
 
@@ -442,8 +470,7 @@ export function init() {
                     plots.enter().append("text")
                     .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + 1) * 50 + 25; })
                     .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 45; })
-                    .text(function(d) { if (d.type == "data") { return d.observationUnitPosition.observationLevel.levelCode; }});
-            plots.select("title").text(function(d) { return get_plot_message(d); }) ;
+                    .text(function(d) { if (d.type == "data" && d.additionalInfo.type != "filler") { return d.observationUnitPosition.observationLevel.levelCode; }});
 
             var image_icon = function (d){
                 var image = d.plotImageDbIds || []; 
@@ -510,7 +537,7 @@ export function init() {
 
         render() {
             jQuery("#working_modal").modal("hide");
-            jQuery("#chart_fm").css({ "display": "inline-block" });
+            // jQuery("#chart_fm").css({ "display": "inline-block" });
             jQuery("#container_fm").css({ "display": "inline-block", "overflow": "auto" });
             jQuery("#trait_heatmap").css("display", "none");
             jQuery("#container_heatmap").css("display", "none");

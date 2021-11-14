@@ -16,6 +16,19 @@ $data_level => 'plot'
     #chart_fm {display: none; }
     #d3legend {display: none; }
     #plot_image_ids {display: none;}
+
+
+    #tooltip {	
+        position: absolute;			
+        width: 220px;					
+        height: 100px;					
+        padding: 2px;				
+        font: 12px sans-serif;		
+        background: lightsteelblue;	
+        border: 0px;		
+        border-radius: 8px;			
+        pointer-events: none;		
+    }
     
     #container_heatmap {
         /*border:2px dashed #000;*/
@@ -101,12 +114,6 @@ $data_level => 'plot'
   <a id="view_ctrl_button_link"><button class="btn btn-primary"  type="button" id="view_ctrl_id_button" value="delete_cords" >View Controls</button></a>
 </div>
 
-
-<div class="well well-sm">
-  
-  <a id="hm_replace_accessions_link"><button class="btn btn-success" type="button" id="hm_replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
-</div>
-
 <div id="container_heatmap" ></div>
 <div>
     <ul class="legend">
@@ -119,21 +126,25 @@ $data_level => 'plot'
     </ul>
 </div>
 <br><br>
-<div>
+<div id="container_fm">
     <div>
         <button class="btn btn-primary" style="margin-left: 2%;" id="planting_order_button"> Planting Order </button>
         <select name="planting_order" id="planting_order">
             <option value="">--Select Layout--</option>
-            <option value="serpentine">Serpentine</option>
-            <option value="zigzag">Zigzag</option>
+            <option value="by_col_serpentine">By Column: Serpentine</option>
+            <option value="by_col_zigzag">By Column: Zigzag</option>
+            <option value="by_row_serpentine">By Row: Serpentine</option>
+            <option value="by_row_zigzag">By Row: Zigzag</option>
         </select>
-        <button class="btn btn-primary" style="margin-left: 2%;"> Harvesting Order </button>
+        <button class="btn btn-primary" id="harvesting_order_button" style="margin-left: 2%;"> Harvesting Order </button>
         <select name="harvesting_order" id="harvesting_order">
             <option value="">--Select Layout--</option>
-            <option value="serpentine">Serpentine</option>
-            <option value="zigzag">Zigzag</option>
+            <option value="by_col_serpentine">By Column: Serpentine</option>
+            <option value="by_col_zigzag">By Column: Zigzag</option>
+            <option value="by_row_serpentine">By Row: Serpentine</option>
+            <option value="by_row_zigzag">By Row: Zigzag</option>
         </select>
-        <button style="margin-left: 30%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
+        <button style="margin-left: 20%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
         <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success">Submit Field Layout</button><br><br>
         <div style="display: inline;">
             <label style="margin-left: 2%;" for="invert_rows">Invert Rows</label>
@@ -154,7 +165,6 @@ $data_level => 'plot'
             </select>
         </div>
     </div>  
-    <div id="container_fm"></div>
 </div>
 
 
@@ -1001,7 +1011,7 @@ jQuery(document).ready( function() {
         jQuery.ajax({
              //url: '/ajax/breeders/trial/'+trial_id+'/coords', 
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-            url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&pageSize=10000',
+            url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&observationUnitLevelName=plot&pageSize=10000',
             // url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
              beforeSend: function() {
                jQuery("#working_modal").modal("show");
@@ -1099,7 +1109,50 @@ jQuery(document).ready( function() {
         )
     }
 
+    function heatmap() {
 
+        FieldMap.load();
+        // jQuery.ajax({
+        //     headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+        //     url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&observationUnitLevelName=plot&pageSize=10000',
+        //     // url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
+        //      beforeSend: function() {
+        //        jQuery("#working_modal").modal("show");
+        //      },
+        //      success: function(response) {
+        //         data = response.result.data;
+        //         console.log('DATA', data);
+        //         if (data[0].additionalInfo) {
+        //             FieldMap.check_elements(data[0].additionalInfo);
+        //             if (data[0].additionalInfo.plot_layout) {
+        //                 document.getElementById("plot_layout").value = data[0].additionalInfo.plot_layout;
+        //                 FieldMap.meta_data.plot_layout = data[0].additionalInfo.plot_layout;
+        //             }
+        //         }
+        //         FieldMap.filter_data(data);
+        //         FieldMap.set_meta_data();
+        //         FieldMap.load();
+
+        //         // FieldMap.plot_ou_arr.sort(function(plot_ou_1, plot_ou_2) {
+	    //         //       // Ascending: first plotNumber less than the previous
+	    //         //     return FieldMap.plot_object[plot_ou_1].observationUnitPosition.observationLevel.levelCode - FieldMap.plot_object[plot_ou_2].observationUnitPosition.observationLevel.levelCode
+        //         // });
+                
+
+        //     },
+        //     error: function(response) {
+        //         alert('Error displaying traits assayed heatmap');   
+        //     }
+        // })
+        // .then(
+        //         function() {
+        //                 console.log(FieldMap.plot_object);
+        //                 // FieldMap.state.retrieve = true;
+        //                 num_real_plots = Object.keys(FieldMap.plot_object).length;
+        //         }
+        //     )
+        }
+    
     function geo_field_map_view(){
 
         jQuery('#container_heatmap_geo_div').width(jQuery('#container_heatmap_geo').parent().width());
@@ -1232,6 +1285,15 @@ jQuery(document).ready( function() {
         } else {
             FieldMap.meta_data.planting_order_layout = jQuery('#planting_order').val();
             FieldMap.get_planting_order();
+        }
+    });
+
+    jQuery('#harvesting_order_button').click(function() {
+        if (jQuery('#harvesting_order').val() == "") {
+            alert("Please select an order layout.")
+        } else {
+            FieldMap.meta_data.harvesting_order_layout = jQuery('#harvesting_order').val();
+            FieldMap.get_harvesting_order();
         }
     })
     jQuery("#invert_row_checkmark").change(function() {
@@ -1441,9 +1503,10 @@ jQuery(document).ready( function() {
     if (selected == 'fieldmap'){
         d3.select("svg").remove();
         jQuery("#view_ctrl_button").css("display", "none");
+        jQuery("#container_heatmap").css("display", "none");
         jQuery("#ctrldiv").css("display", "none");
         d3.select("#container_heatmap_geo_div").remove();
-        field_map_view();
+        FieldMap.load();
     } else if (selected == 'geofieldmap'){
         jQuery('#working_modal').modal("show");
         d3.select("svg").remove();
@@ -1460,12 +1523,10 @@ jQuery(document).ready( function() {
     } else  if (selected != ''){
         d3.select("svg").remove();
         d3.select("#container_heatmap_geo_div").remove();
-        jQuery("#d3legend").css("display", "none");
-        jQuery("#container_fm").css("display", "none");
         jQuery("#delete_button_fm").css("display", "none");
         jQuery("#ctrldiv").css("display", "none");
         jQuery("#view_ctrl_button").show();
-        assayed_trait_heatmap_view(selected);
+        heatmap();
     }
   });
 
