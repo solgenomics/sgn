@@ -165,7 +165,7 @@ sub _prepare_response {
     my $file_id = $c->stash->{file_id};
     my $plot_name = "${cluster_type}-plot-${file_id}";
 
-    my $ret->{kcluster_plot} = $cluster_plot_file;
+    my $ret->{cluster_plot} = $cluster_plot_file;
     $ret->{clusters} = $clusters_file;
     $ret->{cluster_report} = $report;
     $ret->{result} = 'success';
