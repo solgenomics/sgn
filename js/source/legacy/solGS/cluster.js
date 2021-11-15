@@ -632,14 +632,24 @@ if (document.URL.match(/cluster\/analysis/)) {
 	var imageId = res.plot_name;
 	console.log('image id: ' + imageId)
 	imageId = 'id="' + imageId + '"';
-	var plot = '<img '+ imageId + ' src="' + res.kcluster_plot + '">';
-	var filePlot  = res.kcluster_plot.split('/').pop();
-	var plotType = 'K-means plot';
+	var plot = '<img '+ imageId + ' src="' + res.cluster_plot + '">';
+	var filePlot  = res.cluster_plot.split('/').pop();
+	var plotType;
+    var outFileType;
+
+    if (plot.match(/k-means/i)) {
+        plotType = 'K-means plot';
+        outFileType = 'Clusters';
+    } else {
+        plotType = 'Dendrogram';
+        outFileType = 'Newick tree format';
+    }
+
 	var plotLink = "<a href=\""
-	    + res.kcluster_plot
+	    + res.cluster_plot
 	    +  "\" download="
-	    + filePlot + ">["
-	    + plotType +  "]</a>";
+	    + filePlot
+	    + `">${plotType} </a>`;
 
 	var clustersFile = res.clusters;
 	var fileClusters  = clustersFile.split('/').pop();
@@ -648,7 +658,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    + clustersFile
 	    +  "\" download="
 	    + fileClusters
-	    + ">[Clusters]</a>";
+	    + `">${outFileType}</a>`;
 
 	var reportFile = res.cluster_report;
 	var report  = reportFile.split('/').pop();
@@ -657,7 +667,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    + reportFile
 	    +  "\" download="
 	    + report
-	    + ">[Analysis Report]</a>";
+	    + ">Analysis Report </a>";
 
 	var downloadLinks = ' <strong>Download '
 	    + resultName + ' </strong>: '
