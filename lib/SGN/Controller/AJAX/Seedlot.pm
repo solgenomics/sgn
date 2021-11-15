@@ -252,6 +252,26 @@ sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) {
     }
 }
 
+sub seedlot_delete_by_list :Chained('seedlot_base') PathPart('delete_by_list') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $list_id = $c->req->param("list_id");
+
+    my $list = CXGN::List->new( { dbh => $c->dbic_schema()->storage()->dbh(), list_id => $list_id } );
+
+    my @elements = $list->elements();
+
+    my @errors;
+    foreach my $ele (@elements) {
+	my $error = $ele->delete();
+	push @errors, $error;
+    }
+
+    $c->stash->{rest} = { error => [ join "\n", @errors ] }
+}
+
+
 sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $self = shift;
     my $c = shift;
