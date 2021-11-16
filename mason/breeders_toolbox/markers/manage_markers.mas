@@ -62,6 +62,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                                                         <option value="">Select genotyping data type</option>
                                                         <option value="SNP">SNP</option>
                                                         <option value="Dosage">Dosage</option>
+                                                        <option value="Download">Download</option>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -107,23 +108,32 @@ Titima Tantikanjana <tt15@cornell.edu>
                                     <div class="form-horizontal">
                                         <div class="form-group">
                                             <label class="control-label col-sm-4">Markerset Name:</label>
+                                            <div class="col-sm-8">
+                                                <div class="input-group">
+                                                    <select class="form-control" id="selected_marker_set1">
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id = "markerset_download_section" style="display:none">
+                                            <div class="form-group">
+                                                <label class="control-label col-sm-4">Marker Name(s):</label>
+                                                <div class="col-sm-8">
+                                                    <textarea class="form-control" id="marker_name_download" placeholder="To add more than one marker, separate marker names using a new line."></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id = "markerset_dosage_section" style="display:none">
+                                            <div class="form-group">
+                                                <label class="control-label col-sm-4">Marker Name:</label>
                                                 <div class="col-sm-8">
                                                     <div class="input-group">
-                                                        <select class="form-control" id="selected_marker_set1">
-                                                        </select>
+                                                        <input type="text" class="form-control" id="marker_name_dosage" placeholder="Enter marker name">
                                                     </div>
                                                 </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="control-label col-sm-4">Marker Name:</label>
-                                                <div class="col-sm-8">
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" id="marker_name" placeholder="Enter marker name">
-                                                    </div>
-                                                </div>
-                                        </div>
-                                        <div class="form-group" id = "markerset_dosage_section" style="display:none">
-                                            <label class="control-label col-sm-4">Allele Dosage:</label>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-sm-4">Allele Dosage:</label>
                                                 <div class="col-sm-8" >
                                                     <div class="input-group">
                                                         <select class="form-control" id="allele_dosage">
@@ -134,9 +144,19 @@ Titima Tantikanjana <tt15@cornell.edu>
                                                         </select>
                                                     </div>
                                                 </div>
+                                            </div>
                                         </div>
-                                        <div class="form-group" id = "markerset_snp_section" style="display:none">
-                                            <label class="control-label col-sm-4">Specify Alleles:</label>
+                                        <div id = "markerset_snp_section" style="display:none">
+                                            <div class="form-group">
+                                                <label class="control-label col-sm-4">Marker Name:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="marker_name_snp" placeholder="Enter marker name">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-sm-4">Specify Alleles:</label>
                                                 <div class="col-sm-4" >
                                                     <div class="input-group">
                                                         <select class="form-control" id="allele_1">
@@ -155,6 +175,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                                                         </select>
                                                     </div>
                                                 </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
