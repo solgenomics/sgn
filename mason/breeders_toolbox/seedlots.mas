@@ -8,6 +8,7 @@ $programs
 $locations
 $crossing_trials
 $maintenance_enabled => undef
+$user_role => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -174,7 +175,7 @@ $maintenance_enabled => undef
 <& /breeders_toolbox/add_cross_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
 <& /breeders_toolbox/add_crossing_trial_dialogs.mas, programs=>$programs, locations=>$locations &>
 <& /breeders_toolbox/create_seedlots_from_trial_dialogs.mas &>
-<& /breeders_toolbox/delete_seedlots.mas &>
+<& /breeders_toolbox/delete_seedlots.mas, user_role => $user_role &>
     
 <script>
 jQuery(document).ready(function(){

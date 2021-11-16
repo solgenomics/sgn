@@ -48,6 +48,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $draw = $params->{draw};
     $draw =~ s/\D//g; # cast to int
 
+
     my @accessions = split ',', $contents_accession;
     my @crosses = split ',', $contents_cross;
 
@@ -252,13 +253,13 @@ sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) {
     }
 }
 
-sub seedlot_delete_by_list :Chained('seedlot_base') PathPart('delete_by_list') Args(0) {
+sub seedlot_delete_by_list :Path('/ajax/seedlots/delete_by_list') Args(0) {
     my $self = shift;
     my $c = shift;
 
     my $list_id = $c->req->param("list_id");
 
-    my $list = CXGN::List->new( { dbh => $c->dbic_schema()->storage()->dbh(), list_id => $list_id } );
+    my $list = CXGN::List->new( { dbh => $c->dbic_schema("Bio::Chado::Schema")->storage()->dbh(), list_id => $list_id } );
 
     my @elements = $list->elements();
 
@@ -268,7 +269,12 @@ sub seedlot_delete_by_list :Chained('seedlot_base') PathPart('delete_by_list') A
 	push @errors, $error;
     }
 
-    $c->stash->{rest} = { error => [ join "\n", @errors ] }
+    if (@errors) { 
+	$c->stash->{rest} = { error => [ join "\n", @errors ] }
+    }
+    else {
+	$c->stash->{rest} = { success => 1 };
+    }
 }
 
 
