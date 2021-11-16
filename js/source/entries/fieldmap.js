@@ -11,6 +11,10 @@ export function init() {
             this.plot_object = Object;
             this.meta_data = {};
             this.brapi_plots = Object;
+            this.heatmap_queried = false;
+            this.heatmap_selected = false;
+            this.heatmap_selection = String;
+            this.heatmap_object = Object;
         }
 
         set_id(trial_id) {
@@ -93,13 +97,23 @@ export function init() {
                     plot.observationUnitPosition.positionCoordinateX = parseInt(plot.observationUnitPosition.positionCoordinateX);
                     plot.observationUnitPosition.positionCoordinateY = parseInt(plot.observationUnitPosition.positionCoordinateY);
                     plot.type = "data";
-                    plot.plants = [];
-                    plot_object[obs_level.levelCode] = plot;
-                } else if (obs_level.levelName == "plant") {
-                    plot_object[plot.additionalInfo.observationUnitParent];
-                }
+                    plot_object[plot.observationUnitDbId] = plot;
+                }   
             }
             this.plot_object = plot_object;
+        }
+
+        filter_heatmap(observations) {
+            this.heatmap_object = {};
+            for (let observation of observations) {
+                let trait_name = observation.observationVariableName;
+                if (!this.heatmap_object[trait_name]) {
+                    this.heatmap_object[trait_name] = {[observation.observationUnitDbId]: {val: observation.value, plot_name: observation.observationUnitName, id: observation.observationDbId }};
+                } else {
+                    this.heatmap_object[trait_name][observation.observationUnitDbId] = {val: observation.value, plot_name: observation.observationUnitName, id: observation.observationDbId };
+                }
+            } 
+            console.log('hm', this.heatmap_object);
         }
 
         invert_rows() {
@@ -115,6 +129,7 @@ export function init() {
         get_planting_order() {
             var planting_order_arr = Object.values(this.plot_object);
             console.log(planting_order_arr);
+            planting_order_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
             let temp_planting_arr = [];
             for (let i = 0; i < this.meta_data.num_rows; i++) {
                 temp_planting_arr.push([...planting_order_arr.slice(i * this.meta_data.num_cols, (i * this.meta_data.num_cols + this.meta_data.num_cols))])
@@ -157,6 +172,7 @@ export function init() {
         set_meta_data() {
             // this.plot_arr = JSON.parse(JSON.stringify(Object.values(this.plot_object)));
             this.plot_arr = Object.values(this.plot_object);
+            this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) })
             console.log('test', this.plot_arr);
             var min_col = 100000;
             var min_row = 100000;
@@ -306,7 +322,12 @@ export function init() {
             };
             return d3.rebind(cc, event, 'on');
         }
-        plot_click(plot) {
+
+        heatmap_plot_click() {
+
+        }
+
+        fieldmap_plot_click(plot) {
             if (d3.event && d3.event.detail > 1) {
                 console.log(d3.event);
                 return;
@@ -368,8 +389,23 @@ export function init() {
         
         FieldMap() {
             var cc = this.clickcancel();
-            var plot_click = this.plot_click;
-            var get_plot_color = function(plot) {
+            const colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"];
+            var trait_name = this.heatmap_selection;
+            var heatmap_object = this.heatmap_object;
+            var plot_click = !this.heatmap_selected ? this.fieldmap_plot_click : this.heatmap_plot_click;
+            var trait_vals = [];
+            
+            if (this.heatmap_selected) {
+                let plots_with_selected_trait = heatmap_object[trait_name];
+                for (let obs_unit of Object.values(plots_with_selected_trait)) {
+                    trait_vals.push(obs_unit.val);
+                }
+                var colorScale = d3.scale.quantile()
+                .domain(trait_vals)
+                .range(colors);
+            }
+
+            var get_fieldmap_plot_color = function(plot) {
                 var color;
                 if (plot.observationUnitPosition.observationLevelRelationships) {
                     if (plot.observationUnitPosition.entryType == "check") {
@@ -386,7 +422,10 @@ export function init() {
                 }
                 return color;
             }
-    
+            
+            var get_heatmap_plot_color = function(plot) {
+                return heatmap_object[trait_name][plot.observationUnitDbId] ? colorScale(heatmap_object[trait_name][plot.observationUnitDbId].val) : colors[0];
+            }
             var get_stroke_color = function(plot) {
                 var stroke_color;
                 if (plot.observationUnitPosition.observationLevel) {
@@ -424,13 +463,14 @@ export function init() {
             .append("svg")
             .attr("width", width * 50 + 20 + "px")
             .attr("height", height * 50 + 20 + "px");
-            
+
             var tooltip = d3.select("#container_fm")
             .append('div')
             .attr('id', 'tooltip')
             .attr('class', 'tooltip')
             .attr('style', 'position: absolute; opacity: 0;');
             
+            var isHeatMap = this.heatmap_selected;
             var plots = grid.selectAll("plots")
             .data(this.plot_arr);
             plots.append("title");
@@ -443,17 +483,17 @@ export function init() {
                 .attr("height", 50)
                 .style("stroke-width", 2)
                 .style("stroke", function(d) { return get_stroke_color(d)})
-                .style("fill", function(d) {return get_plot_color(d)})
+                .style("fill", function(d) {return !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d)})
                 .on("mouseover", function(d) { if (d.observationUnitPosition.observationLevel) { 
                     d3.select(this).style('fill', 'green').style('cursor', 'pointer'); 
                     d3.select('#tooltip')
                     .style('opacity', .9)
                     .style('left', ((d.observationUnitPosition.positionCoordinateX + 1) * 50 + 100) + 'px')
-                    .style('top', ((d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 535) + 'px')
+                    .style('top', ((d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 540) + 'px')
                     .text(get_plot_message(d))
                 }})
                 .on("mouseout", function(d) { 
-                    d3.select(this).style('fill', get_plot_color(d)).style('cursor', 'default')
+                    d3.select(this).style('fill', !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d)).style('cursor', 'default')
                     d3.select('#tooltip').style('opacity', 0)
                     plots.exit().remove();
                 }).call(cc);

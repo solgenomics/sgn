@@ -1103,55 +1103,40 @@ jQuery(document).ready( function() {
         .then(
             function() {
                     console.log(FieldMap.plot_object);
-                    // FieldMap.state.retrieve = true;
                     num_real_plots = Object.keys(FieldMap.plot_object).length;
             }
         )
     }
 
-    function heatmap() {
-
-        FieldMap.load();
-        // jQuery.ajax({
-        //     headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-        //     url: '/brapi/v2/observationunits?studyDbId='+trial_id+'&observationUnitLevelName=plot&pageSize=10000',
-        //     // url: '/brapi/v1/studies/'+trial_id+'/layout?pageSize=10000&page=0',
-        //      beforeSend: function() {
-        //        jQuery("#working_modal").modal("show");
-        //      },
-        //      success: function(response) {
-        //         data = response.result.data;
-        //         console.log('DATA', data);
-        //         if (data[0].additionalInfo) {
-        //             FieldMap.check_elements(data[0].additionalInfo);
-        //             if (data[0].additionalInfo.plot_layout) {
-        //                 document.getElementById("plot_layout").value = data[0].additionalInfo.plot_layout;
-        //                 FieldMap.meta_data.plot_layout = data[0].additionalInfo.plot_layout;
-        //             }
-        //         }
-        //         FieldMap.filter_data(data);
-        //         FieldMap.set_meta_data();
-        //         FieldMap.load();
-
-        //         // FieldMap.plot_ou_arr.sort(function(plot_ou_1, plot_ou_2) {
-	    //         //       // Ascending: first plotNumber less than the previous
-	    //         //     return FieldMap.plot_object[plot_ou_1].observationUnitPosition.observationLevel.levelCode - FieldMap.plot_object[plot_ou_2].observationUnitPosition.observationLevel.levelCode
-        //         // });
-                
-
-        //     },
-        //     error: function(response) {
-        //         alert('Error displaying traits assayed heatmap');   
-        //     }
-        // })
-        // .then(
-        //         function() {
-        //                 console.log(FieldMap.plot_object);
-        //                 // FieldMap.state.retrieve = true;
-        //                 num_real_plots = Object.keys(FieldMap.plot_object).length;
-        //         }
-        //     )
+    function heatmap(selected) {
+        if (FieldMap.heatmap_queried) {
+            FieldMap.load();
+        } else {
+            var observations;
+            jQuery.ajax({
+                headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+                url: '/brapi/v2/observations?studyDbId='+trial_id+'&pageSize=10000',
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function(response) {
+                    FieldMap.heatmap_queried = true;
+                    observations = response.result.data;
+                },
+                error: function(response) {
+                    alert("Error loading Heatmap");
+                }
+            }).then(
+                function() {
+                    return FieldMap.filter_heatmap(observations);
+                }
+            ).then(
+                function() {
+                    return FieldMap.load();
+                }
+            )
         }
+    }
     
     function geo_field_map_view(){
 
@@ -1506,6 +1491,7 @@ jQuery(document).ready( function() {
         jQuery("#container_heatmap").css("display", "none");
         jQuery("#ctrldiv").css("display", "none");
         d3.select("#container_heatmap_geo_div").remove();
+        FieldMap.heatmap_selected = false;
         FieldMap.load();
     } else if (selected == 'geofieldmap'){
         jQuery('#working_modal').modal("show");
@@ -1526,7 +1512,9 @@ jQuery(document).ready( function() {
         jQuery("#delete_button_fm").css("display", "none");
         jQuery("#ctrldiv").css("display", "none");
         jQuery("#view_ctrl_button").show();
-        heatmap();
+        FieldMap.heatmap_selected = true;
+        FieldMap.heatmap_selection = selected;
+        heatmap(selected);
     }
   });
 
