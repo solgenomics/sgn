@@ -136,7 +136,7 @@ $design_types => ()
           //console.log(html);
           jQuery('#trial_list').jstree( {
               "core": { 'themes': { 'name': 'proton', 'responsive': true}},
-              "valid_children" : [ "folder", "trial", "breeding_program", "genotyping_data_project", "analyses" ],
+              "valid_children" : [ "folder", "trial", "breeding_program", "genotyping_data_project", "analyses", "sampling_trial" ],
               "types" : {
                   "breeding_program" : {
                       "icon": 'glyphicon glyphicon-briefcase text-info',
@@ -212,6 +212,9 @@ $design_types => ()
             window.open('/breeders_toolbox/trial/'+node.id);
             event.stopPropagation();
         } else if (node.type == 'trial') {
+            window.open('/breeders_toolbox/trial/'+node.id);
+            event.stopPropagation();
+        } else if (node.type == 'sampling_trial') {
             window.open('/breeders_toolbox/trial/'+node.id);
             event.stopPropagation();
         }
