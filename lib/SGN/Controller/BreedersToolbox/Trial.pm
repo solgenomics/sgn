@@ -177,7 +177,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     elsif ($trial_type_name eq "crossing_trial"){
         print STDERR "It's a crossing trial!\n\n";
         my $program_name = $breeding_program_data->[0]->[1];
-        my $locations = JSON::XS->new->decode($program_object->get_all_locations_by_breeding_program());
+        my $locations = $program_object->get_all_locations_by_breeding_program();
         my @locations_by_program;
         foreach my $location_hashref (@$locations) {
             my $properties = $location_hashref->{'properties'};
