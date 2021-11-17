@@ -1,0 +1,44 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/product_profiles/manage_product_profiles.mas - a mason component to display, add and update product profiles
+
+=head1 AUTHOR
+
+Titima Tantikanjana <tt15@cornell.edu>
+
+=cut
+
+</%doc>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
+
+<& /page/page_title.mas, title=>'Manage Product Profiles' &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Product Profiles</h4>", info_section_subtitle => 'View product profiles',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_profile_button">Upload New Product Profile</button><button class="btn btn-sm btn-default" style="margin:3px" id="download_template_button">Download Template</button>', icon_class => "glyphicon glyphicon-signal", info_section_id => "product_profile_section" &>
+
+<& /breeders_toolbox/program/create_profile_template_dialog.mas &>
+<& /breeders_toolbox/program/upload_profile_dialog.mas &>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#download_template_button').click(function(){
+        var list = new CXGN.List();
+        var trait_lists = list.listSelect('select_list', ['traits'], 'Select a list', undefined, undefined);
+        jQuery('#select_list_div').html(trait_lists);
+
+        jQuery('#create_profile_template_dialog').modal("show");
+
+    })
+
+    jQuery('#upload_profile_button').click(function(){
+
+        jQuery('#upload_profile_dialog').modal("show");
+
+    })
+
+});
+
+</script>

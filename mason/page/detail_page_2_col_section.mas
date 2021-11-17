@@ -495,8 +495,12 @@ $analytics_protocol_result_summary => {}
                                 <& /breeders_toolbox/program/traits.mas, program_id => $program_id, collapse_phenotypes_section => 0 &>
 % } #End program_phenotype_section
 % if ($info_section_id eq 'program_product_profile_section'){
-                                <& /breeders_toolbox/program/product_profile.mas, program_id => $program_id, collapse_phenotypes_section => 0 &>
+                                <& /breeders_toolbox/program/product_profile.mas, program_id => $program_id &>
 % } #End program_product_profile_section
+% if ($info_section_id eq 'product_profile_section'){
+                                <& /breeders_toolbox/product_profiles/product_profile_summary.mas &>
+% } #End product_profile_section
+
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>

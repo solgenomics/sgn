@@ -857,6 +857,7 @@ sub manage_markers : Path("/breeders/markers") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/markers/manage_markers.mas';
 }
 
+
 sub manage_drone_imagery : Path("/breeders/drone_imagery") Args(0) {
     my $self = shift;
     my $c = shift;
@@ -870,5 +871,14 @@ sub manage_drone_imagery : Path("/breeders/drone_imagery") Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     $c->stash->{template} = '/breeders_toolbox/manage_drone_imagery.mas';
 }
+
+
+sub manage_product_profiles : Path("/breeders/product_profiles") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/breeders_toolbox/product_profiles/manage_product_profiles.mas';
+}
+
 
 1;

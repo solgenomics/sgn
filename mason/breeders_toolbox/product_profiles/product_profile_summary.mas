@@ -1,0 +1,19 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<table id="product_profile_summary" class="display">
+    <thead>
+        <tr>
+            <th>Product Profile Name</th>
+            <th>Scope</th>
+            <th>Trait</th>
+            <th>Submitter</th>
+            <th>Date (Y-M-D)</th>
+        </tr>
+    </thead>
+</table>
