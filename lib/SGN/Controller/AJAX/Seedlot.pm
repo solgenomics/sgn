@@ -259,21 +259,24 @@ sub seedlot_delete_by_list :Path('/ajax/seedlots/delete_by_list') Args(0) {
 
     my $list_id = $c->req->param("list_id");
 
-    my $list = CXGN::List->new( { dbh => $c->dbic_schema("Bio::Chado::Schema")->storage()->dbh(), list_id => $list_id } );
-
-    my @elements = $list->elements();
-
-    my @errors;
-    foreach my $ele (@elements) {
-	my $error = $ele->delete();
-	push @errors, $error;
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in the delete seedlots" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+        $c->detach();
     }
 
-    if (@errors) { 
-	$c->stash->{rest} = { error => [ join "\n", @errors ] }
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($total_count, $delete_count, $errors) = CXGN::Stock::Seedlot->delete_using_list($schema, $phenome_schema, $list_id);
+
+    if (@$errors) { 
+	$c->stash->{rest} = { error => join("\n", @$errors), total_count => $total_count, delete_count => $delete_count }
     }
     else {
-	$c->stash->{rest} = { success => 1 };
+	$c->stash->{rest} = { success => 1, total_count => $total_count, delete_count => $delete_count };
     }
 }
 
