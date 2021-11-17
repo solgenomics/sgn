@@ -288,7 +288,7 @@ sub BUILD {
     $self->breeder_search($bs);
 
     if ($self->has_sp_dataset_id()) {
-        print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
+        #print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
         my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
         if (!$row) { die "The dataset with id ".$self->sp_dataset_id()." does not exist"; }
         my $dataset = JSON::Any->decode($row->dataset());
@@ -483,15 +483,15 @@ sub to_hashref {
 sub store {
     my $self = shift;
 
-    print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
+    #print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
     if (!$self->has_sp_dataset_id()) {
-	print STDERR "Creating new dataset row... ".$self->sp_dataset_id()."\n";
+	#print STDERR "Creating new dataset row... ".$self->sp_dataset_id()."\n";
 	my $row = $self->people_schema()->resultset("SpDataset")->create($self->to_hashref());
 	$self->sp_dataset_id($row->sp_dataset_id());
 	return $row->sp_dataset_id();
     }
     else {
-	print STDERR "Updating dataset row ".$self->sp_dataset_id()."\n";
+	#print STDERR "Updating dataset row ".$self->sp_dataset_id()."\n";
 	my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
 	if ($row) {
 	    $row->name($self->name());
@@ -573,15 +573,27 @@ sub retrieve_genotypes {
     my $marker_name_list = shift || [];
 
     my $accessions = $self->retrieve_accessions();
+
+    #print STDERR "ACCESSIONS: ".Dumper($accessions);
+    
     my @accession_ids;
     foreach (@$accessions) {
         push @accession_ids, $_->[0];
     }
 
+    #print STDERR "ACCESSION IDS: ".Dumper(\@accession_ids);
+    
     my $trials = $self->retrieve_trials();
     my @trial_ids;
     foreach (@$trials) {
         push @trial_ids, $_->[0];
+    }
+
+    my $genotyping_protocol_ref = $self->retrieve_genotyping_protocols();
+    my @protocols;
+    foreach my $p (@$genotyping_protocol_ref) {
+	push @protocols, $p->[0];
+			       	    
     }
 
     my $genotypes_search = CXGN::Genotype::Search->new(
@@ -589,7 +601,7 @@ sub retrieve_genotypes {
         people_schema=>$self->people_schema,
         accession_list => \@accession_ids,
         trial_list => \@trial_ids,
-        protocol_id_list => [$protocol_id],
+        protocol_id_list => \@protocols,
         chromosome_list => $chromosome_list,
         start_position => $start_position,
         end_position => $end_position,
@@ -702,6 +714,7 @@ sub retrieve_high_dimensional_phenotypes {
     if (!$nd_protocol_id) {
         die "Must provide the protocol id!\n";
     }
+
     if (!$high_dimensional_phenotype_type) {
         die "Must provide the high dimensional phenotype type!\n";
     }
@@ -734,6 +747,7 @@ sub retrieve_high_dimensional_phenotypes {
         plot_list=>\@plot_ids,
         plant_list=>\@plant_ids,
     });
+
     my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
 
     return ($data_matrix, $identifier_metadata, $identifier_names);
@@ -896,7 +910,7 @@ sub retrieve_trials {
         push @$criteria, "trials";
         $trials = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trials"));
     }
-    print STDERR "TRIALS: ".Dumper($trials);
+    #print STDERR "TRIALS: ".Dumper($trials);
     return $trials->{results};
 }
 

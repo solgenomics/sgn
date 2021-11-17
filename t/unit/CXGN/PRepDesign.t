@@ -52,7 +52,7 @@ ok($trial_design->set_design_type("p-rep"), "Set design type to p-rep");
  SKIP: {
 
      print STDERR "SKIPPING...\n";
-     skip "DiGGer not installed, skipping", 6, unless ( -e $ENV{R_LIBS_USER}."/DiGGer";					       
+     skip "DiGGer not installed, skipping", 6, unless ( -e $ENV{R_LIBS_USER}."/DiGGer" );
      ok($trial_design->calculate_design(), "Calculate p-rep trial design");
      ok(%design = %{$trial_design->get_design()}, "Get p-rep trial design");
      ok($design{'1'}->{row_number} == 1, "First plot row_number is 1");

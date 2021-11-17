@@ -912,7 +912,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             my $cmd = 'R -e "library(sommer); library(orthopolynom);
             polynomials <- leg(c('.$sorted_trait_names_scaled_string.'), n='.$legendre_order_number.', intercept=TRUE);
             write.table(polynomials, file=\''.$stats_out_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
-            my $status = system($cmd);
+            my $status = system("$cmd > /tmp/Rout");
 
             my %polynomial_map;
             my $csv = Text::CSV->new({ sep_char => "\t" });
@@ -958,7 +958,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             mat\$plot_id_factor <- as.numeric(as.factor(mat\$plot_id));
             write.table(mat, file=\''.$stats_prep_factor_tempfile.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"';
             print STDERR Dumper $cmd_factor;
-            my $status_factor = system($cmd_factor);
+            my $status_factor = system("$cmd_factor > /dev/null");
 
             my %plot_factor_map;
             my %plot_rep_time_factor_map;
@@ -1256,7 +1256,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 cor_mat <- range01(cor_mat);
                 write.table(cor_mat, file=\''.$stats_out_pe_pheno_rel_tempfile2.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
                 # print STDERR Dumper $pe_rel_cmd;
-                my $status_pe_rel = system($pe_rel_cmd);
+                my $status_pe_rel = system("$pe_rel_cmd > /dev/null");
 
                 my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -1503,7 +1503,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     A_threecol\$variable <- substring(A_threecol\$variable, 2);
                     write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
                     print STDERR $cmd."\n";
-                    my $status = system($cmd);
+                    my $status = system("$cmd > /dev/null");
 
                     my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -1735,7 +1735,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     A_threecol\$variable <- substring(A_threecol\$variable, 2);
                     write.table(data.frame(variable = A_threecol\$variable, stock_id = A_threecol\$stock_id, value = A_threecol\$value), file=\''.$grm_out_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');"';
                     print STDERR $cmd."\n";
-                    my $status = system($cmd);
+                    my $status = system("$cmd > /dev/null");
 
                     my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2019,7 +2019,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     cor_mat <- range01(cor_mat);
                     write.table(cor_mat, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
                     print STDERR Dumper $htp_cmd;
-                    my $status = system($htp_cmd);
+                    my $status = system("$htp_cmd > /dev/null");
                 }
                 elsif ($compute_relationship_matrix_from_htp_phenotypes_type eq 'blues') {
                     my $htp_cmd = 'R -e "library(lme4); library(data.table);
@@ -2047,7 +2047,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     colnames(rel) <- blues[,2];
                     write.table(rel, file=\''.$stats_out_htp_rel_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
                     print STDERR Dumper $htp_cmd;
-                    my $status = system($htp_cmd);
+                    my $status = system("$htp_cmd > /dev/null");
                 }
                 else {
                     $c->stash->{rest} = { error => "The value of $compute_relationship_matrix_from_htp_phenotypes_type htp_pheno_rel_matrix_type is not valid!" };
@@ -2141,7 +2141,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 #mix.summary <- summary(mix);
                 #ve <- mix.summary\$varcor\$id[1,1]/(mix.summary\$varcor\$id[1,1] + (mix.summary\$sigma)^2);
                 write.table(ranef(mix)\$id, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');"';
-                my $status = system($cmd);
+                my $status = system("$cmd > /dev/null");
 
                 my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2190,7 +2190,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             write.table(mix\$U\$\`u:id\`, file=\''.$stats_out_tempfile.'\', row.names=TRUE, col.names=TRUE, sep=\'\t\');
             "';
             print STDERR Dumper $cmd;
-            my $status = system($cmd);
+            my $status = system("$cmd > /dev/null");
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2266,7 +2266,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $cmd .= 'write.table(spatial_blup_results, file=\''.$stats_out_tempfile_2dspl.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             "';
             print STDERR Dumper $cmd;
-            my $status = system($cmd);
+            my $status = system("$cmd > /dev/null");
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2444,7 +2444,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 write.table(pe_coeff, file=\''.$stats_out_tempfile_permanent_environment.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"
             ';
             print STDERR Dumper $cmd;
-            my $status = system($cmd);
+            my $status = system("$cmd > /dev/null");
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2691,7 +2691,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $cmd .= 'write.table(genetic_coeff, file=\''.$stats_out_tempfile_genetic.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');"
             ';
             print STDERR Dumper $cmd;
-            my $status = system($cmd);
+            my $status = system("$cmd > /dev/null/");
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -2851,7 +2851,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                 write.table(v, file=\''.$stats_out_param_tempfile.'\', row.names=FALSE, col.names=FALSE, sep=\'\t\');
             "';
             print STDERR Dumper $cmd_r;
-            my $status_r = system($cmd_r);
+            my $status_r = system("$cmd_r > /dev/null");
 
             my $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -3038,7 +3038,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
             $stats_out_tempfile .= '.log';
             my $cmd = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_basename.' | '.$command_name.' > '.$stats_out_tempfile;
             print STDERR Dumper $cmd;
-            my $status = system($cmd);
+            my $status = system("$cmd > /dev/null");
 
             $csv = Text::CSV->new({ sep_char => "\t" });
 
@@ -3533,7 +3533,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         }
         $cmd_gen_plot .= 'ggsave(\''.$genetic_effects_figure_tempfile.'\', sp, device=\'png\', width=12, height=6, units=\'in\');
         dev.off();"';
-        my $status_gen_plot = system($cmd_gen_plot);
+        my $status_gen_plot = system("$cmd_gen_plot > /dev/null");
     }
 
     my $env_effects_figure_tempfile_string;
@@ -3605,7 +3605,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
         ggsave(\''.$env_effects_figure_tempfile.'\', arrangeGrob(gg, gg_eff, nrow=2), device=\'png\', width=20, height=20, units=\'in\');
         "';
         # print STDERR Dumper $cmd;
-        my $status_spatialfirst_plot = system($cmd_spatialfirst_plot);
+        my $status_spatialfirst_plot = system("$cmd_spatialfirst_plot > /dev/null");
     }
 
     $c->stash->{rest} = {
@@ -4153,7 +4153,7 @@ sub drone_imagery_update_gps_images_rotation_POST : Args(0) {
 
         my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RotateBulk.py --input_path \''.$bulk_input_temp_file.'\'';
         print STDERR Dumper $cmd;
-        my $status = system($cmd);
+        my $status = system("$cmd > /dev/null");
 
         my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'rotated_stitched_temporary_drone_imagery', 'project_md_image')->cvterm_id();
         while ( my ($image_id, $i_obj) = each %input_bulk_hash) {
@@ -4314,7 +4314,7 @@ sub drone_imagery_match_and_align_two_images_POST : Args(0) {
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/MatchAndAlignImages.py --image_path1 \''.$image1_fullpath.'\' --image_path2 \''.$image2_fullpath.'\' --outfile_match_path \''.$match_temp_image.'\' --outfile_path \''.$align_temp_image.'\' --results_outfile_path_src \''.$align_match_temp_results.'\' --results_outfile_path_dst \''.$align_match_temp_results_2.'\' ';
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my @match_points_src;
     my $csv = Text::CSV->new({ sep_char => ',' });
@@ -4401,7 +4401,7 @@ sub _drone_imagery_match_and_align_images {
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/MatchAndAlignImages.py --image_path1 \''.$image1_fullpath.'\' --image_path2 \''.$image2_fullpath.'\' --outfile_match_path \''.$match_temp_image.'\' --outfile_path \''.$align_temp_image.'\' --results_outfile_path_src \''.$align_match_temp_results.'\' --results_outfile_path_dst \''.$align_match_temp_results_2.'\' --max_features \''.$max_features.'\'';
     # print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my @match_points_src;
     my $csv = Text::CSV->new({ sep_char => ',' });
@@ -5120,19 +5120,19 @@ sub _perform_image_rotate {
     }
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Rotate.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_rotate_temp_image.'\' --angle '.$angle_rotation.$center.$original_size;
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     if ($check_resize) {
         my ($check_image_width, $check_image_height) = imgsize($archive_rotate_temp_image);
         if ($check_image_width > 16384) {
             my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archive_rotate_temp_image.'\' --outfile_path \''.$archive_rotate_temp_image.'\' --width 16384';
             print STDERR Dumper $cmd_resize;
-            my $status_resize = system($cmd_resize);
+            my $status_resize = system("$cmd_resize > /dev/null");
         }
         elsif ($check_image_height > 16384) {
             my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archive_rotate_temp_image.'\' --outfile_path \''.$archive_rotate_temp_image.'\' --height 16384';
             print STDERR Dumper $cmd_resize;
-            my $status_resize = system($cmd_resize);
+            my $status_resize = system("$cmd_resize > /dev/null");
         }
     }
 
@@ -5241,7 +5241,7 @@ sub drone_imagery_get_contours_GET : Args(0) {
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageContours/GetContours.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_contours_temp_image.'\'';
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my @size = imgsize($archive_contours_temp_image);
 
@@ -5466,7 +5466,7 @@ sub _perform_plot_polygon_assign {
 
     my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageCropping/CropToPolygonBulk.py --inputfile_path '$bulk_input_temp_file'";
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my $pm = Parallel::ForkManager->new(ceil($number_system_cores/4));
     $pm->run_on_finish( sub {
@@ -5848,7 +5848,7 @@ sub _perform_image_denoise {
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Denoise.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_denoise_temp_image.'\'';
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'denoised_stitched_drone_imagery', 'project_md_image')->cvterm_id();
 
@@ -5925,7 +5925,7 @@ sub drone_imagery_remove_background_display_POST : Args(0) {
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_threshold '.$lower_threshold.' --upper_threshold '.$upper_threshold;
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -6011,7 +6011,7 @@ sub _perform_image_background_remove_threshold {
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_threshold '.$lower_threshold.' --upper_threshold '.$upper_threshold;
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -6131,7 +6131,7 @@ sub _perform_image_background_remove_threshold_percentage {
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackgroundPercentage.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_percentage \''.$lower_threshold_percentage.'\' --upper_percentage \''.$upper_threshold_percentage.'\' '.$image_band_index_string;
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -8180,7 +8180,7 @@ sub standard_process_apply_raw_images_interactive_POST : Args(0) {
 
     my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageCropping/CropToPolygonBulk.py --inputfile_path '$bulk_input_temp_file'";
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my $number_system_cores = `getconf _NPROCESSORS_ONLN` or die "Could not get number of system cores!\n";
     chomp($number_system_cores);
@@ -8468,7 +8468,7 @@ sub drone_imagery_accession_phenotype_histogram_GET : Args(0) {
     ggsave(\''.$pheno_figure_tempfile.'\', sp, device=\'png\', width=3, height=3, units=\'in\');
     dev.off();"';
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     $c->stash->{rest} = { success => 1, figure => $pheno_figure_tempfile_string };
 }
@@ -9403,7 +9403,7 @@ sub _perform_image_cropping {
 
     my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageCropping/CropToPolygon.py --inputfile_path '$image_fullpath' --outputfile_path '$archive_temp_image' --polygon_json '$polygons' --polygon_type rectangular_square";
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -9489,7 +9489,7 @@ sub _perform_fourier_transform_calculation {
 
     my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/FourierTransform.py --image_path '$image_fullpath' --outfile_path '$archive_temp_image' --image_band_index ".$image_channel_lookup." --frequency_threshold $high_pass_filter --frequency_threshold_method $high_pass_filter_type";
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my $ft_image_fullpath;
     my $ft_image_url;
@@ -9620,7 +9620,7 @@ sub _perform_vegetative_index_calculation {
 
     my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/VegetativeIndex/$index_script.py --image_path '$image_fullpath' --outfile_path '$archive_temp_image'";
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my $index_image_fullpath;
     my $index_image_url;
@@ -9706,7 +9706,7 @@ sub _perform_image_background_remove_mask {
 
     my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MaskRemoveBackground.py --image_path '$image_fullpath' --mask_image_path '$mask_image_fullpath' --outfile_path '$archive_temp_image'";
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -9836,7 +9836,7 @@ sub _perform_image_merge {
 
     my $cmd = $c->config->{python_executable}." ".$c->config->{rootpath}."/DroneImageScripts/ImageProcess/MergeChannels.py --image_path_band_1 '".$image_filesnames[0]."' --image_path_band_2 '".$image_filesnames[1]."' --image_path_band_3 '".$image_filesnames[2]."' --outfile_path '$archive_temp_image'";
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -10664,7 +10664,7 @@ sub _perform_phenotype_calculation {
 
         my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/'.$calculate_phenotypes_script.' --image_paths_input_file \''.$temp_input_file.'\' '.$out_paths_string.' --results_outfile_path \''.$archive_temp_results.'\''.$calculate_phenotypes_extra_args;
         print STDERR Dumper $cmd;
-        my $status = system($cmd);
+        my $status = system("$cmd > /dev/null");
 
         my $time = DateTime->now();
         my $timestamp = $time->ymd()."_".$time->hms();
@@ -10918,7 +10918,7 @@ sub drone_imagery_compare_images_GET : Args(0) {
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CompareTwoImagesPixelValues.py --image_path1 \''.$image1.'\' --image_path2 \''.$image2.'\' --image_type1 \''.$unique_image_type_names_sort[0].'\' --image_type2 \''.$unique_image_type_names_sort[1].'\' --outfile_path \''.$archive_temp_output_file.'\' ';
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     $c->stash->{rest} = { success => 1, result => $c->config->{main_production_site_url}.$archive_temp_output.".png" };
 }
@@ -11334,7 +11334,7 @@ sub drone_imagery_train_keras_model_POST : Args(0) {
         $c->detach();
     }
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my $csv = Text::CSV->new({ sep_char => ',' });
     open(my $fh, '<', $archive_temp_output_file)
@@ -12011,7 +12011,7 @@ sub _perform_keras_cnn_predict {
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/PredictKerasCNN.py --input_image_label_file \''.$archive_temp_input_file.'\' --input_image_aux_file \''.$archive_temp_input_aux_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --input_model_file_path \''.$model_file.'\' --input_autoencoder_model_file_path \''.$training_autoencoder_model_file.'\' --keras_model_type_name \''.$model_type.'\' --training_data_input_file \''.$training_input_data_file.'\' --training_aux_data_input_file \''.$training_input_aux_data_file.'\' --outfile_evaluation_path \''.$archive_temp_output_evaluation_file.'\' --outfile_activation_path \''.$archive_temp_output_activation_file_path.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my @saved_trained_image_urls;
     my $linking_table_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'observation_unit_polygon_keras_trained', 'project_md_image')->cvterm_id();
@@ -12575,7 +12575,7 @@ sub _perform_autoencoder_keras_cnn_vi {
 
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/CalculatePhenotypeAutoEncoderVegetationIndices.py --input_training_image_file \''.$archive_training_temp_input_file.'\' --input_image_file \''.$archive_temp_input_file.'\' --output_encoded_images_file \''.$archive_temp_output_images_file.'\' --outfile_path \''.$archive_temp_output_file.'\' --autoencoder_model_type \''.$autoencoder_model_type.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my @saved_trained_image_urls;
     my %output_image_ids;
@@ -13205,7 +13205,7 @@ sub drone_imagery_retrain_mask_rcnn_GET : Args(0) {
     }
     my $cmd = $c->config->{python_executable_maskrcnn_env}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/MaskRCNNBoundingBoxTrain.py --input_annotations_dir \''.$temp_input_dir.'\' --output_model_path \''.$temp_output_model_file.'\' --output_model_dir \''.$temp_output_dir.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd > /dev/null");
 
     my $keras_mask_r_cnn_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trained_keras_mask_r_cnn_model', 'protocol_type')->cvterm_id();
     my $keras_cnn_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_model_experiment', 'experiment_type')->cvterm_id();
@@ -13323,7 +13323,7 @@ sub drone_imagery_predict_mask_rcnn_GET : Args(0) {
     }
     my $cmd = $c->config->{python_executable_maskrcnn_env}.' '.$c->config->{rootpath}.'/DroneImageScripts/CNN/MaskRCNNBoundingBoxPredict.py --input_annotations_dir \''.$temp_input_dir.'\' --model_path \''.$model_file.'\' --model_dir \''.$temp_model_dir.'\' --outfile_annotated \''.$archive_temp_output_activation_file_path.'\' --results_outfile \''.$archive_temp_output_results_file.'\' '.$log_file_path;
     print STDERR Dumper $cmd;
-    my $status = system($cmd);
+    my $status = system("$cmd /dev/null");
 
     my @bounding_boxes;
     my $csv = Text::CSV->new({ sep_char => ',' });
