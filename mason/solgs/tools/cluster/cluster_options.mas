@@ -35,7 +35,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
       <input class="form-control"
     	     type="text"
     	     placeholder="selection %?"
-    	     id="selection_proportion"/>
+    	     id="selection_proportion_input"/>
     </div>
 
     <div id="k_number_div" style="padding-right:1px; padding-left:1px;"
