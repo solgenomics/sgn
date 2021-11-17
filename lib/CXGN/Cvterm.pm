@@ -209,7 +209,9 @@ sub synonyms {
 =head2 get_single_synonym
 
  Usage: my $single_synonym = $self->get_single_synonym;
- Desc: a method for fetching a single synonym, based on the synonym structure. This is ugly and it would be better if we used types and type ids
+ Desc: a method for fetching a single synonym, based on the synonym structure.
+ It distinguishes between multiple synonyms by selecting only synonyms without spaces or underscores, and then using the first result
+ This is ugly and it would be better if we used types and type ids
  Ret:  a single synonym
  Args: none
  Side Effects:
