@@ -42,6 +42,7 @@ Description of this patch goes here
 
 has '+prereq' => (
     default => sub {
+        [],
     },
   );
 

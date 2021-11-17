@@ -58,9 +58,30 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 --
-create table sgn_people.sp_product_profileprop (sp_product_profileprop_id serial primary key, sp_product_profile_id bigint references sgn_people.sp_product_profile, type_id bigint references cvterm, value jsonb, rank bigint);
 
-create table sgn_people.sp_product_profile (sp_product_profile_id serial primary key, sp_stage_gate_id bigint references sgn_people.sp_stage_gate, name varchar(100), scope varchar(100), sp_person_id bigint references sgn_people.sp_person, create_date timestamp without time zone default now(), modified_date timestamp without time zone default now())
+CREATE TABLE sgn_people.sp_product_profile (
+    sp_product_profile_id serial primary key,
+    sp_stage_gate_id bigint references sgn_people.
+    sp_stage_gate, name varchar(100),
+    scope varchar(100),
+    sp_person_id bigint references sgn_people.sp_person,
+    create_date timestamp without time zone default now(),
+    modified_date timestamp without time zone default now()
+);
+
+GRANT select,insert,update,delete ON sgn_people.sp_product_profile TO web_usr;
+GRANT USAGE ON sgn_people.sp_product_profile_sp_product_profile_id_seq TO web_usr;
+
+CREATE TABLE sgn_people.sp_product_profileprop (
+    sp_product_profileprop_id serial primary key,
+    sp_product_profile_id bigint references sgn_people.sp_product_profile,
+    type_id bigint references cvterm,
+    value jsonb,
+    rank bigint
+);
+
+GRANT select,insert,update,delete ON sgn_people.sp_product_profileprop TO web_usr;
+GRANT USAGE ON sgn_people.sp_product_profileprop_sp_product_profileprop_id_seq TO web_usr;
 
 EOSQL
 
