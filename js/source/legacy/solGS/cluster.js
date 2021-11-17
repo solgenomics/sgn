@@ -165,9 +165,9 @@ solGS.cluster = {
 
     clusterSelPropSelectId: function(rowId) {
         if (document.URL.match(/cluster\/analysis/) && rowId) {
-            return `selection_prop_select_${rowId}`;
+            return `selection_proportion_input_${rowId}`;
         } else {
-            return 'selection_prop_select';
+            return 'selection_proportion_input';
         }
 
     },
@@ -535,7 +535,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 	if (clusterArgs) {
 
 	    jQuery("#cluster_message")
-		.html(`Running ${clusterType} clustering... please wait...this may take minutes.`)
+		.html(`Running  ${clusterType} clustering... please wait...this may take minutes.`)
 		.show();
 
         jQuery("#cluster_canvas .multi-spinner-container").show();
