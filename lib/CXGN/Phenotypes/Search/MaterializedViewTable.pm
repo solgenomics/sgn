@@ -154,6 +154,12 @@ has 'offset' => (
     is => 'rw'
 );
 
+has 'use_synonyms'=> (
+    is => 'rw',
+    isa => 'Str',
+    default => 'true',
+);
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
@@ -320,7 +326,28 @@ sub search {
             $ordered_observations{$_->{phenotype_id}} = $_;
         }
 
-        my @return_observations;;
+        my @return_observations;
+
+        my %name_hash =  map {
+            $ordered_observations{$_}->{trait_name} => $ordered_observations{$_}->{trait_name}
+        } sort keys %ordered_observations;
+
+        if ($self->use_synonyms) {
+            my $t = CXGN::List::Transform->new();
+            my @trait_ids = map { $ordered_observations{$_}->{trait_id} } sort keys %ordered_observations;
+            my $synonym_list = $t->transform($schema, 'trait_ids_2_synonyms', \@trait_ids);
+            my @missing = @{$synonym_list->{'missing'}};
+            if (scalar @missing) {
+                print STDERR "Traits:" . join("\n", @missing) . "don't have synonyms. Sticking with full trait names instead\n";
+            } else {
+                my @synonyms = @{$synonym_list->{'transform'}};
+                my $i;
+                %name_hash =  map {
+                    $ordered_observations{$_}->{trait_name} => $synonyms[$i++];
+                } sort keys %ordered_observations;
+            }
+        }
+
         foreach my $pheno_id (sort keys %ordered_observations){
             my $o = $ordered_observations{$pheno_id};
             my $trait_name = $o->{trait_name};
@@ -341,7 +368,7 @@ sub search {
                 }
             }
             my $phenotype_uniquename = $o->{uniquename};
-            $unique_traits{$trait_name}++;
+            $unique_traits{$name_hash{$trait_name}}++;
             if ($include_timestamp){
                 my $timestamp_value;
                 my $operator_value;
@@ -365,6 +392,7 @@ sub search {
                     }
                 }
             }
+            $o->{trait_name} = $name_hash{$trait_name};
             push @return_observations, $o;
         }
 
