@@ -56,131 +56,6 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
 
-#Deprecated. Look t0 SGN::Controller::BreedersToolbox::Trial->trial_download
-#sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(1) {
-#    my $self = shift;
-#    my $c = shift;
-#    my $trial_id = shift;
-#    my $format = $c->req->param("format");
-
-#    my $trial = CXGN::Trial::TrialLayout -> new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
-
-#    my $design = $trial->get_design();
-
-#    $self->trial_download_log($c, $trial_id, "trial layout");
-
-#    if ($format eq "csv") {
-#       $self->download_layout_csv($c, $trial_id, $design);
-#    }
-#    else {
-#       $self->download_layout_excel($c, $trial_id, $design);
-#    }
-#}
-
-#Deprecated by deprecation of download_trial_layout_action
-#sub download_layout_csv {
-#    my $self = shift;
-#    my $c = shift;
-#    my $trial_id = shift;
-
-#    $c->tempfiles_subdir("downloads"); # make sure the dir exists
-#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"download/trial_layout_".$trial_id."_XXXXX");
-
-#    close($fh);
-
-#    my $file_path = $c->config->{basepath}."/".$tempfile.".csv"; # need xls extension to avoid trouble
-
-#    move($tempfile, $file_path);
-
-#    my $td = CXGN::Trial::Download->new(
-#   	{
-#   	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#   	    trial_id => $trial_id,
-#   	    filename => $file_path,
-#   	    format => "TrialLayoutCSV",
-#       },
-#	);
-
-#    $td->download();
-#     my $file_name = basename($file_path);
-#     $c->res->content_type('Application/csv');
-#     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-
-#    my $output = read_file($file_path);
-
-#    $c->res->body($output);
-#}
-
-#Deprecated by deprecation of download_trial_layout_action
-#sub download_layout_excel {
-#    my $self = shift;
-#    my $c = shift;
-#    my $trial_id = shift;
-
-#    $c->tempfiles_subdir("downloads"); # make sure the dir exists
-#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"downloads/trial_layout_".$trial_id."_XXXXX");
-
-#    close($fh);
-
-#    my $file_path = $c->config->{basepath}."/".$tempfile.".xls"; # need xls extension to avoid trouble
-
-#    move($tempfile, $file_path);
-
-#    my $td = CXGN::Trial::Download->new(
-#   	{
-#   	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#   	    trial_id => $trial_id,
-#   	    filename => $file_path,
-#   	    format => "TrialLayoutExcel",
-#   	},
-#	);
-
-#    $td->download();
-#      my $file_name = basename($file_path);
-#     $c->res->content_type('Application/xls');
-#     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-
-#    my $output = read_file($file_path);
-
-#    $c->res->body($output);
-
-#}
-
-
-
-#sub download_datacollector_excel {
-#    my $self = shift;
-#    my $c = shift;
-#    my $trial_id = shift;
-
-#    $c->tempfiles_subdir("downloads"); # make sure the dir exists
-#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"downloads/DataCollector_".$trial_id."_XXXXX");
-
-#    close($fh);
-
-#    my $file_path = $c->config->{basepath}."/".$tempfile.".xls"; # need xls extension to avoid trouble
-
-#    move($tempfile, $file_path);
-
-#    my $td = CXGN::Trial::Download->new(
-#	{
-#	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-#	    trial_id => $trial_id,
-#	    filename => $file_path,
-#	    format => "DataCollectorExcel",
-#	},
-#	);
-
-#    $td->download();
-#      my $file_name = basename($file_path);
-#     $c->res->content_type('Application/xls');
-#     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-
-#    my $output = read_file($file_path);
-
-#    $c->res->body($output);
-
-#}
 
 sub _parse_list_from_json {
     my $list_json = shift;
@@ -235,6 +110,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $trait_contains = $c->req->param("trait_contains");
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
+    my $use_synonyms = $c->req->param('use_synonyms') && $c->req->param("use_synonyms") ne 'null' ? $c->req->param("use_synonyms") : 0;
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') { print STDERR "trait_list: ".Dumper $trait_list."\n"; @trait_list = @{_parse_list_from_json($trait_list)}; }
@@ -355,8 +231,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-    print STDERR "TEMPFILE : $tempfile\n";
-    print STDERR "Plugin is $plugin\n";
+    # print STDERR "TEMPFILE : $tempfile\n";
+    # print STDERR "Plugin is $plugin\n";
     #List arguments should be arrayrefs of integer ids
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
@@ -377,7 +253,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
         has_header => $has_header,
-        search_type => $search_type
+        search_type => $search_type,
+        use_synonyms => $use_synonyms,
     });
 
     my $error = $download->download();
@@ -390,54 +267,6 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
     $c->res->body($output);
 }
-
-
-#Deprecated. Look to download_phenotypes_action
-#sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download') Args(1) {
-#    my $self = shift;
-#    my $c = shift;
-#    my $trial_id = shift;
-#    my $format = $c->req->param("format");
-
-#    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-#    my $plugin = "TrialPhenotypeExcel";
-#    if ($format eq "csv") { $plugin = "TrialPhenotypeCSV"; }
-
-#    my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-
-#    $c->tempfiles_subdir("download");
-#    my $trial_name = $t->get_name();
-#    $trial_name =~ s/ /\_/g;
-#    my $location = $t->get_location()->[1];
-#    $location =~ s/ /\_/g;
-#    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"download/trial_".$trial_name."_phenotypes_".$location."_".$trial_id."_XXXXX");
-
-#    close($fh);
-#    my $file_path = $c->config->{basepath}."/".$tempfile.".".$format;
-#    move($tempfile, $file_path);
-
-
-#    my $td = CXGN::Trial::Download->new( {
-#	bcs_schema => $schema,
-#	trial_id => $trial_id,
-#	format => $plugin,
-#        filename => $file_path,
-#	user_id => $c->user->get_object()->get_sp_person_id(),
-#	trial_download_logfile => $c->config->{trial_download_logfile},
-#    }
-#    );
-
-#    $td->download();
-
-#	     my $file_name = basename($file_path);
-
-#     $c->res->content_type('Application/'.$format);
-#     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-
-#    my $output = read_file($file_path);
-
-#    $c->res->body($output);
-#}
 
 
 #used from manage download page for downloading phenotypes.
@@ -907,7 +736,7 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    
+
     # Get request params
     my $seedlot_list_id = $c->req->param("seedlot_maintenance_events_list_list_select");
     my $file_format = $c->req->param("file_format") || ".xls";
@@ -921,7 +750,7 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
     # Get seedlots from list
     my $seedlot_data = SGN::Controller::AJAX::List->retrieve_list($c, $seedlot_list_id);
     my @seedlot_names = map { $_->[1] } @$seedlot_data;
-    
+
     # Get Maintenance Events
     my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
     my $results = $m->filter_events({ names => \@seedlot_names }, 1, 65000);
