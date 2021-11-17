@@ -66,6 +66,9 @@ CREATE TABLE sgn_people.sp_stage_gate (
   breeding_program_id bigint references public.project
 );
 
+GRANT select,insert,update,delete ON sgn_people.sp_stage_gate TO web_usr;
+GRANT USAGE ON sgn_people.sp_stage_gate_sp_stage_gate_id_seq TO web_usr;
+
 CREATE TABLE sgn_people.sp_teams (
   sp_team_id serial primary key,
   name varchar(100),
@@ -73,12 +76,18 @@ CREATE TABLE sgn_people.sp_teams (
   description text
 );
 
+GRANT select,insert,update,delete ON sgn_people.sp_teams TO web_usr;
+GRANT USAGE ON sgn_people.sp_teams_sp_team_id_seq TO web_usr;
+
 CREATE TABLE sgn_people.sp_person_team (
   sp_person_team_id serial primary key,
-  sp_person_id bigint references sgn_people.sp_person NOT NULL ON DELETE CASCADE,
-  sp_team_id bigint references sgn_people.sp_team NOT NULL ON DELETE CASCADE,
+  sp_person_id bigint NOT NULL REFERENCES sgn_people.sp_person ON DELETE CASCADE,
+  sp_team_id bigint NOT NULL REFERENCES sgn_people.sp_teams ON DELETE CASCADE,
   functional_role varchar(100)
 );
+
+GRANT select,insert,update,delete ON sgn_people.sp_person_team TO web_usr;
+GRANT USAGE ON sgn_people.sp_person_team_sp_person_team_id_seq TO web_usr;
 
 
 EOSQL
