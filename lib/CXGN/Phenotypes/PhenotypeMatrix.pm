@@ -146,6 +146,12 @@ has 'offset' => (
     is => 'rw'
 );
 
+has 'use_synonyms'=> (
+    is => 'rw',
+    isa => 'Str',
+    default => 'true',
+);
+
 sub get_phenotype_matrix {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
@@ -172,7 +178,8 @@ sub get_phenotype_matrix {
             phenotype_min_value=>$self->phenotype_min_value,
             phenotype_max_value=>$self->phenotype_max_value,
             limit=>$self->limit,
-            offset=>$self->offset
+            offset=>$self->offset,
+            use_synonyms => $self->use_synonyms,
         }
     );
 
