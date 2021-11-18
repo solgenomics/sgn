@@ -14,12 +14,12 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This is a test dummy patch.
+Add the sp_product_profile and sp_product_profileprop tables
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
- Naama Menda<nm249@cornell.edu>
+Lukas Mueller <lam87@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -61,8 +61,8 @@ sub patch {
 
 CREATE TABLE sgn_people.sp_product_profile (
     sp_product_profile_id serial primary key,
-    sp_stage_gate_id bigint references sgn_people.
-    sp_stage_gate, name varchar(100),
+    sp_stage_gate_id bigint references sgn_people.sp_stage_gate,
+    name varchar(100),
     scope varchar(100),
     sp_person_id bigint references sgn_people.sp_person,
     create_date timestamp without time zone default now(),

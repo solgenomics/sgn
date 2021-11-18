@@ -49,16 +49,16 @@ $program_name => undef
                             <& /page/page_title.mas, title=>"Provide basic information about the product profile and upload your file" &>
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_profile_form" name="upload_profile_form">
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Product Profile Name: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="new_profile_name" name="new_profile_name" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Breeding Program: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" name="profile_program_name" id="profile_program_name" disabled value="<% $program_name %>">
                                         <input name="profile_program_id" id="profile_program_id" type="hidden" value="<% $program_id %>">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">Product Profile Name: </label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="new_profile_name" name="new_profile_name" type="text"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -198,10 +198,10 @@ jQuery(document).ready(function(){
 
         jQuery('#upload_profile_form').attr("action", '/ajax/breeders/program/upload_profile');
 
-        if (program_id === '') {
-            alert("Please choose a breeding program");
-            return;
-        }
+//        if (program_id === '') {
+//            alert("Please choose a breeding program");
+//            return;
+//        }
         if (new_profile_name === '') {
             alert("Please enter a profile name");
             return;

@@ -14,12 +14,12 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-Add the sp_teams and sp_person_teams tables
+Add the sp_stage_gate, sp_teams and sp_person_team tables
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
- Naama Menda<nm249@cornell.edu>
+Lukas Mueller <lam87@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
