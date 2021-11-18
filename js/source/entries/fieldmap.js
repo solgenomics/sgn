@@ -128,26 +128,29 @@ export function init() {
 
         get_planting_order() {
             var planting_order_arr = Object.values(this.plot_object);
-            console.log(planting_order_arr);
             planting_order_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
-            let temp_planting_arr = [];
-            for (let i = 0; i < this.meta_data.num_rows; i++) {
-                temp_planting_arr.push([...planting_order_arr.slice(i * this.meta_data.num_cols, (i * this.meta_data.num_cols + this.meta_data.num_cols))])
-                if (this.meta_data.plot_layout == "serpentine" && i % 2 == 1) {
-                    temp_planting_arr[i].reverse();
-                }
-            }
-
             let final_planting_arr = [];
-            for (let i = 0; i < this.meta_data.num_cols; i++) {
-                let row_coord;
-                for (let j = 0; j < this.meta_data.num_rows; j++) {
-                    if (this.meta_data.planting_order_layout == "serpentine" && i % 2 == 1) {
-                        row_coord = this.meta_data.num_rows - j - 1;
-                    } else {
-                        row_coord = j;
+            if (this.meta_data.planting_order_layout.includes('row')) {
+                final_planting_arr = planting_order_arr;
+            } else {
+                let temp_planting_arr = [];
+                for (let i = 0; i < this.meta_data.num_rows; i++) {
+                    temp_planting_arr.push([...planting_order_arr.slice(i * this.meta_data.num_cols, (i * this.meta_data.num_cols + this.meta_data.num_cols))])
+                    if (this.meta_data.plot_layout == "by_col_serpentine" && i % 2 == 1) {
+                        temp_planting_arr[i].reverse();
                     }
-                    final_planting_arr.push(temp_planting_arr[row_coord][i]);
+                }
+
+                for (let i = 0; i < this.meta_data.num_cols; i++) {
+                    let row_coord;
+                    for (let j = 0; j < this.meta_data.num_rows; j++) {
+                        if (this.meta_data.planting_order_layout == "by_col_serpentine" && i % 2 == 1) {
+                            row_coord = this.meta_data.num_rows - j - 1;
+                        } else {
+                            row_coord = j;
+                        }
+                        final_planting_arr.push(temp_planting_arr[row_coord][i]);
+                    }
                 }
             }
             var csv = ['PlotNumber', 'PlotName', 'AccessionName',].join(',');
@@ -165,9 +168,56 @@ export function init() {
             hiddenElement.click();    
         }
 
-        get_harvesting_order() {
-            console.log(this.plot_arr);
-        }
+        // get_harvesting_order() {
+        //     let temp_harvesting_arr = [];
+        //     let num_harvesting_rows = this.meta_data.num_rows;
+        //     let num_harvesting_cols = this.meta_data.num_cols;
+        //     num_harvesting_cols = this.meta_data.left_border_selection ? num_harvesting_cols + 1 : num_harvesting_cols;
+        //     num_harvesting_cols = this.meta_data.right_border_selection ? num_harvesting_cols + 1 : num_harvesting_cols;
+        //     num_harvesting_rows = this.meta_data.top_border_selection ? num_harvesting_rows + 1 : num_harvesting_rows;
+        //     num_harvesting_rows = this.meta_data.bottom_border_selection ? num_harvesting_rows + 1 : num_harvesting_rows;
+        //     if (this.harvesting_order_layout.includes('row')) {
+        //         if (this.meta_data.bottom_border_selection) {
+        //             temp_harvesting_arr.fill({observationUnitPosition: {observationLevel: {levelCode: ""}}, observationUnitName: "Border", germplasmName: "" }, 0, num_harvesting_cols);
+        //         }
+
+
+        //     }
+        //     if (this.meta_data.left_border_selection && !(this.harvesting_order_layout.includes('row'))) {
+        //         num_harvesting_rows = this.meta_data.top_border_selection ? num_harvesting_rows + 1 : num_harvesting_rows;
+        //         num_harvesting_rows = this.meta_data.bottom_border_selection ? num_harvesting_rows + 1 : num_harvesting_rows;
+        //         for (let i = 0; i < num_harvesting_rows; i++) {
+        //             temp_harvesting_arr.push({observationUnitPosition: {observationLevel: {levelCode: ""}}, observationUnitName: "Border", germplasmName: "" });
+        //         }
+        //     }
+        //     var harvesting_order_arr = Object.values(this.plot_object);
+        //     harvesting_order_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
+        //     let final_harvesting_arr = [];
+        //     if (this.meta_data.harvesting_order_layout.includes('row')) {
+        //         final_harvesting_arr = temp_harvesting_arr;
+        //     } else {
+        //         let temp_planting_arr = [];
+        //         for (let i = 0; i < this.meta_data.num_rows; i++) {
+        //             temp_planting_arr.push([...planting_order_arr.slice(i * this.meta_data.num_cols, (i * this.meta_data.num_cols + this.meta_data.num_cols))])
+        //             if (this.meta_data.plot_layout == "by_col_serpentine" && i % 2 == 1) {
+        //                 temp_planting_arr[i].reverse();
+        //             }
+        //         }
+
+        //         for (let i = 0; i < this.meta_data.num_cols; i++) {
+        //             let row_coord;
+        //             for (let j = 0; j < this.meta_data.num_rows; j++) {
+        //                 if (this.meta_data.planting_order_layout == "by_col_serpentine" && i % 2 == 1) {
+        //                     row_coord = this.meta_data.num_rows - j - 1;
+        //                 } else {
+        //                     row_coord = j;
+        //                 }
+        //                 final_planting_arr.push(temp_planting_arr[row_coord][i]);
+        //             }
+        //         }
+        //     }
+
+        // }
 
         set_meta_data() {
             // this.plot_arr = JSON.parse(JSON.stringify(Object.values(this.plot_object)));
@@ -280,10 +330,10 @@ export function init() {
         }
 
         add_borders() {
-            this.add_border("top_border_selection", "row", this.meta_data.min_row - 1);
-            this.add_border("bottom_border_selection", "row", this.meta_data.max_row + 1);
             this.add_border("left_border_selection", "col", this.meta_data.min_col - 1);
+            this.add_border("top_border_selection", "row", this.meta_data.min_row - 1);
             this.add_border("right_border_selection", "col", this.meta_data.max_col + 1);
+            this.add_border("bottom_border_selection", "row", this.meta_data.max_row + 1);
             this.add_corners();
         }
 
@@ -323,13 +373,25 @@ export function init() {
             return d3.rebind(cc, event, 'on');
         }
 
-        heatmap_plot_click() {
-
+        heatmap_plot_click(plot, heatmap_object, trait_name) {
+            if (d3.event && d3.event.detail > 1) {
+                console.log(d3.event);
+                return;
+            } else if (trait_name in heatmap_object && heatmap_object[trait_name][plot.observationUnitDbId]) {
+                let val, plot_name, pheno_id;
+                val = heatmap_object[trait_name][plot.observationUnitDbId].val;
+                plot_name = heatmap_object[trait_name][plot.observationUnitDbId].plot_name; 
+                pheno_id = heatmap_object[trait_name][plot.observationUnitDbId].id;
+                jQuery("#suppress_plot_pheno_dialog").modal("show"); 
+                jQuery("#myplot_name").html(plot_name);
+                jQuery("#pheno_value").html(val);
+                jQuery("#mytrait_id").html(trait_name);
+                jQuery("#mypheno_id").html(pheno_id);
+            }
         }
 
         fieldmap_plot_click(plot) {
             if (d3.event && d3.event.detail > 1) {
-                console.log(d3.event);
                 return;
             } else {
                 function btnClick(n){
@@ -424,7 +486,13 @@ export function init() {
             }
             
             var get_heatmap_plot_color = function(plot) {
-                return heatmap_object[trait_name][plot.observationUnitDbId] ? colorScale(heatmap_object[trait_name][plot.observationUnitDbId].val) : colors[0];
+                var color;
+                if (!plot.observationUnitPosition.observationLevel) {
+                    color = "lightgrey";
+                } else {
+                    color = heatmap_object[trait_name][plot.observationUnitDbId] ? colorScale(heatmap_object[trait_name][plot.observationUnitDbId].val) : "white";
+                }
+                return color;
             }
             var get_stroke_color = function(plot) {
                 var stroke_color;
@@ -498,7 +566,7 @@ export function init() {
                     plots.exit().remove();
                 }).call(cc);
 
-            cc.on("click", function(el) { var plot = d3.select(el.srcElement).data()[0]; plot_click(plot) });
+            cc.on("click", function(el) { var plot = d3.select(el.srcElement).data()[0]; plot_click(plot, heatmap_object, trait_name) });
             cc.on("dblclick", function(el) { var me = d3.select(el.srcElement);
                 var d = me.data()[0];
                 if (d.observationUnitDbId) {
@@ -510,7 +578,7 @@ export function init() {
                     plots.enter().append("text")
                     .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + 1) * 50 + 25; })
                     .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 45; })
-                    .text(function(d) { if (d.type == "data" && d.additionalInfo.type != "filler") { return d.observationUnitPosition.observationLevel.levelCode; }});
+                    .text(function(d) { if ((d.type == "data" && !d.additionalInfo) || (d.type == "data" && d.additionalInfo.type != "filler")) { return d.observationUnitPosition.observationLevel.levelCode; }});
 
             var image_icon = function (d){
                 var image = d.plotImageDbIds || []; 
