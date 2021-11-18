@@ -5149,7 +5149,7 @@ sub transcriptomics_detail_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
-	my $brapi_package_result = $brapi_module->transcriptomics_detail(
+	my $brapi_package_result = $brapi_module->detail(
 		$c->stash->{stock_id}
 	);
 	_standard_response_construction($c, $brapi_package_result);
@@ -5164,7 +5164,7 @@ sub transcriptomics_matrix_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
-	my $brapi_package_result = $brapi_module->transcriptomics_matrix(
+	my $brapi_package_result = $brapi_module->matrix(
 		$c->stash->{stock_id}
 	);
 	_standard_response_construction($c, $brapi_package_result);
