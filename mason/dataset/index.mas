@@ -1,0 +1,16 @@
+
+<%args>
+$dataset_name
+$dataset_id
+</%args>
+
+<& /page/page_title.mas, title => "Dataset ".$dataset_name &>
+  
+<div id="dataset_info_section">
+</div>
+o
+<h3>Define outliers</h3>
+
+<div id="define_outliers">
+</div>
+
