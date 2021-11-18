@@ -529,7 +529,11 @@ sub _validate_with_plugin {
       push @error_messages, "Accession(s) <b>".join(',',@accessions_missing)."</b> are not in the database as uniquenames or synonyms.";
   }
   if (scalar(@multiple_synonyms) > 0) {
-      push @error_messages, "Accession(s) <b>".join(',',@multiple_synonyms)."</b> appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms";
+      my @msgs;
+      foreach my $m (@multiple_synonyms) {
+          push(@msgs, 'Name: ' . @$m[0] . ' = Synonym: ' . @$m[1]);
+      }
+      push @error_messages, "Accession(s) <b>".join(',',@msgs)."</b> appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms";
   }
 
   ## SEEDLOTS OVERALL VALIDATION
