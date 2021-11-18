@@ -179,7 +179,6 @@ sub get_phenotype_matrix {
             phenotype_max_value=>$self->phenotype_max_value,
             limit=>$self->limit,
             offset=>$self->offset,
-            use_synonyms => $self->use_synonyms,
         }
     );
 
@@ -200,10 +199,56 @@ sub get_phenotype_matrix {
             push @line, ('germplasmPedigreeFemaleParentName', 'germplasmPedigreeFemaleParentDbId', 'germplasmPedigreeMaleParentName', 'germplasmPedigreeMaleParentDbId');
         }
 
-        my @sorted_traits = sort keys(%$unique_traits);
-        foreach my $trait (@sorted_traits) {
-            push @line, $trait;
+
+
+        # my %name_hash =  map {
+        #     $_->{trait_name} => $_->{trait_name}
+        # } @$data;
+        my @sorted_traits;
+        if ($self->use_synonyms) {
+            my $t = CXGN::List::Transform->new();
+            my @trait_names = keys(%$unique_traits);
+            my $trait_id_results = $t->transform($self->bcs_schema, 'traits_2_trait_ids', \@trait_names);
+            my @trait_ids = @{$trait_id_results->{'transform'}};
+            my $synonym_list = $t->transform($self->bcs_schema, 'trait_ids_2_synonyms', \@trait_ids);
+            my @missing = @{$synonym_list->{'missing'}};
+            if (scalar @missing) {
+                print STDERR "Traits:" . join("\n", @missing) . "don't have synonyms. Sticking with full trait names instead\n";
+                @sorted_traits = sort keys(%$unique_traits);
+                foreach my $trait (@sorted_traits) {
+                    push @line, $trait;
+                }
+            } else {
+                my @sorted_synonyms = sort @{$synonym_list->{'transform'}};
+                foreach my $synonym (@sorted_synonyms) {
+                    push @line, $synonym;
+                }
+
+                my $i;
+                my %name_hash =  map {
+                    $_ => $trait_names[$i++];
+                } @{$synonym_list->{'transform'}};
+
+                @sorted_traits =  map {
+                    $name_hash{$_};
+                } sort keys(%name_hash);
+                # foreach my $trait (@sorted_traits) {
+                #     push @line, $trait;
+                # }
+            }
+        } else {
+            @sorted_traits = sort keys(%$unique_traits);
+            foreach my $trait (@sorted_traits) {
+                push @line, $trait;
+            }
         }
+
+
+
+        # my @sorted_traits = sort keys(%$unique_traits);
+        # foreach my $trait (@sorted_traits) {
+        #     push @line, $trait;
+        # }
         push @line, 'notes';
         push @info, \@line;
 
@@ -267,8 +312,28 @@ sub get_phenotype_matrix {
         my @unique_obsunit_list = ();
         my %seen_obsunits;
 
+        my %name_hash =  map {
+            $_->{trait_name} => $_->{trait_name}
+        } @$data;
+
+        if ($self->use_synonyms) {
+            my $t = CXGN::List::Transform->new();
+            my @trait_ids = map { $_->{trait_id} } @$data;
+            my $synonym_list = $t->transform($self->bcs_schema, 'trait_ids_2_synonyms', \@trait_ids);
+            my @missing = @{$synonym_list->{'missing'}};
+            if (scalar @missing) {
+                print STDERR "Traits:" . join("\n", @missing) . "don't have synonyms. Sticking with full trait names instead\n";
+            } else {
+                my @synonyms = @{$synonym_list->{'transform'}};
+                my $i;
+                %name_hash =  map {
+                    $_->{trait_name} => $synonyms[$i++];
+                } @$data;
+            }
+        }
+
         foreach my $d (@$data) {
-            my $cvterm = $d->{trait_name};
+            my $cvterm = $name_hash{$d->{trait_name}};
             if ($cvterm){
                 my $obsunit_id = $d->{obsunit_stock_id};
                 if (!exists($seen_obsunits{$obsunit_id})) {
