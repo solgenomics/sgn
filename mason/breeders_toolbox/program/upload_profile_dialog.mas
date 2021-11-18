@@ -196,7 +196,7 @@ jQuery(document).ready(function(){
         var new_profile_name = jQuery('#new_profile_name').val();
         var new_profile_scope = jQuery('#new_profile_scope').val();
 
-        jQuery('#upload_profile_form').attr("action", '/ajax/breeders/program/upload_profile');
+        jQuery('#upload_profile_form').attr("action", '/ajax/product_profile/upload_profile');
 
 //        if (program_id === '') {
 //            alert("Please choose a breeding program");

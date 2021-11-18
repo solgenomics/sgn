@@ -80,7 +80,7 @@ jQuery(document).ready(function () {
         }
 
         jQuery.ajax({
-            url: '/ajax/program/create_profile_template',
+            url: '/ajax/product_profile/create_profile_template',
             dataType: "json",
             type: 'POST',
             data:{
