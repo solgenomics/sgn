@@ -16,6 +16,10 @@ my $schema = $f->bcs_schema();
 
 my $mech = Test::WWW::Mechanize->new();
 
+# login
+#
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ], 'login with brapi call');
+
 # add seedlots to delete
 #
 my $sl1 = CXGN::Stock::Seedlot->new( schema => $schema);
@@ -33,25 +37,23 @@ $sl3->store();
 
 # add a corresponding list
 #
-my $list = CXGN::List->create_list($schema->storage->dbh(), 'seedlot list for test', 'description', 1 );
+my $list_id = CXGN::List::create_list($schema->storage->dbh(), 'seedlot list for test', 'description', 41 );
 
+my $list = CXGN::List->new( { dbh => $schema->storage->dbh(), list_id => $list_id });
 
+$list->type('seedlots');
 
-my $list_id = $list->store();
 $list->add_bulk( [ 'blabla', 'boff', 'asdf' ]);
 
+$mech->get_ok("http://localhost:3010/ajax/seedlots/verify_delete_by_list?list_id=$list_id");
 
-
-
-$mech->get_ok('/ajax/seedlots/verify_deletion?list_id=$list_id');
-
-$mech->contents();
+print STDERR "CONTENT: ".$mech->content();
 
 
 # delete what has been created
 #
 
-$list->delete();
+CXGN::List::delete_list($schema->storage->dbh(), $list_id);
 
 
 done_testing();
