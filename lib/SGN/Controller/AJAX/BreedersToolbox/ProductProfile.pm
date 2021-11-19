@@ -158,9 +158,10 @@ sub upload_profile_POST : Args(0) {
     my $user_name;
     my $user_role;
     my $session_id = $c->req->param("sgn_session_id");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh();
 
     if ($session_id){
-        my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
             $c->stash->{rest} = {error=>'You must be logged in to upload product profile!'};
@@ -187,23 +188,23 @@ sub upload_profile_POST : Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $program_id = $c->req->param('profile_program_id');
+#    my $program_id = $c->req->param('profile_program_id');
     my $new_profile_name = $c->req->param('new_profile_name');
     my $new_profile_scope = $c->req->param('new_profile_scope');
     $new_profile_name =~ s/^\s+|\s+$//g;
 
-    my $profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema, parent_id => $program_id });
-    my $profiles = $profile_obj->get_product_profile_info();
-    my @db_profile_names;
-    foreach my $profile(@$profiles){
-        my @profile_info = @$profile;
-        my $stored_profile_name = $profile_info[1];
-        push @db_profile_names, $stored_profile_name;
-    }
-    if ($new_profile_name ~~ @db_profile_names){
-        $c->stash->{rest} = {error=>'Please use different product profile name. This name is already used for another product profile!'};
-        return;
-    }
+#    my $profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema, parent_id => $program_id });
+#    my $profiles = $profile_obj->get_product_profile_info();
+#    my @db_profile_names;
+#    foreach my $profile(@$profiles){
+#        my @profile_info = @$profile;
+#        my $stored_profile_name = $profile_info[1];
+#        push @db_profile_names, $stored_profile_name;
+#    }
+#    if ($new_profile_name ~~ @db_profile_names){
+#        $c->stash->{rest} = {error=>'Please use different product profile name. This name is already used for another product profile!'};
+#        return;
+#    }
 
     my $upload = $c->req->upload('profile_uploaded_file');
     my $subdirectory = "profile_upload";
@@ -260,22 +261,28 @@ sub upload_profile_POST : Args(0) {
         $c->detach();
     }
 
-    my $profile = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema });
-    $profile->product_profile_name($new_profile_name);
-    $profile->product_profile_scope($new_profile_scope);
-    $profile->product_profile_details($profile_detail_string);
-    $profile->product_profile_submitter($user_name);
-    $profile->product_profile_uploaded_date($uploaded_date);
-    $profile->parent_id($program_id);
-    my $project_prop_id = $profile->store_by_rank();
-
-    if ($@) {
-        $c->stash->{rest} = { error => $@ };
-        print STDERR "An error condition occurred, was not able to upload profile. ($@).\n";
-        $c->detach();
+    my $profile = CXGN::BreedersToolbox::ProductProfile->new({ people_schema => $people_schema, dbh => $dbh });
+    #need to add sp stage gate
+    $profile->sp_stage_gate_id('1');
+    $profile->name($new_profile_name);
+    $profile->scope($new_profile_scope);
+    $profile->sp_person_id($user_id);
+    $profile->create_date($uploaded_date);
+    my $product_profile_id = $profile->store();
+    #print STDERR "PRODUCT PROFILE ID =".($product_profile_id)."\n";
+    if (!$product_profile_id){
+        $c->stash->{rest} = {error_string => "Error saving your product profile",};
+        return;
     }
 
-    my $dbh = $c->dbc->dbh();
+#    my $project_prop_id = $profile->store_by_rank();
+
+#    if ($@) {
+#        $c->stash->{rest} = { error => $@ };
+#        print STDERR "An error condition occurred, was not able to upload profile. ($@).\n";
+#        $c->detach();
+#    }
+
 
     $c->stash->{rest} = { success => 1 };
 
