@@ -13,7 +13,7 @@
 </%perl>
 
 
-<& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+<& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'CXGN.List', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.SelectionIndex' ] &>
 
 <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
@@ -44,10 +44,9 @@
        <div id = "select_method">
       </div>
       <button class="btn btn-primary" id="method_btn" type="submit" name="method_btn" value="method_btn">Select Method</button -->
-      <div class="form-group form-inline">
-        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
-      <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
+
+      <div id="sin_list"></div>
+      
       <br>
       <br>
       <br>
@@ -162,8 +161,12 @@ jQuery(document).ready(function() {
     });
   });
 
-
-  
+  var lo = new CXGN.List();
+  jQuery('#sin_list').html(lo.listSelect('sin_list', ['dataset'], 'Select a formula', 'refresh', undefined));
+  jQuery('#sin_list_list_select').change(
+      function() {
+          load_sin();
+      });  
 
  //  jQuery('#method_btn').on('click', function() {
  //   var method_id = jQuery('#select_method').val();
@@ -220,18 +223,21 @@ jQuery(document).ready(function() {
 
 
   jQuery('#runGCPC').click( function () {
-    if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
+    alert("hello");
+    if (!jQuery('#sin_list_list_select').val()) {
+      alert("Please select a selection index.")
       $('#gcpc_files').empty();
     } else {
       $('#gcpc_files').empty();
-      if ($('#pheno_select').val() != ""){
+      alert("hello2");
+      if ($('#sin_list_list_select').val() != ""){
+        alert("hello3");
         var dataset_id = get_dataset_id();
-        var trait_id = $('#pheno_select').val();
+        var sin_list_id = $('#sin_list_list_select').val();
         // var method_id = $('#select_method').val();
         $.ajax({
           url: '/ajax/gcpc/generate_results',
-          data: {'dataset_id': dataset_id, 'trait_id': trait_id, 'method_id':method_id},
+          data: {'dataset_id': dataset_id, 'sin_list_id': sin_list_id }, // 'method_id':method_id},
           beforeSend: function() {
             jQuery("#working_modal").modal("show");
           },

@@ -20,9 +20,10 @@ args = commandArgs(trailingOnly=TRUE)
 if (length(args)!=2) {
   stop('Two Arguments are required.')
 }
-phenotype_file= args[1]
-genotype_file= args[2]
-
+phenotypeFile = args[1]
+genotypeFile = args[2]
+traits = args[3]
+weights = args[4]
 
 ################################################################################
 # 1. Load software needed
@@ -52,7 +53,7 @@ Rcpp::sourceCpp("../QuantGenResources/CalcCrossMeans.cpp") # this is called Calc
 #    is defined as the phenotype file.
 
 #userPheno <- path2
-userPheno <- read.csv(phenotype_file, header = TRUE) #testing only
+userPheno <- read.csv(phenotypeFile, header = TRUE) #testing only
 userPheno <- userPheno[userPheno$Trial == "SCG", ] #testing only-- needs to replaced with 2-stage
 
 
@@ -106,15 +107,16 @@ userPloidy <- 2 # for testing only
 #    to this vector, 'userResponse'.
 
 userResponse <- c()
-userResponse <- c("YIELD", "DMC", "OXBI") # for testing only
+#userResponse <- c("YIELD", "DMC", "OXBI") # for testing only
+userResponse <- strsplit(traits, ",")
 
 
 # h. The user must indicate weights for each response. The order of the vector
 #    of response weights must match the order of the responses in userResponse.
 
 userWeights <- c()
-userWeights <- c(1, 0.8, 0.2) # for YIELD, DMC, and OXBI respectively; for testing only
-
+#userWeights <- c(1, 0.8, 0.2) # for YIELD, DMC, and OXBI respectively; for testing only
+userWeights  <- strsplit(weights, ",")
 
 # i. The user can indicate the number of crosses they wish to output.
 #    The maximum possible is a full diallel.
@@ -160,13 +162,13 @@ userPheno$Sex <- sample(c("M", "F"), size = nrow(userPheno), replace = TRUE, pro
 #    It's also possible to filter them here.
 
 #  Import VCF with VariantAnnotation package and extract matrix of dosages
-myVCF <- readVcf(genotype_file)
+myVCF <- readVcf(genotypeFile)
 G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
 
 
 #   TEST temporarily import the genotypes via HapMap:
 #source("R/hapMap2numeric.R") # replace and delete
-#G <- hapMap2numeric(genotype_file) # replace and delete
+#G <- hapMap2numeric(genotypeFile) # replace and delete
 
 
 
@@ -408,7 +410,7 @@ if(!is.na(userSexes)){
   
   # subset the number of crosses the user wishes to output
   crossPlan[1:userNCrosses, ]
-  output_file= paste(phenotype_file, ".out", sep="")
+  outputFile= paste(phenotypeFile, ".out", sep="")
   
 }
 
@@ -417,6 +419,6 @@ if(is.na(userSexes)){
   
   # only subset the number of crosses the user wishes to output
   crossPlan[1:userNCrosses, ]
-  output_file= paste(phenotype_file, ".out", sep="")
+  outputFile= paste(phenotypeFile, ".out", sep="")
   
 }

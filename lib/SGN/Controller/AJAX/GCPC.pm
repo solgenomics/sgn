@@ -90,12 +90,32 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
     #my $method = $c->req->param('method_id');
-    my $trait_id = $c->req->param('trait_id');
+    my $sin_list_id = $c->req->param('sin_list_id');
     
     print STDERR "DATASET_ID: $dataset_id\n";
-    print STDERR "TRAIT ID: $trait_id\n";
+    print STDERR "SELECTION INDEX ID: $sin_list_id\n";
     #print STDERR "Method: ".Dumper($method);
 
+    my $list = CXGN::List->new( { dbh => $c->dbic_schema("Bio::Chado::Schema")->storage->dbh() , list_id => $sin_list_id });
+    my $elements = $list->elements();
+
+    print STDERR "ELEMENTS: ".Dumper($elements);
+
+    $elements->[0] =~ s/^traits\://;
+    my @traits = split /\,/, $elements->[0];
+
+    print STDERR join(",", @traits);
+
+    my @new_traits = @traits;
+
+    foreach my $t (@new_traits) {
+	$t = make_R_trait_name($t);
+    }
+
+    print STDERR "NEW TRAITS ".Dumper(\@new_traits);
+    
+    my $trait_id;
+    
     $c->tempfiles_subdir("gcpc_files");
     my $gcpc_tmp_output = $c->config->{cluster_shared_tempdir}."/gcpc_files";
     mkdir $gcpc_tmp_output if ! -d $gcpc_tmp_output;
@@ -106,7 +126,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     my $pheno_filepath = $tempfile . "_phenotype.txt";
     my $geno_filepath  = $tempfile . "_genotype.txt";
-    
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
@@ -117,11 +137,20 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
-    my $newtrait = $trait_id;
-    $newtrait =~ s/\s/\_/g;
-    $newtrait =~ s/\//\_/g;
-    $trait_id =~ tr/ /./;
-    $trait_id =~ tr/\//./;
+    open(my $PF, "<", $pheno_filepath) || die "Can't open pheno file $pheno_filepath";
+    my $header = <$PF>;
+    chomp($header);
+
+    my @fields = split /\t/, $header;
+
+    my @file_traits = @fields[ 39 .. @fields-1 ];
+    
+    print STDERR "FIELDS: ".Dumper(\@file_traits);
+
+    my $traits;
+    my $weights;
+    
+    my $newtrait = $traits;
 
     my $genotype_data_ref = $ds->retrieve_genotypes($geno_filepath);
 
@@ -131,36 +160,36 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
 	 
 	 
-    #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT
-    while(my $line = <$F>) { 
-	chomp($line);
+    # #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT
+    # while(my $line = <$F>) { 
+    # 	chomp($line);
 
-	if ($line =~ m/^\#\#/) {
-	    next();
-	}
+    # 	if ($line =~ m/^\#\#/) {
+    # 	    next();
+    # 	}
 
-	if ($line =~ m/\#CHROM/) {
-	    my($chrom_header, $pos_header, $id_header, $ref_header, $alt_header, $qual_header, $filter_header, $info_header, $format_header, @genotype_ids) = split /\t/, $line;
+    # 	if ($line =~ m/\#CHROM/) {
+    # 	    my($chrom_header, $pos_header, $id_header, $ref_header, $alt_header, $qual_header, $filter_header, $info_header, $format_header, @genotype_ids) = split /\t/, $line;
 	    
-	    print $G join("\t", (qw | rs allels chrom pos strand assembly center protLSID assayLSID panelLSID QCcode |, @genotype_ids))."\n";
-	}
+    # 	    print $G join("\t", (qw | rs allels chrom pos strand assembly center protLSID assayLSID panelLSID QCcode |, @genotype_ids))."\n";
+    # 	}
 
-	else { 
-	    my($chrom, $pos, $id, $ref, $alt, $qual, $filter, $info, $format, @genotypes) = split /\t/, $line;
+    # 	else { 
+    # 	    my($chrom, $pos, $id, $ref, $alt, $qual, $filter, $info, $format, @genotypes) = split /\t/, $line;
 	    
-	    my @formats = split /\:/, $format;
+    # 	    my @formats = split /\:/, $format;
 	    
-	    my $gt_index = -1;
-	    for(my $n=0; $n++; $n<@formats) {
-		if ($n eq "GT") {
-		    $gt_index = $n;
-		}
-	    }
-	    if ($gt_index == -1) { die "Can't find GT for line with id $id.\n"; }
+    # 	    my $gt_index = -1;
+    # 	    for(my $n=0; $n++; $n<@formats) {
+    # 		if ($n eq "GT") {
+    # 		    $gt_index = $n;
+    # 		}
+    # 	    }
+    # 	    if ($gt_index == -1) { die "Can't find GT for line with id $id.\n"; }
 	    
-	    print $G join("\t", ($chrom."_".$pos, $ref."/".$alt, $chrom, $pos, '+', 'NA', 'NA', 'NA'))."\n";
-	}
-    }
+    # 	    print $G join("\t", ($chrom."_".$pos, $ref."/".$alt, $chrom, $pos, '+', 'NA', 'NA', 'NA'))."\n";
+    # 	}
+    # }
 
     
     my $AMMIFile = $tempfile . "_" . "AMMIFile.png";
@@ -181,16 +210,14 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
         });
 
     $cmd->run_cluster(
-            "Rscript ",
-            $c->config->{basepath} . "/R/gcpc/run_gcpc.R",
+	"Rscript ",
+	$c->config->{basepath} . "/R/GCPC_Yambase.R",
 	$pheno_filepath,
 	$geno_filepath,
-            $trait_id,
-            $figure1file,
-            $figure2file,
-            $AMMIFile,
-            #$method
-    );
+	$traits,
+	$weights,
+	
+	);
 
     while ($cmd->alive) { 
 	sleep(1);
@@ -224,6 +251,15 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
         dummy_response => $dataset_id
         # dummy_response2 => $trait_id,
     };
+}
+
+sub make_R_trait_name {
+    my $trait = shift;
+    $trait =~ s/\s/\_/g;
+    $trait =~ s/\//\_/g;
+    $trait =~ tr/ /./;
+    $trait =~ tr/\//./;
+    return $trait;
 }
 
 1
