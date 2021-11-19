@@ -35,7 +35,8 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
     my $traits = $ds->retrieve_traits();
-    
+
+    my $dataset_name = $ds->name();
     $c->tempfiles_subdir("stability_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"stability_files/trait_XXXXX");
     $people_schema = $c->dbic_schema("CXGN::People::Schema");
@@ -46,6 +47,7 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
 
     print STDERR Dumper($traits);
     $c->stash->{rest} = {
+	dataset_name => $dataset_name,
         options => $traits,
         tempfile => $tempfile."_phenotype.txt",
 #        tempfile => $file_response,
@@ -147,7 +149,8 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     $newtrait =~ s/\//\_/g;
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
-
+    $trait_id =~ tr/|/./;
+    
     my $AMMIFile = $tempfile . "_" . "AMMIFile.png";
     my $figure1file = $tempfile . "_" . "figure1.png";
     my $figure2file = $tempfile . "_" . "figure2.png";

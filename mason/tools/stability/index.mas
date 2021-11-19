@@ -31,73 +31,51 @@
     <br>
 
     <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
-    <br>
+    <br />
+    <br />
+    <div id="selected_dataset_banner"></div>
+    <hr />
     <br>
 
     </div>
-      <div class = "form-group form-inline">
-       <label for = select_method>Available Methods: </label>
-       <select class="form-control input-sm" id="select_method">
+      <span class = "form-group form-inline">
+       <label for = "select_method">Method </label>
+       <select class="form-control input-sm" id="select_method" disabled="true" >
         <option selected value="ammi">AMMI</option>
         <option value="gge">GGE</option>
        </select>
-       <div id = "select_method">
-      </div>
-      <button class="btn btn-primary" id="method_btn" type="submit" name="method_btn" value="method_btn">Select Method</button>
-      <br>
-    
-    <br>
-    <br>    
+       <san id = "select_method">
+      </span>
+      <!-- button class="btn btn-primary" id="method_btn" type="submit" name="method_btn" value="method_btn">Select Method</button -->
 
-      <div class="form-group form-inline">
-        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>
-      <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
-      <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
-      <br>
-      <br>
-      <br>
-      <center>
-        <div id="trait_histogram_plot">
-        </div>
-      </center>
-    
-      <br>
-      <br>
-      <br>
-      <center>
-        <div id="pca_output"></div>
-      </center>
+       <span style="margin-left:100px">&nbsp;</span><span class="form-group form-inline">
+         <label class="blast_select_label" for="pheno_select">Traits:&nbsp; </label>
+	 <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>
+         <button class="btn btn-primary" id="preview_trait_histogram_btn" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn" disabled>View Trait Histogram</button>
 
+	 <br />
+	 <center>
+         <span id="trait_histogram_plot">
+         </span>
+	 </center>
 
-    <br>
-
-
-    <!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
-        <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
-        <br>
-
-        </div>
-
+         <!-- center>
+            <div id="pca_output"></div>
+         </center -->
+        </span>
+<br />
+<br />
+<hr />
             <div style="text-align: center">
-              <button class="btn btn-primary" id="runAMMI" type="submit" name="runAMMI" value="runAMMI">Run Stability</button>
+              <button class="btn btn-primary" id="run_stability" type="submit" name="run_stability" value="run_stability" disabled >Run Stability</button>
             </div>
             <br />
 
     <div id="tempfile" style="display:none" >
     </div>
-
-
-
-
-
 </&>
 
-
-
-
 <&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
-
-
 
   <center>
     <div id="sgn_blast_graph" style="display:none">
@@ -110,11 +88,6 @@
   <center>
     <div id="stability_output"></div>
   </center>
-  <div id="Overview_output"></div>
-  <div id="Coverage_output"></div>
-  <div id="Table_output" style="min-width:900px;"></div>
-  <div id="Bioperl_output"></div>
-  <div id="Basic_output"></div>
 
 </&>
 
@@ -138,8 +111,10 @@ jQuery(document).ready(function() {
     $('#trait_histogram_plot').html('');
     $('#stability_output').empty();
   });
+
   jQuery('#selectDataset').click(function() {
     var dataset_id = get_dataset_id();
+    if (! dataset_id) { return; }
     $.ajax({
       url: '/ajax/stability/shared_phenotypes',
       data: {'dataset_id': dataset_id},
@@ -149,15 +124,18 @@ jQuery(document).ready(function() {
         }
         else {
 //	    alert(response.options);
-//	    	    alert(response.options.length);
-	var option_html = '<option selected="selected" value=""> </option>';
-	  for (var i = 0; i < response.options.length; i++) {
-	    option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
-	  }
-	  $('#pheno_select').attr("disabled",false).html(option_html);
-      jQuery('#tempfile').html(response.tempfile);
+//	    alert(response.options.length);
+	    var option_html = '<option selected="selected" value=""> </option>';
+	    for (var i = 0; i < response.options.length; i++) {
+	        option_html += '<option value="'+response.options[i][1]+'">'+(response.options[i][1])+'</option>';
+            }
 
-
+	    $('#selected_dataset_banner').html('Working with dataset <span class="text-success">'+response.dataset_name+'</span>');
+            $('#pheno_select').attr("disabled",false).html(option_html);
+            $('#tempfile').html(response.tempfile);
+            $('#preview_trait_histogram_btn').attr('disabled', false);
+	    $('#select_method').attr('disabled', false);
+            $('#run_stability').attr('disabled', true);
 	}
 
       },
@@ -181,8 +159,10 @@ jQuery(document).ready(function() {
 
   jQuery('#preview_trait_histogram_btn').on('click', function() {
     if (!jQuery('#pheno_select').val()) {
-      alert("Please select a dataset and trait.")
+	alert("Please select a dataset and trait."); return;				
     } else {
+
+				
       //alert("Inside trait preview");
       var tempfile = jQuery('#tempfile').html();
       var trait = jQuery('#pheno_select').val();
@@ -223,8 +203,11 @@ jQuery(document).ready(function() {
     };
   });
 
-
-  jQuery('#runAMMI').click( function () {
+  jQuery('#pheno_select').click( function() {
+    $('#run_stability').attr('disabled', false);
+  });
+				
+  jQuery('#run_stability').click( function () {
     if (!jQuery('#pheno_select').val()) {
       alert("Please select a dataset and trait.")
       $('#stability_files').empty();
