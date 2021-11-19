@@ -45,31 +45,15 @@
       </div>
       <button class="btn btn-primary" id="method_btn" type="submit" name="method_btn" value="method_btn">Select Method</button -->
 
-      <div id="sin_list"></div>
+       <div id="sin_list"></div>
       
-      <br>
-      <br>
-      <br>
+
       <center>
         <div id="trait_histogram_plot">
         </div>
       </center>
     
-      <br>
-      <br>
-      <br>
-      <center>
-        <div id="pca_output"></div>
-      </center>
-
-
     <br>
-
-
-    <!--    <label class="blast_select_label" for="geno_select">Genotypes &nbsp; </label>
-        <& /page/html_select.mas, name=>'geno_select', id=>'geno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &> -->
-        <br>
-
         </div>
 
             <div style="text-align: center">
@@ -124,7 +108,7 @@ jQuery(document).ready(function() {
     get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
   }
   else {
-    alert('You must be logged in to use Stability');
+    alert('You must be logged in to use GCPC tool.');
   }
   $('#pheno_select').attr("disabled",true).html('');
   jQuery('#dataset_select').click(function() {
@@ -156,7 +140,7 @@ jQuery(document).ready(function() {
 
       },
       error: function(response) {
-        alert("An error occurred, the service may temporarily be unavailable, ponto 1");
+        alert("An error occurred, the service may be temporarily unavailable. Please try again later.");
       }
     });
   });
