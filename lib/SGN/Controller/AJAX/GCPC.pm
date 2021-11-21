@@ -154,7 +154,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 	make_R_trait_name($t);
     }
 
-    print $CLEAN join("\t", @other_header, @file_traits);
+    print $CLEAN join("\t", @other_headers, @file_traits);
 
     while(<$PF>) {
 	print $CLEAN, $_;
@@ -192,7 +192,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     $cmd->run_cluster(
 	"Rscript ",
-	$c->config->{basepath} . "/R/GCPC_Yambase.R",
+	$c->config->{basepath} . "/R/GCPC.R",
 	$pheno_filepath.".clean",
 	$geno_filepath,
 	"'".$traits."'",
