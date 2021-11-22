@@ -348,7 +348,22 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $protocol_id;
     my $row = $schema->resultset("NaturalDiversity::NdProtocol")->find( { name => $protocol_name});# just use find?
     if (defined($row)) {
-	      $protocol_id = $row->nd_protocol_id();
+      $protocol_id = $row->nd_protocol_id();
+    }
+
+    my %chromList;
+    my %posList;
+    my $name;
+    my @row;
+    my $chrom;
+    my $pos;
+    my $q = "select marker_name, chrom, pos from materialized_markerview view where nd_protocol_id = $protocol_id";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute();
+    while (@row = $sth->fetchrow_array) {
+	$name = $row[0];
+	$chromList{$name} = $row[1];
+        $posList{$name} = $row[2];
     }
 
     my $filehandle = $ds->retrieve_genotypes($protocol_id,$geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
@@ -359,6 +374,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $newtrait = $trait_id;
     $newtrait =~ s/\s/\_/g;
     $newtrait =~ s/\//\_/g;
+    $newtrait =~ s/[|%()]/\./g;
     print STDERR $newtrait . "\n";
 #    my $figure1file = "." . $tempfile . "_" . $newtrait . "_figure1.png";
 #    my $figure2file = "." . $tempfile . "_" . $newtrait . "_figure2.png";
@@ -384,15 +400,24 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 #    my $trim_cmd = "cut -f 1-50 " . $geno_filepath2 . " > " . $geno_filepath3;
 #    system($trim_cmd);
 
-#    open my $filehandle_in2,  "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
     open my $filehandle_out, ">", "$geno_filepath2" or die "Could not create $geno_filepath2: $!\n";
-
+    my $line = <$filehandle>;
+    my @sample_line = (split /\t/, $line);
+    splice(@sample_line, 1, 0, "chrom");
+    splice(@sample_line, 2, 0, "pos");
+    $line = join("\t", @sample_line);
+    print $filehandle_out "$line\n";
     my $marker_total;
 
     while ( my $line = <$filehandle> ) {
-        my @sample_line = (split /\s+/, $line);
+        @sample_line = (split /\t/, $line);
+	$chrom = $chromList{$sample_line[0]};
+        $pos = $posList{$sample_line[0]};
+	splice(@sample_line, 1, 0, $chrom);
+        splice(@sample_line, 2, 0, $pos);
+        $line = join("\t", @sample_line);
         $marker_total = scalar(@sample_line);
-        print $filehandle_out $line;
+        print $filehandle_out "$line\n";
     }
     close $filehandle;
     close $filehandle_out;
@@ -457,7 +482,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     $cmd->is_cluster(1);
     $cmd->wait;
 
-    my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
+    my $figure_path = "./documents/tempfiles/solgwas_files/";
     copy($figure3file,$figure_path);
     copy($figure4file,$figure_path);
 #    my $figure3basename = $figure3file;
