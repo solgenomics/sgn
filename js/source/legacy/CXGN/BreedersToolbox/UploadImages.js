@@ -7,96 +7,118 @@ jQuery( document ).ready( function() {
         showImagePreview(this.files);
     });
 
+
     jQuery('#upload_images_submit_verify').click( function() {
         jQuery('#working_modal').modal("show");
-        var imageFiles = document.getElementById('upload_images_file_input').files;
-        var returnMessage;
-        if (imageFiles.length < 1) {
-            alert("Please select image files");
-        }
-        else {
-            var [fileData, parseErrors] = parseImageFiles(imageFiles);
+        var type = jQuery('#upload_images_file_format').val();
+        var result;
+        if (type == 'images') {
+            var imageFiles = document.getElementById('upload_images_file_input').files;
+            if (imageFiles.length < 1) {
+                jQuery('#working_modal').modal("hide");
+                alert("Please select image files");
+                return false;
+            }
+            var [fileData, unitType, transformType, parseErrors] = parseImageFilenames(imageFiles);
             if (parseErrors.length) {
-                returnMessage = formatMessage(parseErrors, 'error');
-                jQuery('#upload_images_submit_store').attr('disabled', true);
-                jQuery('#upload_images_status').html(returnMessage);
+                // console.log("parseErrors are "+JSON.stringify(parseErrors));
+                reportVerifyResult({ "error" : parseErrors });
                 jQuery('#working_modal').modal("hide");
                 return;
             }
-            var observationUnitNames = Object.values(fileData).map(function(value) {
-                return value.observationUnitName;
+            verifyImageFiles(fileData, unitType, transformType).then(function(result) {
+                // console.log("result is "+JSON.stringify(result));
+                reportVerifyResult(result);
             });
-            jQuery.ajax( {
-                url: "/list/array/transform",
-                method: 'GET',
-                data: {
-                    "array": JSON.stringify(observationUnitNames),
-                    "type": "stocks_2_stock_ids"
-                }
-            }).done(function(response) {
-                if (response.missing.length > 0) {
-                    var errors = response.missing.map(function(name) {
-                        return "<b>" + name + "</b> is not a valid observationUnitName.";
-                    });
-                    returnMessage = formatMessage(errors, 'error');
-                    jQuery('#upload_images_submit_store').attr('disabled', true);
-                } else {
-                    jQuery('#upload_images_submit_store').attr('disabled', false);
-                    var successText = "Verification complete. All image files match an existing observationUnit. Ready to store images.";
-                    returnMessage = formatMessage(successText, 'success');
-                }
-            }).fail(function(error){
-                jQuery('#upload_images_submit_store').attr('disabled', true);
-                returnMessage = formatMessage(error, 'error');
-            }).always(function(){
-                jQuery('#upload_images_status').html(returnMessage);
+
+        } else { // verify associated phenotypes format
+            var phenoFile =  document.getElementById('upload_associated_phenotypes_file_input').files[0];
+            var zipFile =  document.getElementById('upload_images_zip_file_input').files[0];
+            if (!(phenoFile instanceof File)) {
                 jQuery('#working_modal').modal("hide");
+                alert("Please select a phenotype spreadsheet");
+                return false;
+            } else if (!(zipFile instanceof File)) {
+                jQuery('#working_modal').modal("hide");
+                alert('Please select an image zipfile');
+                return false;
+            }
+            submitAssociatedPhenotypes(phenoFile, zipFile, "/ajax/phenotype/upload_verify/spreadsheet").done(function(result) {
+                reportVerifyResult(result);
             });
         }
+
+        jQuery('#working_modal').modal("hide");
     });
 
+
     jQuery('#upload_images_submit_store').click( function() {
-        var imageFiles = document.getElementById('upload_images_file_input').files;
-        var currentImage = 0;
-        jQuery('#progress_msg').text('Preparing images for upload');
-        jQuery('#progress_bar').css("width", currentImage + "%")
-        .attr("aria-valuenow", currentImage)
-        .text(Math.round(currentImage) + "%");
-        jQuery('#progress_modal').modal('show');
+        var type = jQuery('#upload_images_file_format').val();
+        if (type == 'images') {
+            var imageFiles = document.getElementById('upload_images_file_input').files;
+            jQuery('#progress_msg').text('Preparing images for upload');
+            jQuery('#progress_bar').css("width", "0%")
+            .attr("aria-valuenow", 0)
+            .text("0%");
+            jQuery('#progress_modal').modal('show');
 
-        var [fileData, parseErrors] = parseImageFiles(imageFiles);
-        var observationUnitNames = Object.values(fileData).map(function(value) {
-            return value.observationUnitName;
-        });
+            var [fileData, unitType, transformType, parseErrors] = parseImageFilenames(imageFiles);
+            var observationUnits = Object.values(fileData).map(function(value) {
+                return value.observationUnit;
+            });
 
-        jQuery.ajax( {
-            url: "/list/array/transform",
-            method: 'GET',
-            data: {
-                "array": JSON.stringify(observationUnitNames),
-                "type": "stocks_2_stock_ids"
+            jQuery.ajax( {
+                url: "/list/transform/temp",
+                method: 'GET',
+                data: {
+                    "type": transformType,
+                    "items": JSON.stringify(observationUnits),
+                }
+            }).done(function(response) {
+                var observationUnitDbIds;
+                if (unitType == "observationUnitName") {
+                    observationUnitDbIds = response.transform;
+                } else {
+                    observationUnitDbIds = observationUnits;
+                }
+
+                var imageData = Object.values(fileData).map(function(value, i) {
+                    value.observationUnitDbId = observationUnitDbIds[i];
+                    return value;
+                });
+
+                loadAllImages(imageFiles, imageData).done(function(result) {
+                    // console.log("Result from promise is: "+JSON.stringify(result));
+                    jQuery('#progress_modal').modal('hide');
+                    reportStoreResult(result);
+                })
+                .fail(function(error) {
+                    console.log(error);
+                    jQuery('#upload_images_status').append(
+                        formatMessage(error, 'error')
+                    );
+                });
+            });
+        } else { // store associated phenotypes format
+            jQuery('#working_modal').modal("show");
+            var phenoFile =  document.getElementById('upload_associated_phenotypes_file_input').files[0];
+            var zipFile =  document.getElementById('upload_images_zip_file_input').files[0];
+            if (!(phenoFile instanceof File)) {
+                jQuery('#working_modal').modal("hide");
+                alert("Please select a phenotype spreadsheet");
+                return false;
+            } else if (!(zipFile instanceof File)) {
+                jQuery('#working_modal').modal("hide");
+                alert('Please select an image zipfile');
+                return false;
             }
-        }).done(function(response) {
 
-            var observationUnitDbIds = response.transform;
-            var imageData = Object.values(fileData).map(function(value, i) {
-                value.observationUnitDbId = observationUnitDbIds[i];
-                return value;
+            submitAssociatedPhenotypes(phenoFile, zipFile, "/ajax/phenotype/upload_store/spreadsheet").done(function(result) {
+                reportStoreResult(result);
             });
-            // var result = loadImagesSequentially(imageFiles, imageData, currentImage);
-            loadImagesSequentially(imageFiles, imageData, currentImage).done(function(result) {
-                console.log(result);
-                jQuery('#upload_images_status').append(
-                    formatMessage("Success! Upload of all "+imageFiles.length+" images is completed.", 'success')
-                );
-            })
-            .fail(function(error) {
-                console.log(error);
-                jQuery('#upload_images_status').append(
-                    formatMessage(error, 'error')
-                );
-            });
-        });
+            jQuery('#progress_modal').modal('hide');
+            jQuery('#working_modal').modal("hide");
+        }
     });
 });
 
@@ -124,11 +146,49 @@ function showImagePreview(imageFiles) {
 }
 
 
-function parseImageFiles(imageFiles) {
-    // extract observationUnitNames from image filenames
+function reportVerifyResult(result) {
+    if (result.success) {
+        jQuery('#upload_images_submit_store').attr('disabled', false);
+        jQuery('#upload_images_status').html(
+            formatMessage(result.success, "success")
+        );
+    }
+    if (result.error) {
+        jQuery('#upload_images_submit_store').attr('disabled', true);
+        jQuery('#upload_images_status').html(
+            formatMessage(result.error, "error")
+        );
+    }
+}
+
+
+function reportStoreResult(result) {
+    // console.log("result is: "+JSON.stringify(result));
+    if (result.success.length) {
+        jQuery('#upload_images_status').append(
+            formatMessage(result.success, 'success')
+        );
+    }
+    if (result.error.length) {
+        jQuery('#upload_images_status').append(
+            formatMessage(result.error, 'error')
+        );
+    }
+}
+
+
+function parseImageFilenames(imageFiles) {
+    // extract observationUnits from image filenames
     // e.g. 21BEDS0809HCRH02_25_809_Covington_G3_RootPhoto1_1_2021-05-13-04-50-36
     var fileData = {};
+    var unitType = '';
+    var transformType = '';
     var parseErrors = [];
+
+    var id_format = /^[0-9]+$/;
+    var id_count = 0;
+    var name_count = 0;
+
     for (var i = 0; i < imageFiles.length; i++) {
         var file = imageFiles[i];
         var name = file.name;
@@ -136,21 +196,34 @@ function parseImageFiles(imageFiles) {
         var timestampWithoutExtension = timestamp.substr(0, timestamp.lastIndexOf('.'));
         var nameWithoutTimestamp = name.substring(0, name.lastIndexOf('_'));
         var nameWithoutNumber = nameWithoutTimestamp.substring(0, nameWithoutTimestamp.lastIndexOf('_'));
-        var justUnitName = nameWithoutNumber.substring(0, nameWithoutNumber.lastIndexOf('_'));
-        if (justUnitName) {
+        var justUnit = nameWithoutNumber.substring(0, nameWithoutNumber.lastIndexOf('_'));
+        justUnit.match(id_format) ? id_count++ : name_count++;
+        if (justUnit) {
             fileData[file.name] = {
                 "imageFileName" : file.name,
                 "imageFileSize" : file.size,
                 "imageTimeStamp" : timestampWithoutExtension,
                 "mimeType" : file.type,
-                "observationUnitName" : justUnitName
+                "observationUnit" : justUnit
             };
         } else {
-            parseErrors.push("Filename <b>" + name + "</b> must start with a valid observationUnitName.")
+            parseErrors.push("Filename <b>" + name + "</b> must start with a valid observationUnitName or observationUnitDbId.")
         }
     }
+
+    if (id_count > 0 && name_count > 0) {
+        parseErrors.push("Image filenames include a mix of observationUnitDbIds and observationUnitNames. Please load files with only one naming pattern at a time.");
+    }
+
+    if (id_count > 0) {
+        unitType = "observationUnitDbId";
+        transformType = "stock_ids_2_stocks";
+    } else {
+        unitType = "observationUnitName";
+        transformType = "stocks_2_stock_ids";
+    }
     // console.log(JSON.stringify(fileData));
-    return [fileData, parseErrors];
+    return [fileData, unitType, transformType, parseErrors];
 }
 
 
@@ -170,60 +243,131 @@ function formatMessage(messageDetails, messageType) {
 }
 
 
-function loadImagesSequentially(imageFiles, imageData, currentImage){
-    if(currentImage == imageFiles.length) {
-        // console.log("Image number "+currentImage+" matched number of files "+imageFiles.length);
-        jQuery('#progress_modal').modal('hide');
-        return jQuery.Deferred().resolve().promise();
-    }
+function verifyImageFiles(fileData, unitType, transformType) {
 
+    var observationUnits = Object.values(fileData).map(function(value) {
+        return value.observationUnit;
+    });
+
+    return jQuery.ajax( {
+      url: "/list/transform/temp",
+      method: 'GET',
+      data: {
+          "type": transformType,
+          "items": JSON.stringify(observationUnits),
+      }
+    }).then(function(response) {
+      // console.log("response is "+JSON.stringify(response));
+      if (response.missing.length > 0) {
+          var errors = response.missing.map(function(name) {
+              return "<b>" + name + "</b> is not a valid "+unitType;
+          });
+          console.log("Errors are "+errors);
+          return { "error" : errors };
+      } else {
+          var successText = "Verification complete. All image files match an existing observationUnit. Ready to store images.";
+          return { "success" : successText };
+      }
+    }).fail(function(error){
+       return { "error" : error };
+    });
+}
+
+
+function submitAssociatedPhenotypes (phenoFile, zipFile, url) {
+    console.log("submitting files for verification to url "+url);
+    var formData = new FormData();
+    formData.append('upload_spreadsheet_phenotype_file_format', 'associated_images');
+    formData.append('upload_spreadsheet_phenotype_file_input', phenoFile);
+    formData.append('upload_spreadsheet_phenotype_associated_images_file_input', zipFile);
+
+    return jQuery.ajax( {
+        url: url,
+        method: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+    }).then(function(response){
+        console.log("finished verification, response is "+JSON.stringify(response));
+        return response;
+        // if (response.success) {
+        //     return { "success": formatMessage(response.success, 'success') };
+        // } else if (response.error) {
+        //     return { "error": formatMessage(response.error, 'error') };
+        // }
+    }).fail(function(error){
+        return { "error": error };
+        // return { "error": formatMessage(error, 'error') };
+    });
+}
+
+
+function loadAllImages(imageFiles, imageData){
+    return loadImagesSequentially(imageFiles, imageData, {"success":[],"error":[]} );
+}
+
+
+function loadImagesSequentially(imageFiles, imageData, uploadStatus){
+
+    return loadSingleImage(imageFiles, imageData).then(function(response) {
+        // console.log("load single image response is: " +JSON.stringify(response));
+
+        if (response.result) {
+            var msg = "Successfly uploaded image "+response.result.data[0].imageFileName;
+            uploadStatus.success.push(msg);
+        } else {
+            // console.log("handling response errors: "+JSON.stringify(response.metadata.status));
+            response.metadata.status.forEach(function(msg) {
+              if (msg.messageType == "ERROR") { uploadStatus.error.push(msg.message); }
+            });
+            return uploadStatus;
+        }
+
+        imageData.shift();
+
+        if (imageData.length < 1) {
+            // console.log("We've shifted through and loaded all "+imageFiles.length+" images");
+            return uploadStatus;
+        } else {
+            return loadImagesSequentially(imageFiles, imageData, uploadStatus);
+        }
+
+    });
+
+}
+
+
+function loadSingleImage(imageFiles, imageData, uploadStatus){
+
+    var currentImage = imageFiles.length - imageData.length;
     var total = imageFiles.length;
     var file = imageFiles[currentImage];
-    var image = imageData[currentImage];
+    var image = imageData[0];
+
     currentImage++;
-    // update progress bar
     jQuery('#progress_msg').html('<p class="form-group text-center">Working on image '+currentImage+' out of '+total+'</p>');
     jQuery('#progress_msg').append('<p class="form-group text-center"><b>'+image.imageFileName+'</b></p>')
-    var progress = (currentImage / total) * 100;
+    var progress = Math.round((currentImage / total) * 100)
     jQuery('#progress_bar').css("width", progress + "%")
     .attr("aria-valuenow", progress)
-    .text(Math.round(progress) + "%");
+    .text(progress + "%");
 
     return jQuery.ajax( {
         url: "/brapi/v2/images",
         method: 'POST',
         headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
         data: JSON.stringify([image]),
-        contentType: "application/json; charset=utf-8",
-    }).done(function(response){
-        // console.log("Success uploading image metadata: "+image.imageFileName+" with details: "+JSON.stringify(response));
-        if (response.result) {
-            var imageDbId = response.result.data[0].imageDbId;
-            jQuery.ajax( {
-                url: "/brapi/v2/images/"+imageDbId+"/imagecontent",
-                method: 'PUT',
-                async: false,
-                headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
-                data: file,
-                processData: false,
-                contentType: file.type
-            }).done(function(response){
-                console.log("Success uploading image content: "+image.imageFileName+" with details: "+JSON.stringify(response));
-            }).fail(function(error){
-                console.log("error: "+JSON.stringify(error));
-                return jQuery.Deferred().reject(error);
-            });
-        } else {
-            var errors = response.metadata.status.flatMap(function(elem) {
-                return elem.messageType == "ERROR" ? elem.message : [];
-            });
-            console.log("handling response errors: "+JSON.stringify(errors));
-            return jQuery.Deferred().reject(errors);
-        }
-    }).fail(function(error){
-        console.log("error: "+JSON.stringify(error));
-        return jQuery.Deferred().reject(error);
-    }).then(function() {
-        return loadImagesSequentially(imageFiles, imageData, currentImage);
+        contentType: "application/json; charset=utf-8"
+    }).success(function(response){
+        var imageDbId = response.result.data[0].imageDbId;
+        jQuery.ajax( {
+            url: "/brapi/v2/images/"+imageDbId+"/imagecontent",
+            method: 'PUT',
+            async: false,
+            headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
+            data: file,
+            processData: false,
+            contentType: file.type
+        });
     });
 }
