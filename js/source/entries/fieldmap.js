@@ -137,7 +137,7 @@ export function init() {
                     }
                 }
 
-                if (planting_or_harvesting_order_layout == "harvesting_order_layout") {
+                if (planting_or_harvesting_order_layout == "planting_order_layout") {
                     return temp_arr;
                 }
 
@@ -156,11 +156,11 @@ export function init() {
             return final_arr;
         }
 
-        get_planting_order() {
-            var final_planting_arr = this.traverse_map('planting_order_layout');
+        get_harvesting_order() {
+            var final_harvesting_arr = this.traverse_map('planting_order_layout');
             var csv = ['PlotNumber', 'PlotName', 'AccessionName',].join(',');
             csv += "\n";
-            final_planting_arr.forEach(function(plot) {
+            final_harvesting_arr.forEach(function(plot) {
                     csv += [plot.observationUnitPosition.observationLevel.levelCode, plot.observationUnitName, plot.germplasmName].join(',');
                     csv += "\n";
             });
@@ -169,12 +169,12 @@ export function init() {
             hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
             hiddenElement.target = '_blank';
             
-            hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data.planting_order_layout}_PlantingOrder.csv`;
+            hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data.harvesting_order_layout}_HarvestingOrder.csv`;
             hiddenElement.click();    
         }
 
-        get_harvesting_order() {
-            var harvesting_arr = this.traverse_map('harvesting_order_layout');
+        get_planting_order() {
+            var planting_arr = this.traverse_map('planting_order_layout');
             let num_rows = this.meta_data.top_border_selection ? this.meta_data.num_rows + 1 : this.meta_data.num_rows;
             num_rows = this.meta_data.bottom_border_selection ? num_rows + 1 : num_rows;
             let num_cols = this.meta_data.left_border_selection ? this.meta_data.num_cols + 1 : this.meta_data.num_cols;
@@ -188,15 +188,15 @@ export function init() {
                     }
                 }
             }
-            if (this.meta_data.harvesting_order_layout == "by_row") {
+            if (this.meta_data.planting_order_layout == "by_row") {
                 let temp_arr = [];
                     for (let i = 0; i < this.meta_data.num_rows; i++) {
-                        temp_arr.push([...harvesting_arr.slice(i * this.meta_data.num_cols, (i * this.meta_data.num_cols + this.meta_data.num_cols))]);
+                        temp_arr.push([...planting_arr.slice(i * this.meta_data.num_cols, (i * this.meta_data.num_cols + this.meta_data.num_cols))]);
                     }
-                harvesting_arr = temp_arr;
+                planting_arr = temp_arr;
             }
             if (this.meta_data.left_border_selection || this.meta_data.right_border_selection) {
-                for (let arr of harvesting_arr) {
+                for (let arr of planting_arr) {
                     if (this.meta_data.left_border_selection) {
                         arr.unshift(border_plot);
                     }
@@ -206,27 +206,27 @@ export function init() {
                 }   
             }
             if ((this.meta_data.invert_row_checkmark && this.meta_data.top_border_selection) || (!this.meta_data.invert_row_checkmark && this.meta_data.bottom_border_selection)) {
-                harvesting_arr = [ [...Array(num_cols).fill(border_plot, 0, num_cols)], ...harvesting_arr]
+                planting_arr = [ [...Array(num_cols).fill(border_plot, 0, num_cols)], ...planting_arr]
             }
             if ((this.meta_data.invert_row_checkmark && this.meta_data.bottom_border_selection) || (!this.meta_data.invert_row_checkmark && this.meta_data.top_border_selection)) {
-                harvesting_arr = [...harvesting_arr, [...Array(num_cols).fill(border_plot, 0, num_cols)]]
+                planting_arr = [...planting_arr, [...Array(num_cols).fill(border_plot, 0, num_cols)]]
             }
 
             let final_arr = [];
-            if (this.meta_data.harvesting_order_layout != "by_row") {
+            if (this.meta_data.planting_order_layout != "by_row") {
                 for (let i = 0; i < num_cols; i++) {
                     let row_coord;
                     for (let j = 0; j < num_rows; j++) {
-                        if (this.meta_data.harvesting_order_layout == "by_col_serpentine" && i % 2 == 1) {
+                        if (this.meta_data.planting_order_layout == "by_col_serpentine" && i % 2 == 1) {
                             row_coord = num_rows - j - 1;
                         } else {
                             row_coord = j;
                         }
-                        final_arr.push(harvesting_arr[row_coord][i]);
+                        final_arr.push(planting_arr[row_coord][i]);
                     }
                 }
             } else {
-                for (let arr of harvesting_arr) {
+                for (let arr of planting_arr) {
                     for (let elem of arr) {
                         final_arr.push(elem);
                     }
@@ -238,12 +238,12 @@ export function init() {
                     csv += [plot.observationUnitPosition.observationLevel.levelCode, plot.observationUnitName, plot.germplasmName].join(',');
                     csv += "\n";
             });
-    
+            
             var hiddenElement = document.createElement('a');
             hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
             hiddenElement.target = '_blank';
             
-            hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data.harvesting_order_layout}_HarvestingOrder.csv`;
+            hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data.harvesting_order_layout}_PlantingOrder.csv`;
             hiddenElement.click();    
         }
 
