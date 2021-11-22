@@ -29,6 +29,7 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Stock::Search;
 use JSON;
 use CXGN::BreedersToolbox::ProductProfile;
+use CXGN::BreedersToolbox::ProductProfileprop;
 use File::Spec::Functions;
 use Spreadsheet::WriteExcel;
 
@@ -274,6 +275,19 @@ sub upload_profile_POST : Args(0) {
         $c->stash->{rest} = {error_string => "Error saving your product profile",};
         return;
     }
+
+    my $product_profileprop = CXGN::BreedersToolbox::ProductProfileprop->new({ bcs_schema => $schema, people_schema => $people_schema});
+    $product_profileprop->product_profile_details($profile_detail_string);
+    $product_profileprop->parent_id($product_profile_id);
+#    $product_profileprop->history(\@history);
+    my $product_profileprop_id = $product_profileprop->store_sp_orderprop();
+    print STDERR "PRODUCT PROFILE PROP ID =".($product_profileprop_id)."\n";
+
+    if (!$product_profileprop_id){
+        $c->stash->{rest} = {error_string => "Error saving your product profile",};
+        return;
+    }
+
 
 #    my $project_prop_id = $profile->store_by_rank();
 

@@ -83,6 +83,7 @@ sub store {
 
     my $row = $rs->update_or_create( \%data );
 
+    print STDERR "SP PRODUCT PROFILE ID =".Dumper($row->sp_product_profile_id())."\n";
     return $row->sp_product_profile_id();
 }
 
