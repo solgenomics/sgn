@@ -135,7 +135,6 @@ $data_level => 'plot'
             <option value="by_col_zigzag">By Column: Zigzag</option>
             <option value="by_row">By Row: Current Layout</option>
         </select>
-        <!--
         <button class="btn btn-primary" id="harvesting_order_button" style="margin-left: 2%;"> Harvesting Order </button>
         <select name="harvesting_order" id="harvesting_order">
             <option value="">--Select Layout--</option>
@@ -143,7 +142,6 @@ $data_level => 'plot'
             <option value="by_col_zigzag">By Column: Zigzag</option>
             <option value="by_row">By Row: Current Layout</option>
         </select>
-        -->
         <button style="margin-left: 20%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
         <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success">Submit Field Layout</button><br><br>
         <div style="display: inline;">
@@ -604,7 +602,6 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 data = response.result.data;
-                console.log('DATA', data);
                 if (data[0].additionalInfo) {
                     FieldMap.check_elements(data[0].additionalInfo);
                     if (data[0].additionalInfo.plot_layout) {
@@ -630,7 +627,6 @@ jQuery(document).ready( function() {
        
         .then(
             function() {
-                    console.log(FieldMap.plot_object);
                     num_real_plots = Object.keys(FieldMap.plot_object).length;
             }
         )
@@ -697,8 +693,6 @@ jQuery(document).ready( function() {
         jQuery("#container_fm").css('transform','rotate(' + (r += 90) + 'deg)');
         jQuery("#container_fm").width(390 + 'px');
         //toggleWidthFM = jQuery("#container_fm").width();
-        //console.log(toggleWidthFM);
-        //console.log(r);
         if ((r/90) % 2 == 0){
             jQuery("#container_fm").width(700 + 'px');
         }
@@ -1051,9 +1045,7 @@ jQuery(document).ready( function() {
       var html = d3.select("svg")
             .attr("version", 1.1)
             .attr("xmlns", "http://www.w3.org/2000/svg")
-            .node().parentNode.innerHTML;;
-
-      //console.log(html);
+            .node().parentNode.innerHTML;
       var imgsrc = 'data:image/svg+xml;base64,'+ btoa(html);
       var img = '<img src="'+imgsrc+'">'; 
 
