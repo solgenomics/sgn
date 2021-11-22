@@ -19,6 +19,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::FieldBook;
 use Moose;
 use File::Slurp;
 use Text::CSV;
+use Data::Dumper;
 
 sub name {
     return "field book";
@@ -39,6 +40,13 @@ sub validate {
 
     ## Check that the file can be read
     my @file_lines = read_file($filename);
+
+    # fix DOS-style line-endings!!!
+    #
+    foreach my $fl (@file_lines) {
+	$fl =~ s/\r//g;
+    }
+    
     if (!@file_lines) {
         $parse_result{'error'} = "Could not read file.";
         print STDERR "Could not read file.\n";
@@ -128,6 +136,13 @@ sub parse {
                 or die "Cannot use CSV: ".Text::CSV->error_diag ();
 
     @file_lines = read_file($filename);
+
+    # fix DOS-style line-endings!!!
+    #
+    foreach my $fl (@file_lines) {
+	$fl =~ s/\r//g;
+    }
+
     $header = shift(@file_lines);
     my $status  = $csv->parse($header);
     my @header_row = $csv->fields();
