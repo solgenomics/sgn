@@ -91,7 +91,6 @@ sub search {
             limit=>$limit,
             offset=>$offset,
             observation_unit_names_list=>$observation_unit_names_list,
-            include_timestamp=>1,
             # phenotype_min_value=>$phenotype_min_value,
             # phenotype_max_value=>$phenotype_max_value,
             # exclude_phenotype_outlier=>$exclude_phenotype_outlier
