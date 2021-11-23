@@ -158,7 +158,7 @@ my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_sc
 $order_prop->clone_list($order_list);
 $order_prop->parent_id($order_id);
 $order_prop->history(\@history);
-ok(my $order_prop_id = $order_prop->store_sp_orderprop(), "check storing orderprop");
+ok(my $order_prop_id = $order_prop->store_people_schema_prop(), "check storing orderprop");
 
 #delete your cart
 CXGN::List::delete_list($dbh, $your_cart_id);

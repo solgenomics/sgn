@@ -8,8 +8,6 @@ extends 'CXGN::JSONProp';
 #has 'clone_list' => (is => 'rw', isa => 'ArrayRef[HashRef]' );
 has 'clone_list' => (is => 'rw', isa => 'Str' );
 
-has 'type' => ( is => 'rw', isa => 'Str' );
-
 has 'requested_delivery_date' => (is => 'rw', isa => 'Str');
 
 has 'delivery_date' => ( is => 'rw', isa => 'Str');

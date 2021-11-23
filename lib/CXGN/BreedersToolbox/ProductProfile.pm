@@ -44,8 +44,6 @@ has 'create_date' => (isa => 'Str', is => 'rw');
 
 has 'modified_date' => (isa => 'Str', is => 'rw');
 
-#has 'product_profile_details' => (isa => 'Str', is => 'rw', required => 1);
-
 
 sub BUILD {
     my $self = shift;

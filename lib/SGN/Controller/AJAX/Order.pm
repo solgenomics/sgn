@@ -89,7 +89,7 @@ sub submit_order_POST : Args(0) {
         $order_prop->clone_list($order_list);
         $order_prop->parent_id($order_id);
         $order_prop->history(\@history);
-    	my $order_prop_id = $order_prop->store_sp_orderprop();
+    	my $order_prop_id = $order_prop->store_people_schema_prop();
 #        print STDERR "ORDER PROP ID =".($order_prop_id)."\n";
 
         if (!$order_prop_id){
@@ -303,7 +303,7 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
 
     my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema, sp_order_id => $order_id, prop_id => $orderprop_id});
     $order_prop->history(\@order_history);
-    my $updated_orderprop = $order_prop->store_sp_orderprop();
+    my $updated_orderprop = $order_prop->store_people_schema_prop();
 
     if (!$updated_orderprop){
         $c->stash->{rest} = {error_string => "Error updating the order",};

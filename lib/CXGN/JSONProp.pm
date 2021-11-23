@@ -249,7 +249,7 @@ sub get_props {
 
 
 =head2 filter_props()
- 
+
  Usage:     my $filtered_props = $JSONPropClass->filter_props({ schema=> $schema, conditions => \%conditions });
  Desc:      This class method can be used to get props that match the provided search criteria
  Ret:       a hash with the results metadata and the matching props:
@@ -259,7 +259,7 @@ sub get_props {
                 total: total number of results
                 results: an arrayref of hashes containing the parent_id, prop_id, all of the prop values, and any specified parent fields
  Args:      schema = Bio::Chado::Schema
-            conditions = (optional, default=unfiltered/all props) a hashref of DBIx where conditions to filter the props by.  
+            conditions = (optional, default=unfiltered/all props) a hashref of DBIx where conditions to filter the props by.
                 If you're filtering by a prop value, you should use the form: "value::json->>'prop_name' => 'prop value'"
             parent_fields = (optional, default=none) an arrayref of the names of fields from the parent table to include in the results
                 NOTE: if a parent field is used in the search conditions, it should also be included here
@@ -269,18 +269,18 @@ sub get_props {
             page = (optional, default=1) the page number of results to return
             pageSize = (optional, default=1000) the number of results to return per page
  Example:   my $conditions = {
-                '-and' => [ 
+                '-and' => [
                     { 'stock.uniquename' => [ 'TEST_SEEDLOT_1', 'TEST_SEEDLOT_2' ] },
                     { 'value::json->>\'timestamp\'' => { '>=' => '2021-06-01 00:00:00' } },
-                    { 'value::json->>\'timestamp\'' => { '<=' => '2021-06-30 24:00:00' } }, 
+                    { 'value::json->>\'timestamp\'' => { '<=' => '2021-06-30 24:00:00' } },
                     { 'value::json->>\'operator\'' => [ 'dwaring87' ] }
-                ], 
+                ],
                 '-or' => [
-                    { 
+                    {
                         '-and' => [
-                            { 'value::json->>\'cvterm_id\'' => '78094' }, 
+                            { 'value::json->>\'cvterm_id\'' => '78094' },
                             { 'value::json->>\'value\'' => [ 'Successful' ] }
-                        ] 
+                        ]
                     },
                     {
                         '-and' => [
@@ -292,8 +292,8 @@ sub get_props {
                 ]
             };
             my $filtered_props = $JSONPropClass->filter_props({
-                schema => $schema, 
-                conditions => $conditions, 
+                schema => $schema,
+                conditions => $conditions,
                 parent_fields => ["uniquename"],
                 order_by => { "-desc" => "value::json->>'timestamp'" }
             });
@@ -440,9 +440,9 @@ sub store_by_rank {
 }
 
 
-=head2 method store_sp_orderprop()
+=head2 method store_people_schema_prop()
 
-Usage:         $prop->store_sp_orderprop();
+Usage:         $prop->store_people_schema_prop();
 Desc:
 Ret:
 Args:
@@ -453,7 +453,7 @@ Example:
 
 =cut
 
-sub store_sp_orderprop {
+sub store_people_schema_prop {
     my $self = shift;
     print STDERR "PROP ID =".Dumper($self->prop_id())."\n";
     if ($self->prop_id()) {
