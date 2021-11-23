@@ -809,7 +809,7 @@ CXGN.List.prototype = {
             if (response.error) {
                 alert(response.error);
             } else {
-            //alert(JSON.stringify(response));
+		//alert(JSON.stringify(response));
                 missing = response.missing;
                 wrong_case = response.wrong_case;
                 multiple_wrong_case = response.multiple_wrong_case;
@@ -823,10 +823,10 @@ CXGN.List.prototype = {
 
             if (type == 'accessions' && missing.length==0 && wrong_case.length==0) {
                 if (!non_interactive) { alert("This list passed validation."); }
-                return 1;
+                return 0;
             } else if (type != 'accessions' && missing.length == 0) {
                 if (!non_interactive) { alert("This list passed validation."); }
-                return 1;
+                return 0;
             } else {
                 if (!non_interactive) {
                     if (type == 'accessions') {
@@ -947,7 +947,7 @@ CXGN.List.prototype = {
     		    	    error: function() { alert('An error occurred'); },
     		    	    success: function(r) {
 
-    				if (r.error) { alert(r.error); }
+    				if (r.error) { alert(r.error); return 1; }
     				else {
     				    var lo = new CXGN.List();
     				    lo.renderItems('list_item_dialog', list_id);
@@ -1002,10 +1002,11 @@ CXGN.List.prototype = {
                         //return 0;
     		}
     		else {
-                        alert('List did not pass validation because of these items: '+missing.join(", "));
+                    alert('List did not pass validation because of these items: '+missing.join(", "));
+		    return 1;
     		}
-                }
-                return;
+            }
+                return 0;
     	}
 
         });

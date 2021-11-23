@@ -202,6 +202,8 @@ $(document).ready(function() {
       var trial_validation = 1;
       if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true); }
 
+      //alert(JSON.stringify(trial_validation));
+
       var trait_validation = 1;
       if (trait_list_id) { trait_validation = lo.validate(trait_list_id, 'traits', true); }
 
@@ -229,7 +231,7 @@ $(document).ready(function() {
       jQuery('#phenotype_download_token').val(token);
       jQuery('#download_form').submit();
 
-	});
+   });
 
 });
 
