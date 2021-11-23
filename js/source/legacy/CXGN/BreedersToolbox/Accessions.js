@@ -322,7 +322,7 @@ jQuery(document).ready(function ($) {
 
 	    verify_species_name().then(
 		function(r) {
-		    if (r.error) { alert('Please correct the species name and try again.'); }
+		    if (r.error) { alert(r.error); }
 		    else {
 			for(var i=0; i<accessionsToAdd.length; i++){
 			    infoToAdd.push({
