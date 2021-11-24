@@ -1891,7 +1891,7 @@ sub set_additional_info {
 =head2 accessors get_entry_numbers(), set_entry_numbers()
 
  Usage: For field trials, this records a map of stock ids to entry numbers
- Desc: The value of this projectprop is stored as a JSON object, where the 
+ Desc: The value of this projectprop is stored as a JSON object, where the
  key is the stock id and the value is the stock entry number
  Ret:
  Args:
@@ -3666,6 +3666,16 @@ sub create_tissue_samples {
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
 
+        my $rs_previous_tissue = $chado_schema->resultset("Project::Projectprop")->search({
+            type_id => $has_tissues_cvterm,
+            project_id => $self->get_trial_id(),
+        });
+        my $previous_tissue_number = 0;
+        if ($rs_previous_tissue->count > 0) {
+            $previous_tissue_number = $rs_previous_tissue->first->value;
+        }
+        my $new_tissue_number = $previous_tissue_number + scalar(@$tissue_names);
+
         my $treatments;
         my %treatment_experiments;
         my %treatment_plots;
@@ -3674,10 +3684,14 @@ sub create_tissue_samples {
             $treatments = $self->get_treatments();
             foreach (@$treatments){
 
-                my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                my $rs = $chado_schema->resultset('Project::Projectprop')->update_or_create({
                     type_id => $has_tissues_cvterm,
-                    value => scalar(@$tissue_names),
                     project_id => $_->[0],
+                    rank => 0,
+                    value => $new_tissue_number
+                },
+                {
+                    key=>'projectprop_c1'
                 });
 
                 my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $treatment_cvterm })->single();
@@ -3695,10 +3709,14 @@ sub create_tissue_samples {
             }
         }
 
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+        my $rs = $chado_schema->resultset('Project::Projectprop')->update_or_create({
             type_id => $has_tissues_cvterm,
-            value => scalar(@$tissue_names),
             project_id => $self->get_trial_id(),
+            rank => 0,
+            value => $new_tissue_number
+        },
+        {
+            key=>'projectprop_c1'
         });
 
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
@@ -3722,7 +3740,7 @@ sub create_tissue_samples {
                 my $parent_plant_name = $plant_row->uniquename();
                 my $parent_plant_organism = $plant_row->organism_id();
 
-                my $tissue_index_number = 1;
+                my $tissue_index_number = $previous_tissue_number + 1;
                 foreach my $tissue_name (@$tissue_names){
                     my $tissue_name = $parent_plant_name."_".$tissue_name.$tissue_index_number;
                     print STDERR "... ... creating tissue $tissue_name...\n";
