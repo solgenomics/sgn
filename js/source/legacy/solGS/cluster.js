@@ -1062,22 +1062,25 @@ jQuery(document).ready( function() {
 		setTimeout(checkClusterPop, 6000);
 	    }
 	}
-}
-// } else {
-//         var dataTypeOpts;
-//         if (page.match(/cluster\/analysis|breeders\/trial\//)) {
-//
-//     	    dataTypeOpts = ['Genotype', 'Phenotype'];
-//         } else if (page.match(/solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/trials\//)) {
-//         	dataTypeOpts = ['Genotype'];
-//         }
-//
-//     dataTypeOpts =   solGS.cluster.createDataTypeSelect(dataTypeOpts);
-//     var clusterTypeOpts =   solGS.cluster.createClusterTypeSelect();
-//
-// 	jQuery('#cluster_div #cluster_options #cluster_data_type_opts').html(dataTypeOpts);
-// 	jQuery('#cluster_div #cluster_options #cluster_type_opts').html(clusterTypeOpts);
-// 	jQuery("#cluster_div #cluster_options").show();
-//
-//     }
+} else {
+
+        if (!page.match(/cluster\/analysis/)) {
+
+            var dataTypeOpts;
+            if (page.match(/breeders\/trial\//)) {
+
+        	    dataTypeOpts = ['Genotype', 'Phenotype'];
+            } else if (page.match(/solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/trials\//)) {
+            	dataTypeOpts = ['Genotype'];
+            }
+
+            dataTypeOpts =   solGS.cluster.createDataTypeSelect(dataTypeOpts);
+            var clusterTypeOpts =   solGS.cluster.createClusterTypeSelect();
+
+        	jQuery('#cluster_div #cluster_options #cluster_data_type_opts').html(dataTypeOpts);
+        	jQuery('#cluster_div #cluster_options #cluster_type_opts').html(clusterTypeOpts);
+        	jQuery("#cluster_div #cluster_options").show();
+        }
+
+    }
 });
