@@ -11,7 +11,7 @@ use File::Spec::Functions qw / catfile catdir/;
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
-  `rm -r /tmp/localhost/`;
+`rm -r /tmp/localhost/`;
 
 $d->while_logged_in_as("submitter", sub {
 
@@ -25,7 +25,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(1);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+  $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(5);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(40);
@@ -47,7 +47,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(1);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(40);
@@ -69,7 +69,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(1);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(120);
@@ -92,7 +92,7 @@ $d->while_logged_in_as("submitter", sub {
      sleep(1);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(1);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(5);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(90);
@@ -113,7 +113,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(1);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(120);
@@ -134,7 +134,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(1);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -159,7 +159,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -180,7 +180,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(1);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(80);
@@ -319,7 +319,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(80);
@@ -350,7 +350,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(80);
@@ -385,7 +385,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+   $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -406,7 +406,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select ghenotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+   $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(40);
@@ -427,7 +427,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(40);
@@ -448,7 +448,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -484,7 +484,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "selection_proportion_input")]', 'xpath', 'fill in sel prop')->send_keys('15');
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(40);
@@ -505,7 +505,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -526,7 +526,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(40);
@@ -555,7 +555,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(3);
@@ -582,7 +582,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(10);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-141-traits-1971973596-genotype-gp-1"]', 'xpath', 'check hierarchical plot')->click();
     sleep(3);
@@ -601,7 +601,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(3);
@@ -628,7 +628,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(10);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-141-traits-1971973596-gebv"]', 'xpath', 'check hierarchical plot')->click();
     sleep(3);
@@ -663,7 +663,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "selection_proportion_input")]', 'xpath', 'fill in sel prop')->send_keys('15');
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(3);
@@ -704,7 +704,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "selection_proportion_input")]', 'xpath', 'fill in sel prop')->send_keys('15');
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(10);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-139-DMCP-3-FRW-5-genotype-gp-1-sp-15"]', 'xpath', 'plot')->click();
     sleep(5);
@@ -728,7 +728,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -753,20 +753,20 @@ $d->while_logged_in_as("submitter", sub {
     my $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
     $d->find_element_ok('//img[@id="hierarchical-plot-139-70666-genotype-gp-1"]', 'xpath', 'check hierarchical plot')->click();
     sleep(5);
 
-#    #  #$d->get_ok('/solgs/model/combined/populations/2804608595/trait/70741/gp/1', 'open combined trials model page');
-#    # # sleep(2);
-#    #
+   #  #$d->get_ok('/solgs/model/combined/populations/2804608595/trait/70741/gp/1', 'open combined trials model page');
+   # # sleep(2);
+   #
 
     $d->get_ok('/solgs', 'solgs home page');
     sleep(2);
@@ -799,10 +799,10 @@ $d->while_logged_in_as("submitter", sub {
     sleep(200);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(10);
-#
-#    #  #$d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
-#    #  #sleep(5);
-#    #
+
+   #  #$d->get('/solgs/populations/combined/2804608595/gp/1', 'combo trials tr pop page');
+   #  #sleep(5);
+   #
 
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('Kasese');
     sleep(2);
@@ -849,9 +849,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(10);
 
-#     #  $d->get_ok('/solgs/models/combined/trials/2804608595/traits/1971973596/gp/1', 'combined trials models summary page');
-#     # sleep(5);
-#
+    ## $d->get_ok('/solgs/models/combined/trials/2804608595/traits/1971973596/gp/1', 'combined trials models summary page');
+    # #sleep(5);
+
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(5);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
@@ -914,7 +914,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -931,11 +931,11 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="Training population 2804608595"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select phenotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -952,11 +952,11 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="Training population 2804608595"]', 'xpath', 'select tr pop')->click();
     sleep(5);
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -987,13 +987,13 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="2804608595-DMCP-3-FRW-5"]', 'xpath', 'si')->click();
     sleep(5);
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="Genotype"]', 'xpath', 'genotype')->click();
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "selection_proportion_input")]', 'xpath', 'fill in sel prop')->send_keys('15');
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(40);
@@ -1025,11 +1025,11 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="Dataset Kasese Clones"]', 'xpath', 'select dataset sel pop')->click();
     sleep(3);
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -1059,11 +1059,11 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="34 clones"]', 'xpath', 'select list sel pop')->click();
     sleep(3);
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(80);
@@ -1080,11 +1080,11 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
     sleep(3);
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -1101,11 +1101,11 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('//dl[@class="cluster_dropdown"]/dd/ul/li/a[text()="trial2 NaCRRI"]', 'xpath', 'select trial sel pop')->click();
     sleep(3);
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
     $d->find_element_ok('//select[@id="cluster_data_type_select"]/option[text()="GEBV"]', 'xpath', 'select gebv')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(40);
@@ -1125,11 +1125,11 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $clustering);
     sleep(5);
 
-   $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
+    $d->find_element_ok('//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select hierarchical')->send_keys('Hierarchical');
     sleep(2);
     $d->find_element_ok('//*[starts-with(@id, "cluster_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_cluster', 'id', 'run cluster')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run cluster')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
