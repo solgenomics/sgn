@@ -57,18 +57,22 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <div class="col-sm-9" >
                                 <select class="form-control" id="high_dim_data_upload_type_select">
 %  if ($high_dimensional_phenotype_type eq 'NIRS') {
+                                    <option value="">Select One</option>
                                     <option value="NIRS">NIRS</option>
                                     <option disabled value="Transcriptomics">Transcriptomics</option>
                                     <option disabled value="Metabolomics">Metabolomics</option>
 %  } elsif ($high_dimensional_phenotype_type eq 'Transcriptomics') {
+                                    <option value="">Select One</option>
                                     <option value="Transcriptomics">Transcriptomics</option>
                                     <option disabled value="NIRS">NIRS</option>
                                     <option disabled value="Metabolomics">Metabolomics</option>
 %  } elsif ($high_dimensional_phenotype_type eq 'Metabolomics') {
+                                    <option value="">Select One</option>
                                     <option value="Metabolomics">Metabolomics</option>
                                     <option disabled value="Transcriptomics">Transcriptomics</option>
                                     <option disabled value="NIRS">NIRS</option>
 %  } else {
+                                    <option value="">Select One</option>
                                     <option value="NIRS">NIRS</option>
                                     <option value="Transcriptomics">Transcriptomics</option>
                                     <option value="Metabolomics">Metabolomics</option>
@@ -267,7 +271,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                     <& /page/page_title.mas, title=>"High-dimensional data must be uploaded using the template information provided" &>
 
                     <center>
-                    <&| /page/explanation.mas, title=>'Spreadsheet Template Information' &>
+                    <&| /page/explanation.mas, title=>'Data Matrix Spreadsheet Template Information' &>
                         <p>
                         <b>File format information</b>
                         <br>
@@ -453,6 +457,8 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 
             <ul>
                 <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
+                <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g. serial number). Can be numeric or letter.</li>
+                <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
                 <li>All other columns are <strong>wavelengths</strong> (e.g. 100, 400, 2000, etc). You can add as many columns as you want upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
@@ -460,6 +466,8 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                 <tbody>
                     <tr>
                         <td>sample_name</td>
+                        <td>device_id</td>
+                        <td>comments</td>
                         <td>wavelength columns (e.g. 400, 1200, etc)</td>
                     </tr>
                 </tbody>
@@ -490,6 +498,8 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
             <ul>
 
                 <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
+                <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g. serial number). Can be numeric or letter.</li>
+                <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
                 <li>All other columns are <strong>transcript names</strong>. You can add as many columns as you want to upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
@@ -497,6 +507,8 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                 <tbody>
                     <tr>
                         <td>sample_name</td>
+                        <td>device_id</td>
+                        <td>comments</td>
                         <td>transcipt name columns</td>
                     </tr>
                 </tbody>
@@ -525,6 +537,8 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 
             <ul>
                 <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
+                <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g. serial number). Can be numeric or letter.</li>
+                <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
                 <li>All other columns are <strong>metabolite names</strong>. You can add as many columns as you want to upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
@@ -532,6 +546,8 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                 <tbody>
                     <tr>
                         <td>sample_name</td>
+                        <td>device_id</td>
+                        <td>comments</td>
                         <td>metabolite name columns</td>
                     </tr>
                 </tbody>
@@ -662,7 +678,7 @@ jQuery(document).ready(function() {
         Workflow.focus('#high_dim_data_upload_workflow', 3);
     });
 
-    jQuery('#high_dim_data_upload_new_protocol').click(function(){
+    jQuery('#high_dim_data_upload_data_protocol_step').click(function(){
         jQuery('#high_dim_data_upload_protocol_div').show();
 
         if (high_dim_data_upload_type == 'NIRS') {
@@ -681,7 +697,7 @@ jQuery(document).ready(function() {
             jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').show();
             jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').hide();
         }
-        if (high_dim_data_upload_type == 'Metabolomics') {
+        else if (high_dim_data_upload_type == 'Metabolomics') {
             jQuery('#high_dim_data_upload_nirs_protocol_div').hide();
             jQuery('#high_dim_data_upload_transcriptomics_protocol_div').hide();
             jQuery('#high_dim_data_upload_metabolomics_protocol_div').show();

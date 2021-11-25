@@ -70,6 +70,20 @@ sub validate {
         return \%parse_result;
     }
 
+    my $header_col_2 = shift @columns;
+    if ($header_col_2 ne "device_id") {
+        $parse_result{'error'} = "Second cell must be 'device_id'. Please, check your file.";
+        print STDERR "Second cell must be 'device_id'\n";
+        return \%parse_result;
+    }
+
+    my $header_col_3 = shift @columns;
+    if ($header_col_3 ne "comments") {
+        $parse_result{'error'} = "Third cell must be 'comments'. Please, check your file.";
+        print STDERR "Third cell must be 'comments'\n";
+        return \%parse_result;
+    }
+
     foreach (@columns) {
         if (not $_=~/^[-+]?\d+\.?\d*$/){
             $parse_result{'error'}= "It is not a valid wavelength in the header. Must be a numeric spectra: '$_'. Could you check the data format?";
@@ -94,6 +108,8 @@ sub validate {
             @fields = $csv->fields();
         }
         my $sample_name = shift @fields;
+        my $device_id = shift @fields;
+        my $comments = shift @fields;
         push @samples, $sample_name;
 
         foreach (@fields) {
@@ -194,16 +210,20 @@ sub parse {
         } elsif ( $row_number > 0 ) {# get data
             my @columns = @{$row};
             my $observationunit_name = $columns[0];
+            my $device_id = $columns[1];
+            my $comments = $columns[2];
             $observation_units_seen{$observationunit_name} = 1;
             # print "The plots are $observationunit_name\n";
             my %spectra;
-            foreach my $col (1..$num_cols-1){
+            foreach my $col (3..$num_cols-1){
                 my $column_name = $header[$col];
                 $traits_seen{$column_name}++;
                 my $wavelength = "X".$column_name;
                 my $nir_value = $columns[$col];
                 $spectra{$wavelength} = $nir_value;
             }
+            $data{$observationunit_name}->{'nirs'}->{'device_id'} = $device_id;
+            $data{$observationunit_name}->{'nirs'}->{'comments'} = $comments;
             push @{$data{$observationunit_name}->{'nirs'}->{'spectra'}}, \%spectra;
         }
         $row_number++;

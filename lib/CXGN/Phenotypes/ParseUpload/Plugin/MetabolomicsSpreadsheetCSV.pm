@@ -71,12 +71,26 @@ sub validate {
         print STDERR "Could not parse header.\n";
         return \%parse_result;
     }
-    
+
     my $header_col_1 = shift @columns;
     if ( $header_col_1 ne "sample_name" ) {
       $parse_result{'error'} = "First cell must be 'sample_name'. Please, check your file.";
       print STDERR "First cell must be 'sample_name'\n";
       return \%parse_result;
+    }
+
+    my $header_col_2 = shift @columns;
+    if ($header_col_2 ne "device_id") {
+        $parse_result{'error'} = "Second cell must be 'device_id'. Please, check your file.";
+        print STDERR "Second cell must be 'device_id'\n";
+        return \%parse_result;
+    }
+
+    my $header_col_3 = shift @columns;
+    if ($header_col_3 ne "comments") {
+        $parse_result{'error'} = "Third cell must be 'comments'. Please, check your file.";
+        print STDERR "Third cell must be 'comments'\n";
+        return \%parse_result;
     }
 
     my @metabolite = @columns;
@@ -88,6 +102,8 @@ sub validate {
             @fields = $csv->fields();
         }
         my $sample_name = shift @fields;
+        my $device_id = shift @fields;
+        my $comments = shift @fields;
         push @samples, $sample_name;
 
         foreach (@fields) {
@@ -117,7 +133,7 @@ sub validate {
         print STDERR "Could not parse header.\n";
         return \%parse_result;
     }
-    
+
     if ( $columns[0] ne "metabolite_name" ||
         $columns[1] ne "inchi_key" ||
         $columns[2] ne "compound_name") {
@@ -231,10 +247,12 @@ sub parse {
         } elsif ( $row_number > 0 ) {# get data
             my @columns = @{$row};
             my $observationunit_name = $columns[0];
+            my $device_id = $columns[1];
+            my $comments = $columns[2];
             $observation_units_seen{$observationunit_name} = 1;
             # print "The plots are $observationunit_name\n";
             my %spectra;
-            foreach my $col (1..$num_cols-1){
+            foreach my $col (3..$num_cols-1){
                 my $column_name = $header[$col];
                 if ($column_name ne ''){
                     my $metabolite_name = $column_name;
@@ -243,6 +261,8 @@ sub parse {
                     $spectra{$metabolite_name} = $metabolite_value;
                 }
             }
+            $data{$observationunit_name}->{'metabolomics'}->{'device_id'} = $device_id;
+            $data{$observationunit_name}->{'metabolomics'}->{'comments'} = $comments;
             push @{$data{$observationunit_name}->{'metabolomics'}->{'metabolites'}}, \%spectra;
         }
         $row_number++;
