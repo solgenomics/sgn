@@ -2,8 +2,8 @@
 use strict;
 use warnings;
 
-#use lib 't/lib';
-#use SGN::Test::Fixture;
+use lib 't/lib';
+use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
 
@@ -11,6 +11,8 @@ use Test::WWW::Mechanize;
 use Data::Dumper;
 use JSON;
 local $Data::Dumper::Indent = 0;
+
+my $f = SGN::Test::Fixture->new(); # calculate db stats
 
 my $mech = Test::WWW::Mechanize->new;
 my $response; my $searchId;
