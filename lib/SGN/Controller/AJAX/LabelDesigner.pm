@@ -196,7 +196,7 @@ __PACKAGE__->config(
             my $additional_list_data = get_additional_list_data($c, $source_id, $longest_hash{'list_item_id'}, $longest_hash{'list_item_name'});
             if ( $additional_list_data ) {
                 my $fields = $additional_list_data->{$longest_hash{'list_item_id'}};
-		if ( (ref($fields) eq "HASH") && (keys(@$fields) > 0) ) { 
+		if ( (ref($fields) eq "HASH") && (keys(%$fields) > 0) ) { 
 		    %longest_hash = (%longest_hash, %$fields);
 		}
             }
