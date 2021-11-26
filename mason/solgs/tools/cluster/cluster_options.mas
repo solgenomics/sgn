@@ -43,7 +43,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
       <input class="form-control"
 	     type="text"
 	     placeholder="K No.?"
-	     id="k_number"/>
+	     id="k_number_input"/>
     </div>
 
     <div style="padding-right:1px; padding-left:1px;"

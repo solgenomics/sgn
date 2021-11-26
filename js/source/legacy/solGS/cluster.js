@@ -165,9 +165,9 @@ solGS.cluster = {
 
     clusterKnumSelectId: function(rowId) {
         if (document.URL.match(/cluster\/analysis/) && rowId) {
-            return `k_number_select_${rowId}`;
+            return `k_number_input_${rowId}`;
         } else {
-            return 'k_number_select';
+            return 'k_number_input';
         }
 
     },
@@ -1054,7 +1054,7 @@ jQuery(document).ready( function() {
 	jQuery(document).ready(checkClusterPop);
 
 	function checkClusterPop() {
-	    if(jQuery('#cluster_div #cluster_select_a_population_div').is(':visible')) {
+	    if (jQuery('#cluster_div #cluster_select_a_population_div').is(':visible')) {
 		jQuery('#cluster_div #cluster_options #cluster_data_type_opts').html(dataTypeOpts);
 		jQuery('#cluster_div #cluster_options #cluster_type_opts').html(clusterTypeOpts);
 		jQuery('#cluster_div #cluster_options').show();
