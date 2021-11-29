@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 
 package SGN::Controller::AJAX::Solgwas;
 
@@ -411,8 +412,16 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 
     while ( my $line = <$filehandle> ) {
         @sample_line = (split /\t/, $line);
-	$chrom = $chromList{$sample_line[0]};
-        $pos = $posList{$sample_line[0]};
+	if ($chromList{$sample_line[0]}) {
+	    $chrom = $chromList{$sample_line[0]};
+	} else {
+	    $chrom = "";
+	}
+        if ($posList{$sample_line[0]}) {
+	    $pos = $posList{$sample_line[0]};
+	} else {
+	    $pos = "";
+	}
 	splice(@sample_line, 1, 0, $chrom);
         splice(@sample_line, 2, 0, $pos);
         $line = join("\t", @sample_line);
