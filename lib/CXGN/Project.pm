@@ -3662,6 +3662,7 @@ sub create_tissue_samples {
         my $has_tissues_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_tissue_sample_entries', 'project_property')->cvterm_id();
         my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
         my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
+        my $tissue_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_type', 'stock_property')->cvterm_id();
         my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
@@ -3742,14 +3743,45 @@ sub create_tissue_samples {
 
                 my $tissue_index_number = $previous_tissue_number + 1;
                 foreach my $tissue_name (@$tissue_names){
-                    my $tissue_name = $parent_plant_name."_".$tissue_name.$tissue_index_number;
-                    print STDERR "... ... creating tissue $tissue_name...\n";
+                    my $tissue_sample_name = $parent_plant_name."_".$tissue_name.$tissue_index_number;
+                    print STDERR "... ... creating tissue $tissue_sample_name...\n";
+
+                    my $plant_accession_rs = $self->bcs_schema()->resultset("Stock::StockRelationship")->search({'me.subject_id'=>$parent_plant, 'me.type_id'=>$plant_relationship_cvterm, 'object.type_id'=>[$accession_cvterm, $cross_cvterm, $family_name_cvterm]}, {'join'=>'object'});
+                    if ($plant_accession_rs->count != 1){
+                        die "There is not 1 stock_relationship of type plant_of between the plant $parent_plant and an accession, a cross or a family_name.";
+                    }
+
+                    my @tissue_stock_props;
+                    my @tissue_subjects;
+                    my @tissue_objects;
+                    my @tissue_nd_experiment_stocks;
+                    push @tissue_stock_props, { type_id => $tissue_type_cvterm, value => $tissue_name };
+                    push @tissue_stock_props, { type_id => $tissue_index_number_cvterm, value => $tissue_index_number };
+                    push @tissue_subjects, { type_id => $tissue_relationship_cvterm, object_id => $parent_plant };
+                    push @tissue_subjects, { type_id => $tissue_relationship_cvterm, object_id => $parent_plot_id };
+                    push @tissue_subjects, { type_id => $tissue_relationship_cvterm, object_id => $plant_accession_rs->first->object_id };
+                    push @tissue_nd_experiment_stocks, { nd_experiment_id => $field_layout_experiment->nd_experiment_id(), type_id => $field_layout_cvterm };
+
+                    if ($inherits_plot_treatments){
+                        if($treatments){
+                            foreach (@$treatments){
+                                my $plots = $treatment_plots{$_->[0]};
+                                if (exists($plots->{$parent_plot_id})){
+                                    push @tissue_nd_experiment_stocks, { nd_experiment_id => $treatment_experiments{$_->[0]}, type_id => $treatment_cvterm };
+                                }
+                            }
+                        }
+                    }
 
                     my $tissue = $chado_schema->resultset("Stock::Stock")->create({
                         organism_id => $parent_plant_organism,
-                        name       => $tissue_name,
-                        uniquename => $tissue_name,
+                        name       => $tissue_sample_name,
+                        uniquename => $tissue_sample_name,
                         type_id => $tissue_sample_cvterm,
+                        stockprops => \@tissue_stock_props,
+                        stock_relationship_subjects => \@tissue_subjects,
+                        stock_relationship_objects => \@tissue_objects,
+                        nd_experiment_stocks => \@tissue_nd_experiment_stocks,
                     });
 
                     if ($tissue_sample_owner) {
@@ -3757,59 +3789,7 @@ sub create_tissue_samples {
                         $stock->associate_owner($tissue_sample_owner,$tissue_sample_owner,$username, "");
                     }
 
-                    my $tissueprop = $chado_schema->resultset("Stock::Stockprop")->create( {
-                        stock_id => $tissue->stock_id(),
-                        type_id => $tissue_index_number_cvterm,
-                        value => $tissue_index_number,
-                    });
                     $tissue_index_number++;
-
-                    #the tissue has a relationship to the plant
-                    my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
-                        object_id => $parent_plant,
-                        subject_id => $tissue->stock_id(),
-                        type_id => $tissue_relationship_cvterm,
-                    });
-
-                    #the tissue has a relationship to the plot
-                    $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
-                        object_id => $parent_plot_id,
-                        subject_id => $tissue->stock_id(),
-                        type_id => $tissue_relationship_cvterm,
-                    });
-
-                    #the tissue has a relationship to the accession
-                    my $plant_accession_rs = $self->bcs_schema()->resultset("Stock::StockRelationship")->search({'me.subject_id'=>$parent_plant, 'me.type_id'=>$plant_relationship_cvterm, 'object.type_id'=>[$accession_cvterm, $cross_cvterm, $family_name_cvterm]}, {'join'=>'object'});
-                    if ($plant_accession_rs->count != 1){
-                        die "There is not 1 stock_relationship of type plant_of between the plant $parent_plant and an accession, a cross or a family_name.";
-                    }
-                    $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
-                        object_id => $plant_accession_rs->first->object_id,
-                        subject_id => $tissue->stock_id(),
-                        type_id => $tissue_relationship_cvterm,
-                    });
-
-                    #link tissue to project through nd_experiment.
-                    my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-                        nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
-                        type_id => $field_layout_cvterm,
-                        stock_id => $tissue->stock_id(),
-                    });
-
-                    if ($inherits_plot_treatments){
-                        if($treatments){
-                            foreach (@$treatments){
-                                my $plots = $treatment_plots{$_->[0]};
-                                if (exists($plots->{$parent_plot_id})){
-                                    my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-                                        nd_experiment_id => $treatment_experiments{$_->[0]},
-                                        type_id => $treatment_cvterm,
-                                        stock_id => $tissue->stock_id(),
-                                    });
-                                }
-                            }
-                        }
-                    }
 
                     push @{$plant_tissue_hash{$plant_name}}, $tissue->stock_id;
 
@@ -3846,6 +3826,10 @@ sub create_tissue_samples {
             }
         }
 
+        foreach (@$treatments) {
+            my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $_->[0], experiment_type=>'field_layout' });
+            $layout->generate_and_cache_layout();
+        }
         $layout->generate_and_cache_layout();
     };
 
