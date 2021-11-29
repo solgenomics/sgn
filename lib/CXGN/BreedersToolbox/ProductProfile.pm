@@ -25,6 +25,7 @@ use Moose;
 use JSON::Any;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use JSON;
 
 has 'people_schema' => (isa => 'Ref', is => 'rw', required => 1);
 
@@ -104,7 +105,41 @@ sub store {
 #}
 
 
-#sub get_product_profile_info {
+sub get_product_profile_info {
+
+    my $self = shift;
+    my $people_schema = $self->people_schema();
+    my $dbh = $self->dbh();
+
+    my $product_profile_rs = $people_schema->resultset('SpProductProfile')->search( { } );
+    my @product_profiles;
+    while (my $result = $product_profile_rs->next()){
+        my $profile_detail_string;
+        my $product_profile_id = $result->sp_product_profile_id();
+        my $product_profile_name = $result->name();
+        my $product_profile_scope = $result->scope();
+        my $person_id = $result->sp_person_id();
+        my $create_date = $result->create_date();
+        my $modified_date = $result->modified_date();
+
+        my $person= CXGN::People::Person->new($dbh, $person_id);
+        my $person_name=$person->get_first_name()." ".$person->get_last_name();
+
+        my $product_profileprop_rs = $people_schema->resultset('SpProductProfileprop')->search( { sp_product_profile_id => $product_profile_id } );
+        while (my $product_profile_details = $product_profileprop_rs->next()){
+            my $profile_detail_json = $product_profile_details->value();
+            my $profile_detail_hash = JSON::Any->jsonToObj($profile_detail_json);
+            $profile_detail_string = $profile_detail_hash->{'product_profile_details'};
+#            $profile_detail_ref = decode_json $profile_detail_string;
+        }
+
+        push @product_profiles, [$product_profile_id, $product_profile_name, $product_profile_scope, $profile_detail_string, $person_name, $create_date, $modified_date ];
+    }
+
+
+
+
+
 #    my $self = shift;
 #    my $schema = $self->bcs_schema();
 #    my $project_id = $self->parent_id();
@@ -128,8 +163,8 @@ sub store {
 #    }
 #    print STDERR "PROFILE LIST =".Dumper(\@profile_list)."\n";
 
-#    return \@profile_list;
-#}
+    return \@product_profiles;
+}
 
 
 1;

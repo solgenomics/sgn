@@ -13,7 +13,25 @@
             <th>Scope</th>
             <th>Trait</th>
             <th>Submitter</th>
-            <th>Date (Y-M-D)</th>
+            <th>Create Date <br>&nbsp&nbsp&nbsp&nbsp(Y-M-D)</th>
+            <th>Modified Date <br>&nbsp&nbsp&nbsp&nbsp(Y-M-D)</th>
         </tr>
     </thead>
 </table>
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#product_profile_summary').DataTable( {
+        'autoWidth': false,
+        'ajax': '/ajax/product_profile/get_product_profiles',
+        'order': false,
+    });
+
+
+});
+
+
+</script>

@@ -343,41 +343,49 @@ sub add_product_profile_POST : Args(0) {
 }
 
 
-sub get_product_profiles :Path('ajax/product_profile/get_product_profiles') Args(0){
+sub get_product_profiles :Path('/ajax/product_profile/get_product_profiles') Args(0){
 
     my $self = shift;
     my $c = shift;
-    my $program = $c->stash->{program};
-    my $program_id = $program->get_program_id;
-    my $schema = $c->stash->{schema};
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh;
 
-    my $profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema, parent_id => $program_id });
+#    my $program = $c->stash->{program};
+#    my $program_id = $program->get_program_id;
+#    my $schema = $c->stash->{schema};
+
+    my $profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ dbh => $dbh, people_schema => $people_schema });
     my $profiles = $profile_obj->get_product_profile_info();
-#    print STDERR "PRODUCT PROFILE RESULTS =".Dumper($profiles)."\n";
+    print STDERR "PRODUCT PROFILE RESULTS =".Dumper($profiles)."\n";
     my @profile_summary;
     foreach my $profile(@$profiles){
         my @trait_list = ();
         my @profile_info = @$profile;
-        my $projectprop_id = $profile_info[0];
+        my $profile_id = $profile_info[0];
         my $profile_name = $profile_info[1];
+        my $profile_name_link = qq{<a href = "/profile/$profile_id">$profile_name</a>};
         my $profile_scope = $profile_info[2];
         my $profile_details = $profile_info[3];
         my $profile_submitter = $profile_info[4];
-        my $uploaded_date = $profile_info[5];
-        my $profile_name_link = qq{<a href = "/profile/$projectprop_id">$profile_name</a>};
-        my $trait_info_ref = decode_json $profile_details;
-        my %trait_info_hash = %{$trait_info_ref};
-        my @traits = keys %trait_info_hash;
-        foreach my $trait(@traits){
-            my @trait_name = ();
-            @trait_name = split '\|', $trait;
-            pop @trait_name;
-            push @trait_list, @trait_name
+        my $create_date = $profile_info[5];
+        my $modified_date = $profile_info[6];
+        print STDERR "PRODUCT PROFILE DETAILS =".Dumper($profile_details)."\n";
+        my $trait_string;
+        if ($profile_details) {
+            my $trait_info_ref = decode_json $profile_details;
+            my %trait_info_hash = %{$trait_info_ref};
+            my @traits = keys %trait_info_hash;
+            foreach my $trait(@traits){
+                my @trait_name = ();
+                @trait_name = split '\|', $trait;
+                pop @trait_name;
+                push @trait_list, @trait_name
+            }
+            my @sort_trait_list = sort @trait_list;
+            $trait_string = join("<br>", @sort_trait_list);
         }
-        my @sort_trait_list = sort @trait_list;
-        my $trait_string = join("<br>", @sort_trait_list);
-
-        push @profile_summary, [$profile_name_link, $profile_scope, $trait_string, $profile_submitter, $uploaded_date] ;
+        push @profile_summary, [$profile_name_link, $profile_scope, $trait_string, $profile_submitter, $create_date, $modified_date] ;
     }
 #    print STDERR "TRAIT LIST =".Dumper(\@profile_summary)."\n";
 
