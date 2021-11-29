@@ -451,7 +451,7 @@ sub remove_team_member :Chained('teams') PathPart('delete/association') Args(1) 
     $c->stash->{rest} = { message => "Member associated with team has been deleted." };
 }
 
-sub delete_tem :Chained('teams') PathPart('delete') Args(0) {
+sub delete_team :Chained('teams') PathPart('delete') Args(0) {
     my $self = shift;
     my $c = shift;
     my $sp_team_id = shift;
@@ -478,6 +478,72 @@ sub delete_tem :Chained('teams') PathPart('delete') Args(0) {
 
 
 
+}
+
+
+sub add_stage_gate :Path('/ajax/people/add_stage_gate') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+     if (! $c->user()) {
+	$c->stash->{rest} = { error => "You must be logged in to use this function." };
+	return;
+    }
+    
+    my $name = $c->req->param("name");
+    my $description = $c->req->param("description");
+    
+    my $schema = $c->dbic_schema("CXGN::People::Schema");
+
+    eval { 
+	my $rs = $schema->resultset("SpStageGate")->find_or_create(
+	    {
+		name => $name,
+		description => $description,
+	    });
+
+    };
+
+    if ($@) { 
+	$c->stash->{rest} = { error =>  "An error occurred! $@\n" };
+	return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+sub list_stage_gates :Path('/ajax/stage_gates/list') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+     if (! $c->user()) {
+	$c->stash->{rest} = { error => "You must be logged in to use this function." };
+	return;
+    }
+    
+        if (! $c->user()->has_role("curator")) {
+	$c->stash->{rest} = { error => "You don't have the necessary privileges for maintaining user roles." };
+	return;
+    }
+
+    my $schema = $c->dbic_schema("CXGN::People::Schema");
+    
+    my $rs = $schema->resultset("SpStageGate")->search( { } );
+
+    my @data;
+    
+    while (my $row = $rs->next()) {
+	my $name = $row->name();
+	my $description = $row->description();
+	my $sp_stage_gate_id = $row->sp_stage_gate_id();
+	push @data, [ $name."[$sp_stage_gate_id]", $description ];
+    }
+
+
+    print STDERR "STAGE GATES: ".Dumper(\@data);
+    
+    $c->stash->{rest} =  { data => \@data };
 }
 
 
