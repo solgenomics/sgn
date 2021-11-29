@@ -168,7 +168,14 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     
     my $newtrait = $traits;
 
-    my $genotype_data_ref = $ds->retrieve_genotypes($geno_filepath);
+    my @genotyping_protocols = $ds->retrieve_genotyping_protocols();
+
+    if (scalar(@genotyping_protocols) == 0) { die "No genotyping protocols found in this dataset! Please choose another dataset!"; }
+    
+    my $protocol_id = shift @genotyping_protocols;
+    my $forbid_cache = 0;
+    
+    my $genotype_data_ref = $ds->retrieve_genotypes($protocol_id, $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
 
     open(my $F, "<", $geno_filepath) || die "Can't open file $geno_filepath\n";
     open(my $G, ">", $geno_filepath.".hmp") || die "Can't open ".$geno_filepath.".hmp for writing\n";
