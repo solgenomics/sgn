@@ -157,7 +157,7 @@ export function init() {
         }
 
         get_harvesting_order() {
-            var final_harvesting_arr = this.traverse_map('planting_order_layout');
+            var final_harvesting_arr = this.traverse_map('harvesting_order_layout');
             var csv = ['PlotNumber', 'PlotName', 'AccessionName',].join(',');
             csv += "\n";
             final_harvesting_arr.forEach(function(plot) {
