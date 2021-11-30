@@ -76,6 +76,9 @@
 <&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
 
 
+      <table id="gcpc_output">
+	<tr><th>Cross #</th><th>Accession 1</th><th>Accession2</th></tr>
+      </table>
 
   <center>
     <div id="sgn_blast_graph" style="display:none">
@@ -207,46 +210,17 @@ jQuery(document).ready(function() {
 
 
   jQuery('#runGCPC').click( function () {
-    alert("hello");
     if (!jQuery('#sin_list_list_select').val()) {
       alert("Please select a selection index.")
       $('#gcpc_files').empty();
     } else {
       $('#gcpc_files').empty();
-      alert("hello2");
       if ($('#sin_list_list_select').val() != ""){
-        alert("hello3");
         var dataset_id = get_dataset_id();
         var sin_list_id = $('#sin_list_list_select').val();
         // var method_id = $('#select_method').val();
-        $.ajax({
-          url: '/ajax/gcpc/generate_results',
-          data: {'dataset_id': dataset_id, 'sin_list_id': sin_list_id }, // 'method_id':method_id},
-          beforeSend: function() {
-            jQuery("#working_modal").modal("show");
-          },
-          timeout: 30000000,
-          success: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error) {
-              alert(response.error);
-            }
-            else {
-              var AMMIFile_response = response.AMMITable;
-              var fig1_response = response.figure1;
-              var fig2_response = response.figure2;
-        //alert("Response ID: "+temp_response);
-            //alert("Response ID: "+fig1_response);
-              //setTimeout(function() {
-              $('#stability_output').append("<img id='stability_Table' src='"+ AMMIFile_response + "'/>");
-              $('#stability_output').append("<img id='stability_Figure1' src='"+ fig1_response + "'/>");
-              $('#stability_output').append("<img id='stability_Figure2' src='"+ fig2_response + "'/>");
-              //},6000);
-            }
-          },
-          error: function(response) {
-            alert("An error occurred, the service may temporarily be unavailable");
-          }
+	jQuery('#gcpc_output').DataTable( function() { 
+          url: '/ajax/gcpc/generate_results&dataset_id='+dataset_id+'&amp;sin_list_id='+sin_list_id+'&amp;method_id='+method_id
         });
       }
     };

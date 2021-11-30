@@ -174,15 +174,11 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     
     my $protocol_id = shift @genotyping_protocols;
     my $forbid_cache = 0;
+
+    print STDERR "GENOFILE PATH = $geno_filepath\n";
+    print STDERR "cache file path = ".$c->config->{cache_file_path}." CLUSTER SHARED TEMPDIR: ".$c->config->{cluster_shared_tempdir}."\n";
     
     my $genotype_data_ref = $ds->retrieve_genotypes($protocol_id, $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
-
-    open(my $F, "<", $geno_filepath) || die "Can't open file $geno_filepath\n";
-    open(my $G, ">", $geno_filepath.".hmp") || die "Can't open ".$geno_filepath.".hmp for writing\n";
-    
-    my $AMMIFile = $tempfile . "_" . "AMMIFile.png";
-    my $figure1file = $tempfile . "_" . "figure1.png";
-    my $figure2file = $tempfile . "_" . "figure2.png";
 
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
@@ -213,31 +209,12 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     my $error;
 
-    if (! -e $AMMIFile) { 
-	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters."
-    }
-
     my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";
 
-    copy($AMMIFile, $figure_path);
-    copy($figure1file, $figure_path);
-    copy($figure2file, $figure_path);
-
-    my $AMMIFilebasename = basename($AMMIFile);
-    my $AMMIFile_response = "/documents/tempfiles/stability_files/" . $AMMIFilebasename;
+    my @data;
     
-    my $figure1basename = basename($figure1file);
-    my $figure1_response = "/documents/tempfiles/stability_files/" . $figure1basename;
-    
-    my $figure2basename = basename($figure2file);
-    my $figure2_response = "/documents/tempfiles/stability_files/" . $figure2basename;
-        
     $c->stash->{rest} = {
-        AMMITable => $AMMIFile_response,
-        figure1 => $figure1_response,
-        figure2 => $figure2_response,
-        dummy_response => $dataset_id
-        # dummy_response2 => $trait_id,
+	data => \@data
     };
 }
 

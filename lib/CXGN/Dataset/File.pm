@@ -23,7 +23,7 @@ override('retrieve_genotypes',
 	sub {
 	    my $self = shift;
 	    my $protocol_id = shift;
-	    my $file = shift || $self->file_name()."_genotype.txt";
+	    my $file = shift; # || $self->file_name()."_genotype.txt";
 		my $cache_root_dir = shift;
 		my $cluster_shared_tempdir_config = shift;
 		my $backend_config = shift;
@@ -48,7 +48,7 @@ override('retrieve_genotypes',
 	    my $genotyping_protocol_ref = $self->retrieve_genotyping_protocols();
 	    my @protocols;
 	    foreach my $p (@$genotyping_protocol_ref) {
-		push @protocols, $p->[0];
+		push @protocols, $p;
 		
 	    }
     
@@ -126,8 +126,17 @@ override('retrieve_genotypes',
 
 
 #	     my $genotype_json = JSON::Any->encode($genotypes);
-#	     write_file($file, $genotype_json);
-	     return $genotypes_search->get_cached_file_dosage_matrix(@required_config);
+	    #	     write_file($file, $genotype_json);
+	    my $filehandle =  $genotypes_search->get_cached_file_dosage_matrix(@required_config);
+	    
+	    if ($file) {
+		open(my $F, ">", $self->file()) || die "Can't open file $file";
+		while(<$filehandle>) {
+		    print $F $_;
+		}
+	    }
+
+	    return $filehandle
 	 });
 
 override('retrieve_phenotypes',
