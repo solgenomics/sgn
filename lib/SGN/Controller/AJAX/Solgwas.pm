@@ -62,8 +62,6 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
 #    );
 #    my $pheno_filepath = $tempfile . "_phenotype.txt";
 
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
 #    my $temppath = $solgwas_tmp_output . "/" . $tempfile;
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
@@ -126,7 +124,7 @@ sub extract_trait_data :Path('/ajax/solgwas/getdata') Args(0) {
 	chomp;
 
 	my @fields = split "\t";
-	my %line = {};
+	my %line = ();
 	for(my $n=0; $n <@keys; $n++) {
 	    if (exists($fields[$n]) && defined($fields[$n])) {
 		$line{$keys[$n]}=$fields[$n];
@@ -166,8 +164,9 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 #    my $temppath = $c->config->{basepath}."/".$tempfile;
-##    my $temppath = $c->config->{cluster_shared_tempdir}."/".$tempfile;
-    my $temppath = $solgwas_tmp_output . "/" . $tempfile;
+#    my $temppath = $c->config->{cluster_shared_tempdir}."/".$tempfile;
+#    my $temppath = $solgwas_tmp_output . "/" . $tempfile;
+    my $temppath = "/" . $tempfile;
 
 #    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
@@ -267,8 +266,6 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
 #    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
 #    system($cmd);
 
-    my $figure2file = $tempfile . "_" . $newtrait . "_figure2.png";
-
     my $cmd = CXGN::Tools::Run->new(
         {
             backend => $c->config->{backend},
@@ -290,7 +287,7 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     $cmd->wait;
 
 
-    my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
+    my $figure_path = "./documents/tempfiles/solgwas_files/";
     copy($figure2file,$figure_path);
 
     my $figure2basename = basename($figure2file);
@@ -358,7 +355,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my @row;
     my $chrom;
     my $pos;
-    my $q = "select marker_name, chrom, pos from materialized_markerview view where nd_protocol_id = $protocol_id";
+    my $q = "SELECT s.value->>'name', s.value->>'chrom', s.value->>'pos' from nd_protocolprop, jsonb_each(nd_protocolprop.value) s(key, value) where type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'vcf_map_details_markers') and nd_protocol_id = $protocol_id";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute();
     while (@row = $sth->fetchrow_array) {
@@ -407,17 +404,17 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     splice(@sample_line, 1, 0, "chrom");
     splice(@sample_line, 2, 0, "pos");
     $line = join("\t", @sample_line);
-    print $filehandle_out "$line\n";
+    print $filehandle_out $line;
     my $marker_total;
 
     while ( my $line = <$filehandle> ) {
-        @sample_line = (split /\t/, $line);
+        @sample_line = split(/\t/, $line);
 	if ($chromList{$sample_line[0]}) {
 	    $chrom = $chromList{$sample_line[0]};
 	} else {
 	    $chrom = "";
 	}
-        if ($posList{$sample_line[0]}) {
+	if ($posList{$sample_line[0]}) {
 	    $pos = $posList{$sample_line[0]};
 	} else {
 	    $pos = "";
@@ -425,8 +422,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 	splice(@sample_line, 1, 0, $chrom);
         splice(@sample_line, 2, 0, $pos);
         $line = join("\t", @sample_line);
-        $marker_total = scalar(@sample_line);
-        print $filehandle_out "$line\n";
+        print $filehandle_out $line;
     }
     close $filehandle;
     close $filehandle_out;
