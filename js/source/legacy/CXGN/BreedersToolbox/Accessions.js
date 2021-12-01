@@ -322,7 +322,7 @@ jQuery(document).ready(function ($) {
 
 	    verify_species_name().then(
 		function(r) {
-		    if (r.error) { alert('Please correct the species name and try again.'); }
+		    if (r.error) { alert(r.error); }
 		    else {
 			for(var i=0; i<accessionsToAdd.length; i++){
 			    infoToAdd.push({
@@ -335,6 +335,9 @@ jQuery(document).ready(function ($) {
 			    speciesNames.push(speciesName);
 			}
 		    }
+		    add_accessions(infoToAdd, speciesNames)
+		    $('#review_absent_dialog').modal("hide");
+
 		},
 		function(r) {
 		    alert('ERROR! Try again later.');
@@ -562,7 +565,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
             if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
                 populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
             } else {
-                alert('All accessions in your list already exist in the database. 3');
+                alert('All accessions in your list already exist in the database. (3)');
             }
         }
     });
