@@ -823,10 +823,10 @@ CXGN.List.prototype = {
 
             if (type == 'accessions' && missing.length==0 && wrong_case.length==0) {
                 if (!non_interactive) { alert("This list passed validation."); }
-                return 0;
+                return 1;
             } else if (type != 'accessions' && missing.length == 0) {
                 if (!non_interactive) { alert("This list passed validation."); }
-                return 0;
+                return 1;
             } else {
                 if (!non_interactive) {
                     if (type == 'accessions') {
