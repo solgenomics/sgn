@@ -651,6 +651,11 @@ jQuery(document).ready(function() {
     jQuery('#high_dim_data_upload_data_type_step').click(function(){
         high_dim_data_upload_type = jQuery('#high_dim_data_upload_type_select').val();
 
+        if (high_dim_data_upload_type == '') {
+            alert('Please select a data type first!');
+            return false;
+        }
+
         if (high_dim_data_upload_type == 'NIRS') {
             jQuery('#high_dim_data_upload_nirs_div').show();
             jQuery('#high_dim_data_upload_transcriptomics_div').hide();
@@ -678,7 +683,7 @@ jQuery(document).ready(function() {
         Workflow.focus('#high_dim_data_upload_workflow', 3);
     });
 
-    jQuery('#high_dim_data_upload_data_protocol_step').click(function(){
+    jQuery('#high_dim_data_upload_new_protocol').click(function(){
         jQuery('#high_dim_data_upload_protocol_div').show();
 
         if (high_dim_data_upload_type == 'NIRS') {
