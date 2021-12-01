@@ -2500,9 +2500,26 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
             return;
         }
     }
-
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+    
     print "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotName: $old_plot_name, NewPlotName: $new_plot_name OldPlotId: $plot_id\n";
     $c->stash->{rest} = { success => 1};
+}
+
+sub accession_exists : Chained('trial') PathPart('accession_exists') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $accession_name = $c->req->param('accession_name');
+    my $rs = $schema->resultset("Stock::Stock")->search({uniquename=> $accession_name });
+    if (!$rs->first()) {
+        $c->stash->{rest} = { error => "Error: $accession_name is not a valid accession in the database." };
+        return;
+    }
+    my $accession_id = $rs->first()->stock_id();
+    $c->stash->{rest} = { success => $accession_id};
 }
 
 sub replace_well_accession : Chained('trial') PathPart('replace_well_accessions') Args(0) {

@@ -52,6 +52,11 @@ export function WizardDownloads(main_id,wizard){
         var compute_from_parents = d3.select(".wizard-download-genotypes-parents-compute").property("checked");
         var include_duplicate_genotypes = d3.select(".wizard-download-genotypes-duplicates-include").property("checked");
         var marker_set_list_id = d3.select(".wizard-download-genotypes-marker-set-list-id").node().value;
+        if(chromosome_number && marker_set_list_id) {
+            alert(`Please indicate either chromosome or markerset, not both.`);
+            d3.select(this).attr("disabled",null);
+            return;
+        }
         var url = document.location.origin+`/breeders/download_gbs_action/?ids=${accession_ids.join(",")}&protocol_id=${protocol_id}&format=accession_ids&chromosome_number=${chromosome_number}&start_position=${start_position}&end_position=${end_position}&trial_ids=${trial_ids.join(",")}&download_format=${download_format}&compute_from_parents=${compute_from_parents}&marker_set_list_id=${marker_set_list_id}&include_duplicate_genotypes=${include_duplicate_genotypes}`;
         window.open(url,'_blank');
       });

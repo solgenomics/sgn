@@ -26,6 +26,7 @@ my $nocleanup;
 my $noserver;
 my $dumpupdatedfixture;
 my $noparallel = 0;
+my $nopatch;
 my $list_config = "";
 my $logfile = "logfile.$$.txt";
 my $print_environment;
@@ -39,6 +40,7 @@ GetOptions(
     "dumpupdatedfixture" => \$dumpupdatedfixture,
     "noserver"           => \$noserver,
     "noparallel"         => \$noparallel,
+    "nopatch"            => \$nopatch,
     "fixture_path"       => \$fixture_path,
     "list_config"        => \$list_config,
     "logfile=s"            => \$logfile,
@@ -141,7 +143,9 @@ print $NEWCONF $new_conf;
 close($NEWCONF);
 
 #run fixture and db patches.
-system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $dbhost -d $dbname -e janedoe -s 145");
+if (! $nopatch) {
+    system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $dbhost -d $dbname -e janedoe -s 145");
+}
 
 # run the materialized views creation script
 #
@@ -150,7 +154,7 @@ system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_po
 
 if ($dumpupdatedfixture){
     print STDERR "Dumping new updated fixture with all patches run on it to t/data/fixture/cxgn_fixture.sql\n";
-    system("pg_dump -U postgres $dbname > t/data/fixture/cxgn_fixture.sql");
+    system("pg_dump -h $config->{dbhost} -U postgres $dbname > t/data/fixture/cxgn_fixture.sql");
 }
 
 print STDERR "Done.\n";
@@ -249,6 +253,7 @@ $SIG{KILL} = sub { kill 9, $server_pid, $prove_pid };
 
 print STDERR "# Start prove (PID $prove_pid)... \n";
 waitpid $prove_pid, 0;
+my $prove_pid_exit_status = $? >> 8;
 print STDERR "# Prove finished, stopping web server PID $server_pid... ";
 
 END { kill 15, $server_pid if $server_pid }
@@ -284,6 +289,7 @@ else {
     print STDERR "# --nocleanup option: not removing db or files.\n";
 }
 print STDERR "# Test run complete.\n\n";
+exit($prove_pid_exit_status); # exit with non-zero exit status if any tests failed
 
 
 
@@ -350,6 +356,8 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
   --noserver     Do not start webserver (if running unit_fixture tests only)
 
   --noparallel   Do not run the server in parallel mode.
+
+  --nopatch      Do not run fixture and database patches
 
   --fixture_path specify a path to the fixture different from the default
                  (t/data/fixture/cxgn_fixture.pl). Note: You can also set the env

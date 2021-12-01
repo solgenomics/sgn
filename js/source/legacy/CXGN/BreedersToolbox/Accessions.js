@@ -281,7 +281,7 @@ jQuery(document).ready(function ($) {
             dataType: "json",
             data: {
                 'species_name': speciesName,
-            },
+            }
             // success: function (response) {
             //     if (response.error) {
             //         alert(response.error);
@@ -318,11 +318,11 @@ jQuery(document).ready(function ($) {
             if (!accessionsToAdd || accessionsToAdd.length == 0) {
                 alert("No accessions to add");
                 return;
-            }
+	    }
 
 	    verify_species_name().then(
 		function(r) {
-		    if (r.error) { alert('Please correct the species name and try again.'); }
+		    if (r.error) { alert(r.error); }
 		    else {
 			for(var i=0; i<accessionsToAdd.length; i++){
 			    infoToAdd.push({
@@ -334,15 +334,19 @@ jQuery(document).ready(function ($) {
 			    });
 			    speciesNames.push(speciesName);
 			}
-			add_accessions(infoToAdd, speciesNames)
-			$('#review_absent_dialog').modal("hide");
 		    }
+		    add_accessions(infoToAdd, speciesNames)
+		    $('#review_absent_dialog').modal("hide");
+
 		},
 		function(r) {
 		    alert('ERROR! Try again later.');
 		}
 	    );
 	}
+
+	add_accessions(infoToAdd, speciesNames)
+	$('#review_absent_dialog').modal("hide");
 
         //window.location.href='/breeders/accessions';
     });
@@ -556,12 +560,12 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
             jQuery('#review_fuzzy_matches_dialog').modal('show');
         } else {
             jQuery('#review_fuzzy_matches_dialog').modal('hide');
-	    alert(JSON.stringify(verifyResponse.absent));
-	    alert(JSON.stringify(infoToAdd));
+	    //alert(JSON.stringify(verifyResponse.absent));
+	    //alert(JSON.stringify(infoToAdd));
             if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
                 populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
             } else {
-                alert('All accessions in your list already exist in the database. 3');
+                alert('All accessions in your list already exist in the database. (3)');
             }
         }
     });
