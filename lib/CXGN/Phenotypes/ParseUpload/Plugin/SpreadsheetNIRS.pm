@@ -58,7 +58,6 @@ sub validate {
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
-        my $windows_csv = Text::CSV->new ({ binary => 1, auto_diag => 1 });
         open $fh, "<", $filename;
         binmode $fh; # for Windows
         if ($csv->header($fh) && $csv->column_names) {
@@ -203,7 +202,6 @@ sub parse {
     if ($csv->parse($header_row)) {
         @header = $csv->fields();
     } else {
-        my $windows_csv = Text::CSV->new ({ binary => 1, auto_diag => 1 });
         open $fh, "<", $filename;
         binmode $fh; # for Windows
         if ($csv->header($fh) && $csv->column_names) {

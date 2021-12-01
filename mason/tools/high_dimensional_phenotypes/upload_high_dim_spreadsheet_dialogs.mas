@@ -275,7 +275,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                         <p>
                         <b>File format information</b>
                         <br>
-                        <a id="high_dim_data_spreadsheet_format_info">Spreadsheet Format</a>
+                        <a id="high_dim_data_spreadsheet_format_info">High Dimensional Phenotype Data Spreadsheet Format</a>
                         </p>
                     </&>
                     </center>
@@ -685,32 +685,6 @@ jQuery(document).ready(function() {
 
     jQuery('#high_dim_data_upload_new_protocol').click(function(){
         jQuery('#high_dim_data_upload_protocol_div').show();
-
-        if (high_dim_data_upload_type == 'NIRS') {
-            jQuery('#high_dim_data_upload_nirs_protocol_div').show();
-            jQuery('#high_dim_data_upload_transcriptomics_protocol_div').hide();
-            jQuery('#high_dim_data_upload_metabolomics_protocol_div').hide();
-
-            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').hide();
-            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').hide();
-        }
-        else if (high_dim_data_upload_type == 'Transcriptomics') {
-            jQuery('#high_dim_data_upload_nirs_protocol_div').hide();
-            jQuery('#high_dim_data_upload_transcriptomics_protocol_div').show();
-            jQuery('#high_dim_data_upload_metabolomics_protocol_div').hide();
-
-            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').show();
-            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').hide();
-        }
-        else if (high_dim_data_upload_type == 'Metabolomics') {
-            jQuery('#high_dim_data_upload_nirs_protocol_div').hide();
-            jQuery('#high_dim_data_upload_transcriptomics_protocol_div').hide();
-            jQuery('#high_dim_data_upload_metabolomics_protocol_div').show();
-
-            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').hide();
-            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').show();
-        }
-
     });
 
     jQuery("#high_dim_data_spreadsheet_format_info").click( function () {
@@ -742,6 +716,31 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#high_dim_data_upload_data_protocol_step').click(function(){
+
+        if (high_dim_data_upload_type == 'NIRS') {
+            jQuery('#high_dim_data_upload_nirs_protocol_div').show();
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_div').hide();
+
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').hide();
+        }
+        else if (high_dim_data_upload_type == 'Transcriptomics') {
+            jQuery('#high_dim_data_upload_nirs_protocol_div').hide();
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_div').show();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_div').hide();
+
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').show();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').hide();
+        }
+        else if (high_dim_data_upload_type == 'Metabolomics') {
+            jQuery('#high_dim_data_upload_nirs_protocol_div').hide();
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_div').show();
+
+            jQuery('#high_dim_data_upload_transcriptomics_protocol_template_div').hide();
+            jQuery('#high_dim_data_upload_metabolomics_protocol_template_div').show();
+        }
 
         var selected = [];
         jQuery('input[name="high_dim_data_upload_protocol_id"]:checked').each(function() {
