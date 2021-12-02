@@ -221,11 +221,15 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     }
 
     my $temp_file_name;
+    my $download_file_name;
     my $dir = $c->tempfiles_subdir('download');
+
     if ($data_level eq 'metadata'){
         $temp_file_name = "metadata" . "XXXX";
+        $download_file_name = "metadata.$format";
     }else{
         $temp_file_name = "phenotype" . "XXXX";
+        $download_file_name = "phenotype.$format";
     }
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";
@@ -259,9 +263,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
     my $error = $download->download();
 
-    my $file_name = "phenotype.$format";
     $c->res->content_type('Application/'.$format);
-    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$download_file_name"]);
 
     my $output = read_file($tempfile);  ## works for xls format
 
@@ -397,7 +400,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         my $temp_file_name = $time_stamp . "$what" . "XXXX";
         my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
         my $tempfile = $c->config->{basepath}."/".$rel_file;
-
         if ($format eq ".csv") {
 
             #build csv with column names

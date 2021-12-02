@@ -8,6 +8,7 @@ $programs
 $locations
 $crossing_trials
 $maintenance_enabled => undef
+$user_role => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -18,7 +19,7 @@ $maintenance_enabled => undef
 }
 </style>
 
-  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Crosses' ] &>
+  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Crosses', 'jqueryui' ] &>
 
 <&| /page/info_section.mas, title=>"About Seedlots",  collapsible => 1, collapsed=>1 &>
     <div class="well well-sm">
@@ -174,7 +175,8 @@ $maintenance_enabled => undef
 <& /breeders_toolbox/add_cross_dialogs.mas, programs=>$programs, locations=>$locations, crossing_trials=>$crossing_trials &>
 <& /breeders_toolbox/add_crossing_trial_dialogs.mas, programs=>$programs, locations=>$locations &>
 <& /breeders_toolbox/create_seedlots_from_trial_dialogs.mas &>
-
+<& /breeders_toolbox/delete_seedlots.mas, user_role => $user_role &>
+    
 <script>
 jQuery(document).ready(function(){
     jQuery("#search_seedlot_form_seedlot_name").autocomplete({

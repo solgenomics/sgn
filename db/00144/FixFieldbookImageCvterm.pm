@@ -48,7 +48,6 @@ has '+prereq' => (
         [],
     },
 
-);
 
 sub patch {
     my $self=shift;

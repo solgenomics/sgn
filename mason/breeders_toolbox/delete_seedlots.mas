@@ -1,0 +1,125 @@
+
+<%args>
+$user_role => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.List' ] &>
+  
+
+  <&| /page/info_section.mas, title=>"Delete seedlots using a list",  collapsible => 1, collapsed=>1 &>
+    
+
+% if ($user_role eq "curator" ) { 
+    <div style="margin-left:20px">
+      
+      
+      <p><strong>Select a list of type "seedlot" to delete from the database</strong></p>
+      Note:
+      <ul><li>Only seedlots that are not associated with crosses or trials can be deleted.</li>
+	<li>Deleting seedlots cannot be undone.</li>
+      </ul>
+      <form class="form-horizontal" role="form" method="post" id="delete_seedlots_form" name="delete_seedlots_form">
+        <div class="form-group">
+	  <div style="width:300px;margin-left:40px;margin-top:30px;" id="seedlots_to_delete_html">
+	  </div>
+	</div>
+      </form>
+      <br /><br />
+      <button type="button" class="btn btn-primary" name="delete_seedlots_submit" id="delete_seedlots_submit">Delete Seedlots</button>
+    </div>
+</div>
+
+%}
+% else {
+
+You need to be logged in or you do not have sufficient privileges to delete seedlots using lists.
+
+%}
+</&>
+
+<div class="modal fade" id="delete_seedlots_modal" name="delete_seedlots_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Seedlot Deletion Verify</h4>
+            </div>
+            <div class="modal-body">
+              <div class="container-fluid">
+		<div id="seedlot_deletion_verify">
+                </div>
+	      </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_seedlots_confirm" id="delete_seedlots_confirm">Delete green elements</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(window).ready( function() { 
+    jQuery("#seedlots_to_delete_html").append(list.listSelect("seedlots_to_delete_html_select", [ 'seedlots' ], 'None', undefined, undefined));
+});
+
+jQuery('#delete_seedlots_submit').click( function() {
+   var list_id = jQuery('#seedlots_to_delete_html_select_list_select').val();
+   if (list_id === "") { alert("Please select a list "+list_id); return; }
+   verify_seedlot_deletion(list_id).then(function(r) { display_seedlot_deletion_info(r) }, function(r) { alert("ERROR!")});
+});
+
+jQuery('#delete_seedlots_confirm').click( function() {
+    var list_id = jQuery('#seedlots_to_delete_html_select_list_select').val();
+    if (list_id) {
+        delete_seedlots(list_id).then( function(r) { alert(r.delete_count+" elements have been deleted"); }, function(r) { alert('An error occurred'); });
+    }
+});
+
+function verify_seedlot_deletion(list_id) {
+
+   return jQuery.ajax( {
+        url: '/ajax/seedlots/verify_delete_by_list?list_id='+list_id,
+    });
+}
+
+function delete_seedlots(list_id) {
+   return jQuery.ajax( {
+       url: '/ajax/seedlots/confirm_delete_by_list?list_id='+list_id,
+   });
+}
+
+function display_seedlot_deletion_info(r) {
+    jQuery('#delete_seedlots_modal').modal('show');
+
+    var ok = r.ok;
+    var errors = r.errors;
+
+    var html = "";
+
+    for (const n of ok) {
+        html += "<li class='list-group-item list-group-item-success'>"+n+"</li>";
+    }
+
+    for (const n of errors) {
+       html += "<li class='list-group-item list-group-item-danger' >"+n[0]+" ("+n[1]+")</li>";
+    }
+
+    html += "</ul>";
+
+    if (ok.length === 0) {
+        html += '<br /><img src="/static/documents/img/info_icon.png"> No items can be deleted.';
+        jQuery('#delete_seedlots_confirm').prop('disabled', true);
+    }
+    else {
+        jQuery('#delete_seedlots_confirm').prop('disabled', false);
+    }
+
+    jQuery('#seedlot_deletion_verify').html(html);
+
+}
+
+</script>
+

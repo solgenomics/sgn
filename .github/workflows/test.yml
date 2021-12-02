@@ -8,7 +8,7 @@ jobs:
   test_breedbase:
     runs-on: ubuntu-latest
     container:
-      image: breedbase/breedbase:v0.33
+      image: breedbase/breedbase:v0.36
       env:
         HOME: /root
         MODE: 'TESTING'
@@ -22,7 +22,7 @@ jobs:
 
     services:
       breedbase_db:
-        image: postgres:12.8
+        image: postgres:12.9
         env:
           POSTGRES_PASSWORD: postgres
         # Set health checks to wait until postgres has started
@@ -41,7 +41,7 @@ jobs:
         uses: actions/checkout@v2
     
       - name: Run unit tests
-        run: prove --recurse t/unit
+        run: prove --recurse t/unit 2>/dev/null
       
       - name: Load/dump fixture database and build node modules
         run: |
@@ -55,10 +55,10 @@ jobs:
       - name: Run unit_fixture tests
         # need entrypoint.sh to start slurm
         # --nopatch to skip running fixture and db patches (already done in previous step)
-        run: /entrypoint.sh --nopatch t/unit_fixture
+        run: /entrypoint.sh --nopatch t/unit_fixture 2>/dev/null
 
       - name: Run unit_mech tests
-        run: /entrypoint.sh --nopatch t/unit_mech
+        run: /entrypoint.sh --nopatch t/unit_mech 2>/dev/null
 
 #     - name: Run selenium tests
-#       run: /entrypoint.sh --nopatch t/selenium2
+#       run: /entrypoint.sh --nopatch t/selenium2 2>/dev/null
