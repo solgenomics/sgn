@@ -46,7 +46,7 @@ $goto_url => '/'
                         <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
 
                         <div>
-                            <button class="btn btn-default" id="new_user_modal_show" style="float:left" tabindex="6">New User</a>
+                            <button class="btn btn-default" id="new_user_modal_show" style="float:left" tabindex="6">New User</button>
                             <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right" tabindex="3">Login</button>
                         </div>
                     </div>
@@ -299,6 +299,13 @@ jQuery(document).ready( function() {
         });
     });
 
+    jQuery("#username, #password").keydown(function(event) {
+        var key = event.keyCode ? event.keyCode : event.which;
+        if ( key === 13 ) {
+            jQuery("#login_form").submit();
+            event.preventDefault();
+        }
+    });
     jQuery('#login_form').submit( function(event) { 
         event.preventDefault();
         var form_data = jQuery('#login_form').serialize();
