@@ -379,12 +379,12 @@ $dataset_id => undef
             </tr>
             <tr>
                 <td>
-                    <label class="col-sm-1 control-label">Use trait synonyms: </label>
-                    <div class="col-sm-1" >
-                         <input class="wizard-download-phenotypes-use-synonyms" type="checkbox" checked data-toggle="toggle">
+                    <div class="form-group">
+                        <label class="control-label">Use trait synonyms:  </label>
+                            <input class="wizard-download-phenotypes-use-synonyms" type="checkbox" checked data-toggle="toggle">
                     </div>
                 </td>
-              <td colspan="2" style="border-top: none; padding-top: 0">
+              <td style="border-top: none; padding-top: 0">
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-phenotypes-outliers" type="checkbox">
