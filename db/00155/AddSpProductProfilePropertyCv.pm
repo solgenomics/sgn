@@ -3,17 +3,17 @@
 
 =head1 NAME
 
- AddSpProductProfilePropertyCvAndCvterm
+ AddSpProductProfilePropertyCv
 
 =head1 SYNOPSIS
 
-mx-run AddProductProfilePropertyCvAndCvterm [options] -H hostname -D dbname -u username [-F]
+mx-run AddProductProfilePropertyCv[options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds sp_product_profile_property cv and product_profile_json cvterm
+This patch adds sp_product_profile_property cv and update product_profile_json cvterm
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddProductProfilePropertyCvAndCvterm;
+package AddProductProfilePropertyCv;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -39,11 +39,11 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'sp_product_profile_property' cv and 'product_profile_json' sp_product_profile_property cvterm
+This patch adds the 'sp_product_profile_property' cv and updates 'product_profile_json' cvterm
 
 has '+prereq' => (
 	default => sub {
-        [],
+        ['AddProductProfileCvterm'],
     },
 
 );
@@ -56,6 +56,7 @@ sub patch {
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
     print STDOUT "\nExecuting the SQL commands.\n";
+
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
     my $cv_rs = $schema->resultset("Cv::Cv");
     my $cvterm_rs = $schema->resultset("Cv::Cvterm");
@@ -63,20 +64,13 @@ sub patch {
     print STDERR "CREATING CV...\n";
     my $cv = $cv_rs->find_or_create({ name => 'sp_product_profile_property' });
 
-    print STDERR "ADDING CVTERMS...\n";
-	my $terms = {
-	    'sp_product_profile_property' => [
-            'product_profile_json'],
-	};
+    print STDERR "UPDATING CVTERM...\n";
 
-	foreach my $t (keys %$terms){
-		foreach (@{$terms->{$t}}){
-			$schema->resultset("Cv::Cvterm")->create_with({
-				name => $_,
-				cv => $t
-			});
-		}
-	}
+	my $product_profile_json_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'product_profile_json', 'project_property');
+    my $product_profile_cv = $schema->resultset("Cv::Cv")->find({ name => 'sp_product_profile_property' });
+
+    $product_profile_json_cvterm->update( { cv_id => $product_profile_cv->cv_id  } );
+
 
     print "You're done!\n";
 }
