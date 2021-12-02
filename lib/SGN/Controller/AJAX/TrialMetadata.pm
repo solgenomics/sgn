@@ -3642,7 +3642,7 @@ sub trial_correlate_traits : Chained('trial') PathPart('correlate_traits') Args(
     my ($stats_tempfile_fh, $stats_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_tempfile_fh, $stats_out_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
-    open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+    open(my $F, ">  :encoding(UTF-8)", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
         print $F $header_string."\n";
         foreach my $s (@sorted_obs_units) {
             my @line = ();
@@ -3668,7 +3668,7 @@ sub trial_correlate_traits : Chained('trial') PathPart('correlate_traits') Args(
 
     my $csv = Text::CSV->new({ sep_char => "\t" });
     my @result;
-    open(my $fh, '<', $stats_out_tempfile)
+    open(my $fh, '<  :encoding(UTF-8)', $stats_out_tempfile)
         or die "Could not open file '$stats_out_tempfile' $!";
 
         print STDERR "Opened $stats_out_tempfile\n";
@@ -3820,7 +3820,7 @@ sub trial_plot_time_series_accessions : Chained('trial') PathPart('plot_time_ser
     $pheno_data_tempfile_string .= '.csv';
     my $stats_tempfile = $c->config->{basepath}."/".$pheno_data_tempfile_string;
 
-    open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+    open(my $F, "> :encoding(UTF-8)", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
         print $F $header_string."\n";
         foreach my $s (@sorted_germplasm_names) {
             foreach my $t (@$trait_ids) {
@@ -4159,7 +4159,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
     my %geno_rank_counter;
     my %geno_rank_seen_scores;
     my @marker_names;
-    open my $geno_fh, "<&", $file_handle or die "Can't open output file: $!";
+    open my $geno_fh, "<& :encoding(UTF-8)", $file_handle or die "Can't open output file: $!";
         my $header = <$geno_fh>;
         chomp($header);
         # print STDERR Dumper $header;
@@ -4199,7 +4199,7 @@ sub trial_genotype_comparison : Chained('trial') PathPart('genotype_comparison')
 
     my $header_string = 'Rank,Genotype,Marker,Count';
 
-    open(my $F, ">", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
+    open(my $F, "> :encoding(UTF-8)", $stats_tempfile) || die "Can't open file ".$stats_tempfile;
         print $F $header_string."\n";
         while (my ($rank, $pos_o) = each %geno_rank_counter) {
             while (my ($position, $score_o) = each %$pos_o) {

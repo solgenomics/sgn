@@ -62,7 +62,7 @@ sub download {
         push @trial_ids, (@{$self->trial_list});
     }
 
-    open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
+    open(my $F, "> :encoding(UTF8)", $self->filename()) || die "Can't open file ".$self->filename();
 
     my $it = 0;
     foreach my $trial_id (@trial_ids) {

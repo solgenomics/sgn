@@ -36,6 +36,7 @@ use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use POSIX;
 use List::Util 'max';
+use utf8;
 
 with 'MooseX::Object::Pluggable';
 

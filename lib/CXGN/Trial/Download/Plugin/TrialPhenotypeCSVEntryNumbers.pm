@@ -174,7 +174,7 @@ sub download {
     # WRITE EACH ROW, WITH INSERTED ENTRY NUMBERS
     #
     no warnings 'uninitialized';
-    open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
+    open(my $F, "> :encoding(UTF8)", $self->filename()) || die "Can't open file ".$self->filename();
       if ($self->has_header){
           print $F "\"Date of Download: $timestamp\"\n";
           print $F "\"Search Parameters: $search_parameters\"\n";

@@ -150,7 +150,7 @@ sub download {
         $search_parameters = "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Plot List:$plot_list_text  Plant List:$plant_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text Exclude Phenotype Outlier: $exclude_phenotype_outlier";
     }
     no warnings 'uninitialized';
-    open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
+    open(my $F, "> :encoding(UTF8)", $self->filename()) || die "Can't open file ".$self->filename();
       if ($self->has_header){
           print $F "\"Date of Download: $timestamp\"\n";
           print $F "\"Search Parameters: $search_parameters\"\n";

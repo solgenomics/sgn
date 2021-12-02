@@ -19,7 +19,7 @@ sub _validate_with_plugin {
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
-    open(my $fh, '<', $filename)
+    open(my $fh, '< :encoding(UTF8)', $filename)
         or die "Could not open file '$filename' $!"."<br>";
 
     if (!$fh) {
@@ -188,7 +188,7 @@ sub _parse_with_plugin {
 
     my $csv = Text::CSV->new({ sep_char => ',' });
 
-    open(my $fh, '<', $filename)
+    open(my $fh, '< :encoding(UTF8)', $filename)
         or die "Could not open file '$filename' $!";
 
     my $header_row = <$fh>;
