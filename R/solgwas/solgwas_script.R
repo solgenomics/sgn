@@ -16,7 +16,7 @@ colnames(pheno)
 #### Current script accepts genotype data with markers as rows and accessions as columns
 #### But rest of code operates on previous format which had genotype data with markers as columns and accessions as rows
 #### therefore the geno table is transposed when the A.mat function is called
-geno <- read.table(args[2], sep="\t", row.names = 1, header = TRUE)
+geno <- read.table(args[2], sep="\t", row.names = 1, header = TRUE, check.names = FALSE)
 study_trait <- args[3]
 study_trait
 figure3_file_name <- args[4]
