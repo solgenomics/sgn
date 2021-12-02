@@ -666,19 +666,24 @@ sub quick_traits_search {
     my $term = shift;
     my $schema = shift;
 
-    my $rs = $schema->resultset("Cv::Cvterm")->search( { name => { ilike => $term } });
+    my $trait_search = CXGN::Trait::Search->new({
+        bcs_schema=>$schema,
+	    is_variable=>1,
+        trait_name_list=>[$term]
+    });
+    my ($data, $records_total) = $trait_search->search();
 
-    my ($id, $name);
-    if ($rs->count() > 0) {
-	my $row = $rs->next();
-	$id = $row->cvterm_id();
-	$name = $row->name();
+    if ($records_total == 0 ) {
+        return [ '', '0 traits' ];
     }
-    if ($id) {
-	return [ '/cvterm/'.$id.'/view', '1 trait: '.$name ];
+    elsif ($records_total == 1) {
+        my $t = ${$data}[0];
+        my $id = $t->{trait_id};
+        my $name = $t->{trait_name};
+        return [ '/cvterm/'.$id.'/view', '1 trait: '.$name ];
     }
-    else {	
-	return [ '', '0 cvterms' ];
+    else {
+        return [ "/search/traits?name=$term", "$records_total traits" ];
     }
 }
 
