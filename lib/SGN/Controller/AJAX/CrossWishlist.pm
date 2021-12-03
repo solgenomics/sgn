@@ -41,6 +41,7 @@ use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
 use CXGN::Cross;
+use CXGN::List;
 use JSON;
 use Spreadsheet::ParseExcel;
 use Tie::UrlEncoder; our(%urlencode);
