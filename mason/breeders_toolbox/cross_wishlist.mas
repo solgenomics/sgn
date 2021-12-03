@@ -406,7 +406,6 @@ jQuery(document).ready(function($) {
             female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
             male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
         }
-
         jQuery.ajax ({
             url : '/ajax/odk/get_crossing_available_forms',
             beforeSend: function() {
@@ -474,7 +473,18 @@ jQuery(document).ready(function($) {
         if (jQuery('#female_accession_list_div_list_select').val() != '' && jQuery('#male_accession_list_div_list_select').val() != '' ) {
             var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
             var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
-            draw_cross_grid(female_accessions, male_accessions);
+            var female_accession_list_id = $('#female_accession_list_div_list_select').val();
+            var male_accession_list_id = $('#male_accession_list_div_list_select').val();
+
+            if (! lo.legacy_validate(female_accession_list_id, 'accessions', true)) {
+                alert('The female accession list contains elements that are not accessions.');
+                return;
+            } else if (! lo.legacy_validate(male_accession_list_id, 'accessions', true)) {
+                alert('The male accession list contains elements that are not accessions.');
+                return;
+            } else {
+                draw_cross_grid(female_accessions, male_accessions);
+            }
         }
     });
 
