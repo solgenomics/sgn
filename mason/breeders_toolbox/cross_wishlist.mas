@@ -486,8 +486,7 @@ jQuery(document).ready(function($) {
                 return;
             }
 
-            check_trial_accessions(female_trial_id, female_accession_list_id);
-            draw_cross_grid(female_accessions, male_accessions);
+            check_trial_accessions(female_trial_id, female_accession_list_id, female_accessions, male_accessions);
         }
     });
 
@@ -955,33 +954,36 @@ jQuery(document).ready(function($) {
         }
     });
 
-});
-
-function check_trial_accessions(female_trial_id, female_accession_list_id) {
-    jQuery.ajax({
-        url: '/ajax/cross/check_wishlist_accessions',
-        method: 'POST',
-        data: {
-            'female_trial_id': female_trial_id,
-            'female_list_id': female_accession_list_id
-        },
-        beforeSend: function() {
-        jQuery('#working_modal').modal('show');
-        },
-        success: function(response) {
-            //console.log(response);
-            jQuery('#working_modal').modal('hide');
-            if (response.error_string){
-                alert(response.error_string);
+    function check_trial_accessions(female_trial_id, female_accession_list_id, female_accessions, male_accessions) {
+        jQuery.ajax({
+            url: '/ajax/cross/check_wishlist_accessions',
+            method: 'POST',
+            data: {
+                'female_trial_id': female_trial_id,
+                'female_list_id': female_accession_list_id
+            },
+            beforeSend: function() {
+            jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
+                if (response.error_string){
+                    alert(response.error_string);
+                } else {
+                    draw_cross_grid(female_accessions, male_accessions);
+                }
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert("An error occurred checking accession list");
             }
-        },
-        error: function(response) {
-            jQuery('#working_modal').modal('hide');
-            alert("An error occurred checking accession list");
-        }
-    });
+        });
 
-}
+    }
+
+
+});
 
 
 </script>
