@@ -1102,6 +1102,39 @@ sub create_wishlist_by_uploading_POST : Args(0) {
 }
 
 
+sub check_wishlist_accessions : Path('/ajax/cross/check_wishlist_accessions') : ActionClass('REST') { }
+
+sub check_wishlist_accessions_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+    my $female_trial_id = $c->req->param('female_trial_id');
+    my $female_list_id = $c->req->param('female_list_id');
+
+    my $female_list = CXGN::List->new( { dbh=>$dbh, list_id=>$female_list_id });
+    my $wishlist_female_accessions = $female_list->elements();
+
+    my $female_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $female_trial_id, experiment_type=>'field_layout' });
+    my $design_layout = $female_trial_layout->get_design();
+    my %accessions_in_trial;
+    foreach my $hash_ref (values %$design_layout) {
+        my %plot_info_hash = %$hash_ref;
+        my $accession_name = $plot_info_hash{'accession_name'};
+        $accessions_in_trial{$accession_name}++;
+    }
+
+    my @accessions_not_in_trial = grep {not $accessions_in_trial{$_}} @$wishlist_female_accessions;
+    print STDERR "ACCESSIONS NOT IN TRIAL =".Dumper(\@accessions_not_in_trial)."\n";
+
+    if (scalar(@accessions_not_in_trial) > 0){
+        my $error = "The following female accessions are not in the provided female trial: ".join(',',@accessions_not_in_trial);
+        $c->stash->{rest} = {error_string => $error };
+    } else {
+        $c->stash->{rest}->{success => 1}
+    }
+}
+
+
 ###
 1;#
 ###
