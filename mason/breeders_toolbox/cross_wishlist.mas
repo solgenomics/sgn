@@ -486,7 +486,7 @@ jQuery(document).ready(function($) {
                 return;
             }
 
-            check_trial_accessions(female_trial_id, female_accession_list_id)
+            check_trial_accessions(female_trial_id, female_accession_list_id);
             draw_cross_grid(female_accessions, male_accessions);
         }
     });
