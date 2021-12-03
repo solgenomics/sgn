@@ -219,6 +219,14 @@ sub get_db_stats {
     # count locations
     $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdGeolocation')->search( {} );
     $stats->{locations} = $rs->count();
+
+    # count nd_protocols
+    $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdProtocol')->search( {} );
+    $stats->{protocols} = $rs->count();
+
+    # count nd_experiments
+    $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search( {} );
+    $stats->{nd_experiments} = $rs->count();
     
     print STDERR "STATS : ".Dumper($stats);
 
