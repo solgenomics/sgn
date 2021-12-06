@@ -17,8 +17,8 @@
 
 #Get Arguments
 args = commandArgs(trailingOnly=TRUE)
-if (length(args)!=2) {
-  stop('Two Arguments are required.')
+if (length(args) < 3) {
+  stop('Two or more arguments are required.')
 }
 phenotypeFile = args[1]
 genotypeFile = args[2]
@@ -32,7 +32,7 @@ weights = args[4]
 library(sommer)
 library(AGHmatrix)
 library(VariantAnnotation) # Bioconductor package
-Rcpp::sourceCpp("../QuantGenResources/CalcCrossMeans.cpp") # this is called CalcCrossMean.cpp on Github
+Rcpp::sourceCpp("/home/production/cxgn/QuantGenResources/CalcCrossMeans.cpp") # this is called CalcCrossMean.cpp on Github
 
 
 
