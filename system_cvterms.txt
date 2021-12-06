@@ -59,7 +59,8 @@ list_types	trials
 list_types	unigene_ids
 list_types	vector_constructs				00049
 list_types	years
-list_types  family_names            00111
+list_types  family_names  00111
+list_types  catalog_items  tt15  00143
 local	date
 local	months after planting
 local	operator
@@ -161,7 +162,6 @@ project_property	drone_run_geoparam_coordinates_type	When GeoTIFF orthophotos ar
 project_property	drone_run_geoparam_coordinates	When GeoTIFF orthophotos are saved, this saves the geocoords	04/22/2021	nm529	00142
 project_property	project_sp_person_id	For saving results in analysis trials	06/04/2020	lam87nm529	00119
 project_property	analysis_metadata_json	For saving results in analysis trials	06/04/2020	lam87nm529	00119
-project_property    product_profile_json    00131
 project_property	sampling_facility	For saving the sampling facility of a sampling trial	11/25/2020	nm529	00132
 project_property	sampling_trial_sample_type	For saving the sample type of a sampling trial	11/25/2020	nm529	00132
 project_relationship	breeding_program_trial_relationship				00051
@@ -249,6 +249,7 @@ stock_property	imaging_event_vehicle_json	For saving imaging event vehicle infor
 stock_property	released_variety_name		For providing the official released name of a variety	   11/18/2020	nm249		00132
 stock_property  cross_transaction_json  For storing crossing activities, then the summary of these data is stored as crossing_metadata_json  11/30/2020  tt15  00132
 stock_property  cross_additional_info  For storing additional parent info for each cross. 2/24/2020  tt15  00138
+stock_property  stock_catalog_json  tt15  00143
 stock_relationship	female_parent				00052
 stock_relationship	male_parent				00052
 stock_relationship	member_of				00052
@@ -783,3 +784,6 @@ project_md_image	image_analysis_necrosis_solomon_nsumba	Image analysis necrosis 
 project_md_image	image_analysis_white_fly_count_solomon_nsumba	Image analysis white fly count as implemented in Solomon's service	08/19/2019	nm529	00114
 project_md_image	standard_process_interactive_match_temporary_drone_imagery	Standard interactive process for drone imagery showing the match of captures	07/06/2020	nm529	00126
 project_md_image	standard_process_interactive_align_temporary_drone_imagery	Standard interactive process for drone imagery showing the alignment of captures	07/06/2020	nm529	00126
+sp_order_property  order_batch_json  tt15  00143
+sp_order_property  order_progress_json  tt15  00143  
+sp_product_profile_property  product_profile_json  tt15  00155

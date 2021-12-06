@@ -7,7 +7,7 @@
 
 =head1 SYNOPSIS
 
-mx-run AddProductProfilePropertyCv[options] -H hostname -D dbname -u username [-F]
+mx-run AddSpProductProfilePropertyCv[options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -30,11 +30,12 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddProductProfilePropertyCv;
+package AddSpProductProfilePropertyCv;
 
 use Moose;
 use Bio::Chado::Schema;
 use Try::Tiny;
+use SGN::Model::Cvterm;
 extends 'CXGN::Metadata::Dbpatch';
 
 
