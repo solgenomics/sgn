@@ -30,7 +30,8 @@ override('retrieve_genotypes',
 		my $cluster_host_config = shift;
 		my $web_cluster_queue_config = shift;
 		my $basepath_config	= shift;
-		my $forbid_cache = shift;
+	    my $forbid_cache = shift;
+	    my $format = shift;
 
 		my $accessions_list_ref = $self->retrieve_accessions();
 		my $genotypeprop_hash_select = shift || ['DS'];
@@ -127,13 +128,18 @@ override('retrieve_genotypes',
 
 #	     my $genotype_json = JSON::Any->encode($genotypes);
 	    #	     write_file($file, $genotype_json);
-	    my $filehandle =  $genotypes_search->get_cached_file_dosage_matrix(@required_config);
-	    
+	    #my $filehandle =  $genotypes_search->get_cached_file_dosage_matrix(@required_config);
+
+	    my $filehandle = $genotypes_search->get_cached_file_VCF(@required_config);
+	    print STDERR "Checking if a file was requested...\n";
 	    if ($file) {
-		open(my $F, ">", $self->file()) || die "Can't open file $file";
+		print STDERR "Generating the file $file ...\n";
+		open(my $F, ">", $file) || die "Can't open file $file";
 		while(<$filehandle>) {
 		    print $F $_;
 		}
+		print STDERR "Done.\n";
+		close($F);
 	    }
 
 	    return $filehandle

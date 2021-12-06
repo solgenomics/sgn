@@ -177,9 +177,12 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     print STDERR "GENOFILE PATH = $geno_filepath\n";
     print STDERR "cache file path = ".$c->config->{cache_file_path}." CLUSTER SHARED TEMPDIR: ".$c->config->{cluster_shared_tempdir}."\n";
-    
-    my $genotype_data_ref = $ds->retrieve_genotypes($protocol_id, $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
 
+    
+    my $genotype_data_fh = $ds->retrieve_genotypes($protocol_id, $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
+
+    
+    
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
 

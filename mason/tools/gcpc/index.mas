@@ -77,7 +77,10 @@
 
 
       <table id="gcpc_output">
-	<tr><th>Cross #</th><th>Accession 1</th><th>Accession2</th></tr>
+	<thead>
+	  <tr><th>Cross #</th><th>Accession 1</th><th>Accession2</th></tr>
+	</thead>
+
       </table>
 
   <center>
@@ -88,9 +91,7 @@
     </div>
   </center>
   <br>
-  <center>
-    <div id="gcpc_output"></div>
-  </center>
+
   <div id="Overview_output"></div>
   <div id="Coverage_output"></div>
   <div id="Table_output" style="min-width:900px;"></div>
@@ -208,23 +209,33 @@ jQuery(document).ready(function() {
     };
   });
 
-
-  jQuery('#runGCPC').click( function () {
-    if (!jQuery('#sin_list_list_select').val()) {
-      alert("Please select a selection index.")
-      $('#gcpc_files').empty();
-    } else {
-      $('#gcpc_files').empty();
-      if ($('#sin_list_list_select').val() != ""){
-        var dataset_id = get_dataset_id();
-        var sin_list_id = $('#sin_list_list_select').val();
+   //if (!jQuery('#sin_list_list_select').val()) {
+    //  alert("Please select a selection index.")
+    //  $('#gcpc_files').empty();
+    //} else {
+			      //if ($('#sin_list_list_select').val() != ""){
         // var method_id = $('#select_method').val();
-	jQuery('#gcpc_output').DataTable( function() { 
-          url: '/ajax/gcpc/generate_results&dataset_id='+dataset_id+'&amp;sin_list_id='+sin_list_id+'&amp;method_id='+method_id
+
+			      
+  jQuery('#runGCPC').click( function () {
+      $('#gcpc_files').empty();
+
+			      var sin_list_id = jQuery('#sin_list_list_select option:selected').val();
+			      alert("SIN LIST ID "+sin_list_id);
+      if (! sin_list_id || sin_list_id == "") {
+          alert("Please select a selection index.")
+          $('#gcpc_files').empty();
+          return;
+      } 
+        var dataset_id = get_dataset_id();
+        var method_id = 1;
+
+        jQuery('#gcpc_output').DataTable( {
+             timeout: 6000000,
+	     ajax: '/ajax/gcpc/generate_results?dataset_id='+dataset_id+'&amp;sin_list_id='+sin_list_id+'&amp;method_id='+method_id
         });
-      }
-    };
-  });
+    });
+  
 
 function get_dataset_id() {
       var selected_datasets = [];
