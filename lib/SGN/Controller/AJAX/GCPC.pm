@@ -154,10 +154,10 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 	make_R_trait_name($t);
     }
 
-    print $CLEAN join("\t", @other_headers, @file_traits);
+    print $CLEAN join("\t", @other_headers, @file_traits)."\n";
 
     while(<$PF>) {
-	print $CLEAN, $_;
+	print $CLEAN $_;
     }
 
     close($CLEAN);
