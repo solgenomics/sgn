@@ -48,6 +48,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $draw = $params->{draw};
     $draw =~ s/\D//g; # cast to int
 
+
     my @accessions = split ',', $contents_accession;
     my @crosses = split ',', $contents_cross;
 
@@ -251,6 +252,60 @@ sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) {
         $c->stash->{rest} = { error => $error };
     }
 }
+
+sub seedlot_verify_delete_by_list :Path('/ajax/seedlots/verify_delete_by_list') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $list_id = $c->req->param("list_id");
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in the delete seedlots" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+        $c->detach();
+    }
+
+    print STDERR "DELETE VERIFY USING LIST!\n";
+    
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($ok, $errors) = CXGN::Stock::Seedlot->delete_verify_using_list($schema, $phenome_schema, $list_id);
+
+    $c->stash->{rest} = { errors => \@$errors, ok => \@$ok };
+
+}
+
+sub seedlot_confirm_delete_by_list :Path('/ajax/seedlots/confirm_delete_by_list') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $list_id = $c->req->param("list_id");
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in the delete seedlots" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
+        $c->detach();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($total_count, $delete_count, $errors) = CXGN::Stock::Seedlot->delete_using_list($schema, $phenome_schema, $list_id);
+
+    if (@$errors) { 
+	$c->stash->{rest} = { error => join("\n", @$errors), total_count => $total_count, delete_count => $delete_count }
+    }
+    else {
+	$c->stash->{rest} = { success => 1, total_count => $total_count, delete_count => $delete_count };
+    }
+}
+
+
 
 sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $self = shift;
