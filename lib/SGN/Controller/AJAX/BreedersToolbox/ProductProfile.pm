@@ -397,14 +397,15 @@ sub get_product_profiles :Path('/ajax/product_profile/get_product_profiles') Arg
 sub get_profile_details :Path('/ajax/product_profile/get_profile_details') :Args(1) {
     my $self = shift;
     my $c = shift;
-    my $profile_id = shift;
+    my $product_profile_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
 
-    my $profile_json_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'product_profile_json', 'project_property')->cvterm_id();
-    my $profile_rs = $schema->resultset("Project::Projectprop")->search({ projectprop_id => $profile_id, type_id => $profile_json_type_id });
+    my $profile_json_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'product_profile_json', 'sp_product_profile_property')->cvterm_id();
+    my $product_profileprop_rs = $people_schema->resultset('SpProductProfileprop')->search( {sp_product_profile_id => $product_profile_id, type_id => $profile_json_type_id } );
 
-    my $profile_row = $profile_rs->next();
-    my $profile_detail_string = $profile_row->value();
+    my $profileprop_row = $product_profileprop_rs->next();
+    my $profile_detail_string = $profileprop_row->value();
 
     my $profile_detail_hash = decode_json $profile_detail_string;
     my $trait_info_string = $profile_detail_hash->{'product_profile_details'};

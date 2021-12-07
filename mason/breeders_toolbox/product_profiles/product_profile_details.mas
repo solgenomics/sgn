@@ -39,13 +39,12 @@ $profile_name
 jQuery(document).ready(function () {
 
     jQuery('#profile_detail_table').DataTable( {
-        'ajax': '/ajax/breeders/program/profile_detail/'+ <% $profile_id %>,
+        'ajax': '/ajax/product_profile/get_profile_details/'+ <% $profile_id %>,
         'paging' : false,
         'searching' : false,
 
     });
 
 });
-
 
 </script>
