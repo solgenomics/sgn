@@ -364,7 +364,7 @@ sub get_product_profiles :Path('/ajax/product_profile/get_product_profiles') Arg
         my @profile_info = @$profile;
         my $profile_id = $profile_info[0];
         my $profile_name = $profile_info[1];
-        my $profile_name_link = qq{<a href = "/profile/$profile_id">$profile_name</a>};
+        my $profile_name_link = qq{<a href = "/breeders/product_profile_details/$profile_id">$profile_name</a>};
         my $profile_scope = $profile_info[2];
         my $profile_details = $profile_info[3];
         my $profile_submitter = $profile_info[4];

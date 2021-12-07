@@ -68,32 +68,6 @@ sub program_info : Chained('get_breeding_program') PathPart('') Args(0) {
 }
 
 
-sub profile_detail : Path('/profile') Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $profile_id = shift;
-    my $schema = $self->schema;
-    my $profile_json_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'product_profile_json', 'project_property')->cvterm_id();
-    my $profile_rs = $schema->resultset("Project::Projectprop")->search({ projectprop_id => $profile_id, type_id => $profile_json_type_id });
-
-    if (!$profile_rs) {
-        $c->stash->{message} = 'The requested profile does not exist.';
-    }
-
-    my $profile_row = $profile_rs->next();
-    my $profile_detail_string = $profile_row->value();
-
-    my $profile_detail_hash = decode_json $profile_detail_string;
-    my $profile_name = $profile_detail_hash->{'product_profile_name'};
-
-    $c->stash->{profile_name} = $profile_name;
-    $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
-    $c->stash->{profile_id} = $profile_id;
-    $c->stash->{template} = '/breeders_toolbox/program/profile_detail.mas';
-
-}
-
-
 
 __PACKAGE__->meta->make_immutable;
 

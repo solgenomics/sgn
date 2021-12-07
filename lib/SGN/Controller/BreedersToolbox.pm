@@ -881,4 +881,29 @@ sub manage_product_profiles : Path("/breeders/product_profiles") Args(0) {
 }
 
 
+sub product_profile_details : Path("/breeders/product_profile_details") Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $product_profile_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh;
+
+    my $product_profile_rs = $people_schema->resultset('SpProductProfile')->search( {sp_product_profile_id => $product_profile_id } );
+    if (!$product_profile_rs) {
+        $c->stash->{message} = 'The requested product profile does not exist.';
+    }
+
+    my $product_profile_row = $product_profile_rs->next();
+    my $product_profile_name = $product_profile_row->name();
+
+    $c->stash->{profile_name} = $product_profile_name;
+    $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
+    $c->stash->{profile_id} = $product_profile_id;
+    $c->stash->{template} = '/breeders_toolbox/product_profiles/product_profile_details.mas';
+
+}
+
+
+
 1;

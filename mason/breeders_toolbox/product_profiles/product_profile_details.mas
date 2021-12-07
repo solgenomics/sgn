@@ -8,7 +8,7 @@ $profile_name
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
-<& /page/page_title.mas, title => "Profile: '$profile_name'" &>
+<& /page/page_title.mas, title => "Product Profile Name: $profile_name" &>
 
 <&| /page/info_section.mas, title => 'Details', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
