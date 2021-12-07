@@ -167,6 +167,7 @@
                 setCol(col+1);
             });
             jQuery('#dsp-help').css('display', 'block');
+            jQuery('#dsp-help-container').css('display', 'flex');
 
         }
 
@@ -258,7 +259,7 @@
         display: none;
     }
     #dsp-help-container {
-        display: flex;
+        display: none;
         align-items: center;
         margin: 5px 0 15px 0;
         width: 100%;
