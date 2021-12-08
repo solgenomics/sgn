@@ -15,7 +15,8 @@ Titima Tantikanjana <tt15@cornell.edu>
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
 
 <& /page/page_title.mas, title=>'Manage Product Profiles' &>
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Product Profiles</h4>", info_section_subtitle => 'View product profiles',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_profile_button">Upload New Product Profile</button><button class="btn btn-sm btn-default" style="margin:3px" id="download_template_button">Download Template</button>', icon_class => "glyphicon glyphicon-signal", info_section_id => "product_profile_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Segments</h4>", info_section_subtitle => 'View Segments',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_segment_button">Add New Segment</button>', icon_class => "glyphicon glyphicon-th", info_section_id => " " &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Product Profiles</h4>", info_section_subtitle => 'View product profiles',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_profile_button">Upload New Product Profile</button><button class="btn btn-sm btn-default" style="margin:3px" id="download_template_button">Download Template</button>', icon_class => " glyphicon glyphicon-list-alt", info_section_id => "product_profile_section" &>
 
 <& /breeders_toolbox/program/create_profile_template_dialog.mas &>
 <& /breeders_toolbox/program/upload_profile_dialog.mas &>
