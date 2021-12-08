@@ -132,7 +132,7 @@ jQuery(document).ready(function() {
   $('#pheno_select').attr("disabled",true).html('');
 
   jQuery("#createDataset").click(function(e) {
-    window.location = "/breeders/search/?dsp=genotyping_protocols,trials,accessions&dsr=/tools/solgwas";
+    window.location = "/breeders/search/?dsp=genotyping_protocols,trials|traits,accessions&dsr=/tools/solgwas";
   });
 
   jQuery('#dataset_select').click(function() {
