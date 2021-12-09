@@ -77,7 +77,9 @@ CREATE TABLE sgn_people.sp_product_profileprop (
     sp_product_profile_id bigint references sgn_people.sp_product_profile,
     type_id bigint references cvterm,
     value jsonb,
-    rank bigint
+    rank bigint,
+    sp_person_id bigint references sgn_people.sp_person,
+    create_date timestamp without time zone default now()
 );
 
 GRANT select,insert,update,delete ON sgn_people.sp_product_profileprop TO web_usr;
@@ -89,6 +91,7 @@ CREATE TABLE sgn_people.sp_market_segment (
     scope varchar(100),
     sp_person_id bigint references sgn_people.sp_person,
     create_date timestamp without time zone default now(),
+    modified_date timestamp without time zone default now()
 );
 
 GRANT select,insert,update,delete ON sgn_people.sp_market_segment TO web_usr;
@@ -99,7 +102,9 @@ CREATE TABLE sgn_people.sp_market_segmentprop (
     sp_market_segment_id bigint references sgn_people.sp_market_segment,
     type_id bigint references cvterm,
     value jsonb,
-    rank bigint
+    rank bigint,
+    sp_person_id bigint references sgn_people.sp_person,
+    create_date timestamp without time zone default now()
 );
 
 GRANT select,insert,update,delete ON sgn_people.sp_market_segmentprop TO web_usr;
@@ -109,7 +114,8 @@ CREATE TABLE sgn_people.sp_product_profile_project (
     sp_product_profile_project_id serial primary key,
     sp_product_profile_id bigint references sgn_people.sp_product_profile,
     project_id bigint references public.project,
-    create_date timestamp without time zone default now(),
+    sp_person_id bigint references sgn_people.sp_person,
+    create_date timestamp without time zone default now()
 );
 
 GRANT select,insert,update,delete ON sgn_people.sp_product_profile_project TO web_usr;
@@ -119,7 +125,8 @@ CREATE TABLE sgn_people.sp_product_profile_market_segment (
     sp_product_profile_market_segment_id serial primary key,
     sp_product_profile_id bigint references sgn_people.sp_product_profile,
     sp_market_segment_id bigint references sgn_people.sp_market_segment,
-    create_date timestamp without time zone default now(),
+    sp_person_id bigint references sgn_people.sp_person,
+    create_date timestamp without time zone default now()
 );
 
 GRANT select,insert,update,delete ON sgn_people.sp_product_profile_market_segment TO web_usr;
@@ -130,7 +137,8 @@ CREATE TABLE sgn_people.sp_product_profile_stage_gate (
     sp_product_profile_stage_gate_id serial primary key,
     sp_product_profile_id bigint references sgn_people.sp_product_profile,
     sp_stage_gate_id bigint references sgn_people.sp_stage_gate,
-    create_date timestamp without time zone default now(),
+    sp_person_id bigint references sgn_people.sp_person,
+    create_date timestamp without time zone default now()
 );
 
 GRANT select,insert,update,delete ON sgn_people.sp_product_profile_stage_gate TO web_usr;
