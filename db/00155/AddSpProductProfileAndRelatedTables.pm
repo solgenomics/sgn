@@ -95,7 +95,7 @@ CREATE TABLE sgn_people.sp_market_segment (
 );
 
 GRANT select,insert,update,delete ON sgn_people.sp_market_segment TO web_usr;
-GRANT USAGE ON sgn_people.sp_market_segment_sp_merket_segment_id_seq TO web_usr;
+GRANT USAGE ON sgn_people.sp_market_segment_sp_market_segment_id_seq TO web_usr;
 
 CREATE TABLE sgn_people.sp_market_segmentprop (
     sp_market_segmentprop_id serial primary key,
@@ -108,7 +108,7 @@ CREATE TABLE sgn_people.sp_market_segmentprop (
 );
 
 GRANT select,insert,update,delete ON sgn_people.sp_market_segmentprop TO web_usr;
-GRANT USAGE ON sgn_people.sp_market_segmentprop_sp_merket_segmentprop_id_seq TO web_usr;
+GRANT USAGE ON sgn_people.sp_market_segmentprop_sp_market_segmentprop_id_seq TO web_usr;
 
 CREATE TABLE sgn_people.sp_product_profile_project (
     sp_product_profile_project_id serial primary key,
@@ -133,8 +133,8 @@ GRANT select,insert,update,delete ON sgn_people.sp_product_profile_segment TO we
 GRANT USAGE ON sgn_people.sp_product_profile_segment_sp_product_profile_segment_id_seq TO web_usr;
 
 
-CREATE TABLE sgn_people.sp_product_profile_stage_gate (
-    sp_product_profile_stage_gate_id serial primary key,
+CREATE TABLE sgn_people.sp_product_profile_stage (
+    sp_product_profile_stage_id serial primary key,
     sp_product_profile_id bigint references sgn_people.sp_product_profile,
     sp_stage_gate_id bigint references sgn_people.sp_stage_gate,
     sp_person_id bigint references sgn_people.sp_person,
