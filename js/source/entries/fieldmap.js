@@ -585,7 +585,7 @@ export function init() {
                 }})
                 .on("mouseout", function(d) { 
                     d3.select(this).style('fill', !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d)).style('cursor', 'default')
-                    d3.select('#tooltip').style('opacity', 0)
+                    tooltip.style('opacity', 0)
                     plots.exit().remove();
                 }).call(cc);
 
