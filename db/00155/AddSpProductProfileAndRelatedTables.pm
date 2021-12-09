@@ -121,16 +121,16 @@ CREATE TABLE sgn_people.sp_product_profile_project (
 GRANT select,insert,update,delete ON sgn_people.sp_product_profile_project TO web_usr;
 GRANT USAGE ON sgn_people.sp_product_profile_project_sp_product_profile_project_id_seq TO web_usr;
 
-CREATE TABLE sgn_people.sp_product_profile_market_segment (
-    sp_product_profile_market_segment_id serial primary key,
+CREATE TABLE sgn_people.sp_product_profile_segment (
+    sp_product_profile_segment_id serial primary key,
     sp_product_profile_id bigint references sgn_people.sp_product_profile,
     sp_market_segment_id bigint references sgn_people.sp_market_segment,
     sp_person_id bigint references sgn_people.sp_person,
     create_date timestamp without time zone default now()
 );
 
-GRANT select,insert,update,delete ON sgn_people.sp_product_profile_market_segment TO web_usr;
-GRANT USAGE ON sgn_people.sp_product_profile_market_segment_sp_product_profile_market_segment_id_seq TO web_usr;
+GRANT select,insert,update,delete ON sgn_people.sp_product_profile_segment TO web_usr;
+GRANT USAGE ON sgn_people.sp_product_profile_segment_sp_product_profile_segment_id_seq TO web_usr;
 
 
 CREATE TABLE sgn_people.sp_product_profile_stage_gate (
@@ -141,8 +141,8 @@ CREATE TABLE sgn_people.sp_product_profile_stage_gate (
     create_date timestamp without time zone default now()
 );
 
-GRANT select,insert,update,delete ON sgn_people.sp_product_profile_stage_gate TO web_usr;
-GRANT USAGE ON sgn_people.sp_product_profile_stage_gate_sp_product_profile_stage_gate_id_seq TO web_usr;
+GRANT select,insert,update,delete ON sgn_people.sp_product_profile_stage TO web_usr;
+GRANT USAGE ON sgn_people.sp_product_profile_stage_sp_product_profile_stage_id_seq TO web_usr;
 
 
 EOSQL
