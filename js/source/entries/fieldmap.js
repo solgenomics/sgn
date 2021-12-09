@@ -556,10 +556,11 @@ export function init() {
             .attr("height", height * 50 + 20 + "px");
 
             var tooltip = d3.select("#fieldmap_chart")
-            .append('div')
-            .attr('id', 'tooltip')
-            .attr('class', 'tooltip')
-            .attr('style', 'position: absolute; opacity: 0;');
+            .append("rect")
+            .attr("id", "tooltip")
+            .attr("class", "tooltip")
+            .style("position", "absolute")
+            .style("opacity", 0);
             
             var isHeatMap = this.heatmap_selected;
             var plots = grid.selectAll("plots")
@@ -576,11 +577,10 @@ export function init() {
                 .style("stroke", function(d) { return get_stroke_color(d)})
                 .style("fill", function(d) {return !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d)})
                 .on("mouseover", function(d) { if (d.observationUnitPosition.observationLevel) { 
-                    d3.select(this).style('fill', 'green').style('cursor', 'pointer'); 
-                    d3.select('#tooltip')
-                    .style('opacity', .9)
-                    .style('left', ((d.observationUnitPosition.positionCoordinateX + 1) * 50 + 100) + 'px')
-                    .style('top', ((d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 540) + 'px')
+                    d3.select(this).style('fill', 'green').style('cursor', 'pointer');
+                    tooltip.style('opacity', .9)
+                    .style('left', (window.event.pageX - 600)+"px")
+                    .style('top', (window.event.pageY - 1100)+"px")
                     .text(get_plot_message(d))
                 }})
                 .on("mouseout", function(d) { 
