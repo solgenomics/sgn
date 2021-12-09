@@ -550,23 +550,24 @@ export function init() {
             height = this.meta_data.bottom_border_selection ? height + 1 : height;
             var row_increment = this.meta_data.invert_row_checkmark ? 1 : 0;
             row_increment = this.meta_data.top_border_selection ? row_increment : row_increment - 1;
-            var grid = d3.select("#container_fm")
+            var grid = d3.select("#fieldmap_chart")
             .append("svg")
             .attr("width", width * 50 + 20 + "px")
             .attr("height", height * 50 + 20 + "px");
 
-            var tooltip = d3.select("#container_fm")
-            .append('div')
-            .attr('id', 'tooltip')
-            .attr('class', 'tooltip')
-            .attr('style', 'position: absolute; opacity: 0;');
+            var tooltip = d3.select("#fieldmap_chart")
+            .append("rect")
+            .attr("id", "tooltip")
+            .attr("class", "tooltip")
+            .style("position", "absolute")
+            .style("opacity", 0);
             
             var isHeatMap = this.heatmap_selected;
             var plots = grid.selectAll("plots")
             .data(this.plot_arr);
             plots.append("title");
             plots.enter().append("rect")
-                .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + 1) * 50 + 15; })
+                .attr("x", function(d) { return d.observationUnitPosition.positionCoordinateX * 50; })
                 .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 15; })
                 .attr("rx", 4)
                 .attr("class", "col bordered")
@@ -576,16 +577,15 @@ export function init() {
                 .style("stroke", function(d) { return get_stroke_color(d)})
                 .style("fill", function(d) {return !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d)})
                 .on("mouseover", function(d) { if (d.observationUnitPosition.observationLevel) { 
-                    d3.select(this).style('fill', 'green').style('cursor', 'pointer'); 
-                    d3.select('#tooltip')
-                    .style('opacity', .9)
-                    .style('left', ((d.observationUnitPosition.positionCoordinateX + 1) * 50 + 100) + 'px')
-                    .style('top', ((d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 540) + 'px')
+                    d3.select(this).style('fill', 'green').style('cursor', 'pointer');
+                    tooltip.style('opacity', .9)
+                    .style('left', (window.event.pageX - 600)+"px")
+                    .style('top', (window.event.pageY - 1100)+"px")
                     .text(get_plot_message(d))
                 }})
                 .on("mouseout", function(d) { 
                     d3.select(this).style('fill', !isHeatMap ? get_fieldmap_plot_color(d) : get_heatmap_plot_color(d)).style('cursor', 'default')
-                    d3.select('#tooltip').style('opacity', 0)
+                    tooltip.style('opacity', 0)
                     plots.exit().remove();
                 }).call(cc);
 
@@ -599,7 +599,7 @@ export function init() {
 
             plots.append("text");
                     plots.enter().append("text")
-                    .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + 1) * 50 + 25; })
+                    .attr("x", function(d) { return d.observationUnitPosition.positionCoordinateX * 50 + 15; })
                     .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 45; })
                     .text(function(d) { if ((d.type == "data" && !d.additionalInfo) || (d.type == "data" && d.additionalInfo.type != "filler")) { return d.observationUnitPosition.observationLevel.levelCode; }});
 
@@ -616,7 +616,7 @@ export function init() {
 
             plots.enter().append("image")
             .attr("xlink:href", image_icon)
-            .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + 1) * 50 + 42; })
+            .attr("x", function(d) { return d.observationUnitPosition.positionCoordinateX * 50 + 5; })
             .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 15; })
             .attr("width", 20)
             .attr("height", 20);
@@ -642,14 +642,14 @@ export function init() {
             var rowLabels = grid.selectAll(".rowLabels") 
             .data(row_label_arr)
             .enter().append("text")
-            .attr("x", ((this.meta_data.left_border_selection ? this.meta_data.min_col - 1 : this.meta_data.min_col) * 50) + 35)
+            .attr("x", ((this.meta_data.left_border_selection ? this.meta_data.min_col - 1 : this.meta_data.min_col) * 50 - 25))
             .attr("y", function(label) {return (label+row_increment) * 50 + 45})
             .text(function(label, i) {return i+1});
 
             var colLabels = grid.selectAll(".colLabels") 
             .data(col_label_arr)
             .enter().append("text")
-            .attr("x", function(label) {return (label+1) * 50 + 30})
+            .attr("x", function(label) {return (label+1) * 50 - 30})
             .attr("y", (col_labels_row * 50) + 45)
             .text(function(label) {return label});
         }
@@ -666,7 +666,7 @@ export function init() {
 
         render() {
             jQuery("#working_modal").modal("hide");
-            // jQuery("#chart_fm").css({ "display": "inline-block" });
+            jQuery("#fieldmap_chart").css({ "display": "inline-block" });
             jQuery("#container_fm").css({ "display": "inline-block", "overflow": "auto" });
             jQuery("#trait_heatmap").css("display", "none");
             jQuery("#container_heatmap").css("display", "none");

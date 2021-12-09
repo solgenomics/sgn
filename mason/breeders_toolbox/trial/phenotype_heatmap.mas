@@ -74,6 +74,7 @@ $data_level => 'plot'
       .legend li { float: left; margin-right: 10px; }
       .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
 
+      .legend .border_plots { background-color: #d3d3d3}
       .legend .block_even_number { background-color: #c7e9b4; }
       .legend .block_odd_number { background-color: #41b6c4; }
       .legend .checks { background-color: #6a5acd; }
@@ -117,6 +118,7 @@ $data_level => 'plot'
 <div id="container_heatmap" ></div>
 <div>
     <ul class="legend">
+        <li><span class="border_plots"></span> Border Plots and Filler Plots</li>
         <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
         <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
         <li><span class="checks"></span> Checks</li>
@@ -127,23 +129,25 @@ $data_level => 'plot'
 </div>
 <br><br>
 <div id="container_fm">
-    <div>
-        <button class="btn btn-primary" style="margin-left: 2%;" id="planting_order_button"> Planting Order </button>
-        <select name="planting_order" id="planting_order">
-            <option value="">--Select Layout--</option>
-            <option value="by_col_serpentine">By Column: Serpentine</option>
-            <option value="by_col_zigzag">By Column: Zigzag</option>
-            <option value="by_row">By Row: Current Layout</option>
-        </select>
-        <button class="btn btn-primary" id="harvesting_order_button" style="margin-left: 2%;"> Harvesting Order </button>
-        <select name="harvesting_order" id="harvesting_order">
-            <option value="">--Select Layout--</option>
-            <option value="by_col_serpentine">By Column: Serpentine</option>
-            <option value="by_col_zigzag">By Column: Zigzag</option>
-            <option value="by_row">By Row: Current Layout</option>
-        </select>
-        <button style="margin-left: 20%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
-        <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success">Submit Field Layout</button><br><br>
+    <div style="position: absolute">
+        <div style="display: flex;">
+            <button class="btn btn-primary" style="margin-left: 2%;" id="planting_order_button"> Download Planting Order </button>
+            <select style="margin-left: 1%;" name="planting_order" id="planting_order">
+                <option value="">--Select Layout--</option>
+                <option value="by_col_serpentine">By Column: Serpentine</option>
+                <option value="by_col_zigzag">By Column: Zigzag</option>
+                <option value="by_row">By Row: Current Layout</option>
+            </select>
+            <button class="btn btn-primary" id="harvesting_order_button" style="margin-left: 2%;"> Download Harvesting Order </button>
+            <select style="margin-left: 1%;" name="harvesting_order" id="harvesting_order">
+                <option value="">--Select Layout--</option>
+                <option value="by_col_serpentine">By Column: Serpentine</option>
+                <option value="by_col_zigzag">By Column: Zigzag</option>
+                <option value="by_row">By Row: Current Layout</option>
+            </select>
+            <button style="margin-left: 8%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
+            <button style="margin-left: 2%;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success">Submit Field Layout</button>
+        </div><br>
         <div style="display: inline;">
             <label style="margin-left: 2%;" for="invert_rows">Invert Rows</label>
             <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
@@ -161,8 +165,9 @@ $data_level => 'plot'
                 <option value="serpentine">Serpentine</option>
                 <option value="zigzag">Zigzag</option>
             </select>
-        </div>
+        </div><br>
     </div>  
+    <div style="margin-top: 8%;" id="fieldmap_chart"></div>
 </div>
 
 
