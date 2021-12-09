@@ -128,6 +128,8 @@ jQuery(document).ready(function () {
         }
     });
 
+    parseArgs();
+
     var trait_table;
     _draw_trait_search_result_table();
 
@@ -196,8 +198,6 @@ jQuery(document).ready(function () {
    trait_table.on( 'deselect', selection_changed);
    trait_table.on( 'select', selection_changed);
 
-   parseArgs();
-
 });
 
 
@@ -209,7 +209,6 @@ function parseArgs() {
     const params = new URLSearchParams(window.location.search);
     if ( params.has('name') ) {
         jQuery("#trait_search_name").val(params.get('name'));
-        jQuery('#submit_trait_search').click();
     }
 }
 
