@@ -436,11 +436,14 @@ if (document.URL.match(/cluster\/analysis/)) {
     },
 
     selectAnalysisOption: function(page, args) {
-	var t = '<p>This analysis may take a long time. '
-	    + 'Do you want to submit the analysis and get an email when it completes?</p>';
+	       var title = '<p>This analysis may take a long time. '
+	          + 'Do you want to submit the analysis and get an email when it completes?</p>';
 
-	jQuery('<div />')
-	    .html(t)
+        var jobSubmit = '<div id= "cluster_submit">' + title + '</div>';
+
+        jQuery(jobSubmit).appendTo('body');
+
+	jQuery('#cluster_submit')
 	    .dialog({
 		height : 200,
 		width  : 400,
