@@ -7,7 +7,6 @@
 
 <& /page/page_title.mas, title => "Trait Search" &>
 
-
     <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
         <div id="trait_search_form" class="form-horizontal well">
             <div class="form-group form-group-sm">
@@ -129,6 +128,8 @@ jQuery(document).ready(function () {
         }
     });
 
+    parseArgs();
+
     var trait_table;
     _draw_trait_search_result_table();
 
@@ -198,5 +199,17 @@ jQuery(document).ready(function () {
    trait_table.on( 'select', selection_changed);
 
 });
+
+
+/**
+ * Parse query params sent to the page
+ * - name = trait name to search on
+ */
+function parseArgs() {
+    const params = new URLSearchParams(window.location.search);
+    if ( params.has('name') ) {
+        jQuery("#trait_search_name").val(params.get('name'));
+    }
+}
 
 </script>
