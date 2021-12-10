@@ -1,0 +1,114 @@
+
+<div class="modal fade" id="add_market_segment_dialog" name="add_market_segment_dialog" tabindex="-1" role="dialog" aria-labelledby="addMarketSegmentDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addMarketSegmentDialog">Add New Market Segment </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Market Segment Name: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_market_segment_name" name="new_market_segment_name" type="text" placeholder="Enter market segment name"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Scope: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_market_segment_scope" name="new_market_segment_scope" type="text" placeholder="Enter market segment scope"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Type: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_market_segment_type" name="new_market_segment_type" type="text" placeholder=""/>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="add_market_segment">Add</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="market_segment_saved_dialog_message" name="market_segment_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addMarketSegmentSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addMarketSegmentSavedDialog"> </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The market segment was added successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="market_segment_close_button" id="market_segment_close_button" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#add_market_segment').click(function(){
+
+        var market_segment_name = jQuery('#new_market_segment_name').val();
+        var market_segment_scope = jQuery('#new_market_segment_scope').val();
+
+        if (market_segment_name === '') {
+            alert("Please enter a market segment name");
+            return;
+        }
+
+        if (market_segment_scope === '') {
+            alert("Please enter market segment scope");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/product_profile/add_market_segment',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'market_segment_name': market_segment_name,
+                'market_segment_scope': market_segment_scope,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery("#market_segment_saved_dialog_message").modal("show");
+                    jQuery('#add_market_segment_dialog').modal("hide");
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred adding new market segment.');
+                jQuery('#add_market_segment_dialog').modal("hide");
+            },
+
+        });
+    });
+
+
+});
+
+</script>

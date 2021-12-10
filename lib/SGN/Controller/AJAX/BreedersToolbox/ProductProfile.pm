@@ -462,6 +462,22 @@ sub get_profile_details :Path('/ajax/product_profile/get_profile_details') :Args
 }
 
 
+sub add_market_segment : Path('/ajax/product_profile/add_market_segment') : ActionClass('REST') { }
+
+sub add_market_segment_POST : Args(0) {
+    my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = {error => "You need to be logged in to add market segment" };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to add market segment." };
+        return;
+    }
+}
+
+
 sub _parse_list_from_json {
     my $list_json = shift;
     my $json = new JSON;
