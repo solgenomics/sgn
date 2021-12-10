@@ -53,9 +53,11 @@ Rcpp::sourceCpp("/home/production/cxgn/QuantGenResources/CalcCrossMeans.cpp") # 
 #    is defined as the phenotype file.
 
 #userPheno <- path2
+write(paste("READING PHENOTYPEFILE: ",phenotypeFile), stderr())
 userPheno <- read.csv(phenotypeFile, header = TRUE) #testing only
-userPheno <- userPheno[userPheno$Trial == "SCG", ] #testing only-- needs to replaced with 2-stage
+##userPheno <- userPheno[userPheno$Trial == "SCG", ] #testing only-- needs to replaced with 2-stage
 
+write("DONE WITH PHENOTYPEFILE"), stderr());
 
 # c. The user should be able to select their fixed variables from a menu
 #    of the column names of the userPheno object. The possible interaction terms
@@ -161,6 +163,7 @@ userPheno$Sex <- sample(c("M", "F"), size = nrow(userPheno), replace = TRUE, pro
 #    monomorphic or biallelic sites which could be communicated through the GUI.
 #    It's also possible to filter them here.
 
+write(paste("READING VARIANT FILE ", genotypeFile), stderr())
 #  Import VCF with VariantAnnotation package and extract matrix of dosages
 myVCF <- readVcf(genotypeFile)
 G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
