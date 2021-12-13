@@ -1,0 +1,86 @@
+package CXGN::BreedersToolbox::MarketSegment;
+
+
+=head1 NAME
+
+CXGN::BreedersToolbox::MarketSegment - a class to manage market segment
+
+=head1 DESCRIPTION
+
+
+=head1 EXAMPLE
+
+my $market_segment = CXGN::BreedersToolbox::MarketSegment->new( { schema => $schema});
+
+=head1 AUTHOR
+
+Titima Tantikanjana <tt15@cornell.edu>
+
+=cut
+
+
+use Moose;
+
+use JSON::Any;
+use Data::Dumper;
+use SGN::Model::Cvterm;
+use JSON;
+
+has 'people_schema' => (isa => 'Ref', is => 'rw', required => 1);
+
+has 'dbh' => (is  => 'rw', required => 1);
+
+has 'sp_market_segment_id' => (isa => 'Int', is => 'rw');
+
+has 'name' => (isa => 'Str', is => 'rw');
+
+has 'scope' => (isa => 'Str', is => 'rw');
+
+has 'sp_person_id' => (isa => 'Int', is => 'rw');
+
+has 'create_date' => (isa => 'Str', is => 'rw');
+
+has 'modified_date' => (isa => 'Str', is => 'rw');
+
+
+sub BUILD {
+    my $self = shift;
+    my $args = shift;
+    my $people_schema = $self->people_schema();
+
+    if (! $args->{sp_product_profile_id}) {
+        print STDERR "Creating empty object...\n";
+        return $self;
+    }
+
+    my $row = $people_schema->resultset('SpMarketSegment')->find( { sp_market_segment_id => $args->{sp_market_segment_id} } );
+
+    if (!$row) {
+        die "The database has no market segment entry with id $args->{sp_market_segment_id}";
+    }
+
+}
+
+
+sub store {
+    my $self = shift;
+    my %data = (
+	name => $self->name(),
+	scope => $self->scope(),
+	sp_person_id => $self->sp_person_id(),
+    create_date => $self->create_date(),
+    modified_date => $self->modified_date(),
+	);
+
+    if ($self->sp_market_segment_id()) { $data{sp_market_segment_id} = $self->sp_market_segment_id(); }
+
+    my $rs = $self->people_schema()->resultset('SpMarketSegment');
+
+    my $row = $rs->update_or_create( \%data );
+
+    print STDERR "SP MARKET SEGMENT ID =".Dumper($row->sp_market_segment_id())."\n";
+    return $row->sp_market_segment_id();
+}
+
+
+1;

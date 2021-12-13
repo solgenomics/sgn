@@ -30,6 +30,7 @@ use CXGN::Stock::Search;
 use JSON;
 use CXGN::BreedersToolbox::ProductProfile;
 use CXGN::BreedersToolbox::ProductProfileprop;
+use CXGN::BreedersToolbox::MarketSegment;
 use File::Spec::Functions;
 use Spreadsheet::WriteExcel;
 
@@ -277,7 +278,7 @@ sub upload_profile_POST : Args(0) {
     }
 
     my $history_info ->{'create'} = $uploaded_date;
-    push my @history, $history_info;
+    push (my @history, $history_info);
 
     my $product_profileprop = CXGN::BreedersToolbox::ProductProfileprop->new({ bcs_schema => $schema, people_schema => $people_schema});
     $product_profileprop->product_profile_details($profile_detail_string);
@@ -465,16 +466,56 @@ sub get_profile_details :Path('/ajax/product_profile/get_profile_details') :Args
 sub add_market_segment : Path('/ajax/product_profile/add_market_segment') : ActionClass('REST') { }
 
 sub add_market_segment_POST : Args(0) {
-    my ($self, $c) = @_;
+    my $self = shift;
+    my $c = shift;
+    my $market_segment_name = $c->req->param('market_segment_name');
+    my $market_segment_scope = $c->req->param('market_segment_scope');
 
-    if (!$c->user()) {
-        $c->stash->{rest} = {error => "You need to be logged in to add market segment" };
+    my $user_id;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh();
+    print STDERR "SESSION ID =".Dumper($session_id)."\n";
+    if ($session_id){
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to add market segment!'};
+            return;
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to add market segment!'};
+            return;
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (!any { $_ eq 'curator' || $_ eq 'submitter' } ($user_role)) {
+        $c->stash->{rest} = {error =>  'You have insufficient privileges to add market segment.' };
         return;
     }
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to add market segment." };
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $market_segment = CXGN::BreedersToolbox::MarketSegment->new({ people_schema => $people_schema, dbh => $dbh });
+    $market_segment->name($market_segment_name);
+    $market_segment->scope($market_segment_scope);
+    $market_segment->sp_person_id($user_id);
+    $market_segment->create_date($timestamp);
+    my $market_segment_id = $market_segment->store();
+    print STDERR "MARKET SEGMENT ID =".($market_segment_id)."\n";
+    if (!$market_segment_id){
+        $c->stash->{rest} = {error => 'Error saving your market segment'};
         return;
     }
+
+    $c->stash->{rest} = { success => 1 };
+
 }
 
 
