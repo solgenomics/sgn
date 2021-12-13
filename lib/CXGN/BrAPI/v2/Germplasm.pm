@@ -64,12 +64,10 @@ sub search {
 
     my %stockprops_values;
     if ($accession_numbers_arrayref && scalar(@$accession_numbers_arrayref)>0){
-        foreach (@$accession_numbers_arrayref) {
-            $stockprops_values{'accession number'} = {
-                matchtype => 'contains',
-                value => $_
-            };
-        }
+        $stockprops_values{'accession number'} = {
+            matchtype => 'one of',
+            value => join(',', @$accession_numbers_arrayref)
+        };
     }
     if ($germplasm_puis_arrayref && scalar(@$germplasm_puis_arrayref)>0){
         foreach (@$germplasm_puis_arrayref) {
