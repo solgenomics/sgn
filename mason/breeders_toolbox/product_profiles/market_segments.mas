@@ -1,0 +1,34 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<table id="market_segment_info" class="display">
+    <thead>
+        <tr>
+            <th>Market Segment Name</th>
+            <th>Scope</th>
+            <th>Submitter</th>
+            <th>Create Date <br>&nbsp&nbsp&nbsp&nbsp(Y-M-D)</th>
+            <th>Modified Date <br>&nbsp&nbsp&nbsp&nbsp(Y-M-D)</th>
+        </tr>
+    </thead>
+</table>
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#market_segment_info').DataTable( {
+        'autoWidth': false,
+        'ajax': '/ajax/product_profile/get_market_segments',
+        'order': false,
+    });
+
+});
+
+</script>

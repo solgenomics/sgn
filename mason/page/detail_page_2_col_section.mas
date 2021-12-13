@@ -500,6 +500,9 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'product_profile_section'){
                                 <& /breeders_toolbox/product_profiles/product_profile_summary.mas &>
 % } #End product_profile_section
+% if ($info_section_id eq 'market_segment_section'){
+                                <& /breeders_toolbox/product_profiles/market_segments.mas &>
+% } #End market_segment_section
 
 
 % if (!$info_section_id){

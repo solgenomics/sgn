@@ -83,4 +83,27 @@ sub store {
 }
 
 
+sub get_market_segments {
+    my $self = shift;
+    my $people_schema = $self->people_schema();
+    my $dbh = $self->dbh();
+
+    my $market_segment_rs = $people_schema->resultset('SpMarketSegment')->search( { } );
+    my @market_segments;
+    while (my $result = $market_segment_rs->next()){
+        my $market_segment_name = $result->name();
+        my $market_segment_scope = $result->scope();
+        my $person_id = $result->sp_person_id();
+        my $create_date = $result->create_date();
+        my $modified_date = $result->modified_date();
+
+        my $person= CXGN::People::Person->new($dbh, $person_id);
+        my $person_name=$person->get_first_name()." ".$person->get_last_name();
+        push @market_segments, [$market_segment_name, $market_segment_scope, $person_name, $create_date, $modified_date ];
+    }
+
+    return \@market_segments;
+}
+
+
 1;

@@ -519,6 +519,22 @@ sub add_market_segment_POST : Args(0) {
 }
 
 
+sub get_market_segments :Path('/ajax/product_profile/get_market_segments') Args(0){
+
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $dbh = $c->dbc->dbh;
+
+    my $market_segment_obj = CXGN::BreedersToolbox::MarketSegment->new({ dbh => $dbh, people_schema => $people_schema });
+    my $market_segments = $market_segment_obj->get_market_segments();
+
+    $c->stash->{rest} = {data => $market_segments};
+
+}
+
+
 sub _parse_list_from_json {
     my $list_json = shift;
     my $json = new JSON;
