@@ -158,7 +158,7 @@ export function init() {
 
         get_harvesting_order() {
             var final_harvesting_arr = this.traverse_map('harvesting_order_layout');
-            var csv = ['PlotNumber', 'PlotName', 'AccessionName',].join(',');
+            var csv = ['PlotNumber', 'PlotName', 'AccessionName', 'entryType'].join(',');
             csv += "\n";
             final_harvesting_arr.forEach(function(plot) {
                     csv += [plot.observationUnitPosition.observationLevel.levelCode, plot.observationUnitName, plot.germplasmName].join(',');
@@ -181,6 +181,7 @@ export function init() {
             num_cols = this.meta_data.right_border_selection ? num_cols + 1 : num_cols;
             const border_plot = {
                 observationUnitName: "Border Plot",
+                entryType: '',
                 germplasmName: "N/A",
                 observationUnitPosition: {
                     observationLevel: {
@@ -232,10 +233,10 @@ export function init() {
                     }
                 }
             }
-            var csv = ['PlotNumber', 'PlotName', 'AccessionName',].join(',');
+            var csv = ['PlotNumber', 'PlotName', 'AccessionName', 'entryType'].join(',');
             csv += "\n";
             final_arr.forEach(function(plot) {
-                    csv += [plot.observationUnitPosition.observationLevel.levelCode, plot.observationUnitName, plot.germplasmName].join(',');
+                    csv += [plot.observationUnitPosition.observationLevel.levelCode, plot.observationUnitName, plot.germplasmName, plot.entryType].join(',');
                     csv += "\n";
             });
             
@@ -249,8 +250,23 @@ export function init() {
 
         set_meta_data() {
             // this.plot_arr = JSON.parse(JSON.stringify(Object.values(this.plot_object)));
-            this.plot_arr = Object.values(this.plot_object);
-            this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
+            let unsorted_plot_arr = Object.values(this.plot_object);
+            let ordered_grouped_plot_arr = [];
+            // this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
+            for (let plot of unsorted_plot_arr) {
+                if (!ordered_grouped_plot_arr[plot.observationUnitPosition.positionCoordinateY - 1]) {
+                    ordered_grouped_plot_arr[plot.observationUnitPosition.positionCoordinateY - 1] = [];
+                    ordered_grouped_plot_arr[plot.observationUnitPosition.positionCoordinateY - 1][plot.observationUnitPosition.positionCoordinateX - 1] = plot;
+                } else {
+                    ordered_grouped_plot_arr[plot.observationUnitPosition.positionCoordinateY - 1][plot.observationUnitPosition.positionCoordinateX - 1] = plot;
+                }
+            }
+            let final_plot_arr = []
+            for (let ordered_plot_arr of ordered_grouped_plot_arr) {
+                final_plot_arr.push(...ordered_plot_arr);
+            }
+            this.plot_arr = final_plot_arr;
+            console.log(this.plot_arr);
             var min_col = 100000;
             var min_row = 100000;
             var max_col = 0;
@@ -299,6 +315,7 @@ export function init() {
             this.plot_arr = [
                 ...this.plot_arr.slice(0, Object.entries(this.plot_object).length),
             ];
+            this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
             var count = 0;
             var column;
 
@@ -657,10 +674,13 @@ export function init() {
 
         load() {
             d3.select("svg").remove();
-            this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
-            this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
+            if (this.meta_data.first_load == false) {
+                this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
+                this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
+            }
             this.invert_rows();
             this.add_borders();
+            this.meta_data.first_load = false;
             this.render();
         }
 

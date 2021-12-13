@@ -564,8 +564,6 @@ var num_real_plots;
 
 
 jQuery(document).ready( function() {
-    // document.getElementById("invert_row_checkmark").checked = false;
-    retrieve_additional_info = true;
     var auth_token;
     var require_login = "<%  $c->get_conf('brapi_require_login') %>";
     auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
@@ -616,6 +614,7 @@ jQuery(document).ready( function() {
                 }
                 FieldMap.filter_data(data);
                 FieldMap.set_meta_data();
+                FieldMap.meta_data.first_load = true;
                 FieldMap.load();
 
                 // FieldMap.plot_ou_arr.sort(function(plot_ou_1, plot_ou_2) {
@@ -711,7 +710,6 @@ jQuery(document).ready( function() {
 
     jQuery('#submit_dimensions_change').click(function() {
         jQuery('#working_modal').modal("show");
-        retrieve_additional_info = false;
         changed_dim_rows = jQuery("#row-dims").val();
         changed_dim_cols = jQuery("#col-dims").val();
         var filler_accession_name = jQuery("#filler_accession").val();
