@@ -86,10 +86,19 @@ export function init() {
         }
 
         filter_data(data) {
-            var plants = [];
-            var plant_obj = {};
+            var pseudo_layout = {};
             var plot_object = {};
             for (let plot of data) {
+                if (isNaN(parseInt(plot.observationUnitPosition.positionCoordinateY))) {
+                    plot.observationUnitPosition.positionCoordinateY = isNaN(parseInt(plot.observationUnitPosition.observationLevelRelationships[1].levelCode)) ? plot.observationUnitPosition.observationLevelRelationships[0].levelCode : plot.observationUnitPosition.observationLevelRelationships[1].levelCode;
+                    if (plot.observationUnitPosition.positionCoordinateY in pseudo_layout) {
+                        pseudo_layout[plot.observationUnitPosition.positionCoordinateY] += 1;
+                        plot.observationUnitPosition.positionCoordinateX = pseudo_layout[plot.observationUnitPosition.positionCoordinateY];
+                    } else {
+                        pseudo_layout[plot.observationUnitPosition.positionCoordinateY] = 1;
+                        plot.observationUnitPosition.positionCoordinateX = 1;
+                    }
+                }
                 var obs_level = plot.observationUnitPosition.observationLevel;
                 if (obs_level.levelName == "plot") {
                     plot.observationUnitPosition.positionCoordinateX = parseInt(plot.observationUnitPosition.positionCoordinateX);
@@ -99,6 +108,7 @@ export function init() {
                 }   
             }
             this.plot_object = plot_object;
+            console.log(this.plot_object);
         }
 
         filter_heatmap(observations) {
@@ -243,8 +253,8 @@ export function init() {
             var hiddenElement = document.createElement('a');
             hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
             hiddenElement.target = '_blank';
-            
             hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data.harvesting_order_layout}_PlantingOrder.csv`;
+            
             hiddenElement.click();    
         }
 
