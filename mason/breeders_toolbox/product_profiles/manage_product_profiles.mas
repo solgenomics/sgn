@@ -18,8 +18,8 @@ Titima Tantikanjana <tt15@cornell.edu>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Market Segments</h4>", info_section_subtitle => 'View Market Segments',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_market_segment_button">Add New Market Segment</button>', icon_class => "glyphicon glyphicon-th", info_section_id => "market_segment_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Product Profiles</h4>", info_section_subtitle => 'View product profiles',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_profile_button">Upload New Product Profile</button><button class="btn btn-sm btn-default" style="margin:3px" id="download_template_button">Download Template</button>', icon_class => " glyphicon glyphicon-list-alt", info_section_id => "product_profile_section" &>
 
-<& /breeders_toolbox/program/create_profile_template_dialog.mas &>
-<& /breeders_toolbox/program/upload_profile_dialog.mas &>
+<& /breeders_toolbox/product_profiles/create_profile_template_dialog.mas &>
+<& /breeders_toolbox/product_profiles/upload_profile_dialog.mas &>
 <& /breeders_toolbox/product_profiles/add_market_segment_dialog.mas &>
 
 <script>
