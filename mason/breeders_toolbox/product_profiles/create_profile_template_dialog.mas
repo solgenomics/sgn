@@ -14,7 +14,7 @@
                             <div class="col-sm-9">
                                 <input class="form-control" id="template_file_name" name="template_file_name" type="text" placeholder="Enter template file name"/>
                             </div>
-                        </div><br/><br/>
+                        </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label" for="select_list_list_select">Select a List of Traits: </label>
                             <div class="col-sm-9">

@@ -55,16 +55,23 @@ $program_name => undef
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Scope: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="new_profile_scope" name="new_profile_scope" type="text"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Market Segment: </label>
+                                    <div class="col-sm-9">
+                                        <div id="product_profile_select_market_segment" name="product_profile_select_market_segment" >
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Breeding Program: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" name="profile_program_name" id="profile_program_name" disabled value="<% $program_name %>">
                                         <input name="profile_program_id" id="profile_program_id" type="hidden" value="<% $program_id %>">
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">Scope: </label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="new_profile_scope" name="new_profile_scope" type="text"/>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -181,6 +188,8 @@ $program_name => undef
 <script>
 
 jQuery(document).ready(function(){
+
+    get_select_box('market_segments', 'product_profile_select_market_segment', {'empty':1}, {'id':'market_segment', 'name':'market_segment', 'multiple':0});
 
     jQuery('#product_profile_instructions').click(function(){
         jQuery('#product_profile_instruction_dialog').modal("show");

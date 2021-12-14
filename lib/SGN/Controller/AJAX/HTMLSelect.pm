@@ -817,7 +817,7 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
     my $checkbox_name = $c->req->param('checkbox_name');
     my $data_type_cvterm_id = $c->req->param('sequence_metadata_data_type_id');
     my $include_query_link = $c->req->param('include_query_link');
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol', 'protocol_type')->cvterm_id();
@@ -2115,6 +2115,36 @@ sub get_drone_imagery_drone_run_band : Path('/ajax/html/select/drone_imagery_dro
     );
     $c->stash->{rest} = { select => $html };
 }
+
+
+sub get_market_segment_select : Path('/ajax/html/select/market_segments') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+
+    my $market_segment_rs = $people_schema->resultset('SpMarketSegment')->search( { } );
+    my @market_segments;
+    while (my $result = $market_segment_rs->next()){
+        my $sp_market_segment_id = $result->sp_market_segment_id();
+        my $sp_market_segment_name = $result->name();
+        push @market_segments, [$sp_market_segment_id, $sp_market_segment_name];
+    }
+
+    my $id = $c->req->param("id") || "html_market_segment_select";
+        my $name = $c->req->param("name") || "html_market_segment_select";
+        my $empty = $c->req->param("empty");
+
+        @market_segments = sort { $a->[1] cmp $b->[1] } @market_segments;
+        if ($empty) { unshift @market_segments, [ "", "Please select a market segment" ]; }
+
+        my $html = simple_selectbox_html(
+            name => $name,
+            id => $id,
+            choices => \@market_segments
+        );
+        $c->stash->{rest} = { select => $html };
+}
+
 
 sub _clean_inputs {
 	no warnings 'uninitialized';
