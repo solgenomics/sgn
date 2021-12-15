@@ -160,8 +160,15 @@ sub upload_profile_POST : Args(0) {
     my $user_name;
     my $user_role;
     my $session_id = $c->req->param("sgn_session_id");
-    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $new_profile_name = $c->req->param('new_profile_name');
+    my $new_profile_scope = $c->req->param('new_profile_scope');
+    my $market_segment_id = $c->req->param('product_profile_market_segment_id');
+    $new_profile_name =~ s/^\s+|\s+$//g;
+
 
     if ($session_id){
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
@@ -188,12 +195,6 @@ sub upload_profile_POST : Args(0) {
         return;
     }
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-#    my $program_id = $c->req->param('profile_program_id');
-    my $new_profile_name = $c->req->param('new_profile_name');
-    my $new_profile_scope = $c->req->param('new_profile_scope');
-    $new_profile_name =~ s/^\s+|\s+$//g;
 
 #    my $profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema, parent_id => $program_id });
 #    my $profiles = $profile_obj->get_product_profile_info();
@@ -263,13 +264,13 @@ sub upload_profile_POST : Args(0) {
         $c->detach();
     }
 
-    my $profile = CXGN::BreedersToolbox::ProductProfile->new({ people_schema => $people_schema, dbh => $dbh });
+    my $profile = CXGN::BreedersToolbox::ProductProfile->new({ people_schema => $people_schema, dbh => $dbh});
     #need to add sp stage gate
-    $profile->sp_stage_gate_id('1');
     $profile->name($new_profile_name);
     $profile->scope($new_profile_scope);
     $profile->sp_person_id($user_id);
     $profile->create_date($uploaded_date);
+    $profile->sp_market_segment_id($market_segment_id);
     my $product_profile_id = $profile->store();
     #print STDERR "PRODUCT PROFILE ID =".($product_profile_id)."\n";
     if (!$product_profile_id){
@@ -280,7 +281,7 @@ sub upload_profile_POST : Args(0) {
     my $history_info ->{'create'} = $uploaded_date;
     push (my @history, $history_info);
 
-    my $product_profileprop = CXGN::BreedersToolbox::ProductProfileprop->new({ bcs_schema => $schema, people_schema => $people_schema});
+    my $product_profileprop = CXGN::BreedersToolbox::ProductProfileprop->new({bcs_schema => $schema, people_schema => $people_schema});
     $product_profileprop->product_profile_details($profile_detail_string);
     $product_profileprop->parent_id($product_profile_id);
     $product_profileprop->history(\@history);

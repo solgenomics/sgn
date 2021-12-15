@@ -2129,20 +2129,19 @@ sub get_market_segment_select : Path('/ajax/html/select/market_segments') Args(0
         my $sp_market_segment_name = $result->name();
         push @market_segments, [$sp_market_segment_id, $sp_market_segment_name];
     }
-
     my $id = $c->req->param("id") || "html_market_segment_select";
-        my $name = $c->req->param("name") || "html_market_segment_select";
-        my $empty = $c->req->param("empty");
+    my $name = $c->req->param("name") || "html_market_segment_select";
+    my $empty = $c->req->param("empty");
 
-        @market_segments = sort { $a->[1] cmp $b->[1] } @market_segments;
-        if ($empty) { unshift @market_segments, [ "", "Please select a market segment" ]; }
+    @market_segments = sort { $a->[1] cmp $b->[1] } @market_segments;
+    if ($empty) { unshift @market_segments, [ "", "Please select a market segment" ]; }
 
-        my $html = simple_selectbox_html(
-            name => $name,
-            id => $id,
-            choices => \@market_segments
-        );
-        $c->stash->{rest} = { select => $html };
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@market_segments
+    );
+    $c->stash->{rest} = { select => $html };
 }
 
 

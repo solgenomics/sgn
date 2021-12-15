@@ -29,7 +29,7 @@ use JSON;
 
 has 'people_schema' => (isa => 'Ref', is => 'rw', required => 1);
 
-has 'dbh' => (is  => 'rw', required => 1);
+has 'dbh' => (isa => 'Ref', is  => 'rw');
 
 has 'sp_product_profile_id' => (isa => 'Int', is => 'rw');
 
@@ -44,6 +44,8 @@ has 'sp_person_id' => (isa => 'Int', is => 'rw');
 has 'create_date' => (isa => 'Str', is => 'rw');
 
 has 'modified_date' => (isa => 'Str', is => 'rw');
+
+has 'sp_market_segment_id' => (isa => 'Int', is => 'rw');
 
 
 sub BUILD {
@@ -68,22 +70,35 @@ sub BUILD {
 sub store {
     my $self = shift;
     my %data = (
-	sp_stage_gate_id => $self->sp_stage_gate_id(),
-	name => $self->name(),
-	scope => $self->scope(),
-	sp_person_id => $self->sp_person_id(),
-    create_date => $self->create_date(),
-    modified_date => $self->modified_date(),
+        name => $self->name(),
+        scope => $self->scope(),
+        sp_person_id => $self->sp_person_id(),
+        create_date => $self->create_date(),
+        modified_date => $self->modified_date(),
 	);
 
-    if ($self->sp_product_profile_id()) { $data{sp_product_profile_id} = $self->sp_product_profile_id(); }
+    if ($self->sp_product_profile_id()) {
+        $data{sp_product_profile_id} = $self->sp_product_profile_id();
+    }
 
     my $rs = $self->people_schema()->resultset('SpProductProfile');
 
     my $row = $rs->update_or_create( \%data );
+    my $product_profile_id = $row->sp_product_profile_id();
 
-    print STDERR "SP PRODUCT PROFILE ID =".Dumper($row->sp_product_profile_id())."\n";
-    return $row->sp_product_profile_id();
+    my %market_segment_link_data = (
+        sp_product_profile_id => $product_profile_id,
+        sp_market_segment_id => $self->sp_market_segment_id(),
+        sp_person_id => $self->sp_person_id(),
+        create_date => $self->create_date(),
+	);
+
+    my $market_segment_link_rs = $self->people_schema()->resultset('SpProductProfileSegment');
+
+    my $market_segment_link_row = $market_segment_link_rs->update_or_create( \%market_segment_link_data );
+    my $product_profile_segment_id = $market_segment_link_row->sp_product_profile_segment_id();
+    print STDERR "PRODUCT PROFILE SEGMENT ID =".Dumper($product_profile_segment_id)."\n";
+    return $product_profile_id;
 }
 
 

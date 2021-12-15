@@ -17,7 +17,7 @@ sub BUILD {
     $self->prop_namespace('SpProductProfileprop');
     $self->prop_primary_key('sp_product_profileprop_id');
     $self->prop_type('product_profile_json');
-    $self->cv_name('project_property');
+    $self->cv_name('sp_product_profile_property');
     $self->allowed_fields( [ qw | product_profile_details history | ] );
     $self->parent_table('sp_product_profile');
     $self->parent_primary_key('sp_product_profile_id');

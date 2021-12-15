@@ -189,7 +189,7 @@ $program_name => undef
 
 jQuery(document).ready(function(){
 
-    get_select_box('market_segments', 'product_profile_select_market_segment', {'empty':1}, {'id':'market_segment', 'name':'market_segment', 'multiple':0});
+    get_select_box('market_segments', 'product_profile_select_market_segment', {'id':'product_profile_market_segment_id', 'name':'product_profile_market_segment_id', 'multiple':0, 'empty':1});
 
     jQuery('#product_profile_instructions').click(function(){
         jQuery('#product_profile_instruction_dialog').modal("show");
@@ -201,16 +201,12 @@ jQuery(document).ready(function(){
 
     function upload_profile() {
         var profile_uploaded_file = jQuery("#profile_uploaded_file").val();
-        var program_id = jQuery('#profile_program_id').val();
         var new_profile_name = jQuery('#new_profile_name').val();
         var new_profile_scope = jQuery('#new_profile_scope').val();
+        var market_segment_id = jQuery('#product_profile_market_segment_id').val();
 
         jQuery('#upload_profile_form').attr("action", '/ajax/product_profile/upload_profile');
 
-//        if (program_id === '') {
-//            alert("Please choose a breeding program");
-//            return;
-//        }
         if (new_profile_name === '') {
             alert("Please enter a profile name");
             return;
@@ -219,6 +215,11 @@ jQuery(document).ready(function(){
             alert("Please enter a scope");
             return;
         }
+        if (market_segment_id === '') {
+            alert("Please choose a market segment");
+            return;
+        }
+
         jQuery('#upload_profile_form').submit();
 
     }
