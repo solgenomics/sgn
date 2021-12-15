@@ -114,8 +114,6 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     print STDERR "NEW TRAITS ".Dumper(\@new_traits);
     
-    my $trait_id;
-    
     $c->tempfiles_subdir("gcpc_files");
     my $gcpc_tmp_output = $c->config->{cluster_shared_tempdir}."/gcpc_files";
     mkdir $gcpc_tmp_output if ! -d $gcpc_tmp_output;
@@ -151,7 +149,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     print STDERR "FIELDS: ".Dumper(\@file_traits);
 
     foreach my $t (@file_traits) {
-	make_R_trait_name($t);
+	$t = make_R_trait_name($t);
     }
 
     print $CLEAN join("\t", @other_headers, @file_traits)."\n";
@@ -180,11 +178,6 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     
     my $genotype_data_fh = $ds->retrieve_genotypes($protocol_id, $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
-
-    
-    
-    $trait_id =~ tr/ /./;
-    $trait_id =~ tr/\//./;
 
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
@@ -221,12 +214,16 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     };
 }
 
-sub make_R_trait_name {
+
+sub make_R_trait_name { 
     my $trait = shift;
     $trait =~ s/\s/\_/g;
     $trait =~ s/\//\_/g;
     $trait =~ tr/ /./;
     $trait =~ tr/\//./;
+    $trait =~ s/\:/\_/g;
+    $trait =~ s/\|/\_/g;
+    
     return $trait;
 }
 
