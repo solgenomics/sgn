@@ -607,7 +607,7 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 data = response.result.data;
-                if (data[0].additionalInfo) {
+                if (data.length > 0 && data[0].additionalInfo) {
                     FieldMap.check_elements(data[0].additionalInfo);
                     if (data[0].additionalInfo.plot_layout) {
                         document.getElementById("plot_layout").value = data[0].additionalInfo.plot_layout;
