@@ -43,12 +43,12 @@ $response = $ua->post(
             "upload_genotypes_species_name_input"=>"Manihot esculenta",
             "upload_genotype_vcf_project_name"=>"test_genotype_project",
             "upload_genotype_location_select"=>$location_id,
-            "upload_genotype_year_select"=>"2021",
+            "upload_genotype_year_select"=>"2015",
             "upload_genotype_breeding_program_select"=>$breeding_program_id,
             "upload_genotype_vcf_observation_type"=>"accession",
             "upload_genotype_vcf_facility_select"=>"IGD",
             "upload_genotype_vcf_project_description"=>"Test uploading",
-            "upload_genotype_vcf_protocol_name"=>"2021_genotype_protocol",
+            "upload_genotype_vcf_protocol_name"=>"2015_genotype_protocol",
             "upload_genotype_vcf_include_igd_numbers"=>0,
             "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
             "upload_genotype_add_new_accessions"=>0,
@@ -65,6 +65,7 @@ ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
 
 my $protocol_id = $message_hash->{nd_protocol_id};
+my $project_id = $message_hash->{project_id};
 
 #test adding markerset
 $mech->get_ok('http://localhost:3010/list/new?name=test_markerset_1&desc=test');
@@ -73,7 +74,7 @@ my $markerset_list_id = $response->{list_id};
 #print STDERR "MARKERSET LIST ID =".Dumper($markerset_list_id)."\n";
 ok($markerset_list_id);
 
-$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.'&element={"genotyping_protocol_name":"2021_genotype_protocol", "genotyping_protocol_id":'.$protocol_id.', "genotyping_data_type":"Dosage"}');
+$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset_list_id.'&element={"genotyping_protocol_name":"2015_genotype_protocol", "genotyping_protocol_id":'.$protocol_id.', "genotyping_data_type":"Dosage"}');
 $response = decode_json $mech->content;
 is($response->[0],'SUCCESS');
 
@@ -87,7 +88,7 @@ my $markerset2_list_id = $response->{list_id};
 #print STDERR "MARKERSET LIST ID =".Dumper($markerset_list_id)."\n";
 ok($markerset2_list_id);
 
-$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset2_list_id.'&element={"genotyping_protocol_name":"2021_genotype_protocol", "genotyping_protocol_id":'.$protocol_id.', "genotyping_data_type":"SNP"}');
+$mech->get_ok('http://localhost:3010/list/item/add?list_id='.$markerset2_list_id.'&element={"genotyping_protocol_name":"2015_genotype_protocol", "genotyping_protocol_id":'.$protocol_id.', "genotyping_data_type":"SNP"}');
 $response = decode_json $mech->content;
 is($response->[0],'SUCCESS');
 
@@ -130,5 +131,11 @@ is($number_of_accessions_snp,14);
 $mech->get("/ajax/genotyping_protocol/delete/$protocol_id");
 $response = decode_json $mech->content;
 is($response->{'success'}, 1);
+
+#Delete created list
+CXGN::List::delete_list($schema->storage->dbh, $markerset_list_id);
+CXGN::List::delete_list($schema->storage->dbh, $markerset2_list_id);
+CXGN::List::delete_list($schema->storage->dbh, $accession_list_id);
+$schema->resultset("Project::Project")->find({project_id=>$project_id})->delete();
 
 done_testing();

@@ -38,7 +38,9 @@ geno_trim <- geno_trim - 1
 #  coordinate_matrix[marker,3] = current_string[[1]][2]
 #}
 
-geno.filtered <- geno_trim
+# filter markers that have more than 20% missing because EM imputation will fail
+minAccn <- ncol(geno_trim) * (1/5)
+geno.filtered <- geno_trim[rowSums(is.na(geno_trim)) <= minAccn,]
 dim(geno.filtered)
 
 ##### The data in the database has already been imputed, but we use the A.mat function here for MAF filtering and to generate the kinship matrix #####

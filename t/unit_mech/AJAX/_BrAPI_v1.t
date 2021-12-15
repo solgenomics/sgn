@@ -2,8 +2,8 @@
 use strict;
 use warnings;
 
-#use lib 't/lib';
-#use SGN::Test::Fixture;
+use lib 't/lib';
+use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
 
@@ -11,6 +11,8 @@ use Test::WWW::Mechanize;
 use Data::Dumper;
 use JSON;
 local $Data::Dumper::Indent = 0;
+
+my $f = SGN::Test::Fixture->new(); # calculate db stats
 
 my $mech = Test::WWW::Mechanize->new;
 my $response; my $searchId;
@@ -221,7 +223,7 @@ is_deeply($response, {"result"=>{"data"=>[{"name"=>"CASS_6Genotypes_Sampling_201
 $mech->get_ok('http://localhost:3010/brapi/v1/studies/139?access_token='.$access_token);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response,{'metadata' => {'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10},'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v1::Studies'},{'message' => 'Studies detail result constructed','messageType' => 'INFO'}]},'result' => {'startDate' => undef,'studyName' => 'Kasese solgs trial','studyTypeName' => '','studyDescription' => 'This trial was loaded into the fixture to test solgs.','seasons' => ['2014'],'contacts' => undef,'additionalInfo' => {},'programName' => 'test','trialName' => 'test','endDate' => undef,'active' => JSON::true,'lastUpdate' => {'timestamp' => undef,'version' => ''},'studyTypeDbId' => '','studyDbId' => '139','studyType' => 'Clonal Evaluation','license' => '','documentationURL' => '','programDbId' => '134','location' => {'abbreviation' => '','locationName' => 'test_location','locationDbId' => '23','documentationURL' => '','locationType' => '','countryCode' => 'USA','countryName' => 'United States','longitude' => '-115.864','additionalInfo' => {'geodetic datum' => undef,'breeding_program' => '134'},'latitude' => '32.6136','altitude' => '109','name' => 'test_location','instituteName' => '','instituteAddress' => ''},'dataLinks' => [],'trialDbId' => '134','commonCropName' => 'Cassava'}}, 'study details');
+is_deeply($response,{'metadata' => {'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10},'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v1::Studies'},{'message' => 'Studies detail result constructed','messageType' => 'INFO'}]},'result' => {'startDate' => undef,'studyName' => 'Kasese solgs trial','studyTypeName' => '','studyDescription' => 'This trial was loaded into the fixture to test solgs.','seasons' => ['2014'],'contacts' => undef,'additionalInfo' => {},'programName' => 'test','trialName' => 'test','endDate' => undef,'active' => JSON::true,'lastUpdate' => {'timestamp' => undef,'version' => ''},'studyTypeDbId' => '','studyDbId' => '139','studyType' => 'Clonal Evaluation','license' => '','documentationURL' => '','programDbId' => '134','location' => {'abbreviation' => '','locationName' => 'test_location','locationDbId' => '23','documentationURL' => '','locationType' => '','countryCode' => 'USA','countryName' => 'United States','longitude' => '-115.86428','additionalInfo' => {'geodetic datum' => undef,'breeding_program' => '134'},'latitude' => '32.61359','altitude' => '109','name' => 'test_location','instituteName' => '','instituteAddress' => ''},'dataLinks' => [],'trialDbId' => '134','commonCropName' => 'Cassava'}}, 'study details');
 
 $mech->get_ok('http://localhost:3010/brapi/v1/studies/139/germplasm?access_token='.$access_token);
 $response = decode_json $mech->content;
@@ -285,7 +287,7 @@ is_deeply($response, {'metadata' => {'datafiles' => [],'pagination' => {'totalPa
 $mech->get_ok('http://localhost:3010/brapi/v1/locations?pageSize=1&page=1&access_token='.$access_token );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'metadata' => {'pagination' => {'totalCount' => 4,'totalPages' => 4,'pageSize' => 1,'currentPage' => 1},'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=1, pageSize=1'},{'message' => 'Loading CXGN::BrAPI::v1::Locations','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Locations list result constructed'}]},'result' => {'data' => [{'documentationURL' => undef,'locationDbId' => '24','locationType' => '','countryCode' => 'USA','countryName' => 'United States','longitude' => '-76.4735','abbreviation' => '','locationName' => 'Cornell Biotech','altitude' => '274','name' => 'Cornell Biotech','instituteName' => '','instituteAddress' => '','latitude' => '42.4534','additionalInfo' => {'geodetic datum' => undef,'breeding_program' => '134'}}]}}, 'location');
+is_deeply($response, {'metadata' => {'pagination' => {'totalCount' => 4,'totalPages' => 4,'pageSize' => 1,'currentPage' => 1},'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=1, pageSize=1'},{'message' => 'Loading CXGN::BrAPI::v1::Locations','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Locations list result constructed'}]},'result' => {'data' => [{'documentationURL' => undef,'locationDbId' => '24','locationType' => '','countryCode' => 'USA','countryName' => 'United States','longitude' => '-76.4735','abbreviation' => '','locationName' => 'Cornell Biotech','altitude' => '274','name' => 'Cornell Biotech','instituteName' => '','instituteAddress' => '','latitude' => '42.45345','additionalInfo' => {'geodetic datum' => undef,'breeding_program' => '134'}}]}}, 'location');
 
 # $mech->get_ok('http://localhost:3010/brapi/v1/ontologies?access_token='.$access_token );
 # $response = decode_json $mech->content;

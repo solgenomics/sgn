@@ -101,7 +101,7 @@ Seed transactions can be added using CXGN::Stock::Seedlot::Transaction.
 
 ------------------------------------------------------------------------------
 
-Seed Maintenance Events can be stored and retrieved using the helper functions 
+Seed Maintenance Events can be stored and retrieved using the helper functions
 in this Seedlot class.
 
 To add a Maintenance Event:
@@ -455,7 +455,7 @@ sub list_seedlots {
     my @seen_seedlot_ids = keys %seen_seedlot_ids;
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my $owners_hash = $stock_lookup->get_owner_hash_lookup(\@seen_seedlot_ids);
-    
+
     my $stock_search = CXGN::Stock::Search->new({
         bcs_schema=>$schema,
         people_schema=>$people_schema,
@@ -891,9 +891,9 @@ sub _update_content_stock_id {
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "accession", "stock_type")->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "cross", "stock_type")->cvterm_id();
-    
+
     my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'me.type_id'=>$type_id, 'subject.type_id'=>[$accession_type_id,$cross_type_id]}, {'join'=>'subject'});
-    
+
     while (my $r=$acc_rs->next){
         $r->delete();
     }
@@ -1228,14 +1228,15 @@ sub delete {
     my $self = shift;
     my $error = '';
     my $transactions = $self->transactions();
+    my $name = $self->name();
     if (scalar(@$transactions)>1){
-        $error = "This seedlot has been used in transactions and so cannot be deleted!";
+        $error = "Seedlot '$name' has been used in transactions and so cannot be deleted!";
     } else {
         my $stock = $self->stock();
         my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
         my $nd_experiment_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id});
         if ($nd_experiment_rs->count != 1){
-            $error = "Seedlot does not have 1 nd_experiment associated!";
+            $error = "Seedlot '$name' should have only one associated nd_experiment!";
         } else {
             my $nd_experiment = $nd_experiment_rs->first();
             $nd_experiment->delete();
@@ -1250,6 +1251,100 @@ sub delete {
     return $error;
 }
 
+
+### CLASS FUNCTION DELETE_USING_LIST
+
+sub delete_verify_using_list {
+    my $class = shift;
+    my $schema = shift;
+    my $phenome_schema = shift;
+    my $list_id = shift;
+
+    my $list = CXGN::List->new( { dbh => $schema->storage->dbh(), list_id => $list_id } );
+    my $type_row = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", 'stock_type');
+
+    my $type_id;
+    if ($type_row) {
+	$type_id = $type_row->cvterm_id();
+    }
+
+    print STDERR "TYPE ID = $type_id\n";
+
+    my $elements = $list->elements();
+
+    my @errors;
+    my @ok;
+
+    print STDERR "ELEMENTS ".join(",", @$elements);
+    my $delete_count = 0;
+    foreach my $ele (@$elements) {
+	print STDERR "start deletion for seedlot ".Dumper($ele)."...\n";
+	my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => $ele, type_id => $type_id });
+	if ($rs->count() == 0) {
+	    print STDERR "No such seedlot $ele\n";
+	    push @errors, [ $ele, "No seedlot named '$ele' could be found in the database" ];
+	}
+	else {
+	    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
+	    my $seedlot_id = $rs->next()->stock_id();
+	    print STDERR "SEEDLOT ID: $seedlot_id\n";
+	    my $nd_experiment_rs = $schema->resultset('Stock::Stock')->search({'me.stock_id'=> $seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id});
+	    if ($nd_experiment_rs->count != 1){
+		my $error = "Seedlot '$ele' should have only one associated nd_experiment!";
+		push @errors, [ $ele, $error];
+	    }
+	    else {
+		push @ok, $ele;
+	    }
+
+	}
+    }
+    return ( \@ok, \@errors );
+
+
+}
+
+sub delete_using_list {
+    my $class = shift;
+    my $schema = shift;
+    my $phenome_schema = shift;
+    my $list_id = shift;
+
+    my $list = CXGN::List->new( { dbh => $schema->storage->dbh(), list_id => $list_id } );
+    my $type_row = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", 'stock_type');
+
+    my $type_id;
+    if ($type_row) {
+	$type_id = $type_row->cvterm_id();
+    }
+
+    print STDERR "TYPE ID = $type_id\n";
+
+    my $elements = $list->elements();
+
+    my @errors;
+    my $delete_count = 0;
+    foreach my $ele (@$elements) {
+	print STDERR "start deletion for seedlot ".Dumper($ele)."...\n";
+	my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => $ele, type_id => $type_id });
+	if ($rs->count() == 0) {
+	    print STDERR "No such seedlot $ele\n";
+	    push @errors, "No seedlot named '$ele' could be found in the database";
+	}
+	else {
+	    my $seedlot = CXGN::Stock::Seedlot->new( schema => $schema, phenome_schema => $phenome_schema, seedlot_id => $rs->next()->stock_id());
+	    my $error = $seedlot->delete();
+	    if ($error) {
+		print STDERR "Error during seedlot deletion: $error\n";
+		push @errors, $error;
+	    }
+	    else {
+		$delete_count++;
+	    }
+	}
+    }
+    return ( scalar(@$elements), $delete_count, \@errors );
+}
 
 
 #
@@ -1276,7 +1371,7 @@ sub delete {
                         - value: value of the seedlot maintenance event
                         - notes: additional notes/comments about the event
                         - operator: username of the person creating the event
-                        - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+                        - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
 
 =cut
 
@@ -1306,7 +1401,7 @@ sub get_events {
                     - value: value of the seedlot maintenance event
                     - notes: additional notes/comments about the event
                     - operator: username of the person creating the event
-                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
 
 =cut
 
@@ -1333,7 +1428,7 @@ sub get_event {
                     - value: value of the seedlot maintenance event
                     - notes: (optional) additional notes/comments about the event
                     - operator: username of the person creating the event
-                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
  Ret:           an arrayref of hashes of the processed/stored events (includes stockprop_id), with the following keys:
                     - stockprop_id: the unique id of the maintenance event
                     - stock_id: the unique id of the seedlot
@@ -1342,8 +1437,8 @@ sub get_event {
                     - value: value of the seedlot maintenance event
                     - notes: additional notes/comments about the event
                     - operator: username of the person creating the event
-                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
-                the function will die on a caught error 
+                    - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
+                the function will die on a caught error
 
 =cut
 

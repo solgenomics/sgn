@@ -46,8 +46,10 @@ ok($response->is_success);
 my $message = $response->decoded_content;
 print STDERR "MESSAGE: $message\n";
 my $message_hash = JSON::XS->new->decode($message);
-print STDERR Dumper $message_hash;
-is_deeply($message_hash, {'success' => 1});
+
+is_deeply($message_hash->{'success'}, 1);
+my $added_seedlot = $message_hash->{'added_seedlot'};
+
 
 $file = $f->config->{basepath}."/t/data/stock/seedlot_upload_harvested";
 $ua = LWP::UserAgent->new;
@@ -67,8 +69,9 @@ $response = $ua->post(
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = JSON::XS->new()->decode($message);
-print STDERR Dumper $message_hash;
-is_deeply($message_hash, {'success' => 1});
+
+is_deeply($message_hash->{'success'}, 1);
+my $added_seedlot2 = $message_hash->{'added_seedlot'};
 
 $file = $f->config->{basepath}."/t/data/stock/seedlot_inventory_android_app";
 $ua = LWP::UserAgent->new;
@@ -87,5 +90,34 @@ $message = $response->decoded_content;
 $message_hash = JSON::XS->new()->decode($message);
 print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
+
+#Clean up
+
+END{
+    #Remove seedlots
+    my $dbh = $f->dbh();
+    my $seedlot_ids = join ("," , @$added_seedlot);
+    my $seedlot_ids2 = join ("," , @$added_seedlot2);
+
+    my $q = "delete from phenome.stock_owner where stock_id in ($seedlot_ids);";
+    $q .= "delete from phenome.stock_owner where stock_id in ($seedlot_ids2);";
+    $q .= "delete from stock where stock_id in ($seedlot_ids);";
+    $q .= "delete from stock where stock_id in ($seedlot_ids2);";
+    my $sth = $dbh->prepare($q);
+    $sth->execute;
+
+    #remove transactions
+    my $rs = $schema->resultset("Stock::Stock")->find({ name => 'test_accession2_001' });
+    my $row = $schema->resultset("Stock::StockRelationship")->find({ subject_id => $rs->stock_id });
+    $row->delete();
+
+    my $rs = $schema->resultset("Stock::Stock")->find({ name => 'test_accession4_001' });
+    my $row = $schema->resultset("Stock::StockRelationship")->find({ subject_id => $rs->stock_id });
+    $row->delete();
+
+    my $rs = $schema->resultset("Stock::Stock")->find({ name => 'test_accession3_001' });
+    my $row = $schema->resultset("Stock::StockRelationship")->find({ subject_id => $rs->stock_id });
+    $row->delete();
+}
 
 done_testing();

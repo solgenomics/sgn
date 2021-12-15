@@ -616,19 +616,58 @@ sub validate : Path('/list/validate') Args(2) {
     my $lv = CXGN::List::Validate->new();
     my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
 
+    print STDERR "DATA = ".Dumper($data);
     $c->stash->{rest} = $data;
 }
 
+sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $list_ids_string = $c->req->param('list_ids');
+    my $list_types_string = $c->req->param('list_types');
+    
+    my @list_ids = split /\,/, $list_ids_string;
+    my @list_types = split /\,/, $list_types_string;
+
+    my @invalid_lists = ();
+    for (my $n = 0; $n<@list_ids; $n++)  {
+	
+	my $list = $self->retrieve_list($c, $list_ids[$n]);
+
+	my @flat_list = map { $_->[1] } @$list;
+
+	print STDERR "LIST TYPE = ".$list_types[$n]."\n";
+	my $lv = CXGN::List::Validate->new();
+	my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $list_types[$n], \@flat_list);
+
+
+	print STDERR "Return data = ".Dumper($data);
+	
+	if ($list_types[$n] eq "accessions" && $data->{valid} == 0) {
+	    print STDERR "list $list_ids[$n] is invalid! ($data->{valid}) \n";
+	    push @invalid_lists, [ $list_ids[$n], $list_types[$n] ];
+	}
+	elsif ($list_types[$n] ne "accessions" && scalar(@{$data->{missing}}) > 0) {
+	    print STDERR "list $list_ids[$n] is invalid! (missing = ".scalar(@{$data->{missing}}).")\n";
+	    push @invalid_lists, [ $list_ids[$n], $list_types[$n] ];
+	    
+	}
+	else {
+	    print STDERR "List $list_ids[$n] of type $list_types[$n] is valid :-) \n";
+	}
+    }
+    $c->stash->{rest} = { invalid_lists => \@invalid_lists };
+}
 #
-# Validate a list of names for a specified data type
-# - Temporarily create a list
-# - Validate the list
-# - Delete the temp list
+# Validate a temp list of names for a specified data type
+# - Validate the temp list
 # - Return lists of missing and existing items
 #
-# PATH: POST /list/validate/{type}
-#   {type} is the name of a supported list type (accessions, trials, seedlots, etc...)
+# PATH: GET /list/validate/temp
+#
 # BODY:
+#   type: the name of a supported list type (accessions, trials, seedlots, etc...)
 #   items: array of item names to validate
 #
 # RETURNS:
@@ -636,56 +675,15 @@ sub validate : Path('/list/validate') Args(2) {
 #   missing: array list item names not in the database
 #   existing: array list item names found in the database
 #
-sub validate_temp : Path('/list/validate') : ActionClass('REST') { }
-sub validate_temp_POST : Args(1) {
+
+sub temp_validate :Path('/list/validate/temp') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $type = shift;
-    my $params = $c->request->parameters();
+    my $type = $c->req->param("type");
+    my $items = $c->req->param("items") ? decode_json $c->req->param("items") : [];
 
-    # Check user status
-    my $user_id = $self->get_user($c);
-    if (!$user_id) {
-        $c->stash->{rest} = { error => "You must be logged in to perform a list validation" };
-	    $c->detach();
-    }
-
-    # Get list items
-    my $items = $params->{'items[]'} || $params->{'items'};
-    if (!defined $items) {
-        $c->stash->{rest} = { error => "Data items not provided" };
-        $c->detach();
-    }
-
-    # Create new temp list
-    my $list_name = "TEMP_" . sprintf("%08X", rand(0xFFFFFFFF));
-    my $list_id = $self->new_list($c, $list_name, "temp list used for validation...", $user_id);
-    if (!$list_id) {
-        $c->stash->{rest} = { error => "Could not create temporary list" };
-        $c->detach();
-    }
-    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
-    if (!$list) {
-        $c->stash->{rest} = { error => "Could not get temporary list" };
-        $c->detach();
-    }
-    $list->type($type);
-
-    # Add list items
-    my $response = $list->add_bulk($items);
-    if ($response->{error}) {
-        $c->stash->{rest} = { error => $response->{error} };
-        $c->detach();
-    }
-
-    # Validate the list
-    my $list_elements = $list->retrieve_elements_with_ids($list_id);
-    my @flat_list = map { $_->[1] } @$list_elements;
     my $lv = CXGN::List::Validate->new();
-    my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
-
-    # Delete the list
-    CXGN::List::delete_list($c->dbc->dbh(), $list_id);
+    my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, $items);
 
     # Set missing
     my $m = $data->{missing};
@@ -734,6 +732,23 @@ sub transform :Path('/list/transform/') Args(2) {
 
     if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
 	$result->{error}  =  "Warning. This lists contains elements that cannot be converted.";
+    }
+
+    $c->stash->{rest} = $result;
+
+}
+
+sub temp_transform :Path('/list/transform/temp') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $type = $c->req->param("type");
+    my $items = $c->req->param("items") ? decode_json $c->req->param("items") : [];
+
+    my $t = CXGN::List::Transform->new();
+    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema"), $type, $items);
+
+    if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
+       $result->{error}  =  "Warning. This temporary list contains elements that cannot be converted.";
     }
 
     $c->stash->{rest} = $result;
@@ -1252,7 +1267,6 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
 	duplicated => $data->{duplicated} || [],
 	mapping => $data->{mapping},
     }
-
 }
 
 #########

@@ -648,6 +648,8 @@ sub save_experimental_design_POST : Args(0) {
             }
         }
     }
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
     
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
@@ -948,7 +950,7 @@ sub upload_trial_file_POST : Args(0) {
             #print STDERR Dumper $parse_errors;
 
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."<br>";
+                $return_error=$return_error.$error_string."<br>";
             }
         }
 
@@ -1030,6 +1032,10 @@ sub upload_trial_file_POST : Args(0) {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+
 
         $c->stash->{rest} = {warnings => $return_warnings, success => "1", trial_id => $save->{'trial_id'}};
         return;

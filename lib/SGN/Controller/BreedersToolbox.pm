@@ -21,7 +21,6 @@ use File::Spec::Functions;
 use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
 use CXGN::Genotype::Search;
-use JSON::XS;
 use CXGN::Trial;
 
 
@@ -106,8 +105,7 @@ sub manage_trials : Path("/breeders/trials") Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{timestamp} = localtime;
 
-    my $json = JSON::XS->new();
-    my $locations = $json->decode($projects->get_all_locations_by_breeding_program());
+    my $locations = $projects->get_all_locations_by_breeding_program();
 
     #print STDERR "Locations are ".Dumper($locations)."\n";
 
@@ -278,8 +276,7 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
         }
     }
 
-    my $json = JSON::XS->new();
-    my $locations = $json->decode($crossingtrial->get_all_locations_by_breeding_program());
+    my $locations = $crossingtrial->get_all_locations_by_breeding_program();
 
     $c->stash->{locations} = $locations;
 
@@ -368,8 +365,6 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     my $genotyping_facilities = $c->config->{genotyping_facilities};
     my @facilities = split ',',$genotyping_facilities;
 
-    my $json = JSON::XS->new();
-
     my $field_management_factors = $c->config->{management_factor_types};
     my @management_factor_types = split ',',$field_management_factors;
 
@@ -381,7 +376,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     $c->stash->{design_types} = \@design_types;
     $c->stash->{management_factor_types} = \@management_factor_types;
     $c->stash->{facilities} = \@facilities;
-    $c->stash->{geojson_locations} = $json->decode($projects->get_all_locations_by_breeding_program());
+    $c->stash->{geojson_locations} = $projects->get_all_locations_by_breeding_program();
     $c->stash->{locations} = $projects->get_all_locations();
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{timestamp} = localtime;
