@@ -91,15 +91,27 @@ sub get_market_segments {
     my $market_segment_rs = $people_schema->resultset('SpMarketSegment')->search( { } );
     my @market_segments;
     while (my $result = $market_segment_rs->next()){
+        my $market_segment_id = $result->sp_market_segment_id();
         my $market_segment_name = $result->name();
         my $market_segment_scope = $result->scope();
         my $person_id = $result->sp_person_id();
         my $create_date = $result->create_date();
         my $modified_date = $result->modified_date();
 
+        my $product_profile_link_rs = $people_schema->resultset('SpProductProfileSegment')->search({ sp_market_segment_id => $market_segment_id });
+        my @all_product_profiles;
+        while (my $product_profile_result = $product_profile_link_rs->next()){
+            my $product_profile_id = $product_profile_result->sp_product_profile_id();
+            my $profile_name = $people_schema->resultset('SpProductProfile')->find({sp_product_profile_id => $product_profile_id})->name();
+            push @all_product_profiles, $profile_name;
+        }
+
+        my @sort_product_profile_names = sort @all_product_profiles;
+        my $profile_name_string = join("<br>", @sort_product_profile_names);
+
         my $person= CXGN::People::Person->new($dbh, $person_id);
         my $person_name=$person->get_first_name()." ".$person->get_last_name();
-        push @market_segments, [$market_segment_name, $market_segment_scope, $person_name, $create_date, $modified_date ];
+        push @market_segments, [$market_segment_name, $market_segment_scope, $profile_name_string, $person_name, $create_date, $modified_date ];
     }
 
     return \@market_segments;

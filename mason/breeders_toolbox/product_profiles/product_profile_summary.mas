@@ -10,6 +10,7 @@
     <thead>
         <tr>
             <th>Product Profile Name</th>
+            <th>Market Segment</th>
             <th>Scope</th>
             <th>Trait</th>
             <th>Submitter</th>

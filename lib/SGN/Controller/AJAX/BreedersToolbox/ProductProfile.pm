@@ -336,6 +336,7 @@ sub get_product_profiles :Path('/ajax/product_profile/get_product_profiles') Arg
         my $profile_submitter = $profile_info[4];
         my $create_date = $profile_info[5];
         my $modified_date = $profile_info[6];
+        my $market_segment_name = $profile_info[7];
 #        print STDERR "PRODUCT PROFILE DETAILS =".Dumper($profile_details)."\n";
         my $trait_string;
         if ($profile_details) {
@@ -351,7 +352,7 @@ sub get_product_profiles :Path('/ajax/product_profile/get_product_profiles') Arg
             my @sort_trait_list = sort @trait_list;
             $trait_string = join("<br>", @sort_trait_list);
         }
-        push @profile_summary, [$profile_name_link, $profile_scope, $trait_string, $profile_submitter, $create_date, $modified_date] ;
+        push @profile_summary, [$profile_name_link, $market_segment_name, $profile_scope, $trait_string, $profile_submitter, $create_date, $modified_date] ;
     }
 #    print STDERR "TRAIT LIST =".Dumper(\@profile_summary)."\n";
 

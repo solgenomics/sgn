@@ -122,14 +122,19 @@ sub get_product_profile_info {
         my $person= CXGN::People::Person->new($dbh, $person_id);
         my $person_name=$person->get_first_name()." ".$person->get_last_name();
 
-        my $product_profileprop_rs = $people_schema->resultset('SpProductProfileprop')->search( { sp_product_profile_id => $product_profile_id } );
+        my $product_profileprop_rs = $people_schema->resultset('SpProductProfileprop')->search({ sp_product_profile_id => $product_profile_id });
         while (my $product_profile_details = $product_profileprop_rs->next()){
             my $profile_detail_json = $product_profile_details->value();
             my $profile_detail_hash = JSON::Any->jsonToObj($profile_detail_json);
             $profile_detail_string = $profile_detail_hash->{'product_profile_details'};
         }
 
-        push @product_profiles, [$product_profile_id, $product_profile_name, $product_profile_scope, $profile_detail_string, $person_name, $create_date, $modified_date ];
+        my $market_segment_link_rs = $people_schema->resultset('SpProductProfileSegment')->find({ sp_product_profile_id => $product_profile_id });
+        my $market_segment_id = $market_segment_link_rs->sp_market_segment_id();
+        my $market_segment_rs = $people_schema->resultset('SpMarketSegment')->find({ sp_market_segment_id => $market_segment_id });
+        my $market_segment_name = $market_segment_rs->name();
+
+        push @product_profiles, [$product_profile_id, $product_profile_name, $product_profile_scope, $profile_detail_string, $person_name, $create_date, $modified_date, $market_segment_name ];
     }
 
     return \@product_profiles;
