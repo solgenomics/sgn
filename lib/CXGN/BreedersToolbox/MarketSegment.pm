@@ -10,7 +10,7 @@ CXGN::BreedersToolbox::MarketSegment - a class to manage market segment
 
 =head1 EXAMPLE
 
-my $market_segment = CXGN::BreedersToolbox::MarketSegment->new( { schema => $schema});
+my $market_segment = CXGN::BreedersToolbox::MarketSegment->new( { people_schema => $people_schema});
 
 =head1 AUTHOR
 
@@ -65,20 +65,20 @@ sub BUILD {
 sub store {
     my $self = shift;
     my %data = (
-	name => $self->name(),
-	scope => $self->scope(),
-	sp_person_id => $self->sp_person_id(),
-    create_date => $self->create_date(),
-    modified_date => $self->modified_date(),
+        name => $self->name(),
+        scope => $self->scope(),
+        sp_person_id => $self->sp_person_id(),
+        create_date => $self->create_date(),
+        modified_date => $self->modified_date(),
 	);
 
-    if ($self->sp_market_segment_id()) { $data{sp_market_segment_id} = $self->sp_market_segment_id(); }
+    if ($self->sp_market_segment_id()) {
+        $data{sp_market_segment_id} = $self->sp_market_segment_id();
+    }
 
     my $rs = $self->people_schema()->resultset('SpMarketSegment');
-
     my $row = $rs->update_or_create( \%data );
 
-    print STDERR "SP MARKET SEGMENT ID =".Dumper($row->sp_market_segment_id())."\n";
     return $row->sp_market_segment_id();
 }
 
@@ -104,6 +104,5 @@ sub get_market_segments {
 
     return \@market_segments;
 }
-
 
 1;

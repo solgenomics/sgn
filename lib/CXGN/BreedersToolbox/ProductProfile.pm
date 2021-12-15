@@ -7,11 +7,11 @@ CXGN::BreedersToolbox::ProductProfile - a class to manage product profile
 
 =head1 DESCRIPTION
 
-The projectprop of type "product_profile_json" is stored as JSON.
+The SpProductProfileprop of type "product_profile_json" is stored as JSON.
 
 =head1 EXAMPLE
 
-my $profile = CXGN::BreedersToolbox::ProductProfile->new( { schema => $schema});
+my $profile = CXGN::BreedersToolbox::ProductProfile->new( { people_schema => $people_schema});
 
 =head1 AUTHOR
 
@@ -54,14 +54,14 @@ sub BUILD {
     my $people_schema = $self->people_schema();
 
     if (! $args->{sp_product_profile_id}) {
-	print STDERR "Creating empty object...\n";
-	return $self;
+        print STDERR "Creating empty object...\n";
+        return $self;
     }
 
     my $row = $people_schema->resultset('SpProductProfile')->find( { sp_product_profile_id => $args->{sp_product_profile_id} } );
 
     if (!$row) {
-	die "The database has no product profile entry with id $args->{sp_product_profile_id}";
+        die "The database has no product profile entry with id $args->{sp_product_profile_id}";
     }
 
 }
@@ -97,27 +97,9 @@ sub store {
 
     my $market_segment_link_row = $market_segment_link_rs->update_or_create( \%market_segment_link_data );
     my $product_profile_segment_id = $market_segment_link_row->sp_product_profile_segment_id();
-    print STDERR "PRODUCT PROFILE SEGMENT ID =".Dumper($product_profile_segment_id)."\n";
+
     return $product_profile_id;
 }
-
-
-
-#sub BUILD {
-#    my $self = shift;
-#    my $args = shift;
-
-#    $self->prop_table('projectprop');
-#    $self->prop_namespace('Project::Projectprop');
-#    $self->prop_primary_key('projectprop_id');
-#    $self->prop_type('product_profile_json');
-#    $self->cv_name('project_property');
-#    $self->allowed_fields([ qw | product_profile_name product_profile_scope product_profile_details product_profile_submitter product_profile_uploaded_date | ]);
-#    $self->parent_table('project');
-#    $self->parent_primary_key('project_id');
-
-#    $self->load();
-#}
 
 
 sub get_product_profile_info {
@@ -145,38 +127,10 @@ sub get_product_profile_info {
             my $profile_detail_json = $product_profile_details->value();
             my $profile_detail_hash = JSON::Any->jsonToObj($profile_detail_json);
             $profile_detail_string = $profile_detail_hash->{'product_profile_details'};
-#            $profile_detail_ref = decode_json $profile_detail_string;
         }
 
         push @product_profiles, [$product_profile_id, $product_profile_name, $product_profile_scope, $profile_detail_string, $person_name, $create_date, $modified_date ];
     }
-
-
-
-
-
-#    my $self = shift;
-#    my $schema = $self->bcs_schema();
-#    my $project_id = $self->parent_id();
-#    my $type = $self->prop_type();
-#    my $type_id = $self->_prop_type_id();
-#    my $key_ref = $self->allowed_fields();
-#    my @fields = @$key_ref;
-
-#    my $profile_rs = $schema->resultset("Project::Projectprop")->search({ project_id => $project_id, type_id => $type_id }, { order_by => {-asc => 'projectprop_id'} });
-#    my @profile_list;
-#    while (my $r = $profile_rs->next()){
-#        my @each_row = ();
-#        my $profile_id = $r->projectprop_id();
-#        push @each_row, $profile_id;
-#        my $profile_json = $r->value();
-#        my $profile_hash = JSON::Any->jsonToObj($profile_json);
-#        foreach my $field (@fields){
-#            push @each_row, $profile_hash->{$field};
-#        }
-#        push @profile_list, [@each_row];
-#    }
-#    print STDERR "PROFILE LIST =".Dumper(\@profile_list)."\n";
 
     return \@product_profiles;
 }

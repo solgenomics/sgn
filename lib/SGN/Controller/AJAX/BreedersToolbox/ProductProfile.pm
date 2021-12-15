@@ -139,9 +139,6 @@ sub create_profile_template_POST : Args(0) {
 
     my $result = $file_row->file_id;
 
-#    print STDERR "FILE =".Dumper($file_destination)."\n";
-#    print STDERR "FILE ID =".Dumper($file_id)."\n";
-
     $c->stash->{rest} = {
         success => 1,
         result => $result,
@@ -169,7 +166,6 @@ sub upload_profile_POST : Args(0) {
     my $market_segment_id = $c->req->param('product_profile_market_segment_id');
     $new_profile_name =~ s/^\s+|\s+$//g;
 
-
     if ($session_id){
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
@@ -195,20 +191,6 @@ sub upload_profile_POST : Args(0) {
         return;
     }
 
-
-#    my $profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema, parent_id => $program_id });
-#    my $profiles = $profile_obj->get_product_profile_info();
-#    my @db_profile_names;
-#    foreach my $profile(@$profiles){
-#        my @profile_info = @$profile;
-#        my $stored_profile_name = $profile_info[1];
-#        push @db_profile_names, $stored_profile_name;
-#    }
-#    if ($new_profile_name ~~ @db_profile_names){
-#        $c->stash->{rest} = {error=>'Please use different product profile name. This name is already used for another product profile!'};
-#        return;
-#    }
-
     my $upload = $c->req->upload('profile_uploaded_file');
     my $subdirectory = "profile_upload";
     my $upload_original_name = $upload->filename();
@@ -216,9 +198,6 @@ sub upload_profile_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $uploaded_date = $time->ymd();
-#    print STDERR "PROGRAM ID =".Dumper($program_id)."\n";
-#    print STDERR "PROFILE NAME =".Dumper($new_profile_name)."\n";
-#    print STDERR "PROFILE SCOPE =".Dumper($new_profile_scope)."\n";
 
     ## Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({
@@ -240,7 +219,7 @@ sub upload_profile_POST : Args(0) {
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('ProfileXLS');
     my $parsed_data = $parser->parse();
-    print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
+#    print STDERR "PARSED DATA =".Dumper($parsed_data)."\n";
 
     my $profile_detail_string;
     if ($parsed_data){
@@ -272,7 +251,7 @@ sub upload_profile_POST : Args(0) {
     $profile->create_date($uploaded_date);
     $profile->sp_market_segment_id($market_segment_id);
     my $product_profile_id = $profile->store();
-    #print STDERR "PRODUCT PROFILE ID =".($product_profile_id)."\n";
+
     if (!$product_profile_id){
         $c->stash->{rest} = {error_string => "Error saving your product profile",};
         return;
@@ -286,21 +265,11 @@ sub upload_profile_POST : Args(0) {
     $product_profileprop->parent_id($product_profile_id);
     $product_profileprop->history(\@history);
     my $product_profileprop_id = $product_profileprop->store_people_schema_prop();
-    print STDERR "PRODUCT PROFILE PROP ID =".($product_profileprop_id)."\n";
 
     if (!$product_profileprop_id){
         $c->stash->{rest} = {error_string => "Error saving your product profile",};
         return;
     }
-
-#    my $project_prop_id = $profile->store_by_rank();
-
-#    if ($@) {
-#        $c->stash->{rest} = { error => $@ };
-#        print STDERR "An error condition occurred, was not able to upload profile. ($@).\n";
-#        $c->detach();
-#    }
-
 
     $c->stash->{rest} = { success => 1 };
 
@@ -346,20 +315,15 @@ sub add_product_profile_POST : Args(0) {
 
 
 sub get_product_profiles :Path('/ajax/product_profile/get_product_profiles') Args(0){
-
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh;
 
-#    my $program = $c->stash->{program};
-#    my $program_id = $program->get_program_id;
-#    my $schema = $c->stash->{schema};
-
     my $profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ dbh => $dbh, people_schema => $people_schema });
     my $profiles = $profile_obj->get_product_profile_info();
-    print STDERR "PRODUCT PROFILE RESULTS =".Dumper($profiles)."\n";
+
     my @profile_summary;
     foreach my $profile(@$profiles){
         my @trait_list = ();
@@ -372,7 +336,7 @@ sub get_product_profiles :Path('/ajax/product_profile/get_product_profiles') Arg
         my $profile_submitter = $profile_info[4];
         my $create_date = $profile_info[5];
         my $modified_date = $profile_info[6];
-        print STDERR "PRODUCT PROFILE DETAILS =".Dumper($profile_details)."\n";
+#        print STDERR "PRODUCT PROFILE DETAILS =".Dumper($profile_details)."\n";
         my $trait_string;
         if ($profile_details) {
             my $trait_info_ref = decode_json $profile_details;
@@ -477,7 +441,7 @@ sub add_market_segment_POST : Args(0) {
     my $session_id = $c->req->param("sgn_session_id");
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $dbh = $c->dbc->dbh();
-    print STDERR "SESSION ID =".Dumper($session_id)."\n";
+
     if ($session_id){
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
@@ -509,7 +473,7 @@ sub add_market_segment_POST : Args(0) {
     $market_segment->sp_person_id($user_id);
     $market_segment->create_date($timestamp);
     my $market_segment_id = $market_segment->store();
-    print STDERR "MARKET SEGMENT ID =".($market_segment_id)."\n";
+
     if (!$market_segment_id){
         $c->stash->{rest} = {error => 'Error saving your market segment'};
         return;
@@ -521,7 +485,6 @@ sub add_market_segment_POST : Args(0) {
 
 
 sub get_market_segments :Path('/ajax/product_profile/get_market_segments') Args(0){
-
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
