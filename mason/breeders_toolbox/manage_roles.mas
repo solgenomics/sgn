@@ -51,7 +51,7 @@ $is_curator => undef
                 </div>
 	        </div>
 	       </form><br/>
-         
+
         </div>
       </div>
       <div class="modal-footer">
@@ -93,16 +93,16 @@ $is_curator => undef
                 <div class="col-sm-9" >
 		  <input class="form-control" type="text" id="team_name"></input>
 		</div>
-		
+
 		<label class="col-sm-3 control-label">Responsibilities</label>
 		<div class="col-sm-9" >
 		  <input class="form-control" type="text" id="team_description"></input>
 		</div>
 	    </div>
 	</div>
-	
 
-      
+
+
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" name="add_team_cancel_button" id="add_person_role_cancel_button" data-dismiss="modal">Close</button>
@@ -112,54 +112,6 @@ $is_curator => undef
   </div>
 </div>
 </div>  <!-- manage_teams -->
-
-
-<& /page/page_title.mas, title=>"Manage Stage Gates <button class='btn btn-default btn-xs' id='add_new_stage_gate'>+</button>" &>
-
-<table id="manage_stage_gate_table" class="table table-bordered">
-<thead>
-<tr><th>Stage gate</th><th>Description</th></tr>
-</thead>
-<tbody>
-</tbody>
-</table>
-
-
-<div class="modal fade" id="add_stage_gate_dialog" name="add_stage_gate_dialog" tabindex="-1" role="dialog" aria-labelledby="addStageGateDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addStageGateDialog">Add New Stage Gate</span></h4>
-      </div>
-      <div class="modal-body ui-front">
-        <div class="container-fluid">
-          <div class="form-group">
-	    <input type="hidden" id="sp_team_id_for_member" name="sp_team_id_for_member" />
-                <label class="col-sm-3 control-label">Stage gate name</label>
-                <div class="col-sm-9" >
-                  <input class="form-control" type="text" name="add_stage_gate_name_input"  id="add_stage_gate_name_input" ></input>
-                </div>
-		<label class="col-sm-3 control-label">Management Role</label>
-		<div class="col-sm-9" >
-                  <input class="form-control" name="add_stage_gate_description_input" id="add_stage_gate_description_input" />
-                </div>
-
-	        </div>
-	       </form><br/>
-         
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="add_stage_gate_cancel_button" id="add_stage_gate_cancel_button" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="add_stage_gate_submit_button" id="add_stage_gate_submit_button" title="Submit">Submit</button>
-      </div>
-    </div>
-  </div>
-</div>
-</div>  <!-- manage_teams -->
-
-
 
 
 % if (! $is_curator) {
@@ -178,29 +130,26 @@ jQuery(document).ready(function() {
        ajax : '/ajax/teams/list'
    });
 
-   jQuery('#manage_stage_gate_table').DataTable( {
-       ajax: '/ajax/stage_gates/list'
-   });
 
 });
 
-jQuery('#add_new_team').click( function(e) { 
+jQuery('#add_new_team').click( function(e) {
   jQuery('#add_team_dialog').modal("show");
 });
 
 
-jQuery('#add_new_stage_gate').click( function(e) { 
+jQuery('#add_new_stage_gate').click( function(e) {
   jQuery('#add_stage_gate_dialog').modal("show");
 });
 
 function delete_user_role(sp_person_role_id) {
-    
+
     var yes = confirm("Really delete this role association?");
-    if (yes) { 
+    if (yes) {
       $.ajax( {
         url: '/ajax/roles/delete/association/'+sp_person_role_id
       });
-      jQuery('#manage_user_roles_table').DataTable().ajax.reload();					  
+      jQuery('#manage_user_roles_table').DataTable().ajax.reload();
       alert('Association deleted.');
     }
   }
@@ -242,14 +191,14 @@ function open_add_team_member_dialog(sp_team_id, team_name) {
 }
 
 
-							  
+
    jQuery('#add_person_role_submit_button').click( function(e) {
 
 
    jQuery.ajax ( {
        url : '/ajax/people/add_person_role?sp_person_id'+jQuery("#sp_person_id").val()+'&sp_role_id='+jQuery("#add_person_role_role_select").val(),
        beforeSend: function() {
-           jQuery("#working_modal").modal("show");							  
+           jQuery("#working_modal").modal("show");
        },
        success: function(response){
           //console.log(response);
@@ -267,7 +216,7 @@ function open_add_team_member_dialog(sp_team_id, team_name) {
        }
     });
 });
-	
+
 
 
 jQuery('#add_team_submit_button').click( function(e) {
@@ -319,32 +268,4 @@ jQuery('#add_team_member_submit_button').click( function(e) {
 });
 
 
-jQuery('#add_stage_gate_submit_button').click( function(e) {
-
-   alert(jQuery("#add_stage_gate_name_input").val()+'&description='+jQuery("#add_stage_gate_description_input").val());
-							  
-   jQuery.ajax ( {
-       url : '/ajax/people/add_stage_gate?name='+jQuery("#add_stage_gate_name_input").val()+'&description='+jQuery("#add_stage_gate_description_input").val(),
-       beforeSend: function() {
-           jQuery("#working_modal").modal("show");
-       },
-       success: function(response){
-           //console.log(response);
-           jQuery("#working_modal").modal("hide");
-           if (response.error) {
-               alert('Error: '+response.error);
-           } else {
-           jQuery('#manage_stage_gate_table').DataTable().ajax.reload();
-               alert('Successfully added new stage gate!');
-           }
-        },
-        error: function(response) {
-            jQuery("#working_modal").modal("hide");
-            alert('An error occured: '+response);
-        }
-    });
-});
-
-							  
 </script>
-

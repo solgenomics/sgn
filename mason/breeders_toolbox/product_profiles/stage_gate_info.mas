@@ -1,0 +1,29 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<table id="manage_stage_gate_table" class="display">
+    <thead>
+        <tr>
+            <th>Stage Gate</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+</table>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#manage_stage_gate_table').DataTable( {
+        'autoWidth': false,
+        ajax: '/ajax/stage_gates/list'
+    });
+
+});
+
+
+</script>
