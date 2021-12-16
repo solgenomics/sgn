@@ -60,13 +60,13 @@ foreach my $ds (@datasets) {
     if ($ds->can("cache")) { $ds->cache->clear(); }
     $ds->name("test");
     $ds->description("test description");
-    
+
     $ds->accessions( [ 38913, 38914, 38915 ] );
-    
+
     my $sp_dataset_id = $ds->store();
-    
+
     my $trials = $ds->retrieve_trials();
-    
+
     is_deeply($trials, [
 		  [
 		   139,
@@ -82,15 +82,15 @@ foreach my $ds (@datasets) {
 		  ]
 	      ]
 	      , "trial retrieve test");
-    
+
     if ($ds->isa("CXGN::Dataset::File")) {
 	ok(-e $ds->file_name()."_trials.txt", "trial file exists");
     }
-    
+
     my $traits = $ds->retrieve_traits();
-    
+
     print STDERR Dumper($traits);
-    
+
     is_deeply($traits, [
 		  [
 		   70741,
@@ -110,22 +110,31 @@ foreach my $ds (@datasets) {
 		  ]
 	      ]
 	);
-    
+
     my $phenotypes = $ds->retrieve_phenotypes();
-    
+
     if ($ds->isa("CXGN::Dataset::File")) {
 	my$geno_filename = $ds->file_name()."_genotype.txt";
 	my $genotypes = $ds->retrieve_genotypes(1,$geno_filename,$cache_root_dir,$cluster_shared_tempdir_config,$backend_config,$cluster_host_config,$web_cluster_queue_config,$basepath_config,$forbid_cache);
     } else {
 	my $genotypes = $ds->retrieve_genotypes(1);
     }
-    
+
     my $years = $ds->retrieve_years();
-    
-    is_deeply($years, [], "Year retrieve test");
-    
+
+    is_deeply($years, [
+          [
+            '2014',
+            '2014'
+          ],
+          [
+            '2016',
+            '2016'
+          ]
+        ], "Year retrieve test");
+
     my $plots = $ds->retrieve_plots();
-    
+
     is_deeply($plots, [
 		  [
 		   39299,
@@ -196,7 +205,7 @@ foreach my $ds (@datasets) {
 		   'UG120038_block:2_plot:TP38_2012_NaCRRI'
 		  ]
 	      ], "plot retrieve test");
-    
+
 }
 
 

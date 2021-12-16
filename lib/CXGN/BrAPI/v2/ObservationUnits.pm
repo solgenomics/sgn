@@ -281,6 +281,20 @@ sub search {
             }
         }
 
+        my @plot_image_ids;
+			eval {
+	            my $image_id = CXGN::Stock->new({
+	    			schema => $self->bcs_schema,
+	    			stock_id => $obs_unit->{observationunit_stock_id},
+	    		});
+	    		@plot_image_ids = $image_id->get_image_ids();
+	    	};
+            my @ids;
+            foreach my $arrayimage (@plot_image_ids){
+                push @ids, $arrayimage->[0];
+            }
+        
+
         push @data_window, {
             externalReferences => \@references,
             additionalInfo => $additional_info,
@@ -296,8 +310,10 @@ sub search {
             programName => $obs_unit->{breeding_program_name},
             programDbId => qq|$obs_unit->{breeding_program_id}|,
             seedLotDbId => $obs_unit->{seedlot_stock_id} ? qq|$obs_unit->{seedlot_stock_id}| : undef,
+            seedLotName => $obs_unit->{seedlot_uniquename} ? qq|$obs_unit->{seedlot_uniquename}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
+            plotImageDbIds => \@ids,
             treatments => \@brapi_treatments,
             trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
             trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
@@ -449,14 +465,15 @@ sub observationunits_update {
         }
 
         #update accession
+        my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
         if ($old_accession && $accession_id && $old_accession_id ne $accession_id) {
             my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
                 bcs_schema => $schema,
                 trial_id => $study_ids_arrayref,
-                new_accession => $accession_name,
-                old_accession => $old_accession,
-                old_plot_id => $observation_unit_db_id,
-                old_plot_name => $observationUnit_name,
+                # new_accession => $accession_name,
+                # old_accession => $old_accession,
+                # old_plot_id => $observation_unit_db_id,
+                # old_plot_name => $observationUnit_name,
                 experiment_type => 'field_layout'
             });
 
@@ -466,7 +483,7 @@ sub observationunits_update {
                 return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
             }
 
-            my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
+            my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($observation_unit_db_id, $old_accession_id, $plot_of_type_id);
             if ($replace_return_error) {
                 print STDERR Dumper $replace_return_error;
                 return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
@@ -818,4 +835,4 @@ sub _order {
     return $levels{$value} + 0;
 }
 
-1;
+
