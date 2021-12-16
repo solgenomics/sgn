@@ -707,7 +707,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    + clustersLink + ' | '
 	    + reportLink;
 
-	jQuery('#cluster_plot').prepend('<p>' + downloadLinks + '</p>');
+	jQuery('#cluster_plot').prepend('<p style="margin-top: 20px">' + downloadLinks + '</p>');
 	jQuery('#cluster_plot').prepend(plot);
 
     },
