@@ -145,7 +145,7 @@ $data_level => 'plot'
                 <option value="by_col_zigzag">By Column: Zigzag</option>
                 <option value="by_row">By Row: Current Layout</option>
             </select>
-            <button style="margin-left: 8%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
+            <button style="margin-left: 5%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
             <button style="margin-left: 2%;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success">Submit Field Layout</button>
         </div><br>
         <div style="display: inline;">
@@ -614,7 +614,7 @@ jQuery(document).ready( function() {
                 }
                 FieldMap.filter_data(data);
                 FieldMap.set_meta_data();
-                FieldMap.meta_data.first_load = true;
+                FieldMap.meta_data.retain_layout = true;
                 FieldMap.load();
 
                 // FieldMap.plot_ou_arr.sort(function(plot_ou_1, plot_ou_2) {
@@ -737,7 +737,7 @@ jQuery(document).ready( function() {
                         FieldMap.meta_data.filler_accession_name = filler_accession_name;
                         FieldMap.meta_data.num_rows = changed_dim_rows;
                         FieldMap.meta_data.num_cols = changed_dim_cols;
-                        
+                        FieldMap.meta_data.retain_layout = false;
                         FieldMap.load();         
                     }
                 },
@@ -751,6 +751,7 @@ jQuery(document).ready( function() {
             FieldMap.meta_data.num_cols = changed_dim_cols;
             jQuery('#working_modal').modal("hide");
             jQuery("#change_dimensions_dialog").modal("hide");
+            FieldMap.meta_data.retain_layout = false;
             FieldMap.load();
         }
     })
@@ -761,6 +762,7 @@ jQuery(document).ready( function() {
 
     jQuery("#plot_layout").change(function() {
         FieldMap.meta_data.plot_layout = jQuery("#plot_layout").val();
+        FieldMap.meta_data.retain_layout = false;
         FieldMap.load();
     });
 

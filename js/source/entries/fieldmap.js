@@ -103,7 +103,11 @@ export function init() {
                 if (obs_level.levelName == "plot") {
                     plot.observationUnitPosition.positionCoordinateX = parseInt(plot.observationUnitPosition.positionCoordinateX);
                     plot.observationUnitPosition.positionCoordinateY = parseInt(plot.observationUnitPosition.positionCoordinateY);
-                    plot.type = "data";
+                    if (plot.additionalInfo && plot.additionalInfo.type == "filler") {
+                        plot.type = "filler";
+                    } else {
+                        plot.type = "data";
+                    }
                     plot_object[plot.observationUnitDbId] = plot;
                 }   
             }
@@ -325,29 +329,30 @@ export function init() {
             this.plot_arr = [
                 ...this.plot_arr.slice(0, Object.entries(this.plot_object).length),
             ];
-            this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
-            var count = 0;
-            var column;
+            if (this.meta_data.retain_layout == true) {} else {
+                this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
+                var count = 0;
+                var column;
 
-            if (!this.meta_data.plot_layout) {
-                this.meta_data.plot_layout = "serpentine";
-            }
-            for (let j = 0; j < (rows); j++) {
-                for (let i = 0; i < (cols); i++) {
-                    column = this.meta_data.plot_layout == "serpentine" && j % 2 == 1 ? this.meta_data.max_col - i : this.meta_data.min_col + i;
-                    if (!this.plot_arr[count]) {
-                        this.meta_data.post = true;
-                        this.plot_arr[count] = this.get_plot_format('filler', column, this.meta_data.max_row - j, );
-                    } else if (this.plot_arr[count].observationUnitPosition) {
-                        this.plot_arr[count].observationUnitPosition.positionCoordinateX = column;
-                        this.plot_arr[count].observationUnitPosition.positionCoordinateY = this.meta_data.max_row - j;
-                    }
-                        count += 1;
+                if (!this.meta_data.plot_layout) {
+                    this.meta_data.plot_layout = "serpentine";
                 }
+                for (let j = 0; j < (rows); j++) {
+                    for (let i = 0; i < (cols); i++) {
+                        column = this.meta_data.plot_layout == "serpentine" && j % 2 == 1 ? this.meta_data.max_col - i : this.meta_data.min_col + i;
+                        if (!this.plot_arr[count]) {
+                            this.meta_data.post = true;
+                            this.plot_arr[count] = this.get_plot_format('filler', column, this.meta_data.max_row - j, );
+                        } else if (this.plot_arr[count].observationUnitPosition) {
+                            this.plot_arr[count].observationUnitPosition.positionCoordinateX = column;
+                            this.plot_arr[count].observationUnitPosition.positionCoordinateY = this.meta_data.max_row - j;
+                        }
+                            count += 1;
+                    }
+                }
+                this.meta_data.max_row = rows + this.meta_data.min_row - 1;
+                this.meta_data.max_col = cols + this.meta_data.min_col - 1;
             }
-            this.meta_data.max_row = rows + this.meta_data.min_row - 1;
-            this.meta_data.max_col = cols + this.meta_data.min_col - 1;
-
 
         }
         add_corners() {
@@ -577,6 +582,7 @@ export function init() {
             height = this.meta_data.bottom_border_selection ? height + 1 : height;
             var row_increment = this.meta_data.invert_row_checkmark ? 1 : 0;
             row_increment = this.meta_data.top_border_selection ? row_increment : row_increment - 1;
+            var col_increment = this.meta_data.left_border_selection ? 1 : 0;
             var grid = d3.select("#fieldmap_chart")
             .append("svg")
             .attr("width", width * 50 + 20 + "px")
@@ -594,7 +600,7 @@ export function init() {
             .data(this.plot_arr);
             plots.append("title");
             plots.enter().append("rect")
-                .attr("x", function(d) { return d.observationUnitPosition.positionCoordinateX * 50; })
+                .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + col_increment)* 50; })
                 .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 15; })
                 .attr("rx", 4)
                 .attr("class", "col bordered")
@@ -626,7 +632,7 @@ export function init() {
 
             plots.append("text");
                     plots.enter().append("text")
-                    .attr("x", function(d) { return d.observationUnitPosition.positionCoordinateX * 50 + 15; })
+                    .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + col_increment) * 50 + 15; })
                     .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 45; })
                     .text(function(d) { if ((d.type == "data" && !d.additionalInfo) || (d.type == "data" && d.additionalInfo.type != "filler")) { return d.observationUnitPosition.observationLevel.levelCode; }});
 
@@ -643,7 +649,7 @@ export function init() {
 
             plots.enter().append("image")
             .attr("xlink:href", image_icon)
-            .attr("x", function(d) { return d.observationUnitPosition.positionCoordinateX * 50 + 5; })
+            .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + col_increment)* 50 + 5; })
             .attr("y", function(d) { return (d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 15; })
             .attr("width", 20)
             .attr("height", 20);
@@ -669,14 +675,14 @@ export function init() {
             var rowLabels = grid.selectAll(".rowLabels") 
             .data(row_label_arr)
             .enter().append("text")
-            .attr("x", ((this.meta_data.left_border_selection ? this.meta_data.min_col - 1 : this.meta_data.min_col) * 50 - 25))
+            .attr("x", (this.meta_data.min_col * 50 - 25))
             .attr("y", function(label) {return (label+row_increment) * 50 + 45})
             .text(function(label, i) {return i+1});
 
             var colLabels = grid.selectAll(".colLabels") 
             .data(col_label_arr)
             .enter().append("text")
-            .attr("x", function(label) {return (label+1) * 50 - 30})
+            .attr("x", function(label) {return (label+1 + col_increment) * 50 - 30})
             .attr("y", (col_labels_row * 50) + 45)
             .text(function(label) {return label});
         }
@@ -684,13 +690,10 @@ export function init() {
 
         load() {
             d3.select("svg").remove();
-            if (this.meta_data.first_load == false) {
-                this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
-                this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
-            }
+            this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
+            this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
             this.invert_rows();
             this.add_borders();
-            this.meta_data.first_load = false;
             this.render();
         }
 
