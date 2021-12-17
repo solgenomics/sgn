@@ -505,7 +505,10 @@ $analytics_protocol_result_summary => {}
 % } #End market_segment_section
 % if ($info_section_id eq 'stage_gate_section'){
                                 <& /breeders_toolbox/product_profiles/stage_gate_info.mas &>
-% } #End market_segment_section
+% } #End stage_gate_section
+% if ($info_section_id eq 'team_section'){
+                                <& /breeders_toolbox/product_profiles/team_info.mas &>
+% } #End team_section
 
 
 % if (!$info_section_id){

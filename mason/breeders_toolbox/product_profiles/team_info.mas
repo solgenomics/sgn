@@ -1,0 +1,31 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<table id="manage_teams_table" class="display">
+    <thead>
+        <tr>
+            <th>Team</th>
+            <th>Description</th>
+            <th>Stage Gate</th>
+            <th>Team Members</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+</table>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#manage_teams_table').DataTable( {
+        'autoWidth': false,
+        ajax: '/ajax/teams/list'
+    });
+
+});
+
+</script>

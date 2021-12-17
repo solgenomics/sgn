@@ -18,12 +18,13 @@ Titima Tantikanjana <tt15@cornell.edu>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Market Segments</h4>", info_section_subtitle => 'View and manage market segments',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_market_segment_button">Add New Market Segment</button>', icon_class => "glyphicon glyphicon-th", info_section_id => "market_segment_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Product Profiles</h4>", info_section_subtitle => 'View and manage product profiles',buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_profile_button">Upload New Product Profile</button><button class="btn btn-sm btn-default" style="margin:3px" id="download_template_button">Download Template</button>', icon_class => " glyphicon glyphicon-list-alt", info_section_id => "product_profile_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Stage Gates</h4>", info_section_subtitle => 'View and manage stage gates', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_stage_gate_button">Add New Stage Gate</button>', icon_class => "glyphicon glyphicon-forward", info_section_id => "stage_gate_section" &>
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Teams</h4>", info_section_subtitle => 'View and manage teams', icon_class => "glyphicon glyphicon-user", info_section_id => "team_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Teams</h4>", info_section_subtitle => 'View and manage teams', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_team_button">Add New Team</button>', icon_class => "glyphicon glyphicon-user", info_section_id => "team_section" &>
 
 <& /breeders_toolbox/product_profiles/create_profile_template_dialog.mas &>
 <& /breeders_toolbox/product_profiles/upload_profile_dialog.mas &>
 <& /breeders_toolbox/product_profiles/add_market_segment_dialog.mas &>
 <& /breeders_toolbox/product_profiles/add_stage_gate_dialog.mas &>
+<& /breeders_toolbox/product_profiles/add_team_dialog.mas &>
 
 <script>
 
@@ -50,6 +51,9 @@ jQuery(document).ready(function () {
         jQuery('#add_stage_gate_dialog').modal("show");
     })
 
+    jQuery('#add_team_button').click(function(){
+        jQuery('#add_team_dialog').modal("show");
+    })
 
 
 });
