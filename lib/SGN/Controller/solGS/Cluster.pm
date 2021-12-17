@@ -50,8 +50,8 @@ sub check_cluster_output_files {
 
     # if ($cluster_type =~ /k-means/i)
     # {
-	$self->cluster_result_file($c);
-	$cluster_result_file = $c->stash->{"${cluster_type}_result_file"};
+	#$self->cluster_result_file($c);
+	#$cluster_result_file = $c->stash->{"${cluster_type}_result_file"};
 
 	$self->cluster_plot_file($c);
 	$cluster_plot_file = $c->stash->{"${cluster_type}_plot_file"};
@@ -61,7 +61,7 @@ sub check_cluster_output_files {
 	# $self->hierarchical_result_file($c);
 	# $cluster_plot_file = $c->stash->{hierarchical_dendrogram_file};
     # }
-print STDERR "\ntype: $cluster_type - result file: $cluster_result_file -- plot_file: $cluster_plot_file\n";
+
     if (-s $cluster_plot_file)
     {
 	$c->stash->{"${cluster_type}_plot_exists"} = 1;
@@ -98,7 +98,7 @@ sub run_cluster_analysis :Path('/run/cluster/analysis/') Args() {
 	    $self->run_cluster($c);
     }
 
-    $ret = $self->_prepare_response($c);
+    $ret = $self->prepare_response($c);
 
     $ret = to_json($ret);
     $c->res->content_type('application/json');
@@ -149,25 +149,22 @@ sub cluster_gebvs_file {
 }
 
 
-sub _prepare_response {
+sub prepare_response {
     my ($self, $c) = @_;
 
     $self->prep_cluster_download_files($c);
-    my $cluster_plot_file = $c->stash->{download_plot};
-    my $clusters_file     = $c->stash->{download_clusters};
-    my $report            = $c->stash->{download_cluster_report};
-
+    
     my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
-
     my $result_name = $c->stash->{dataset_name}  || $c->stash->{list_name} || $c->stash->{cluster_pop_name};
 
     my $cluster_type = $c->stash->{cluster_type};
     my $file_id = $c->stash->{file_id};
-    my $plot_name = "${cluster_type}-plot-${file_id}";
-
-    my $ret->{cluster_plot} = $cluster_plot_file;
-    $ret->{clusters} = $clusters_file;
-    $ret->{cluster_report} = $report;
+    
+    my $ret->{cluster_plot} = $c->stash->{download_plot};;
+    $ret->{kmeans_clusters} = $c->stash->{download_kmeans_clusters};
+    $ret->{newick_file} = $c->stash->{download_newick};
+    $ret->{json_file} = $c->stash->{download_json};
+    $ret->{cluster_report} = $c->stash->{download_cluster_report};;
     $ret->{result} = 'success';
     $ret->{cluster_pop_id} = $c->stash->{cluster_pop_id};
     $ret->{combo_pops_id} = $c->stash->{combo_pops_id};
@@ -181,7 +178,7 @@ sub _prepare_response {
     $ret->{k_number}      = $c->stash->{k_number};
     $ret->{selection_proportion} = $c->stash->{selection_proportion};
     $ret->{training_traits_ids} =  $c->stash->{training_traits_ids};
-    $ret->{plot_name} = $plot_name;
+    $ret->{plot_name} = "${cluster_type}-plot-${file_id}";
 
     return $ret;
 
@@ -359,13 +356,34 @@ sub cluster_result_file {
     my $cluster_type = $c->stash->{cluster_type};
     $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
-    my $cache_data = {key       => "${cluster_type}-result-${file_id}",
-                      file      => "${cluster_type}-result-${file_id}.txt",
-                      stash_key => "${cluster_type}_result_file"
-    };
+    my $cache_data;
+    
+    if ($cluster_type =~ /hierarchical/i)
+    {
+	my $cache_json = {key      => "${cluster_type}_result_json_${file_id}",
+                      file      => "${cluster_type}_result_json_${file_id}.json",
+                      stash_key => "${cluster_type}_result_json_file"
+	};
 
-    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+	$c->controller('solGS::Files')->cache_file($c, $cache_json);
+	
+	my $cache_newick = {key      => "${cluster_type}_result_newick_${file_id}",
+		       file      => "${cluster_type}_result_newick_${file_id}.tree",
+		       stash_key => "${cluster_type}_result_newick_file"
+	};
+	
+	$c->controller('solGS::Files')->cache_file($c, $cache_newick);	
+    }
+    else 
+    {
+	my $cache_kmeans = {key       => "${cluster_type}_result_${file_id}",
+			  file      => "${cluster_type}_result_${file_id}.txt",
+			  stash_key => "${cluster_type}_result_file"
+	};
 
+	$c->controller('solGS::Files')->cache_file($c, $cache_kmeans);
+    }
+    
 }
 
 
@@ -444,36 +462,56 @@ sub cluster_options_file {
 
 sub prep_cluster_download_files {
   my ($self, $c) = @_;
-
-  $c->stash->{cache_dir}      = $c->stash->{cluster_cache_dir};
-  $c->stash->{analysis_type}  = $c->stash->{cluster_type};
-
-  my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, 'cluster');
-  my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
-
-  mkpath ([$base_tmp_dir], 0, 0755);
-
+  
   my $cluster_type = $c->stash->{cluster_type};
 
   $self->cluster_plot_file($c);
   my $plot_file = $c->stash->{"${cluster_type}_plot_file"};
-  $c->controller('solGS::Files')->copy_file($plot_file, $base_tmp_dir);
-  $plot_file = catfile($tmp_dir, basename($plot_file));
-
+  $plot_file = $self->copy_cluster_tempfiles_subdir($c, $plot_file);
+						   
   $self->cluster_result_file($c);
-  my $clusters_file = $c->stash->{"${cluster_type}_result_file"};
-  $c->controller('solGS::Files')->copy_file($clusters_file, $base_tmp_dir);
-  $clusters_file =  catfile($tmp_dir, basename($clusters_file));
+  my $clusters_file;
+  if ($cluster_type =~ /k-means/i)
+  {
+      $clusters_file = $c->stash->{"${cluster_type}_result_file"};
+      $clusters_file = $self->copy_cluster_tempfiles_subdir($c, $clusters_file);
+  }
+  
+  my $newick_file = $c->stash->{"${cluster_type}_result_newick_file"};
+  $newick_file = $self->copy_cluster_tempfiles_subdir($c, $newick_file);
 
+  my $json_file = $c->stash->{"${cluster_type}_result_json_file"};
+  $json_file = $self->copy_cluster_tempfiles_subdir($c, $json_file);
+  
   $c->controller('solGS::Files')->analysis_report_file($c);
   my $report_file = $c->stash->{"${cluster_type}_report_file"};
-  $c->controller('solGS::Files')->copy_file($report_file, $base_tmp_dir);
-  $report_file =  catfile($tmp_dir, basename($report_file));
-
+  $report_file = $self->copy_cluster_tempfiles_subdir($c, $report_file);
+  
   $c->stash->{download_plot}     = $plot_file;
-  $c->stash->{download_clusters} = $clusters_file;
+  $c->stash->{download_kmeans_clusters} = $clusters_file;
+  $c->stash->{download_newick} = $newick_file;
+  $c->stash->{download_json} = $json_file;
   $c->stash->{download_cluster_report}= $report_file;
 
+}
+
+
+sub copy_cluster_tempfiles_subdir {
+    my ($self, $c, $file) = @_;
+
+    $c->stash->{cache_dir}      = $c->stash->{cluster_cache_dir};
+    $c->stash->{analysis_type}  = $c->stash->{cluster_type};
+
+    my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, 'cluster');
+    my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
+
+    mkpath ([$base_tmp_dir], 0, 0755);
+
+    $c->controller('solGS::Files')->copy_file($file, $base_tmp_dir);
+    $file = catfile($tmp_dir, basename($file));
+    
+    return $file;
+    
 }
 
 
@@ -482,28 +520,15 @@ sub cluster_output_files {
 
     my $file_id = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
-
-    my $result_file;
-    my $plot_pam_file;
-    my $plot_kmeans_file;
-
-    # if ($cluster_type =~/k-means/i)
-    # {
-	$self->cluster_result_file($c);
-	$result_file = $c->stash->{"${cluster_type}_result_file"};
-
-	$self->cluster_plot_file($c);
-	$plot_kmeans_file = $c->stash->{"${cluster_type}_plot_file"};
-
-	#$self->kcluster_plot_pam_file($c);
-	#$plot_pam_file = $c->stash->{"${cluster_type}_plot_pam_file"};
-    # }
-    # else
-    # {
-	# $self->hierarchical_result_file($c);
-	# $result_file = $c->stash->{hierarchical_result_file};
-    # }
-
+    
+    $self->cluster_result_file($c);
+    my $result_file = $c->stash->{"${cluster_type}_result_file"};
+    my $json_file = $c->stash->{"${cluster_type}_result_json_file"};
+    my $newick_file = $c->stash->{"${cluster_type}_result_newick_file"};
+    
+    $self->cluster_plot_file($c);
+    my $plot_file = $c->stash->{"${cluster_type}_plot_file"};
+   
     $c->stash->{analysis_type} = $cluster_type;
     ###$c->stash->{pop_id} = $file_id;
 
@@ -519,8 +544,9 @@ sub cluster_output_files {
 
     my $file_list = join ("\t",
                           $result_file,
-			  $plot_pam_file,
-			  $plot_kmeans_file,
+			  $newick_file,
+			  $json_file,
+			  $plot_file,
 			  $analysis_report_file,
 			  $analysis_error_file,
 			  $combined_cluster_data_file,
