@@ -37,20 +37,17 @@
 jQuery(document).ready(function() {
 
     jQuery('#add_stage_gate_submit_button').click( function(e) {
-
-        alert(jQuery("#add_stage_gate_name_input").val()+'&description='+jQuery("#add_stage_gate_description_input").val());
-
         jQuery.ajax ({
             url : '/ajax/people/add_stage_gate?name='+jQuery("#add_stage_gate_name_input").val()+'&description='+jQuery("#add_stage_gate_description_input").val(),
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response){
-                //console.log(response);
                 jQuery("#working_modal").modal("hide");
                 if (response.error) {
                     alert('Error: '+response.error);
                 } else {
+                    jQuery("#add_stage_gate_dialog").modal("hide");
                     jQuery('#manage_stage_gate_table').DataTable().ajax.reload();
                     alert('Successfully added new stage gate!');
                 }

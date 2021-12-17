@@ -6,7 +6,7 @@ backend for the sgn_people schema
 
 =head1 DESCRIPTION
 
-REST interface for searching people, getting user data, etc. 
+REST interface for searching people, getting user data, etc.
 
 =head1 AUTHOR
 
@@ -107,7 +107,7 @@ sub roles :Chained('/') PathPart('ajax/roles') CaptureArgs(0) {
     my $c = shift;
 
     print STDERR "ajax/roles...\n";
-    
+
     $c->stash->{message} = "processing";
 }
 
@@ -128,20 +128,20 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
     while (my $row = $rs1->next()) {
 	$roles{$row->sp_role_id} = $row->name();
     }
-    
+
     my $rs2 = $schema->resultset("SpPerson")->search(
 	{ },
 	{ join => 'sp_person_roles',
 	  '+select' => ['sp_person_roles.sp_role_id', 'sp_person_roles.sp_person_role_id' ],
 	  '+as'     => ['sp_role_id', 'sp_person_role_id' ],
 	  order_by => 'sp_role_id' });
-    
+
     my @data;
     my %hash;
 
     my %role_colors = ( curator => 'red', submitter => 'orange', user => 'green' );
     my $default_color = "#0275d8";
-    
+
 
     while (my $row = $rs2->next()) {
 	my $person_name = $row->first_name." ".$row->last_name();
@@ -150,17 +150,17 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
 	if ($c->user()->has_role("curator")) {
 	    $delete_link = '<a style="color:white" href="javascript:delete_user_role('.$row->get_column('sp_person_role_id').')"><b>X</b></a>';
 	}
-	
+
 	else {
 	    $delete_link = "X";
 	}
-	
+
 	$hash{$row->sp_person_id}->{userlink} = '<a href="/solpeople/personal-info.pl?sp_person_id='.$row->sp_person_id().'">'.$row->first_name()." ".$row->last_name().'</a>';
 
 	my $role_name = $roles{$row->get_column('sp_role_id')};
 
 	print STDERR "ROLE : $role_name\n";
-	
+
 	if (! $c->user()->has_role("curator")) {
 	    # only show breeding programs
 	    if ($role_name !~ /curator|user|submitter/) {
@@ -172,14 +172,14 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
 	    $hash{$row->sp_person_id}->{userroles} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:6px;background-color:'.$color.'"><b>'. $delete_link."&nbsp;&nbsp; ".$role_name."</b></span>";
 	    $hash{$row->sp_person_id}->{add_user_link} = $add_user_link;
 	}
-	    
+
     }
 
     foreach my $k (keys %hash) {
 	$hash{$k}->{userroles} .= $hash{$k}->{add_user_link};
 	push @data, [ $hash{$k}->{userlink}, $hash{$k}->{userroles} ];
     }
-    
+
     $c->stash->{rest} = { data => \@data };
 }
 
@@ -206,7 +206,7 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
 # 	$c->stash->{rest} = { error => "You don't have the necessary privileges for maintaining user roles." };
 # 	return;
 #     }
-    
+
 
 # }
 
@@ -215,7 +215,7 @@ sub delete :Chained('roles') PathPart('delete/association') Args(1) {
     my $self = shift;
     my $c = shift;
     my $sp_person_role_id = shift;
-    
+
     if (! $c->user()) {
 	$c->stash->{rest} = { error => "You must be logged in to use this function." };
 	return;
@@ -227,7 +227,7 @@ sub delete :Chained('roles') PathPart('delete/association') Args(1) {
     }
 
     my $schema = $c->dbic_schema("CXGN::People::Schema");
-    
+
     my $row = $schema->resultset("SpPersonRole")->find( { sp_person_role_id => $sp_person_role_id } );
 
     if (!$row) {
@@ -248,7 +248,7 @@ sub teams :Chained('/') PathPart('ajax/teams') CaptureArgs(0) {
 sub list_teams :Chained('teams') PathPart('list') Args(0) {
     my $self = shift;
     my $c = shift;
-    
+
     if (! $c->user()) {
 	$c->stash->{rest} = { error => "You must be logged in to use this function." };
 	return;
@@ -261,14 +261,14 @@ sub list_teams :Chained('teams') PathPart('list') Args(0) {
 #    while (my $row = $rs1->next()) {
 #	$roles{$row->sp_role_id} = $row->name();
 #    }
-    
+
     my $rs2 = $schema->resultset("SpTeam")->search(
 	{ },
 	{ join => 'sp_person_teams',
 	  '+select' => ['sp_person_teams.sp_person_id', 'sp_person_teams.sp_person_team_id' ],
 	  '+as'     => ['sp_person_id', 'sp_person_team_id' ],
 	  order_by => 'sp_person_id' });
-    
+
     my @data;
     my %hash = ();
 
@@ -281,27 +281,27 @@ sub list_teams :Chained('teams') PathPart('list') Args(0) {
 	my $delete_link = "";
 
 	print STDERR "TEAM NAME = $team_name ($sp_team_id)\n";
-	
+
 	$hash{$row->sp_team_id}->{add_user_link} = '&nbsp;&nbsp;<a href="#" onclick="javascript:open_add_team_member_dialog('.$sp_team_id.', \''.$team_name.'\')"><span style="color:darkgrey;width:8px;height:8px;border:solid;border-width:1px;padding:1px;"><b>+</b></a></span>';
 #	if ($c->user()->has_role("curator")) {
 #	    $delete_link = '<a href="javascript:delete_user_role('.$row->get_column('sp_person_role_id').')"><b>X</b></a>';
 #	}
-	
+
 #	else {
 	    $delete_link = "X";
 #	}
-	
+
 #	$hash{$row->sp_person_id}->{userlink} = '<a href="/solpeople/personal-info.pl?sp_person_id='.$row->sp_person_id().'">'.$row->first_name()." ".$row->last_name().'</a>';
 
 #	my $role_name = $roles{$row->get_column('sp_role_id')};
 
 	my $sp_person_id = $row->get_column('sp_person_id');
 	print STDERR "PERSON ID: $sp_person_id\n";
-	
+
 	my $person = $schema->resultset("SpPerson")->find( { sp_person_id => $sp_person_id });
 
-	
-	if ($person) { 
+
+	if ($person) {
 	    my $first_name = $person->first_name();
 	    my $last_name = $person->last_name();
 
@@ -317,7 +317,7 @@ sub list_teams :Chained('teams') PathPart('list') Args(0) {
 #	else {
 	    my $color =  $default_color;
 	    $hash{$row->sp_team_id}->{team_members} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:6px;background-color:'.$color.'"><b>'. $delete_link."&nbsp;&nbsp; ".$username."</b></span>";
-	    
+
 	    #	}
 	}
 	$hash{$row->sp_team_id}->{team_name} = $row->name();
@@ -326,7 +326,7 @@ sub list_teams :Chained('teams') PathPart('list') Args(0) {
 	$hash{$row->sp_team_id}->{team_delete} = 'X';
     }
 
-    
+
     foreach my $k (keys %hash) {
 	print STDERR "Building info for index $k...\n";
 	$hash{$k}->{team_members} = $hash{$k}->{team_members}." ".$hash{$k}->{add_user_link};
@@ -334,7 +334,7 @@ sub list_teams :Chained('teams') PathPart('list') Args(0) {
     }
 
     print STDERR "DATA: ".Dumper(\@data);
-    
+
     $c->stash->{rest} = { data => \@data };
 }
 
@@ -347,14 +347,14 @@ sub add_team :Path('/ajax/people/add_team') Args(0) {
 	$c->stash->{rest} = { error => "You must be logged in to use this function." };
 	return;
     }
-    
+
     my $name = $c->req->param("name");
     my $description = $c->req->param("description");
     my $stage_gate_id = $c->req->param("stage_gate_id");
-    
+
     my $schema = $c->dbic_schema("CXGN::People::Schema");
 
-    eval { 
+    eval {
 	my $rs = $schema->resultset("SpTeam")->find_or_create(
 	    {
 		name => $name,
@@ -364,7 +364,7 @@ sub add_team :Path('/ajax/people/add_team') Args(0) {
 
     };
 
-    if ($@) { 
+    if ($@) {
 	$c->stash->{rest} = { error =>  "An error occurred! $@\n" };
 	return;
     }
@@ -381,20 +381,20 @@ sub add_team_member :Path('/ajax/teams/add_member') Args(0) {
 	$c->stash->{rest} = { error => "You must be logged in to use this function." };
 	return;
     }
-    
+
     my $team_member_name = $c->req->param('team_member_name');
     my $management_role = $c->req->param('management_role');
     my $sp_team_id = $c->req->param("sp_team_id_for_member");
 
     print STDERR "RECEIVED INFO: $team_member_name, $management_role, $sp_team_id!\n";
-    
+
     my $schema = $c->dbic_schema("CXGN::People::Schema");
 
     eval {
 	my($first_name, $last_name) = split /\s*\,\s*|\s*$/, $team_member_name;
 
 	print STDERR "Searching name: $first_name, $last_name.\n";
-	
+
 	my $prs = $schema->resultset("SpPerson")->search( { first_name => $first_name, last_name => $last_name });
 	if ($prs->count() > 1) {
 	    die "Too many people with name $team_member_name in the database.";
@@ -418,8 +418,8 @@ sub add_team_member :Path('/ajax/teams/add_member') Args(0) {
     else {
 	$c->stash->{rest} = { message => "success" };
     }
-    
-		
+
+
 
 }
 
@@ -427,7 +427,7 @@ sub remove_team_member :Chained('teams') PathPart('delete/association') Args(1) 
     my $self = shift;
     my $c = shift;
     my $sp_person_team_id = shift;
-    
+
     if (! $c->user()) {
 	$c->stash->{rest} = { error => "You must be logged in to use this function." };
 	return;
@@ -439,7 +439,7 @@ sub remove_team_member :Chained('teams') PathPart('delete/association') Args(1) 
     }
 
     my $schema = $c->dbic_schema("CXGN::People::Schema");
-    
+
     my $row = $schema->resultset("SpPersonTeam")->find( { sp_person_team_id => $sp_person_team_id } );
 
     if (!$row) {
@@ -467,7 +467,7 @@ sub delete_team :Chained('teams') PathPart('delete') Args(0) {
     }
 
     my $schema = $c->dbic_schema("CXGN::People::Schema");
-    
+
     my $row = $schema->resultset("SpTeam")->find( { sp_team_id => $sp_team_id } );
 
     if (!$row) {
@@ -485,64 +485,61 @@ sub add_stage_gate :Path('/ajax/people/add_stage_gate') Args(0) {
     my $self = shift;
     my $c = shift;
 
-     if (! $c->user()) {
-	$c->stash->{rest} = { error => "You must be logged in to use this function." };
-	return;
+    if (! $c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to use this function." };
+        return;
     }
-    
+
     my $name = $c->req->param("name");
     my $description = $c->req->param("description");
-    
     my $schema = $c->dbic_schema("CXGN::People::Schema");
 
-    eval { 
-	my $rs = $schema->resultset("SpStageGate")->find_or_create(
-	    {
-		name => $name,
-		description => $description,
-	    });
-
+    eval {
+        my $rs = $schema->resultset("SpStageGate")->find_or_create({
+            name => $name,
+            description => $description,
+        });
+#        my $stage_gate_id = $rs->sp_stage_gate_id();
+#        print STDERR "STAGE GATE ID =".Dumper($stage_gate_id)."\n";
     };
 
-    if ($@) { 
-	$c->stash->{rest} = { error =>  "An error occurred! $@\n" };
-	return;
+    if ($@) {
+        $c->stash->{rest} = { error =>  "An error occurred! $@\n" };
+        return;
     }
 
     $c->stash->{rest} = { success => 1 };
 
 }
 
+
 sub list_stage_gates :Path('/ajax/stage_gates/list') Args(0) {
     my $self = shift;
     my $c = shift;
 
-     if (! $c->user()) {
-	$c->stash->{rest} = { error => "You must be logged in to use this function." };
-	return;
+    if (! $c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to use this function." };
+        return;
     }
-    
-        if (! $c->user()->has_role("curator")) {
-	$c->stash->{rest} = { error => "You don't have the necessary privileges for maintaining user roles." };
-	return;
+
+    if (! $c->user()->has_role("curator")) {
+        $c->stash->{rest} = { error => "You don't have the necessary privileges for maintaining stage gate." };
+        return;
     }
 
     my $schema = $c->dbic_schema("CXGN::People::Schema");
-    
     my $rs = $schema->resultset("SpStageGate")->search( { } );
 
     my @data;
-    
     while (my $row = $rs->next()) {
-	my $name = $row->name();
-	my $description = $row->description();
-	my $sp_stage_gate_id = $row->sp_stage_gate_id();
-	push @data, [ $name."[$sp_stage_gate_id]", $description ];
+        my $name = $row->name();
+        my $description = $row->description();
+        my $sp_stage_gate_id = $row->sp_stage_gate_id();
+        #push @data, [ $name."[$sp_stage_gate_id]", $description ];
+        push @data, [ $name, $description ];
     }
+    #print STDERR "STAGE GATES: ".Dumper(\@data);
 
-
-    print STDERR "STAGE GATES: ".Dumper(\@data);
-    
     $c->stash->{rest} =  { data => \@data };
 }
 
@@ -551,4 +548,3 @@ sub list_stage_gates :Path('/ajax/stage_gates/list') Args(0) {
 
 ###
 1;
-
