@@ -471,17 +471,22 @@ sub prep_cluster_download_files {
 						   
   $self->cluster_result_file($c);
   my $clusters_file;
+  my $newick_file;
+  my $json_file;
+  
   if ($cluster_type =~ /k-means/i)
   {
       $clusters_file = $c->stash->{"${cluster_type}_result_file"};
       $clusters_file = $self->copy_cluster_tempfiles_subdir($c, $clusters_file);
   }
-  
-  my $newick_file = $c->stash->{"${cluster_type}_result_newick_file"};
-  $newick_file = $self->copy_cluster_tempfiles_subdir($c, $newick_file);
+  else
+  {
+      $newick_file = $c->stash->{"${cluster_type}_result_newick_file"};
+      $newick_file = $self->copy_cluster_tempfiles_subdir($c, $newick_file);
 
-  my $json_file = $c->stash->{"${cluster_type}_result_json_file"};
-  $json_file = $self->copy_cluster_tempfiles_subdir($c, $json_file);
+      $json_file = $c->stash->{"${cluster_type}_result_json_file"};
+      $json_file = $self->copy_cluster_tempfiles_subdir($c, $json_file);
+  }
   
   $c->controller('solGS::Files')->analysis_report_file($c);
   my $report_file = $c->stash->{"${cluster_type}_report_file"};
