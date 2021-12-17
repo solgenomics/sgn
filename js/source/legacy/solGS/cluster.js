@@ -1,5 +1,5 @@
 /**
-* K-means cluster analysis and vizualization
+* K-means and hierarchical cluster analysis and vizualization
 * Isaak Y Tecle <iyt2@cornell.edu>
 *
 */
@@ -567,7 +567,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 	if (clusterArgs) {
 
 	    jQuery("#cluster_message")
-		.html(`Running  ${clusterType} clustering... please wait...this may take minutes.`)
+		.html(`Running ${clusterType} clustering... please wait...this may take minutes.`)
 		.show();
 
         jQuery("#cluster_canvas .multi-spinner-container").show();
@@ -667,15 +667,18 @@ if (document.URL.match(/cluster\/analysis/)) {
 	var plot = '<img '+ imageId + ' src="' + res.cluster_plot + '">';
 	var filePlot  = res.cluster_plot.split('/').pop();
 	var plotType;
-    var outFileType;
-
-    if (plot.match(/k-means/i)) {
-        plotType = 'K-means plot';
-        outFileType = 'Clusters';
-    } else {
-        plotType = 'Dendrogram';
-        outFileType = 'Newick tree format';
-    }
+	var outFileType;
+	var clustersFile;
+	
+	if (plot.match(/k-means/i)) {
+            plotType = 'K-means plot';
+            outFileType = 'Clusters';
+	    clustersFile = res.kmeans_clusters;  
+	} else {
+            plotType = 'Dendrogram';
+            outFileType = 'Newick tree format';
+	    clustersFile = res.newick_file;
+	}
 
 	var plotLink = "<a href=\""
 	    + res.cluster_plot
@@ -683,7 +686,6 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    + filePlot
 	    + `">${plotType} </a>`;
 
-	var clustersFile = res.clusters;
 	var fileClusters  = clustersFile.split('/').pop();
 
 	var clustersLink = "<a href=\""
