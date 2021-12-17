@@ -166,18 +166,25 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     
     my $newtrait = $traits;
 
-    my @genotyping_protocols = $ds->retrieve_genotyping_protocols();
+    my $genotyping_protocols = $ds->retrieve_genotyping_protocols();
 
-    if (scalar(@genotyping_protocols) == 0) { die "No genotyping protocols found in this dataset! Please choose another dataset!"; }
+    print STDERR "Genotyping protocols: ".Dumper($genotyping_protocols);
     
-    my $protocol_id = shift @genotyping_protocols;
+    if (scalar(@$genotyping_protocols) == 0) { die "No genotyping protocols found in this dataset! Please choose another dataset!"; }
+    
+    my $protocol = shift @$genotyping_protocols;
+
+    print STDERR "PROTOCOL NOW : ".Dumper($protocol);
+
+    print STDERR "PROTOCOL ID = ".$protocol->[0]."\n";
+    
     my $forbid_cache = 0;
 
     print STDERR "GENOFILE PATH = $geno_filepath\n";
     print STDERR "cache file path = ".$c->config->{cache_file_path}." CLUSTER SHARED TEMPDIR: ".$c->config->{cluster_shared_tempdir}."\n";
 
     
-    my $genotype_data_fh = $ds->retrieve_genotypes($protocol_id, $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
+    my $genotype_data_fh = $ds->retrieve_genotypes( $protocol->[0], $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache, ['GT'], [], ['name', 'chrom', 'pos', 'alt', 'ref']);
 
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
