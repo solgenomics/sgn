@@ -30,7 +30,9 @@ outputFiles <- scan(outputFiles, what = "character")
 inputFiles  <- grep("input_files", allArgs, value = TRUE)
 inputFiles <- scan(inputFiles, what = "character")
 
-resultFile <- grep("result", outputFiles, value = TRUE)
+clusterFile <- grep("cluster", outputFiles, value = TRUE)
+newickFile <- grep("newick", outputFiles, value = TRUE)
+jsonFile <- grep("json", outputFiles, value = TRUE)
 reportFile  <- grep("report", outputFiles, value = TRUE)
 errorFile   <- grep("error", outputFiles, value = TRUE)
 
@@ -52,8 +54,8 @@ selectionProp  <- as.numeric(clusterOptions["selection_proportion", 1])
 predictedTraits <- clusterOptions["predicted_traits", 1]
 predictedTraits <- unlist(strsplit(predictedTraits, ','))
 
-if (is.null(resultFile)) {
-  stop("Clustering output file is missing.")
+if (is.null(newickFile) && is.null(jsonFile)) {
+  stop("Hierarchical output file is missing.")
   q("no", 1, FALSE)
 }
 
@@ -201,12 +203,13 @@ hClust <- distMat  %>%
 
 distTable <- data.frame(as.matrix(distMat))
 
-clustTree <- ggtree(hClust,  layout = "circular", color = "#96CA2D")
+clustTree <- ggtree(hClust,  layout = "rectangular", color = "#96CA2D")
 xMax <- ggplot_build(clustTree)$layout$panel_scales_x[[1]]$range$range[2]
 xMax <- xMax + 0.02
 
  # ggplot2::xlim(0, xMax)
 clustTree <- clustTree +
+	  ggplot2::xlim(0, xMax) +
     geom_tiplab(size = 4, color = "blue")
 
 
@@ -235,10 +238,10 @@ if (length(genoFiles) > 1) {
 #        quote     = FALSE,
 #        )
 # }
-
+message('newick file ', newickFile)
 newickF <- as.phylo(hClust)
 write.tree(phy = newickF,
-file = resultFile
+file = newickFile
 )
 
 ####
