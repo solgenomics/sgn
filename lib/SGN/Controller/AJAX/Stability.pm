@@ -88,23 +88,24 @@ sub extract_trait_data :Path('/ajax/stability/getdata') Args(0) {
     print STDERR Dumper($keys[1]);
     for(my $n=0; $n <@keys; $n++) {
         if ($keys[$n] =~ /\|CO\_/) {
-        $keys[$n] =~ s/\|CO\_.*//;
+	    #$keys[$n] =~ s/\|CO\_.*//;
+	    $keys[$n] = make_R_string($keys[$n]);
         }
     }
     my @data = ();
 
     while (<$F>) {
-  chomp;
-
-  my @fields = split "\t";
-  my %line;
-  for(my $n=0; $n <@keys; $n++) {
-      if (exists($fields[$n]) && defined($fields[$n])) {
-    $line{$keys[$n]}=$fields[$n];
-      }
-  }
-  #print STDERR Dumper(\%line);
-  push @data, \%line;
+	chomp;
+	
+	my @fields = split "\t";
+	my %line;
+	for(my $n=0; $n <@keys; $n++) {
+	    if (exists($fields[$n]) && defined($fields[$n])) {
+		$line{$keys[$n]}=$fields[$n];
+	    }
+	}
+	#print STDERR Dumper(\%line);
+	push @data, \%line;
     }
 
     $c->stash->{rest} = { data => \@data, trait => $trait};
@@ -142,18 +143,35 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
 
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
-    my $newtrait = $trait_id;
-    $newtrait =~ s/\s/\_/g;
-    $newtrait =~ s/\//\_/g;
-    $trait_id =~ tr/ /./;
-    $trait_id =~ tr/\//./;
+    open(my $F, "<", $pheno_filepath) || die "Can't open file $pheno_filepath";
+
+    open(my $G, ">". $pheno_filepath.".clean") || die "Can't open file $pheno_filepath.clean";
+    
+    my $header = <$F>;
+    chomp($header);
+    
+    my @header_fields = split /\t/, $header;
+
+    foreach my $hf (@header_fields) {
+	$hf = make_R_string($hf);
+    }
+
+    
+    print $G join("\t", @header_fields)."\n";
+
+    while (<$F>) {
+	chomp;
+	print $G $_."\n";
+    }
+
+    close($F);
+    close($G);
 
     my $AMMIFile = $tempfile . "_" . "AMMIFile.png";
     my $figure1file = $tempfile . "_" . "figure1.png";
     my $figure2file = $tempfile . "_" . "figure2.png";
 
-    $trait_id =~ tr/ /./;
-    $trait_id =~ tr/\//./;
+    $trait_id = make_R_string($trait_id);
 
     my $cmd = CXGN::Tools::Run->new({
             backend => $c->config->{backend},
@@ -168,8 +186,8 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     $cmd->run_cluster(
             "Rscript ",
             $c->config->{basepath} . "/R/stability/ammi_script.R",
-            $pheno_filepath,
-            $trait_id,
+            $pheno_filepath.".clean",
+            "\'".$trait_id."\'",
             $figure1file,
             $figure2file,
             $AMMIFile,
@@ -209,6 +227,15 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
         # dummy_response2 => $trait_id,
     };
 }
+
+sub make_R_string {
+    my $s = shift;
+    $s =~ s/\s/\_/g;
+    $s =~ s/\//\_/g;
+    $s =~ s/\|.*$//g;
+    return $s;
+}
+
 
 1
 
