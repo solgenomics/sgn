@@ -136,14 +136,16 @@ $data_level => 'plot'
                 <option value="">--Select Layout--</option>
                 <option value="by_col_serpentine">By Column: Serpentine</option>
                 <option value="by_col_zigzag">By Column: Zigzag</option>
-                <option value="by_row">By Row: Current Layout</option>
+                <option value="by_row_serpentine">By Row: Serpentine</option>
+                <option value="by_row_zigzag">By Row: Zigzag</option>
             </select>
             <button class="btn btn-primary" id="harvesting_order_button" style="margin-left: 2%;"> Download Harvesting Order </button>
             <select style="margin-left: 1%;" name="harvesting_order" id="harvesting_order">
                 <option value="">--Select Layout--</option>
                 <option value="by_col_serpentine">By Column: Serpentine</option>
                 <option value="by_col_zigzag">By Column: Zigzag</option>
-                <option value="by_row">By Row: Current Layout</option>
+                <option value="by_row_serpentine">By Row: Serpentine</option>
+                <option value="by_row_zigzag">By Row: Zigzag</option>
             </select>
             <button style="margin-left: 5%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
             <button style="margin-left: 2%;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success">Submit Field Layout</button>
@@ -605,18 +607,20 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 data = response.result.data;
-                if (data[0].additionalInfo) {
-                    FieldMap.check_elements(data[0].additionalInfo);
-                    if (data[0].additionalInfo.plot_layout) {
-                        document.getElementById("plot_layout").value = data[0].additionalInfo.plot_layout;
-                        FieldMap.meta_data.plot_layout = data[0].additionalInfo.plot_layout;
+                if (data[0]) {
+                    if (data[0].additionalInfo) {
+                        FieldMap.check_elements(data[0].additionalInfo);
+                        if (data[0].additionalInfo.plot_layout) {
+                            document.getElementById("plot_layout").value = data[0].additionalInfo.plot_layout;
+                            FieldMap.meta_data.plot_layout = data[0].additionalInfo.plot_layout;
+                        }
                     }
-                }
-                FieldMap.filter_data(data);
-                FieldMap.set_meta_data();
-                FieldMap.meta_data.retain_layout = true;
-                FieldMap.load();
 
+                    FieldMap.filter_data(data);
+                    FieldMap.set_meta_data();
+                    FieldMap.meta_data.retain_layout = true;
+                    FieldMap.load();
+                }
                 // FieldMap.plot_ou_arr.sort(function(plot_ou_1, plot_ou_2) {
 	            //       // Ascending: first plotNumber less than the previous
 	            //     return FieldMap.plot_object[plot_ou_1].observationUnitPosition.observationLevel.levelCode - FieldMap.plot_object[plot_ou_2].observationUnitPosition.observationLevel.levelCode

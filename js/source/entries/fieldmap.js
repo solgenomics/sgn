@@ -112,7 +112,6 @@ export function init() {
                 }   
             }
             this.plot_object = plot_object;
-            console.log(this.plot_object);
         }
 
         filter_heatmap(observations) {
@@ -136,46 +135,36 @@ export function init() {
 
         }
 
-        traverse_map(planting_or_harvesting_order_layout) {
-            var order_arr = [...Object.values(this.plot_object)];
-            order_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
-            let final_arr = [];
-            if (this.meta_data[planting_or_harvesting_order_layout].includes('row')) {
-                final_arr = order_arr;
-            } else {
-                let temp_arr = [];
-                for (let i = 0; i < this.meta_data.num_rows; i++) {
-                    temp_arr.push([...order_arr.slice(i * this.meta_data.num_cols, (i * this.meta_data.num_cols + this.meta_data.num_cols))])
-                    if (this.meta_data.plot_layout == "serpentine" && i % 2 == 1) {
-                        temp_arr[i].reverse();
-                    }
+        traverse_map(plot_arr, planting_or_harvesting_order_layout) {
+            let coord_matrix = [];
+            var row = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateY" : "positionCoordinateX";
+            var col = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateX" : "positionCoordinateY";
+            
+            for (let plot of plot_arr) {
+                if (!coord_matrix[plot.observationUnitPosition[row]]) {
+                    coord_matrix[plot.observationUnitPosition[row]] = [];
+                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
+                } else {
+                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
                 }
+            }
 
-                if (planting_or_harvesting_order_layout == "planting_order_layout") {
-                    return temp_arr;
-                }
-
-                for (let i = 0; i < this.meta_data.num_cols; i++) {
-                    let row_coord;
-                    for (let j = 0; j < this.meta_data.num_rows; j++) {
-                        if (this.meta_data[planting_or_harvesting_order_layout] == "by_col_serpentine" && i % 2 == 1) {
-                            row_coord = this.meta_data.num_rows - j - 1;
-                        } else {
-                            row_coord = j;
-                        }
-                        final_arr.push(temp_arr[row_coord][i]);
+            if (this.meta_data[planting_or_harvesting_order_layout].includes('serpentine')) {
+                for (let i = 1; i <= coord_matrix.length; i++) {
+                    if (i % 2 == 0) {
+                        coord_matrix[i-1].reverse();
                     }
                 }
             }
-            return final_arr;
-        }
-
-        get_harvesting_order() {
-            var final_harvesting_arr = this.traverse_map('harvesting_order_layout');
-            var csv = ['PlotNumber', 'PlotName', 'AccessionName', 'entryType'].join(',');
+            var final_arr = [];
+            for (let arr of coord_matrix) {
+                final_arr.push(...arr);
+            }
+            
+            var csv = ['Plot_Number', 'Plot_Name', 'Accession_Name', 'Entry_Type'].join(',');
             csv += "\n";
-            final_harvesting_arr.forEach(function(plot) {
-                    csv += [plot.observationUnitPosition.observationLevel.levelCode, plot.observationUnitName, plot.germplasmName].join(',');
+            final_arr.forEach(function(plot) {
+                    csv += [plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A", plot.observationUnitName, plot.germplasmName, plot.observationUnitPosition.entryType].join(',');
                     csv += "\n";
             });
     
@@ -183,83 +172,17 @@ export function init() {
             hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
             hiddenElement.target = '_blank';
             
-            hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data.harvesting_order_layout}_HarvestingOrder.csv`;
+            hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data[planting_or_harvesting_order_layout]}_HarvestingOrder.csv`;
             hiddenElement.click();    
         }
 
-        get_planting_order() {
-            var planting_arr = this.traverse_map('planting_order_layout');
-            let num_rows = this.meta_data.top_border_selection ? this.meta_data.num_rows + 1 : this.meta_data.num_rows;
-            num_rows = this.meta_data.bottom_border_selection ? num_rows + 1 : num_rows;
-            let num_cols = this.meta_data.left_border_selection ? this.meta_data.num_cols + 1 : this.meta_data.num_cols;
-            num_cols = this.meta_data.right_border_selection ? num_cols + 1 : num_cols;
-            const border_plot = {
-                observationUnitName: "Border Plot",
-                entryType: '',
-                germplasmName: "N/A",
-                observationUnitPosition: {
-                    observationLevel: {
-                        levelCode: "N/A"
-                    }
-                }
-            }
-            if (this.meta_data.planting_order_layout == "by_row") {
-                let temp_arr = [];
-                    for (let i = 0; i < this.meta_data.num_rows; i++) {
-                        temp_arr.push([...planting_arr.slice(i * this.meta_data.num_cols, (i * this.meta_data.num_cols + this.meta_data.num_cols))]);
-                    }
-                planting_arr = temp_arr;
-            }
-            if (this.meta_data.left_border_selection || this.meta_data.right_border_selection) {
-                for (let arr of planting_arr) {
-                    if (this.meta_data.left_border_selection) {
-                        arr.unshift(border_plot);
-                    }
-                    if (this.meta_data.right_border_selection) {
-                        arr.push(border_plot);
-                    }
-                }   
-            }
-            if ((this.meta_data.invert_row_checkmark && this.meta_data.top_border_selection) || (!this.meta_data.invert_row_checkmark && this.meta_data.bottom_border_selection)) {
-                planting_arr = [ [...Array(num_cols).fill(border_plot, 0, num_cols)], ...planting_arr]
-            }
-            if ((this.meta_data.invert_row_checkmark && this.meta_data.bottom_border_selection) || (!this.meta_data.invert_row_checkmark && this.meta_data.top_border_selection)) {
-                planting_arr = [...planting_arr, [...Array(num_cols).fill(border_plot, 0, num_cols)]]
-            }
+        get_harvesting_order() {
+            var temp_harvesting_arr = this.plot_arr.filter(plot => plot.type == "data");
+            var final_harvesting_arr = this.traverse_map(temp_harvesting_arr, 'harvesting_order_layout');
+        }
 
-            let final_arr = [];
-            if (this.meta_data.planting_order_layout != "by_row") {
-                for (let i = 0; i < num_cols; i++) {
-                    let row_coord;
-                    for (let j = 0; j < num_rows; j++) {
-                        if (this.meta_data.planting_order_layout == "by_col_serpentine" && i % 2 == 1) {
-                            row_coord = num_rows - j - 1;
-                        } else {
-                            row_coord = j;
-                        }
-                        final_arr.push(planting_arr[row_coord][i]);
-                    }
-                }
-            } else {
-                for (let arr of planting_arr) {
-                    for (let elem of arr) {
-                        final_arr.push(elem);
-                    }
-                }
-            }
-            var csv = ['PlotNumber', 'PlotName', 'AccessionName', 'entryType'].join(',');
-            csv += "\n";
-            final_arr.forEach(function(plot) {
-                    csv += [plot.observationUnitPosition.observationLevel.levelCode, plot.observationUnitName, plot.germplasmName, plot.entryType].join(',');
-                    csv += "\n";
-            });
-            
-            var hiddenElement = document.createElement('a');
-            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
-            hiddenElement.target = '_blank';
-            hiddenElement.download = `Trial_${this.trial_id}_${this.meta_data.harvesting_order_layout}_PlantingOrder.csv`;
-            
-            hiddenElement.click();    
+        get_planting_order() {
+            var final_harvesting_arr = this.traverse_map(this.plot_arr, 'planting_order_layout');
         }
 
         set_meta_data() {
@@ -280,7 +203,6 @@ export function init() {
                 final_plot_arr.push(...ordered_plot_arr);
             }
             this.plot_arr = final_plot_arr;
-            console.log(this.plot_arr);
             var min_col = 100000;
             var min_row = 100000;
             var max_col = 0;
@@ -316,7 +238,7 @@ export function init() {
 
         get_plot_format(type, x, y) {
             return { 
-                type: type, observationUnitPosition: { positionCoordinateX: x, positionCoordinateY: y, } 
+                type: type, observationUnitName: type, observationUnitPosition: { positionCoordinateX: x, positionCoordinateY: y} 
             }
         }
 
