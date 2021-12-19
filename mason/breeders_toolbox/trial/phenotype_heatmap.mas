@@ -842,6 +842,11 @@ jQuery(document).ready( function() {
         source: '/ajax/stock/accession_autocomplete',
     });
 
+    jQuery("#filler_accession").autocomplete({
+        appendTo: "#change_dimensions_dialog",
+        source: '/ajax/stock/accession_autocomplete',
+    });
+
     jQuery("#hm_replace_plot_accession_form").submit( function() {
       event.preventDefault();
       hm_replace_plotAccession_fieldMap('check');
