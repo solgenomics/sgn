@@ -818,14 +818,29 @@ jQuery(document).ready( function() {
         FieldMap.load();
     });
     jQuery('#submit_fieldmap').click( function() {
-        var answer = window.confirm(`You are about to save this plot layout to the database.
-        Filler plots will be added to your trial if they exist in the display below. Are you sure you would like to continue?`);
-        if (answer) {
-            submit_fieldmap_metadata();
-        } else {
-            jQuery('#working_modal').modal("hide");
-        }
-
+        new jQuery.ajax({
+            type: "POST",
+            url: '/ajax/breeders/trial/<% $trial_id %>/check_curator_privileges',
+            dataType: "json",
+            data: { 
+                'trial_id': trial_id,
+            },
+            success: function(response) {
+                if (response.success) {
+                    var answer = window.confirm(`You are about to save this plot layout to the database.\nFiller plots will be added to your trial if they exist in the display below. Are you sure you would like to continue?`);
+                    if (answer) {
+                        submit_fieldmap_metadata();
+                    } else {
+                        jQuery('#working_modal').modal("hide");
+                    }
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function(response) {
+                alert(response);
+            }
+        });
         
     });
 
@@ -861,9 +876,9 @@ jQuery(document).ready( function() {
     });
 
     function submit_fieldmap_metadata() {
-        jQuery('#working_modal').modal("show");
+        jQuery('#working_modal').modal("show");  
         let filler_plot_object = FieldMap.format_brapi_post_object();
-        var stringifiedPostData = JSON.stringify(filler_plot_object);            
+        var stringifiedPostData = JSON.stringify(filler_plot_object);         
         if (FieldMap.meta_data.post) {
             new jQuery.ajax({
                 type: 'POST',
@@ -873,7 +888,6 @@ jQuery(document).ready( function() {
                 data: stringifiedPostData,
                 success: function(response) {
                     put_brapi_plots();
-                    
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal("hide");
@@ -895,7 +909,6 @@ jQuery(document).ready( function() {
             url: '/brapi/v2/observationunits/',
             data: stringifiedData,
             success: function(response) {
-                // refresh_cache();
                 jQuery('#working_modal').modal("hide");
                 jQuery('#fieldplot_layout_success_dialog').modal("show");
                 
