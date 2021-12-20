@@ -170,6 +170,7 @@ myVCF <- readVcf(genotypeFile)
 mat <- genotypeToSnpMatrix(myVCF)
 #G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
 G <- as(mat$genotypes, "numeric")
+G <- G[,colSums(is.na(G))<nrow(G)]
 
 #   TEST temporarily import the genotypes via HapMap:
 #source("R/hapMap2numeric.R") # replace and delete
