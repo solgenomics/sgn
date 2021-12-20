@@ -166,8 +166,10 @@ userPheno$Sex <- sample(c("M", "F"), size = nrow(userPheno), replace = TRUE, pro
 #write(paste("READING VARIANT FILE ", genotypeFile), stderr())
 #  Import VCF with VariantAnnotation package and extract matrix of dosages
 myVCF <- readVcf(genotypeFile)
-G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
-
+#G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
+mat <- genotypeToSnpMatrix(myVCF)
+#G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
+G <- as(mat$genotypes, "numeric")
 
 #   TEST temporarily import the genotypes via HapMap:
 #source("R/hapMap2numeric.R") # replace and delete
@@ -396,32 +398,33 @@ crossPlan <- calcCrossMean(GP,
 
 # Add option to remove crosses with incompatible sexes.
 
-if(!is.na(userSexes)){
-  
+#if(!is.na(userSexes)){
+
   # Reformat the cross plan
-  crossPlan <- as.data.frame(crossPlan)
-  crossPlan <- crossPlan[order(crossPlan[,3], decreasing = TRUE), ] # orders the plan by predicted merit
-  crossPlan[ ,1] <- rownames(GP)[crossPlan[ ,1]] # replaces internal ID with genotye file ID
-  crossPlan[ ,2] <- rownames(GP)[crossPlan[ ,2]] # replaces internal ID with genotye file ID
+  #crossPlan <- as.data.frame(crossPlan)
+
+#  crossPlan <- crossPlan[order(crossPlan[,3], decreasing = TRUE), ] # orders the plan by predicted merit
+  #crossPlan[ ,1] <- rownames(GP)[crossPlan[ ,1]] # replaces internal ID with genotye file ID
+  #crossPlan[ ,2] <- rownames(GP)[crossPlan[ ,2]] # replaces internal ID with genotye file ID
   colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
-  
+
   # Look up the parent sexes and subset
-  crossPlan$P1Sex <- userPheno[match(crossPlan$Parent1, userPheno$Accession), userSexes] # get sexes ordered by Parent1
-  crossPlan$P2Sex <- userPheno[match(crossPlan$Parent2, userPheno$Accession), userSexes] # get sexes ordered by Parent2
-  crossPlan <- crossPlan[crossPlan$P1Sex != crossPlan$P2Sex, ] # remove crosses with same-sex parents
-  
-  
+  #crossPlan$P1Sex <- userPheno[match(crossPlan$Parent1, userPheno$Accession), userSexes] # get sexes ordered by Parent1
+  #crossPlan$P2Sex <- userPheno[match(crossPlan$Parent2, userPheno$Accession), userSexes] # get sexes ordered by Parent2
+  #crossPlan <- crossPlan[crossPlan$P1Sex != crossPlan$P2Sex, ] # remove crosses with same-sex parents
+
+
   # subset the number of crosses the user wishes to output
-  crossPlan[1:userNCrosses, ]
-  outputFile= paste(phenotypeFile, ".out", sep="")
-  
-}
+  #crossPlan[1:userNCrosses, ]
+  #outputFile= paste(phenotypeFile, ".out", sep="")
+
+#}
 
 
-if(is.na(userSexes)){
-  
+#if(is.na(userSexes)){
+
   # only subset the number of crosses the user wishes to output
-  crossPlan[1:userNCrosses, ]
-  outputFile= paste(phenotypeFile, ".out", sep="")
-  
-}
+  #crossPlan[1:userNCrosses, ]
+  #outputFile= paste(phenotypeFile, ".out", sep="")
+
+#}
