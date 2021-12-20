@@ -805,6 +805,8 @@ sub update {
     my $user_id = shift;
     my $c = shift;
 
+    my $default_species = $c->config->{preferred_species};
+
     if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
     }
@@ -829,7 +831,7 @@ sub update {
     my $organism_list;
 
     foreach (@$data){
-        my $organism = $_->{species} || undef;
+        my $organism = $_->{species} || $default_species;
         push @$organism_list, $organism;
     }
 
@@ -860,7 +862,7 @@ sub update {
     my @added_stocks;
     my $coderef_bcs = sub {
         foreach my $params (@$data){
-            my $species = $params->{species} || undef;
+            my $species = $params->{species} || $default_species;
             my $name = $params->{defaultDisplayName} || undef;
             my $uniquename = $params->{germplasmName} || undef;
             my $accessionNumber = $params->{accessionNumber} || undef;
@@ -884,6 +886,17 @@ sub update {
             my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
             my $description = $params->{additionalInfo}->{description} || undef;
             my $externalReferences = $params->{externalReferences} || undef;
+            # Get misc additionalInfo and remove specific codes above
+            my %specific_keys = map { $_ => 1 } ("organizationName", "transgenic", "notes", "state", "variety", "locationCode", "description", "stock_id");
+            my $raw_additional_info = $params->{additionalInfo} || undef;
+            my %additional_info;
+            if (defined $raw_additional_info) {
+                foreach my $key (keys %$raw_additional_info) {
+                    if (!exists($specific_keys{$key})) {
+                        $additional_info{$key} = $raw_additional_info->{$key};
+                    }
+                }
+            }
             #not supported
             # speciesAuthority
             # genus
@@ -917,7 +930,7 @@ sub update {
                     accessionNumber=>$accessionNumber,
                     germplasmPUI=>$germplasmPUI,
                     germplasmSeedSource=>$germplasmSeedSource,
-                    synonyms=>[$synonyms],
+                    synonyms=>$synonyms ? [ $synonyms ] : [],
                     instituteCode=>$instituteCode,
                     instituteName=>$instituteName,
                     biologicalStatusOfAccessionCode=>$biologicalStatusOfAccessionCode,
@@ -932,7 +945,8 @@ sub update {
                     locationCode=>$locationCode,
                     sp_person_id => $user_id,
                     user_name => $user_name,
-                    modification_note => 'Bulk load of accession information'
+                    modification_note => 'Bulk load of accession information',
+                    additional_info => \%additional_info
                 });
                 my $added_stock_id = $stock->store();
                 
