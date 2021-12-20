@@ -23,7 +23,7 @@ export function init() {
 
         format_brapi_post_object() {
             let brapi_post_plots = [];
-            let count = 1;
+            let count = parseInt(this.meta_data.max_level_code) + 1;
             for (let plot of this.plot_arr.filter(plot => plot.type == "filler")) {
                 brapi_post_plots.push({
                     "additionalInfo": {
@@ -40,7 +40,7 @@ export function init() {
                     "observationUnitName": this.trial_id + " filler " + count,
                     "observationUnitPosition": {
                         "observationLevel": {
-                            "levelCode": parseInt(this.meta_data.max_level_code) + count,
+                            "levelCode":  count,
                             "levelName": "plot",
                             "levelOrder": 2
                         },
@@ -89,6 +89,7 @@ export function init() {
             var pseudo_layout = {};
             var plot_object = {};
             for (let plot of data) {
+                plot.type = "data";
                 if (isNaN(parseInt(plot.observationUnitPosition.positionCoordinateY))) {
                     plot.observationUnitPosition.positionCoordinateY = isNaN(parseInt(plot.observationUnitPosition.observationLevelRelationships[1].levelCode)) ? plot.observationUnitPosition.observationLevelRelationships[0].levelCode : plot.observationUnitPosition.observationLevelRelationships[1].levelCode;
                     if (plot.observationUnitPosition.positionCoordinateY in pseudo_layout) {
@@ -103,11 +104,11 @@ export function init() {
                 if (obs_level.levelName == "plot") {
                     plot.observationUnitPosition.positionCoordinateX = parseInt(plot.observationUnitPosition.positionCoordinateX);
                     plot.observationUnitPosition.positionCoordinateY = parseInt(plot.observationUnitPosition.positionCoordinateY);
-                    if (plot.additionalInfo && plot.additionalInfo.type == "filler") {
-                        plot.type = "filler";
-                    } else {
-                        plot.type = "data";
-                    }
+                    // if (plot.additionalInfo && plot.additionalInfo.type == "filler") {
+                    //     plot.type = "filler";
+                    // } else {
+                    //     plot.type = "data";
+                    // }
                     plot_object[plot.observationUnitDbId] = plot;
                 }   
             }
@@ -126,15 +127,6 @@ export function init() {
             }
         }
 
-        // invert_rows() {
-        //     if (this.meta_data.invert_row_checkmark) {
-        //         for (let i = 0; i < this.plot_arr.length; i++) {
-        //             this.plot_arr[i].observationUnitPosition.positionCoordinateY = this.meta_data.max_row - this.plot_arr[i].observationUnitPosition.positionCoordinateY + 1;
-        //         }
-        //     }
-
-        // }
-
         traverse_map(plot_arr, planting_or_harvesting_order_layout) {
             let coord_matrix = [];
             var row = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateY" : "positionCoordinateX";
@@ -142,10 +134,11 @@ export function init() {
             let row_decrement = 1;
             let col_decrement = 1;
             
-            // if (planting_or_harvesting_order_layout == "planting_order_layout") {
-            //     row_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateY == 0).length > 0 ? 0 : 1;
-            //     col_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateX == 0).length > 0 ? 0 : 1;
-            // }
+            if (planting_or_harvesting_order_layout == "planting_order_layout") {
+                row_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateY == 0).length > 0 ? 0 : 1;
+                col_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateX == 0).length > 0 ? 0 : 1;
+            }
+            
             for (let plot of plot_arr) {
                 if (!coord_matrix[plot.observationUnitPosition[row] - row_decrement]) {
                     coord_matrix[plot.observationUnitPosition[row] - row_decrement] = [];
@@ -186,8 +179,8 @@ export function init() {
         }
 
         get_planting_order() {
-            // this.traverse_map(this.plot_arr, 'planting_order_layout');
-            this.traverse_map(this.plot_arr.filter(plot => plot.type == "data"), 'planting_order_layout');
+            this.traverse_map(this.plot_arr, 'planting_order_layout');
+            // this.traverse_map(this.plot_arr.filter(plot => plot.type == "data"), 'planting_order_layout');
         }
 
         set_meta_data() {
