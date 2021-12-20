@@ -142,10 +142,10 @@ export function init() {
             let row_decrement = 1;
             let col_decrement = 1;
             
-            if (planting_or_harvesting_order_layout == "planting_order_layout") {
-                row_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateY == 0).length > 0 ? 0 : 1;
-                col_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateX == 0).length > 0 ? 0 : 1;
-            }
+            // if (planting_or_harvesting_order_layout == "planting_order_layout") {
+            //     row_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateY == 0).length > 0 ? 0 : 1;
+            //     col_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateX == 0).length > 0 ? 0 : 1;
+            // }
             for (let plot of plot_arr) {
                 if (!coord_matrix[plot.observationUnitPosition[row] - row_decrement]) {
                     coord_matrix[plot.observationUnitPosition[row] - row_decrement] = [];
@@ -185,9 +185,10 @@ export function init() {
             this.traverse_map(this.plot_arr.filter(plot => plot.type == "data"), 'harvesting_order_layout');
         }
 
-        // get_planting_order() {
-        //     this.traverse_map(this.plot_arr, 'planting_order_layout');
-        // }
+        get_planting_order() {
+            // this.traverse_map(this.plot_arr, 'planting_order_layout');
+            this.traverse_map(this.plot_arr.filter(plot => plot.type == "data"), 'planting_order_layout');
+        }
 
         set_meta_data() {
             // this.plot_arr = JSON.parse(JSON.stringify(Object.values(this.plot_object)));
