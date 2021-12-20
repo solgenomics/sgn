@@ -1435,7 +1435,20 @@ sub upload_family_names_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload = $c->req->upload('family_name_upload_file');
+    my $upload;
+    my $upload_type;
+    my $same_parents_upload = $c->req->upload('same_parents_file');
+    my $reciprocal_parents_upload = $c->req->upload('reciprocal_parents_file');
+
+    if ($same_parents_upload) {
+        $upload = $same_parents_upload;
+        $upload_type = ' ';
+    }
+    if ($reciprocal_parents_upload) {
+        $upload = $reciprocal_parents_upload;
+        $upload_type = ' ';
+    }
+
     my $parser;
     my $parsed_data;
     my $upload_original_name = $upload->filename();

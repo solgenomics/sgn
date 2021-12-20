@@ -283,10 +283,30 @@ $trial_id
                     </&>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_family_name_form" name="upload_family_name_form">
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Upload File: </label>
-                                <div class="col-sm-10">
-                                    <input type="file" name="family_name_upload_file" id="family_name_upload_file" encoding="multipart/form-data" />
+                            <label class="col-sm-2 control-label">Family Type: </label>
+                            <div class="col-sm-6">
+                                <select class="form-control" id="family_type_option">
+                                    <option value="">Select a family type</option>
+                                    <option value="same_parents">Include only crosses with the same parental genotypes</option>
+                                    <option value="reciprocal_parents">Include reciprocal crosses</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="upload_family_with_the_same_parents" style="display:none">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Upload File (.xls): </label>
+                                <div class="col-sm-10" >
+                                    <input type="file" name="same_parents_file" id="same_parents_file" encoding="multipart/form-data" />
                                 </div>
+                            </div>
+                        </div>
+                        <div id="upload_family_with_reciprocal_parents" style="display:none">
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Upload File (.xls): </label>
+                                <div class="col-sm-10" >
+                                    <input type="file" name="reciprocal_parents_file" id="reciprocal_parents_file" encoding="multipart/form-data" />
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -498,7 +518,7 @@ jQuery(document).ready(function(){
             data: {
                 'archived_file_name':archived_file_name,
                 'overwrite_pedigrees':jQuery('#cross_upload_overwrite_pedigrees').is(":checked"),
-                'user_id' : user_id,               
+                'user_id' : user_id,
             },
             beforeSend: function(){
                 jQuery('#working_modal').modal('show');
@@ -532,13 +552,39 @@ jQuery(document).ready(function(){
         jQuery("#upload_family_name_dialog").modal("show");
     });
 
+    jQuery("#family_type_option").change(function(){
+        if (jQuery(this).val() == ""){
+            jQuery("#upload_family_with_the_same_parents").hide();
+            jQuery("#upload_family_with_reciprocal_parents").hide();
+        }
+        if (jQuery(this).val() == "same_parents"){
+            jQuery("#upload_family_with_the_same_parents").show();
+            jQuery("#upload_family_with_reciprocal_parents").hide();
+        }
+        if(jQuery(this).val() == "reciprocal_parents"){
+            jQuery("#upload_family_with_reciprocal_parents").show();
+            jQuery("#upload_family_with_the_same_parents").hide();
+
+        }
+    });
+
     jQuery("#upload_family_name_submit").click(function(){
-        var uploadFile = jQuery("#family_name_upload_file").val();
+        var familyType = jQuery("#family_type_option").val();
+        var sameParentsFile = jQuery("#same_parents_file").val();
+        var reciprocalParentsFile = jQuery("#reciprocal_parents_file").val();
+
         jQuery('#upload_family_name_form').attr("action", "/ajax/cross/upload_family_names");
-        if (uploadFile === ''){
+
+        if (familyType === ''){
+            alert("Please select a family type");
+            return;
+        }
+
+        if (sameParentsFile === '' && reciprocalParentsFile === ''){
             alert("Please select a file");
             return;
         }
+
         jQuery("#upload_family_name_form").submit();
         jQuery("#upload_family_name_dialog").modal("hide");
     });
