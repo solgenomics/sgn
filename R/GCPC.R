@@ -1,3 +1,4 @@
+
 ################################################################################
 # Genomic prediction of cross performance for YamBase
 ################################################################################
@@ -407,7 +408,7 @@ crossPlan <- calcCrossMean(GP,
 #  crossPlan <- crossPlan[order(crossPlan[,3], decreasing = TRUE), ] # orders the plan by predicted merit
   #crossPlan[ ,1] <- rownames(GP)[crossPlan[ ,1]] # replaces internal ID with genotye file ID
   #crossPlan[ ,2] <- rownames(GP)[crossPlan[ ,2]] # replaces internal ID with genotye file ID
-  colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
+  #colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
 
   # Look up the parent sexes and subset
   #crossPlan$P1Sex <- userPheno[match(crossPlan$Parent1, userPheno$Accession), userSexes] # get sexes ordered by Parent1
@@ -425,7 +426,8 @@ crossPlan <- calcCrossMean(GP,
 #if(is.na(userSexes)){
 
   # only subset the number of crosses the user wishes to output
-  #crossPlan[1:userNCrosses, ]
-  #outputFile= paste(phenotypeFile, ".out", sep="")
+  crossPlan[1:userNCrosses, ]
+  outputFile= paste(phenotypeFile, ".out", sep="")
 
 #}
+
