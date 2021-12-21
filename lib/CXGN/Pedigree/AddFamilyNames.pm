@@ -44,6 +44,7 @@ has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
 has 'family_name' => (isa =>'Str', is => 'rw', predicate => 'has_family_name', required => 1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
+has 'family_type' => (isa => 'Str', is => 'rw', predicate => 'has_family_type', required => 1,);
 
 sub add_family_name {
     my $self = shift;
@@ -51,6 +52,7 @@ sub add_family_name {
     my $phenome_schema = $self->get_phenome_schema();
     my $family_name = $self->get_family_name();
 	my $cross_name = $self->get_cross_name();
+	my $family_type = $self->get_family_type();
     my $cross_stock;
     my $organism_id;
     my $family_name_id;
@@ -135,10 +137,18 @@ sub add_family_name {
 #			print STDERR "CROSS MALE ID =".Dumper($cross_male_id)."\n";
 #			print STDERR "FAMILY FEMALE ID =".Dumper($family_female_id)."\n";
 #			print STDERR "FAMILY MALE ID =".Dumper($family_male_id)."\n";
-
-            if (($cross_female_id != $family_female_id) || ($cross_male_id != $family_male_id)) {
-				push @{$return{error}},"Parents of cross: $cross_name are not the same as parents of family: $family_name";
-				return \%return;
+            if ($previous_linkage && ($family_type eq 'same_parents')) {
+				if (($cross_female_id != $family_female_id) || ($cross_male_id != $family_male_id)) {
+					push @{$return{error}},"Parents of cross: $cross_name are not the same as parents of family: $family_name";
+					return \%return;
+                }
+            } elsif ($previous_linkage && ($family_type eq 'reciprocal_parents')) {
+                if (($cross_female_id != $family_female_id) && ($cross_female_id != $family_male_id)) {
+                    push @{$return{error}},"Female parent of cross: $cross_name is neither female parent nor male parent of family: $family_name";
+				} elsif (($cross_male_id != $family_female_id) && ($cross_male_id != $family_male_id)) {
+                    push @{$return{error}},"Male parent of cross: $cross_name is neither female parent nor male parent of family: $family_name";
+                }
+               return \%return;
             } elsif (!$previous_linkage) {
 				$family_name_rs->find_or_create_related('stock_relationship_objects', {
 	                type_id => $cross_member_of_cvterm_id,

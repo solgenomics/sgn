@@ -1435,24 +1435,27 @@ sub upload_family_names_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $upload;
-    my $upload_type;
     my $same_parents_upload = $c->req->upload('same_parents_file');
     my $reciprocal_parents_upload = $c->req->upload('reciprocal_parents_file');
 
+    my $upload_original_name;
+    my $upload_tempfile;
+    my $family_type;
+
     if ($same_parents_upload) {
-        $upload = $same_parents_upload;
-        $upload_type = ' ';
+        $upload_original_name = $same_parents_upload->filename();
+        $upload_tempfile = $same_parents_upload->tempname;
+        $family_type = 'same_parents';
     }
+
     if ($reciprocal_parents_upload) {
-        $upload = $reciprocal_parents_upload;
-        $upload_type = ' ';
+        $upload_original_name = $reciprocal_parents_upload->filename();
+        $upload_tempfile = $reciprocal_parents_upload->tempname;
+        $family_type = 'reciprocal_parents';
     }
 
     my $parser;
     my $parsed_data;
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $subdirectory = "cross_upload";
     my $archived_filename_with_path;
     my $md5;
@@ -1547,6 +1550,7 @@ sub upload_family_names_POST : Args(0) {
                 cross_name => $cross_name,
                 family_name => $family_name,
                 owner_name => $user_name,
+                family_type => $family_type
             });
 
             my $return = $family_name_add->add_family_name();
