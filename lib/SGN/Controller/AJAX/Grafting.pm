@@ -31,14 +31,14 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     my $self = shift;
     my $c = shift;
 
-    my $separator_string = $c->req->param("separator_string");
+    my $separator_string = $c->config->{separator_string};
     
     if (!$c->user()) {
 	print STDERR "User not logged in... not uploading grafts.\n";
 	$c->stash->{rest} = {error => "You need to be logged in to upload grafts." };
 	return;
     }
-
+    
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add grafts." };
 	return;
@@ -49,24 +49,24 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     my $user_name = $c->user()->get_object()->get_username();
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'graft_upload';
-
+    
     my $upload = $c->req->upload('graft_uploaded_file');
     my $upload_tempfile  = $upload->tempname;
-
+    
     my $upload_original_name  = $upload->filename();
-
+    
     # check file type by file name extension
     #
     if ($upload_original_name =~ /\.xls$|\.xlsx/) {
 	$c->stash->{rest} = { error => "Grafting upload requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
 	return;
     }
-
+    
     my $md5;
-
+    
     my @user_roles = $c->user()->roles();
     my $user_role = shift @user_roles;
-
+    
     my $params = {
 	tempfile => $upload_tempfile,
 	subdirectory => $subdirectory,
@@ -76,109 +76,27 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
 	user_id => $user_id,
 	user_role => $user_role,
     };
-
+    
     my $uploader = CXGN::UploadFile->new( $params );
-
+    
     my %upload_metadata;
     my $archived_filename_with_path = $uploader->archive();
-
+    
     if (!$archived_filename_with_path) {
 	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
 	return;
     }
-
+    
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
-
-    # check if all accessions exist
-    #
-    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my %stocks;
-
-    my $header = <$F>;
-    $header =~ s/\r//g;
-    chomp($header);
-    my ($scion_accession, $rootstock_accession, $type) =split /\t/, $header;
-
-    my %header_errors;
-
-    if ($scion_accession ne 'scion') {
-	$header_errors{'scion accession'} = "First column must have header 'scion accession' (not '$scion_accession'); ";
-    }
-
-    if ($rootstock_accession ne 'rootstock') {
-	$header_errors{'rootstock accession'} = "Second column must have header 'rootstock accession' (not '$rootstock_accession'); ";
-    }
-
-    if (%header_errors) {
-	my $error = join "<br />", values %header_errors;
-	$c->stash->{rest} = { error => $error, archived_filename_with_path => $archived_filename_with_path };
-	return;
-    }
-
     
-    my %errors;
-
-    my ($scion, $rootstock);
+    my ($header, $grafts) = _get_grafts_from_file($c, $archived_filename_with_path);
     
-    while (<$F>) {
-        chomp;
-        $_ =~ s/\r//g;
-	($scion, $rootstock) = split /\t/;
-	print STDERR "READ: $scion, $rootstock\n";
-        foreach my $acc ($scion, $rootstock) {
-	    if ($acc){
-		$acc =~ s/^\s+|\s+$//g; #trim whitespace from front and end...
-		$stocks{$acc}++;
-            }
-        }
-    }
-    close($F);
+    my $info = $self->validate_grafts($c, $header, $grafts);
     
-    my @unique_stocks = keys(%stocks);
-    my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations',\@unique_stocks)->{'missing'}};
-
-    if (scalar(@accessions_missing)>0){
-        $errors{"The following accessions could not be found in the database: ".(join ",", @accessions_missing)} = 1;
-    }
-
-    if (%errors) {
-        $c->stash->{rest} = { error => "There were problems loading the graft for the following accessions or populations: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
-        return;
-    }
-
-    print STDERR "UploadGraftCheck1".localtime()."\n";
-    my $grafts = _get_grafts_from_file($c, $archived_filename_with_path);
-    print STDERR "UploadGraftCheck2".localtime()."\n";
-
-    my $error = "";
-    foreach my $g (@$grafts) { 
-
-	my ($scion, $rootstock) = @$g;
-
-	if ($scion eq $rootstock) {
-	    $error .= "Scion and rootstock ($scion and $rootstock) designate the same accession. Not generating a graft.\n";
-
-	}
-	my $add = CXGN::Pedigree::AddGrafts->new({ schema=>$schema });
-	$add->scion($scion);
-	$add->rootstock($rootstock);
-      
-	my $error;
-	my $graft_check = $add->validate_grafts($separator_string);
-	print STDERR "UploadGraftCheck3".localtime()."Complete\n";
-	#print STDERR Dumper $graft_check;
-	if (!$graft_check){
-	    $error .= "There was a problem validating grafts. Grafts were not stored.";
-	}
-    }
-    if ($error){
-        $c->stash->{rest} = {error => $error, archived_file_name => $archived_filename_with_path};
-    } else {
-        $c->stash->{rest} = {archived_file_name => $archived_filename_with_path};
-    }
+    $info->{archived_filename_with_path} = $archived_filename_with_path;
+    
+    $c->stash($info);
 }
 
 sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
@@ -186,15 +104,17 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
     my $c = shift;
     my $archived_file_name = $c->req->param('archived_file_name');
     my $overwrite_grafts = $c->req->param('overwrite_grafts') ne 'false' ? $c->req->param('overwrite_grafts') : 0;
-    my $separator_string = $c->req->param('separator_string');
-
+    my $separator_string = $c->config->{graft_separator_string};
+    
     print STDERR "ARCHIVED FILE NAME = $archived_file_name\n";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-    my $grafts = _get_grafts_from_file($c, $archived_file_name);
-
+    
+    my ($header, $grafts) = _get_grafts_from_file($c, $archived_file_name);
+    
+    my $info = $self->validate_grafts($c, $header, $grafts);
+    
     print STDERR "FILE CONTENTS: ".Dumper($grafts);
-
+    
     my @added_grafts;
     my @already_existing_grafts;
     my @error_grafts;
@@ -206,22 +126,19 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
 	my $add = CXGN::Pedigree::AddGrafts->new({ schema=>$schema });
 	$add->scion($scion);
 	$add->rootstock($rootstock);
-		  
+	
 	my $info = $add->add_grafts($separator_string);
 
 	print STDERR Dumper $info;
-
+	
 	if ($info->{errors}){
-	    
-	    else {
-		push @error_grafts, $info->{error};
-	    }
+	    push @error_grafts, $info->{error};
 	}
 	else {
 	    push @added_grafts, $info->{graft};
 	}
     }
-    	
+    
     if (@error_grafts){
         $c->stash->{rest} = { error => join(", ",@error_grafts) };
         $c->detach();
@@ -232,24 +149,102 @@ sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
 sub validate_grafts {
     my $self = shift;
     my $c = shift;
-
-
+    my $header = shift;
+    my $grafts = shift;
+    
+    # check if all accessions exist
+    #
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $separator_string = $c->config->{graft_separator_string};
+    
+    my ($scion_accession, $rootstock_accession) = @$header;
+    
+    my %header_errors;
+    
+    if ($scion_accession ne 'scion') {
+	$header_errors{'scion accession'} = "First column must have header 'scion accession' (not '$scion_accession'); ";
+    }
+    
+    if ($rootstock_accession ne 'rootstock') {
+	$header_errors{'rootstock accession'} = "Second column must have header 'rootstock accession' (not '$rootstock_accession'); ";
+    }
+    
+    if (%header_errors) {
+	my $error = join "<br />", values %header_errors;
+	return { error => $error  };
+    }
+    
+    
+    my %errors;
+    
+    my %stocks;
+    my ($scion, $rootstock);
+    foreach my $acc (@$grafts) { 
+	$stocks{$acc->[0]}++;
+	$stocks{$acc->[1]}++;
+    }
+    
+    my @unique_stocks = keys(%stocks);
+    my $accession_validator = CXGN::List::Validate->new();
+    my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations',\@unique_stocks)->{'missing'}};
+    
+    if (scalar(@accessions_missing)>0){
+        $errors{"The following accessions could not be found in the database: ".(join ",", @accessions_missing)} = 1;
+    }
+    
+    if (%errors) {
+        return { error => "There were problems loading the graft for the following accessions or populations: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
+    }
+    
+    my $error = "";
+    foreach my $g (@$grafts) { 
+	
+	my ($scion, $rootstock) = @$g;
+	
+	if ($scion eq $rootstock) {
+	    $error .= "Scion and rootstock ($scion and $rootstock) designate the same accession. Not generating a graft.\n";
+	    
+	}
+	my $add = CXGN::Pedigree::AddGrafts->new({ schema=>$schema });
+	$add->scion($scion);
+	$add->rootstock($rootstock);
+	
+	my $error;
+	my $graft_check = $add->validate_grafts($separator_string);
+	print STDERR "UploadGraftCheck3".localtime()."Complete\n";
+	#print STDERR Dumper $graft_check;
+	if (!$graft_check){
+	    $error .= "There was a problem validating grafts. Grafts were not stored.";
+	}
+    }
+    if ($error){
+        return {error => $error };
+    } else {
+        return { success => 1 };
+    }
 }
 
 sub _get_grafts_from_file {
     my $c = shift;
     my $archived_filename_with_path = shift;
-
+    
     open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
     my $header = <$F>;
+    $header =~ s/\r//g;
+    my @header = split/\t/, $header;
     my @grafts;
     my $line_num = 2;
     while (<$F>) {
 	chomp;
-	my ($scion, $rootstock) = split /\t/;
+	$_ =~ s/\r//g;
+	($scion, $rootstock) = split /\t/;
+	
+	$scion =~ s/^\s+|\s+$//g;     # trim whitespace from front and end..
+	$rootstock =~ s/^\s+|\s+$//g; # trim also
 	push @grafts, [ $scion, $rootstock ];
     }
-    return \@grafts;
+
+    return \@header, \@grafts;
 }
 
 =head2 get_full_graft
