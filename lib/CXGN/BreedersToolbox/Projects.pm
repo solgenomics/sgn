@@ -394,7 +394,7 @@ sub get_location_geojson_data {
         });
     }
 
-    print STDERR "LOCATIONS: ".Dumper(\@locations);
+    #print STDERR "LOCATIONS: ".Dumper(\@locations);
     #my $json = JSON->new();
     #$json->canonical(); # output sorted JSON
     #return $json->encode(\@locations);
