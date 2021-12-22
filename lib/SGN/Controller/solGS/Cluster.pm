@@ -159,11 +159,19 @@ sub prepare_response {
 
     my $cluster_type = $c->stash->{cluster_type};
     my $file_id = $c->stash->{file_id};
-    
+
+    my $json_data;
+    if ($cluster_type =~ /hierarchical/i)
+    {
+	my $json_file = $c->stash->{"${cluster_type}_result_json_file"};
+	$json_data = read_file($json_file, {binmode => ':utf8'});
+	print STDERR "\njson_data: $json_data\n";
+    }
     my $ret->{cluster_plot} = $c->stash->{download_plot};;
     $ret->{kmeans_clusters} = $c->stash->{download_kmeans_clusters};
     $ret->{newick_file} = $c->stash->{download_newick};
     $ret->{json_file} = $c->stash->{download_json};
+    $ret->{json_data} = $json_data;
     $ret->{cluster_report} = $c->stash->{download_cluster_report};;
     $ret->{result} = 'success';
     $ret->{cluster_pop_id} = $c->stash->{cluster_pop_id};
@@ -473,6 +481,7 @@ sub prep_cluster_download_files {
   my $clusters_file;
   my $newick_file;
   my $json_file;
+
   
   if ($cluster_type =~ /k-means/i)
   {
