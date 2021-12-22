@@ -560,10 +560,18 @@ sub check_cluster_output {
         $c->stash->{file_id} = $file_id;
 
         my $cluster_type = $c->stash->{cluster_type};
+	my $cached_file;
+	if ($cluster_type =~ /k-means/i)
+	{
         $c->controller('solGS::Cluster')->cluster_result_file($c);
-        my $result_file = $c->stash->{"${cluster_type}_result_file"};
-    
-    	if (-s $result_file)
+        $cached_file = $c->stash->{"${cluster_type}_result_file"};
+	}
+	else
+	{
+	    $c->controller('solGS::Cluster')->cluster_result_file($c);
+	    $cached_file = $c->stash->{"${cluster_type}_result_newick_file"};
+	}
+    	if (-s $cached_file)
     	{
     	    return 1;
     	}
