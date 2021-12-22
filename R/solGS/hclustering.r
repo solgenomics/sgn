@@ -21,6 +21,7 @@ library(ggplot2)
 library(ape)
 library(ggtree)
 library(treeio)
+library(R2D3)
 
 allArgs <- commandArgs()
 
@@ -203,13 +204,12 @@ hClust <- distMat  %>%
 
 distTable <- data.frame(as.matrix(distMat))
 
-clustTree <- ggtree(hClust,  layout = "rectangular", color = "#96CA2D")
+clustTree <- ggtree(hClust,  layout = "circular", color = "#96CA2D")
 xMax <- ggplot_build(clustTree)$layout$panel_scales_x[[1]]$range$range[2]
 xMax <- xMax + 0.02
 
  # ggplot2::xlim(0, xMax)
 clustTree <- clustTree +
-	  ggplot2::xlim(0, xMax) +
     geom_tiplab(size = 4, color = "blue")
 
 
@@ -243,6 +243,9 @@ newickF <- as.phylo(hClust)
 write.tree(phy = newickF,
 file = newickFile
 )
+
+jsonHclust <- jsonHC(hClust)
+write(jsonHclust$json, file = jsonFile)
 
 ####
 q(save = "no", runLast = FALSE)
