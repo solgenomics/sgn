@@ -632,25 +632,35 @@ sub family_name_detail : Path('/family') Args(1) {
     my $self = shift;
     my $c = shift;
     my $id = shift;
-    my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'family_name', 'stock_type')->cvterm_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $family_stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_type', 'stock_property')->cvterm_id();
 
     #get family_name from stock id
-    my $family = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->search( { stock_id => $id, type_id => $family_type_id } )->first();
+    my $family = $schema->resultset("Stock::Stock")->find( { stock_id => $id, type_id => $family_stock_type_id } );
 
     my $family_id;
     my $family_name;
+    my $family_type;
 	if (!$family) {
     	$c->stash->{template} = '/generic_message.mas';
     	$c->stash->{message} = 'The requested family name does not exist.';
     	return;
     } else {
         $family_id = $family->stock_id();
-		$family_name = $family->uniquename();
+        $family_name = $family->uniquename();
+        my $type = $schema->resultset("Stock::Stockprop")->find({ stock_id => $family_id, type_id => $family_type_id})->value();
+        if (($type eq 'same_parents') || ($type eq '')){
+            $family_type = 'This family includes only crosses having the same parental genotypes';
+        } elsif ($type eq 'reciprocal_parents'){
+            $family_type = 'This family includes reciprocal crosses';
+        }
     }
 
     $c->stash->{family_name} = $family_name;
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{family_id} = $family_id;
+    $c->stash->{family_type} = $family_type;
     $c->stash->{template} = '/breeders_toolbox/cross/family.mas';
 
 }
