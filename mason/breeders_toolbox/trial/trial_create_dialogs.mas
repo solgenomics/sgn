@@ -290,6 +290,8 @@ rect.bordered {
 %        $method = 'CRD';
 %    } elsif ($type eq 'Complete Block'){
 %        $method = 'RCBD';
+%    } elsif ($type eq 'Row Column'){
+%        $method = 'RCD';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){
