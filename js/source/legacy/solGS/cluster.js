@@ -484,6 +484,7 @@ if (document.URL.match(/cluster\/analysis/)) {
     	    data    : {'page': page, 'args': args },
     	    url     : '/solgs/check/cached/result/',
     	    success : function(res) {
+		console.log('cached result: ' + res.cached)
     		if (res.cached) {
     		    solGS.cluster.runClusterAnalysis(args);
     		} else {
@@ -584,6 +585,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 			jQuery("#cluster_canvas .multi-spinner-container").hide();
 
 			solGS.cluster.plotClusterOutput(res);
+			
 
 			jQuery("#cluster_message").empty();
 		    jQuery('#' + runClusterId).show();
@@ -684,7 +686,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    + res.cluster_plot
 	    +  "\" download="
 	    + filePlot
-	    + `">${plotType} </a>`;
+	    + "\">" + plotType + '</a>';
 
 	var fileClusters  = clustersFile.split('/').pop();
 
@@ -692,7 +694,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    + clustersFile
 	    +  "\" download="
 	    + fileClusters
-	    + `">${outFileType}</a>`;
+	    + "\">" + outFileType + '</a>';
 
 	var reportFile = res.cluster_report;
 	var report  = reportFile.split('/').pop();
@@ -703,6 +705,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    + report
 	    + ">Analysis Report </a>";
 
+	if (plotLink.match(/k-means/i)) {
 	var downloadLinks = ' <strong>Download '
 	    + resultName + ' </strong>: '
 	    + plotLink + ' | '
@@ -710,10 +713,16 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    + reportLink;
 
 	jQuery('#cluster_plot').prepend('<p style="margin-top: 20px">' + downloadLinks + '</p>');
-	jQuery('#cluster_plot').prepend(plot);
+	    jQuery('#cluster_plot').prepend(plot);
+	} else {
+	    console.log('json data: ' + res.json_data)
+	    solGS.dendrogram.plot(res.json_data, '#cluster_canvas', '#cluster_plot', resultName) 
+	}
 
     },
 
+    
+    
     getClusterPopsTable: function(tableId) {
 
 	var clusterTable  = this.createTable(tableId);
