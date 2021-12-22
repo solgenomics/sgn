@@ -1658,7 +1658,7 @@ sub lists_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Lists');
-	my $brapi_package_result = $brapi_module->search($clean_inputs,$user_id);
+	my $brapi_package_result = $brapi_module->get($clean_inputs,$user_id);
 	_standard_response_construction($c, $brapi_package_result);
 }
 

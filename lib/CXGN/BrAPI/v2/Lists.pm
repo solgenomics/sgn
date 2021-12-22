@@ -10,7 +10,6 @@ extends 'CXGN::BrAPI::v2::Common';
 sub search {
 	my $self = shift;
 	my $params = shift;
-	my $user_id = shift;
 
 	my $page_obj = CXGN::Page->new();
     my $hostname = $page_obj->get_hostname();
@@ -22,6 +21,8 @@ sub search {
     my $list_source_arrayref = $params->{listSource} || ($params->{listSources} || ());
     my $reference_ids_arrayref = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
     my $reference_sources_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
+	my $list_owner_array_refs = $params->{listOwnerPersonDbIds};
+	my $user_id = $list_owner_array_refs->[0];
 
     if (($reference_ids_arrayref && scalar(@$reference_ids_arrayref)>0) || ($reference_sources_arrayref && scalar(@$reference_sources_arrayref)>0) ){
         push @$status, { 'error' => 'The following search parameters are not implemented: externalReferenceID, externalReferenceSources' };
@@ -36,11 +37,19 @@ sub search {
 	my $lists;
 
 	if ($user_id){
-		$lists = CXGN::List::available_lists($self->bcs_schema()->storage->dbh(),$user_id,$types_arrayref->[0]);
+		if ($types_arrayref) {
+			$lists = CXGN::List::available_lists($self->bcs_schema()->storage->dbh(),$user_id,$types_arrayref->[0]);
+		} else {
+			$lists = CXGN::List::available_lists($self->bcs_schema()->storage->dbh(),$user_id);
+		}
 	} else {
-		$lists = CXGN::List::available_public_lists($self->bcs_schema()->storage->dbh(),$types_arrayref->[0]);
-	}
+		if ($types_arrayref) {
+			$lists = CXGN::List::available_public_lists($self->bcs_schema()->storage->dbh(),$types_arrayref->[0]);
+		} else {
+			$lists = CXGN::List::available_public_lists($self->bcs_schema()->storage->dbh());
+		}
 
+	}
 	my @list_ids;
 	for (@$lists) {
 		push @list_ids, $_->[0];
@@ -72,7 +81,7 @@ sub search {
 		if ($counter >= $start_index && $counter <= $end_index) {
 			push @data , {
 				additionalInfo      => {},
-				dateCreated         => CXGN::BrAPI::TimeUtils::db_time_to_iso($create_date),
+				dateCreated         => CXGN::BrAPI::TimeUtils::db_time_to_iso_utc($create_date),
 				dateModified        => undef,
 				externalReferences  => [],
 				listDbId            => qq|$id|,
@@ -94,6 +103,14 @@ sub search {
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Lists result constructed');
+}
+
+sub get {
+	my $self = shift;
+	my $params = shift;
+	my $user_id = shift;
+	$params->{listOwnerPersonDbIds} = [$user_id];
+	return $self->search($params);
 }
 
 sub convert_to_brapi_type {
@@ -209,6 +226,7 @@ sub store {
     my $status = $self->status;
     my $page = $self->page;
     my $counter = 0;
+	my @new_lists_ids;
 
 	foreach my $params (@$data){
 		my $additional_info = $params->{additionalInfo} || undef; #not supported
@@ -283,13 +301,17 @@ sub store {
 			my $reference_result = $references->store();
 		}
 	    $counter++;
+		push @new_lists_ids, $new_list_id;
 
 	}
 
   	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
-	return CXGN::BrAPI::JSONResponse->return_success(1, $pagination, \@data_files, $status, $counter . ' Lists stored');
+	my $params;
+	$params->{listDbIds} = \@new_lists_ids;
+	$params->{listOwnerPersonDbIds} = [$user_id];
+	return $self->search($params);
 }
 
 sub update {
