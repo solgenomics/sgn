@@ -96,7 +96,7 @@ sub upload_grafts_verify : Path('/ajax/grafts/upload_verify') Args(0)  {
     
     $info->{archived_filename_with_path} = $archived_filename_with_path;
     
-    $c->stash($info);
+    $c->stash->{rest} = $info;
 }
 
 sub upload_grafts_store : Path('/ajax/grafts/upload_store') Args(0)  {
@@ -236,8 +236,8 @@ sub _get_grafts_from_file {
     my $line_num = 2;
     while (<$F>) {
 	chomp;
-	$_ =~ s/\r//g;
-	($scion, $rootstock) = split /\t/;
+	s/\r//g;
+	my ($scion, $rootstock) = split /\t/;
 	
 	$scion =~ s/^\s+|\s+$//g;     # trim whitespace from front and end..
 	$rootstock =~ s/^\s+|\s+$//g; # trim also

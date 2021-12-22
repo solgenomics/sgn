@@ -141,27 +141,27 @@ sub validate_grafts {
     my $schema = $self->schema();
     my %return_errors;
 
-    my $scion = $schema->resultset('Stock::Stock')->find( { uniquename => $self->scion });
+    my $scion_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->$self->scion() });
     
-    my $rootstock = $schema->resultset('Stock::Stock')->find( { uniquename => $self->rootstock() });
+    my $rootstock_row = $schema->resultset('Stock::Stock')->find( { uniquename => $self->rootstock() });
     
     my @errors;
     my @messages;
     
-    if ($scion && $rootstock) {
-	my $graft = join("", $scion, $separator_string, $rootstock);
+    if ($scion_row && $rootstock_row) {
+	my $graft = join("", $self->scion, $separator_string, $self->rootstock);
 	
-	my $graft = $schema->resultset('Stock::Stock')->find( { uniquename => $graft });
+	my $graft_row = $schema->resultset('Stock::Stock')->find( { uniquename => $graft });
 	
-	if ($graft) {
+	if ($graft_row) {
 	    push @messages, "The name for the graft $graft already exists in the database, not storing.\n";
 	}
 
-	if (!$scion) {
-	    push @errors,  "The scion $scion does not exist in the database.";
+	if (!$scion_row) {
+	    push @errors,  "The scion ". $self->scion()." does not exist in the database.";
 	}
-	if (!$rootstock) {
-	    push @errors, "The rootstock $rootstock does not exist in the database.";
+	if (!$rootstock_row) {
+	    push @errors, "The rootstock ".$self->rootstock()." does not exist in the database.";
 	}
 
 	$return_errors{error} = join(", ", @errors);
