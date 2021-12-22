@@ -68,7 +68,7 @@ userPheno <- read.csv(phenotypeFile, header = TRUE) #testing only
 #    f is automatically included as a fixed effect- a note to the user would be good.
 
 userFixed <- c()
-userFixed <- c("Year") # for testing only
+userFixed <- c("studyYear") # for testing only
 
 
 # d. The user should be able to select their random variables from a menu
@@ -77,7 +77,7 @@ userFixed <- c("Year") # for testing only
 #    to this vector, 'userRandom'.
 
 userRandom <- c()
-userRandom <- "Block" # for testing only
+userRandom <- "blockNumber" # for testing only
 
 
 # e. The user should be able to indicate which of the userPheno column names
@@ -86,7 +86,7 @@ userRandom <- "Block" # for testing only
 #    should be passed to this vector, userID.
 
 userID <- c()
-userID <- "Accession" # for testing only
+userID <- "observationUnitName" # for testing only
 
 
 # f. The user must indicate the ploidy level of their organism, and the integer
