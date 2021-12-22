@@ -7,7 +7,8 @@ sub create_design {
   my $self = shift;
   my %rcd_design;
   my $rbase = R::YapRI::Base->new();
-  my @stock_list;
+  my $stock_list;
+  my $control_list;
   my $number_of_blocks;
   my $stock_data_matrix;
   my $control_data_matrix;
@@ -18,7 +19,7 @@ sub create_design {
   my @control_names_crbd;
   my @block_numbers;
   my @converted_plot_numbers;
-  my @control_list;
+  my @control_list_crbd;
   my %control_names_lookup;
   my $fieldmap_row_number;
   my @fieldmap_row_numbers;
@@ -27,13 +28,14 @@ sub create_design {
   my @col_number_fieldmaps;
 
   if ($self->has_stock_list()) {
-    @stock_list = @{$self->get_stock_list()};
+    @stock_list = '"'.join('","',@{$self->get_stock_list()}).'"';
+    # @stock_list = @{$self->get_stock_list()};
   } else {
     die "No stock list specified\n";
   }
-  if ($self->has_control_list()) {
-    @control_list = @{$self->get_control_list()};
-    %control_names_lookup = map { $_ => 1 } @control_list;
+  if ($self->has_control_list_crbd()) {
+    $control_list = '"'.join('","',@{$self->get_control_list_crbd()}).'"';
+    %control_names_lookup = map { $_ => 1 } @{$self->get_control_list_crbd()};
     $self->_check_controls_and_accessions_lists;
   }
   if ($self->has_number_of_blocks()) {
@@ -54,25 +56,6 @@ sub create_design {
     $plot_layout_format = $self->get_plot_layout_format();
   }
 
-  $stock_data_matrix =  R::YapRI::Data::Matrix->new(
-                              {
-                           name => 'stock_data_matrix',
-                           rown => 1,
-                           coln => scalar(@stock_list),
-                           data => \@stock_list,
-                              }
-                             );
-
-  $control_data_matrix =  R::YapRI::Data::Matrix->new(
-						       {
-							name => 'control_data_matrix',
-							rown => 1,
-							coln => scalar(@control_list),
-							data => \@control_list,
-						       }
-						      );
-
-
   my $plot_start = $self->get_plot_start_number();
   my $serie;
   if($plot_start == 1){
@@ -83,36 +66,101 @@ sub create_design {
       $serie = 3;
   }
 
-  $r_block = $rbase->create_block('r_block');
-  $stock_data_matrix->send_rbase($rbase, 'r_block');
-  $control_data_matrix->send_rbase($rbase, 'r_block');
-  $r_block->add_command('library(agricolae)');
-  $r_block->add_command('library(blocksdesign)');
-  $r_block->add_command('treatments <- stock_data_matrix[1,]');
-  $r_block->add_command('controls <- control_data_matrix[1,]');
-  $r_block->add_command('number_of_blocks <- '.$number_of_blocks);
-  $r_block->add_command('number_of_rows <- '.$fieldmap_row_number);
-  $r_block->add_command('number_of_cols <- '.$fieldmap_col_number);
+  my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"trialdesigns/rc_XXXXX");
 
-  $r_block->add_command('RCDblocks <- data.frame(
-    block = gl(number_of_blocks,length(treatments)),
-    row = gl(number_of_rows,1),
-    col = gl(number_of_cols,number_of_rows)
-  )');
-  $r_block->add_command('RCD <- design(treatments, RCDblocks)$Design');
-  # $r_block->add_command('RCD <- transform(RCD, is_a_control = ifelse(RCD$treatments %in% controls, TRUE, FALSE))');
+  my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+  my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+  my $temppath = $c->config->{basepath}."/".$tempfile;
 
-  $r_block->run_block();
-  $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','RCD');
-  print STDERR Dumper $result_matrix;
-  @plot_numbers = $result_matrix->get_column("plots");
-  print STDERR Dumper \@plot_numbers;
-  @block_numbers = $result_matrix->get_column("block");
-  @stock_names = $result_matrix->get_column("treatments");
-  @fieldmap_row_numbers = $result_matrix->get_column("row");
-  @col_number_fieldmaps = $result_matrix->get_column("col");
+  my $param_file = $temppath.".params";
+  open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
+  print $F "treatments <- c($stock_list)\n";
+  print $F "controls <- c($control_list)\n";
+  print $F "nRep <- ".$number_of_blocks."\n";
+  print $F "nRow <- ".$fieldmap_row_number."\n";
+  print $F "nCol <- ".$fieldmap_row_number."\n";
+  print $F "serie <- ".$serie."\n";
+  close($F);
+  #
+  # print $F "dependent_variables <- c($dependent_variables)\n";
+  # print $F "random_factors <- c($random_factors)\n";
+  # print $F "fixed_factors <- c($fixed_factors)\n";
+  #
+  # print $F "model <- \"$model\"\n";
+  # close($F);
+
+  my $cmd = "R CMD BATCH  '--args paramfile=\"".$temppath.".params\"' " .  " R/row_column_design.R ".$temppath.".out";
+  print STDERR "running R command $cmd...\n";
+
+  my $design_file = $temppath.".design";
+  open my $deisgn, $design_file or die "Could not open $design_file: $!";
+
+  # $stock_data_matrix =  R::YapRI::Data::Matrix->new(
+  #                             {
+  #                          name => 'stock_data_matrix',
+  #                          rown => 1,
+  #                          coln => scalar(@stock_list),
+  #                          data => \@stock_list,
+  #                             }
+  #                            );
+  #
+  # $control_data_matrix =  R::YapRI::Data::Matrix->new(
+	# 					       {
+	# 						name => 'control_data_matrix',
+	# 						rown => 1,
+	# 						coln => scalar(@control_list),
+	# 						data => \@control_list,
+	# 					       }
+	# 					      );
+  #
+  # $r_block = $rbase->create_block('r_block');
+  # $stock_data_matrix->send_rbase($rbase, 'r_block');
+  # $control_data_matrix->send_rbase($rbase, 'r_block');
+  # $r_block->add_command('library(agricolae)');
+  # $r_block->add_command('library(blocksdesign)');
+  # $r_block->add_command('treatments <- stock_data_matrix[1,]');
+  # $r_block->add_command('controls <- control_data_matrix[1,]');
+  # $r_block->add_command('number_of_blocks <- '.$number_of_blocks);
+  # $r_block->add_command('number_of_rows <- '.$fieldmap_row_number);
+  # $r_block->add_command('number_of_cols <- '.$fieldmap_col_number);
+  #
+  # $r_block->add_command('RCDblocks <- data.frame(
+  #   block = gl(number_of_blocks,length(treatments)),
+  #   row = gl(number_of_rows,1),
+  #   col = gl(number_of_cols,number_of_rows)
+  # )');
+  # $r_block->add_command('RCD <- design(treatments, RCDblocks)$Design');
+  # # $r_block->add_command('RCD <- transform(RCD, is_a_control = ifelse(RCD$treatments %in% controls, TRUE, FALSE))');
+  #
+  # $r_block->run_block();
+  # $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','RCD');
+  # print STDERR Dumper $result_matrix;
+  @block_numbers = split('\t', $design);
+  @fieldmap_row_numbers = split('\t', $design);
+  @col_number_fieldmaps = split('\t', $design);
+  @plot_numbers = split('\t', $design);
+  @stock_names = split('\t', $design);
+  @is_a_control = split('\t', $design);
+
+  # @plot_numbers = split('\t', $design);
 
   # alter plot numbers for serpentine or custom start number
+
+  # my $plot_start = $self->get_plot_start_number();
+  #
+  # if ($plot_layout_format eq "zigzag") {
+  #
+  # } elsif ($plot_layout_format eq "serpentine") {
+  #
+  # }
+  #
+  # if ($plot_start == 1){
+  #
+  # } elsif($plot_start == 101){
+  #
+  # } elsif($plot_start == 1001){
+  #
+  # }
 
     my %seedlot_hash;
     if($self->get_seedlot_hash){
@@ -131,7 +179,7 @@ sub create_design {
     #$plot_info{'plot_num_per_block'} = $plot_numbers[$i];
     $plot_info{'plot_number'} = $plot_numbers[$i];
     $plot_info{'plot_num_per_block'} = $plot_numbers[$i];
-    $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+    $plot_info{'is_a_control'} = $is_a_control[$i];
     #$plot_info_per_block{}
       if ($fieldmap_row_numbers[$i]){
       $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
