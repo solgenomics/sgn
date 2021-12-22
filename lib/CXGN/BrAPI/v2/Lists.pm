@@ -36,20 +36,8 @@ sub search {
 	my @data;
 	my $lists;
 
-	if ($user_id){
-		if ($types_arrayref) {
-			$lists = CXGN::List::available_lists($self->bcs_schema()->storage->dbh(),$user_id,$types_arrayref->[0]);
-		} else {
-			$lists = CXGN::List::available_lists($self->bcs_schema()->storage->dbh(),$user_id);
-		}
-	} else {
-		if ($types_arrayref) {
-			$lists = CXGN::List::available_public_lists($self->bcs_schema()->storage->dbh(),$types_arrayref->[0]);
-		} else {
-			$lists = CXGN::List::available_public_lists($self->bcs_schema()->storage->dbh());
-		}
+	$lists = CXGN::List::all_lists($self->bcs_schema()->storage->dbh(),$user_id,$types_arrayref->[0]);
 
-	}
 	my @list_ids;
 	for (@$lists) {
 		push @list_ids, $_->[0];
@@ -103,14 +91,6 @@ sub search {
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($counter,$page_size,$page);
 
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Lists result constructed');
-}
-
-sub get {
-	my $self = shift;
-	my $params = shift;
-	my $user_id = shift;
-	$params->{listOwnerPersonDbIds} = [$user_id];
-	return $self->search($params);
 }
 
 sub convert_to_brapi_type {
@@ -246,12 +226,12 @@ sub store {
 		#verify if list exists
 		my $check_list_id = CXGN::List::exists_list($dbh, $list_name, $owner_id);
 		if ($check_list_id->{list_id}){
-        	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('List name %s already exist in the database!',$list_name));		
+        	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('List name %s already exist in the database!',$list_name), 409);
 		}
 
 	    #check entries
 		if (!$list_type || !$data) {
-        	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide list type and data!'));		
+        	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide list type and data!'), 400);
 		}
 
 		my $q = "SELECT cvterm_id FROM cvterm WHERE name =?";
@@ -310,7 +290,6 @@ sub store {
 
 	my $params;
 	$params->{listDbIds} = \@new_lists_ids;
-	$params->{listOwnerPersonDbIds} = [$user_id];
 	return $self->search($params);
 }
 
