@@ -1654,11 +1654,11 @@ sub lists : Chained('brapi') PathPart('lists') Args(0) : ActionClass('REST') { }
 sub lists_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c,1);
+	my ($auth,$user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Lists');
-	my $brapi_package_result = $brapi_module->search($clean_inputs,$user_id);
+	my $brapi_package_result = $brapi_module->search($clean_inputs);
 	_standard_response_construction($c, $brapi_package_result);
 }
 

@@ -64,6 +64,10 @@ has 'elements' => (isa => 'ArrayRef',
 		   is => 'rw',
     );
 
+has 'create_date' => (isa => 'Str',
+    is => 'rw',
+);
+
 # class method: Use like so: CXGN::List::create_list
 sub create_list {
     my $dbh = shift;
@@ -115,19 +119,19 @@ sub available_lists {
     my $owner = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, list.create_date FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
     my $h = $dbh->prepare($q);
     $h->execute($owner);
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public) = $h->fetchrow_array()) {
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public, $create_date) = $h->fetchrow_array()) {
 	if ($requested_type) {
 	    if ($type && ($type eq $requested_type)) {
-		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public ];
+		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $create_date ];
 	    }
 	}
 	else {
-	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public ];
+	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $create_date ];
 	}
     }
     return \@lists;
@@ -137,19 +141,49 @@ sub available_public_lists {
     my $dbh = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, sp_person.username FROM sgn_people.list LEFT JOIN sgn_people.sp_person AS sp_person ON (sgn_people.list.owner=sp_person.sp_person_id) LEFT JOIN sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name, sp_person.username ORDER BY list.name";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, sp_person.username, list.create_date FROM sgn_people.list LEFT JOIN sgn_people.sp_person AS sp_person ON (sgn_people.list.owner=sp_person.sp_person_id) LEFT JOIN sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name, sp_person.username ORDER BY list.name";
     my $h = $dbh->prepare($q);
     $h->execute();
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type, $username) = $h->fetchrow_array()) {
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $username, $create_date) = $h->fetchrow_array()) {
         if ($requested_type) {
             if ($type && ($type eq $requested_type)) {
-                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username ];
+                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $create_date ];
             }
         }
         else {
-            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username ];
+            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username, $create_date ];
+        }
+    }
+    return \@lists;
+}
+
+sub all_lists {
+    my $dbh = shift;
+    my $owner = shift;
+    my $requested_type = shift;
+
+    my $h;
+    if ($owner) {
+        my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, list.create_date FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
+        $h = $dbh->prepare($q);
+        $h->execute($owner);
+    } else {
+        my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public, list.create_date FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
+        $h = $dbh->prepare($q);
+        $h->execute();
+    }
+
+    my @lists = ();
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public, $create_date) = $h->fetchrow_array()) {
+        if ($requested_type) {
+            if ($type && ($type eq $requested_type)) {
+                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $create_date ];
+            }
+        }
+        else {
+            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public, $create_date ];
         }
     }
     return \@lists;
@@ -187,7 +221,6 @@ sub exists_list {
     }
     return { list_id => undef };
 }
-
 
 around 'BUILDARGS' => sub {
     my $orig = shift;
