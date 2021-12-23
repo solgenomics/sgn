@@ -655,12 +655,10 @@ sub family_name_detail : Path('/family') Args(1) {
         if ($family_prop){
             $family_type = $family_prop->value();
             if ($family_type eq 'same_parents'){
-                $family_type_string = 'This family includes only crosses having the same female accession and the same male accession';
+                $family_type_string = 'This family includes only crosses having the same female parent and the same male parent';
             } elsif ($family_type eq 'reciprocal_parents'){
                 $family_type_string = 'This family includes reciprocal crosses';
             }
-        } else {
-            $family_type_string = 'This family includes only crosses having the same female accession and the same male accession';
         }
     }
 

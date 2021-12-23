@@ -4,8 +4,8 @@ $family_id
 $family_name => ''
 $user_id => undef
 $identifier_prefix => ''
-$family_type => ''
-$family_type_string => ''
+$family_type
+$family_type_string
 </%args>
 
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List"] &>

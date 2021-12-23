@@ -35,6 +35,8 @@ package AddFamilyTypeCvterm;
 use Moose;
 use Bio::Chado::Schema;
 use Try::Tiny;
+use SGN::Model::Cvterm;
+
 extends 'CXGN::Metadata::Dbpatch';
 
 
@@ -76,6 +78,19 @@ sub patch {
 		}
 	}
 
+    #add missing family_type stockprop
+    my $family_name_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $family_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_type', 'stock_property');
+	my $family_name_rs = $schema->resultset("Stock::Stock")->search({type_id => $family_name_cvterm_id});
+    if ($family_name_rs) {
+        while(my $family = $family_name_rs->next()){
+            my $family_id = $family->stock_id."\n";
+            my $stored_family_type = $schema->resultset("Stock::Stockprop")->find({ stock_id => $family_id, type_id => $family_type_cvterm->cvterm_id()});
+            if (!$stored_family_type) {
+                $family->create_stockprops({$family_type_cvterm->name() => 'same_parents'});
+            }
+        }
+    }
 
     print "You're done!\n";
 }

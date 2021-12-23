@@ -284,10 +284,10 @@ $trial_id
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_family_name_form" name="upload_family_name_form">
                         <div class="form-group">
                             <label class="col-sm-2 control-label">Family Type: </label>
-                            <div class="col-sm-6">
+                            <div class="col-sm-8">
                                 <select class="form-control" id="family_type_option">
                                     <option value="">Select a family type</option>
-                                    <option value="same_parents">Include only crosses with the same parental genotypes</option>
+                                    <option value="same_parents">Include only crosses with the same female parent and the same male parent</option>
                                     <option value="reciprocal_parents">Include reciprocal crosses</option>
                                 </select>
                             </div>
