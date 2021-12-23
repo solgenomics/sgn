@@ -642,6 +642,7 @@ sub family_name_detail : Path('/family') Args(1) {
     my $family_id;
     my $family_name;
     my $family_type;
+    my $family_type_string;
 	if (!$family) {
     	$c->stash->{template} = '/generic_message.mas';
     	$c->stash->{message} = 'The requested family name does not exist.';
@@ -649,11 +650,17 @@ sub family_name_detail : Path('/family') Args(1) {
     } else {
         $family_id = $family->stock_id();
         $family_name = $family->uniquename();
-        my $type = $schema->resultset("Stock::Stockprop")->find({ stock_id => $family_id, type_id => $family_type_id})->value();
-        if (($type eq 'same_parents') || ($type eq '')){
-            $family_type = 'This family includes only crosses having the same parental genotypes';
-        } elsif ($type eq 'reciprocal_parents'){
-            $family_type = 'This family includes reciprocal crosses';
+        my $family_prop = $schema->resultset("Stock::Stockprop")->find({ stock_id => $family_id, type_id => $family_type_id});
+
+        if ($family_prop){
+            $family_type = $family_prop->value();
+            if ($family_type eq 'same_parents'){
+                $family_type_string = 'This family includes only crosses having the same female accession and the same male accession';
+            } elsif ($family_type eq 'reciprocal_parents'){
+                $family_type_string = 'This family includes reciprocal crosses';
+            }
+        } else {
+            $family_type_string = 'This family includes only crosses having the same female accession and the same male accession';
         }
     }
 
@@ -661,6 +668,7 @@ sub family_name_detail : Path('/family') Args(1) {
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{family_id} = $family_id;
     $c->stash->{family_type} = $family_type;
+    $c->stash->{family_type_string} = $family_type_string;
     $c->stash->{template} = '/breeders_toolbox/cross/family.mas';
 
 }

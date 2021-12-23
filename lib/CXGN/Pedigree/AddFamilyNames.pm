@@ -113,9 +113,9 @@ sub add_family_name {
 
         if ($family_name_rs){
 
-            my $stored_family_type = $chado_schema->resultset("Stock::Stockprop")->search({ stock_id => $family_name_rs->stock_id(), type_id => $family_type_cvterm->cvterm_id() });
+            my $stored_family_type = $chado_schema->resultset("Stock::Stockprop")->find({ stock_id => $family_name_rs->stock_id(), type_id => $family_type_cvterm->cvterm_id() })->value();
 
-            if ($stored_family_type != $family_type) {
+            if ($stored_family_type ne $family_type) {
                 push @{$return{error}},"The previously stored family type of family: $family_name is not the same as the selected family type";
                 return \%return;
             }
