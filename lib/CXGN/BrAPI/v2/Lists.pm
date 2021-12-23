@@ -43,7 +43,7 @@ sub search {
 		$h->execute($list_type);
 		my ($cvterm_id) = $h->fetchrow_array();
 		if (!$cvterm_id) {
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide valid list type: %s',$list_type), 400);
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide a valid BrAPI list type: %s',$list_type), 400);
 		}
 	}
 
@@ -249,7 +249,7 @@ sub store {
 		$h->execute($list_type);
 		my ($cvterm_id) = $h->fetchrow_array();
 		if (!$cvterm_id) {
-	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide valid list type: %s',$list_type));
+	    	return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide a valid BrAPI list typee: %s',$list_type));
 		}
 
 	    #validate
