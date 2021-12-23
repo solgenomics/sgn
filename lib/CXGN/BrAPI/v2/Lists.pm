@@ -36,7 +36,18 @@ sub search {
 	my @data;
 	my $lists;
 
-	$lists = CXGN::List::all_lists($self->bcs_schema()->storage->dbh(),$user_id,$types_arrayref->[0]);
+	my $list_type = convert_to_breedbase_type($types_arrayref->[0]);
+	if ($list_type) {
+		my $q = "SELECT cvterm_id FROM cvterm WHERE name =?";
+		my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+		$h->execute($list_type);
+		my ($cvterm_id) = $h->fetchrow_array();
+		if (!$cvterm_id) {
+			return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must provide valid list type: %s',$list_type), 400);
+		}
+	}
+
+	$lists = CXGN::List::all_lists($self->bcs_schema()->storage->dbh(),$user_id,$list_type);
 
 	my @list_ids;
 	for (@$lists) {
@@ -71,7 +82,6 @@ sub search {
 				additionalInfo      => {},
 				dateCreated         => CXGN::BrAPI::TimeUtils::db_time_to_iso_utc($create_date),
 				dateModified        => undef,
-				externalReferences  => [],
 				listDbId            => qq|$id|,
 				listDescription     => $_->[2],
 				listName            => $name,
@@ -112,6 +122,7 @@ sub convert_to_breedbase_type {
 	if ($type eq 'observationVariables') {
 		return 'traits';
 	}
+	return $type;
 }
 
 sub detail {
@@ -170,7 +181,6 @@ sub detail {
 			additionalInfo      => {},
 			dateCreated         => $list->{create_date},
 			dateModified        => undef,
-			externalReferences  => [],
 			listDbId            => qq|$list_id|,
 			listDescription     => $list->{description},
 			listName            => $list->{name},
