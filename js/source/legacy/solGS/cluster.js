@@ -28,10 +28,9 @@ solGS.cluster = {
      var traitsCode;
      var clusterType;
 
-     if (urlArgs) {
-          var args = urlArgs.split(/\/+/);
-
-
+	if (urlArgs) {
+	    
+         var args = urlArgs.split(/\/+/);
          clusterPopId = args[1];
          clusterType = args[3];
          dataType = args[5];
@@ -58,10 +57,10 @@ solGS.cluster = {
 
          if (clusterPopId.match(/dataset/)) {
              dataStr = 'dataset';
-             //datasetId = clusterPopId.replace(/dataset_/, '');
+             datasetId = clusterPopId.replace(/dataset_/, '');
         } else if (clusterPopId.match(/list/)) {
             dataStr = 'list';
-            //listId = clusterPopId.replace(/list_/, '');
+            listId = clusterPopId.replace(/list_/, '');
          }
 
          var args = {
@@ -484,11 +483,11 @@ if (document.URL.match(/cluster\/analysis/)) {
     	    data    : {'page': page, 'args': args },
     	    url     : '/solgs/check/cached/result/',
     	    success : function(res) {
-		console.log('cached result: ' + res.cached)
+
     		if (res.cached) {
     		    solGS.cluster.runClusterAnalysis(args);
     		} else {
-                args = JSON.parse(args);
+                    args = JSON.parse(args);
     		    solGS.cluster.selectAnalysisOption(page, args);
     		}
     	    },
@@ -550,20 +549,20 @@ if (document.URL.match(/cluster\/analysis/)) {
 
         var type = typeof clusterArgs;
         var clusterPopId;
-    if (typeof clusterArgs == 'string') {
-        clusterArgs = JSON.parse(clusterArgs);
-        clusterType = clusterArgs.cluster_type;
-        clusterPopId = clusterArgs.cluster_pop_id;
-        runClusterId = this.clusterRunClusterId(clusterPopId)
-    } else {
-        clusterType = clusterArgs.cluster_type;
-        clusterPopId = clusterArgs.cluster_pop_id;
-        runClusterId = this.clusterRunClusterId(clusterPopId)
-    }
+	if (typeof clusterArgs == 'string') {
+            clusterArgs = JSON.parse(clusterArgs);
+            clusterType = clusterArgs.cluster_type;
+            clusterPopId = clusterArgs.cluster_pop_id;
+            runClusterId = this.clusterRunClusterId(clusterPopId)
+	} else {
+            clusterType = clusterArgs.cluster_type;
+            clusterPopId = clusterArgs.cluster_pop_id;
+            runClusterId = this.clusterRunClusterId(clusterPopId)
+	}
 
-    if (typeof clusterArgs !== 'string') {
-        clusterArgs = JSON.stringify(clusterArgs);
-    }
+	if (typeof clusterArgs !== 'string') {
+            clusterArgs = JSON.stringify(clusterArgs);
+	}
 
 	if (clusterArgs) {
 
@@ -571,7 +570,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 		.html(`Running ${clusterType} clustering... please wait...this may take minutes.`)
 		.show();
 
-        jQuery("#cluster_canvas .multi-spinner-container").show();
+            jQuery("#cluster_canvas .multi-spinner-container").show();
 
 	    jQuery('#' + runClusterId).hide();
 
@@ -581,6 +580,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 		data: {'arguments': clusterArgs},
 		url: '/run/cluster/analysis',
 		success: function(res) {
+		    
 		    if (res.result == 'success') {
 			jQuery("#cluster_canvas .multi-spinner-container").hide();
 
@@ -588,7 +588,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 			
 
 			jQuery("#cluster_message").empty();
-		    jQuery('#' + runClusterId).show();
+			jQuery('#' + runClusterId).show();
 
 		    } else {
 			jQuery("#cluster_message").html(res.result);
@@ -662,7 +662,7 @@ if (document.URL.match(/cluster\/analysis/)) {
 
     plotClusterOutput: function(res) {
 
-	var resultName = res.result_name || '';
+	var popName = res.cluster_pop_name || '';
 	var imageId = res.plot_name;
 	console.log('image id: ' + imageId)
 	imageId = 'id="' + imageId + '"';
@@ -705,18 +705,17 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    + report
 	    + ">Analysis Report </a>";
 
-	if (plotLink.match(/k-means/i)) {
 	var downloadLinks = ' <strong>Download '
-	    + resultName + ' </strong>: '
+	    + popName + ' </strong>: '
 	    + plotLink + ' | '
 	    + clustersLink + ' | '
 	    + reportLink;
-
-	jQuery('#cluster_plot').prepend('<p style="margin-top: 20px">' + downloadLinks + '</p>');
+	
+	if (plotLink.match(/k-means/i)) {
+	    jQuery('#cluster_plot').prepend('<p style="margin-top: 20px">' + downloadLinks + '</p>');
 	    jQuery('#cluster_plot').prepend(plot);
 	} else {
-	    console.log('json data: ' + res.json_data)
-	    solGS.dendrogram.plot(res.json_data, '#cluster_canvas', '#cluster_plot', resultName) 
+	    solGS.dendrogram.plot(res.json_data, '#cluster_canvas', '#cluster_plot', downloadLinks) 
 	}
 
     },
