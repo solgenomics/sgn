@@ -48,20 +48,9 @@ sub check_cluster_output_files {
     my $cluster_result_file;
     my $cluster_plot_file;
 
-    # if ($cluster_type =~ /k-means/i)
-    # {
-	#$self->cluster_result_file($c);
-	#$cluster_result_file = $c->stash->{"${cluster_type}_result_file"};
-
-	$self->cluster_plot_file($c);
-	$cluster_plot_file = $c->stash->{"${cluster_type}_plot_file"};
-    # }
-    # else
-    # {
-	# $self->hierarchical_result_file($c);
-	# $cluster_plot_file = $c->stash->{hierarchical_dendrogram_file};
-    # }
-
+    $self->cluster_plot_file($c);
+    $cluster_plot_file = $c->stash->{"${cluster_type}_plot_file"};
+    
     if (-s $cluster_plot_file)
     {
 	$c->stash->{"${cluster_type}_plot_exists"} = 1;
@@ -76,12 +65,8 @@ sub run_cluster_analysis :Path('/run/cluster/analysis/') Args() {
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
 
-    my $list_id = $c->stash->{list_id};
-    if ($list_id)
-    {
-        $c->controller('solGs::List')->stash_list_metadata($c, $list_id);
-    }
-
+    $self->stash_cluster_pop_name($c);
+    
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
     $c->stash->{file_id} = $file_id;
 
@@ -95,7 +80,7 @@ sub run_cluster_analysis :Path('/run/cluster/analysis/') Args() {
 
     if (!$cluster_plot_exists)
     {
-	    $self->run_cluster($c);
+	$self->run_cluster($c);
     }
 
     $ret = $self->prepare_response($c);
@@ -138,6 +123,29 @@ sub cluster_genotypes_list :Path('/cluster/genotypes/list') Args(0) {
 }
 
 
+sub stash_cluster_pop_name {
+    my ($self, $c) = @_;
+    
+    my $list_id = $c->stash->{list_id};
+    my $dataset_id = $c->stash->{dataset_id};
+    my $pop_id = $c->stash->{cluster_pop_id};
+
+    if ($pop_id =~ /list_id/ || $list_id)
+    {
+	$list_id = $pop_id if !$list_id;
+	$c->controller('solGS::List')->stash_list_metadata($c, $list_id);
+	$c->stash->{cluster_pop_name} = $c->stash->{list_name};
+    }
+    elsif ($pop_id =~ /dataset_id/ || $dataset_id)
+    {
+	$dataset_id = $pop_id if !$dataset_id;
+	my $pop_name = $c->controller('solGS::Dataset')->get_dataset_name($c, $dataset_id);
+	$c->stash->{cluster_pop_name} = $pop_name;
+    }
+
+}
+
+
 sub cluster_gebvs_file {
     my ($self, $c) = @_;
 
@@ -155,8 +163,8 @@ sub prepare_response {
     $self->prep_cluster_download_files($c);
     
     my $output_link = $c->controller('solGS::Files')->format_cluster_output_url($c, 'cluster/analysis');
-    my $result_name = $c->stash->{dataset_name}  || $c->stash->{list_name} || $c->stash->{cluster_pop_name};
-
+    my $pop_name = $c->stash->{cluster_pop_name};
+    
     my $cluster_type = $c->stash->{cluster_type};
     my $file_id = $c->stash->{file_id};
 
@@ -165,8 +173,8 @@ sub prepare_response {
     {
 	my $json_file = $c->stash->{"${cluster_type}_result_json_file"};
 	$json_data = read_file($json_file, {binmode => ':utf8'});
-	print STDERR "\njson_data: $json_data\n";
     }
+    
     my $ret->{cluster_plot} = $c->stash->{download_plot};;
     $ret->{kmeans_clusters} = $c->stash->{download_kmeans_clusters};
     $ret->{newick_file} = $c->stash->{download_newick};
@@ -180,7 +188,7 @@ sub prepare_response {
     $ret->{cluster_type}  = $c->stash->{cluster_type};
     $ret->{dataset_id}    = $c->stash->{dataset_id};
     $ret->{trials_names}  = $c->stash->{trials_names};
-    $ret->{result_name}   = $result_name;
+    $ret->{cluster_pop_name}   = $pop_name;
     $ret->{output_link}   = $output_link;
     $ret->{data_type}     = $c->stash->{data_type};
     $ret->{k_number}      = $c->stash->{k_number};
