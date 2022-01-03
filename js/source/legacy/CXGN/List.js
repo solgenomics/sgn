@@ -1643,9 +1643,10 @@ function validate_interactive(response, type, list_id) {
     multiple_wrong_case = response.multiple_wrong_case;
     synonym_matches = response.synonyms;
     multiple_synonyms = response.multiple_synonyms;
+    valid = response.valid;
     
     //alert("validate_interactive: "+JSON.stringify(response));
-    if (type == 'accessions' && missing.length==0 && wrong_case.length==0) {
+    if (type == 'accessions' && valid == 1) {
 	alert("This list passed validation.");
 	return;
 	
