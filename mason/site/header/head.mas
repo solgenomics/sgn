@@ -29,11 +29,11 @@
    MochiKit = {__export__: false};
 </script>
 
-<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "jquery.dataTables-min", "CXGN.Effects", "CXGN.Dataset", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min", "CXGN.BreedersToolbox.HTMLSelect", "bootstrap-toggle_min"] &>
+<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "CXGN.Effects", "CXGN.Dataset", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min", "CXGN.BreedersToolbox.HTMLSelect", "bootstrap-toggle_min"] &>
 % if ($c->config->{production_server}) {
-    <& /util/import_javascript.mas, classes => [ "jquerymigrate-min" ] &>
+    <& /util/import_javascript.mas, classes => [ "jquerymigrate-min", "jquery.dataTables-min" ] &>
 % } else {
-    <& /util/import_javascript.mas, classes => [ "jquerymigrate" ] &>
+    <& /util/import_javascript.mas, classes => [ "jquerymigrate", "jquery.dataTables" ] &>
 % }
 
 <script type="text/javascript"
