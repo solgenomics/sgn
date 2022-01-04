@@ -1656,7 +1656,7 @@ function validate_interactive(response, type, list_id) {
         return;
     } else {
         if (type == 'accessions') {
-	    alert(JSON.stringify(response));
+	    //alert(JSON.stringify(response));
             jQuery("#validate_accession_error_display tbody").html('');
             var missing_accessions_link = "<button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br /><br />";
 	    
@@ -1815,10 +1815,8 @@ function validate_interactive(response, type, list_id) {
     		multiple_synonym_matches_table.push( [ multiple_synonym_matches[i][0], multiple_synonym_matches[i][1] ] );
     	    }
 
-	    alert(JSON.stringify(multiple_synonym_matches_table));
 	    if (multiple_synonym_matches_table.length > 0) {
 		jQuery('#multiple_synonym_matches_div').show();
-		alert("HELLO");
 		jQuery('#element_matches_multiple_synonyms_table').DataTable( {
     		    destroy: true,
     		    data: multiple_synonym_matches_table,
