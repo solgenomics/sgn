@@ -39,8 +39,8 @@ sub search {
     my $study_names = $params->{studyName} || ($params->{studyNames} || ());
     my $parent_db_id = $params->{parentDbId} || ($params->{parentDbIds} || ());
     my $progeny_db_id = $params->{progenyDbId} || ($params->{progenyDbIds} || ());
-    my $external_reference_id = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
-    my $external_reference_source = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
+    my $external_reference_id_arrayref = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
+    my $external_reference_source_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
 
     if ( $collection || $progeny_db_id || $parent_db_id ){
         push @$status, { 'error' => 'The following search parameters are not implemented: collection, parentDbId, progenyDbId' };
@@ -166,13 +166,30 @@ sub search {
             };
         }
 
-        #Get external references
+        #Get external references and check for search params
         my @references;
+        my $external_reference_id = $external_reference_id_arrayref->[0];
+        my $external_reference_source = $external_reference_source_arrayref->[0];
+        my $match_found = $external_reference_id || $external_reference_source ? 0 : 1;
         if (%$reference_result{$_->{stock_id}}){
             foreach (@{%$reference_result{$_->{stock_id}}}){
+
                 push @references, $_;
+                if (!$match_found) {
+                    my $source_found = $external_reference_source ? 0 : 1;
+                    my $id_found = $external_reference_id ? 0 : 1;
+                    if (!$id_found) {
+                        $id_found = $external_reference_id && $_->{referenceID} eq $external_reference_id ? 1 : 0;
+                    }
+                    if (!$source_found) {
+                        $source_found = $external_reference_source && $_->{referenceSource} eq $external_reference_source ? 1 : 0;
+                    }
+                    $match_found = $id_found && $source_found;
+                }
             }
         }
+        # Skip this germplasm if an external reference match was not found
+        if (!$match_found) { next; }
 
         my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
         my $q = "SELECT value FROM stock_relationship WHERE object_id = ? AND type_id = ?;";
