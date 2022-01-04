@@ -283,7 +283,7 @@ $trial_id
                     </&>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_family_name_form" name="upload_family_name_form">
                         <div class="form-group">
-                            <label class="col-sm-2 control-label">Family Type: </label>
+                            <label class="col-sm-3 control-label">Family Type: </label>
                             <div class="col-sm-8">
                                 <select class="form-control" id="family_type_option">
                                     <option value="">Select a family type</option>
@@ -355,14 +355,20 @@ $trial_id
                     </b>
                     <br>
                         (.xlsx format not supported)
-                    <br><br>
+                    <br>
+                    <br>
+                    <b>Family Types:</b>
+                        <ul>
+                            <li>same parents (the family includes only crosses with the same female parent and the same male parent)</li>
+                            <li>reciprocal parents (the family includes reciprocal crosses)</li>
+                            (All families in the same file must have the same family type.)
+                        </ul>
                     <b>
                         Header:
                     </b>
                     <br>
                         The first row (header) must contain the following:
                     <br>
-
                     <table class="table table-bordered table-hover">
                         <tbody>
                             <tr>
@@ -374,7 +380,7 @@ $trial_id
                     <b>Required columns:</b>
                     <ul>
                         <li>cross_unique_id (must exist in the database)</li>
-                        <li>family_name (may be new family name or family name already stored in the database. Crosses in the same family must have the same parental genotypes. If you would like to use family name previously stored in the database, please check the name carefully)</li>
+                        <li>family_name (may be new family name or family name already stored in the database. If you would like to use family name previously stored in the database, please check the name carefully)</li>
                     </ul>
                 </div>
             </div>

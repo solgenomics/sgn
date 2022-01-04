@@ -136,12 +136,6 @@ sub add_family_name {
                 $family_male_id = $family_male_parent->subject_id();
             }
 
-            my $previous_linkage = $chado_schema->resultset("Stock::StockRelationship")->find ({
-                object_id => $family_name_rs->stock_id(),
-                subject_id => $cross_stock->stock_id(),
-                type_id => $cross_member_of_cvterm_id,
-            });
-
             if ($family_type eq 'same_parents') {
                 if (($cross_female_id != $family_female_id) || ($cross_male_id != $family_male_id)) {
                     push @{$return{error}},"Parents of cross: $cross_name are not the same as parents of family: $family_name";
@@ -150,13 +144,21 @@ sub add_family_name {
             } elsif ($family_type eq 'reciprocal_parents') {
                 if (($cross_female_id != $family_female_id) && ($cross_female_id != $family_male_id)) {
                     push @{$return{error}},"Female parent of cross: $cross_name is neither female parent nor male parent of family: $family_name";
+                    return \%return;
                 } elsif (($cross_male_id != $family_female_id) && ($cross_male_id != $family_male_id)) {
                     push @{$return{error}},"Male parent of cross: $cross_name is neither female parent nor male parent of family: $family_name";
+                    return \%return;
                 }
-                return \%return;
             }
 
+            my $previous_linkage = $chado_schema->resultset("Stock::StockRelationship")->find ({
+                object_id => $family_name_rs->stock_id(),
+                subject_id => $cross_stock->stock_id(),
+                type_id => $cross_member_of_cvterm_id,
+            });
+
             if (!$previous_linkage) {
+#                print STDERR "ADDING..".Dumper($cross_stock->name())."\n";
                 $family_name_rs->find_or_create_related('stock_relationship_objects', {
                     type_id => $cross_member_of_cvterm_id,
                     object_id => $family_name_rs->stock_id(),
