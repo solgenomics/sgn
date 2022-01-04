@@ -74,8 +74,9 @@ sub validate {
 	    }
 	}
 	elsif($rs->count() > 1)  {
-	    my $row = $rs->next();
-	    push @multiple_synonyms, [ $row->uniquename(), $row->get_column('stockprops_value') ];
+	    while (my $row = $rs->next()) {
+		push @multiple_synonyms, [ $row->uniquename(), $row->get_column('stockprops_value') ];
+	    }
 	}
 	  
     }
