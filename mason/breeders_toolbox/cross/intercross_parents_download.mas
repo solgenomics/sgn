@@ -1,0 +1,42 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<div class="modal fade" id="intercross_parents_download_dialog" name="intercross_parents_download_dialog" tabindex="-1" role="dialog" aria-labelledby="intercrossParentsDownloaddialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossParentsDownloaddialog">Download Intercross Parents File</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="download_intercross_parents_button" type="button" class="btn btn-primary" >Download</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#download_intercross_parents').click(function(){
+
+        jQuery('#intercross_parents_download_dialog').modal("show");
+    });
+
+});
+
+
+</script>
