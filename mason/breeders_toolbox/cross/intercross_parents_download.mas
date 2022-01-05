@@ -15,12 +15,32 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <div id="">
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">Female parents:</label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="female_parents_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">Male parents:</label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="male_parents_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="download_intercross_parents_button" type="button" class="btn btn-primary" >Download</button>
+                <button id="download_intercross_parents_submit" type="button" class="btn btn-primary" >Download</button>
             </div>
         </div>
     </div>
@@ -31,10 +51,60 @@
 
 jQuery(document).ready(function(){
 
-    jQuery('#download_intercross_parents').click(function(){
+    var lo = new CXGN.List();
 
+    jQuery('#female_parents_list_select').html(lo.listSelect('female_parents_list_select', ['accessions'], 'Select a list of female parents', undefined, undefined));
+    jQuery('#male_parents_list_select').html(lo.listSelect('male_parents_list_select', ['accessions'], 'Select a list of male parents', undefined, undefined));
+
+    jQuery('#download_intercross_parents').click(function(){
         jQuery('#intercross_parents_download_dialog').modal("show");
     });
+
+    jQuery('#download_intercross_parents_submit').click(function(){
+
+        var female_list_id = jQuery('#female_parents_list_select').val();
+        var male_list_id = jQuery('#male_parents_list_select').val();
+
+        if (!female_list_id) {
+            alert("Please choose a list of female parents");
+            return;
+        }
+
+        if (!male_list_id) {
+            alert("Please choose a list of male parents");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/intercross/download_parents_file',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'female_list_id': female_list_id,
+                'male_list_id': male_list_id,
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery('#parents_file_download_link').attr('href', "/fieldbook/trait_file_download/" + response.file_id);
+                    jQuery("#parents_file_dialog_message").modal("show");
+                    jQuery('#intercross_parents_download_dialog').modal("hide");
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred creating the parents file.');
+                jQuery('#intercross_parents_download_dialog').modal("hide");
+            },
+        });
+    });
+
+
 
 });
 
