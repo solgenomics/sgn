@@ -118,7 +118,7 @@ $data_level => 'plot'
 <div id="container_heatmap" ></div>
 <div>
     <ul class="legend">
-        <li><span class="border_plots"></span> Border Plots and Filler Plots</li>
+        <li><span class="border_plots"></span> Border Plots and testing Filler Plots</li>
         <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
         <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
         <li><span class="checks"></span> Checks</li>
