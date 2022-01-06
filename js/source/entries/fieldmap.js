@@ -214,11 +214,15 @@ export function init() {
             var max_row = 0;
             var max_level_code = 0;
             for (let plot of this.plot_arr) {
+                if (plot === undefined) {
+                    continue;
+                }
                 max_col = plot.observationUnitPosition.positionCoordinateX > max_col ? plot.observationUnitPosition.positionCoordinateX : max_col;
                 min_col = plot.observationUnitPosition.positionCoordinateX < min_col ? plot.observationUnitPosition.positionCoordinateX : min_col;
                 max_row = plot.observationUnitPosition.positionCoordinateY > max_row ? plot.observationUnitPosition.positionCoordinateY : max_row;
                 min_row = plot.observationUnitPosition.positionCoordinateY < min_row ? plot.observationUnitPosition.positionCoordinateY : min_row;
                 max_level_code = parseInt(plot.observationUnitPosition.observationLevel.levelCode) > max_level_code ? plot.observationUnitPosition.observationLevel.levelCode : max_level_code;
+                
             }
             this.meta_data.min_row = min_row;
             this.meta_data.max_row = max_row;
@@ -227,6 +231,32 @@ export function init() {
             this.meta_data.num_rows = max_row - min_row + 1;
             this.meta_data.num_cols = max_col - min_col + 1;
             this.meta_data.max_level_code = max_level_code;
+        }
+
+        fill_holes() {
+                var fieldmap_hole_fillers = [];
+                let last_coord;
+                for (let plot of this.plot_arr) {
+                    if (last_coord === undefined) {
+                        last_coord = [0,1];
+                    }
+                    if (plot === undefined) {
+                        if (last_coord[0] < this.meta_data.max_col) {
+                            fieldmap_hole_fillers.push(this.get_plot_format('border', last_coord[0] + 1, last_coord[1]));
+                            last_coord = [last_coord[0] + 1, last_coord[1]];
+                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('border', last_coord[0] + 1, last_coord[1]);
+                        } else {
+                            fieldmap_hole_fillers.push(this.get_plot_format('border', this.meta_data.min_col, last_coord[1] + 1));
+                            last_coord = [this.meta_data.min_col, last_coord[1]];
+                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('border', this.meta_data.min_col, last_coord[1] + 1);
+                        }
+                    } else {
+                        last_coord = [plot.observationUnitPosition.positionCoordinateX, plot.observationUnitPosition.positionCoordinateY];
+                    }
+                }
+                this.plot_arr = [...this.plot_arr.filter(plot => plot !== undefined), ...fieldmap_hole_fillers];
+                console.log('plot_object', this.plot_object);
+                console.log('plot_arr', this.plot_arr);
         }
 
         check_element(selection, element_id) {
@@ -261,6 +291,7 @@ export function init() {
             var column;
 
             if (this.meta_data.retain_layout == false) {
+                this.plot_arr = this.plot_arr.filter(plot => plot.type !== "border");
                 this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
                 if (!this.meta_data.plot_layout) {
                     this.meta_data.plot_layout = "serpentine";

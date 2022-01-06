@@ -619,8 +619,6 @@ jQuery(document).ready( function() {
 
                     FieldMap.filter_data(data);
                     FieldMap.set_meta_data();
-                    FieldMap.meta_data.retain_layout = true;
-                    FieldMap.load();
                 }
                 // FieldMap.plot_ou_arr.sort(function(plot_ou_1, plot_ou_2) {
 	            //       // Ascending: first plotNumber less than the previous
@@ -637,6 +635,9 @@ jQuery(document).ready( function() {
         .then(
             function() {
                     num_real_plots = Object.keys(FieldMap.plot_object).length;
+                    FieldMap.fill_holes();
+                    FieldMap.meta_data.retain_layout = true;
+                    FieldMap.load();
             }
         )
     }
