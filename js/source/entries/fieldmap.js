@@ -255,8 +255,6 @@ export function init() {
                     }
                 }
                 this.plot_arr = [...this.plot_arr.filter(plot => plot !== undefined), ...fieldmap_hole_fillers];
-                console.log('plot_object', this.plot_object);
-                console.log('plot_arr', this.plot_arr);
         }
 
         check_element(selection, element_id) {
@@ -292,7 +290,6 @@ export function init() {
 
             if (this.meta_data.retain_layout == false) {
                 this.plot_arr = this.plot_arr.filter(plot => plot.type == "data");
-                console.log('plot arr', this.plot_arr);
                 this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
                 if (!this.meta_data.plot_layout) {
                     this.meta_data.plot_layout = "serpentine";
