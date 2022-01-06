@@ -242,13 +242,13 @@ export function init() {
                     }
                     if (plot === undefined) {
                         if (last_coord[0] < this.meta_data.max_col) {
-                            fieldmap_hole_fillers.push(this.get_plot_format('border', last_coord[0] + 1, last_coord[1]));
+                            fieldmap_hole_fillers.push(this.get_plot_format('dummy', last_coord[0] + 1, last_coord[1]));
                             last_coord = [last_coord[0] + 1, last_coord[1]];
-                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('border', last_coord[0] + 1, last_coord[1]);
+                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('dummy', last_coord[0] + 1, last_coord[1]);
                         } else {
-                            fieldmap_hole_fillers.push(this.get_plot_format('border', this.meta_data.min_col, last_coord[1] + 1));
+                            fieldmap_hole_fillers.push(this.get_plot_format('dummy', this.meta_data.min_col, last_coord[1] + 1));
                             last_coord = [this.meta_data.min_col, last_coord[1]];
-                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('border', this.meta_data.min_col, last_coord[1] + 1);
+                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('dummy', this.meta_data.min_col, last_coord[1] + 1);
                         }
                     } else {
                         last_coord = [plot.observationUnitPosition.positionCoordinateX, plot.observationUnitPosition.positionCoordinateY];
@@ -291,7 +291,8 @@ export function init() {
             var column;
 
             if (this.meta_data.retain_layout == false) {
-                this.plot_arr = this.plot_arr.filter(plot => plot.type !== "border");
+                this.plot_arr = this.plot_arr.filter(plot => plot.type == "data");
+                console.log('plot arr', this.plot_arr);
                 this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
                 if (!this.meta_data.plot_layout) {
                     this.meta_data.plot_layout = "serpentine";
