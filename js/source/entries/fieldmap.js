@@ -136,24 +136,32 @@ export function init() {
         // }
 
         traverse_map(plot_arr, planting_or_harvesting_order_layout) {
+            console.log('plot_arr', plot_arr);
             let coord_matrix = [];
             var row = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateY" : "positionCoordinateX";
             var col = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateX" : "positionCoordinateY";
-            let row_decrement = 1;
-            let col_decrement = 1;
+            // let row_decrement = 1;
+            // let col_decrement = 1;
             
             // if (planting_or_harvesting_order_layout == "planting_order_layout") {
             //     row_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateY == 0).length > 0 ? 0 : 1;
             //     col_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateX == 0).length > 0 ? 0 : 1;
             // }
             for (let plot of plot_arr) {
-                if (!coord_matrix[plot.observationUnitPosition[row] - row_decrement]) {
-                    coord_matrix[plot.observationUnitPosition[row] - row_decrement] = [];
-                    coord_matrix[plot.observationUnitPosition[row] - row_decrement][plot.observationUnitPosition[col] - col_decrement] = plot;
+                if (!coord_matrix[plot.observationUnitPosition[row]]) {
+                    coord_matrix[plot.observationUnitPosition[row]] = [];
+                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
                 } else {
-                    coord_matrix[plot.observationUnitPosition[row] - row_decrement][plot.observationUnitPosition[col] - col_decrement] = plot;
+                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
                 }
             }
+
+            coord_matrix = coord_matrix.filter(plot_arr => Array.isArray(plot_arr));
+            for (let plot_arr of coord_matrix) {
+                plot_arr = plot_arr.filter(plot => plot !== undefined);
+            }
+
+            
             if (this.meta_data[planting_or_harvesting_order_layout].includes('serpentine')) {
                 for (let i = 0; i < coord_matrix.length; i++) {
                     if (i % 2 == 1) {
@@ -182,12 +190,12 @@ export function init() {
         }
 
         get_harvesting_order() {
-            this.traverse_map(this.plot_arr.filter(plot => plot.type == "data"), 'harvesting_order_layout');
+            this.traverse_map(this.plot_arr.filter(plot => plot.type != "border"), 'harvesting_order_layout');
         }
 
         get_planting_order() {
             // this.traverse_map(this.plot_arr, 'planting_order_layout');
-            this.traverse_map(this.plot_arr.filter(plot => plot.type == "data"), 'planting_order_layout');
+            this.traverse_map(this.plot_arr, 'planting_order_layout');
         }
 
         set_meta_data() {
@@ -242,13 +250,13 @@ export function init() {
                     }
                     if (plot === undefined) {
                         if (last_coord[0] < this.meta_data.max_col) {
-                            fieldmap_hole_fillers.push(this.get_plot_format('border', last_coord[0] + 1, last_coord[1]));
+                            fieldmap_hole_fillers.push(this.get_plot_format('dummy', last_coord[0] + 1, last_coord[1]));
                             last_coord = [last_coord[0] + 1, last_coord[1]];
-                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('border', last_coord[0] + 1, last_coord[1]);
+                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('dummy', last_coord[0] + 1, last_coord[1]);
                         } else {
-                            fieldmap_hole_fillers.push(this.get_plot_format('border', this.meta_data.min_col, last_coord[1] + 1));
+                            fieldmap_hole_fillers.push(this.get_plot_format('dummy', this.meta_data.min_col, last_coord[1] + 1));
                             last_coord = [this.meta_data.min_col, last_coord[1]];
-                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('border', this.meta_data.min_col, last_coord[1] + 1);
+                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('dummy', this.meta_data.min_col, last_coord[1] + 1);
                         }
                     } else {
                         last_coord = [plot.observationUnitPosition.positionCoordinateX, plot.observationUnitPosition.positionCoordinateY];
