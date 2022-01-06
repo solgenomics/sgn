@@ -255,8 +255,6 @@ export function init() {
                     }
                 }
                 this.plot_arr = [...this.plot_arr.filter(plot => plot !== undefined), ...fieldmap_hole_fillers];
-                console.log('plot_object', this.plot_object);
-                console.log('plot_arr', this.plot_arr);
         }
 
         check_element(selection, element_id) {
