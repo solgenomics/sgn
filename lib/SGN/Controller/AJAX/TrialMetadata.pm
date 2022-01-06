@@ -2522,6 +2522,18 @@ sub accession_exists : Chained('trial') PathPart('accession_exists') Args(0) {
     $c->stash->{rest} = { success => $accession_id};
 }
 
+sub check_curator_privileges : Chained('trial') PathPart('check_curator_privileges') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if ($c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { success => 1};
+    } else {
+        $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
+    }
+
+}
+
 sub replace_well_accession : Chained('trial') PathPart('replace_well_accessions') Args(0) {
   my $self = shift;
   my $c = shift;
@@ -2650,10 +2662,10 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
     if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments, $user_id)) {
-
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
 
         $c->stash->{rest} = {success => 1};
         return;

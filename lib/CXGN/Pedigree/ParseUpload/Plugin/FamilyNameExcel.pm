@@ -45,13 +45,22 @@ sub _validate_with_plugin {
 
     #get column headers
     my $cross_name_head;
+    my $family_name_head;
 
     if ($worksheet->get_cell(0,0)) {
         $cross_name_head  = $worksheet->get_cell(0,0)->value();
     }
 
+    if ($worksheet->get_cell(0,1)) {
+        $family_name_head  = $worksheet->get_cell(0,1)->value();
+    }
+
     if (!$cross_name_head || $cross_name_head ne 'cross_unique_id' ) {
         push @error_messages, "Cell A1: cross_unique_id is missing from the header";
+    }
+
+    if (!$family_name_head || $family_name_head ne 'family_name' ) {
+        push @error_messages, "Cell A2: family_name is missing from the header";
     }
 
     my %seen_cross_names;

@@ -4,6 +4,8 @@ $family_id
 $family_name => ''
 $user_id => undef
 $identifier_prefix => ''
+$family_type
+$family_type_string
 </%args>
 
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List"] &>
@@ -42,19 +44,28 @@ $identifier_prefix => ''
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<&| /page/info_section.mas, title => 'Parents', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => "Parents: ($family_type_string)", collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <table id = "family_parent_information" class="table table-hover table-striped">
                     <thead>
                         <tr>
+% if ($family_type eq 'same_parents') {
                             <th>Female Parent</th>
                             <th>Female Stock Type</th>
                             <th>Female Ploidy</th>
                             <th>Male Parent</th>
                             <th>Male Stock Type</th>
                             <th>Male Ploidy</th>
+% } elsif ($family_type eq 'reciprocal_parents') {
+                            <th>Parent 1</th>
+                            <th>Parent 1 Stock Type</th>
+                            <th>Parent 1 Ploidy</th>
+                            <th>Parent 2</th>
+                            <th>Parent 2 Stock Type</th>
+                            <th>Parent 2 Ploidy</th>
+%}
                         </tr>
                     </thead>
                 </table>

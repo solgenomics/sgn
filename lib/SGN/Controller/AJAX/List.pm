@@ -616,9 +616,49 @@ sub validate : Path('/list/validate') Args(2) {
     my $lv = CXGN::List::Validate->new();
     my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
 
+    print STDERR "DATA = ".Dumper($data);
     $c->stash->{rest} = $data;
 }
 
+sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $list_ids_string = $c->req->param('list_ids');
+    my $list_types_string = $c->req->param('list_types');
+    
+    my @list_ids = split /\,/, $list_ids_string;
+    my @list_types = split /\,/, $list_types_string;
+
+    my @invalid_lists = ();
+    for (my $n = 0; $n<@list_ids; $n++)  {
+	
+	my $list = $self->retrieve_list($c, $list_ids[$n]);
+
+	my @flat_list = map { $_->[1] } @$list;
+
+	print STDERR "LIST TYPE = ".$list_types[$n]."\n";
+	my $lv = CXGN::List::Validate->new();
+	my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $list_types[$n], \@flat_list);
+
+
+	print STDERR "Return data = ".Dumper($data);
+	
+	if ($list_types[$n] eq "accessions" && $data->{valid} == 0) {
+	    print STDERR "list $list_ids[$n] is invalid! ($data->{valid}) \n";
+	    push @invalid_lists, [ $list_ids[$n], $list_types[$n] ];
+	}
+	elsif ($list_types[$n] ne "accessions" && scalar(@{$data->{missing}}) > 0) {
+	    print STDERR "list $list_ids[$n] is invalid! (missing = ".scalar(@{$data->{missing}}).")\n";
+	    push @invalid_lists, [ $list_ids[$n], $list_types[$n] ];
+	    
+	}
+	else {
+	    print STDERR "List $list_ids[$n] of type $list_types[$n] is valid :-) \n";
+	}
+    }
+    $c->stash->{rest} = { invalid_lists => \@invalid_lists };
+}
 #
 # Validate a temp list of names for a specified data type
 # - Validate the temp list
