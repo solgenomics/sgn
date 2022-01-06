@@ -173,17 +173,16 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
 
 ##    my $phenotype_data_ref = $ds->retrieve_phenotypes();
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
+    my $protocols = $ds->retrieve_genotyping_protocols();
+    my $protocol_id;
+    foreach (@$protocols) {
+        $protocol_id = $_->[0];
+    }
 
 #    my ($fh, $tempfile2) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_genotypes_download_XXXXX");
 #    my $temppath2 = $c->config->{basepath}."/".$tempfile2;
 #    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath2);
     #    $ds2 -> file_name => $temppath2;
-    my $protocol_name = $c->config->{default_genotyping_protocol};
-    my $protocol_id;
-    my $row = $schema->resultset("NaturalDiversity::NdProtocol")->find( { name => $protocol_name});# just use find?
-    if (defined($row)) {
-	      $protocol_id = $row->nd_protocol_id();
-    }
 
     my $filehandle = $ds->retrieve_genotypes($protocol_id,$geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
 #    my $base_filename = $$filehandle;
@@ -337,17 +336,16 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 
 ##    my $phenotype_data_ref = $ds->retrieve_phenotypes();
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
+    my $protocols = $ds->retrieve_genotyping_protocols();
+    my $protocol_id;
+    foreach (@$protocols) {
+	$protocol_id = $_->[0];
+    }
 
 #    my ($fh, $tempfile2) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_genotypes_download_XXXXX");
 #    my $temppath2 = $c->config->{basepath}."/".$tempfile2;
 #    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath2);
     #    $ds2 -> file_name => $temppath2;
-    my $protocol_name = $c->config->{default_genotyping_protocol};
-    my $protocol_id;
-    my $row = $schema->resultset("NaturalDiversity::NdProtocol")->find( { name => $protocol_name});# just use find?
-    if (defined($row)) {
-      $protocol_id = $row->nd_protocol_id();
-    }
 
     my %chromList;
     my %posList;
@@ -411,11 +409,17 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         @sample_line = split(/\t/, $line);
 	if ($chromList{$sample_line[0]}) {
 	    $chrom = $chromList{$sample_line[0]};
+	} elsif ($sample_line[0] =~ /\_/) {
+	    ($chrom, undef) = split /\_/, $sample_line[0];
+	    print STDERR "Warning! no chrom data, using $chrom extracted from $sample_line[0]\n";
 	} else {
 	    $chrom = "";
 	}
 	if ($posList{$sample_line[0]}) {
 	    $pos = $posList{$sample_line[0]};
+	} elsif ($sample_line[0] =~ /\_/) {
+	    (undef, $pos) = split /\_/, $sample_line[0];
+	    print STDERR "Warning! No position data, using $pos extracted from $sample_line[0]\n";
 	} else {
 	    $pos = "";
 	}
