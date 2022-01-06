@@ -466,6 +466,7 @@ my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_na
 my $cross_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_member_of', 'stock_relationship')->cvterm_id();
 my $family_female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_female_parent_of', 'stock_relationship')->cvterm_id();
 my $family_male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_male_parent_of', 'stock_relationship')->cvterm_id();
+my $family_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_type", "stock_property")->cvterm_id();
 
 my $before_family_name_stocks = $schema->resultset("Stock::Stock")->search({})->count();
 my $before_add_family_name = $schema->resultset("Stock::Stock")->search({type_id => $family_name_type_id})->count();
@@ -473,6 +474,7 @@ my $before_upload_family_relationship = $schema->resultset("Stock::StockRelation
 my $before_upload_family_member = $schema->resultset("Stock::StockRelationship")->search({type_id => $cross_member_of_cvterm_id})->count();
 my $before_upload_family_female = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_female_parent_cvterm_id})->count();
 my $before_upload_family_male = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_male_parent_cvterm_id})->count();
+my $before_upload_family_stockprop = $schema->resultset("Stock::Stockprop")->search({type_id => $family_type_cvterm_id})->count();
 
 $file = $f->config->{basepath}."/t/data/cross/family_name_upload.xls";
 $ua = LWP::UserAgent->new;
@@ -480,7 +482,7 @@ $response = $ua->post(
     'http://localhost:3010/ajax/cross/upload_family_names',
     Content_Type => 'form-data',
     Content => [
-        family_name_upload_file => [ $file, 'family_name_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
+        same_parents_file => [ $file, 'family_name_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -495,6 +497,7 @@ my $after_upload_family_relationship = $schema->resultset("Stock::StockRelations
 my $after_upload_family_member = $schema->resultset("Stock::StockRelationship")->search({type_id => $cross_member_of_cvterm_id})->count();
 my $after_upload_family_female = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_female_parent_cvterm_id})->count();
 my $after_upload_family_male = $schema->resultset("Stock::StockRelationship")->search({type_id => $family_male_parent_cvterm_id})->count();
+my $after_upload_family_stockprop = $schema->resultset("Stock::Stockprop")->search({type_id => $family_type_cvterm_id})->count();
 
 is($after_family_name_stocks, $before_family_name_stocks +2);
 is($after_add_family_name, $before_add_family_name + 2);
@@ -502,11 +505,14 @@ is($after_upload_family_relationship, $before_upload_family_relationship + 8);
 is($after_upload_family_member, $before_upload_family_member + 4);
 is($after_upload_family_female, $before_upload_family_female + 2);
 is($after_upload_family_male, $before_upload_family_male + 2);
+is($after_upload_family_stockprop, $before_upload_family_stockprop +2);
 
 #test retrieving family name info
 my $family_stock_rs = $schema->resultset("Stock::Stock")->find({name => 'family1x2', type_id => $family_name_type_id});
 my $family_stock_id = $family_stock_rs->stock_id();
-print STDERR "FAMILY ID =".Dumper($family_stock_id)."\n";
+my $family_type = $schema->resultset("Stock::Stockprop")->find({stock_id => $family_stock_id, type_id => $family_type_cvterm_id})->value();
+is ($family_type, 'same_parents');
+#print STDERR "FAMILY ID =".Dumper($family_stock_id)."\n";
 $mech->post_ok('http://localhost:3010/ajax/family/members/'.$family_stock_id);
 $response = decode_json $mech->content;
 my %data = %$response;
