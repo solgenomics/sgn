@@ -24,7 +24,6 @@ export function init() {
         format_brapi_post_object() {
             let brapi_post_plots = [];
             let count = 1;
-            console.log('test', this.plot_arr.filter(plot => plot.type == "filler"));
             for (let plot of this.plot_arr.filter(plot => plot.type == "filler")) {
                 brapi_post_plots.push({
                     "additionalInfo": {
@@ -137,7 +136,7 @@ export function init() {
         // }
 
         traverse_map(plot_arr, planting_or_harvesting_order_layout) {
-            console.log('plot_arr', plot_arr);
+            var local_this = this;
             let coord_matrix = [];
             var row = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateY" : "positionCoordinateX";
             var col = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateX" : "positionCoordinateY";
@@ -158,8 +157,16 @@ export function init() {
             }
 
             coord_matrix = coord_matrix.filter(plot_arr => Array.isArray(plot_arr));
-            for (let plot_arr of coord_matrix) {
-                plot_arr = plot_arr.filter(plot => plot !== undefined);
+            if (!document.getElementById("invert_row_checkmark").checked && this.meta_data[planting_or_harvesting_order_layout].includes('row') && planting_or_harvesting_order_layout.includes('planting')) {
+                if ((this.meta_data.top_border_selection && !this.meta_data.bottom_border_selection) || (!this.meta_data.top_border_selection && this.meta_data.bottom_border_selection)) {
+                    if (this.meta_data.top_border_selection) {
+                        var top_borders = coord_matrix.shift();
+                        coord_matrix.push(top_borders);
+                    } else if (this.meta_data.bottom_border_selection) {
+                        var bottom_borders = coord_matrix.pop();
+                        coord_matrix.unshift(bottom_borders);
+                    }
+                }
             }
 
             
@@ -170,13 +177,26 @@ export function init() {
                     }
                 }
             }
+
             var final_arr = [];
-            for (let arr of coord_matrix) {
-                final_arr.push(...arr);
+            for (let plot_arr of coord_matrix) {
+                plot_arr = plot_arr.filter(plot => plot !== undefined);
+                if (!document.getElementById("invert_row_checkmark").checked && local_this.meta_data[planting_or_harvesting_order_layout].includes('col') && planting_or_harvesting_order_layout.includes('planting')) {
+                    if ((local_this.meta_data.top_border_selection && !local_this.meta_data.bottom_border_selection) || (!local_this.meta_data.top_border_selection && local_this.meta_data.bottom_border_selection)) {
+                        if (local_this.meta_data.top_border_selection) {
+                            var top_border_plot = plot_arr.shift();
+                             plot_arr.push(top_border_plot);
+                        } else if (local_this.meta_data.bottom_border_selection) {
+                            var bottom_border_plot = plot_arr.pop();
+                            plot_arr.unshift(bottom_border_plot);
+                        }
+                    }
+                }
+                final_arr.push(...plot_arr);
             }
-            
-            var csv = ['Plot_Number', 'Plot_Name', 'Accession_Name', 'Entry_Type'].join(',');
+            var csv = ['Plot_Number', 'Plot_Name', 'Accession_Name'].join(',');
             csv += "\n";
+            final_arr = final_arr.filter(plot => plot !== undefined);
             final_arr.forEach(function(plot) {
                     csv += [plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A", plot.observationUnitName, plot.germplasmName, plot.observationUnitPosition.entryType].join(',');
                     csv += "\n";
@@ -251,13 +271,13 @@ export function init() {
                     }
                     if (plot === undefined) {
                         if (last_coord[0] < this.meta_data.max_col) {
-                            fieldmap_hole_fillers.push(this.get_plot_format('dummy', last_coord[0] + 1, last_coord[1]));
+                            fieldmap_hole_fillers.push(this.get_plot_format(`Empty_Space_(${last_coord[0] + 1}_${last_coord[1]})`, last_coord[0] + 1, last_coord[1]));
                             last_coord = [last_coord[0] + 1, last_coord[1]];
-                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('dummy', last_coord[0] + 1, last_coord[1]);
+                            this.plot_object['Empty Space' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('empty_space', last_coord[0] + 1, last_coord[1]);
                         } else {
-                            fieldmap_hole_fillers.push(this.get_plot_format('dummy', this.meta_data.min_col, last_coord[1] + 1));
+                            fieldmap_hole_fillers.push(this.get_plot_format(`Empty_Space_${this.meta_data.min_col}_${last_coord[1] + 1}`, this.meta_data.min_col, last_coord[1] + 1));
                             last_coord = [this.meta_data.min_col, last_coord[1]];
-                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('dummy', this.meta_data.min_col, last_coord[1] + 1);
+                            this.plot_object['Empty Space' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('empty_space', this.meta_data.min_col, last_coord[1] + 1);
                         }
                     } else {
                         last_coord = [plot.observationUnitPosition.positionCoordinateX, plot.observationUnitPosition.positionCoordinateY];
@@ -298,7 +318,6 @@ export function init() {
 
             if (this.meta_data.retain_layout == false) {
                 this.plot_arr = this.plot_arr.filter(plot => plot.type == "data");
-                console.log('after dim change', this.plot_arr);
                 this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
                 if (!this.meta_data.plot_layout) {
                     this.meta_data.plot_layout = "serpentine";
