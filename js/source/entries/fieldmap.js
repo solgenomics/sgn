@@ -297,7 +297,7 @@ export function init() {
             var column;
 
             if (this.meta_data.retain_layout == false) {
-                this.plot_arr = this.plot_arr.filter(plot => plot.type !== "border");
+                this.plot_arr = this.plot_arr.filter(plot => plot.type == "data");
                 this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
                 if (!this.meta_data.plot_layout) {
                     this.meta_data.plot_layout = "serpentine";
