@@ -37,7 +37,7 @@ export function init() {
                     },
                     "germplasmDbId": this.meta_data.filler_accession_id,
                     "germplasmName": this.meta_data.filler_accession_name,
-                    "observationUnitName": this.trial_id + " filler " + parseInt(this.meta_data.max_level_code) + count,
+                    "observationUnitName": this.trial_id + " filler " + (parseInt(this.meta_data.max_level_code) + count),
                     "observationUnitPosition": {
                         "observationLevel": {
                             "levelCode": parseInt(this.meta_data.max_level_code) + count,
@@ -297,7 +297,7 @@ export function init() {
             var column;
 
             if (this.meta_data.retain_layout == false) {
-                // this.plot_arr = this.plot_arr.filter(plot => plot.type == "data");
+                this.plot_arr = this.plot_arr.filter(plot => plot.type == "data");
                 console.log('after dim change', this.plot_arr);
                 this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
                 if (!this.meta_data.plot_layout) {
@@ -602,7 +602,7 @@ export function init() {
                     plots.enter().append("text")
                     .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + col_increment) * 50 + 15; })
                     .attr("y", function(d) { return (d.type != "border" && !(document.getElementById("invert_row_checkmark").checked == true) ? max_row - d.observationUnitPosition.positionCoordinateY + row_increment + 1 : d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 45; })
-                    .text(function(d) { if (!(d.observationUnitName.includes(local_this.trial_id + " filler"))) { return d.observationUnitPosition.observationLevel.levelCode; }});
+                    .text(function(d) { if (!(d.observationUnitName.includes(local_this.trial_id + " filler")) && d.type != "dummy") { return d.observationUnitPosition.observationLevel.levelCode; }});
 
             var image_icon = function (d){
                 var image = d.plotImageDbIds || []; 
