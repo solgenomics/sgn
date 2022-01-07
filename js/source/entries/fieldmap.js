@@ -602,7 +602,7 @@ export function init() {
                     plots.enter().append("text")
                     .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + col_increment) * 50 + 15; })
                     .attr("y", function(d) { return (d.type != "border" && !(document.getElementById("invert_row_checkmark").checked == true) ? max_row - d.observationUnitPosition.positionCoordinateY + row_increment + 1 : d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 45; })
-                    .text(function(d) { if (!(d.observationUnitName.includes(local_this.trial_id + " filler")) && d.type != "dummy") { return d.observationUnitPosition.observationLevel.levelCode; }});
+                    .text(function(d) { if (!(d.observationUnitName.includes(local_this.trial_id + " filler")) && d.type == "data") { return d.observationUnitPosition.observationLevel.levelCode; }});
 
             var image_icon = function (d){
                 var image = d.plotImageDbIds || []; 
