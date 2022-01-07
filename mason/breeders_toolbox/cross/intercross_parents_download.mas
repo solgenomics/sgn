@@ -41,6 +41,7 @@
             </div>
             <div class="modal-footer">
                 <button id="download_intercross_parents_submit" type="button" class="btn btn-primary" >Download</button>
+                <input type="hidden" id="intercross_parents_download_token" name="intercross_parents_download_token"/>
             </div>
         </div>
     </div>
