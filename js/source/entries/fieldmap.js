@@ -24,6 +24,7 @@ export function init() {
         format_brapi_post_object() {
             let brapi_post_plots = [];
             let count = 1;
+            console.log('test', this.plot_arr.filter(plot => plot.type == "filler"));
             for (let plot of this.plot_arr.filter(plot => plot.type == "filler")) {
                 brapi_post_plots.push({
                     "additionalInfo": {
@@ -33,11 +34,10 @@ export function init() {
                         "right_border_selection": this.meta_data.right_border_selection || false,
                         "bottom_border_selection": this.meta_data.bottom_border_selection || false,
                         "plot_layout": this.meta_data.plot_layout || "serpentine",
-                        "type": "filler",
                     },
                     "germplasmDbId": this.meta_data.filler_accession_id,
                     "germplasmName": this.meta_data.filler_accession_name,
-                    "observationUnitName": this.trial_id + " filler " + count,
+                    "observationUnitName": this.trial_id + " filler " + parseInt(this.meta_data.max_level_code) + count,
                     "observationUnitPosition": {
                         "observationLevel": {
                             "levelCode": parseInt(this.meta_data.max_level_code) + count,
@@ -89,6 +89,7 @@ export function init() {
             var pseudo_layout = {};
             var plot_object = {};
             for (let plot of data) {
+                plot.type = "data";
                 if (isNaN(parseInt(plot.observationUnitPosition.positionCoordinateY))) {
                     plot.observationUnitPosition.positionCoordinateY = isNaN(parseInt(plot.observationUnitPosition.observationLevelRelationships[1].levelCode)) ? plot.observationUnitPosition.observationLevelRelationships[0].levelCode : plot.observationUnitPosition.observationLevelRelationships[1].levelCode;
                     if (plot.observationUnitPosition.positionCoordinateY in pseudo_layout) {
@@ -103,11 +104,11 @@ export function init() {
                 if (obs_level.levelName == "plot") {
                     plot.observationUnitPosition.positionCoordinateX = parseInt(plot.observationUnitPosition.positionCoordinateX);
                     plot.observationUnitPosition.positionCoordinateY = parseInt(plot.observationUnitPosition.positionCoordinateY);
-                    if (plot.additionalInfo && plot.additionalInfo.type == "filler") {
-                        plot.type = "filler";
-                    } else {
-                        plot.type = "data";
-                    }
+                    // if (plot.additionalInfo && plot.additionalInfo.type == "filler") {
+                    //     plot.type = "filler";
+                    // } else {
+                    //     plot.type = "data";
+                    // }
                     plot_object[plot.observationUnitDbId] = plot;
                 }   
             }
@@ -279,7 +280,7 @@ export function init() {
 
         get_plot_format(type, x, y) {
             return { 
-                type: type, observationUnitName: type, observationUnitPosition: { positionCoordinateX: x, positionCoordinateY: y} 
+                type: type, observationUnitName: this.trial_id + ' ' + type, observationUnitPosition: { positionCoordinateX: x, positionCoordinateY: y} 
             }
         }
 
@@ -292,12 +293,12 @@ export function init() {
             this.plot_arr = [
                 ...this.plot_arr.slice(0, Object.entries(this.plot_object).length),
             ];
-            
             var count = 0;
             var column;
 
             if (this.meta_data.retain_layout == false) {
-                this.plot_arr = this.plot_arr.filter(plot => plot.type == "data");
+                // this.plot_arr = this.plot_arr.filter(plot => plot.type == "data");
+                console.log('after dim change', this.plot_arr);
                 this.plot_arr.sort(function(a,b) { return parseFloat(a.observationUnitPosition.observationLevel.levelCode) - parseFloat(b.observationUnitPosition.observationLevel.levelCode) });
                 if (!this.meta_data.plot_layout) {
                     this.meta_data.plot_layout = "serpentine";
@@ -476,7 +477,8 @@ export function init() {
             var heatmap_object = this.heatmap_object;
             var plot_click = !this.heatmap_selected ? this.fieldmap_plot_click : this.heatmap_plot_click;
             var trait_vals = [];
-            
+            var local_this = this;
+
             if (this.heatmap_selected) {
                 let plots_with_selected_trait = heatmap_object[trait_name];
                 for (let obs_unit of Object.values(plots_with_selected_trait)) {
@@ -494,7 +496,7 @@ export function init() {
                         color = "#6a5acd";
                     } else if (plot.observationUnitPosition.observationLevelRelationships[1].levelCode % 2 == 0) {
                         color = "#c7e9b4";
-                    } else if (plot.additionalInfo && plot.additionalInfo.type == "filler") {
+                    } else if (plot.observationUnitName.includes(local_this.trial_id + " filler")) {
                         color = "lightgrey";    
                     } else {
                         color = "#41b6c4";
@@ -600,7 +602,7 @@ export function init() {
                     plots.enter().append("text")
                     .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + col_increment) * 50 + 15; })
                     .attr("y", function(d) { return (d.type != "border" && !(document.getElementById("invert_row_checkmark").checked == true) ? max_row - d.observationUnitPosition.positionCoordinateY + row_increment + 1 : d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 45; })
-                    .text(function(d) { if ((d.type == "data" && !d.additionalInfo) || (d.type == "data" && d.additionalInfo.type != "filler")) { return d.observationUnitPosition.observationLevel.levelCode; }});
+                    .text(function(d) { if (!(d.observationUnitName.includes(local_this.trial_id + " filler"))) { return d.observationUnitPosition.observationLevel.levelCode; }});
 
             var image_icon = function (d){
                 var image = d.plotImageDbIds || []; 
