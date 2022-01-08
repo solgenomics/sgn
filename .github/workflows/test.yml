@@ -14,7 +14,7 @@ jobs:
         MODE: 'TESTING'
         PGPASSWORD: postgres
         SGN_TEST_SERVER: http://test_breedbase:3010
-#       SGN_REMOTE_SERVER_ADDR: selenium
+        SGN_REMOTE_SERVER_ADDR: selenium
       volumes:
         - ${{ github.workspace }}:/home/production/cxgn/sgn
         - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
@@ -32,9 +32,9 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-#     selenium:
-#       image: selenium/standalone-firefox:3.141.59
-#       options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
+      selenium:
+        image: selenium/standalone-firefox:3.141.59
+        options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
 
     steps:
       - name: Checkout sgn
