@@ -1642,10 +1642,11 @@ function validate_interactive(response, type, list_id) {
     wrong_case = response.wrong_case;
     multiple_wrong_case = response.multiple_wrong_case;
     synonym_matches = response.synonyms;
-    multiple_synonyms = response.multiple_synonyms;
+    multiple_synonym_matches = response.multiple_synonyms;
+    valid = response.valid;
     
     //alert("validate_interactive: "+JSON.stringify(response));
-    if (type == 'accessions' && missing.length==0 && wrong_case.length==0) {
+    if (type == 'accessions' && valid == 1) {
 	alert("This list passed validation.");
 	return;
 	
@@ -1655,6 +1656,7 @@ function validate_interactive(response, type, list_id) {
         return;
     } else {
         if (type == 'accessions') {
+	    //alert(JSON.stringify(response));
             jQuery("#validate_accession_error_display tbody").html('');
             var missing_accessions_link = "<button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions to database now.</button><br /><br />";
 	    
@@ -1806,11 +1808,18 @@ function validate_interactive(response, type, list_id) {
     		jQuery('#synonym_matches_div').hide();
     		jQuery('#synonym_message').html('No synonym matches found.');
     	    }
+
+	    var multiple_synonym_matches_table = new Array();
 	    
-    	    if (multiple_synonyms.count > 0) {
-    		jQuery('#element_matches_multiple_synonyms_table').DataTable( {
+    	    for(var i=0; i< multiple_synonym_matches.length; i++) {
+    		multiple_synonym_matches_table.push( [ multiple_synonym_matches[i][0], multiple_synonym_matches[i][1] ] );
+    	    }
+
+	    if (multiple_synonym_matches_table.length > 0) {
+		jQuery('#multiple_synonym_matches_div').show();
+		jQuery('#element_matches_multiple_synonyms_table').DataTable( {
     		    destroy: true,
-    		    data: multiple_synonyms,
+    		    data: multiple_synonym_matches_table,
     		    sDom: 'lrtip',
     		    bInfo: false,
     		    paging: false,
@@ -1820,6 +1829,7 @@ function validate_interactive(response, type, list_id) {
     		    ]
     		});
     	    }
+	    
 	    
             jQuery('#validate_accession_error_display').modal("show");
             //alert("List validation failed. Elements not found: "+ missing.join(","));

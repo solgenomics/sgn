@@ -69,11 +69,14 @@ sub validate {
 
 	if ($rs->count() == 1) { 
 	    my $row = $rs->next();
-	    push @synonyms, { uniquename =>  $row->uniquename(), synonym => $row->get_column('stockprops_value') };
+	    if ($row->uniquename() ne $item) { ## allow stocks to have the a synonym that is their own name - these synonyms should be removed from the dbs  
+		push @synonyms, { uniquename =>  $row->uniquename(), synonym => $row->get_column('stockprops_value') };
+	    }
 	}
 	elsif($rs->count() > 1)  {
-	    my $row = $rs->next();
-	    push @multiple_synonyms, [ $row->uniquename(), $row->get_column('stockprops_value') ];
+	    while (my $row = $rs->next()) {
+		push @multiple_synonyms, [ $row->uniquename(), $row->get_column('stockprops_value') ];
+	    }
 	}
 	  
     }
