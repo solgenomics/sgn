@@ -83,41 +83,88 @@ sub download_parents_file_POST : Args(0) {
     }
     print STDERR "ALL ROWS =".Dumper(\@all_rows)."\n";
 
-    my $dl_token = $c->req->param("intercross_parents_download_token") || "no_token";
-    my $dl_cookie = "download".$dl_token;
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
 
-    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "intercross_parents_download_XXXXX", UNLINK=> 0);
+    my $template_file_name = 'intercross_parents';
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $subdirectory_name = "intercross_parents_files";
+    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
+    my $archive_path = $c->config->{archive_path};
+    my $file_destination =  catfile($archive_path, $archived_file_name);
+    print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
 
+    my $dbh = $c->dbc->dbh();
+    my %errors;
+    my @error_messages;
+
+    my $dir = $c->tempfiles_subdir('/download');
+    my $rel_file = $c->tempfile( TEMPLATE => 'download/intercross_parentsXXXXX');
+    my $tempfile = $c->config->{basepath}."/".$rel_file.".csv";
+    print STDERR "TEMPFILE =".Dumper($tempfile)."\n";
     open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
 
-    print $FILE "codeId\tsex\tname\n";
+    my @headers = qw(codeId sex name);
+    my $formatted_header = join(',',@headers);
+    print $FILE $formatted_header."\n";
     my $parent = 0;
     foreach my $row (@all_rows) {
-        print $FILE $row;
+        my @row_array = ();
+        my @row_array = @$row;
+        my $csv_format = join(',',@row_array);
+        print STDERR "EACH CSV FORMAT =".Dumper($csv_format)."\n";
+        print $FILE $csv_format."\n";
         $parent++;
     }
     close $FILE;
 
-    my $filename = "intercross_parents.txt";
-
-    my $filename = "pedigree.txt";
-
-    $c->res->content_type("application/text");
-    $c->res->cookies->{$dl_cookie} = {
-      value => $dl_token,
-      expires => '+1m',
-    };
-
-    $c->res->header("Content-Disposition", qq[attachment; filename="$filename"]);
-
-    my $output = "";
-    open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
-    while (<$F>) {
-	$output .= $_;
-    }
+    open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
+    binmode $F;
+    my $md5 = Digest::MD5->new();
+    $md5->addfile($F);
     close($F);
 
-    $c->res->body($output);
+    if (!-d $archive_path) {
+        mkdir $archive_path;
+    }
+
+    if (! -d catfile($archive_path, $user_id)) {
+        mkdir (catfile($archive_path, $user_id));
+    }
+
+    if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
+        mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+    }
+
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({
+        create_person_id => $user_id,
+    });
+    $md_row->insert();
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($file_destination),
+        dirname => dirname($file_destination),
+        filetype => 'profile template xls',
+        md5checksum => $md5->hexdigest(),
+        metadata_id => $md_row->metadata_id(),
+    });
+    $file_row->insert();
+    my $file_id = $file_row->file_id();
+
+    move($tempfile,$file_destination);
+    unlink $tempfile;
+
+    my $result = $file_row->file_id;
+
+    print STDERR "FILE =".Dumper($file_destination)."\n";
+    print STDERR "FILE ID =".Dumper($file_id)."\n";
+    $c->stash->{rest} = {
+        success => 1,
+        result => $result,
+        file => $file_destination,
+        file_id => $file_id,
+    };
 
 }
 
