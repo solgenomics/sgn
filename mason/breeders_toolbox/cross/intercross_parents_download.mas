@@ -47,6 +47,31 @@
     </div>
 </div>
 
+<div class="modal fade" id="intercross_parents_download_message" name="intercross_parents_download_message" tabindex="-1" role="dialog" aria-labelledby="intercrossParentsDownloadMessage">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossParentsDownloadMessage">Intercross Parents File Created</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The Intercross parents file was created successfully.
+                    </p>
+                    <p>
+                        <a id="intercross_parents_download_link">Download Intercross Parents</a>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="intercross_parents_download_close_button" id="intercross_parents_download_close_button" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
@@ -92,8 +117,8 @@ jQuery(document).ready(function(){
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    jQuery('#parents_file_download_link').attr('href', "/fieldbook/trait_file_download/" + response.file_id);
-                    jQuery("#parents_file_dialog_message").modal("show");
+                    jQuery('#intercross_parents_download_link').attr('href', "/fieldbook/trait_file_download/" + response.file_id);
+                    jQuery("#intercross_parents_download_message").modal("show");
                     jQuery('#intercross_parents_download_dialog').modal("hide");
                 }
             },
