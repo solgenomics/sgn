@@ -33,11 +33,10 @@ export function init() {
                         "right_border_selection": this.meta_data.right_border_selection || false,
                         "bottom_border_selection": this.meta_data.bottom_border_selection || false,
                         "plot_layout": this.meta_data.plot_layout || "serpentine",
-                        "type": "filler",
                     },
                     "germplasmDbId": this.meta_data.filler_accession_id,
                     "germplasmName": this.meta_data.filler_accession_name,
-                    "observationUnitName": this.trial_id + " filler " + count,
+                    "observationUnitName": this.trial_id + " filler " + (parseInt(this.meta_data.max_level_code) + count),
                     "observationUnitPosition": {
                         "observationLevel": {
                             "levelCode": parseInt(this.meta_data.max_level_code) + count,
@@ -89,6 +88,7 @@ export function init() {
             var pseudo_layout = {};
             var plot_object = {};
             for (let plot of data) {
+                plot.type = "data";
                 if (isNaN(parseInt(plot.observationUnitPosition.positionCoordinateY))) {
                     plot.observationUnitPosition.positionCoordinateY = isNaN(parseInt(plot.observationUnitPosition.observationLevelRelationships[1].levelCode)) ? plot.observationUnitPosition.observationLevelRelationships[0].levelCode : plot.observationUnitPosition.observationLevelRelationships[1].levelCode;
                     if (plot.observationUnitPosition.positionCoordinateY in pseudo_layout) {
@@ -103,11 +103,11 @@ export function init() {
                 if (obs_level.levelName == "plot") {
                     plot.observationUnitPosition.positionCoordinateX = parseInt(plot.observationUnitPosition.positionCoordinateX);
                     plot.observationUnitPosition.positionCoordinateY = parseInt(plot.observationUnitPosition.positionCoordinateY);
-                    if (plot.additionalInfo && plot.additionalInfo.type == "filler") {
-                        plot.type = "filler";
-                    } else {
-                        plot.type = "data";
-                    }
+                    // if (plot.additionalInfo && plot.additionalInfo.type == "filler") {
+                    //     plot.type = "filler";
+                    // } else {
+                    //     plot.type = "data";
+                    // }
                     plot_object[plot.observationUnitDbId] = plot;
                 }   
             }
@@ -136,24 +136,40 @@ export function init() {
         // }
 
         traverse_map(plot_arr, planting_or_harvesting_order_layout) {
+            var local_this = this;
             let coord_matrix = [];
             var row = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateY" : "positionCoordinateX";
             var col = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateX" : "positionCoordinateY";
-            let row_decrement = 1;
-            let col_decrement = 1;
+            // let row_decrement = 1;
+            // let col_decrement = 1;
             
             // if (planting_or_harvesting_order_layout == "planting_order_layout") {
             //     row_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateY == 0).length > 0 ? 0 : 1;
             //     col_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateX == 0).length > 0 ? 0 : 1;
             // }
             for (let plot of plot_arr) {
-                if (!coord_matrix[plot.observationUnitPosition[row] - row_decrement]) {
-                    coord_matrix[plot.observationUnitPosition[row] - row_decrement] = [];
-                    coord_matrix[plot.observationUnitPosition[row] - row_decrement][plot.observationUnitPosition[col] - col_decrement] = plot;
+                if (!coord_matrix[plot.observationUnitPosition[row]]) {
+                    coord_matrix[plot.observationUnitPosition[row]] = [];
+                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
                 } else {
-                    coord_matrix[plot.observationUnitPosition[row] - row_decrement][plot.observationUnitPosition[col] - col_decrement] = plot;
+                    coord_matrix[plot.observationUnitPosition[row]][plot.observationUnitPosition[col]] = plot;
                 }
             }
+
+            coord_matrix = coord_matrix.filter(plot_arr => Array.isArray(plot_arr));
+            if (!document.getElementById("invert_row_checkmark").checked && this.meta_data[planting_or_harvesting_order_layout].includes('row') && planting_or_harvesting_order_layout.includes('planting')) {
+                if ((this.meta_data.top_border_selection && !this.meta_data.bottom_border_selection) || (!this.meta_data.top_border_selection && this.meta_data.bottom_border_selection)) {
+                    if (this.meta_data.top_border_selection) {
+                        var top_borders = coord_matrix.shift();
+                        coord_matrix.push(top_borders);
+                    } else if (this.meta_data.bottom_border_selection) {
+                        var bottom_borders = coord_matrix.pop();
+                        coord_matrix.unshift(bottom_borders);
+                    }
+                }
+            }
+
+            
             if (this.meta_data[planting_or_harvesting_order_layout].includes('serpentine')) {
                 for (let i = 0; i < coord_matrix.length; i++) {
                     if (i % 2 == 1) {
@@ -161,13 +177,26 @@ export function init() {
                     }
                 }
             }
+
             var final_arr = [];
-            for (let arr of coord_matrix) {
-                final_arr.push(...arr);
+            for (let plot_arr of coord_matrix) {
+                plot_arr = plot_arr.filter(plot => plot !== undefined);
+                if (!document.getElementById("invert_row_checkmark").checked && local_this.meta_data[planting_or_harvesting_order_layout].includes('col') && planting_or_harvesting_order_layout.includes('planting')) {
+                    if ((local_this.meta_data.top_border_selection && !local_this.meta_data.bottom_border_selection) || (!local_this.meta_data.top_border_selection && local_this.meta_data.bottom_border_selection)) {
+                        if (local_this.meta_data.top_border_selection) {
+                            var top_border_plot = plot_arr.shift();
+                             plot_arr.push(top_border_plot);
+                        } else if (local_this.meta_data.bottom_border_selection) {
+                            var bottom_border_plot = plot_arr.pop();
+                            plot_arr.unshift(bottom_border_plot);
+                        }
+                    }
+                }
+                final_arr.push(...plot_arr);
             }
-            
-            var csv = ['Plot_Number', 'Plot_Name', 'Accession_Name', 'Entry_Type'].join(',');
+            var csv = ['Plot_Number', 'Plot_Name', 'Accession_Name'].join(',');
             csv += "\n";
+            final_arr = final_arr.filter(plot => plot !== undefined);
             final_arr.forEach(function(plot) {
                     csv += [plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A", plot.observationUnitName, plot.germplasmName, plot.observationUnitPosition.entryType].join(',');
                     csv += "\n";
@@ -182,12 +211,12 @@ export function init() {
         }
 
         get_harvesting_order() {
-            this.traverse_map(this.plot_arr.filter(plot => plot.type == "data"), 'harvesting_order_layout');
+            this.traverse_map(this.plot_arr.filter(plot => plot.type != "border"), 'harvesting_order_layout');
         }
 
         get_planting_order() {
             // this.traverse_map(this.plot_arr, 'planting_order_layout');
-            this.traverse_map(this.plot_arr.filter(plot => plot.type == "data"), 'planting_order_layout');
+            this.traverse_map(this.plot_arr, 'planting_order_layout');
         }
 
         set_meta_data() {
@@ -242,13 +271,13 @@ export function init() {
                     }
                     if (plot === undefined) {
                         if (last_coord[0] < this.meta_data.max_col) {
-                            fieldmap_hole_fillers.push(this.get_plot_format('dummy', last_coord[0] + 1, last_coord[1]));
+                            fieldmap_hole_fillers.push(this.get_plot_format(`Empty_Space_(${last_coord[0] + 1}_${last_coord[1]})`, last_coord[0] + 1, last_coord[1]));
                             last_coord = [last_coord[0] + 1, last_coord[1]];
-                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('dummy', last_coord[0] + 1, last_coord[1]);
+                            this.plot_object['Empty Space' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('empty_space', last_coord[0] + 1, last_coord[1]);
                         } else {
-                            fieldmap_hole_fillers.push(this.get_plot_format('dummy', this.meta_data.min_col, last_coord[1] + 1));
+                            fieldmap_hole_fillers.push(this.get_plot_format(`Empty_Space_${this.meta_data.min_col}_${last_coord[1] + 1}`, this.meta_data.min_col, last_coord[1] + 1));
                             last_coord = [this.meta_data.min_col, last_coord[1]];
-                            this.plot_object['Filler' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('dummy', this.meta_data.min_col, last_coord[1] + 1);
+                            this.plot_object['Empty Space' + String(last_coord[0]) + String(last_coord[1])] = this.get_plot_format('empty_space', this.meta_data.min_col, last_coord[1] + 1);
                         }
                     } else {
                         last_coord = [plot.observationUnitPosition.positionCoordinateX, plot.observationUnitPosition.positionCoordinateY];
@@ -271,7 +300,7 @@ export function init() {
 
         get_plot_format(type, x, y) {
             return { 
-                type: type, observationUnitName: type, observationUnitPosition: { positionCoordinateX: x, positionCoordinateY: y} 
+                type: type, observationUnitName: this.trial_id + ' ' + type, observationUnitPosition: { positionCoordinateX: x, positionCoordinateY: y} 
             }
         }
 
@@ -284,7 +313,6 @@ export function init() {
             this.plot_arr = [
                 ...this.plot_arr.slice(0, Object.entries(this.plot_object).length),
             ];
-            
             var count = 0;
             var column;
 
@@ -468,7 +496,8 @@ export function init() {
             var heatmap_object = this.heatmap_object;
             var plot_click = !this.heatmap_selected ? this.fieldmap_plot_click : this.heatmap_plot_click;
             var trait_vals = [];
-            
+            var local_this = this;
+
             if (this.heatmap_selected) {
                 let plots_with_selected_trait = heatmap_object[trait_name];
                 for (let obs_unit of Object.values(plots_with_selected_trait)) {
@@ -486,7 +515,7 @@ export function init() {
                         color = "#6a5acd";
                     } else if (plot.observationUnitPosition.observationLevelRelationships[1].levelCode % 2 == 0) {
                         color = "#c7e9b4";
-                    } else if (plot.additionalInfo && plot.additionalInfo.type == "filler") {
+                    } else if (plot.observationUnitName.includes(local_this.trial_id + " filler")) {
                         color = "lightgrey";    
                     } else {
                         color = "#41b6c4";
@@ -592,7 +621,7 @@ export function init() {
                     plots.enter().append("text")
                     .attr("x", function(d) { return (d.observationUnitPosition.positionCoordinateX + col_increment) * 50 + 15; })
                     .attr("y", function(d) { return (d.type != "border" && !(document.getElementById("invert_row_checkmark").checked == true) ? max_row - d.observationUnitPosition.positionCoordinateY + row_increment + 1 : d.observationUnitPosition.positionCoordinateY + row_increment) * 50 + 45; })
-                    .text(function(d) { if ((d.type == "data" && !d.additionalInfo) || (d.type == "data" && d.additionalInfo.type != "filler")) { return d.observationUnitPosition.observationLevel.levelCode; }});
+                    .text(function(d) { if (!(d.observationUnitName.includes(local_this.trial_id + " filler")) && d.type == "data") { return d.observationUnitPosition.observationLevel.levelCode; }});
 
             var image_icon = function (d){
                 var image = d.plotImageDbIds || []; 

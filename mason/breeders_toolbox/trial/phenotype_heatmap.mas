@@ -131,7 +131,7 @@ $data_level => 'plot'
 <div id="container_fm">
     <div style="position: absolute">
         <div style="display: flex;">
-            <button class="btn btn-primary" style="margin-left: 2%;" id="planting_order_button"> Download Planting Order </button>
+            <button class="btn btn-primary btn-sm" style="margin-left: 2%;" id="planting_order_button"> Download Planting Order </button>
             <select style="margin-left: 1%;" name="planting_order" id="planting_order">
                 <option value="">--Select Layout--</option>
                 <option value="by_col_serpentine">By Column: Serpentine</option>
@@ -139,7 +139,7 @@ $data_level => 'plot'
                 <option value="by_row_serpentine">By Row: Serpentine</option>
                 <option value="by_row_zigzag">By Row: Zigzag</option>
             </select>
-            <button class="btn btn-primary" id="harvesting_order_button" style="margin-left: 2%;"> Download Harvesting Order </button>
+            <button class="btn btn-primary btn-sm" id="harvesting_order_button" style="margin-left: 2%;"> Download Harvesting Order </button>
             <select style="margin-left: 1%;" name="harvesting_order" id="harvesting_order">
                 <option value="">--Select Layout--</option>
                 <option value="by_col_serpentine">By Column: Serpentine</option>
@@ -147,8 +147,8 @@ $data_level => 'plot'
                 <option value="by_row_serpentine">By Row: Serpentine</option>
                 <option value="by_row_zigzag">By Row: Zigzag</option>
             </select>
-            <button style="margin-left: 5%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
-            <button style="margin-left: 2%;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success">Submit Field Layout</button>
+            <button style="margin-left: 2%;" type="button" class="btn btn-primary btn-sm" id="change_dimensions_button">Change Dimensions</button>
+            <button style="margin-left: 1%;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success btn-sm">Submit Field Layout</button>
         </div><br>
         <div style="display: inline;">
             <label style="margin-left: 2%;" for="invert_rows">Invert Rows</label>
