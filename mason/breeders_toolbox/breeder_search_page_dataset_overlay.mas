@@ -83,7 +83,7 @@
                     let c = p[j].split('|');
                     let ca = [];
                     for ( let k = 0; k < c.length; k++ ) {
-                        ca.push(c[k].toLowerCase());
+                        ca.push(c[k].toLowerCase().replaceAll(" ", "_"));
                     }
                     pa.push(ca);
                 }
@@ -110,7 +110,7 @@
         let prev_sel_col_types = [];
         for ( let i = 0; i < col; i++ ) {
             let sel = jQuery(jQuery('.wizard-type-select option:selected')[i]);
-            prev_sel_col_types.push((sel.attr("data-type") ? sel.attr("data-type") : sel.html()).toLowerCase());
+            prev_sel_col_types.push((sel.attr("data-type") ? sel.attr("data-type") : sel.html()).toLowerCase().replaceAll(" ", "_"));
         }
         
         // Get items from DSP_COLS that match selected data types in previous columns
@@ -167,6 +167,7 @@
                 setCol(col+1);
             });
             jQuery('#dsp-help').css('display', 'block');
+            jQuery('#dsp-help-container').css('display', 'flex');
 
         }
 
@@ -258,7 +259,7 @@
         display: none;
     }
     #dsp-help-container {
-        display: flex;
+        display: none;
         align-items: center;
         margin: 5px 0 15px 0;
         width: 100%;

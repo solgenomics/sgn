@@ -60,18 +60,24 @@ $d->find_element_ok("updateNameButton", "id", "submit edit list name")->click();
 sleep(1);
 $d->accept_alert_ok();
 sleep(1);
-$d->accept_alert_ok();
+#$d->accept_alert_ok();
 sleep(1);
 
 $d->find_element_ok("close_list_item_dialog", "id", "find close_list_item_dialog button test")->click();
 
 sleep(1);
 
-my %test_lists = ('accessions'=>"test_accession1\ntest_accession2\ntest_accession3\n", 'plots'=>"test_trial1\ntest_trial21\ntest_trial22\n", 'locations'=>"test_location\nCornell Biotech\n", 'trials'=>"test\ntest_trial\ntest_genotyping_project\n", 'years'=>"2014\n2015\n", 'traits'=>"fresh shoot weight|CO_334:0000016\ndry matter content|CO_334:0000092\nharvest index|CO_334:0000015\n");
+#my %test_lists = ('accessions'=>"test_accession1\ntest_accession2\ntest_accession3\n", 'plots'=>"test_trial1\ntest_trial21\ntest_trial22\n", 'locations'=>"test_location\nCornell Biotech\n", 'trials'=>"test\ntest_trial\ntest_genotyping_project\n", 'traits'=>"fresh shoot weight|CO_334:0000016\ndry matter content|CO_334:0000092\nharvest index|CO_334:0000015\n");
+
+my %test_lists = ('accessions'=>"test_accession1\ntest_accession2\ntest_accession3\n", 'plots'=>"test_trial1\ntest_trial21\ntest_trial22\n", 'locations'=>"test_location\nCornell Biotech\n",
+		  #'traits'=>"fresh shoot weight|CO_334:0000016\ndry matter content|CO_334:0000092\nharvest index|CO_334:0000015\n"
+    );
 
 foreach my $list_type ( keys %test_lists ) {
 
-
+    print STDERR "NOW TESTING $list_type...\n";
+    
+    sleep(3);
     $d->find_element_ok("view_list_update_list_name", "id", "view list dialog test");
 
     sleep(1);
@@ -89,9 +95,6 @@ foreach my $list_type ( keys %test_lists ) {
     $d->find_element_ok("dialog_add_list_item", "id", "add list items")->send_keys($test_lists{$list_type});
 
     my @list_items = split /\n/, $test_lists{$list_type};
-    #foreach (@list_items) {
-    #   
-    #}
 
     $d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
 
@@ -112,7 +115,6 @@ foreach my $list_type ( keys %test_lists ) {
     $d->find_element_ok("close_list_item_dialog", "id", "find close list dialog button")->click();
 
     $d->find_element_ok("view_list_".$list_type, "id", "view accession list dialog test");
-
 }
 
 $d->find_element_ok("view_public_lists_button", "id", "find public list button")->click();

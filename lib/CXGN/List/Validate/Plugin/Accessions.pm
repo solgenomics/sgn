@@ -77,14 +77,18 @@ sub validate {
 	}
 	  
     }
-
-
+    my $valid = 0;
+    if ( (@multiple_synonyms ==0)  && (@synonyms == 0)  && (@wrong_case == 0) && (@missing == 0) && (@multiple_wrong_case ==0)) {
+	$valid = 1;
+    }
+    
     return {
 	missing => \@missing,
 	wrong_case => \@wrong_case,
 	multiple_wrong_case => \@multiple_wrong_case,
 	synonyms => \@synonyms,
 	multiple_synonyms => \@multiple_synonyms,
+	valid => $valid,
     };
 }
 

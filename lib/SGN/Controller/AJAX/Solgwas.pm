@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 
 package SGN::Controller::AJAX::Solgwas;
 
@@ -61,8 +62,6 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
 #    );
 #    my $pheno_filepath = $tempfile . "_phenotype.txt";
 
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
 #    my $temppath = $solgwas_tmp_output . "/" . $tempfile;
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
@@ -125,7 +124,7 @@ sub extract_trait_data :Path('/ajax/solgwas/getdata') Args(0) {
 	chomp;
 
 	my @fields = split "\t";
-	my %line = {};
+	my %line = ();
 	for(my $n=0; $n <@keys; $n++) {
 	    if (exists($fields[$n]) && defined($fields[$n])) {
 		$line{$keys[$n]}=$fields[$n];
@@ -165,25 +164,25 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 #    my $temppath = $c->config->{basepath}."/".$tempfile;
-##    my $temppath = $c->config->{cluster_shared_tempdir}."/".$tempfile;
-    my $temppath = $solgwas_tmp_output . "/" . $tempfile;
+#    my $temppath = $c->config->{cluster_shared_tempdir}."/".$tempfile;
+#    my $temppath = $solgwas_tmp_output . "/" . $tempfile;
+    my $temppath = "/" . $tempfile;
 
 #    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath);
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
 
 ##    my $phenotype_data_ref = $ds->retrieve_phenotypes();
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
+    my $protocols = $ds->retrieve_genotyping_protocols();
+    my $protocol_id;
+    foreach (@$protocols) {
+        $protocol_id = $_->[0];
+    }
 
 #    my ($fh, $tempfile2) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_genotypes_download_XXXXX");
 #    my $temppath2 = $c->config->{basepath}."/".$tempfile2;
 #    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath2);
     #    $ds2 -> file_name => $temppath2;
-    my $protocol_name = $c->config->{default_genotyping_protocol};
-    my $protocol_id;
-    my $row = $schema->resultset("NaturalDiversity::NdProtocol")->find( { name => $protocol_name});# just use find?
-    if (defined($row)) {
-	      $protocol_id = $row->nd_protocol_id();
-    }
 
     my $filehandle = $ds->retrieve_genotypes($protocol_id,$geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
 #    my $base_filename = $$filehandle;
@@ -266,8 +265,6 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
 #    my $cmd = "Rscript " . $c->config->{basepath} . "/R/solgwas/solgwas_script.R " . $pheno_filepath . " " . $geno_filepath3 . " " . $trait_id . " " . $figure3file . " " . $figure4file . " " . $pc_check . " " . $kinship_check;
 #    system($cmd);
 
-    my $figure2file = $tempfile . "_" . $newtrait . "_figure2.png";
-
     my $cmd = CXGN::Tools::Run->new(
         {
             backend => $c->config->{backend},
@@ -289,7 +286,7 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     $cmd->wait;
 
 
-    my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
+    my $figure_path = "./documents/tempfiles/solgwas_files/";
     copy($figure2file,$figure_path);
 
     my $figure2basename = basename($figure2file);
@@ -339,16 +336,30 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 
 ##    my $phenotype_data_ref = $ds->retrieve_phenotypes();
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
+    my $protocols = $ds->retrieve_genotyping_protocols();
+    my $protocol_id;
+    foreach (@$protocols) {
+	$protocol_id = $_->[0];
+    }
 
 #    my ($fh, $tempfile2) = $c->tempfile(TEMPLATE=>"solgwas_files/solgwas_genotypes_download_XXXXX");
 #    my $temppath2 = $c->config->{basepath}."/".$tempfile2;
 #    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath2);
     #    $ds2 -> file_name => $temppath2;
-    my $protocol_name = $c->config->{default_genotyping_protocol};
-    my $protocol_id;
-    my $row = $schema->resultset("NaturalDiversity::NdProtocol")->find( { name => $protocol_name});# just use find?
-    if (defined($row)) {
-	      $protocol_id = $row->nd_protocol_id();
+
+    my %chromList;
+    my %posList;
+    my $name;
+    my @row;
+    my $chrom;
+    my $pos;
+    my $q = "SELECT s.value->>'name', s.value->>'chrom', s.value->>'pos' from nd_protocolprop, jsonb_each(nd_protocolprop.value) s(key, value) where type_id = (SELECT cvterm_id FROM public.cvterm WHERE name = 'vcf_map_details_markers') and nd_protocol_id = $protocol_id";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute();
+    while (@row = $sth->fetchrow_array) {
+	$name = $row[0];
+	$chromList{$name} = $row[1];
+        $posList{$name} = $row[2];
     }
 
     my $filehandle = $ds->retrieve_genotypes($protocol_id,$geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host}, $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
@@ -359,6 +370,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $newtrait = $trait_id;
     $newtrait =~ s/\s/\_/g;
     $newtrait =~ s/\//\_/g;
+    $newtrait =~ s/[|%()]/\./g;
     print STDERR $newtrait . "\n";
 #    my $figure1file = "." . $tempfile . "_" . $newtrait . "_figure1.png";
 #    my $figure2file = "." . $tempfile . "_" . $newtrait . "_figure2.png";
@@ -384,14 +396,36 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 #    my $trim_cmd = "cut -f 1-50 " . $geno_filepath2 . " > " . $geno_filepath3;
 #    system($trim_cmd);
 
-#    open my $filehandle_in2,  "<", "$geno_filepath2"  or die "Could not open $geno_filepath2: $!\n";
     open my $filehandle_out, ">", "$geno_filepath2" or die "Could not create $geno_filepath2: $!\n";
-
+    my $line = <$filehandle>;
+    my @sample_line = (split /\t/, $line);
+    splice(@sample_line, 1, 0, "chrom");
+    splice(@sample_line, 2, 0, "pos");
+    $line = join("\t", @sample_line);
+    print $filehandle_out $line;
     my $marker_total;
 
     while ( my $line = <$filehandle> ) {
-        my @sample_line = (split /\s+/, $line);
-        $marker_total = scalar(@sample_line);
+        @sample_line = split(/\t/, $line);
+	if ($chromList{$sample_line[0]}) {
+	    $chrom = $chromList{$sample_line[0]};
+	} elsif ($sample_line[0] =~ /\_/) {
+	    ($chrom, undef) = split /\_/, $sample_line[0];
+	    print STDERR "Warning! no chrom data, using $chrom extracted from $sample_line[0]\n";
+	} else {
+	    $chrom = "";
+	}
+	if ($posList{$sample_line[0]}) {
+	    $pos = $posList{$sample_line[0]};
+	} elsif ($sample_line[0] =~ /\_/) {
+	    (undef, $pos) = split /\_/, $sample_line[0];
+	    print STDERR "Warning! No position data, using $pos extracted from $sample_line[0]\n";
+	} else {
+	    $pos = "";
+	}
+	splice(@sample_line, 1, 0, $chrom);
+        splice(@sample_line, 2, 0, $pos);
+        $line = join("\t", @sample_line);
         print $filehandle_out $line;
     }
     close $filehandle;
@@ -457,7 +491,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     $cmd->is_cluster(1);
     $cmd->wait;
 
-    my $figure_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
+    my $figure_path = "./documents/tempfiles/solgwas_files/";
     copy($figure3file,$figure_path);
     copy($figure4file,$figure_path);
 #    my $figure3basename = $figure3file;
