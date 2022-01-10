@@ -29,7 +29,7 @@ solGS.cluster = {
      var clusterType;
 
 	if (urlArgs) {
-	    
+
          var args = urlArgs.split(/\/+/);
          clusterPopId = args[1];
          clusterType = args[3];
@@ -580,12 +580,12 @@ if (document.URL.match(/cluster\/analysis/)) {
 		data: {'arguments': clusterArgs},
 		url: '/run/cluster/analysis',
 		success: function(res) {
-		    
+
 		    if (res.result == 'success') {
 			jQuery("#cluster_canvas .multi-spinner-container").hide();
 
 			solGS.cluster.plotClusterOutput(res);
-			
+
 
 			jQuery("#cluster_message").empty();
 			jQuery('#' + runClusterId).show();
@@ -671,11 +671,11 @@ if (document.URL.match(/cluster\/analysis/)) {
 	var plotType;
 	var outFileType;
 	var clustersFile;
-	
+
 	if (plot.match(/k-means/i)) {
             plotType = 'K-means plot';
             outFileType = 'Clusters';
-	    clustersFile = res.kmeans_clusters;  
+	    clustersFile = res.kmeans_clusters;
 	} else {
             plotType = 'Dendrogram';
             outFileType = 'Newick tree format';
@@ -710,18 +710,18 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    + plotLink + ' | '
 	    + clustersLink + ' | '
 	    + reportLink;
-	
-	if (plotLink.match(/k-means/i)) {
+
+	// if (plotLink.match(/k-means/i)) {
 	    jQuery('#cluster_plot').prepend('<p style="margin-top: 20px">' + downloadLinks + '</p>');
 	    jQuery('#cluster_plot').prepend(plot);
-	} else {
-	    solGS.dendrogram.plot(res.json_data, '#cluster_canvas', '#cluster_plot', downloadLinks) 
-	}
+	// } else {
+	    // solGS.dendrogram.plot(res.json_data, '#cluster_canvas', '#cluster_plot', downloadLinks)
+	// }
 
     },
 
-    
-    
+
+
     getClusterPopsTable: function(tableId) {
 
 	var clusterTable  = this.createTable(tableId);
