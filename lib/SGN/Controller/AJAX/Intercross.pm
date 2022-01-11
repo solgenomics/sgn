@@ -41,6 +41,8 @@ use CXGN::Pedigree::ParseUpload;
 use CXGN::Trial::Folder;
 use CXGN::Trial::TrialLayout;
 use CXGN::Stock::StockLookup;
+use CXGN::List::Validate;
+use CXGN::List;
 use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
@@ -75,13 +77,33 @@ sub download_parents_file_POST : Args(0) {
     my $male_elements = $male_list->retrieve_elements_with_ids($male_list_id);
 
     my @all_rows;
+    my @female_accessions;
+    my @male_accessions;
     foreach my $female (@$female_elements){
+        push @female_accessions, $female->[1];
         push @all_rows, [$female->[0], '0', $female->[1]]
     }
     foreach my $male (@$male_elements){
+        push @male_accessions, $male->[1];
         push @all_rows, [$male->[0], '1', $male->[1]]
     }
-    print STDERR "ALL ROWS =".Dumper(\@all_rows)."\n";
+
+    my $list_error_message;
+    my $female_validator = CXGN::List::Validate->new();
+    my @female_accessions_missing = @{$female_validator->validate($schema,'uniquenames',\@female_accessions)->{'missing'}};
+    if (scalar(@female_accessions_missing) > 0) {
+        $list_error_message = "The following female parents did not pass validation: ".join("\n", @female_accessions_missing);
+        $c->stash->{rest} = { error => $list_error_message };
+        $c->detach();
+    }
+
+    my $male_validator = CXGN::List::Validate->new();
+    my @male_accessions_missing = @{$male_validator->validate($schema,'uniquenames',\@male_accessions)->{'missing'}};
+    if (scalar(@male_accessions_missing) > 0) {
+        $list_error_message = "The following male parents did not pass validation: ".join("\n", @male_accessions_missing);
+        $c->stash->{rest} = { error => $list_error_message };
+        $c->detach();
+    }
 
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
 
