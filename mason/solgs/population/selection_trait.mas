@@ -53,7 +53,7 @@ $data_set_type => ''
 <%perl>
 </%perl>
 
-  <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.solGS",
+  <& /util/import_javascript.mas, classes => [ "solGS.solGS",
                                               "flot.flot", "flot.categories",
                                               "flot.tooltip", "flot.selection", "flot.navigate",
                                               "flot.axisLabels",

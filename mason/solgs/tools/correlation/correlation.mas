@@ -39,7 +39,7 @@ $data_str => undef
 </style>
 
 
-<& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.correlation"] &>
+<& /util/import_javascript.mas, classes => [ "solGS.correlation"] &>
 <&| /page/info_section.mas,
       collapsible => 1,
       collapsed   => 1,

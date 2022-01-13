@@ -51,7 +51,7 @@ $model_link
   <& /util/import_javascript.mas, classes => ["solGS.solGS",
                                               "flot.flot", "flot.categories",
                                               "flot.tooltip", "flot.selection", "flot.navigate",
-                                              "flot.axisLabels", "d3.d3Min",
+                                              "flot.axisLabels", 
                                              ]
   &>
 
