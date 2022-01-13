@@ -12,7 +12,6 @@ use CXGN::BrAPI::v2::ExternalReferences;
 use CXGN::BrAPI::v2::Methods;
 use CXGN::BrAPI::v2::Scales;
 use CXGN::BrAPI::Exceptions::NotFoundException;
-use POSIX;
 
 extends 'CXGN::BrAPI::v2::Common';
 
