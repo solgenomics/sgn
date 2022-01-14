@@ -200,22 +200,25 @@ jQuery(document).ready(function($) {
             jQuery("#xls_cross_accession_section").hide();
             jQuery("#xls_cross_plot_section").hide();
             jQuery("#xls_cross_plant_section").hide();
+            jQuery("#submit_button_section").hide();
       }
         if (jQuery(this).val() == "xls_cross_accession"){
             jQuery("#xls_cross_accession_section").show();
             jQuery("#xls_cross_plot_section").hide();
             jQuery("#xls_cross_plant_section").hide();
+            jQuery("#submit_button_section").show();
         }
         if(jQuery(this).val() == "xls_cross_plot"){
             jQuery("#xls_cross_plot_section").show();
             jQuery("#xls_cross_accession_section").hide();
             jQuery("#xls_cross_plant_section").hide();
-
+            jQuery("#submit_button_section").show();
         }
         if (jQuery(this).val() == "xls_cross_plant" ){
             jQuery("#xls_cross_plant_section").show();
             jQuery("#xls_cross_plot_section").hide();
             jQuery("#xls_cross_accession_section").hide();
+            jQuery("#submit_button_section").show();
         }
     });
 
@@ -381,7 +384,7 @@ jQuery(document).ready(function($) {
     function upload_crosses_file() {
         var crossing_trial_id = $("#cross_upload_crossing_trial").val();
         var experiment_id = $("#experiment_id").val();
-        alert(experiment_id);
+
         if (!crossing_trial_id && !experiment_id) {
             alert("A crossing experiment is required");
             return;
@@ -393,7 +396,7 @@ jQuery(document).ready(function($) {
             if (uploadFileXlsPlots === ''){
                 var uploadFileXlsPlants = $("#xls_crosses_plants_file").val();
                 if (uploadFileXlsPlants === '') {
-                    alert("Please select your file format and select a file");
+                    alert("Please select a file");
                     return;
                 }
             }

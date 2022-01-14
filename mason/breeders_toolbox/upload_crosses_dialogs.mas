@@ -80,7 +80,7 @@ $trial_name => undef
                                         <label class="col-sm-3 control-label">Crossing Experiment: </label>
                                         <div class="col-sm-6" >
                                             <input class="form-control" name="experiment_name" id="experiment_name" disabled value="<% $trial_name %>">
-                                            <input name="experiment_id" id="experime_id" type="hidden" value="<% $trial_id %>">
+                                            <input name="experiment_id" id="experiment_id" type="hidden" value="<% $trial_id %>">
                                         </div>
                                     </div>
                                 </div>
@@ -202,10 +202,11 @@ $trial_name => undef
                                 </div>
                                 -->
                             </form>
-
-                            <center>
-                                <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
-                            </center>
+                            <div id="submit_button_section" style="display:none">
+                                <center>
+                                    <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
+                                </center>
+                            </div>                        
 
                         </&>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
