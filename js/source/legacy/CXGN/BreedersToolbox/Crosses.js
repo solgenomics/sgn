@@ -174,6 +174,13 @@ jQuery(document).ready(function($) {
         get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
         get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
         $("#upload_crosses_dialog").modal("show");
+
+        jQuery('#manage_page_section_1').modal("show");
+        jQuery('#crossing_experiment_page_section_1').modal("hide");
+
+        jQuery('#manage_page_section_2').modal("show");
+        jQuery('#crossing_experiment_page_section_2').modal("hide");
+
     });
 
     $("#cross_accession_info_format").click(function() {
@@ -373,7 +380,9 @@ jQuery(document).ready(function($) {
 
     function upload_crosses_file() {
         var crossing_trial_id = $("#cross_upload_crossing_trial").val();
-        if (!crossing_trial_id) {
+        var experiment_id = $("#experiment_id").val();
+        alert(experiment_id);
+        if (!crossing_trial_id && !experiment_id) {
             alert("A crossing experiment is required");
             return;
         }

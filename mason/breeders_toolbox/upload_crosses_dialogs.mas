@@ -1,5 +1,6 @@
 <%args>
-
+$trial_id => undef
+$trial_name => undef
 </%args>
 
 % my $cross_additional_info_string = $c->config->{cross_additional_info};
@@ -39,23 +40,47 @@
 
                         <&| /util/workflow.mas:step, title=> "Crossing experiment" &>
                             <& /page/page_title.mas, title=>"Select a crossing experiment for your crosses" &>
+                            <div id="manage_page_section_1" style="display:none">
+                                <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
+                                <center>
+                                    <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a new crossing experiment, click here</button><br/><br/>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">If you already have a crossing experiment, go to Next Step</button>
+                                </center>
+                            </div>
 
-                            <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
-                            <center>
-                                <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a new crossing experiment, click here</button><br/><br/>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">If you already have a crossing experiment, go to Next Step</button>
-                            </center>
-
+                            <div id="crossing_experiment_page_section_1" style="display:none">
+                                <center>
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">You are uploading crosses for crossing experiment: </label>
+                                        <div class="col-sm-6" >
+                                            <input class="form-control" name="experiment_name_1" id="experiment_name_1" disabled value="<% $trial_name %>">
+                                        </div>
+                                    </div>
+                                    <br/><br/><br/><br/>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                </center>
+                            </dvi>
                         </&>
                         <&| /util/workflow.mas:step, title=> "Upload your crosses" &>
                             <& /page/page_title.mas, title=>"Enter basic information about the crosses and upload your file" &>
 
                             <br/>
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">Select a Crossing Experiment: </label>
-                                    <div class="col-sm-9">
-                                        <div id="upload_crosses_select_crossingtrial_2" name="upload_crosses_select_crossingtrial_2" >
+                                <div id="manage_page_section_2" style="display:none">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Select a Crossing Experiment: </label>
+                                        <div class="col-sm-9">
+                                            <div id="upload_crosses_select_crossingtrial_2" name="upload_crosses_select_crossingtrial_2" >
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="crossing_experiment_page_section_2" style="display:none">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Crossing Experiment: </label>
+                                        <div class="col-sm-6" >
+                                            <input class="form-control" name="experiment_name" id="experiment_name" disabled value="<% $trial_name %>">
+                                            <input name="experiment_id" id="experime_id" type="hidden" value="<% $trial_id %>">
                                         </div>
                                     </div>
                                 </div>
@@ -481,3 +506,26 @@
         </div>
     </div>
 </div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_new_crosses_link').click(function(){
+        jQuery('#upload_crosses_dialog').modal("show");
+
+        var trial_id = "<% $trial_id %>";
+        var trial_name = "<% $trial_name %>";
+        if (trial_id) {
+            jQuery('#crossing_experiment_page_section_1').modal("show");
+            jQuery('#manage_page_section_1').modal("hide");
+
+            jQuery('#crossing_experiment_page_section_2').modal("show");
+            jQuery('#manage_page_section_2').modal("hide");
+
+        }
+    });
+
+});
+
+</script>
