@@ -131,22 +131,24 @@ $data_level => 'plot'
 <div id="container_fm">
     <div style="position: absolute">
         <div style="display: flex;">
-            <button class="btn btn-primary" style="margin-left: 2%;" id="planting_order_button"> Download Planting Order </button>
+            <button class="btn btn-primary btn-sm" style="margin-left: 2%;" id="planting_order_button"> Download Planting Order </button>
             <select style="margin-left: 1%;" name="planting_order" id="planting_order">
                 <option value="">--Select Layout--</option>
                 <option value="by_col_serpentine">By Column: Serpentine</option>
                 <option value="by_col_zigzag">By Column: Zigzag</option>
-                <option value="by_row">By Row: Current Layout</option>
+                <option value="by_row_serpentine">By Row: Serpentine</option>
+                <option value="by_row_zigzag">By Row: Zigzag</option>
             </select>
-            <button class="btn btn-primary" id="harvesting_order_button" style="margin-left: 2%;"> Download Harvesting Order </button>
+            <button class="btn btn-primary btn-sm" id="harvesting_order_button" style="margin-left: 2%;"> Download Harvesting Order </button>
             <select style="margin-left: 1%;" name="harvesting_order" id="harvesting_order">
                 <option value="">--Select Layout--</option>
                 <option value="by_col_serpentine">By Column: Serpentine</option>
                 <option value="by_col_zigzag">By Column: Zigzag</option>
-                <option value="by_row">By Row: Current Layout</option>
+                <option value="by_row_serpentine">By Row: Serpentine</option>
+                <option value="by_row_zigzag">By Row: Zigzag</option>
             </select>
-            <button style="margin-left: 8%;" type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
-            <button style="margin-left: 2%;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success">Submit Field Layout</button>
+            <button style="margin-left: 2%;" type="button" class="btn btn-primary btn-sm" id="change_dimensions_button">Change Dimensions</button>
+            <button style="margin-left: 1%;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success btn-sm">Submit Field Layout</button>
         </div><br>
         <div style="display: inline;">
             <label style="margin-left: 2%;" for="invert_rows">Invert Rows</label>
@@ -564,8 +566,6 @@ var num_real_plots;
 
 
 jQuery(document).ready( function() {
-    // document.getElementById("invert_row_checkmark").checked = false;
-    retrieve_additional_info = true;
     var auth_token;
     var require_login = "<%  $c->get_conf('brapi_require_login') %>";
     auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
@@ -607,17 +607,19 @@ jQuery(document).ready( function() {
              },
              success: function(response) {
                 data = response.result.data;
-                if (data[0].additionalInfo) {
-                    FieldMap.check_elements(data[0].additionalInfo);
-                    if (data[0].additionalInfo.plot_layout) {
-                        document.getElementById("plot_layout").value = data[0].additionalInfo.plot_layout;
-                        FieldMap.meta_data.plot_layout = data[0].additionalInfo.plot_layout;
-                    }
-                }
-                FieldMap.filter_data(data);
-                FieldMap.set_meta_data();
-                FieldMap.load();
 
+                if (data[0]) {
+                    if (data[0].additionalInfo) {
+                        FieldMap.check_elements(data[0].additionalInfo);
+                        if (data[0].additionalInfo.plot_layout) {
+                            document.getElementById("plot_layout").value = data[0].additionalInfo.plot_layout;
+                            FieldMap.meta_data.plot_layout = data[0].additionalInfo.plot_layout;
+                        }
+                    }
+
+                    FieldMap.filter_data(data);
+                    FieldMap.set_meta_data();
+                }
                 // FieldMap.plot_ou_arr.sort(function(plot_ou_1, plot_ou_2) {
 	            //       // Ascending: first plotNumber less than the previous
 	            //     return FieldMap.plot_object[plot_ou_1].observationUnitPosition.observationLevel.levelCode - FieldMap.plot_object[plot_ou_2].observationUnitPosition.observationLevel.levelCode
@@ -633,6 +635,9 @@ jQuery(document).ready( function() {
         .then(
             function() {
                     num_real_plots = Object.keys(FieldMap.plot_object).length;
+                    FieldMap.fill_holes();
+                    FieldMap.meta_data.retain_layout = true;
+                    FieldMap.load();
             }
         )
     }
@@ -711,7 +716,6 @@ jQuery(document).ready( function() {
 
     jQuery('#submit_dimensions_change').click(function() {
         jQuery('#working_modal').modal("show");
-        retrieve_additional_info = false;
         changed_dim_rows = jQuery("#row-dims").val();
         changed_dim_cols = jQuery("#col-dims").val();
         var filler_accession_name = jQuery("#filler_accession").val();
@@ -739,7 +743,7 @@ jQuery(document).ready( function() {
                         FieldMap.meta_data.filler_accession_name = filler_accession_name;
                         FieldMap.meta_data.num_rows = changed_dim_rows;
                         FieldMap.meta_data.num_cols = changed_dim_cols;
-                        
+                        FieldMap.meta_data.retain_layout = false;
                         FieldMap.load();         
                     }
                 },
@@ -753,6 +757,7 @@ jQuery(document).ready( function() {
             FieldMap.meta_data.num_cols = changed_dim_cols;
             jQuery('#working_modal').modal("hide");
             jQuery("#change_dimensions_dialog").modal("hide");
+            FieldMap.meta_data.retain_layout = false;
             FieldMap.load();
         }
     })
@@ -763,6 +768,7 @@ jQuery(document).ready( function() {
 
     jQuery("#plot_layout").change(function() {
         FieldMap.meta_data.plot_layout = jQuery("#plot_layout").val();
+        FieldMap.meta_data.retain_layout = false;
         FieldMap.load();
     });
 
@@ -814,14 +820,29 @@ jQuery(document).ready( function() {
         FieldMap.load();
     });
     jQuery('#submit_fieldmap').click( function() {
-        var answer = window.confirm(`You are about to save this plot layout to the database.
-        Filler plots will be added to your trial if they exist in the display below. Are you sure you would like to continue?`);
-        if (answer) {
-            submit_fieldmap_metadata();
-        } else {
-            jQuery('#working_modal').modal("hide");
-        }
-
+        new jQuery.ajax({
+            type: "POST",
+            url: '/ajax/breeders/trial/<% $trial_id %>/check_curator_privileges',
+            dataType: "json",
+            data: { 
+                'trial_id': trial_id,
+            },
+            success: function(response) {
+                if (response.success) {
+                    var answer = window.confirm(`You are about to save this plot layout to the database.\nFiller plots will be added to your trial if they exist in the display below. Are you sure you would like to continue?`);
+                    if (answer) {
+                        submit_fieldmap_metadata();
+                    } else {
+                        jQuery('#working_modal').modal("hide");
+                    }
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function(response) {
+                alert(response);
+            }
+        });
         
     });
 
@@ -835,6 +856,11 @@ jQuery(document).ready( function() {
     
     jQuery("#hm_accession").autocomplete({
         appendTo: "#hm_replace_plot_accessions_dialog",
+        source: '/ajax/stock/accession_autocomplete',
+    });
+
+    jQuery("#filler_accession").autocomplete({
+        appendTo: "#change_dimensions_dialog",
         source: '/ajax/stock/accession_autocomplete',
     });
 
@@ -852,9 +878,9 @@ jQuery(document).ready( function() {
     });
 
     function submit_fieldmap_metadata() {
-        jQuery('#working_modal').modal("show");
+        jQuery('#working_modal').modal("show");  
         let filler_plot_object = FieldMap.format_brapi_post_object();
-        var stringifiedPostData = JSON.stringify(filler_plot_object);            
+        var stringifiedPostData = JSON.stringify(filler_plot_object);         
         if (FieldMap.meta_data.post) {
             new jQuery.ajax({
                 type: 'POST',
@@ -864,7 +890,6 @@ jQuery(document).ready( function() {
                 data: stringifiedPostData,
                 success: function(response) {
                     put_brapi_plots();
-                    
                 },
                 error: function(response) {
                     jQuery('#working_modal').modal("hide");
@@ -886,7 +911,6 @@ jQuery(document).ready( function() {
             url: '/brapi/v2/observationunits/',
             data: stringifiedData,
             success: function(response) {
-                // refresh_cache();
                 jQuery('#working_modal').modal("hide");
                 jQuery('#fieldplot_layout_success_dialog').modal("show");
                 
