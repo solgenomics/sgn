@@ -1196,7 +1196,6 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             $chado_schema->txn_rollback();
             push @{$save{'errors'}}, $current_save->{'error'};
         }
-
       }
 
     };
@@ -1217,8 +1216,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     } else {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
+        $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+        $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
         $c->stash->{rest} = {success => "1",};
         return;
     }
