@@ -123,7 +123,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "Westcott" || $_ eq "Analysis" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "RCD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "Westcott" || $_ eq "Analysis" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -132,6 +132,13 @@ has 'replicated_accession_no' => (isa => 'Int', is => 'rw', predicate => 'has_re
 
 has 'unreplicated_accession_no' => (isa => 'Maybe[Int]', is => 'rw', predicate => 'has_unreplicated_accession_no');
 
+has 'tempfile' => (isa => "Str", is => 'rw', required => 0);
+
+has 'backend' => (isa => "Str", is => 'rw', required => 0);
+
+has 'submit_host' => (isa => "Str", is => 'rw', required => 0);
+
+has 'temp_base' => (isa => "Str", is => 'rw', required => 0);
 
 sub get_design {
     my $self = shift;
@@ -171,7 +178,7 @@ sub isint{
 sub validate_field_colNumber {
     my $colNum = shift;
     if (isint($colNum)){
-	
+
 	return $colNum;
     } else {
 	die "Choose a different row number for field map generation. The product of number of stocks and rep when divided by row number should give an integer\n";

@@ -273,6 +273,15 @@ sub generate_experimental_design_POST : Args(0) {
         $trial_name =~ s/[\\\/\s:,"*?<>|]+//;
         $trial_design->set_trial_name($trial_name);
 
+        my $dir = $c->tempfiles_subdir('trial_designs');
+        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"trial_designs/$design_type-XXXXX");
+        my $design_tempfile = $c->config->{basepath}.$filename;
+        # my $design_tempfile = "".$filename;
+        $trial_design->set_tempfile($design_tempfile);
+        $trial_design->set_backend($c->config->{backend});
+        $trial_design->set_submit_host($c->config->{cluster_host});
+        $trial_design->set_temp_base($c->config->{cluster_shared_tempdir});
+
         my $design_created = 0;
         if ($use_same_layout) {
             $design_created = 1;
