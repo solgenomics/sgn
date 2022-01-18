@@ -15,10 +15,6 @@ if(length(args)==0){
     }
 }
 
-
-workdir = dirname(datafile);
-setwd(workdir);
-
 library(agricolae)
 library(blocksdesign)
 
@@ -31,11 +27,16 @@ RCblocks <- data.frame(
 )
 
 RC <- design(treatments, RCblocks)$Design
-RC <- transform(RC, is_a_control = ifelse(RC$treatments %in% controls, TRUE, FALSE))
+RC <- transform(RC, is_a_control = ifelse(RC$treatments %in% controls, 1, 0))
+RC <- RC[order(RC$col),]
 
 CB <- design.rcbd(treatments, r=nRep, serie=serie)$book
-RC <- RC[order(RC$col),]
-RC$plots <- CB$plots
+
+if(serie == 1){ #Use row numbers as plot names to avoid unwanted agricolae plot num pattern
+    RC$plots <- row.names(CB)
+} else {
+    RC$plots <- CB$plots
+}
 TRC <- unname(as.matrix(RC))
 TRC <- t(TRC)
 
