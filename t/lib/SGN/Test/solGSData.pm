@@ -109,9 +109,10 @@ has 'genotyping_protocol_id' => (isa => 'Int',
 
 sub load_plots_list {
     my $self = shift;
+    my $trial_id = shift;
 
     my $list_id = $self->create_plots_list();
-    my $plots = $self->get_plots_names();
+    my $plots = $self->get_plots_names($trial_id);
 
     return  $self->load_list_elems($list_id, $plots, 'plots');
 
@@ -169,9 +170,10 @@ sub create_accessions_list {
 
 sub load_accessions_list {
     my $self = shift;
+    my $trial_id = shift;
 
     my $list_id = $self->create_accessions_list();
-    my $accs = $self->get_accessions_names();
+    my $accs = $self->get_accessions_names($trial_id);
     #my @accs = $accs->[0..34];
 
     return $self->load_list_elems($list_id, $accs, 'accessions');
@@ -243,7 +245,7 @@ sub load_trials_dataset {
 
     my $dt_name = $self->trials_dataset_name;
     my $dataset = $self->create_dataset($dt_name);
-    $dataset->trials([139, 141]);
+    $dataset->trials($self->trials_ids);
     $dataset->store();
 
     return {'dataset_name' => $dataset->name,
@@ -253,10 +255,13 @@ sub load_trials_dataset {
 
 sub load_accessions_dataset {
     my $self = shift;
+    my $trial_id = shift;
+
+   $trial_id = $self->default_accessions_trial if !$trial_id;
 
     my $dt_name = $self->accessions_dataset_name;
     my $dataset = $self->create_dataset($dt_name);
-    $dataset->trials([139]);
+    $dataset->trials([$trial_id]);
 
     $dataset->accessions($self->get_accessions_ids);
     $dataset->is_live(1);
@@ -269,10 +274,13 @@ sub load_accessions_dataset {
 
 sub load_plots_dataset {
     my $self = shift;
+    my $trial_id = shift;
+
+    $trial_id = $self->default_plots_trial if !$trial_id;
 
     my $dt_name = $self->plots_dataset_name;
     my $dataset = $self->create_dataset($dt_name);
-    $dataset->trials([139]);
+    $dataset->trials([$trial_id]);
 
     $dataset->plots($self->get_plots_ids);
     $dataset->is_live(1);
@@ -358,8 +366,6 @@ sub accessions_list {
     my $self = shift;
     my $trial_id = shift;
 
-    $trial_id = 139 if !$trial_id;
-
     my $trial =  my $trial = $self->get_trial_obj($trial_id);
     my $accessions = $trial->get_accessions();
 
@@ -370,8 +376,6 @@ sub accessions_list {
 sub plots_list {
     my $self = shift;
     my $trial_id = shift;
-
-    $trial_id = 139 if !$trial_id;
 
     my $trial = $self->get_trial_obj($trial_id);
     my $plots =  $trial->get_plots();
@@ -391,11 +395,29 @@ sub get_trial_obj {
 
 }
 
-sub get_plots_ids {
+
+sub default_plots_trial {
     my $self = shift;
 
-    my $trials_ids = $self->trials_ids;
-    my $plots = $self->plots_list($trials_ids->[0]);
+    my $trials_ids  = $self->trials_ids;
+    return $trials_ids->[0]; #trial Kasese solgs trial (139)
+
+}
+
+sub default_accessions_trial {
+    my $self = shift;
+
+    my $trials_ids  = $self->trials_ids;
+    return $trials_ids->[1]; #trial2 NaCRRI (141)
+
+}
+
+sub get_plots_ids {
+    my $self = shift;
+    my $trial_id = shift;
+
+    $trial_id = $self->default_plots_trial if !$trial_id;
+    my $plots = $self->plots_list($trial_id);
 
     my @plots_ids;
     foreach my $pl (@$plots){
@@ -408,9 +430,10 @@ sub get_plots_ids {
 
 sub get_plots_names {
     my $self = shift;
+    my $trial_id = shift;
 
-    my $trials_ids = $self->trials_ids;
-    my $plots = $self->plots_list($trials_ids->[0]);
+    $trial_id = $self->default_plots_trial if !$trial_id;
+    my $plots = $self->plots_list($trial_id);
 
     my @plots_names;
     foreach my $pl (@$plots){
@@ -423,9 +446,11 @@ sub get_plots_names {
 
 sub get_accessions_ids {
     my $self = shift;
+    my $trial_id = shift;
 
-    my $trials_ids = $self->trials_ids;
-    my $accessions = $self->accessions_list($trials_ids->[0]);
+    $trial_id = $self->default_accessions_trial if !$trial_id;
+
+    my $accessions = $self->accessions_list($trial_id);
 
     my @accessions_ids;
     foreach my $acc (@$accessions){
@@ -438,9 +463,11 @@ sub get_accessions_ids {
 
 sub get_accessions_names {
     my $self = shift;
+    my $trial_id = shift;
 
-    my $trials_ids = $self->trials_ids;
-    my $accessions = $self->accessions_list($trials_ids->[0]);
+    $trial_id = $self->default_accessions_trial if !$trial_id;
+
+    my $accessions = $self->accessions_list($trial_id);
 
     my @accessions_names;
     foreach my $acc (@$accessions){
