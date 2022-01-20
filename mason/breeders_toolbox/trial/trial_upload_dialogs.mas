@@ -258,7 +258,7 @@ $design_types => ()
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Plants per Plot: </label> 
+                                    <label class="col-sm-3 control-label">Plants per Plot: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="trial_upload_plant_entries" name="trial_upload_plant_entries" type="text" />
                                         <p><i>Creates plant entries for each plot. Ignore if not adding plant entries.</i></p>
@@ -295,6 +295,8 @@ $design_types => ()
 %        $method = 'CRD';
 %    } elsif ($type eq 'Complete Block'){
 %        $method = 'RCBD';
+%    } elsif ($type eq 'Resolvable Row-Column'){
+%        $method = 'RRC';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){
