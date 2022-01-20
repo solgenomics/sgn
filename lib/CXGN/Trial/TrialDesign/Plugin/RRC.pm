@@ -100,7 +100,7 @@ sub create_design {
   print STDERR "running R command $cmd...\n";
   $ctr->run_cluster($cmd);
   while ($ctr->alive()) {
-    print STDERR "R process still running ...\n";
+    # print STDERR "R process still running ...\n";
     sleep(1);
   }
 
@@ -111,11 +111,9 @@ sub create_design {
   if ( -e $design_file) {
       my @lines = read_file($design_file);
       chomp(@lines);
-      print STDERR Dumper @lines;
-
+      # print STDERR Dumper @lines;
       my $header_line = shift(@lines);
       @block_numbers = split('\t', shift(@lines));
-      print STDERR "Block numbers are: @block_numbers\n";
       @fieldmap_row_numbers = split('\t', shift(@lines));
       @col_number_fieldmaps = split('\t', shift(@lines));
       @plot_numbers = split('\t', shift(@lines));
@@ -123,11 +121,28 @@ sub create_design {
       @is_a_control = split('\t', shift(@lines));
   }
 
-
   if ($plot_layout_format eq "serpentine") {
-      my @serpentine_pattern = (1..$fieldmap_row_number, reverse 1..$fieldmap_row_number);
-      my $pattern_repetitions = $fieldmap_col_number / 2;
-      @fieldmap_row_numbers = map @serpentine_pattern, 1..$pattern_repetitions;
+      my @serpentine_plot_numbers = ();
+      my @plot_numbers_to_be_reversed = ();
+
+      for my $index (0 .. $#plot_numbers) {
+          if ($col_number_fieldmaps[$index] %2 == 0) {
+              # save plot numbers from even numbered columns for reversal
+              push @plot_numbers_to_be_reversed, $plot_numbers[$index];
+          } else {
+              # use plot numbers from odd numbered as is
+              if ($fieldmap_row_numbers[$index] == 1) {
+                  # if in first row of new odd column, push last even column reversal
+                  @serpentine_plot_numbers = (@serpentine_plot_numbers, reverse @plot_numbers_to_be_reversed);
+                  @plot_numbers_to_be_reversed = ();
+                  push @serpentine_plot_numbers, $plot_numbers[$index];
+              } else {
+                  push @serpentine_plot_numbers, $plot_numbers[$index];
+              }
+          }
+      }
+      @serpentine_plot_numbers = (@serpentine_plot_numbers, reverse @plot_numbers_to_be_reversed);
+      @plot_numbers = @serpentine_plot_numbers;
   }
 
     my %seedlot_hash;
