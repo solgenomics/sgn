@@ -468,6 +468,7 @@ sub _validate_with_plugin {
   my %valid_design_types = (
     "CRD" => 1,
     "RCBD" => 1,
+    "RRC" => 1,
     "Alpha" => 1,
     "Lattice" => 1,
     "Augmented" => 1,
@@ -517,13 +518,13 @@ sub _validate_with_plugin {
       @accessions = grep !/$matched_synonym/, @accessions;
       push @accessions, $found_acc_name_from_synonym;
   }
-  
+
   #now validate again the accession names
   $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
-  
+
   my @accessions_missing = @{$accessions_hashref->{'missing'}};
   my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
-  
+
   if (scalar(@accessions_missing) > 0) {
       # $errors{'missing_accessions'} = \@accessions_missing;
       push @error_messages, "Accession(s) <b>".join(',',@accessions_missing)."</b> are not in the database as uniquenames or synonyms.";

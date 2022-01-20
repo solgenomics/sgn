@@ -184,7 +184,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $use_same_layout = $c->req->param('use_same_layout');
     my $number_of_checks = scalar(@control_names_crbd);
 
-    if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
+    if ($design_type eq "RCBD" || $design_type eq "RRC" || $design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
         if (@control_names_crbd) {
             @stock_names = (@stock_names, @control_names_crbd);
         }
@@ -272,6 +272,15 @@ sub generate_experimental_design_POST : Args(0) {
         #strip name of any invalid filename characters
         $trial_name =~ s/[\\\/\s:,"*?<>|]+//;
         $trial_design->set_trial_name($trial_name);
+
+        my $dir = $c->tempfiles_subdir('trial_designs');
+        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"trial_designs/$design_type-XXXXX");
+        my $design_tempfile = $c->config->{basepath}.$filename;
+        # my $design_tempfile = "".$filename;
+        $trial_design->set_tempfile($design_tempfile);
+        $trial_design->set_backend($c->config->{backend});
+        $trial_design->set_submit_host($c->config->{cluster_host});
+        $trial_design->set_temp_base($c->config->{cluster_shared_tempdir});
 
         my $design_created = 0;
         if ($use_same_layout) {
@@ -650,7 +659,7 @@ sub save_experimental_design_POST : Args(0) {
     }
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
-    
+
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
