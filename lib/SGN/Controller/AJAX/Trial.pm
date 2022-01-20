@@ -655,9 +655,9 @@ sub save_experimental_design_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $save->{'trial_id'}, experiment_type => 'field_layout' });
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $chado_schema, trial_id => $save->{'trial_id'}, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
-    
+
     $c->stash->{rest} = {success => "1", trial_id => $save->{'trial_id'}};
     return;
 }
