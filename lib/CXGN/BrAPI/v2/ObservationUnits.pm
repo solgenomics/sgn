@@ -170,7 +170,7 @@ sub search {
         while( my $r = $sp_rs->next()){
             $geolocation_lookup{$r->stock_id} = $r->value;
         }
-        my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{observationunit_stock_id}} ?$geolocation_lookup{$obs_unit->{observationunit_stock_id}} : '';
+        my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{observationunit_stock_id}} ?$geolocation_lookup{$obs_unit->{observationunit_stock_id}} : undef;
         my $geo_coordinates; 
 
         if ($geo_coordinates_string){
@@ -491,28 +491,30 @@ sub observationunits_update {
         }
 
         #Update: geo coordinates
-        my $geo_coordinates = $observationUnit_position_arrayref->{geoCoordinates} || "";
-        my $geno_json_string = encode_json $geo_coordinates;
+        my $geo_coordinates = $observationUnit_position_arrayref->{geoCoordinates} || undef;
+        if($geo_coordinates) {
+        
+            my $geno_json_string = encode_json $geo_coordinates;
 
-        #sub upload coordinates
-        my $upload_plot_gps_txn = sub {
+            #sub upload coordinates
+            my $upload_plot_gps_txn = sub {
 
-            my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>$observation_unit_db_id}});
+                my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>$observation_unit_db_id}});
 
-            while (my $plot=$plots_rs->next){
-                my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
-                $previous_plot_gps_rs->delete_all();
-                $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
+                while (my $plot=$plots_rs->next){
+                    my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
+                    $previous_plot_gps_rs->delete_all();
+                    $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
+                }
+            };
+
+            eval {
+                $schema->txn_do($upload_plot_gps_txn);
+            };
+            if ($@) {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to upload trial plot GPS coordinates. ($@)'));
             }
-        };
-
-        eval {
-            $schema->txn_do($upload_plot_gps_txn);
-        };
-        if ($@) {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to upload trial plot GPS coordinates. ($@)'));
         }
-
 
         #update stockprops
         if ($level_number){
