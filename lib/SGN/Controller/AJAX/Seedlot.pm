@@ -269,7 +269,7 @@ sub seedlot_verify_delete_by_list :Path('/ajax/seedlots/verify_delete_by_list') 
     }
 
     print STDERR "DELETE VERIFY USING LIST!\n";
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($ok, $errors) = CXGN::Stock::Seedlot->delete_verify_using_list($schema, $phenome_schema, $list_id);
@@ -297,7 +297,7 @@ sub seedlot_confirm_delete_by_list :Path('/ajax/seedlots/confirm_delete_by_list'
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my ($total_count, $delete_count, $errors) = CXGN::Stock::Seedlot->delete_using_list($schema, $phenome_schema, $list_id);
 
-    if (@$errors) { 
+    if (@$errors) {
 	$c->stash->{rest} = { error => join("\n", @$errors), total_count => $total_count, delete_count => $delete_count }
     }
     else {
@@ -312,6 +312,10 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $c = shift;
     if (!$c->user){
         $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
+        $c->detach();
+    }
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => "You do not have the correct submitter or curator role to add seedlots. Please contact us." };
         $c->detach();
     }
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -1226,7 +1230,7 @@ sub seedlot_maintenance_ontology : Path('/ajax/breeders/seedlot/maintenance/onto
 #           - value: value of the seedlot maintenance event
 #           - notes: additional notes/comments about the event
 #           - operator: username of the person creating the event
-#           - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
+#           - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
 #
 sub seedlot_maintenance_event_search : Path('/ajax/breeders/seedlot/maintenance/search') : ActionClass('REST') { }
 sub seedlot_maintenance_event_search_POST {
@@ -1303,8 +1307,8 @@ sub seedlot_maintenance_event_overdue_POST {
 #           - value: value of the seedlot maintenance event
 #           - notes: additional notes/comments about the event
 #           - operator: username of the person creating the event
-#           - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format) 
-# 
+#           - timestamp: timestamp string of when the event was created ('YYYY-MM-DD HH:MM:SS' format)
+#
 sub seedlot_maintenance_events : Chained('seedlot_base') PathPart('maintenance') Args(0) : ActionClass('REST') { }
 sub seedlot_maintenance_events_GET {
     my $self = shift;
@@ -1329,10 +1333,10 @@ sub seedlot_maintenance_events_GET {
 #       - notes: (optional) additional notes/comments about the event
 #       - operator: (optional, default=username of user making request) username of the person creating the event
 #       - timestamp: (optional, default=now) timestamp of when the event was created (YYYY-MM-DD HH:MM:SS format)
-# RETURNS: 
+# RETURNS:
 #   events: the processed events stored in the database, an array of objects with the following keys:
 #       - stock_id: stock id of the seedlot
-#       - stockprop_id: seedlot maintenance event id (stockprop_id) 
+#       - stockprop_id: seedlot maintenance event id (stockprop_id)
 #       - cvterm_id: id of seedlot maintenance event ontology term
 #       - cvterm_name: name of seedlot maintenance event ontology term
 #       - value: value of seedlot maintenance event
@@ -1368,7 +1372,7 @@ sub seedlot_maintenance_events_POST {
 
     # Process each Event
     my @args = ();
-    foreach my $event (@$events) {        
+    foreach my $event (@$events) {
 
         # Set operator
         my $operator = $event->{operator} || $c->user()->get_object()->get_username();
@@ -1382,7 +1386,7 @@ sub seedlot_maintenance_events_POST {
             my $d = DateTime->now(time_zone => 'local');
             $timestamp = $d->strftime("%Y-%m-%d %H:%M:%S");
         }
-        
+
         # Build event arguments
         my %arg = (
             cvterm_id => $event->{cvterm_id},
@@ -1409,14 +1413,14 @@ sub seedlot_maintenance_events_POST {
 }
 
 
-# 
+#
 # Get the details of the single specified Maintenance Event from the specified Seedlot
 # PATH: GET /ajax/breeders/seedlot/{seedlot id}/maintenance/{event id}
 # RETURNS:
 #   event: the details of the specified event, with the following keys:
 #       - stock_id: the unique id of the seedlot
 #       - uniquename: the unique name of the seedlot
-#       - stockprop_id: seedlot maintenance event id (stockprop_id) 
+#       - stockprop_id: seedlot maintenance event id (stockprop_id)
 #       - cvterm_id: id of seedlot maintenance event ontology term
 #       - cvterm_name: name of seedlot maintenance event ontology term
 #       - value: value of seedlot maintenance event
@@ -1435,7 +1439,7 @@ sub seedlot_maintenance_event_GET {
     $c->stash->{rest} = { event => $event };
 }
 
-# 
+#
 # Delete the specified event from the database
 # PATH: DELETE /ajax/breeders/seedlot/{seedlot id}/maintenance/{event id}
 # RETURNS:
@@ -1523,8 +1527,8 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
 
         # Parse the file
         my $parser = CXGN::Stock::Seedlot::ParseUpload->new(
-            chado_schema => $schema, 
-            filename => $archived_filepath, 
+            chado_schema => $schema,
+            filename => $archived_filepath,
             event_ontology_root => $c->config->{seedlot_maintenance_event_ontology_root}
         );
         $parser->load_plugin('SeedlotMaintenanceEventXLS');
@@ -1542,10 +1546,10 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
                 foreach my $error_string(@{$parse_errors->{'error_messages'}}) {
                     $return_error .= $error_string."<br>";
                 }
-                $c->stash->{rest} = { 
-                    error => $return_error, 
+                $c->stash->{rest} = {
+                    error => $return_error,
                     missing_seedlots => $parse_errors->{'missing_seedlots'},
-                    missing_events => $parse_errors->{'missing_events'} 
+                    missing_events => $parse_errors->{'missing_events'}
                 };
                 $c->detach();
             }
