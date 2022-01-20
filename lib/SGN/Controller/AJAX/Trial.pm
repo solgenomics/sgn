@@ -649,14 +649,14 @@ sub save_experimental_design_POST : Args(0) {
         }
     }
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $chado_schema, trial_id => $save->{'trial_id'}, experiment_type => 'field_layout' });
-    $trial_layout->generate_and_cache_layout();
+    # my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $chado_schema, trial_id => $save->{'trial_id'}, experiment_type => 'field_layout' });
+    # $trial_layout->generate_and_cache_layout();
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
     
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
 
     $c->stash->{rest} = {success => "1", trial_id => $save->{'trial_id'}};
