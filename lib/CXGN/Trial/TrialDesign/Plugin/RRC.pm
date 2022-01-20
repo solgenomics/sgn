@@ -1,5 +1,5 @@
 
-package CXGN::Trial::TrialDesign::Plugin::RCD;
+package CXGN::Trial::TrialDesign::Plugin::RRC;
 
 use File::Slurp;
 use CXGN::Tools::Run;
@@ -8,7 +8,7 @@ use Data::Dumper;
 
 sub create_design {
   my $self = shift;
-  my %rcd_design;
+  my %rrc_design;
   my $rbase = R::YapRI::Base->new();
   my $stock_list;
   my @stock_list;
@@ -86,7 +86,7 @@ sub create_design {
   close($F);
 
 
-  my $cmd = "R CMD BATCH  '--args paramfile=\"".$tempfile.".params\"' " .  " R/row_column_design.R ".$tempfile.".out";
+  my $cmd = "R CMD BATCH  '--args paramfile=\"".$tempfile.".params\"' " .  " R/rrc_design.R ".$tempfile.".out";
 
   my $backend = 'Slurm';
   my $cluster_host = "localhost";
@@ -153,10 +153,10 @@ sub create_design {
       $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
       $plot_info{'col_number'} = $col_number_fieldmaps[$i];
     }
-    $rcd_design{$plot_numbers[$i]} = \%plot_info;
+    $rrc_design{$plot_numbers[$i]} = \%plot_info;
   }
-  %rcd_design = %{$self->_build_plot_names(\%rcd_design)};
-  return \%rcd_design;
+  %rrc_design = %{$self->_build_plot_names(\%rrc_design)};
+  return \%rrc_design;
 }
 
 1;

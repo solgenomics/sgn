@@ -1004,17 +1004,17 @@ jQuery(document).ready(function ($) {
         var stock_type = jQuery('#select_stock_type').val();
 
         if (design_method == "CRD"){
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a completely randomized design with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Completely Randomized design (CRD) with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
         } else if (design_method == "RCBD") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Randomized Complete Block Design, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
-        } else if (design_method == "RCD") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Row Column Design, using the blocksdesign package in R. In addition to the one-way blocks it adds a constraint that no treatment may appear more than once in each row (latinization). Each row becomes an incomplete block.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Randomized Complete Block design (RCBD), using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "RRC") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Resolvable Row-Column design (RRC), using the blocksdesign package in R. In addition to the one-way blocks it adds a constraint that no treatment may appear more than once in each row (latinization). Each row becomes an incomplete block.</p></div>');
         } else if (design_method == "Alpha") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Alpha design starting from design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Lattice") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>SIMPLE and TRIPLE lattice designs. Randomizes treatments in K x K lattice. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates SIMPLE and TRIPLE lattice designs using the design.lattice function from the agricolae R package. Randomizes treatments in K x K lattice. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Augmented") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Some  treatments  (checks)  are  replicated  r  times  and  other  treatments  (new)  are replicated once. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Augmented design. Some treatments (checks) are replicated r times and other treatments (new) are replicated once. Creates plot entities in the database.</p></div>');
         } else if (design_method == "MAD") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Adjustments are calculated using data from all checks. Creates plot entities in the database.</p></div>');
         } else if (design_method == "greenhouse") {
@@ -1186,7 +1186,7 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
-        } else if (design_method == "RCD") {
+        } else if (design_method == "RRC") {
             if (stock_type == "accession") {
                 $("#show_list_of_accession_section").show();
                 $("#show_list_of_cross_section").hide();

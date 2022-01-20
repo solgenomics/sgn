@@ -20,29 +20,31 @@ library(blocksdesign)
 
 source(paramfile)
 
-RCblocks <- data.frame(
+RRCblocks <- data.frame(
   block = gl(nRep,length(treatments)),
   row = gl(nRow,1),
   col = gl(nCol,nRow)
 )
 
-RC <- design(treatments, RCblocks)$Design
-RC <- transform(RC, is_a_control = ifelse(RC$treatments %in% controls, 1, 0))
-RC <- RC[order(RC$col),]
+RRC <- design(treatments, RRCblocks)$Design
+RRC <- transform(RRC, is_a_control = ifelse(RRC$treatments %in% controls, 1, 0))
+RRC <- RRC[order(RRC$col),]
 
-CB <- design.rcbd(treatments, r=nRep, serie=serie)$book
+RCBD <- design.rcbd(treatments, r=nRep, serie=serie)$book
 
 if(serie == 1){ #Use row numbers as plot names to avoid unwanted agricolae plot num pattern
-    RC$plots <- row.names(CB)
+    RRC$plots <- row.names(RCBD)
 } else {
-    RC$plots <- CB$plots
+    RRC$plots <- RCBD$plots
 }
-TRC <- unname(as.matrix(RC))
-TRC <- t(TRC)
+
+#Transform to make each column (block#, row#, col#, etc) a row so perl can parse the design file line by line
+TRRC <- unname(as.matrix(RRC))
+TRRC <- t(TRRC)
 
 # save result files
 basefile <- tools::file_path_sans_ext(paramfile)
 outfile = paste(basefile, ".design", sep="");
 sink(outfile)
-write.table(TRC, quote=F, sep='\t', row.names=FALSE)
+write.table(TRRC, quote=F, sep='\t', row.names=FALSE)
 sink();
