@@ -160,6 +160,13 @@ sub generate_experimental_design_POST : Args(0) {
         }
     }
 
+    if ($design_type eq 'RRC'){
+        if (!$fieldmap_row_number){
+            $c->stash->{rest} = { error => "You need to provide number of rows for a resolvable row-column design."};
+            return;
+        }
+    }
+
     my $row_in_design_number = $c->req->param('row_in_design_number');
     my $col_in_design_number = $c->req->param('col_in_design_number');
     my $no_of_rep_times = $c->req->param('no_of_rep_times');

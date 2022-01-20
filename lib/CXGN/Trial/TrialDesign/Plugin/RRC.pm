@@ -52,13 +52,13 @@ sub create_design {
   if ($self->has_fieldmap_col_number()) {
     $fieldmap_col_number = $self->get_fieldmap_col_number();
   }
-  if ($self->has_fieldmap_row_number()) {
-    $fieldmap_row_number = $self->get_fieldmap_row_number();
-    print STDERR "Stock number is ".scalar(@stock_list)." and block number is $number_of_blocks and row number is $fieldmap_row_number\n";
-    my $colNumber = ((scalar(@stock_list) * $number_of_blocks)/$fieldmap_row_number);
-    print STDERR "colNumber is $colNumber\n";
-    $fieldmap_col_number = CXGN::Trial::TrialDesign::validate_field_colNumber($colNumber);
-  }
+
+  $fieldmap_row_number = $self->get_fieldmap_row_number();
+  print STDERR "Stock number is ".scalar(@stock_list)." and block number is $number_of_blocks and row number is $fieldmap_row_number\n";
+  my $colNumber = ((scalar(@stock_list) * $number_of_blocks)/$fieldmap_row_number);
+  print STDERR "colNumber is $colNumber\n";
+  $fieldmap_col_number = CXGN::Trial::TrialDesign::validate_field_colNumber($colNumber);
+
   if ($self->has_plot_layout_format()) {
     $plot_layout_format = $self->get_plot_layout_format();
   }
