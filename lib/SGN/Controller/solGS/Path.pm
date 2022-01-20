@@ -44,7 +44,7 @@ sub training_page_url {
 sub trial_page_url {
 	my ($self, $trial_id) = @_;
 
-    return "/breeders_toolbox/trial/$trial_id";
+    return "/breeders/trial/$trial_id";
 
 }
 
