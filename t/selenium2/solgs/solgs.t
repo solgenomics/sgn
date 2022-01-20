@@ -6,9 +6,47 @@ use lib 't/lib';
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
+use SGN::Test::solGSData;
+
 
 my $d = SGN::Test::WWW::WebDriver->new();
-#my $f = SGN::Test::Fixture->new();
+my $f = SGN::Test::Fixture->new();
+
+my $solgs_data = SGN::Test::solGSData->new();
+
+my $accessions_list =  $solgs_data->load_accessions_list(141);
+my $accessions_list_name = $accessions_list->{list_name};
+my $accessions_list_id = $accessions_list->{list_id};
+
+my $plots_list =  $solgs_data->load_plots_list(139);
+my $plots_list_name = $plots_list->{list_name};
+my $plots_list_id = $plots_list->{list_id};
+print STDERR "\nadding trials list\n";
+my $trials_list =  $solgs_data->load_trials_list();
+my $trials_list_name = $trials_list->{list_name};
+my $trials_list_id = $trials_list->{list_id};
+print STDERR "\nadding trials dataset\n";
+my $trials_dt = $solgs_data->load_trials_dataset();
+my $trials_dt_name = $trials_dt->{dataset_name};
+my $trials_dt_id = $trials_dt->{dataset_id};
+print STDERR "\nadding accessions dataset\n";
+my $accessions_dt = $solgs_data->load_accessions_dataset(141);
+my $accessions_dt_name = $accessions_dt->{dataset_name};
+my $accessions_dt_id = $accessions_dt->{dataset_id};
+
+print STDERR "\nadding plots dataset\n";
+my $plots_dt = $solgs_data->load_plots_dataset(139);
+my $plots_dt_name = $plots_dt->{dataset_name};
+my $plots_dt_id = $plots_dt->{dataset_id};
+
+print STDERR "\ntrials dt: $trials_dt_name -- $trials_dt_id\n";
+print STDERR "\naccessions dt: $accessions_dt_name -- $accessions_dt_id\n";
+print STDERR "\nplots dt: $plots_dt_name -- $plots_dt_id\n";
+
+print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
+print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
+print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
+
 `rm -r /tmp/localhost/`;
 sleep(5);
 
@@ -141,7 +179,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="34 clones"]', 'xpath', 'list sl pop')->click();
+    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(15);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
@@ -161,7 +199,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(10);
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="34 clones"]', 'xpath', 'select list sl pop')->click();
+    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_list_name. '"]',  'xpath', 'select list sl pop')->click();
     sleep(15);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
@@ -188,7 +226,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(12);
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="Dataset Kasese Clones"]', 'xpath', 'dataset')->click();
+    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'dataset')->click();
     sleep(10);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select dataset sel pop')->click();
     sleep(5);
@@ -208,7 +246,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="Dataset Kasese Clones"]', 'xpath', 'select list sl pop')->click();
+    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
      sleep(10);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
@@ -280,7 +318,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->go_back();
     sleep(6);
 
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="34 clones"]', 'xpath', 'list sl pop')->click();
+    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
@@ -295,7 +333,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(150);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="34 clones"]', 'xpath', 'list sl page')->click();
+    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_list_name. '"]',  'xpath', 'list sl page')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
@@ -305,7 +343,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->go_back();
     sleep(5);
 
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="Dataset Kasese Clones"]', 'xpath', 'select list sl pop')->click();
+    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'select list sl pop')->click();
      sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select dataset sel pop')->click();
     sleep(5);
@@ -325,7 +363,7 @@ $d->while_logged_in_as("submitter", sub {
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(5);
-    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="Dataset Kasese Clones"]', 'xpath', 'dataset')->click();
+    $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'dataset')->click();
      sleep(10);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'dataset sel pop')->click();
     sleep(5);
