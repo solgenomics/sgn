@@ -55,7 +55,7 @@ $locations_by_program_json
 <& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => ''."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", trial_stock_type => '' &>
 <& /breeders_toolbox/cross/intercross_file_upload.mas &>
 <& /breeders_toolbox/cross/intercross_parents_download.mas &>
-<& /breeders_toolbox/upload_crosses_dialogs.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/cross/upload_crosses_dialogs.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
