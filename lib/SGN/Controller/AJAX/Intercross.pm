@@ -29,13 +29,8 @@ use List::MoreUtils 'none';
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use CXGN::UploadFile;
-use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
-use CXGN::Pedigree::AddProgeny;
-use CXGN::Pedigree::AddProgeniesExistingAccessions;
 use CXGN::Pedigree::AddCrossInfo;
-use CXGN::Pedigree::AddFamilyNames;
-use CXGN::Pedigree::AddPopulations;
 use CXGN::Pedigree::AddCrossTransaction;
 use CXGN::Pedigree::ParseUpload;
 use CXGN::Trial::Folder;
@@ -48,6 +43,7 @@ use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
 use CXGN::Cross;
 use JSON;
+use SGN::Model::Cvterm;
 use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
 use HTML::Entities;
@@ -68,12 +64,14 @@ sub download_parents_file_POST : Args(0) {
     my $c = shift;
     my $female_list_id = $c->req->param("female_list_id");
     my $male_list_id = $c->req->param("male_list_id");
+    my $crossing_experiment_id = $c->req->param("crossing_experiment_id");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $dbh = $c->dbc->dbh;
 
-    my $female_list = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $female_list_id});
+    my $female_list = CXGN::List->new({dbh => $dbh, list_id => $female_list_id});
     my $female_elements = $female_list->retrieve_elements_with_ids($female_list_id);
 
-    my $male_list = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $male_list_id});
+    my $male_list = CXGN::List->new({dbh => $dbh, list_id => $male_list_id});
     my $male_elements = $male_list->retrieve_elements_with_ids($male_list_id);
 
     my @all_rows;
@@ -112,20 +110,16 @@ sub download_parents_file_POST : Args(0) {
     my $user_name = $c->user()->get_object()->get_username();
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my $subdirectory_name = "intercross_parents_files";
+    my $subdirectory_name = "intercross_parents";
     my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
     my $archive_path = $c->config->{archive_path};
     my $file_destination =  catfile($archive_path, $archived_file_name);
     print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
 
-    my $dbh = $c->dbc->dbh();
-    my %errors;
-    my @error_messages;
-
     my $dir = $c->tempfiles_subdir('/download');
     my $rel_file = $c->tempfile( TEMPLATE => 'download/intercross_parentsXXXXX');
     my $tempfile = $c->config->{basepath}."/".$rel_file.".csv";
-    print STDERR "TEMPFILE =".Dumper($tempfile)."\n";
+#    print STDERR "TEMPFILE =".Dumper($tempfile)."\n";
     open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
 
     my @headers = qw(codeId sex name);
@@ -136,7 +130,6 @@ sub download_parents_file_POST : Args(0) {
         my @row_array = ();
         my @row_array = @$row;
         my $csv_format = join(',',@row_array);
-        print STDERR "EACH CSV FORMAT =".Dumper($csv_format)."\n";
         print $FILE $csv_format."\n";
         $parent++;
     }
@@ -177,14 +170,16 @@ sub download_parents_file_POST : Args(0) {
     move($tempfile,$file_destination);
     unlink $tempfile;
 
-    my $result = $file_row->file_id;
+    my %file_metadata;
+    $file_metadata{intercross_parents}{file_id} = $file_id;
+    my $file_metadata_json = encode_json \%file_metadata;
 
-    print STDERR "FILE =".Dumper($file_destination)."\n";
-    print STDERR "FILE ID =".Dumper($file_id)."\n";
+    my $file_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'file_metadata_json', 'project_property');
+    my $crossing_experiment = $schema->resultset("Project::Project")->find({project_id => $crossing_experiment_id});
+    $crossing_experiment->create_projectprops( { $file_metadata_cvterm->name() => $file_metadata_json } );
+
     $c->stash->{rest} = {
         success => 1,
-        result => $result,
-        file => $file_destination,
         file_id => $file_id,
     };
 

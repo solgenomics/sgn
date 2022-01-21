@@ -3,11 +3,11 @@
 
 =head1 NAME
 
- AddFileMetadataCvterm
+ AddFileMetadataJsonCvterm
 
 =head1 SYNOPSIS
 
-mx-run AddFileMetadataCvterm [options] -H hostname -D dbname -u username [-F]
+mx-run AddFileMetadataJsonCvterm [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddFileMetadataCvterm;
+package AddFileMetadataJsonCvterm;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -65,7 +65,7 @@ sub patch {
 
     my $terms = {
         'project_property' => [
-            'file_metadata_j son',
+            'file_metadata_json',
         ]
     };
 
