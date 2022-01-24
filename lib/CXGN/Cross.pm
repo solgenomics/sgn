@@ -1283,7 +1283,6 @@ sub get_cross_additional_info_trial {
         WHERE nd_experiment_project.project_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    my $h = $schema->storage->dbh()->prepare($q);
 
     $h->execute($cross_combination_typeid, $cross_additional_info_typeid, $trial_id);
 
@@ -1343,6 +1342,51 @@ sub get_nd_experiment_id_with_type_cross_experiment {
 
     return $experiment_id;
 }
+
+
+=head2 get_intercross_file_metadata
+
+
+=cut
+
+sub get_intercross_file_metadata {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $crossing_experiment_id = $self->trial_id();
+    my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial', 'project_type')->cvterm_id();
+    my $file_metadata_json_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'file_metadata_json', 'project_property')->cvterm_id;
+
+    my $projectprop_rs = $schema->resultset("Project::Projectprop")->find({ project_id => $crossing_experiment_id, type_id => $file_metadata_json_type_id });
+    my $file_metadata_json = $projectprop_rs->value();
+
+    my @file_ids;
+    my @file_info = ();
+    my $dbh = $schema->storage->dbh();
+    if ($file_metadata_json){
+        my $file_metadata_ref = decode_json$file_metadata_json;
+        my %file_metadata = %{$file_metadata_ref};
+        @file_ids = keys %file_metadata;
+        if (scalar @file_ids > 0) {
+            foreach my $id (@file_ids){
+                my @each_row = ();
+                my $q = "SELECT f.file_id, m.create_date, p.sp_person_id, p.username, f.basename, f.dirname, f.filetype
+                    FROM metadata.md_files AS f
+                    JOIN metadata.md_metadata as m ON (f.metadata_id = m.metadata_id)
+                    JOIN sgn_people.sp_person as p ON (p.sp_person_id = m.create_person_id) WHERE f.file_id = ?
+                   ORDER BY f.file_id ASC";
+
+                my $h = $dbh->prepare($q);
+                $h->execute($id);
+                @each_row = $h->fetchrow_array();
+                push @file_info, [@each_row];
+            }
+        }
+    }
+
+    return \@file_info;
+
+}
+
 
 
 1;

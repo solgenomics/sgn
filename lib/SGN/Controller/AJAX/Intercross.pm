@@ -171,7 +171,7 @@ sub download_parents_file_POST : Args(0) {
     unlink $tempfile;
 
     my %file_metadata;
-    $file_metadata{intercross_parents}{file_id} = $file_id;
+    $file_metadata{$file_id}{'file_type'} = 'intercross_parents';
     my $file_metadata_json = encode_json \%file_metadata;
 
     my $file_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'file_metadata_json', 'project_property');

@@ -1,0 +1,34 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<table class="table table-hover table-bordered" id="intercross_files_table">
+</table>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+jQuery('#intercross_section_onswitch').click(function(){
+
+    jQuery('#intercross_files_table').DataTable({
+        'ajax': { 'url': '/ajax/breeders/trial/<% $trial_id %>/intercross_file_metadata' },
+        columns: [
+            { title: "Filename", "data": null, "render": function ( data, type, row ) { return row[4]; } },
+            { title: "Create Date", "data": null, "render": function ( data, type, row ) { return row[1]; } },
+            { title: "Created By", "data": null, "render": function ( data, type, row ) { return '<a href="/solpeople/profile/'+row[2]+'">'+row[3]+'</a>'; } },
+            { title: "File Type", "data": null, "render": function ( data, type, row ) { return row[6]; } },
+            { title: "Options", "data": null, "render": function ( data, type, row ) { return '<a href="/breeders/phenotyping/view/'+row[0]+'">View</a> | <a href="/breeders/phenotyping/download/'+row[0]+'">Download</a>'; } },
+        ]
+    });
+
+});
+
+
+});
+
+</script>
