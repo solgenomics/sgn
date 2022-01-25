@@ -1,0 +1,128 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<style>
+@media (min-width: 768px) {
+    .modal-xl {
+        width: 90%;
+        max-width:1200px;
+    }
+}
+</style>
+
+<div class="modal fade" id="intercross_wishlist_download_dialog" name="intercross_wishlist_download_dialog" tabindex="-1" role="dialog" aria-labelledby="intercrossWishlistDownloadDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossWishlistDownloadDialog">Create Intercross Wishlist</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">Female parents:</label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="wishlist_female_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">Male parents:</label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="wishlist_male_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id ="intercross_wishlist_form_div">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var crossing_experiment_id = "<% $trial_id %>";
+    var lo = new CXGN.List();
+
+    jQuery('#wishlist_female_list_select').html(lo.listSelect('wishlist_female_list_select', ['accessions'], 'Select a list of female parents', undefined, undefined));
+    jQuery('#wishlist_male_list_select').html(lo.listSelect('wishlist_male_list_select', ['accessions'], 'Select a list of male parents', undefined, undefined));
+
+    jQuery('#download_intercross_wishlist').click(function(){
+        jQuery('#intercross_wishlist_download_dialog').modal("show");
+    });
+
+    jQuery(document).on('change', "#wishlist_male_list_select", function() {
+        wishlist_form();
+    });
+
+    function wishlist_form () {
+    var female_list_id = jQuery('#wishlist_female_list_select').val();
+    var female_list = lo.getList(female_list_id);
+
+    var male_list_id = jQuery('#wishlist_male_list_select').val();
+    var male_list = lo.getList(male_list_id);
+
+    var html = '<table class="table table-bordered" id="wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Priority ( 1 : highest, 60 : lowest )</th></tr></thead><tbody>';
+    for(var i=0; i<female_list.length; i++){
+        html = html + '<tr><td>' + female_list[i] + '</td><td><div name="wishlist_male_selects" id="wishlist_male_select_' +i+ '"></div></td><td><span id="male_list_'+ i +'_priority" data-related="'+encodeURI(female_list[i])+'" >Select Male(s)</span></td></tr>';
+    };
+    html = html + '</tbody></table>';
+
+    jQuery('#intercross_wishlist_form_div').html(html);
+
+    var wishlist_male_parents = jQuery('#wishlist_male_select_table')
+         .find("div")
+         .map(function() { return this.id; })
+         .get();
+    for(var i=0; i<wishlist_male_parents.length; i++){
+        var female_id = jQuery('#cross_wishlist_male_accession_id_'+ i +'_priority').data('related');
+        get_select_box('stocks', wishlist_male_parents[i], { 'name' : 'wishlist_male_accession_id_select', 'id' : 'cross_wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'uniquename_list':male_list, 'names_as_select':1});
+    };
+
+    jQuery(document).on('change', "select[name='wishlist_male_accession_id_select']", function() {
+        var div_id = '#' + this.id;
+        var male_ids = jQuery(div_id).val();
+        if (male_ids.length > 0){
+            wishlist_change_males(div_id, div_id + '_priority');
+        }
+    });
+
+    function wishlist_change_males(div_id, select_id){
+        var female_accession_ids = jQuery('#wishlist_female_accession_ids').val();
+        var male_ids = jQuery(div_id).val();
+        var female_id = jQuery(div_id).data('related');
+        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>Priority</th></tr></thead><tbody>';
+        for (var i=0; i<male_ids.length; i++){
+            html = html + '<tr><td>' + male_ids[i] + '</td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '" name ="cross_wishlist_final_priority" id="cross_wishlist_male_priority_'+ i +'" value="1" placeholder="1"/></td></tr>';
+        };
+        html = html + '</tbody></table>';
+        jQuery(select_id).html(html);
+    };
+
+
+
+
+}
+
+
+});
+
+</script>
