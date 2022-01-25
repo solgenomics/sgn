@@ -219,4 +219,8 @@ is($management_factor_type, 'Fertilizer', "check management factors 3");
 is($management_factor_date, '2019-July-01', "check management factors 4");
 
 
+$treatment_project->delete_field_layout();
+$treatment_project->delete_project_entry();
+
+
 done_testing();
