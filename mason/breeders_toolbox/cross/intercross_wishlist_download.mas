@@ -93,8 +93,8 @@ jQuery(document).ready(function(){
          .map(function() { return this.id; })
          .get();
     for(var i=0; i<wishlist_male_parents.length; i++){
-        var female_id = jQuery('#cross_wishlist_male_accession_id_'+ i +'_priority').data('related');
-        get_select_box('stocks', wishlist_male_parents[i], { 'name' : 'wishlist_male_accession_id_select', 'id' : 'cross_wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'uniquename_list':male_list, 'names_as_select':1});
+        var female_id = jQuery('#wishlist_male_accession_id_'+ i +'_priority').data('related');
+        get_select_box('items', wishlist_male_parents[i], { 'name' : 'wishlist_male_accession_id_select', 'id' : 'wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'list_items':male_list, 'names_as_select':1});
     };
 
     jQuery(document).on('change', "select[name='wishlist_male_accession_id_select']", function() {
