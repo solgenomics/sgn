@@ -44,10 +44,11 @@ $mech->get_ok('http://localhost:3010/ajax/solgwas/shared_phenotypes?dataset_id='
 
 my $sp_data = JSON::Any->decode($mech->content());
 
-#my $trait_id = $sp_data->{options}->[0]->[0];
-my $trait_id = 'fresh.root.weight';
+my $trait_id = $sp_data->{options}->[0]->[1];
 
 $mech->get_ok('http://localhost:3010/ajax/solgwas/generate_results?dataset_id='.$dataset_id.'&trait_id='.$trait_id.'&pc_check=0&kinship_check=0', 'run the solgwas analysis');
+
+print STDERR $mech->content();
 
 my $rdata = JSON::Any->decode($mech->content());
 
@@ -55,16 +56,16 @@ print STDERR "RDATA: ".Dumper($rdata);
 
 # check if file names were returned
 #
-ok($rdata->{figure3}, "figure 3 returned");
-ok($rdata->{figure4}, "figure 4 returned");
+ok($rdata->{figure3}, "Manhattan plot returned");
+ok($rdata->{figure4}, "QQ plot returned");
 
 # check if files were created
 #
-ok( -e "static/".$rdata->{figure3}, "figure 3 created");
-ok( -e "static/".$rdata->{figure4}, "figure 4 created");
+ok( -e "static/".$rdata->{figure3}, "Manhattan plot file created");
+ok( -e "static/".$rdata->{figure4}, "QQ plot file created");
 
-ok( -s "static/".$rdata->{figure3} > 10000, "figure 3 has contents");
-ok( -s "static/".$rdata->{figure4} > 10000, "figure 4 has contents");
+ok( -s "static/".$rdata->{figure3} > 10000, "Manhattan plot file has contents");
+ok( -s "static/".$rdata->{figure4} > 10000, "QQ plot file has contents");
 
 # remove changes to the database
 #
