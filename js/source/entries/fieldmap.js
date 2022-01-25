@@ -193,7 +193,7 @@ export function init() {
             final_arr = final_arr.filter(plot => plot !== undefined);
             let order_number = 1;
             final_arr.forEach(function(plot) {
-                    csv += [order_number++, plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A", plot.observationUnitName, plot.germplasmName, plot.observationUnitPosition.entryType].join(',');
+                    csv += [order_number++, plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A", plot.observationUnitName, plot.germplasmName,].join(',');
                     csv += "\n";
             });
     
@@ -552,7 +552,7 @@ export function init() {
                         Plot Name: ${plot.observationUnitName}
                         Plot Number: ${plot.observationUnitPosition.observationLevel.levelCode}
                         Block Number: ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}
-                        Rep Number: ${plot.observationUnitPosition.observationLevelRelationships[2].levelCode}
+                        Rep Number: ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}
                         Accession Name: ${plot.germplasmName}
                     `
                 }
