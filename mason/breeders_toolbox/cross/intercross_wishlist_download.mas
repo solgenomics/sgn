@@ -80,7 +80,7 @@ jQuery(document).ready(function(){
     var male_list_id = jQuery('#wishlist_male_list_select').val();
     var male_list = lo.getList(male_list_id);
 
-    var html = '<table class="table table-bordered" id="wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Priority ( 1 : highest, 60 : lowest )</th></tr></thead><tbody>';
+    var html = '<table class="table table-bordered" id="wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Requirement (type, min, max)</th></tr></thead><tbody>';
     for(var i=0; i<female_list.length; i++){
         html = html + '<tr><td>' + female_list[i] + '</td><td><div name="wishlist_male_selects" id="wishlist_male_select_' +i+ '"></div></td><td><span id="male_list_'+ i +'_priority" data-related="'+encodeURI(female_list[i])+'" >Select Male(s)</span></td></tr>';
     };
@@ -94,7 +94,7 @@ jQuery(document).ready(function(){
          .get();
     for(var i=0; i<wishlist_male_parents.length; i++){
         var female_id = jQuery('#wishlist_male_accession_id_'+ i +'_priority').data('related');
-        get_select_box('items', wishlist_male_parents[i], { 'name' : 'wishlist_male_accession_id_select', 'id' : 'wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'list_items':male_list, 'names_as_select':1});
+        get_select_box('items', wishlist_male_parents[i], { 'name' : 'wishlist_male_accession_id_select', 'id' : 'wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'list_items':male_list, 'names_as_select':1, 'data-related':female_id});
     };
 
     jQuery(document).on('change', "select[name='wishlist_male_accession_id_select']", function() {
@@ -106,12 +106,14 @@ jQuery(document).ready(function(){
     });
 
     function wishlist_change_males(div_id, select_id){
-        var female_accession_ids = jQuery('#wishlist_female_accession_ids').val();
+//        var female_accession_ids = jQuery('#wishlist_female_accession_ids').val();
         var male_ids = jQuery(div_id).val();
+        alert (male_ids);
         var female_id = jQuery(div_id).data('related');
+        alert (female_id);
         var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>Priority</th></tr></thead><tbody>';
         for (var i=0; i<male_ids.length; i++){
-            html = html + '<tr><td>' + male_ids[i] + '</td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '" name ="cross_wishlist_final_priority" id="cross_wishlist_male_priority_'+ i +'" value="1" placeholder="1"/></td></tr>';
+            html = html + '<tr><td>' + male_ids[i] + '</td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '" name ="wishlist_final_priority" id="wishlist_male_priority_'+ i +'" value="1" placeholder="1"/></td></tr>';
         };
         html = html + '</tbody></table>';
         jQuery(select_id).html(html);

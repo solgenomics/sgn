@@ -2124,12 +2124,18 @@ sub get_items_select : Path('/ajax/html/select/items') Args(0) {
     my $items = $params->{list_items},
     my $size = $params->{size};
     my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
-
+    my $data_related = $c->req->param("data-related") || "";
     my $names_as_select = $params->{names_as_select}->[0] || 0;
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+
     my $html = simple_selectbox_html(
         multiple => $multiple,
         choices => $items,
-        size => $size
+        size => $size,
+        data_related => $data_related,
+        id => $id,
+        name => $name
     );
 
     $c->stash->{rest} = { select => $html };
