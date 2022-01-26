@@ -82,7 +82,7 @@ jQuery(document).ready(function(){
 
     var html = '<table class="table table-bordered" id="wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Requirement (type, min, max)</th></tr></thead><tbody>';
     for(var i=0; i<female_list.length; i++){
-        html = html + '<tr><td>' + female_list[i] + '</td><td><div name="wishlist_male_selects" id="wishlist_male_select_' +i+ '"></div></td><td><span id="male_list_'+ i +'_priority" data-related="'+encodeURI(female_list[i])+'" >Select Male(s)</span></td></tr>';
+        html = html + '<tr><td>' + female_list[i] + '</td><td><div name="wishlist_male_selects" id="wishlist_male_select_' +i+ '"></div></td><td><span id="wishlist_male_accession_id_'+ i +'_priority" data-related="'+encodeURI(female_list[i])+'" >Select Male(s)</span></td></tr>';
     };
     html = html + '</tbody></table>';
 
@@ -108,12 +108,10 @@ jQuery(document).ready(function(){
     function wishlist_change_males(div_id, select_id){
 //        var female_accession_ids = jQuery('#wishlist_female_accession_ids').val();
         var male_ids = jQuery(div_id).val();
-        alert (male_ids);
         var female_id = jQuery(div_id).data('related');
-        alert (female_id);
-        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>Priority</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>Type</th><th>Min</th><th>Max</th></tr></thead><tbody>';
         for (var i=0; i<male_ids.length; i++){
-            html = html + '<tr><td>' + male_ids[i] + '</td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '" name ="wishlist_final_priority" id="wishlist_male_priority_'+ i +'" value="1" placeholder="1"/></td></tr>';
+            html = html + '<tr><td>' + male_ids[i] + '</td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '" name ="wishlist_type" id="wishlist_type_'+ i +'" value="" placeholder=""/></td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '"name ="wishlist_min" id="wishlist_min_'+ i +'" value="" placeholder=""/></td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '"name ="wishlist_max" id="wishlist_max_'+ i +'" value="" placeholder=""/></td></tr>';
         };
         html = html + '</tbody></table>';
         jQuery(select_id).html(html);
