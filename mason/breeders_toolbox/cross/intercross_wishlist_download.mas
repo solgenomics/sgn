@@ -16,7 +16,7 @@ $trial_id
 </style>
 
 <div class="modal fade" id="intercross_wishlist_download_dialog" name="intercross_wishlist_download_dialog" tabindex="-1" role="dialog" aria-labelledby="intercrossWishlistDownloadDialog">
-    <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -48,6 +48,12 @@ $trial_id
                             </div>
                         </div>
                     </div>
+                    <div id="wishlist_footer" style="display:none" >
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" id="wishlist_submit" name="wishlist_submit">Create Wishlist</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -74,53 +80,86 @@ jQuery(document).ready(function(){
     });
 
     function wishlist_form () {
-    var female_list_id = jQuery('#wishlist_female_list_select').val();
-    var female_list = lo.getList(female_list_id);
+        var female_list_id = jQuery('#wishlist_female_list_select').val();
+        var female_list = lo.getList(female_list_id);
 
-    var male_list_id = jQuery('#wishlist_male_list_select').val();
-    var male_list = lo.getList(male_list_id);
+        var male_list_id = jQuery('#wishlist_male_list_select').val();
+        var male_list = lo.getList(male_list_id);
 
-    var html = '<table class="table table-bordered" id="wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Requirement (type, min, max)</th></tr></thead><tbody>';
-    for(var i=0; i<female_list.length; i++){
-        html = html + '<tr><td>' + female_list[i] + '</td><td><div name="wishlist_male_selects" id="wishlist_male_select_' +i+ '"></div></td><td><span id="wishlist_male_accession_id_'+ i +'_priority" data-related="'+encodeURI(female_list[i])+'" >Select Male(s)</span></td></tr>';
-    };
-    html = html + '</tbody></table>';
+        var html = '<table class="table table-bordered" id="wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Info (type, min, max)</th></tr></thead><tbody>';
+        for(var i=0; i<female_list.length; i++){
+            html = html + '<tr><td>' + female_list[i] + '</td><td><div name="wishlist_male_selects" id="wishlist_male_select_' +i+ '"></div></td><td><span id="wishlist_male_accession_id_'+ i +'_priority" data-related="'+encodeURI(female_list[i])+'" >Select Male(s)</span></td></tr>';
+        };
+        html = html + '</tbody></table>';
 
-    jQuery('#intercross_wishlist_form_div').html(html);
+        jQuery('#intercross_wishlist_form_div').html(html);
 
-    var wishlist_male_parents = jQuery('#wishlist_male_select_table')
-         .find("div")
-         .map(function() { return this.id; })
-         .get();
-    for(var i=0; i<wishlist_male_parents.length; i++){
-        var female_id = jQuery('#wishlist_male_accession_id_'+ i +'_priority').data('related');
-        get_select_box('items', wishlist_male_parents[i], { 'name' : 'wishlist_male_accession_id_select', 'id' : 'wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'list_items':male_list, 'names_as_select':1, 'data-related':female_id});
+        var wishlist_male_parents = jQuery('#wishlist_male_select_table')
+            .find("div")
+            .map(function() { return this.id; })
+            .get();
+        for(var i=0; i<wishlist_male_parents.length; i++){
+            var female_id = jQuery('#wishlist_male_accession_id_'+ i +'_priority').data('related');
+            get_select_box('items', wishlist_male_parents[i], { 'name' : 'wishlist_male_accession_id_select', 'id' : 'wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'list_items':male_list, 'names_as_select':1, 'data-related':female_id});
+        };
     };
 
     jQuery(document).on('change', "select[name='wishlist_male_accession_id_select']", function() {
         var div_id = '#' + this.id;
-        var male_ids = jQuery(div_id).val();
-        if (male_ids.length > 0){
+        var male_names = jQuery(div_id).val();
+        if (male_names.length > 0){
             wishlist_change_males(div_id, div_id + '_priority');
         }
+
+        jQuery('#wishlist_footer').show();
     });
 
     function wishlist_change_males(div_id, select_id){
-//        var female_accession_ids = jQuery('#wishlist_female_accession_ids').val();
-        var male_ids = jQuery(div_id).val();
-        var female_id = jQuery(div_id).data('related');
-        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>Type</th><th>Min</th><th>Max</th></tr></thead><tbody>';
-        for (var i=0; i<male_ids.length; i++){
-            html = html + '<tr><td>' + male_ids[i] + '</td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '" name ="wishlist_type" id="wishlist_type_'+ i +'" value="" placeholder=""/></td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '"name ="wishlist_min" id="wishlist_min_'+ i +'" value="" placeholder=""/></td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '"name ="wishlist_max" id="wishlist_max_'+ i +'" value="" placeholder=""/></td></tr>';
+        var male_names = jQuery(div_id).val();
+        var female_name = jQuery(div_id).data('related');
+        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>Type, Min, Max</th></tr></thead><tbody>';
+        for (var i=0; i<male_names.length; i++){
+            html = html + '<tr><td>' + male_names[i] + '</td><td><input class="form-control" male_name="' + male_names[i] + '" female_name="' + female_name + '" name ="wishlist_activity_info" id="wishlist_activity_info_'+ i +'" value="" placeholder=""/></td></tr>';
         };
         html = html + '</tbody></table>';
         jQuery(select_id).html(html);
     };
 
+    jQuery('#wishlist_submit').click(function(e){
+        e.preventDefault();
+        wishlist_data = [];
+        jQuery('input[name="wishlist_activity_info"]').each(function() {
+            value = this.value;
+            var male_name = jQuery(this).attr('male_name');
+            var female_name = jQuery(this).attr('female_name');
+            wishlist_data.push({ 'female_name':female_name, 'male_name':male_name, 'activity_info':value });
+        });
 
+        jQuery.ajax({
+            url: '/ajax/intercross/create_intercross_wishlist',
+            method: 'POST',
+            data: {
+                'wishlist_data': JSON.stringify(wishlist_data),
+                'crossing_experiment_id': crossing_experiment_id
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.error){
+                    alert(response.error);
+                } else {
 
-
-}
+                }
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert("An error occurred submitting info for intercross wishlist");
+            }
+        });
+    });
 
 
 });
