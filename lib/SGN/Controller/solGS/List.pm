@@ -152,7 +152,7 @@ sub get_trial_id :Path('/solgs/get/trial/id') Args(0) {
 
     my @trials_names = $c->req->param('trials_names[]');
 
-    my $tr_rs = $c->model('solGS::solGS')->project_details_by_exact_name(\@trials_names);
+    my $tr_rs = $c->controller('solGS::Search')->model($c)->project_details_by_exact_name(\@trials_names);
 
     my @trials_ids;
 
@@ -564,7 +564,7 @@ sub map_plots_genotypes {
     }
     else
     {
-	my $genotypes_rs = $c->model('solGS::solGS')->get_genotypes_from_plots($plots);
+	my $genotypes_rs = $c->controller('solGS::Search')->model($c)->get_genotypes_from_plots($plots);
 
 	my @genotypes;
 	my @genotypes_ids;
@@ -699,7 +699,16 @@ sub genotypes_list_genotype_query_job {
     nstore $args, $args_file
 		or croak "data query script: $! serializing genotype lists genotype query details to $args_file ";
 
-    my $cmd = 'mx-run solGS::queryJobs '
+        my $dbhost = $c->config->{dbhost};
+        my $dbname = $c->config->{dbname};
+        my $dbpass = $c->config->{dbpass};
+        my $dbuser = $c->config->{dbuser};
+
+       my $cmd = 'mx-run solGS::queryJobs '
+        . ' --dbhost ' . $dbhost
+        .' --dbname ' . $dbname
+        .' --dbuser ' . $dbuser
+        .' --dbpass ' . $dbpass
     	. ' --data_type genotype '
     	. ' --population_type ' . $pop_type
     	. ' --args_file ' . $args_file;
@@ -770,10 +779,19 @@ sub plots_list_phenotype_query_job {
     nstore $args, $args_file
 		or croak "data query script: $! serializing data query details to $args_file ";
 
+        my $dbhost = $c->config->{dbhost};
+        my $dbname = $c->config->{dbname};
+        my $dbpass = $c->config->{dbpass};
+        my $dbuser = $c->config->{dbuser};
+
     my $cmd = 'mx-run solGS::queryJobs '
-    	. ' --data_type phenotype '
-    	. ' --population_type plots_list '
-    	. ' --args_file ' . $args_file;
+            . ' --dbhost ' . $dbhost
+            .' --dbname ' . $dbname
+            .' --dbuser ' . $dbuser
+            .' --dbpass ' . $dbpass
+    	    . ' --data_type phenotype '
+    	    . ' --population_type plots_list '
+    	    . ' --args_file ' . $args_file;
 
      my $config_args = {
 	'temp_dir' => $temp_dir,
