@@ -22,6 +22,7 @@ on:
     branches:
       - develop
       - master
+      - bug/BI-1320
   workflow_dispatch:
 
 jobs:
@@ -56,6 +57,10 @@ jobs:
         shell: bash
         run: echo ::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/})
         id: extract_branch
+
+      - name: Checkout sgn branch
+        working-directory: ./breedbase_dockerfile
+        run: cd cxgn/sgn & git status
 
       - name: Set tag
         id: vars
