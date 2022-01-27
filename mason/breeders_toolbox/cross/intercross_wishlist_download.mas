@@ -60,6 +60,31 @@ $trial_id
     </div>
 </div>
 
+<div class="modal fade" id="intercross_wishlist_download_message" name="intercross_wishlist_download_message" tabindex="-1" role="dialog" aria-labelledby="intercrossWishlistDownloadMessage">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossWishlistDownloadMessage">Intercross Wishlist File Created</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The Intercross wishlist file was created successfully.
+                    </p>
+                    <p>
+                        <a id="intercross_wishlist_download_link">Download Intercross Wishlist</a>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="intercross_wishlist_download_close_button" id="intercross_wishlist_download_close_button" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
@@ -144,23 +169,25 @@ jQuery(document).ready(function(){
             },
             dataType:'json',
             beforeSend: function() {
-                jQuery('#working_modal').modal('show');
+                jQuery("#working_modal").modal("show");
             },
             success: function(response) {
-                jQuery('#working_modal').modal('hide');
-                if (response.error){
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
                     alert(response.error);
                 } else {
-
+                    jQuery('#intercross_wishlist_download_link').attr('href', "/fieldbook/trait_file_download/" + response.file_id);
+                    jQuery("#intercross_wishlist_download_message").modal("show");
+                    jQuery('#intercross_wishlist_download_dialog').modal("hide");
                 }
             },
-            error: function(response) {
-                jQuery('#working_modal').modal('hide');
-                alert("An error occurred submitting info for intercross wishlist");
-            }
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred creating the wishlist file.');
+                jQuery('#intercross_wishlist_download_dialog').modal("hide");
+            },
         });
     });
-
 
 });
 

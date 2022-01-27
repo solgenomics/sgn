@@ -285,12 +285,27 @@ sub create_intercross_wishlist_POST : Args(0) {
     unlink $tempfile;
 
     my %file_metadata;
-    $file_metadata{$file_id}{'file_type'} = 'intercross_wishlist';
-    my $file_metadata_json = encode_json \%file_metadata;
-
     my $file_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'file_metadata_json', 'project_property');
+
     my $crossing_experiment = $schema->resultset("Project::Project")->find({project_id => $crossing_experiment_id});
-    $crossing_experiment->create_projectprops( { $file_metadata_cvterm->name() => $file_metadata_json } );
+    my $previous_projectprop_rs = $crossing_experiment->projectprops({type_id=>$file_metadata_cvterm->cvterm_id});
+    if ($previous_projectprop_rs->count == 1){
+        my $file_metadata_string = $previous_projectprop_rs->first->value();
+        print STDERR "PREVIOUS FILE METADATA =".Dumper($file_metadata_string)."\n";
+        my $file_metadata_ref = decode_json $file_metadata_string;
+        %file_metadata = %{$file_metadata_ref};
+        $file_metadata{$file_id}{'file_type'} = 'intercross_wishlist';
+        my $updated_file_metadata_json = encode_json \%file_metadata;
+        print STDERR "NEW METADATA =".Dumper($updated_file_metadata_json)."\n";
+        $previous_projectprop_rs->first->update({value=>$updated_file_metadata_json});
+    } elsif ($previous_projectprop_rs->count > 1) {
+        print STDERR "More than one found!\n";
+        return;
+    } else {
+        $file_metadata{$file_id}{'file_type'} = 'intercross_wishlist';
+        my $file_metadata_json = encode_json \%file_metadata;
+        $crossing_experiment->create_projectprops( { $file_metadata_cvterm->name() => $file_metadata_json } );
+    }
 
     $c->stash->{rest} = {
         success => 1,
