@@ -128,7 +128,7 @@ sub download_parents_file_POST : Args(0) {
     my $parent = 0;
     foreach my $row (@all_rows) {
         my @row_array = ();
-        my @row_array = @$row;
+        @row_array = @$row;
         my $csv_format = join(',',@row_array);
         print $FILE $csv_format."\n";
         $parent++;
@@ -193,7 +193,109 @@ sub create_intercross_wishlist_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $wishlist_data = decode_json $c->req->param('wishlist_data');
     my $crossing_experiment_id = $c->req->param('crossing_experiment_id');
-    print STDERR "DATA =".Dumper($wishlist_data)."\n";
+    my @wishlist_array = @$wishlist_data;
+
+    my @all_combinations;
+    foreach my $wishlist_pair (@wishlist_array) {
+        my @each_combination = ();
+        my $female_name = $wishlist_pair->{'female_name'};
+        my $male_name = $wishlist_pair->{'male_name'};
+        my $info_string = $wishlist_pair->{'activity_info'};
+        my $female_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $female_name});
+        my $female_id = $female_rs->stock_id();
+        my $male_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $male_name});
+        my $male_id = $male_rs->stock_id();
+        my @info_array = split /,/ , $info_string;
+        my $type = $info_array[0];
+        $type =~ s/^\s+|\s+$//g;
+        my $min = $info_array[1];
+        $min =~ s/^\s+|\s+$//g;
+        my $max = $info_array[2];
+        $max =~ s/^\s+|\s+$//g;
+        @each_combination = ($female_id, $male_id, $female_name, $male_name, $type, $min, $max);
+        push @all_combinations, [@each_combination];
+    }
+
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+
+    my $template_file_name = 'intercross_wishlist';
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $subdirectory_name = "intercross_wishlist";
+    my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
+    my $archive_path = $c->config->{archive_path};
+    my $file_destination =  catfile($archive_path, $archived_file_name);
+
+    my $dir = $c->tempfiles_subdir('/download');
+    my $rel_file = $c->tempfile( TEMPLATE => 'download/intercross_wishlistXXXXX');
+    my $tempfile = $c->config->{basepath}."/".$rel_file.".csv";
+#    print STDERR "TEMPFILE =".Dumper($tempfile)."\n";
+    open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
+
+    my @headers = qw(femaleDbId maleDbId femaleName maleName wishType wishMin wishMax);
+    my $formatted_header = join(',',@headers);
+    print $FILE $formatted_header."\n";
+    my $wishlist = 0;
+    foreach my $combination (@all_combinations) {
+        my @combination_array = ();
+        @combination_array = @$combination;
+        my $csv_format = join(',',@combination_array);
+        print $FILE $csv_format."\n";
+        $wishlist++;
+    }
+    close $FILE;
+
+    open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
+    binmode $F;
+    my $md5 = Digest::MD5->new();
+    $md5->addfile($F);
+    close($F);
+
+    if (!-d $archive_path) {
+        mkdir $archive_path;
+    }
+
+    if (! -d catfile($archive_path, $user_id)) {
+        mkdir (catfile($archive_path, $user_id));
+    }
+
+    if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
+        mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+    }
+
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({
+        create_person_id => $user_id,
+    });
+
+    $md_row->insert();
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($file_destination),
+        dirname => dirname($file_destination),
+        filetype => 'intercross_wishlist',
+        md5checksum => $md5->hexdigest(),
+        metadata_id => $md_row->metadata_id(),
+    });
+
+    $file_row->insert();
+    my $file_id = $file_row->file_id();
+
+    move($tempfile,$file_destination);
+    unlink $tempfile;
+
+    my %file_metadata;
+    $file_metadata{$file_id}{'file_type'} = 'intercross_wishlist';
+    my $file_metadata_json = encode_json \%file_metadata;
+
+    my $file_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'file_metadata_json', 'project_property');
+    my $crossing_experiment = $schema->resultset("Project::Project")->find({project_id => $crossing_experiment_id});
+    $crossing_experiment->create_projectprops( { $file_metadata_cvterm->name() => $file_metadata_json } );
+
+    $c->stash->{rest} = {
+        success => 1,
+        file_id => $file_id,
+    };
 
 }
 
