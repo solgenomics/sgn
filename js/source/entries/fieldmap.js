@@ -140,13 +140,7 @@ export function init() {
             let coord_matrix = [];
             var row = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateY" : "positionCoordinateX";
             var col = this.meta_data[planting_or_harvesting_order_layout].includes('row') ? "positionCoordinateX" : "positionCoordinateY";
-            // let row_decrement = 1;
-            // let col_decrement = 1;
             
-            // if (planting_or_harvesting_order_layout == "planting_order_layout") {
-            //     row_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateY == 0).length > 0 ? 0 : 1;
-            //     col_decrement = plot_arr.filter(plot => plot.observationUnitPosition.positionCoordinateX == 0).length > 0 ? 0 : 1;
-            // }
             for (let plot of plot_arr) {
                 if (!coord_matrix[plot.observationUnitPosition[row]]) {
                     coord_matrix[plot.observationUnitPosition[row]] = [];
@@ -194,11 +188,12 @@ export function init() {
                 }
                 final_arr.push(...plot_arr);
             }
-            var csv = ['Plot_Number', 'Plot_Name', 'Accession_Name'].join(',');
+            var csv = [planting_or_harvesting_order_layout == "planting_order_layout" ? 'Planting_Order': "Harvesting_Order", 'Plot_Number', 'Plot_Name', 'Accession_Name'].join(',');
             csv += "\n";
             final_arr = final_arr.filter(plot => plot !== undefined);
+            let order_number = 1;
             final_arr.forEach(function(plot) {
-                    csv += [plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A", plot.observationUnitName, plot.germplasmName, plot.observationUnitPosition.entryType].join(',');
+                    csv += [order_number++, plot.observationUnitPosition.observationLevel ? plot.observationUnitPosition.observationLevel.levelCode : "N/A", plot.observationUnitName, plot.germplasmName,].join(',');
                     csv += "\n";
             });
     
@@ -557,7 +552,7 @@ export function init() {
                         Plot Name: ${plot.observationUnitName}
                         Plot Number: ${plot.observationUnitPosition.observationLevel.levelCode}
                         Block Number: ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}
-                        Rep Number: ${plot.observationUnitPosition.observationLevelRelationships[2].levelCode}
+                        Rep Number: ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}
                         Accession Name: ${plot.germplasmName}
                     `
                 }
