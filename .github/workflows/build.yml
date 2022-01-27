@@ -59,8 +59,12 @@ jobs:
         id: extract_branch
 
       - name: Checkout sgn branch
-        working-directory: ./breedbase_dockerfile
-        run: cd cxgn/sgn & git status
+        working-directory: ./breedbase_dockerfile/cxgn/sgn
+        run: git switch ${steps.extract_branch.outputs.branch}
+
+      - name: Debug sgn branch
+        working-directory: ./breedbase_dockerfile/cxgn/sgn
+        run: git status
 
       - name: Set tag
         id: vars
