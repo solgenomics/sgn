@@ -507,7 +507,7 @@ sub population_metadata_file {
     }
     elsif ($c->stash->{dataset_id})
     {
-	$owner_id = $c->model('solGS::solGS')->get_dataset_owner($c->stash->{dataset_id});
+	       $owner_id = $c->controller('solGS::Search')->model($c)->get_dataset_owner($c->stash->{dataset_id});
     }
 
     my $person = CXGN::People::Person->new($c->dbc()->dbh(), $owner_id);

@@ -551,7 +551,7 @@ sub combine_populations_confrim  :Path('/solgs/combine/populations/trait/confirm
 
     foreach my $pop_id (@pop_ids)
     {
-        my $markers     = $c->model("solGS::solGS")->get_project_genotyping_markers($pop_id);
+        my $markers     = $c->controller('solGS::Search')->model($c)->get_project_genotyping_markers($pop_id);
         my @markers     = split(/\t/, $markers);
         my $markers_num = scalar(@markers);
 
@@ -1334,7 +1334,7 @@ sub find_common_traits {
     my @common_traits;
     foreach my $trial_id (@$combined_pops_list)
     {
-#	my $trial_traits = $c->model('solGS::solGS')->trial_traits($pop_id);
+#	my $trial_traits = $c->controller('solGS::Search')->model($c)->trial_traits($pop_id);
 #	my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($c, $trial_traits);
 	my $trait_names = $c->controller('solGS::Utils')->get_clean_trial_trait_names($c, $trial_id);
 
