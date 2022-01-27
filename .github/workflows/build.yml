@@ -22,7 +22,6 @@ on:
     branches:
       - develop
       - master
-      - bug/BI-1320
   workflow_dispatch:
 
 jobs:
