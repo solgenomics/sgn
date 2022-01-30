@@ -55,10 +55,11 @@ Rcpp::sourceCpp("/home/production/cxgn/QuantGenResources/CalcCrossMeans.cpp") # 
 
 #userPheno <- path2
 #write(paste("READING PHENOTYPEFILE: ",phenotypeFile), stderr())
-userPheno <- read.csv(phenotypeFile, header = TRUE) #testing only
+userPheno <- read.delim(phenotypeFile, header = TRUE, sep="\t") #testing only
+write(colnames(userPheno), stderr())
 ##userPheno <- userPheno[userPheno$Trial == "SCG", ] #testing only-- needs to replaced with 2-stage
 
-#write("DONE WITH PHENOTYPEFILE"), stderr());
+#write("DONE WITH PHENOTYPEFILE"), stderr())
 
 # c. The user should be able to select their fixed variables from a menu
 #    of the column names of the userPheno object. The possible interaction terms
@@ -109,22 +110,26 @@ userPloidy <- 2 # for testing only
 #    of the column names of the userPheno object. Then, those strings should be passed
 #    to this vector, 'userResponse'.
 
-userResponse <- c()
+write(paste("TRAIT STRING:", traits), stderr())
+#userResponse <- c()
 #userResponse <- c("YIELD", "DMC", "OXBI") # for testing only
-userResponse <- strsplit(traits, ",")
+userResponse <- unlist(strsplit(traits, split=",", fixed=T))
 
-
+write(paste("USER RESPONSE", userResponse),stderr())
+write(paste("first element: ", userResponse[1]), stderr())
 # h. The user must indicate weights for each response. The order of the vector
 #    of response weights must match the order of the responses in userResponse.
 
-userWeights <- c()
+#userWeights <- c()
 #userWeights <- c(1, 0.8, 0.2) # for YIELD, DMC, and OXBI respectively; for testing only
-userWeights  <- strsplit(weights, ",")
+userWeights  <- unlist(strsplit(weights, split=",", fixed=T))
+
+write(paste("WEIGHTS", userWeights), stderr())
 
 # i. The user can indicate the number of crosses they wish to output.
 #    The maximum possible is a full diallel.
 
-userNCrosses <- c()
+#userNCrosses <- c()
 userNCrosses <- 40 # for testing only
 
 
@@ -135,9 +140,9 @@ userNCrosses <- 40 # for testing only
 #   then userSexes should be set to NA.
 
 
-userSexes <- c()
-userSexes <- "Sex" # for testing only
-userPheno$Sex <- sample(c("M", "F"), size = nrow(userPheno), replace = TRUE, prob = c(0.7, 0.3)) # for testing only
+#userSexes <- c()
+#userSexes <- "Sex" # for testing only
+#userPheno$Sex <- sample(c("M", "F"), size = nrow(userPheno), replace = TRUE, prob = c(0.7, 0.3)) # for testing only
 # Please note that for the test above, sex is sampled randomly for each entry, so the same accession can have
 # different sexes. This does not matter for the code or testing.
 
@@ -164,7 +169,7 @@ userPheno$Sex <- sample(c("M", "F"), size = nrow(userPheno), replace = TRUE, pro
 #    monomorphic or biallelic sites which could be communicated through the GUI.
 #    It's also possible to filter them here.
 
-#write(paste("READING VARIANT FILE ", genotypeFile), stderr())
+write(paste("READING VARIANT FILE ", genotypeFile), stderr())
 #  Import VCF with VariantAnnotation package and extract matrix of dosages
 myVCF <- readVcf(genotypeFile)
 #G <- t(geno(myVCF)$DS) # Individual in row, genotype in column
@@ -227,17 +232,19 @@ if(userPloidy > 2){
 ################################################################################
 
 # a. Paste f into the phenotype dataframe
+write("processing phenotypic data...", stderr())
 userPheno$f <- f[as.character(userPheno[ , userID])]
 
 
 # b. Scale the response variables.
+write("processing phenotypic data... scaling...", stderr())
+write(paste("USER RESPONSE LENGTH = ", length(userResponse)), stderr())
 for(i in 1:length(userResponse)){
-  userPheno[ , userResponse[i]] <- (userPheno[ , userResponse[i]] -
-                                      mean(userPheno[ , userResponse[i]], na.rm = TRUE))/
-    sd(userPheno[ , userResponse[i]], na.rm = TRUE)
+  write(paste("working on user response ", userResponse[i]), stderr())
+  userPheno[ , userResponse[i]] <- (userPheno[ , userResponse[i]] - mean(userPheno[ , userResponse[i]], na.rm = TRUE)) / sd(userPheno[ , userResponse[i]], na.rm = TRUE)
 }
 
-
+write("processing phenotypic data... adding dominance effects", stderr())
 # c. Paste in a second ID column for the dominance effects.
 userPheno[ , paste(userID, 2, sep = "")] <- userPheno[ , userID]
 
@@ -428,6 +435,6 @@ crossPlan <- calcCrossMean(GP,
   # only subset the number of crosses the user wishes to output
   crossPlan[1:userNCrosses, ]
   outputFile= paste(phenotypeFile, ".out", sep="")
-
+  write.table(crossPlan, sep="\t", file=outputFile, row.names=TRUE, col.names=TRUE)
 #}
 

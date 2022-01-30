@@ -73,7 +73,7 @@ sub extract_trait_data :Path('/ajax/gcpc/getdata') Args(0) {
     $file = basename($file);
     my @data;
     
-    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/gcpc_files/".$file);
+    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/gcpc_files", $file);
     print STDERR Dumper($temppath);
 
     my $F;
@@ -101,18 +101,24 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     print STDERR "ELEMENTS: ".Dumper($elements);
 
-    $elements->[0] =~ s/^traits\://;
+    $elements->[0] =~ s/^traits\://g;
     my @traits = split /\,/, $elements->[0];
 
-    print STDERR join(",", @traits);
+    $elements->[1] =~ s/^numbers\://g;
+    my @numbers = split /\,/, $elements->[1];
 
-    my @new_traits = @traits;
-
-    foreach my $t (@new_traits) {
+    print STDERR "TRAITS: ".join(",", @traits)."\n";
+    print STDERR "NUMBERS: ".join(",", @numbers)."\n";
+    
+    my @si_r_traits = @traits;
+    foreach my $t (@si_r_traits) {
 	$t = make_R_trait_name($t);
     }
 
-    print STDERR "NEW TRAITS ".Dumper(\@new_traits);
+    my $si_traits = join(",", @si_r_traits);
+    my $si_weights = join(",", @numbers);
+    
+    print STDERR "TRAITS and WEIGHTS: $si_traits $si_weights\n";
     
     $c->tempfiles_subdir("gcpc_files");
     my $gcpc_tmp_output = $c->config->{cluster_shared_tempdir}."/gcpc_files";
@@ -131,9 +137,12 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     #my $temppath = $stability_tmp_output . "/" . $tempfile;
     my $temppath =  $tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
-
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes=>0);
+    
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
+
+    print STDERR "PHENOTYPES REF: ".Dumper($phenotype_data_ref);
+    
 
     open(my $PF, "<", $pheno_filepath) || die "Can't open pheno file $pheno_filepath";
     open(my $CLEAN, ">", $pheno_filepath.".clean") || die "Can't open pheno_filepath clean for writing";
@@ -152,6 +161,8 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 	$t = make_R_trait_name($t);
     }
 
+    print STDERR "FILE TRAITS: ".Dumper(\@file_traits);
+    
     print $CLEAN join("\t", @other_headers, @file_traits)."\n";
 
     while(<$PF>) {
@@ -160,12 +171,30 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     close($CLEAN);
     close($PF);
-    
-    my $traits;
-    my $weights;
-    
-    my $newtrait = $traits;
 
+    # compare if all the traits in the selection index are in the file
+    #
+    my %file_traits_hash = ();
+    foreach my $ft (@file_traits) {
+	$file_traits_hash{$ft}++;
+    }
+
+    my @missing_traits;
+    foreach my $si_t (@si_r_traits) {
+	if (! defined($file_traits_hash{$si_t})) {
+	    push @missing_traits, $si_t;
+	}
+    }
+
+    if (scalar(@missing_traits) == scalar(@si_r_traits)) {
+	$c->stash->{rest} = { error => "None of the traits in the selection index are present in the dataset. Please choose another selection index." };
+	return ;
+    }
+
+    if (scalar(@missing_traits) < scalar(@si_r_traits)) {
+	$c->stash->{rest} = { message => "Some of the traits in the selection index are not in the dataset (".join(",", @missing_traits)."). Their weights will be ignored." };
+    }
+    
     my $genotyping_protocols = $ds->retrieve_genotyping_protocols();
 
     print STDERR "Genotyping protocols: ".Dumper($genotyping_protocols);
@@ -201,8 +230,8 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 	$c->config->{basepath} . "/R/GCPC.R",
 	$pheno_filepath.".clean",
 	$geno_filepath,
-	"'".$traits."'",
-	$weights,
+	"'".$si_traits."'",
+	"'".$si_weights."'",
 	
 	);
 
@@ -210,13 +239,18 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 	sleep(1);
     }
 
-    my $error;
-
-    my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";
+#    my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";
 
     my @data;
+
+    open(my $F, "<", $pheno_filepath.".clean.out") || die "Can't open result file $pheno_filepath".".clean.out";
+    while (<$F>) {
+	chomp;
+	my @fields = split /\t/;
+	push @data, \@fields;
+    }
     
-    $c->stash->{rest} = {
+    $c->stash->{rest}->{
 	data => \@data
     };
 }
