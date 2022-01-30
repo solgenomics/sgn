@@ -83,13 +83,13 @@ sub get_breeding_program_select : Path('/ajax/html/select/breeding_programs') Ar
     my $breeding_programs = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_breeding_programs();
 
     my $default = $c->req->param("default") || @$breeding_programs[0]->[0];
-    if ($empty) { unshift @$breeding_programs, [ "", "please select" ]; }
+    if ($empty) { unshift @$breeding_programs, [ "", "please select a program" ]; }
 
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
       choices => $breeding_programs,
-      selected => $default
+#      selected => $default
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -277,7 +277,14 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
         }
     }
 
-    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
+#    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
+    if ($empty) {
+        if ($get_crossing_trials) {
+            unshift @projects, [ "", "Please select a crossing experiment" ];
+        } else {
+            unshift @projects, [ "", "Please select a trial" ];
+        }
+    }
 
     my $html = simple_selectbox_html(
       multiple => $multiple,

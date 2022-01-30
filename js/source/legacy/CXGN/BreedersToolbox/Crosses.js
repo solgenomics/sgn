@@ -171,8 +171,11 @@ jQuery(document).ready(function($) {
     });
 
     $("[name='upload_crosses_link']").click(function() {
+
+        get_select_box('breeding_programs', 'upload_crosses_breeding_program_select_div', { 'name' : 'upload_crosses_breeding_program_id', 'id' : 'upload_crosses_breeding_program_id', 'empty': 1 });
+
         get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
-        get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
+//        get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
         $("#upload_crosses_dialog").modal("show");
 
         jQuery('#manage_page_section_1').modal("show");
@@ -182,6 +185,15 @@ jQuery(document).ready(function($) {
         jQuery('#crossing_experiment_page_section_2').modal("hide");
 
     });
+
+    jQuery("#upload_crosses_breeding_program_select_div").on('change', "#upload_crosses_breeding_program_id", function() {
+        breeding_program_change_crossing_experiments();
+    });
+
+    function breeding_program_change_crossing_experiments() {
+        var breeding_program_id = jQuery("#upload_crosses_breeding_program_id").val();
+        get_select_box('projects', 'upload_crosses_select_crossingtrial_2', { 'name' : 'cross_upload_crossing_trial', 'id' : 'cross_upload_crossing_trial', 'breeding_program_id' : breeding_program_id, 'get_crossing_trials': '1', 'empty':1});
+    }
 
     $("#cross_accession_info_format").click(function() {
         $("#cross_accession_info_dialog").modal("show");

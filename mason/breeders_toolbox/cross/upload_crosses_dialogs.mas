@@ -68,9 +68,17 @@ $trial_name => undef
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
                                 <div id="manage_page_section_2" style="display:none">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Select a Crossing Experiment: </label>
+                                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                                        <div class="col-sm-9" >
+                                            <div id="upload_crosses_breeding_program_select_div">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Crossing Experiment: </label>
                                         <div class="col-sm-9">
                                             <div id="upload_crosses_select_crossingtrial_2" name="upload_crosses_select_crossingtrial_2" >
+
                                             </div>
                                         </div>
                                     </div>
@@ -78,14 +86,14 @@ $trial_name => undef
                                 <div id="crossing_experiment_page_section_2" style="display:none">
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Crossing Experiment: </label>
-                                        <div class="col-sm-6" >
+                                        <div class="col-sm-9" >
                                             <input class="form-control" name="experiment_name" id="experiment_name" disabled value="<% $trial_name %>">
                                             <input name="experiment_id" id="experiment_id" type="hidden" value="<% $trial_id %>">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Select a File Format: </label>
+                                    <label class="col-sm-3 control-label">File Format: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="cross_file_format_option">
                                             <option value="">Select a file format that you want to upload</option>
@@ -206,7 +214,7 @@ $trial_name => undef
                                 <center>
                                     <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
                                 </center>
-                            </div>                        
+                            </div>
 
                         </&>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
