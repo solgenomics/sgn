@@ -137,7 +137,7 @@ $trial_id
                         <li><b>maleDbId:</b> stock_id of male parent in the database</li>
                         <li><b>femaleName:</b> female uniquename in the database.</li>
                         <li><b>maleName:</b> male uniquename in the database.</li>
-                        <li><b>wishType:</b> type of information (flower, fruit, seed).</li>
+                        <li><b>wishType:</b> type of field crossing data (flower, fruit, seed).</li>
                         <li><b>wishMin:</b> expected minimum number of the specified type.</li>
                         <li><b>wishMax:</b> expected maximum number of the specified type.</li>
                     </ul>

@@ -77,8 +77,7 @@ $trial_name => undef
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Crossing Experiment: </label>
                                         <div class="col-sm-9">
-                                            <div id="upload_crosses_select_crossingtrial_2" name="upload_crosses_select_crossingtrial_2" >
-
+                                            <div id="upload_crosses_crossing_experiment_select_div" name="upload_crosses_crossing_experiment_select_div" >
                                             </div>
                                         </div>
                                     </div>

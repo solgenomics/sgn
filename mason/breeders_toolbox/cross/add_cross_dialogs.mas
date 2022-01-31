@@ -82,7 +82,7 @@ $locations
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Crossing Experiment: </label>
                                     <div class="col-sm-9">
-                                        <div id="upload_crosses_select_crossingtrial_4" name="upload_crosses_select_crossingtrial_4" >
+                                        <div id="add_cross_crossing_experiment_select_div" name="add_cross_crossing_experiment_select_div" >
                                         </div>
                                     </div>
                                 </div><br/><br/>

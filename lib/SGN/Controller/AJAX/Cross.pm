@@ -73,7 +73,7 @@ sub upload_cross_file_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    my $crossing_trial_id = $c->req->param('cross_upload_crossing_trial');
+    my $crossing_trial_id = $c->req->param('upload_crosses_crossing_experiment_id');
     my $crosses_simple_upload = $c->req->upload('xls_crosses_simple_file');
     my $crosses_plots_upload = $c->req->upload('xls_crosses_plots_file');
     my $crosses_plants_upload = $c->req->upload('xls_crosses_plants_file');
