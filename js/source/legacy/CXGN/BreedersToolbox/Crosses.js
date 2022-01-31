@@ -61,7 +61,6 @@ jQuery(document).ready(function($) {
     });
 
     $("[name='create_cross_link']").click(function() {
-
         $("#cross_type_info").click(function() {
             $("#cross_type_dialog").modal("show");
         });
@@ -72,8 +71,17 @@ jQuery(document).ready(function($) {
         $('#maternal_accession_list').html(lo.listSelect('maternal_accessions', ['accessions'], 'select', undefined, undefined));
         $('#paternal_accession_list').html(lo.listSelect('paternal_accessions', ['accessions'], 'select', undefined, undefined));
 
-        get_select_box('crosses', 'upload_crosses_select_crossingtrial_3', {'id':'upload_crosses_select_crossingtrial_3_sel', 'name':'upload_crosses_select_crossingtrial_3_sel', 'multiple':0});
-        get_select_box('crosses', 'upload_crosses_select_crossingtrial_4', {'id':'crossing_trial', 'name':'crossing_trial', 'multiple':0});
+        get_select_box('breeding_programs', 'add_cross_breeding_program_select_div', {'name' : 'add_cross_breeding_program_id', 'id' : 'add_cross_breeding_program_id', 'empty': 1  });
+        jQuery("#add_cross_breeding_program_select_div").on('change', "#add_cross_breeding_program_id", function() {
+            program_change_crossing_experiments();
+        });
+
+        function program_change_crossing_experiments() {
+            var breeding_program_id = jQuery("#add_cross_breeding_program_id").val();
+            get_select_box('projects', 'upload_crosses_select_crossingtrial_4', { 'name' : 'cross_upload_crossing_trial', 'id' : 'cross_upload_crossing_trial', 'breeding_program_id' : breeding_program_id, 'get_crossing_trials': '1', 'empty':1});
+        }
+//        get_select_box('crosses', 'upload_crosses_select_crossingtrial_3', {'id':'upload_crosses_select_crossingtrial_3_sel', 'name':'upload_crosses_select_crossingtrial_3_sel', 'multiple':0});
+//        get_select_box('crosses', 'upload_crosses_select_crossingtrial_4', {'id':'crossing_trial', 'name':'crossing_trial', 'multiple':0});
 
         $("#create_cross").modal("show");
 
@@ -481,10 +489,10 @@ jQuery(document).ready(function($) {
                     alert(response.error);
                 } else {
                     refreshCrossJsTree(0);
-                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
-                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
-                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_3', {'id':'upload_crosses_select_crossingtrial_3_sel', 'name':'upload_crosses_select_crossingtrial_3_sel', 'multiple':0});
-                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_4', {'id':'crossing_trial', 'name':'crossing_trial', 'multiple':0});
+//                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_1', {'id':'upload_crosses_select_crossingtrial_1_sel', 'name':'upload_crosses_select_crossingtrial_1_sel', 'multiple':0});
+//                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_2', {'id':'cross_upload_crossing_trial', 'name':'cross_upload_crossing_trial', 'multiple':0});
+//                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_3', {'id':'upload_crosses_select_crossingtrial_3_sel', 'name':'upload_crosses_select_crossingtrial_3_sel', 'multiple':0});
+//                    get_select_box('crosses', 'upload_crosses_select_crossingtrial_4', {'id':'crossing_trial', 'name':'crossing_trial', 'multiple':0});
                     Workflow.focus("#add_crossing_trial_workflow", -1); //Go to success page
                     Workflow.check_complete("#add_crossing_trial_workflow");
                     jQuery("#working_modal").modal("hide");

@@ -53,17 +53,6 @@ $locations
                             <& /page/page_title.mas, title=>"Select a crossing experiment" &>
 
                             <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
-                            <!--
-                            <hr>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">You can check your crossing experiment here: </label>
-                                <div class="col-sm-10">
-                                    <div id="upload_crosses_select_crossingtrial_3" name="upload_crosses_select_crossingtrial_3" >
-                                    </div>
-                                </div>
-                            </div><br/><br/>
-                            <hr>
-                            -->
                             <center>
                                 <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a crossing experiment, click here</button><br/><br/>
                                 <button class="btn btn-primary" onclick="Workflow.complete(this);">Once you have a crossing experiment, go to Next Step</button>
@@ -83,37 +72,20 @@ $locations
                                         <a id="cross_type_info">Descriptions of cross types</a>
                                     </p>
                                 </&>
-                                <!--
-                                <h3>Required:</h3>
-                                -->
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <div class="col-sm-9">
+                                        <div id="add_cross_breeding_program_select_div" name="add_cross_breeding_program_select_div">
+                                        </div>
+                                    </div>
+                                </div><br/><br/><br/>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Crossing Experiment: </label>
                                     <div class="col-sm-9">
                                         <div id="upload_crosses_select_crossingtrial_4" name="upload_crosses_select_crossingtrial_4" >
                                         </div>
                                     </div>
-                                </div><br/><br/><br/>
-                                <!--
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">Location of cross: </label>
-                                    <div class="col-sm-9">
-                                        <select class="form-control" id="location" name="location">
-                                            <option value="">Select Location</option>
-<%perl>
-    # foreach my $location (@locations) {
-    #     print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
-    # }
-    foreach my $location_hashref (@$locations) {
-        my $properties = $location_hashref->{'properties'};
-        my $program = $properties->{'Program'};
-        my $name = $properties->{'Name'};
-        print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
-    }
-</%perl>
-                                        </select>
-                                    </div>
                                 </div><br/><br/>
-                                -->
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Cross Unique ID: </label>
                                     <div class="col-sm-9">
