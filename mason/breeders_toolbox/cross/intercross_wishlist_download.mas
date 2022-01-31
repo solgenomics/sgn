@@ -26,6 +26,14 @@ $trial_id
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-sm-11">
+                            <&| /page/explanation.mas, title=>'File Information' &>
+                                <p>
+                                    <b>File Information</b>
+                                    <br>
+                                    <a id="intercross_wishlist_file_info">Intercross Wishlist</a>
+                                    <br>
+                                </p>
+                            </&>
                             <div class="form-horizontal">
                                 <div class="form-group">
                                     <label class="control-label col-sm-3">Female parents:</label>
@@ -85,6 +93,63 @@ $trial_id
     </div>
 </div>
 
+<div class="modal fade" id="intercross_wishlist_file_info_dialog" name="intercross_wishlist_file_info_dialog" tabindex="-1" role="dialog" aria-labelledby="intercrossWishlistFileInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossWishlistFileInfoDialog">Intercross Wishlist</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Names in the list must be uniquenames.
+                    </b>
+                    <br>
+                        Intercross Wishlist file is a CSV file (.csv).
+                    <br>
+                         The file can be used directly with Intercross app.
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                    The first row (header) contains the following:
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>femaleDbId</td>
+                                <td>maleDbId</td>
+                                <td>femaleName</td>
+                                <td>maleName</td>
+                                <td>wishType</td>
+                                <td>wishMin</td>
+                                <td>wishMax</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Column Information:
+                    </b>
+                    <ul>
+                        <li><b>femaleDbId:</b> stock_id of female parent in the database.</li>
+                        <li><b>maleDbId:</b> stock_id of male parent in the database</li>
+                        <li><b>femaleName:</b> female uniquename in the database.</li>
+                        <li><b>maleName:</b> male uniquename in the database.</li>
+                        <li><b>wishType:</b> type of information (flower, fruit, seed).</li>
+                        <li><b>wishMin:</b> expected minimum number of the specified type.</li>
+                        <li><b>wishMax:</b> expected maximum number of the specified type.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
@@ -98,6 +163,10 @@ jQuery(document).ready(function(){
 
     jQuery('#download_intercross_wishlist').click(function(){
         jQuery('#intercross_wishlist_download_dialog').modal("show");
+    });
+
+    jQuery("#intercross_wishlist_file_info").click(function(){
+        jQuery("#intercross_wishlist_file_info_dialog").modal("show");
     });
 
     jQuery(document).on('change', "#wishlist_male_list_select", function() {
