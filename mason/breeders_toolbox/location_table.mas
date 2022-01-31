@@ -43,6 +43,11 @@ jQuery(document).ready(function() {
             locationJSON = response.data;
             // console.log("Data is "+JSON.stringify(locationJSON, null, 2));
 
+            // Remove [Computataion] location from response
+            locationJSON = locationJSON.filter(function(loc) {
+                return loc.properties.Name !== '[Computation]';
+            });
+
             var table = jQuery('#location_table').DataTable( {
                 data: locationJSON,
                 dom: 'Bfrtip',
