@@ -10,6 +10,7 @@ use POSIX qw(strftime);
 use Scalar::Util qw /weaken reftype/;
 use Storable qw/ nstore retrieve /;
 #BEGIN { extends 'Catalyst::Controller' }
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -153,13 +154,13 @@ sub get_dataset_phenotype_data {
 
     my $dataset_id = $c->stash->{dataset_id};
 
-    #$self->get_dataset_plots_list($c);
+
 
     my $data = $self->get_model($c)->get_dataset_data($dataset_id);
 
     if ($data->{categories}->{plots}->[0])
     {
-	$c->stash->{plots_names} = $data->{categories}->{plots};
+	$c->stash->{plots_ids} = $data->{categories}->{plots};
 
 	$c->controller('solGS::List')->plots_list_phenotype_file($c);
 	$c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
@@ -181,8 +182,7 @@ sub create_dataset_pheno_data_query_jobs {
 
     if ($data->{categories}->{plots}->[0])
     {
-	$c->stash->{plots_names} = $data->{categories}->{plots};
-	my $plots = $data->{categories}->{plots};
+	$c->stash->{plots_ids} = $data->{categories}->{plots};
 
 	$c->controller('solGS::List')->plots_list_phenotype_query_job($c);
 	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{plots_list_phenotype_query_job};
@@ -335,12 +335,7 @@ sub get_model {
     my $c = shift;
 
     return $c->controller('solGS::Search')->model($c);
-# print STDERR "\nprotocol_detail: $protocol\n";
-#     my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context',
-# 					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")
-# 					      });
 
-    # return $model;
 }
 
 
@@ -361,9 +356,7 @@ sub dataset_population_summary {
     else
     {
 	my $user_name = $c->user->id;
-    print STDERR "\n dataset_population_summary solGS::genotypingProtocol create_protocol_url\n";
         my $protocol  = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
-         print STDERR "\n DONE dataset_population_summary solGS::genotypingProtocol create_protocol_url\n";
 
 	if ($dataset_id)
 	{
