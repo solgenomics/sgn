@@ -340,17 +340,17 @@ sub refresh_matviews {
     my $q = "SELECT pid, state FROM pg_stat_activity";
     if ($materialized_view eq 'fullview') {
         $q = $q . " WHERE query =
-            'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_genoview;'
-            OR query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview;'";
+            'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_genoview'
+            OR query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview'";
     } elsif ($materialized_view eq 'phenotypes') {
         $q = $q . " WHERE query =
-            'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenotype_jsonb_table;'
-            OR query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview;'";
+            'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenotype_jsonb_table'
+            OR query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview'";
     } elsif ($materialized_view eq 'stockprop') {
         $q = $q . " WHERE query =
-            'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_stockprop;'";
+            'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_stockprop'";
     }
-
+    print STDERR "\nQUERY: $q\n";
     my $h = $self->dbh->prepare($q);
     $h->execute();
 
@@ -414,7 +414,7 @@ sub matviews_status {
   my $self = shift;
   # my $q = "SELECT currently_refreshing, last_refresh FROM public.matviews WHERE mv_id=?";
 
-  my $q = "SELECT pid, state FROM pg_stat_activity WHERE query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview;'";
+  my $q = "SELECT pid, state FROM pg_stat_activity WHERE query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview'";
   my $h = $self->dbh->prepare($q);
   $h->execute();
 
