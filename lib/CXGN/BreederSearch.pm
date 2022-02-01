@@ -339,15 +339,15 @@ sub refresh_matviews {
     # my $q = "SELECT currently_refreshing FROM public.matviews WHERE mv_id=?";
     my $q = "SELECT pid, state FROM pg_stat_activity";
     if ($materialized_view eq 'fullview') {
-        $q = $q . "WHERE query =
+        $q = $q . " WHERE query =
             'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_genoview;'
             OR query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview;'";
     } elsif ($materialized_view eq 'phenotypes') {
-        $q = $q . "WHERE query =
+        $q = $q . " WHERE query =
             'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenotype_jsonb_table;'
             OR query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview;'";
     } elsif ($materialized_view eq 'stockprop') {
-        $q = $q . "WHERE query =
+        $q = $q . " WHERE query =
             'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_stockprop;'";
     }
 
