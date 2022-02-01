@@ -42,7 +42,7 @@ use CXGN::Dataset;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use Data::Dumper;
 
-extends 'Catalyst::Model';
+# extends 'Catalyst::Model';
 
 
 
