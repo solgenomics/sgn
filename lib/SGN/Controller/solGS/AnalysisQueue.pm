@@ -90,7 +90,7 @@ sub check_analysis_name :Path('/solgs/check/analysis/name') Args() {
 
 	my $new_name = $c->req->param('name');
 	my $match = $self->check_analyses_names($c, $new_name);
-    
+
 	my $ret->{analysis_exists} = $match;
 	$ret = to_json($ret);
 
@@ -488,6 +488,7 @@ sub structure_output_details {
 		$output_details = $self->structure_training_combined_pops_data_output($c);
 	}
 	elsif ( $analysis_page =~ m/solgs\/selection\/(\d+|\w+_\d+)\/model\/|solgs\/combined\/model\/\d+\/selection\// )
+    {
 		$output_details = $self->structure_selection_prediction_output($c);
 	}
 	elsif ( $analysis_page =~ m/kinship\/analysis/ )
