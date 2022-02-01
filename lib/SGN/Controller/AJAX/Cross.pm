@@ -179,6 +179,20 @@ sub upload_cross_file_POST : Args(0) {
         $c->detach();
     }
 
+    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    $md_row->insert();
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    my $md5checksum = $md5->hexdigest();
+    my $file_row = $metadata_schema->resultset("MdFiles")->create({
+        basename => basename($archived_filename_with_path),
+        dirname => dirname($archived_filename_with_path),
+        filetype => 'crosses',
+        md5checksum => $md5checksum,
+        metadata_id => $md_row->metadata_id(),
+    });
+    my $file_id = $file_row->file_id();
+
     my $cross_add = CXGN::Pedigree::AddCrosses->new({
         chado_schema => $chado_schema,
         phenome_schema => $phenome_schema,
@@ -187,8 +201,7 @@ sub upload_cross_file_POST : Args(0) {
         crossing_trial_id => $crossing_trial_id,
         crosses =>  $parsed_data->{crosses},
         user_id => $user_id,
-        archived_filename => $archived_filename_with_path,
-        archived_file_type => 'crosses'
+        file_id => $file_id
     });
 
     #validate the crosses

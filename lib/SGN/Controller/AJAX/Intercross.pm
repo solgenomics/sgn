@@ -179,14 +179,14 @@ sub download_parents_file_POST : Args(0) {
         my $file_metadata_string = $previous_projectprop_rs->first->value();
         my $file_metadata_ref = decode_json $file_metadata_string;
         %file_metadata = %{$file_metadata_ref};
-        $file_metadata{$file_id}{'file_type'} = 'intercross_parents';
+        $file_metadata{'intercross_download'}{$file_id}{'file_type'} = 'intercross_parents';
         my $updated_file_metadata_json = encode_json \%file_metadata;
         $previous_projectprop_rs->first->update({value=>$updated_file_metadata_json});
     } elsif ($previous_projectprop_rs->count > 1) {
         print STDERR "More than one found!\n";
         return;
     } else {
-        $file_metadata{$file_id}{'file_type'} = 'intercross_parents';
+        $file_metadata{'intercross_download'}{$file_id}{'file_type'} = 'intercross_parents';
         my $file_metadata_json = encode_json \%file_metadata;
         $crossing_experiment->create_projectprops( { $file_metadata_cvterm->name() => $file_metadata_json } );
     }
@@ -306,14 +306,14 @@ sub create_intercross_wishlist_POST : Args(0) {
         my $file_metadata_string = $previous_projectprop_rs->first->value();
         my $file_metadata_ref = decode_json $file_metadata_string;
         %file_metadata = %{$file_metadata_ref};
-        $file_metadata{$file_id}{'file_type'} = 'intercross_wishlist';
+        $file_metadata{'intercross_download'}{$file_id}{'file_type'} = 'intercross_wishlist';
         my $updated_file_metadata_json = encode_json \%file_metadata;
         $previous_projectprop_rs->first->update({value=>$updated_file_metadata_json});
     } elsif ($previous_projectprop_rs->count > 1) {
         print STDERR "More than one found!\n";
         return;
     } else {
-        $file_metadata{$file_id}{'file_type'} = 'intercross_wishlist';
+        $file_metadata{'intercross_download'}{$file_id}{'file_type'} = 'intercross_wishlist';
         my $file_metadata_json = encode_json \%file_metadata;
         $crossing_experiment->create_projectprops( { $file_metadata_cvterm->name() => $file_metadata_json } );
     }
@@ -341,7 +341,7 @@ sub upload_intercross_file_POST : Args(0) {
     my $parsed_data;
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
-    my $subdirectory = "cross_upload";
+    my $subdirectory = "intercross_upload";
     my $archived_filename_with_path;
     my $md5;
     my $validate_file;
@@ -419,6 +419,21 @@ sub upload_intercross_file_POST : Args(0) {
     }
 
     if ($parsed_data){
+
+        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+        $md_row->insert();
+        my $upload_file = CXGN::UploadFile->new();
+        my $md5 = $upload_file->get_md5($archived_filename_with_path);
+        my $md5checksum = $md5->hexdigest();
+        my $file_row = $metadata_schema->resultset("MdFiles")->create({
+            basename => basename($archived_filename_with_path),
+            dirname => dirname($archived_filename_with_path),
+            filetype => 'intercross_upload',
+            md5checksum => $md5checksum,
+            metadata_id => $md_row->metadata_id(),
+        });
+        my $file_id = $file_row->file_id();
+
         my %intercross_data = %{$parsed_data};
         my $crossing_experiment_name = $intercross_data{'crossing_experiment_name'};
         my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name => $crossing_experiment_name});
@@ -444,7 +459,7 @@ sub upload_intercross_file_POST : Args(0) {
         } else {
             @new_cross_identifiers = @intercross_identifier_list;
         }
-        print STDERR "NEW CROSS IDENTIFIER ARRAY =".Dumper(\@new_cross_identifiers)."\n";
+#        print STDERR "NEW CROSS IDENTIFIER ARRAY =".Dumper(\@new_cross_identifiers)."\n";
 
         my @new_crosses;
         my %new_stockprop;
@@ -562,7 +577,8 @@ sub upload_intercross_file_POST : Args(0) {
                     dbh => $dbh,
                     crossing_trial_id => $crossing_experiment_id,
                     crosses => \@new_crosses,
-                    user_id => $user_id
+                    user_id => $user_id,
+                    file_id => $file_id
                 });
 
                 if (!$cross_add->validate_crosses()){
@@ -592,6 +608,26 @@ sub upload_intercross_file_POST : Args(0) {
                 $c->stash->{rest} = {error_string => "Error adding cross transaction",};
                 return;
             }
+        }
+
+        my $file_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'file_metadata_json', 'project_property');
+
+        my $crossing_experiment = $schema->resultset("Project::Project")->find({project_id => $crossing_experiment_id});
+        my $previous_projectprop_rs = $crossing_experiment->projectprops({type_id=>$file_metadata_cvterm->cvterm_id});
+        if ($previous_projectprop_rs->count == 1){
+            my $file_metadata_string = $previous_projectprop_rs->first->value();
+            my $file_metadata_ref = decode_json $file_metadata_string;
+            %file_metadata = %{$file_metadata_ref};
+            $file_metadata{'intercross_upload'}{$file_id}{'file_type'} = 'intercross_upload';
+            my $updated_file_metadata_json = encode_json \%file_metadata;
+            $previous_projectprop_rs->first->update({value=>$updated_file_metadata_json});
+        } elsif ($previous_projectprop_rs->count > 1) {
+            print STDERR "More than one found!\n";
+            return;
+        } else {
+            $file_metadata{'intercross_upload'}{$file_id}{'file_type'} = 'intercross_upload';
+            my $file_metadata_json = encode_json \%file_metadata;
+            $crossing_experiment->create_projectprops( { $file_metadata_cvterm->name() => $file_metadata_json } );
         }
     }
 
