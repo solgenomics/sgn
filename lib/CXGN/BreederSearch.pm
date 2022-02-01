@@ -417,13 +417,16 @@ sub matviews_status {
   my $q = "SELECT pid, state FROM pg_stat_activity WHERE query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview;'";
   my $h = $self->dbh->prepare($q);
   $h->execute();
-  my ($pid, $state) = $h->fetchrow_array();
+
+  my ($pid, $state);
+  if ($h->rows()) {
+      ($pid, $state) = $h->fetchrow_array();
+  }
 
   if ($state eq 'active') {
     print STDERR "Wizard is already refreshing, refresh pid: $pid, current state: $state \n";
     return { refreshing => "<p id='wizard_status'>Wizard update in progress . . . </p>"};
-  }
-  else {
+  } else {
     my $q = "SELECT last_refresh FROM public.matviews WHERE mv_name = 'materialized_phenoview'";
     my $h = $self->dbh->prepare($q);
     $h->execute();
