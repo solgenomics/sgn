@@ -48,7 +48,7 @@ my $trait_id = $sp_data->{options}->[0]->[1];
 
 $mech->get_ok('http://localhost:3010/ajax/solgwas/generate_results?dataset_id='.$dataset_id.'&trait_id='.$trait_id.'&pc_check=0&kinship_check=0', 'run the solgwas analysis');
 
-print STDERR $mech->content();
+print STDERR "CONTENT: ".Dumper($mech->content());
 
 my $rdata = JSON::Any->decode($mech->content());
 
