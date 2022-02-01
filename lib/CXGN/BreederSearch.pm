@@ -336,46 +336,66 @@ sub refresh_matviews {
     my $refresh_finished = 0;
     my $async_refresh;
 
-    my $q = "SELECT currently_refreshing FROM public.matviews WHERE mv_id=?";
-    my $h = $self->dbh->prepare($q);
-    $h->execute(1);
-
-    my $refreshing = $h->fetchrow_array();
-
-    if ($refreshing) {
-        return { error => $materialized_view.' update already in progress . . . ' };
+    # my $q = "SELECT currently_refreshing FROM public.matviews WHERE mv_id=?";
+    my $q = "SELECT pid, state FROM pg_stat_activity";
+    if ($materialized_view eq 'fullview') {
+        $q = $q . "WHERE query =
+            'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_genoview;'
+            OR query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview;'";
+    } elsif ($materialized_view eq 'phenotypes') {
+        $q = $q . "WHERE query =
+            'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenotype_jsonb_table;'
+            OR query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview;'";
+    } elsif ($materialized_view eq 'stockprop') {
+        $q = $q . "WHERE query =
+            'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_stockprop;'";
     }
-    else {
-        try {
-            if ($refresh_type eq 'concurrent') {
-                print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c\n";
-                $async_refresh = CXGN::Tools::Run->new();
-                $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c");
-            } else {
-                print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view\n";
-                $async_refresh = CXGN::Tools::Run->new();
-                $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view");
-            }
 
-            for (my $i = 1; $i < 10; $i++) {
-                sleep($i/5);
-                if ($async_refresh->alive) {
-                    next;
-                } else {
-                    $refresh_finished = 1;
-                }
-            }
+    my $h = $self->dbh->prepare($q);
+    $h->execute();
 
-            if ($refresh_finished) {
-                return { message => $materialized_view.' update completed!' };
-            } else {
-                return { message => $materialized_view.' update initiated.' };
-            }
-        } catch {
-            print STDERR 'Error initiating '.$materialized_view.' update.' . $@ . "\n";
-            return { error => 'Error initiating '.$materialized_view.' update.' . $@ };
+    if ( $h->rows() < 1) {
+        print STDERR "No refreshes currently running, proceeding as normal\n";
+    } else {
+        while ( my ($pid, $state) = $h->fetchrow_array() ) {
+            my $q = "SELECT pg_terminate_backend($pid)";
+            my $h = $self->dbh->prepare($q);
+            $h->execute();
+            print STDERR "Terminating refresh query with state $state and pid $pid\n";
         }
     }
+
+
+    try {
+        if ($refresh_type eq 'concurrent') {
+            print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c\n";
+            $async_refresh = CXGN::Tools::Run->new();
+            $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view -c");
+        } else {
+            print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view\n";
+            $async_refresh = CXGN::Tools::Run->new();
+            $async_refresh->run_async("perl $basepath/bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -m $materialized_view");
+        }
+
+        for (my $i = 1; $i < 10; $i++) {
+            sleep($i/5);
+            if ($async_refresh->alive) {
+                next;
+            } else {
+                $refresh_finished = 1;
+            }
+        }
+
+        if ($refresh_finished) {
+            return { message => $materialized_view.' update completed!' };
+        } else {
+            return { message => $materialized_view.' update initiated.' };
+        }
+    } catch {
+        print STDERR 'Error initiating '.$materialized_view.' update.' . $@ . "\n";
+        return { error => 'Error initiating '.$materialized_view.' update.' . $@ };
+    }
+
 }
 
 =head2 matviews_status
@@ -392,17 +412,22 @@ Side Effects: none
 
 sub matviews_status {
   my $self = shift;
-  my $q = "SELECT currently_refreshing, last_refresh FROM public.matviews WHERE mv_id=?";
+  # my $q = "SELECT currently_refreshing, last_refresh FROM public.matviews WHERE mv_id=?";
+
+  my $q = "SELECT pid, state FROM pg_stat_activity WHERE query = 'REFRESH MATERIALIZED VIEW CONCURRENTLY materialized_phenoview;'";
   my $h = $self->dbh->prepare($q);
-  $h->execute(1);
+  $h->execute();
+  my ($pid, $state) = $h->fetchrow_array();
 
-  my ($refreshing, $timestamp) = $h->fetchrow_array();
-
-  if ($refreshing) {
-    print STDERR "Wizard is already refreshing, current status: $refreshing \n";
+  if ($state eq 'active') {
+    print STDERR "Wizard is already refreshing, refresh pid: $pid, current state: $state \n";
     return { refreshing => "<p id='wizard_status'>Wizard update in progress . . . </p>"};
   }
   else {
+    my $q = "SELECT last_refresh FROM public.matviews WHERE mv_name = 'materialized_phenoview'";
+    my $h = $self->dbh->prepare($q);
+    $h->execute();
+    my $timestamp = $h->fetchrow_array();
     print STDERR "materialized views last updated $timestamp\n";
     return { timestamp => "<p id='wizard_status'>Wizard last updated: $timestamp</p>" };
   }

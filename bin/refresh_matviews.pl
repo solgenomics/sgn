@@ -52,20 +52,20 @@ print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$dbname.";host=".$dbhost.";port=5432";
 my $dbh = DBI->connect($dsn, $username, $password, { RaiseError => 1, AutoCommit=>0 });
 
-my $cur_refreshing_q =  "UPDATE public.matviews SET currently_refreshing=?";
-if ($mode eq 'stockprop'){
-    $cur_refreshing_q .= " WHERE mv_name = 'materialized_stockprop'";
-}
-if ($mode eq 'phenotypes') {
-    $cur_refreshing_q .= " WHERE mv_name = 'materialized_phenotype_jsonb_table'";
-}
+# my $cur_refreshing_q =  "UPDATE public.matviews SET currently_refreshing=?";
+# if ($mode eq 'stockprop'){
+#     $cur_refreshing_q .= " WHERE mv_name = 'materialized_stockprop'";
+# }
+# if ($mode eq 'phenotypes') {
+#     $cur_refreshing_q .= " WHERE mv_name = 'materialized_phenotype_jsonb_table'";
+# }
 
 #set TRUE before the transaction begins
-my $state = 'TRUE';
-print STDERR "*Setting currently_refreshing = TRUE\n";
-my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
-$cur_refreshing_h->execute($state);
-$dbh->commit();
+# my $state = 'TRUE';
+# print STDERR "*Setting currently_refreshing = TRUE\n";
+# my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
+# $cur_refreshing_h->execute($state);
+# $dbh->commit();
 
 try {
     print STDERR "Refreshing materialized views . . ." . localtime() . "\n";
@@ -99,10 +99,10 @@ finally {
         $dbh->commit();
     }
     #always set the refreshing status to FALSE at the end
-    $state = 'FALSE';
-    my $done_h = $dbh->prepare($cur_refreshing_q);
-    print STDERR "*Setting currently_refreshing = FALSE \n";
-    $done_h->execute($state);
+    # $state = 'FALSE';
+    # my $done_h = $dbh->prepare($cur_refreshing_q);
+    # print STDERR "*Setting currently_refreshing = FALSE \n";
+    # $done_h->execute($state);
     $dbh->commit();
 };
 
