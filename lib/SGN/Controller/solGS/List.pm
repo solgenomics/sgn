@@ -827,12 +827,16 @@ sub create_list_pheno_data_query_jobs {
     }
     elsif ($list_type =~ /trials/)
     {
+
+        print STDERR "\nLIST : create_list_pheno_data_query_jobs -- get_list_trials_ids\n ";
 	$self->get_list_trials_ids($c);
 	my $trials_ids = $c->stash->{trials_ids};
-
+  print STDERR "\nDONE LIST : create_list_pheno_data_query_jobs -- get_list_trials_ids\n ";
 	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
+      print STDERR "\nDone LIST : create_list_pheno_data_query_jobs -- multi_pop_pheno_filesn ";
 	$c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
 	$c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, $trials_ids);
+      print STDERR "\nDONE LIST : create_list_pheno_data_query_jobs -- get_cluster_phenotype_query_job_args\n ";
 	$c->stash->{list_pheno_data_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
     }
 }
@@ -1027,7 +1031,7 @@ sub get_list_trials_ids {
     {
 	foreach my $t_name (@trials_names)
 	{
-	    my $trial_id = $c->model("solGS::solGS")
+	    my $trial_id = $c->controller('solGS::Search')->model($c)
 		->project_details_by_name($t_name)
 		->first
 		->project_id;
