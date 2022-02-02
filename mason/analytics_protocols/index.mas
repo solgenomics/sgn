@@ -22,10 +22,11 @@ Displays a page with a table of all the analytics run by the currently logged in
 
 <& /page/page_title.mas, title => "Your Analytics Protocols" &>
 
-<button class='btn btn-success' style='margin:3px;float:right' id='drone_imagery_analytics_link'>Drone Imagery Analytics</button><br />
+<button class='btn btn-default' style='margin:3px;float:right' id='drone_imagery_analytics_merge_results_link'>Merge Analytics Results</button><button class='btn btn-success' style='margin:3px;float:right' id='drone_imagery_analytics_link'>Run Drone Imagery Analytics</button><br />
 <hr>
 
 <& /breeders_toolbox/drone_imagery/drone_imagery_analytics.mas &>
+<& /analytics_protocols/analytics_protocols_merge_results_dialogs.mas &>
 
 <div class="well">
     <table class="table table-bordered table-hover" id="analytics_protocols_by_user_table">

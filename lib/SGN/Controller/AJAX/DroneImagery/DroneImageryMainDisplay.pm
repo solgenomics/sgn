@@ -57,10 +57,16 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
     my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
     my $drone_run_camera_rig_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_camera_rig_description', 'project_property')->cvterm_id();
     my $drone_run_base_date_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_base_date', 'project_property')->cvterm_id();
+    my $geoparam_coordinates_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_geoparam_coordinates', 'project_property')->cvterm_id();
+    my $geoparam_coordinates_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_geoparam_coordinates_type', 'project_property')->cvterm_id();
+    my $geoparam_coordinates_plot_polygons_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_geoparam_coordinates_plot_polygons', 'project_property')->cvterm_id();
 
-    my $drone_run_q = "SELECT drone_run_band_project.project_id, drone_run_band_project.name, drone_run_band_project.description, drone_run_project.project_id, drone_run_project.name, drone_run_project.description, field_trial.project_id, field_trial.name, field_trial.description, drone_run_band_type.value, drone_run_date.value, drone_run_type.value, drone_run_averaged_temperature_gdd.value, drone_run_averaged_precipitation_sum.value, drone_run_related_time_cvterm_json.value, drone_run_indicator.value, drone_run_phenotypes_indicator.value, drone_run_processed.value, drone_run_processed_extended.value, drone_run_processed_vi.value, drone_run_is_raw_images.value, drone_run_ground_control_points.value, drone_run_camera_rig.value, drone_run_base_date.value
+    my $drone_run_q = "SELECT drone_run_band_project.project_id, drone_run_band_project.name, drone_run_band_project.description, drone_run_project.project_id, drone_run_project.name, drone_run_project.description, field_trial.project_id, field_trial.name, field_trial.description, drone_run_band_type.value, drone_run_date.value, drone_run_type.value, drone_run_averaged_temperature_gdd.value, drone_run_averaged_precipitation_sum.value, drone_run_related_time_cvterm_json.value, drone_run_indicator.value, drone_run_phenotypes_indicator.value, drone_run_processed.value, drone_run_processed_extended.value, drone_run_processed_vi.value, drone_run_is_raw_images.value, drone_run_ground_control_points.value, drone_run_camera_rig.value, drone_run_base_date.value, drone_run_band_geoparam_coordinates.value, drone_run_band_geoparam_coordinate_type.value, drone_run_band_geoparam_polygons.value
         FROM project AS drone_run_band_project
         JOIN projectprop AS drone_run_band_type ON(drone_run_band_project.project_id=drone_run_band_type.project_id AND drone_run_band_type.type_id=$drone_run_band_type_cvterm_id)
+        LEFT JOIN projectprop AS drone_run_band_geoparam_coordinates ON(drone_run_band_project.project_id=drone_run_band_geoparam_coordinates.project_id AND drone_run_band_geoparam_coordinates.type_id=$geoparam_coordinates_cvterm_id)
+        LEFT JOIN projectprop AS drone_run_band_geoparam_coordinate_type ON(drone_run_band_project.project_id=drone_run_band_geoparam_coordinate_type.project_id AND drone_run_band_geoparam_coordinate_type.type_id=$geoparam_coordinates_type_cvterm_id)
+        LEFT JOIN projectprop AS drone_run_band_geoparam_polygons ON(drone_run_band_project.project_id=drone_run_band_geoparam_polygons.project_id AND drone_run_band_geoparam_polygons.type_id=$geoparam_coordinates_plot_polygons_cvterm_id)
         JOIN project_relationship AS drone_run_band_rel ON (drone_run_band_rel.subject_project_id = drone_run_band_project.project_id AND drone_run_band_rel.type_id = $drone_run_band_drone_run_project_relationship_type_id_cvterm_id)
         JOIN project AS drone_run_project ON (drone_run_band_rel.object_project_id = drone_run_project.project_id)
         JOIN projectprop AS drone_run_date ON(drone_run_project.project_id=drone_run_date.project_id AND drone_run_date.type_id=$project_start_date_type_id)
@@ -88,12 +94,15 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
     my %unique_drone_run_dates;
     my $epoch_seconds = 0;
     my %trial_id_hash;
-    while( my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_project_desc, $drone_run_project_id, $drone_run_project_name, $drone_run_project_desc, $field_trial_project_id, $field_trial_project_name, $field_trial_project_desc, $drone_run_band_project_type, $drone_run_date, $drone_run_type, $drone_run_averaged_temperature_gdd, $drone_run_averaged_precipitation_sum, $drone_run_related_time_cvterm_json, $drone_run_indicator, $drone_run_phenotypes_indicator, $drone_run_processed, $drone_run_processed_extended, $drone_run_processed_vi, $drone_run_is_raw_images, $drone_run_ground_control_points_json, $drone_run_camera_rig, $drone_run_base_date) = $h->fetchrow_array()) {
+    while( my ($drone_run_band_project_id, $drone_run_band_project_name, $drone_run_band_project_desc, $drone_run_project_id, $drone_run_project_name, $drone_run_project_desc, $field_trial_project_id, $field_trial_project_name, $field_trial_project_desc, $drone_run_band_project_type, $drone_run_date, $drone_run_type, $drone_run_averaged_temperature_gdd, $drone_run_averaged_precipitation_sum, $drone_run_related_time_cvterm_json, $drone_run_indicator, $drone_run_phenotypes_indicator, $drone_run_processed, $drone_run_processed_extended, $drone_run_processed_vi, $drone_run_is_raw_images, $drone_run_ground_control_points_json, $drone_run_camera_rig, $drone_run_base_date, $drone_run_band_geoparam_coordinates, $drone_run_band_geoparam_coordinates_type, $drone_run_band_geoparam_polygons) = $h->fetchrow_array()) {
         my $drone_run_date_formatted = $drone_run_date ? $calendar_funcs->display_start_date($drone_run_date) : '';
 
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_project_name} = $drone_run_band_project_name;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_project_description} = $drone_run_band_project_desc;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_project_type} = $drone_run_band_project_type;
+        $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_geoparam_coordinates} = $drone_run_band_geoparam_coordinates;
+        $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_geoparam_coordinates_type} = $drone_run_band_geoparam_coordinates_type;
+        $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{bands}->{$drone_run_band_project_id}->{drone_run_band_geoparam_polygons} = $drone_run_band_geoparam_polygons;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{trial_id} = $field_trial_project_id;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{trial_name} = $field_trial_project_name;
         $unique_drone_runs{$field_trial_project_name}->{$drone_run_project_id}->{drone_run_project_name} = $drone_run_project_name;
@@ -137,6 +146,20 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
             my $drone_run_bands = $v->{bands};
             my $drone_run_date = $v->{drone_run_date};
 
+            my $missing_geocoord_params = 0;
+            foreach my $drone_run_band_project_id (sort keys %$drone_run_bands) {
+                my $d = $drone_run_bands->{$drone_run_band_project_id};
+                if ($d->{drone_run_band_geoparam_polygons}) {
+                    my $geocoords = decode_json $d->{drone_run_band_geoparam_polygons};
+                    if (scalar(keys %$geocoords) < 1) {
+                        $missing_geocoord_params = 1;
+                    }
+                }
+                else {
+                    $missing_geocoord_params = 1;
+                }
+            }
+
             $drone_run_html .= '<div class="panel-group" id="drone_run_band_accordion_drone_run_wrapper_'.$k.'" ><div class="panel panel-default"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#drone_run_band_accordion_drone_run_wrapper_'.$k.'" href="#drone_run_band_accordion_drone_run_wrapper_one_'.$k.'" >'.$v->{drone_run_project_name}.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp'.$drone_run_date.'</a></h4></div><div id="drone_run_band_accordion_drone_run_wrapper_one_'.$k.'" class="panel-collapse collapse"><div class="panel-body">';
 
             $drone_run_html .= '<div class="well well-sm">';
@@ -175,7 +198,7 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
             if ($v->{drone_run_phenotypes_indicator}) {
                 $drone_run_html .= '<span class="label label-info" ><span class="glyphicon glyphicon-hourglass"></span>&nbsp;&nbsp;&nbsp;Processing Phenotypes in Progress</span><br/><br/>';
             } elsif ($v->{drone_run_processed}) {
-                # $drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button>';
+                # $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Calculate Phenotypes Again for <br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
             }
             #$drone_run_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Generate Phenotypes for <br/>'.$v->{drone_run_project_name}.'</button>';
 
@@ -201,11 +224,20 @@ sub raw_drone_imagery_summary_top_GET : Args(0) {
 
                     # if ($v->{drone_run_processed} && !$v->{drone_run_ground_control_points}) {
                     if ($v->{drone_run_processed}) {
+                        $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_phenotype_run" data-drone_run_project_id="'.$k.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Calculate Phenotypes Again for <br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+
+                        $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_apply_other_vi" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Apply Other Vegetation Indices For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+
                         $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_ground_control_points" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Save Ground Control Points For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
+
+                        if ($missing_geocoord_params) {
+                            $drone_run_html .= '<button class="btn btn-default btn-sm" name="drone_imagery_drone_run_band_add_geocoordinate_params" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Add GeoCoordinate Params</button><br/><br/>';
+                        }
+
+                        $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_quality_control_check" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Quality Control Plot Images For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
                     }
                 # }
             }
-            $drone_run_html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_quality_control_check" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" data-field_trial_id="'.$v->{trial_id}.'" data-field_trial_name="'.$v->{trial_name}.'" >Quality Control Plot Images For<br/>'.$v->{drone_run_project_name}.'</button><br/><br/>';
 
             $drone_run_html .= '<button class="btn btn-danger btn-sm" name="project_drone_imagery_delete_drone_run" data-drone_run_project_id="'.$k.'" data-drone_run_project_name="'.$v->{drone_run_project_name}.'" >Delete Imaging Event</button>';
 
@@ -362,8 +394,11 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_modified_date"} = $_->{image_modified_date};
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_original"} = $image_original;
             $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_id"} = $image_id;
+            $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_plot_phenotype_margin"} = $_->{drone_run_phenotype_plot_margins};
             if (exists($imagery_attribute_map->{$_->{project_image_type_name}})) {
-                $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_".$imagery_attribute_map->{$_->{project_image_type_name}}->{name}} = $_->{$imagery_attribute_map->{$_->{project_image_type_name}}->{key}};
+                if ($imagery_attribute_map->{$_->{project_image_type_name}}->{name} eq 'threshold') {
+                    $unique_drone_runs{$_->{drone_run_project_id}}->{bands}->{$_->{drone_run_band_project_id}}->{$_->{project_image_type_name}."_".$imagery_attribute_map->{$_->{project_image_type_name}}->{name}} = $_->{drone_run_band_removed_background_threshold};
+                }
             }
         }
     }
@@ -419,14 +454,14 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                         $drone_run_band_table_html .= '<div class="well well-sm"><div class="row"><div class="col-sm-6"><h5>Cropped Image&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$d->{cropped_stitched_drone_imagery_id}.'"></span></h5><b>By</b>: '.$d->{cropped_stitched_drone_imagery_username}.'<br/><b>Date</b>: '.$d->{cropped_stitched_drone_imagery_modified_date}.'<br/><b>Cropped Polygon</b>: '.$d->{cropped_stitched_drone_imagery_polygon}.'</div><div class="col-sm-6">'.$d->{cropped_stitched_drone_imagery}.'</div></div></div>';
 
                         if ($d->{denoised_stitched_drone_imagery}) {
-                            $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{denoised_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_username}, $d->{denoised_stitched_drone_imagery_modified_date}, undef, $d->{denoised_stitched_drone_imagery}, $original_denoised_observation_unit_polygon_terms{$d->{drone_run_band_project_type}}, $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{denoised_stitched_drone_imagery_id}, $v->{drone_run_project_name});
+                            $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{denoised_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_username}, $d->{denoised_stitched_drone_imagery_modified_date}, undef, $d->{denoised_stitched_drone_imagery}, $original_denoised_observation_unit_polygon_terms{$d->{drone_run_band_project_type}}, $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{denoised_stitched_drone_imagery_id}, $v->{drone_run_project_name}, $d->{"denoised_stitched_drone_imagery_plot_phenotype_margin"});
 
                             # $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_add_georeference" data-stitched_image_id="'.$d->{stitched_image_id}.'" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Add Georeferenced Points</button><br/><br/>';
 
                             foreach my $original_background_removed_threshold_term (keys %original_background_removed_threshold_terms) {
                                 my $plot_polygon_type = $imagery_attribute_map->{$original_background_removed_threshold_term}->{observation_unit_plot_polygon_type};
                                 if (exists($d->{$original_background_removed_threshold_term})) {
-                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$original_background_removed_threshold_term."_id"}, $d->{$original_background_removed_threshold_term."_username"}, $d->{$original_background_removed_threshold_term."_modified_date"}, $d->{$original_background_removed_threshold_term."_threshold"}, $d->{$original_background_removed_threshold_term}, [$plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$original_background_removed_threshold_term."_id"}, $v->{drone_run_project_name});
+                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$original_background_removed_threshold_term."_id"}, $d->{$original_background_removed_threshold_term."_username"}, $d->{$original_background_removed_threshold_term."_modified_date"}, $d->{$original_background_removed_threshold_term."_threshold"}, $d->{$original_background_removed_threshold_term}, [$plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$original_background_removed_threshold_term."_id"}, $v->{drone_run_project_name}, $d->{$original_background_removed_threshold_term."_plot_phenotype_margin"});
                                 } else {
                                     if ($d->{drone_run_band_project_type} eq $original_background_removed_threshold_terms{$original_background_removed_threshold_term}) {
                                     #     $drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_remove_background" data-denoised_stitched_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-denoised_stitched_image="'.uri_encode($d->{denoised_stitched_drone_imagery_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-remove_background_current_image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-remove_background_current_image_type="'.$original_background_removed_threshold_term.'" >Remove Background From Original Denoised Image via Threshold</button><br/><br/>';
@@ -440,7 +475,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                 foreach my $ft_hpf30_denoised_original_image_type (@{$original_denoised_imagery_terms->{$d->{drone_run_band_project_type}}->{imagery_types}->{ft_hpf}->{$ft_hpf_denoised_original_image_type_filter}}) {
                                     my $ft_hpf30_denoised_plot_polygon_type = $original_denoised_imagery_terms->{$d->{drone_run_band_project_type}}->{observation_unit_plot_polygon_types}->{ft_hpf}->{$ft_hpf_denoised_original_image_type_filter}->[$ft_hpf30_denoised_imagery_type_counter];
                                     if ($d->{$ft_hpf30_denoised_original_image_type}) {
-                                        $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$ft_hpf30_denoised_original_image_type."_id"}, $d->{$ft_hpf30_denoised_original_image_type."_username"}, $d->{$ft_hpf30_denoised_original_image_type."_modified_date"}, undef, $d->{$ft_hpf30_denoised_original_image_type}, [$ft_hpf30_denoised_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$ft_hpf30_denoised_original_image_type.'_id'}, $v->{drone_run_project_name});
+                                        $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$ft_hpf30_denoised_original_image_type."_id"}, $d->{$ft_hpf30_denoised_original_image_type."_username"}, $d->{$ft_hpf30_denoised_original_image_type."_modified_date"}, undef, $d->{$ft_hpf30_denoised_original_image_type}, [$ft_hpf30_denoised_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$ft_hpf30_denoised_original_image_type.'_id'}, $v->{drone_run_project_name}, $d->{$ft_hpf30_denoised_original_image_type."_plot_phenotype_margin"});
                                     } else {
                                         #$drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_fourier_transform_hpf30" data-image_id="'.$d->{denoised_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-drone_run_band_project_type="'.$d->{drone_run_band_project_type}.'", data-selected_image_type="'.$ft_hpf30_denoised_original_image_type.'" >Run Fourier Transform HPF30 ('.$ft_hpf30_denoised_original_image_type.')</button><br/><br/>';
                                         # $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Imagery of type '.$ft_hpf30_denoised_original_image_type.' and subsequently plot polygons of type '.$ft_hpf30_denoised_plot_polygon_type.' are not found. The standard process should have covered all supported image cases. Please try again or contact us.</button><br/><br/>';
@@ -463,7 +498,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{NDVI}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {
-                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'}, $v->{drone_run_project_name});
+                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'}, $v->{drone_run_project_name}, $d->{$image_type_term."_plot_phenotype_margin"});
                                                 } else {
                                                     # $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Imagery of type '.$image_type_term.' and subsequently plot polygons of type '.$observation_unit_plot_polygon_type.' are not found. The standard process should have covered all supported image cases. Please try again or contact us.</button><br/><br/>';
                                                 }
@@ -478,7 +513,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{NDRE}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {
-                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'}, $v->{drone_run_project_name});
+                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'}, $v->{drone_run_project_name}, $d->{$image_type_term."_plot_phenotype_margin"});
                                                 } else {
                                                     # $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Imagery of type '.$image_type_term.' and subsequently plot polygons of type '.$observation_unit_plot_polygon_type.' are not found. The standard process should have covered all supported image cases. Please try again or contact us.</button><br/><br/>';
                                                 }
@@ -492,7 +527,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{TGI}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {
-                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'}, $v->{drone_run_project_name});
+                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'}, $v->{drone_run_project_name}, $d->{$image_type_term."_plot_phenotype_margin"});
                                                 } else {
                                                     # $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Imagery of type '.$image_type_term.' and subsequently plot polygons of type '.$observation_unit_plot_polygon_type.' are not found. The standard process should have covered all supported image cases. Please try again or contact us.</button><br/><br/>';
                                                 }
@@ -503,7 +538,18 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                         while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{VARI}->{$imagery_term}}) {
                                             foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
                                                 if ($d->{$image_type_term}) {
-                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'}, $v->{drone_run_project_name});
+                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'}, $v->{drone_run_project_name}, $d->{$image_type_term."_plot_phenotype_margin"});
+                                                } else {
+                                                    # $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Imagery of type '.$image_type_term.' and subsequently plot polygons of type '.$observation_unit_plot_polygon_type.' are not found. The standard process should have covered all supported image cases. Please contact try again or us.</button><br/><br/>';
+                                                }
+                                            }
+                                        }
+                                    }
+                                    foreach my $imagery_term (sort keys %{$vi_map_hash->{CCC}}) {
+                                        while (my ($image_type_term, $observation_unit_plot_polygon_types) = each %{$vi_map_hash->{CCC}->{$imagery_term}}) {
+                                            foreach my $observation_unit_plot_polygon_type (@$observation_unit_plot_polygon_types) {
+                                                if ($d->{$image_type_term}) {
+                                                    $drone_run_band_table_html .= _draw_drone_imagery_section($observation_unit_plot_polygon_type_names, $d, $d->{$image_type_term."_id"}, $d->{$image_type_term."_username"}, $d->{$image_type_term."_modified_date"}, undef, $d->{$image_type_term}, [$observation_unit_plot_polygon_type], $d->{stitched_image_id}, $d->{cropped_stitched_drone_imagery_id}, $d->{denoised_stitched_drone_imagery_id}, $v->{trial_id}, uri_encode($d->{stitched_image_original}), $drone_run_band_project_id, $d->{drone_run_band_project_type}, $k, $d->{$image_type_term.'_id'}, $v->{drone_run_project_name}, $d->{$image_type_term."_plot_phenotype_margin"});
                                                 } else {
                                                     # $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Imagery of type '.$image_type_term.' and subsequently plot polygons of type '.$observation_unit_plot_polygon_type.' are not found. The standard process should have covered all supported image cases. Please contact try again or us.</button><br/><br/>';
                                                 }
@@ -512,7 +558,7 @@ sub raw_drone_imagery_drone_run_band_summary_GET : Args(0) {
                                     }
                                 }
                             } else {
-                                $drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Vegetative index cannot be calculated on an image with a single channel.<br/>You can merge bands into a multi-channel image using the "Merge Drone Run Bands" button below this table.<br/>If the standard process was run and vegetative indices were selected, merged images should appear at the bottom of this table.</button><br/><br/>';
+                                #$drone_run_band_table_html .= '<button class="btn btn-default btn-sm disabled">Vegetative index cannot be calculated on an image with a single channel.<br/>You can merge bands into a multi-channel image using the "Merge Drone Run Bands" button below this table.<br/>If the standard process was run and vegetative indices were selected, merged images should appear at the bottom of this table.</button><br/><br/>';
                             }
                         } else {
                             #$drone_run_band_table_html .= '<button class="btn btn-primary btn-sm" name="project_drone_imagery_denoise" data-cropped_stitched_image_id="'.$d->{cropped_stitched_drone_imagery_id}.'" data-field_trial_id="'.$v->{trial_id}.'" data-stitched_image="'.uri_encode($d->{stitched_image_original}).'" data-cropped_stitched_image="'.uri_encode($d->{cropped_stitched_drone_imagery_original}).'" data-drone_run_project_id="'.$k.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" >Denoise</button><br/><br/>';
@@ -558,10 +604,16 @@ sub _draw_drone_imagery_section {
     my $drone_run_project_id = shift;
     my $plot_polygon_background_to_use_image_id = shift;
     my $drone_run_project_name = shift;
+    my $plot_phenotype_margins = shift;
 
     my $html .= '<div class="well well-sm"><h5>'.$observation_unit_plot_polygon_type_names->{$plot_polygon_terms->[0]}.'&nbsp;&nbsp;&nbsp;&nbsp;<span class="glyphicon glyphicon-remove-sign text-danger" name="drone_image_remove" data-image_id="'.$imagery_id.'"></span></h5><div class="row"><div class="col-sm-3"><b>By</b>: '.$imagery_username.'</br><b>Date</b>: '.$imagery_modified_date;
     if ($threshold_value) {
-        $html .= '<br/><b>Threshold Value</b>: '.$threshold_value;
+        $html .= '<br/><b>Thresholded</b>: '.$threshold_value;
+    }
+    if ($plot_phenotype_margins) {
+        my $top_bottom = defined($plot_phenotype_margins->{top_bottom}) ? $plot_phenotype_margins->{top_bottom} : 5;
+        my $left_right = defined($plot_phenotype_margins->{left_right}) ? $plot_phenotype_margins->{left_right} : 5;
+        $html .= '<br/><b>Plot-polygon Phenotype Margins</b>: Top/Bottom: '.$top_bottom.'%, Left/Right: '.$left_right.'%';
     }
     $html .= '<hr>'.$imagery.'</div><div class="col-sm-9">';
 
@@ -588,7 +640,7 @@ sub _draw_plot_polygon_images_panel {
     my $drone_run_project_name = shift;
 
     my $html .= '<div class="panel panel-default panel-sm"><div class="panel-body" style="overflow-x:auto">';
-        $html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$stitched_image_id.'" data-cropped_stitched_image_id="'.$cropped_stitched_drone_imagery_id.'" data-denoised_stitched_image_id="'.$denoised_stitched_drone_imagery_id.'" data-field_trial_id="'.$trial_id.'" data-stitched_image="'.$stitched_image_original_uri_encoded.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$plot_polygon_background_to_use_image_id.'" data-assign_plot_polygons_type="'.$plot_polygon_term.'" data-drone_run_project_name="'.$drone_run_project_name.'" >Create/View Plot Polygons</button><br/><br/>';
+        #$html .= '<button class="btn btn-default btn-sm" name="project_drone_imagery_plot_polygons" data-stitched_image_id="'.$stitched_image_id.'" data-cropped_stitched_image_id="'.$cropped_stitched_drone_imagery_id.'" data-denoised_stitched_image_id="'.$denoised_stitched_drone_imagery_id.'" data-field_trial_id="'.$trial_id.'" data-stitched_image="'.$stitched_image_original_uri_encoded.'" data-drone_run_project_id="'.$drone_run_project_id.'" data-drone_run_band_project_id="'.$drone_run_band_project_id.'" data-background_removed_stitched_image_id="'.$plot_polygon_background_to_use_image_id.'" data-assign_plot_polygons_type="'.$plot_polygon_term.'" data-drone_run_project_name="'.$drone_run_project_name.'" >Create/View Plot Polygons</button><br/><br/>';
 
         my $plot_polygon_images = '';
         if ($d->{$plot_polygon_term."_images"}) {

@@ -14,7 +14,7 @@
                 <div class="container-fluid">
 
                     <form class="form-horizontal" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_new_analysis_dialog_form" name="upload_new_analysis_dialog_form">
-                    
+
                         <&| /util/workflow.mas, id=> "upload_new_analysis_workflow" &>
                             <&| /util/workflow.mas:step, title=> "Intro" &>
                                 <& /page/page_title.mas, title=>"This workflow will guide you through uploading an analysis to the database" &>
@@ -120,7 +120,7 @@
                                 <hr>
 
                                 <div id="upload_new_analysis_model_div" style="display:none">
-                                
+
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-3 control-label">Model Name (must be unique): </label>
                                         <div class="col-sm-9">
@@ -171,7 +171,7 @@
 
                                 <div class="well well-sm">
                                     <h4>Data files from this analysis model</h4>
-                                    
+
                                     <table class="table table-bordered">
                                         <thead>
                                             <tr>

@@ -225,11 +225,11 @@
                                 <label class="col-sm-3 control-label">Legendre Polynomial Order: </label>
                                 <div class="col-sm-9" >
                                     <select class="form-control" id="drone_image_calculate_statistics_legendre_order_number_select">
-                                        <option value="1">1</option>
-                                        <option value="2">2</option>
+                                        <!--option value="1">1</option>
+                                        <option value="2">2</option-->
                                         <option value="3">3</option>
-                                        <option value="4">4</option>
-                                        <option value="5">5</option>
+                                        <!--option value="4">4</option>
+                                        <option value="5">5</option-->
                                     </select>
                                 </div>
                             </div>
@@ -931,6 +931,12 @@ jQuery(document).ready(function() {
                     }
                     if (response.env_effects_heatmap_plot) {
                         html = html + '<img src="'+response.env_effects_heatmap_plot+'"><hr>';
+                    }
+                    if (response.env_effects_ggcorr_plot) {
+                        html = html + '<img src="'+response.env_effects_ggcorr_plot+'"><hr>';
+                    }
+                    if (response.env_effects_line_plot) {
+                        html = html + '<img src="'+response.env_effects_line_plot+'"><hr>';
                     }
                     if (response.unique_accessions.length > 0 && response.unique_traits.length > 0 && response.result_blup_genetic_data) {
                         manage_drone_imagery_calculate_statistics_accession_names = response.unique_accessions;

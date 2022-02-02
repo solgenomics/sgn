@@ -24,15 +24,18 @@ $analytics_protocol_type_name
 $analytics_protocol_create_date
 $analytics_protocol_properties
 $analytics_protocol_result_summary
+$analytics_protocol_charts
 </%args>
 
 <& /util/import_javascript.mas, entries => [], classes => [ 'jquery', 'jquery.dataTables' ],  &>
 
 <& /page/page_title.mas, title => "Analytics Protocol <span id=\"analytics_protocol_name_title\">$analytics_protocol_name</span>" &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, analytics_protocol_id => $analytics_protocol_id, info_section_title => "<h4 style='display:inline'>Analytics Protocol Details</h4>", info_section_subtitle => 'View basic information about the analytics protocol.', buttons_html => '', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "analytics_protocol_details", analytics_protocol_name => $analytics_protocol_name, analytics_protocol_description => $analytics_protocol_description, analytics_protocol_type_id => $analytics_protocol_type_id, analytics_protocol_type_name => $analytics_protocol_type_name, analytics_protocol_create_date=>$analytics_protocol_create_date, analytics_protocol_properties => $analytics_protocol_properties, analytics_protocol_result_summary=>$analytics_protocol_result_summary &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, analytics_protocol_id => $analytics_protocol_id, info_section_title => "<h4 style='display:inline'>Analytics Protocol Details</h4>", info_section_subtitle => 'View basic information about the analytics protocol.', buttons_html => '', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "analytics_protocol_details", analytics_protocol_name => $analytics_protocol_name, analytics_protocol_description => $analytics_protocol_description, analytics_protocol_type_id => $analytics_protocol_type_id, analytics_protocol_type_name => $analytics_protocol_type_name, analytics_protocol_create_date=>$analytics_protocol_create_date, analytics_protocol_properties => $analytics_protocol_properties, analytics_protocol_result_summary=>$analytics_protocol_result_summary, analytics_protocol_charts=>$analytics_protocol_charts &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Result Files</h4>", info_section_subtitle => 'Result files and figures.', buttons_html => '', icon_class => "glyphicon glyphicon-option-horizontal", info_section_id => "analytics_protocol_result_files", analytics_protocol_id => $analytics_protocol_id &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Result Files</h4>", info_section_subtitle => 'Result files and figures.', buttons_html => '<button class="btn btn-primary" style="margin:3px" id="analytics_results_compare_to_trait_button">Compare to Trait</button>', icon_class => "glyphicon glyphicon-option-horizontal", info_section_id => "analytics_protocol_result_files", analytics_protocol_id => $analytics_protocol_id, analytics_protocol_charts=>$analytics_protocol_charts &>
+
+<& /analytics_protocols/analytics_protocols_compare_to_trait.mas, analytics_protocol_id=>$analytics_protocol_id &>
 
 <script>
 jQuery(document).ready(function(){

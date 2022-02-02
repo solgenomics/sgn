@@ -131,8 +131,12 @@ jQuery(document).ready(function() {
     jQuery('#export_drone_imagery_submit').click(function(){
         jQuery.ajax({
             url : '/api/drone_imagery/export_drone_runs?drone_run_project_ids='+JSON.stringify(export_imaging_events_drone_run_ids)+'&field_trial_id='+export_imaging_events_field_trial_id,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
             success: function(response){
                 console.log(response);
+                jQuery("#working_modal").modal("hide");
 
                 if (response.error) {
                     alert(response.error);
@@ -146,6 +150,7 @@ jQuery(document).ready(function() {
             },
             error: function(response){
                 alert('Error exporting imaging events!');
+                jQuery("#working_modal").modal("hide");
             }
         });
     });

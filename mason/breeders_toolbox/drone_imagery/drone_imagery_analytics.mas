@@ -41,17 +41,18 @@
 
                             <!--option value="sommer_grm_genetic_blups">Sommer GBLUPs Y~replicate+GRM. Multivariate genetic effects using GRM</option-->
 
-                            <option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+Row+Col+2Dspline. Multivariate genetic + 2Dspl spatial effects</option>
-                            <option value="sommer_grm_spatial_pure_2dspl_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+2Dspline. Multivariate genetic + 2Dspl spatial effects</option>
-                            <option value="sommer_grm_univariate_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+Row+Col+2Dspline. Univariate genetic + 2Dspl spatial effects</option>
+                            <!--option value="sommer_grm_univariate_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+Row+Col+2Dspline. Univariate genetic + 2Dspl spatial effects</option-->
                             <option value="sommer_grm_univariate_spatial_pure_2dspl_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+2Dspline. Univariate genetic + 2Dspl spatial effects</option>
+
+                            <!-- option value="sommer_grm_spatial_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+Row+Col+2Dspline. Multivariate genetic + 2Dspl spatial effects</option-->
+                            <option value="sommer_grm_spatial_pure_2dspl_genetic_blups">Sommer Spatial GBLUPs Y~replicate+GRM+2Dspline. Multivariate genetic + 2Dspl spatial effects</option>
 
                             <!--option value="blupf90_grm_random_regression_dap_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
                             <option value="blupf90_grm_random_regression_gdd_blups">BLUPf90 GBLUPs Y~replicate+GRM+temporal random regression using growing degree days. Multivariate genetic + permanent environment effects</option-->
 
                             <option value="airemlf90_grm_random_regression_dap_blups">AIREMLf90 GBLUPs Y~replicate+GRM+temporal random regression using days after planting. Multivariate genetic + permanent environment effects</option>
 
-                            <option value="asreml_grm_univariate_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+Row+Col+spatial. Univariate genetic + AR1xAR1 spatial effects</option>
+                            <!--option value="asreml_grm_univariate_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+Row+Col+spatial. Univariate genetic + AR1xAR1 spatial effects</option-->
                             <option value="asreml_grm_univariate_pure_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+spatial. Univariate genetic + AR1xAR1 spatial effects</option>
                             <option value="asreml_grm_multivariate_spatial_genetic_blups">ASREML Spatial GBLUPs Y~replicate+GRM+spatial. Multivariate genetic + AR1xAR1 spatial effects</option>
 
@@ -121,8 +122,8 @@
                                     <label class="col-sm-3 control-label">Number Interations: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="drone_imagery_analytics_number_iterations">
-                                            <option value="10">10</option>
                                             <option value="2">2</option>
+                                            <option value="10">10</option>
                                             <option value="25">25</option>
                                             <option value="1">1</option>
                                         </select>
@@ -291,6 +292,8 @@
                                             <option value="0.000001">0.000001</option>
                                             <option value="0.00001">0.00001</option>
                                             <option value="0.0001">0.0001</option>
+                                            <option value="0.0005">0.0005</option>
+                                            <option value="0.0008">0.0008</option>
                                             <option value="0.001">0.001</option>
                                             <option value="0.01">0.01</option>
                                             <option value="0.05">0.05</option>
@@ -324,8 +327,10 @@
                                             <option value="identity">Identity Matrix</option>
                                             <option value="env_corr_structure">Simulated Phenotype Correlation Matrix</option>
                                             <option value="phenotype_correlation">Phenotype Correlation Matrix</option>
-                                            <option value="phenotype_2dspline_effect">2D-Spline Effect of Phenotype</option>
-                                            <!--option value="phenotype_ar1xar1_effect">AR1xAR1 Effect of Phenotype</option-->
+                                            <option value="phenotype_2dspline_effect">Multi 2D-Spline Effect of Phenotype Correlation Matrix</option>
+                                            <option value="phenotype_2dspline_uni_effect">Uni 2D-Spline Effect of Phenotype Correlation Matrix</option>
+                                            <option value="phenotype_ar1xar1_effect">Multi AR1xAR1 Effect of Phenotype Correlation Matrix</option>
+                                            <option value="phenotype_ar1xar1_uni_effect">Uni AR1xAR1 Effect of Phenotype Correlation Matrix</option>
                                             <option value="euclidean_rows_and_columns">Euclidean Distance From Rows and Columns Matrix</option>
                                         </select>
                                     </div>
@@ -346,7 +351,7 @@
                             <div id="drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div" style="display:none">
                                 <div class="form-horizontal">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Phenotype For 2D-spline of AR1xAR1 Effect in Permanent Environment Structure: </label>
+                                        <label class="col-sm-3 control-label">Phenotype For 2D-spline or AR1xAR1 Effects in Permanent Environment Structure: </label>
                                         <div class="col-sm-9" >
                                             <div id="drone_imagery_analytics_permanent_env_structure_phenotype_select_div"></div>
                                         </div>
@@ -360,14 +365,18 @@
                                     <label class="col-sm-3 control-label">Simulated Environment Processes: </label>
                                     <div class="col-sm-9" >
                                         <select class="form-control" id="drone_imagery_analytics_simulated_environment_processes_select_div">
-                                            <option value="">Linear, 1D Normal, 2D Normal, AR1xAR1, Random, Real Data</option>
+                                            <option value="none">No Simulation Process</option>
+                                            <option value="6sims">Linear, 1D Normal, 2D Normal, AR1xAR1, Random, Real Data</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="display:none" id="drone_imagery_analytics_simulated_environment_real_data_trait_select_section">
                                     <label class="col-sm-3 control-label">Trait For Real Data Environment Simulation: </label>
-                                    <div class="col-sm-9" >
+                                    <div class="col-sm-6" >
                                         <div id="drone_imagery_analytics_simulated_environment_real_data_trait_select_div"></div>
+                                    </div>
+                                    <div class="col-sm-3" >
+                                        <button class="btn btn-default" id="drone_imagery_analytics_simulated_environment_processes_select_example_button">Show Simulations Example</button>
                                     </div>
                                 </div>
                             </div>
@@ -428,6 +437,26 @@
 
         </div>
 
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="drone_imagery_analytics_temp_results_dialog" name="drone_imagery_analytics_temp_results_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryAnalyticsTempResultsDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryAnalyticsTempResultsDialog">Results</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div id="drone_imagery_analytics_temp_results_dialog_div">
+            </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -498,6 +527,79 @@ jQuery(document).ready(function() {
             Workflow.focus('#drone_imagery_analytics_workflow', 1);
         }
         return false;
+    });
+
+    jQuery('#drone_imagery_analytics_simulated_environment_processes_select_div').change(function() {
+        if (jQuery(this).val() == '6sims') {
+            jQuery('#drone_imagery_analytics_simulated_environment_real_data_trait_select_section').show();
+        }
+        else {
+            jQuery('#drone_imagery_analytics_simulated_environment_real_data_trait_select_section').hide();
+        }
+    });
+
+    jQuery('#drone_imagery_analytics_simulated_environment_processes_select_example_button').click(function(){
+        var drone_imagery_analytics_simulated_environment_processes_select_example_button_sims = jQuery('#drone_imagery_analytics_simulated_environment_processes_select_div').val();
+        var drone_imagery_analytics_simulated_environment_processes_select_example_button_trait = jQuery('#drone_imagery_analytics_simulated_environment_real_data_trait_select').val();
+        if (drone_imagery_analytics_simulated_environment_processes_select_example_button_sims == '6sims' && drone_imagery_analytics_simulated_environment_processes_select_example_button_trait == '') {
+            alert('Please select the real data trait to show example of!');
+            return false;
+        }
+
+        var drone_imagery_analytics_simulated_environment_processes_select_example_button_trait_ids = [];
+        manage_drone_imagery_analytics_observation_variable_type = jQuery('#drone_imagery_analytics_select_observation_variable_type').val();
+        if (manage_drone_imagery_analytics_observation_variable_type == 'time_ontology') {
+            jQuery('input[name="drone_imagery_analytics_trait_id_select"]').each(function() {
+                if (this.checked){
+                    drone_imagery_analytics_simulated_environment_processes_select_example_button_trait_ids.push(jQuery(this).val());
+                }
+            });
+
+            if (drone_imagery_analytics_simulated_environment_processes_select_example_button_trait_ids.length < 1) {
+                alert('Please select at least one observation variable first!');
+                return false;
+            }
+        }
+        else {
+            drone_imagery_analytics_simulated_environment_processes_select_example_button_trait_ids = jQuery('#drone_imagery_analytics_trait_id_select').val();
+            if (drone_imagery_analytics_simulated_environment_processes_select_example_button_trait_ids == null || drone_imagery_analytics_simulated_environment_processes_select_example_button_trait_ids == undefined) {
+                alert('Please select at least one observation variable first!');
+                return false;
+            }
+        }
+
+        jQuery.ajax({
+            url : '/api/drone_imagery/show_example_simulations',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            method:'POST',
+            data: {
+                'field_trial_id':manage_drone_imagery_analytics_field_trial_id_string,
+                'simulations':drone_imagery_analytics_simulated_environment_processes_select_example_button_sims,
+                'real_data_trait_id':drone_imagery_analytics_simulated_environment_processes_select_example_button_trait,
+                'trait_ids':JSON.stringify(drone_imagery_analytics_simulated_environment_processes_select_example_button_trait_ids),
+                'change_over_time':jQuery('#drone_imagery_analytics_select_sim_env_change_over_time_type').val(),
+                'correlation_over_time':jQuery('#drone_imagery_analytics_sim_env_change_over_time_correlation').val()
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    var html = '<img src="'+response.plot+'">';
+                    jQuery('#drone_imagery_analytics_temp_results_dialog_div').html(html);
+                    jQuery('#drone_imagery_analytics_temp_results_dialog').modal('show');
+                }
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error showing example sims!')
+            }
+        });
     });
 
     jQuery('#drone_imagery_analytics_select_observation_variable_type').change(function(){
@@ -649,7 +751,11 @@ jQuery(document).ready(function() {
             jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').show();
             jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').hide();
         }
-        else if (jQuery(this).val() == 'phenotype_2dspline_effect') {
+        else if (jQuery(this).val() == 'phenotype_2dspline_effect' || jQuery(this).val() == 'phenotype_2dspline_uni_effect') {
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').hide();
+            jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').show();
+        }
+        else if (jQuery(this).val() == 'phenotype_ar1xar1_effect' || jQuery(this).val() == 'phenotype_ar1xar1_uni_effect') {
             jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_correlation_div').hide();
             jQuery('#drone_imagery_analytics_permanent_env_structure_phenotype_effect_select_div').show();
         }
@@ -785,7 +891,8 @@ jQuery(document).ready(function() {
                 'sim_env_change_over_time_correlation':jQuery('#drone_imagery_analytics_sim_env_change_over_time_correlation').val(),
                 'fixed_effect_type':jQuery('#drone_imagery_analytics_fixed_effect_select_div').val(),
                 'fixed_effect_trait_id':jQuery('#drone_imagery_analytics_fixed_effect_trait_select').val(),
-                'fixed_effect_quantiles':jQuery('#drone_imagery_analytics_fixed_effect_select_quantile').val()
+                'fixed_effect_quantiles':jQuery('#drone_imagery_analytics_fixed_effect_select_quantile').val(),
+                'simulations_to_run':jQuery('#drone_imagery_analytics_simulated_environment_processes_select_div').val()
             },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");

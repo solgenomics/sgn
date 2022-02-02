@@ -1,6 +1,7 @@
 <%args>
 $analytics_protocol_id
 $analytics_protocol_name
+$analytics_protocol_charts
 </%args>
 
 <table class="table table-hover table-bordered" id="analytics_protocols_result_files_table">
@@ -14,6 +15,14 @@ $analytics_protocol_name
     <tbody>
     </tbody>
 </table>
+
+<hr>
+
+%  if ($analytics_protocol_charts) {
+%    foreach (@$analytics_protocol_charts) {
+%      print "<img src='".$_."'><br/>";
+%    }
+%  }
 
 <script>
 jQuery(document).ready(function(){

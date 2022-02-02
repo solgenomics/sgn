@@ -7,6 +7,7 @@ $analytics_protocol_type_name
 $analytics_protocol_create_date
 $analytics_protocol_properties
 $analytics_protocol_result_summary
+$analytics_protocol_charts
 </%args>
 
 <div class="row">
@@ -78,6 +79,7 @@ $analytics_protocol_result_summary
 %           my $env_iterations = $s->{env_iterations};
 %           my $number_iterations = $s->{number_iterations};
 %           my $varcomps = $s->{env_varcomps};
+%           my $avg_varcomps = $s->{avg_varcomps};
 %           my $avg_varcomps_display = $s->{avg_varcomps_display};
 %           my $avg_cross_validation_display = $s->{avg_cross_validation_display};
 %           if ($analytics_result_type) {
@@ -87,9 +89,11 @@ $analytics_protocol_result_summary
 %               print "<strong>Simulated Environment Correlation Results</strong><br/>";
 %               print $number_iterations." iterations<br/>";
 %               foreach my $env_type (sort keys %$env_corr_results) {
+%                   my $values = $env_corr_results->{$env_type}->{values};
+%                   my $values_string = join ',', @$values;
 %                   my $mean = $env_corr_results->{$env_type}->{mean};
 %                   my $std = $env_corr_results->{$env_type}->{std};
-%                   print $env_type." : ".$mean." +- ".$std."<br/>";
+%                   print "<span title='".$values_string."'>".$env_type." : ".$mean." +- ".$std."</span><br/>";
 %               }
 %           }
 %           if ($env_iterations) {
@@ -128,7 +132,8 @@ $analytics_protocol_result_summary
 %               print "<br/><strong>Variance Components</strong><br/>";
 %               foreach my $i (@$avg_varcomps_display) {
 %                   if (defined($i->{mean})) {
-%                       print "$i->{type}: $i->{type_scenario}: $i->{level}: $i->{mean} +- $i->{std}<br/>";
+%                       my $values_string = join ',', @{$i->{vals}};
+%                       print "<span title='".$values_string."'>$i->{type}: $i->{type_scenario}: $i->{level}: $i->{mean} +- $i->{std}</span><br/>";
 %                   }
 %               }
 %           }

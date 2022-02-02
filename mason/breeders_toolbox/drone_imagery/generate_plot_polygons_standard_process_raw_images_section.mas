@@ -44,7 +44,7 @@ $id_extension => ''
                 </div>
             </div>
             <hr>
-        
+
             <&| /page/info_section.mas, title => 'Template Parameters', collapsible=>1, collapsed => 1, subtitle=> 'View and edit template parameters. These parameters can be filled using the above button clicks' &>
                 <div class="well well-sm">
                     <form class="form-horizontal">

@@ -2183,7 +2183,7 @@ jQuery(document).ready(function(){
     }
 
     jQuery(document).on('click', '#drone_imagery_standard_process_interactive_generated_polygons_table_input_generate_button', function(){
-        generatePlotPolygonAssignmentsInteractiveManual('drone_imagery_standard_process_trial_layout_div', 'drone_imagery_standard_process_layout_table');
+        generatePlotPolygonAssignmentsInteractiveManual('drone_imagery_standard_process_trial_layout_div_0', 'drone_imagery_standard_process_layout_table_0');
     });
 
     function generatePlotPolygonAssignmentsInteractiveManual(trial_layout_div, trial_layout_table) {
@@ -2217,7 +2217,7 @@ jQuery(document).ready(function(){
     }
 
     jQuery(document).on('click', '#drone_imagery_standard_process_interactive_plot_polygons_generated_assign', function(){
-        generatePlotPolygonAssignmentsInteractive('drone_imagery_standard_process_trial_layout_div', 'drone_imagery_standard_process_layout_table');
+        generatePlotPolygonAssignmentsInteractive('drone_imagery_standard_process_trial_layout_div_0', 'drone_imagery_standard_process_layout_table_0');
     });
 
     function generatePlotPolygonAssignmentsInteractive(trial_layout_div, trial_layout_table) {

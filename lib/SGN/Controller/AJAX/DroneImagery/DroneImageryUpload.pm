@@ -61,6 +61,7 @@ sub upload_drone_imagery_check_drone_name_GET : Args(0) {
     }
 }
 
+#DEPRECATED. USE /drone_imagery/upload_drone_imagery instead!
 sub upload_drone_imagery : Path('/api/drone_imagery/upload_drone_imagery') : ActionClass('REST') { }
 sub upload_drone_imagery_POST : Args(0) {
     my $self = shift;
@@ -330,6 +331,8 @@ sub upload_drone_imagery_POST : Args(0) {
     my $drone_run_band_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_project_type', 'project_property')->cvterm_id();
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
     my $project_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_on_drone_run', 'project_relationship')->cvterm_id();
+    my $original_image_resize_ratio_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_original_image_resize_ratio', 'project_property')->cvterm_id();
+    my $rotated_image_resize_ratio_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'drone_run_band_rotated_image_resize_ratio', 'project_property')->cvterm_id();
 
     my @return_drone_run_band_project_ids;
     my @return_drone_run_band_image_ids;
@@ -425,14 +428,6 @@ sub upload_drone_imagery_POST : Args(0) {
             }
         }
         foreach (@new_drone_run_bands) {
-            my $project_rs = $schema->resultset("Project::Project")->create({
-                name => $_->{name},
-                description => $_->{description},
-                projectprops => [{type_id => $drone_run_band_type_cvterm_id, value => $_->{type}}, {type_id => $design_cvterm_id, value => 'drone_run_band'}],
-                project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
-            });
-            my $selected_drone_run_band_id = $project_rs->project_id();
-
             my $upload_file = $_->{upload_file};
             my $upload_original_name = $upload_file->filename();
             my $upload_tempfile = $upload_file->tempname;
@@ -457,17 +452,39 @@ sub upload_drone_imagery_POST : Args(0) {
             unlink $upload_tempfile;
             print STDERR "Archived Drone Image File: $archived_filename_with_path\n";
 
-            my ($check_image_width, $check_image_height) = imgsize($archived_filename_with_path);
-            if ($check_image_width > 16384) {
-                my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --width 16384';
-                print STDERR Dumper $cmd_resize;
-                my $status_resize = system($cmd_resize);
+            my @original_image_resize_ratio = (1,1);
+            if ($c->config->{drone_imagery_allow_resize}) {
+                my ($check_image_width, $check_image_height) = imgsize($archived_filename_with_path);
+                my $check_image_width_original = $check_image_width;
+                my $check_image_height_original = $check_image_height;
+                if ($check_image_width > 16384) {
+                    my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --width 16384';
+                    print STDERR Dumper $cmd_resize;
+                    my $status_resize = system($cmd_resize);
+                    my ($check_image_width_resized, $check_image_height_resized) = imgsize($archived_filename_with_path);
+                    $check_image_width = $check_image_width_resized;
+                    $check_image_height = $check_image_height_resized;
+                }
+                if ($check_image_height > 16384) {
+                    my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --height 16384';
+                    print STDERR Dumper $cmd_resize;
+                    my $status_resize = system($cmd_resize);
+                }
+                my ($check_image_width_saved, $check_image_height_saved) = imgsize($archived_filename_with_path);
+                @original_image_resize_ratio = ($check_image_width_original/$check_image_width_saved, $check_image_height_original/$check_image_height_saved);
             }
-            elsif ($check_image_height > 16384) {
-                my $cmd_resize = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/Resize.py --image_path \''.$archived_filename_with_path.'\' --outfile_path \''.$archived_filename_with_path.'\' --height 16384';
-                print STDERR Dumper $cmd_resize;
-                my $status_resize = system($cmd_resize);
-            }
+
+            my $project_rs = $schema->resultset("Project::Project")->create({
+                name => $_->{name},
+                description => $_->{description},
+                projectprops => [
+                    {type_id => $drone_run_band_type_cvterm_id, value => $_->{type}},
+                    {type_id => $design_cvterm_id, value => 'drone_run_band'},
+                    {type_id => $original_image_resize_ratio_cvterm_id, value => encode_json \@original_image_resize_ratio}
+                ],
+                project_relationship_subject_projects => [{type_id => $project_relationship_type_id, object_project_id => $selected_drone_run_id}]
+            });
+            my $selected_drone_run_band_id = $project_rs->project_id();
 
             my $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
             $image->set_sp_person_id($user_id);

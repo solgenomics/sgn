@@ -1,9 +1,11 @@
 <%args>
 </%args>
 
+<!--
 <div class="well well-sm">
     <div class="panel panel-default">
         <div class="panel-body">
+-->
             <div class="well well-sm">
                 <form class="form-horizontal">
                     <div class="row">
@@ -24,14 +26,37 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Plot-polygon Margins Top/Bottom (%): </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_standard_process_plot_polygons_margin_top_bottom" name="drone_imagery_standard_process_plot_polygons_margin_top_bottom" type="number" value=0 />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group form-group-sm">
+                                <label class="col-sm-6 control-label">Plot-polygon Margins Left/Right (%): </label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" id="drone_imagery_standard_process_plot_polygons_margin_left_right" name="drone_imagery_standard_process_plot_polygons_margin_left_right" type="number" value=0 />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </form>
+                <button class="btn btn btn-primary" id="drone_imagery_standard_process_plot_polygons_rectangles_start">Click Here To Start Templating. Create As Many Templates As Needed.</button>
             </div>
+    <!--
         </div>
     </div>
+    -->
 
+    <!--
     <div class="panel panel-default">
         <div class="panel-body">
-
+    -->
+            <!--
             <div class="row">
                 <div class="col-sm-12">
                     <h4> Either (A) click the four corners of the area of interest: </h4>
@@ -42,6 +67,9 @@
                     <button class="btn btn-sm btn-info" id="drone_imagery_standard_process_plot_polygons_bottom_right_click">Click Bottom Right Corner</button>
                 </div>
             </div>
+            -->
+
+            <!--
             <hr>
 
             <&| /page/info_section.mas, title => 'Template Parameters', collapsible=>1, collapsed => 1, subtitle=> 'View and edit template parameters. These parameters can be filled using the above button clicks' &>
@@ -52,7 +80,9 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Left-most Column Top Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_left_column_top_offset" name="drone_imagery_standard_process_plot_polygons_left_column_top_offset" type="number" value="0" placeholder="0"/>
+                                    -->
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_left_column_top_offset" name="drone_imagery_standard_process_plot_polygons_left_column_top_offset" type="hidden" value="0" placeholder="0"/>
+                                    <!--
                                     </div>
                                 </div>
                             </div>
@@ -60,7 +90,9 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Left-most Column Bottom Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_left_column_bottom_offset" name="drone_imagery_standard_process_plot_polygons_left_column_bottom_offset" type="number" value="0" placeholder="0"/>
+                                    -->
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_left_column_bottom_offset" name="drone_imagery_standard_process_plot_polygons_left_column_bottom_offset" type="hidden" value="0" placeholder="0"/>
+                                    <!--
                                     </div>
                                 </div>
                             </div>
@@ -70,7 +102,9 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Top-most Row Left Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_row_left_offset" name="drone_imagery_standard_process_plot_polygons_top_row_left_offset" type="number" placeholder="0" value="0" />
+                                    -->
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_row_left_offset" name="drone_imagery_standard_process_plot_polygons_top_row_left_offset" type="hidden" placeholder="0" value="0" />
+                                    <!--
                                     </div>
                                 </div>
                             </div>
@@ -78,7 +112,9 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Top-most Row Right Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_row_right_offset" name="drone_imagery_standard_process_plot_polygons_top_row_right_offset" type="number" placeholder="0" value="0" />
+                                    -->
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_top_row_right_offset" name="drone_imagery_standard_process_plot_polygons_top_row_right_offset" type="hidden" placeholder="0" value="0" />
+                                    <!--
                                     </div>
                                 </div>
                             </div>
@@ -88,7 +124,9 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Bottom-most Row Left Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_bottom_row_left_offset" name="drone_imagery_standard_process_plot_polygons_bottom_row_left_offset" type="number" placeholder="0" value="0" />
+                                    -->
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_bottom_row_left_offset" name="drone_imagery_standard_process_plot_polygons_bottom_row_left_offset" type="hidden" placeholder="0" value="0" />
+                                    <!--
                                     </div>
                                 </div>
                             </div>
@@ -96,7 +134,9 @@
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-6 control-label">Right-most Column Bottom Margin: </label>
                                     <div class="col-sm-6">
-                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_right_col_bottom_offset" name="drone_imagery_standard_process_plot_polygons_right_col_bottom_offset" type="number" placeholder="0" value="0" />
+                                    -->
+                                        <input class="form-control" id="drone_imagery_standard_process_plot_polygons_right_col_bottom_offset" name="drone_imagery_standard_process_plot_polygons_right_col_bottom_offset" type="hidden" placeholder="0" value="0" />
+                                    <!--
                                     </div>
                                 </div>
                             </div>
@@ -104,14 +144,19 @@
                     </form>
                 </div>
             </&>
+            -->
 
+            <!--
             <br/>
             <button class="btn btn-sm btn-primary" id="drone_imagery_standard_process_plot_polygons_rectangles_apply">(A) Draw Plot Polygon Template (Does not save. Apply multiple templates if needed.)</button>
-            
+            -->
+
+    <!--
         </div>
     </div>
+    -->
 
-    <div class="panel panel-default">
+    <!--div class="panel panel-default">
         <div class="panel-body">
 
             <div class="row">
@@ -139,8 +184,10 @@
                 </div>
             </&>
         </div>
-    </div>
+    </div-->
 
     <div id="drone_imagery_standard_process_plot_polygons_active_templates"></div>
 
+<!--
 </div>
+-->

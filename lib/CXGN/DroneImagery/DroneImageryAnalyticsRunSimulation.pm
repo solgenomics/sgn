@@ -63,7 +63,7 @@ use Storable qw(dclone);
 use Statistics::Descriptive;
 
 sub perform_drone_imagery_analytics {
-    my ($schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $legendre_coeff_exec_array, $trait_name_encoder_hash, $trait_name_encoder_rev_hash, $stock_info_hash, $plot_id_map_hash, $sorted_trait_names_array, $accession_id_factor_map_hash, $rep_time_factors_array, $ind_rep_factors_array, $unique_accession_names_array, $plot_id_count_map_reverse_hash, $sorted_scaled_ln_times_array, $time_count_map_reverse_hash, $accession_id_factor_map_reverse_hash, $seen_times_hash, $plot_id_factor_map_reverse_hash, $trait_to_time_map_hash, $unique_plot_names_array, $stock_name_row_col_hash, $phenotype_data_original_hash, $plot_rep_time_factor_map_hash, $stock_row_col_hash, $stock_row_col_id_hash, $polynomial_map_hash, $plot_ids_ordered_array, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type, $perform_cv) = @_;
+    my ($schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $legendre_coeff_exec_array, $trait_name_encoder_hash, $trait_name_encoder_rev_hash, $stock_info_hash, $plot_id_map_hash, $sorted_trait_names_array, $accession_id_factor_map_hash, $rep_time_factors_array, $ind_rep_factors_array, $unique_accession_names_array, $plot_id_count_map_reverse_hash, $sorted_scaled_ln_times_array, $time_count_map_reverse_hash, $accession_id_factor_map_reverse_hash, $seen_times_hash, $plot_id_factor_map_reverse_hash, $trait_to_time_map_hash, $unique_plot_names_array, $stock_name_row_col_hash, $phenotype_data_original_hash, $plot_rep_time_factor_map_hash, $stock_row_col_hash, $stock_row_col_id_hash, $polynomial_map_hash, $plot_ids_ordered_array, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type, $perform_cv, $run_only_first_env_estimation) = @_;
     my @legendre_coeff_exec = @$legendre_coeff_exec_array;
     my %trait_name_encoder = %$trait_name_encoder_hash;
     my %trait_name_encoder_rev = %$trait_name_encoder_rev_hash;
@@ -124,7 +124,7 @@ sub perform_drone_imagery_analytics {
     my $env_effect_sum_original = 0;
     my $residual_sum_square_original = 0;
     my $residual_sum_original = 0;
-    my (@param_file_rows_data, @param_file_rows_data_cv1, @param_file_rows_data_cv2, @param_file_rows_data_cv3, @param_file_rows_data_cv4, @param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_2, @param_file_rows_3, @param_file_rows_4, @param_file_rows_5, @param_file_rows_6, @param_file_rows_7);
+    my (@param_file_rows_data, @param_file_rows_data_cv1, @param_file_rows_data_cv2, @param_file_rows_data_cv3, @param_file_rows_data_cv4, @param_file_rows_data_cv5, @param_file_rows_1, @param_file_rows_2, @param_file_rows_3, @param_file_rows_4, @param_file_rows_5, @param_file_rows_6, @param_file_rows_7, @varcomp_herit);
 
     my ($stats_out_cv1_predict_tempfile_fh, $stats_out_cv1_predict_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($stats_out_cv2_predict_tempfile_fh, $stats_out_cv2_predict_tempfile) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
@@ -149,6 +149,8 @@ sub perform_drone_imagery_analytics {
     my ($parameter_tempfile_cv3_2_fh, $parameter_tempfile_cv3_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($parameter_tempfile_cv4_2_fh, $parameter_tempfile_cv4_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
     my ($parameter_tempfile_cv5_2_fh, $parameter_tempfile_cv5_2) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
+
+    my ($stats_out_heritability_fh, $stats_out_heritability) = tempfile("drone_stats_XXXXX", DIR=> $tmp_stats_dir);
 
     print STDERR "RUN FIRST ENV ESTIMATION\n";
     if ($statistics_select eq 'sommer_grm_spatial_genetic_blups' || $statistics_select eq 'sommer_grm_spatial_pure_2dspl_genetic_blups') {
@@ -923,6 +925,9 @@ sub perform_drone_imagery_analytics {
             blups1 <- mix\$U\$\`u:rowNumber\`\$'.$t.';
             spatial_blup_results\$'.$t.' <- data.matrix(X) %*% data.matrix(blups1);
             write.table(spatial_blup_results, file=\''.$stats_out_tempfile_2dspl.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
+            h2 <- vpredict(mix, h2 ~ (V1) / ( V1+V3) );
+            e2 <- vpredict(mix, e2 ~ (V2) / ( V2+V3) );
+            write.table(data.frame(h2=h2\$Estimate, hse=h2\$SE, e2=e2\$Estimate, ese=e2\$SE), file=\''.$stats_out_heritability.'\', row.names=FALSE, col.names=TRUE, sep=\'\t\');
             }
             "';
 
@@ -1387,6 +1392,22 @@ sub perform_drone_imagery_analytics {
                         push @varcomp_original, \@columns;
                     }
                 close($fh_varcomp);
+
+                open(my $fh_herit, '<', $stats_out_heritability) or die "Could not open file '$stats_out_heritability' $!";
+                    print STDERR "Opened $stats_out_heritability\n";
+                    my $header_herit = <$fh_herit>;
+                    my @header_cols_herit;
+                    if ($csv->parse($header_herit)) {
+                        @header_cols_herit = $csv->fields();
+                    }
+                    while (my $row = <$fh_herit>) {
+                        my @columns;
+                        if ($csv->parse($row)) {
+                            @columns = $csv->fields();
+                        }
+                        push @varcomp_herit, \@columns;
+                    }
+                close($fh_herit);
 
                 if ($current_env_row_count == 0 || $current_gen_row_count == 0) {
                     $run_stats_fault = 1;
@@ -2031,6 +2052,7 @@ sub perform_drone_imagery_analytics {
                 $env_effect_sum_square_original = $env_effect_sum_square_original + $value*$value;
             }
         }
+        # print STDERR Dumper $result_blup_pe_data_delta_original;
 
         if ($perform_cv) {
             my $cmd_f90_cv1 = 'cd '.$tmp_stats_dir.'; echo '.$parameter_tempfile_cv1_basename.' | '.$command_name.' > '.$stats_out_tempfile;
@@ -4169,6 +4191,7 @@ sub perform_drone_imagery_analytics {
     print STDERR "ORIGINAL $statistics_select GENETIC EFFECT SUM $genetic_effect_sum_original\n";
     print STDERR "ORIGINAL $statistics_select ENV EFFECT SUM $env_effect_sum_original\n";
     print STDERR Dumper [$genetic_effect_min_original, $genetic_effect_max_original, $env_effect_min_original, $env_effect_max_original];
+    print STDERR Dumper \@varcomp_herit;
 
     my @model_sum_square_original_cv_values = ($model_sum_square_cv1_original, $model_sum_square_cv2_original, $model_sum_square_cv3_original, $model_sum_square_cv4_original, $model_sum_square_cv5_original);
     my @model_sum_square_original_cv_2_values = ($model_sum_square_cv1_2_original, $model_sum_square_cv2_2_original, $model_sum_square_cv3_2_original, $model_sum_square_cv4_2_original, $model_sum_square_cv5_2_original);
@@ -4188,6 +4211,15 @@ sub perform_drone_imagery_analytics {
         variance => $model_sum_square_original_cv_2_stat->variance(),
         mean => $model_sum_square_original_cv_2_stat->mean()
     };
+
+    if ($run_only_first_env_estimation) {
+        return [$statistical_ontology_term, $analysis_model_training_data_file_type, $analysis_model_language, \@sorted_residual_trait_names, \%rr_unique_traits, \%rr_residual_unique_traits, $statistics_cmd, $cmd_f90, $number_traits, \%trait_to_time_map,
+
+        $result_blup_data_original, $result_blup_data_delta_original, $result_blup_spatial_data_original, $result_blup_pe_data_original, $result_blup_pe_data_delta_original, $result_residual_data_original, $result_fitted_data_original, \%fixed_effects_original, \%rr_genetic_coefficients_original, \%rr_temporal_coefficients_original, \@rr_coeff_genetic_covariance_original, \@rr_coeff_env_covariance_original, \@rr_coeff_genetic_correlation_original, \@rr_coeff_env_correlation_original, $rr_residual_variance_original, \@varcomp_original,
+
+        $model_sum_square_residual_original, $genetic_effect_min_original, $genetic_effect_max_original, $env_effect_min_original, $env_effect_max_original, $genetic_effect_sum_square_original, $genetic_effect_sum_original, $env_effect_sum_square_original, $env_effect_sum_original, $residual_sum_square_original, $residual_sum_original, $model_sum_square_original_cv_result, $model_sum_square_original_cv_2_result
+        ];
+    }
 
     my (%phenotype_data_altered, @data_matrix_altered, @data_matrix_phenotypes_altered, @phenotype_data_altered_values);
     my $phenotype_min_altered = 1000000000;

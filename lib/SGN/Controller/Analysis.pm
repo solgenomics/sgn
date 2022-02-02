@@ -114,4 +114,3 @@ sub analysis_model_detail :Path('/analyses_model') Args(1) {
 }
 
 1;
-    

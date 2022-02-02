@@ -1,0 +1,480 @@
+<%args>
+$analytics_protocol_id
+</%args>
+
+<div class="modal fade" id="analytics_results_compare_to_trait_dialog" name="analytics_results_compare_to_trait_dialog" tabindex="-1" role="dialog" aria-labelledby="analyticsCompareResultstoTraitDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="analyticsCompareResultstoTraitDialog">Compare Analytics Results to Trait</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "analytics_compare_results_to_trait_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Trial" &>
+                    <& /page/page_title.mas, title=>"Select Trial to Compare With" &>
+
+                    <div id="analytics_compare_results_to_trait_trial_select_div">Loading...</div>
+
+                    <hr>
+                    <center>
+                    <button class="btn btn-primary" id="analytics_compare_results_to_trait_trial_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Trait" &>
+                    <& /page/page_title.mas, title=>"Select Trait to Compare With" &>
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Trait to Spatial Correct and Plot: </label>
+                            <div class="col-sm-6" >
+                                <div id="analytics_compare_results_to_trait_trait_select_div">Loading...</div>
+                            </div>
+                            <div class="col-sm-4" >
+                                <div class="well well-sm">
+                                    <button class="btn btn-default btn-sm" id="analytics_compare_results_to_trait_analysis_test_ar1_models">Test Models</button>
+                                    <br/><br/>
+                                    <select class="form-control form-control-sm" id="analytics_compare_results_to_trait_analysis_test_ar1_models_default_tol">
+                                        <option value="pre_both">Predefined Tol (2Dspl and AR(1))</option>
+                                        <option value="default_both">Default Tol (2Dspl and AR(1))</option>
+                                        <option value="pre_2dspl_def_ar1">Predefined Tol 2Dspl, Default Tol AR(1)</option>
+                                        <option value="pre_ar1_def_2dspl">Predefined Tol AR(1), Default Tol 2Dspl</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Trait(s) to Plot Alongside: </label>
+                            <div class="col-sm-10" >
+                                <div id="analytics_compare_results_to_trait_trait_secondary_select_div">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <center>
+                    <button class="btn btn-primary" id="analytics_compare_results_to_trait_trait_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Analysis" &>
+                    <& /page/page_title.mas, title=>"Select Analysis to Run" &>
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Analyses: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="analytics_compare_results_to_trait_analysis_select">
+                                    <option value="2dspl">2D-Spline on Trait</option>
+                                    <option value="2dspl_ar1">2D-Spline and AR1xAR1 on Trait</option>
+                                    <option value="2dspl_ar1_wCol">2D-Spline and AR1xAR1 + Column on Trait</option>
+                                    <option value="2dspl_ar1_wRow">2D-Spline and AR1xAR1 + Row on Trait</option>
+                                    <option value="2dspl_ar1_wRowCol">2D-Spline and AR1xAR1 + Column + Row on Trait</option>
+                                    <option value="2dspl_ar1_wRowPlusCol">2D-Spline and AR1(Row) + Column Trait</option>
+                                    <option value="2dspl_ar1_wColPlusRow">2D-Spline and AR1(Column) + Row Trait</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Tolerance: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="analytics_compare_results_to_trait_analysis_select_default_tol">
+                                    <option value="pre_both">Predefined Tol (2Dspl and AR(1))</option>
+                                    <option value="default_both">Default Tol (2Dspl and AR(1))</option>
+                                    <option value="pre_2dspl_def_ar1">Predefined Tol 2Dspl, Default Tol AR(1)</option>
+                                    <option value="pre_ar1_def_2dspl">Predefined Tol AR(1), Default Tol 2Dspl</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Correlation Plot Label Size: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="analytics_compare_results_to_trait_analysis_correlation_plot_label_size">
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-sm">
+                            <label class="col-sm-3 control-label">Correlation Plot Label Decimal Digits: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="analytics_compare_results_to_trait_analysis_correlation_plot_label_digits">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <center>
+                    <button class="btn btn-primary" id="analytics_compare_results_to_trait_analysis_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Results" &>
+                    <& /page/page_title.mas, title=>"Results" &>
+
+                    <div id ="analytics_compare_results_to_trait_results_div">
+                    </div>
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="analytics_results_compare_to_trait_dialog_ar1_tests" name="analytics_results_compare_to_trait_dialog_ar1_tests" tabindex="-1" role="dialog" aria-labelledby="analyticsCompareResultstoTraitAR1TestsDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="analyticsCompareResultstoTraitAR1TestsDialog">Spatial Model Tests</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div id="analytics_results_compare_to_trait_dialog_ar1_tests_results">
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+    jQuery('#analytics_results_compare_to_trait_button').click(function(){
+
+        get_select_box('trials', 'analytics_compare_results_to_trait_trial_select_div', { 'name' : 'analytics_compare_results_to_trait_trial_id', 'id' : 'analytics_compare_results_to_trait_trial_id', 'empty':1, 'multiple':0 });
+
+        jQuery('#analytics_results_compare_to_trait_dialog').modal('show');
+    });
+
+    var manage_drone_imagery_analytics_compare_results_trial_id = '';
+    var manage_drone_imagery_analytics_compare_results_trait_id = '';
+    var manage_drone_imagery_analytics_compare_results_trait_secondary_ids = [];
+    var manage_drone_imagery_analytics_compare_results_trait_secondary_id_string = '';
+    var manage_drone_imagery_analytics_compare_results_analysis = '';
+
+    jQuery('#analytics_compare_results_to_trait_trial_select_step').click(function(){
+        manage_drone_imagery_analytics_compare_results_trial_id = jQuery('#analytics_compare_results_to_trait_trial_id').val();
+
+        if (manage_drone_imagery_analytics_compare_results_trial_id == '') {
+            alert('Please select a trial!');
+            return false;
+        }
+        else {
+            get_select_box('traits', 'analytics_compare_results_to_trait_trait_select_div', { 'name' : 'analytics_compare_results_to_trait_trait_select', 'id' : 'analytics_compare_results_to_trait_trait_select', 'empty':1, 'multiple':0, 'trial_ids':manage_drone_imagery_analytics_compare_results_trial_id, 'stock_type':'plot' });
+
+            get_select_box('traits', 'analytics_compare_results_to_trait_trait_secondary_select_div', { 'name' : 'analytics_compare_results_to_trait_trait_secondary_select', 'id' : 'analytics_compare_results_to_trait_trait_secondary_select', 'empty':1, 'multiple':1, 'trial_ids':manage_drone_imagery_analytics_compare_results_trial_id, 'stock_type':'plot' });
+
+            Workflow.complete("#analytics_compare_results_to_trait_trial_select_step");
+            Workflow.focus('#analytics_compare_results_to_trait_workflow', 1);
+        }
+    });
+
+    jQuery('#analytics_compare_results_to_trait_trait_select_step').click(function(){
+        manage_drone_imagery_analytics_compare_results_trait_id = jQuery('#analytics_compare_results_to_trait_trait_select').val();
+        manage_drone_imagery_analytics_compare_results_trait_secondary_ids = jQuery('#analytics_compare_results_to_trait_trait_secondary_select').val();
+        if (manage_drone_imagery_analytics_compare_results_trait_secondary_ids != '' && manage_drone_imagery_analytics_compare_results_trait_secondary_ids != null) {
+            manage_drone_imagery_analytics_compare_results_trait_secondary_id_string = manage_drone_imagery_analytics_compare_results_trait_secondary_ids.join();
+        }
+
+        if (manage_drone_imagery_analytics_compare_results_trait_id == '') {
+            alert('Please select a trait!');
+            return false;
+        }
+
+        Workflow.complete("#analytics_compare_results_to_trait_trait_select_step");
+        Workflow.focus('#analytics_compare_results_to_trait_workflow', 2);
+    });
+
+    jQuery('#analytics_compare_results_to_trait_analysis_test_ar1_models').click(function(){
+        manage_drone_imagery_analytics_compare_results_trait_id = jQuery('#analytics_compare_results_to_trait_trait_select').val();
+
+        if (manage_drone_imagery_analytics_compare_results_trait_id == '') {
+            alert('Please select a trait!');
+            return false;
+        }
+
+        jQuery.ajax({
+            url : '/ajax/analytics_protocols_compare_to_trait_test_ar1_models?protocol_id='+<% $analytics_protocol_id %>+'&trial_id='+manage_drone_imagery_analytics_compare_results_trial_id+'&trait_id='+manage_drone_imagery_analytics_compare_results_trait_id+'&default_tol='+jQuery('#analytics_compare_results_to_trait_analysis_test_ar1_models_default_tol').val(),
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                var html = '<img src="'+response.heatmap_plot+'">';
+                html = html + '<img src="'+response.ggcorr_plot+'">';
+
+                html = html + '<div class="well well-sm"><table class="table table-hover table-bordered" id="analytics_compare_results_to_trait_test_models_germplasm_data_table"><thead><tr>';
+                for(var i=0; i<response.germplasm_data_header.length; i++) {
+                    html = html + '<th>'+response.germplasm_data_header[i]+'</th>';
+                }
+                html = html + '</tr></thead>';
+                for(var i=0; i<response.germplasm_data.length; i++) {
+                    html = html + '<tr>';
+                    for(var j=0; j<response.germplasm_data[i].length; j++) {
+                        html = html + '<td>'+response.germplasm_data[i][j]+'</td>';
+                    }
+                    html = html + '</tr>';
+                }
+                html = html + '</tbody></table></div>';
+
+                html = html + '<img src="'+response.germplasm_ggcorr_plot+'">';
+
+                jQuery('#analytics_results_compare_to_trait_dialog_ar1_tests_results').html(html);
+                jQuery('#analytics_results_compare_to_trait_dialog_ar1_tests').modal('show');
+
+                jQuery('#analytics_compare_results_to_trait_test_models_germplasm_data_table').DataTable({});
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error testing AR(1) and 2Dspl models!')
+            }
+        });
+    });
+
+    jQuery('#analytics_compare_results_to_trait_analysis_select_step').click(function(){
+        manage_drone_imagery_analytics_compare_results_analysis = jQuery('#analytics_compare_results_to_trait_analysis_select').val();
+
+        jQuery.ajax({
+            url : '/ajax/analytics_protocols_compare_to_trait',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            type: 'POST',
+            data:{
+                'protocol_id':<% $analytics_protocol_id %>,
+                'trial_id':manage_drone_imagery_analytics_compare_results_trial_id,
+                'trait_id':manage_drone_imagery_analytics_compare_results_trait_id,
+                'analysis':manage_drone_imagery_analytics_compare_results_analysis,
+                'traits_secondary':manage_drone_imagery_analytics_compare_results_trait_secondary_id_string,
+                'default_tol':jQuery('#analytics_compare_results_to_trait_analysis_select_default_tol').val(),
+                'cor_label_size':jQuery('#analytics_compare_results_to_trait_analysis_correlation_plot_label_size').val(),
+                'cor_label_digits':jQuery('#analytics_compare_results_to_trait_analysis_correlation_plot_label_digits').val()
+            },
+            timeout: 7200000,
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                var result_blups_all = response.result_blups_all;
+
+                var html = '<p>Genotypic Effects For Selected Trait: <a href="'+response.germplasm_trait_gen_file+'" target="_blank">Download</a></p>';
+
+                html = html + '<h2>Model Iterations</h2>';
+                for(var i=0; i<result_blups_all.length; i++) {
+                    html = html + '<button type="button" class="btn btn-default btn-sm" data-toggle="collapse" data-target="#analytics_protocol_compare_to_trait_model_it'+i+'">('+i+')&nbsp;&nbsp;&nbsp;'+result_blups_all[i]["model_name"]+': '+result_blups_all[i]["result_type"]+'</button>';
+                    html = html + '<div id="analytics_protocol_compare_to_trait_model_it'+i+'" class="collapse"><div class="well well-sm">';
+                    console.log(result_blups_all[i]["result_type"]);
+                    if (result_blups_all[i]["result_type"] == "originalgenoeff") {
+                        if (result_blups_all[i]["germplasm_results"].length>1) {
+                            html = html + '<table class="table table-hover table-bordered"><thead><tr>';
+                            for(var j=0; j<result_blups_all[i]["germplasm_results"][0].length; j++) {
+                                html = html + '<th>'+result_blups_all[i]["germplasm_results"][0][j]+'</th>';
+                            }
+                            html = html + '</tr></thead>';
+                            for(var j=1; j<result_blups_all[i]["germplasm_results"].length; j++) {
+                                html = html + '<tr>';
+                                for(var k=0; k<result_blups_all[i]["germplasm_results"][j].length; k++) {
+                                    html = html + '<td>'+result_blups_all[i]["germplasm_results"][j][k]+'</td>';
+                                }
+                                html = html + '</tr>';
+                            }
+
+                            html = html + '</tbody></table>';
+                            html = html + '<img src="'+result_blups_all[i]["germplasm_geno_corr_plot"]+'">';
+                        }
+                    }
+                    if (result_blups_all[i]["result_type"] == "fullcorr") {
+                        html = html + '<table class="table table-hover table-bordered"><thead><tr>';
+                        for(var j=0; j<result_blups_all[i].plots_avg_results[0].length; j++) {
+                            html = html + '<th>'+result_blups_all[i].plots_avg_results[0][j]+'</th>';
+                        }
+                        html = html + '</tr></thead>';
+                        for(var j=1; j<result_blups_all[i].plots_avg_results.length; j++) {
+                            html = html + '<tr>';
+                            for(var k=0; k<result_blups_all[i].plots_avg_results[j].length; k++) {
+                                html = html + '<td>'+result_blups_all[i].plots_avg_results[j][k]+'</td>';
+                            }
+                            html = html + '</tr>';
+                        }
+                        html = html + '</tbody></table>';
+                        html = html + '<table class="table table-hover table-bordered"><thead><tr><th>Phenotype</th><th>Heritability</th></tr></thead><tbody>';
+                        for(var j=0; j<result_blups_all[i].plots_h_results.length; j++) {
+                            html = html + '<tr><td>'+result_blups_all[i].plots_h_results[j][0]+'</td><td>'+result_blups_all[i].plots_h_results[j][1]+'</td></tr>';
+                        }
+                        html = html + '</tbody></table>';
+                        html = html + '<table class="table table-hover table-bordered"><thead><tr><th>Model</th><th>Heritability (h^2)</th><th>Env (e^2)</th><th>GenVarComp</th><th>EnvVarComp</th><th>ResVarComp</th><th>SSE</th><th>r2</th><th>cor(g1,g2)</th><th>Fixed Effect Anova</th></tr></thead><tbody>';
+                        html = html + '<tr><td>Trait ~ GRM</td><td>'+result_blups_all[i].varcomp_h_grm[0][1]+'+-'+result_blups_all[i].varcomp_h_grm[0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm[0][1]+'+-'+result_blups_all[i].varcomp_original_grm[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm[0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm[1][1]+'+-'+result_blups_all[i].varcomp_original_grm[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm[1][4]+')</td><td>'+result_blups_all[i].fits_grm[0][1]+'</td><td>'+result_blups_all[i].fits_grm[0][2]+'</td><td>'+result_blups_all[i].gcorr_grm+'</td><td>NA</td></tr>';
+                        html = html + '<tr><td>Trait ~ GRM + Fixed Effect Avg</td><td>'+result_blups_all[i].varcomp_h_grm_fixed_effect[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_fixed_effect[0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effect[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effect[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effect[0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effect[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effect[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effect[1][4]+')</td><td>'+result_blups_all[i].fits_grm_fixed_effect[0][1]+'</td><td>'+result_blups_all[i].fits_grm_fixed_effect[0][2]+'</td><td>'+result_blups_all[i].gcorr_favg+'</td><td>'+result_blups_all[i].f_anova_grm_fixed_effect[1][1]+'['+result_blups_all[i].f_anova_grm_fixed_effect[1][3]+']['+result_blups_all[i].f_anova_grm_fixed_effect[1][4]+']</td></tr>';
+                        html = html + '<tr><td>Trait ~ GRM + Fixed Effect Continuous Avg</td><td>'+result_blups_all[i].varcomp_h_grm_fixed_effects_cont[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_fixed_effects_cont[0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_cont[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_cont[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_cont[0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_cont[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_cont[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_cont[1][4]+')</td><td>'+result_blups_all[i].fits_grm_fixed_effects_cont[0][1]+'</td><td>'+result_blups_all[i].fits_grm_fixed_effects_cont[0][2]+'</td><td>'+result_blups_all[i].gcorr_havg+'</td><td>'+result_blups_all[i].f_anova_grm_fixed_effects_cont[1][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects_cont[1][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects_cont[1][4]+']</td></tr>';
+                        html = html + '<tr><td>Trait ~ GRM + Fixed Effect Min</td><td>'+result_blups_all[i].varcomp_h_grm_fixed_effects_min[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_fixed_effects_min[0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_min[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_min[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_min[0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_min[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_min[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_min[1][4]+')</td><td>'+result_blups_all[i].fits_grm_fixed_effects_min[0][1]+'</td><td>'+result_blups_all[i].fits_grm_fixed_effects_min[0][2]+'</td><td>'+result_blups_all[i].gcorr_fmin+'</td><td>'+result_blups_all[i].f_anova_grm_fixed_effects_min[1][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects_min[1][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects_min[1][4]+']</td></tr>';
+                        html = html + '<tr><td>Trait ~ GRM + Fixed Effect Max</td><td>'+result_blups_all[i].varcomp_h_grm_fixed_effects_max[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_fixed_effects_max[0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_max[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_max[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_max[0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_max[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_max[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_max[1][4]+')</td><td>'+result_blups_all[i].fits_grm_fixed_effects_max[0][1]+'</td><td>'+result_blups_all[i].fits_grm_fixed_effects_max[0][2]+'</td><td>'+result_blups_all[i].gcorr_fmax+'</td><td>'+result_blups_all[i].f_anova_grm_fixed_effects_max[1][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects_max[1][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects_max[1][4]+']</td></tr>';
+                        html = html + '<tr><td>Trait ~ GRM + Fixed Effects (2)</td><td>'+result_blups_all[i].varcomp_h_grm_fixed_effects[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_fixed_effects[0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects[0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects[1][4]+')</td><td>'+result_blups_all[i].fits_grm_fixed_effects[0][1]+'</td><td>'+result_blups_all[i].fits_grm_fixed_effects[0][2]+'</td><td>'+result_blups_all[i].gcorr_f2+'</td><td>'+result_blups_all[i].f_anova_grm_fixed_effects[1][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects[1][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects[1][4]+']<br/>'+result_blups_all[i].f_anova_grm_fixed_effects[2][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects[2][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects[2][4]+']</td></tr>';
+                        html = html + '<tr><td>Trait ~ GRM + Fixed Effects (3)</td><td>'+result_blups_all[i].varcomp_h_grm_fixed_effects_3[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_fixed_effects_3[0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_3[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_3[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_3[0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_3[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_3[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_3[1][4]+')</td><td>'+result_blups_all[i].fits_grm_fixed_effects_3[0][1]+'</td><td>'+result_blups_all[i].fits_grm_fixed_effects_3[0][2]+'</td><td>'+result_blups_all[i].gcorr_f3+'</td><td>'+result_blups_all[i].f_anova_grm_fixed_effects_3[1][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects_3[1][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects_3[1][4]+']<br/>'+result_blups_all[i].f_anova_grm_fixed_effects_3[2][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects_3[2][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects_3[2][4]+']<br/>'+result_blups_all[i].f_anova_grm_fixed_effects_3[3][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects_3[3][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects_3[3][4]+']</td></tr>';
+                        html = html + '<tr><td>Trait ~ GRM + Fixed Effects (3) Continuous</td><td>'+result_blups_all[i].varcomp_h_grm_fixed_effects_f3_cont[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_fixed_effects_f3_cont[0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_f3_cont[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_f3_cont[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_f3_cont[0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_f3_cont[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_f3_cont[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_f3_cont[1][4]+')</td><td>'+result_blups_all[i].fits_grm_fixed_effects_f3_cont[0][1]+'</td><td>'+result_blups_all[i].fits_grm_fixed_effects_f3_cont[0][2]+'</td><td>'+result_blups_all[i].gcorr_f3_cont+'</td><td>'+result_blups_all[i].f_anova_grm_fixed_effects_f3_cont[1][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects_f3_cont[1][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects_f3_cont[1][4]+']<br/>'+result_blups_all[i].f_anova_grm_fixed_effects_f3_cont[2][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects_f3_cont[2][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects_f3_cont[2][4]+']<br/>'+result_blups_all[i].f_anova_grm_fixed_effects_f3_cont[3][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects_f3_cont[3][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects_f3_cont[3][4]+']</td></tr>';
+
+                        html = html + '<tr><td>Trait ~ GRM + Fixed Effects (All) Continuous</td><td>'+result_blups_all[i].varcomp_h_grm_fixed_effects_all[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_fixed_effects_all[0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_all[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_all[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_all[0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_fixed_effects_all[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_fixed_effects_all[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_fixed_effects_all[1][4]+')</td><td>'+result_blups_all[i].fits_grm_fixed_effects_all[0][1]+'</td><td>'+result_blups_all[i].fits_grm_fixed_effects_all[0][2]+'</td><td>'+result_blups_all[i].gcorr_fall+'</td><td>';
+                        for (var k=1; k<response.observation_variable_id_list.length+1; k++) {
+                            html = html + result_blups_all[i].f_anova_grm_fixed_effects_all[k][1]+'['+result_blups_all[i].f_anova_grm_fixed_effects_all[k][3]+']['+result_blups_all[i].f_anova_grm_fixed_effects_all[k][4]+']<br/>';
+                        }
+                        html = html + '</td></tr>';
+
+                        html = html + '<tr><td>Trait ~ GRM + 2DSpl</td><td>'+result_blups_all[i].varcomp_h_grm_trait_2dspl[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_trait_2dspl[0][2]+'</td><td>'+result_blups_all[i].varcomp_h_grm_trait_2dspl[0][3]+'+-'+result_blups_all[i].varcomp_h_grm_trait_2dspl[0][4]+'</td><td>'+result_blups_all[i].varcomp_original_grm_trait_2dspl[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_trait_2dspl[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_trait_2dspl[0][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_trait_2dspl[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_trait_2dspl[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_trait_2dspl[1][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_trait_2dspl[2][1]+'+-'+result_blups_all[i].varcomp_original_grm_trait_2dspl[2][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_trait_2dspl[2][4]+')</td><td>'+result_blups_all[i].fits_grm_trait_2dspl[0][1]+'</td><td>'+result_blups_all[i].fits_grm_trait_2dspl[0][2]+'</td><td>'+result_blups_all[i].gcorr_grm_2dspl+'</td><td>NA</td></tr>';
+
+                        if (manage_drone_imagery_analytics_compare_results_analysis != '2dspl') {
+                            html = html + '<tr><td>Trait ~ GRM + AR1xAR1</td><td>'+result_blups_all[i].varcomp_h_grm_trait_ar1[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_trait_ar1[0][2]+'</td><td>'+result_blups_all[i].varcomp_h_grm_trait_ar1[0][3]+'+-'+result_blups_all[i].varcomp_h_grm_trait_ar1[0][4]+'</td><td>'+result_blups_all[i].varcomp_original_grm_trait_ar1[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_trait_ar1[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_trait_ar1[0][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_trait_ar1[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_trait_ar1[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_trait_ar1[1][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_trait_ar1[2][1]+'+-'+result_blups_all[i].varcomp_original_grm_trait_ar1[2][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_trait_ar1[2][4]+')</td><td>'+result_blups_all[i].fits_grm_trait_ar1[0][1]+'</td><td>'+result_blups_all[i].fits_grm_trait_ar1[0][2]+'</td><td>NA</td><td>NA</td></tr>';
+                        }
+
+                        html = html + '<tr><td>Trait ~ GRM + PRM</td><td>'+result_blups_all[i].varcomp_h_grm_prm[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_prm[0][2]+'</td><td>'+result_blups_all[i].varcomp_h_grm_prm[0][3]+'+-'+result_blups_all[i].varcomp_h_grm_prm[0][4]+'</td><td>'+result_blups_all[i].varcomp_original_grm_prm[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_prm[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_prm[0][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_prm[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_prm[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_prm[1][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_prm[2][1]+'+-'+result_blups_all[i].varcomp_original_grm_prm[2][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_prm[2][4]+')</td><td>'+result_blups_all[i].fits_grm_prm[0][1]+'</td><td>'+result_blups_all[i].fits_grm_prm[0][2]+'</td><td>'+result_blups_all[i].gcorr_grm_prm+'</td><td>NA</td></tr>';
+                        html = html + '<tr><td>Trait ~ PRM</td><td>NA</td><td>'+result_blups_all[i].varcomp_h_prm[0][1]+'+-'+result_blups_all[i].varcomp_h_prm[0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_prm[0][1]+'+-'+result_blups_all[i].varcomp_original_prm[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_prm[0][4]+')</td><td>'+result_blups_all[i].varcomp_original_prm[1][1]+'+-'+result_blups_all[i].varcomp_original_prm[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_prm[1][4]+')</td><td>'+result_blups_all[i].fits_prm[0][1]+'</td><td>'+result_blups_all[i].fits_prm[0][2]+'</td><td>'+result_blups_all[i].gcorr_prm+'</td><td>NA</td></tr>';
+                        html = html + '<tr><td>Trait ~ GRM_ID</td><td>'+result_blups_all[i].varcomp_h_grm_id[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_id[0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_id[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_id[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_id[0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_id[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_id[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_id[1][4]+')</td><td>'+result_blups_all[i].fits_grm_id[0][1]+'</td><td>'+result_blups_all[i].fits_grm_id[0][2]+'</td><td>'+result_blups_all[i].gcorr_grm_id+'</td><td>NA</td></tr>';
+                        html = html + '<tr><td>Trait ~ GRM_ID + PRM</td><td>'+result_blups_all[i].varcomp_h_grm_id_prm[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_id_prm[0][2]+'</td><td>'+result_blups_all[i].varcomp_h_grm_id_prm[0][3]+'+-'+result_blups_all[i].varcomp_h_grm_id_prm[0][4]+'</td><td>'+result_blups_all[i].varcomp_original_grm_id_prm[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_id_prm[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_id_prm[0][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_id_prm[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_id_prm[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_id_prm[1][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_id_prm[2][1]+'+-'+result_blups_all[i].varcomp_original_grm_id_prm[2][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_id_prm[2][4]+')</td><td>'+result_blups_all[i].fits_grm_id_prm[0][1]+'</td><td>'+result_blups_all[i].fits_grm_id_prm[0][2]+'</td><td>'+result_blups_all[i].gcorr_grm_id_prm+'</td><td>NA</td></tr>';
+                        html = html + '<tr><td>Trait ~ GRM_ID + PRM_ID</td><td>'+result_blups_all[i].varcomp_h_grm_id_prm_id[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_id_prm_id[0][2]+'</td><td>'+result_blups_all[i].varcomp_h_grm_id_prm_id[0][3]+'+-'+result_blups_all[i].varcomp_h_grm_id_prm_id[0][4]+'</td><td>'+result_blups_all[i].varcomp_original_grm_id_prm_id[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_id_prm_id[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_id_prm_id[0][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_id_prm_id[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_id_prm_id[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_id_prm_id[1][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_id_prm_id[2][1]+'+-'+result_blups_all[i].varcomp_original_grm_id_prm_id[2][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_id_prm_id[2][4]+')</td><td>'+result_blups_all[i].fits_grm_id_prm_id[0][1]+'</td><td>'+result_blups_all[i].fits_grm_id_prm_id[0][2]+'</td><td>'+result_blups_all[i].gcorr_grm_id_prm_id+'</td><td>NA</td></tr>';
+                        html = html + '<tr><td>Trait ~ GRM + PRM_SecondaryTraits</td><td>'+result_blups_all[i].varcomp_h_grm_prm_secondary_traits[0][1]+'+-'+result_blups_all[i].varcomp_h_grm_prm_secondary_traits[0][2]+'</td><td>'+result_blups_all[i].varcomp_h_grm_prm_secondary_traits[0][3]+'+-'+result_blups_all[i].varcomp_h_grm_prm_secondary_traits[0][4]+'</td><td>'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits[0][1]+'+-'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits[0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_prm_secondary_traits[0][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits[1][1]+'+-'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits[1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_prm_secondary_traits[1][4]+')</td><td>'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits[2][1]+'+-'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits[2][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_prm_secondary_traits[2][4]+')</td><td>'+result_blups_all[i].fits_grm_prm_secondary_traits[0][1]+'</td><td>'+result_blups_all[i].fits_grm_prm_secondary_traits[0][2]+'</td><td>'+result_blups_all[i].gcorr_grm_prm_secondary_traits+'</td><td>NA</td></tr>';
+
+                        for (var k=0; k<result_blups_all[i].sorted_trait_names_secondary.length; k++) {
+                            html = html + '<tr><td>Trait ~ GRM + Favg '+result_blups_all[i].sorted_trait_names_secondary[k]+'</td><td>'+result_blups_all[i].varcomp_h_grm_prm_secondary_traits_favg[k][0][1]+'+-'+result_blups_all[i].varcomp_h_grm_prm_secondary_traits_favg[k][0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_favg[k][0][1]+'+-'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_favg[k][0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_favg[k][0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_favg[k][1][1]+'+-'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_favg[k][1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_favg[k][1][4]+')</td><td>'+result_blups_all[i].fits_grm_prm_secondary_traits_favg[k][0][1]+'</td><td>'+result_blups_all[i].fits_grm_prm_secondary_traits_favg[k][0][2]+'</td><td>'+result_blups_all[i].gcorr_grm_prm_secondary_traits_favg[k]+'</td><td>'+result_blups_all[i].f_anova_grm_prm_secondary_traits_favg[k][1][1]+'['+result_blups_all[i].f_anova_grm_prm_secondary_traits_favg[k][1][3]+']['+result_blups_all[i].f_anova_grm_prm_secondary_traits_favg[k][1][4]+']</td></tr>';
+                        }
+                        for (var k=0; k<result_blups_all[i].sorted_trait_names_secondary.length; k++) {
+                            html = html + '<tr><td>Trait ~ GRM + Havg '+result_blups_all[i].sorted_trait_names_secondary[k]+'</td><td>'+result_blups_all[i].varcomp_h_grm_prm_secondary_traits_havg[k][0][1]+'+-'+result_blups_all[i].varcomp_h_grm_prm_secondary_traits_havg[k][0][2]+'</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_havg[k][0][1]+'+-'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_havg[k][0][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_havg[k][0][4]+')</td><td>NA</td><td>'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_havg[k][1][1]+'+-'+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_havg[k][1][2]+'&nbsp;('+result_blups_all[i].varcomp_original_grm_prm_secondary_traits_havg[k][1][4]+')</td><td>'+result_blups_all[i].fits_grm_prm_secondary_traits_havg[k][0][1]+'</td><td>'+result_blups_all[i].fits_grm_prm_secondary_traits_havg[k][0][2]+'</td><td>'+result_blups_all[i].gcorr_grm_prm_secondary_traits_havg[k]+'</td><td>'+result_blups_all[i].f_anova_grm_prm_secondary_traits_havg[k][1][1]+'['+result_blups_all[i].f_anova_grm_prm_secondary_traits_havg[k][1][3]+']['+result_blups_all[i].f_anova_grm_prm_secondary_traits_havg[k][1][4]+']</td></tr>';
+                        }
+
+                        html = html + '</tbody></table>';
+                        html = html + '<h2>Analytics Effects Heatmaps</h2><br/><img src="'+result_blups_all[i]["plots_spatial_heatmap_plot"]+'"><hr>';
+                        html = html + '<h2>Trait Corrected Heatmaps</h2><br/><img src="'+result_blups_all[i]["plots_spatial_heatmap_traits_plot"]+'">';
+                        html = html + '<h2>Trait Spatial Effects Heatmaps</h2><br/><img src="'+result_blups_all[i]["plots_spatial_heatmap_traits_effects_plot"]+'">';
+                        html = html + '<h2>Selected Secondary Traits Heatmaps</h2><br/><img src="'+result_blups_all[i]["plots_spatial_heatmap_traits_secondary_plot"]+'">';
+                        html = html + '<h2>Analytics Effects Correlations</h2><br/><img src="'+result_blups_all[i]["plots_spatial_ggcorr_plot"]+'">';
+                        html = html + '<h2>Trait vs Analytics Effects</h2><br/><img src="'+result_blups_all[i]["plots_spatial_corr_plot"]+'">';
+                        html = html + '<h2>Analytics Effects PRM</h2><br/><img src="'+result_blups_all[i]["plots_spatial_effects_corr_plot"]+'">';
+                        //html = html + '<img src="'+result_blups_all[i]["plots_htp_corr_plot"]+'">';
+                        html = html + '<h2>Secondary Traits PRM</h2><br/><img src="'+result_blups_all[i]["plots_secondary_traits_corr_plot"]+'">';
+                    }
+                    html = html + '</div></div><br/>';
+                }
+                html = html + '</div><hr>';
+
+                // html = html + '<table class="table table-hover table-bordered"><thead><tr>';
+                // for(var i=0; i<response.germplasm_results[0].length; i++) {
+                //     html = html + '<th>'+response.germplasm_results[0][i]+'</th>';
+                // }
+                // html = html + '</tr></thead>';
+                // for(var i=1; i<response.germplasm_results.length; i++) {
+                //     html = html + '<tr>';
+                //     for(var j=0; j<response.germplasm_results[i].length; j++) {
+                //         html = html + '<td>'+response.germplasm_results[i][j]+'</td>';
+                //     }
+                //     html = html + '</tr>';
+                // }
+                // html = html + '</tbody></table>';
+
+                // html = html + '<div class="well well-sm"><table class="table table-hover table-bordered" id="analytics_compare_results_to_trait_germplasm_data_table"><thead><tr>';
+                // for(var i=0; i<response.germplasm_data_header.length; i++) {
+                //     html = html + '<th>'+response.germplasm_data_header[i]+'</th>';
+                // }
+                // html = html + '</tr></thead>';
+                // for(var i=0; i<response.germplasm_data.length; i++) {
+                //     html = html + '<tr>';
+                //     for(var j=0; j<response.germplasm_data[i].length; j++) {
+                //         html = html + '<td>'+response.germplasm_data[i][j]+'</td>';
+                //     }
+                //     html = html + '</tr>';
+                // }
+                // html = html + '</tbody></table></div>';
+
+                // html = html + '<table class="table table-hover table-bordered"><thead><tr>';
+                // for(var i=0; i<response.plots_avg_results[0].length; i++) {
+                //     html = html + '<th>'+response.plots_avg_results[0][i]+'</th>';
+                // }
+                // html = html + '</tr></thead>';
+                // for(var i=1; i<response.plots_avg_results.length; i++) {
+                //     html = html + '<tr>';
+                //     for(var j=0; j<response.plots_avg_results[i].length; j++) {
+                //         html = html + '<td>'+response.plots_avg_results[i][j]+'</td>';
+                //     }
+                //     html = html + '</tr>';
+                // }
+                // html = html + '</tbody></table>';
+
+                // html = html + '<div class="well well-sm"><table class="table table-hover table-bordered" id="analytics_compare_results_to_trait_plots_data_table"><thead><tr>';
+                // for(var i=0; i<response.plots_avg_data_header.length; i++) {
+                //     html = html + '<th>'+response.plots_avg_data_header[i]+'</th>';
+                // }
+                // html = html + '</tr></thead>';
+                // for(var i=0; i<response.plots_avg_data.length; i++) {
+                //     html = html + '<tr>';
+                //     for(var j=0; j<response.plots_avg_data[i].length; j++) {
+                //         html = html + '<td>'+response.plots_avg_data[i][j]+'</td>';
+                //     }
+                //     html = html + '</tr>';
+                // }
+                // html = html + '</tbody></table></div>';
+
+                // html = html + '<table class="table table-hover table-bordered"><thead><tr>';
+                // for(var i=0; i<response.plots_avg_corrected_results[0].length; i++) {
+                //     html = html + '<th>'+response.plots_avg_corrected_results[0][i]+'</th>';
+                // }
+                // html = html + '</tr></thead>';
+                // for(var i=1; i<response.plots_avg_corrected_results.length; i++) {
+                //     html = html + '<tr>';
+                //     for(var j=0; j<response.plots_avg_corrected_results[i].length; j++) {
+                //         html = html + '<td>'+response.plots_avg_corrected_results[i][j]+'</td>';
+                //     }
+                //     html = html + '</tr>';
+                // }
+                // html = html + '</tbody></table>';
+
+                // html = html + '<div class="well well-sm"><table class="table table-hover table-bordered" id="analytics_compare_results_to_trait_plots_corrected_data_table"><thead><tr>';
+                // for(var i=0; i<response.plots_avg_corrected_data_header.length; i++) {
+                //     html = html + '<th>'+response.plots_avg_corrected_data_header[i]+'</th>';
+                // }
+                // html = html + '</tr></thead>';
+                // for(var i=0; i<response.plots_avg_corrected_data.length; i++) {
+                //     html = html + '<tr>';
+                //     for(var j=0; j<response.plots_avg_corrected_data[i].length; j++) {
+                //         html = html + '<td>'+response.plots_avg_corrected_data[i][j]+'</td>';
+                //     }
+                //     html = html + '</tr>';
+                // }
+                // html = html + '</tbody></table></div>';
+
+                var charts = response.charts;
+                for (var i=0; i<charts.length; i++) {
+                    html = html + '<img src="'+charts[i]+'"><br/>';
+                }
+                jQuery('#analytics_compare_results_to_trait_results_div').html(html);
+
+                jQuery('#analytics_compare_results_to_trait_germplasm_data_table').DataTable({});
+                jQuery('#analytics_compare_results_to_trait_plots_data_table').DataTable({});
+                jQuery('#analytics_compare_results_to_trait_plots_corrected_data_table').DataTable({});
+
+                Workflow.complete("#analytics_compare_results_to_trait_analysis_select_step");
+                Workflow.focus('#analytics_compare_results_to_trait_workflow', 3);
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error comparing analytics protocol results to trait!')
+            }
+        });
+
+    });
+
+});
+</script>

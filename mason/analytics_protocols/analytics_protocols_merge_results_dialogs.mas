@@ -1,0 +1,126 @@
+<%args>
+</%args>
+
+<div class="modal fade" id="drone_imagery_analytics_merge_results_dialog" name="drone_imagery_analytics_merge_results_dialog" tabindex="-1" role="dialog" aria-labelledby="droneImageryAnalyticsMergeResultsDialog" data-backdrop="static">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="droneImageryAnalyticsMergeResultsDialog">Merge Analytics Results</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /util/workflow.mas, id=> "drone_imagery_analytics_merge_results_workflow" &>
+                <&| /util/workflow.mas:step, title=> "Analytics Reporting" &>
+                    <& /page/page_title.mas, title=>"Select Analytics Protocol(s) to merge results for" &>
+
+                    <div id="drone_imagery_analytics_merge_results_analytics_protocols_select_div">Loading...</div>
+
+                    <hr>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_analytics_merge_results_protocol_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Analysis" &>
+                    <& /page/page_title.mas, title=>"Analysis" &>
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Result Type: </label>
+                            <div class="col-sm-6" >
+                                <select class="form-control" name="drone_imagery_analytics_merge_results_analysis_select">
+                                    <option value="charts_across_models_across_sims">Charts of Sim Correlation Across Models</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <center>
+                    <button class="btn btn-primary" id="drone_imagery_analytics_merge_results_analysis_select_step">Go to Next Step</button>
+                    </center>
+                </&>
+                <&| /util/workflow.mas:step, title=> "Results" &>
+                    <& /page/page_title.mas, title=>"Results" &>
+
+                    <div id ="drone_imagery_analytics_merge_results_result_div">
+                    </div>
+                </&>
+            </&>
+
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function() {
+    jQuery('#drone_imagery_analytics_merge_results_link').click(function(){
+        get_select_box('analytics_protocols', 'drone_imagery_analytics_merge_results_analytics_protocols_select_div', { 'checkbox_name' : 'drone_imagery_analytics_merge_results_analytics_protocols_select_id', 'analytics_protocol_type' : 'drone_imagery_analytics_env_simulation_protocol' });
+
+        jQuery('#drone_imagery_analytics_merge_results_dialog').modal('show');
+    });
+
+    var manage_drone_imagery_analytics_merge_results_protocol_ids = [];
+    var manage_drone_imagery_analytics_merge_results_protocol_ids_string = '';
+    var manage_drone_imagery_analytics_merge_results_analysis_type;
+
+    jQuery('#drone_imagery_analytics_merge_results_protocol_select_step').click(function(){
+        manage_drone_imagery_analytics_merge_results_protocol_ids = [];
+        manage_drone_imagery_analytics_merge_results_protocol_ids_string = '';
+
+        jQuery('input[name="drone_imagery_analytics_merge_results_analytics_protocols_select_id"]').each(function() {
+            if (this.checked){
+                manage_drone_imagery_analytics_merge_results_protocol_ids.push(jQuery(this).val());
+            }
+        });
+
+        if (manage_drone_imagery_analytics_merge_results_protocol_ids.length < 1) {
+            alert('Please select protocols!');
+            return false;
+        }
+
+        manage_drone_imagery_analytics_merge_results_protocol_ids_string = manage_drone_imagery_analytics_merge_results_protocol_ids.join(",");
+
+        Workflow.complete("#drone_imagery_analytics_merge_results_protocol_select_step");
+        Workflow.focus('#drone_imagery_analytics_merge_results_workflow', 1);
+    });
+
+    jQuery('#drone_imagery_analytics_merge_results_analysis_select_step').click(function(){
+        manage_drone_imagery_analytics_merge_results_analysis_type = jQuery('#drone_imagery_analytics_merge_results_analysis_select').val();
+
+        jQuery.ajax({
+            url : '/ajax/analytics_protocols_merge_results?protocol_ids='+manage_drone_imagery_analytics_merge_results_protocol_ids_string+'&analysis_type='+manage_drone_imagery_analytics_merge_results_analysis_type,
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                var charts = response.charts;
+                var html = '';
+                for (var i=0; i<charts.length; i++) {
+                    html = html + '<img src="'+charts[i]+'"><br/>';
+                }
+                jQuery('#drone_imagery_analytics_merge_results_result_div').html(html);
+
+                Workflow.complete("#drone_imagery_analytics_merge_results_analysis_select_step");
+                Workflow.focus('#drone_imagery_analytics_merge_results_workflow', 2);
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert('Error merging analytics protocol results!')
+            }
+        });
+
+    });
+
+});
+</script>
