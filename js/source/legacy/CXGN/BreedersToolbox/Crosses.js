@@ -188,8 +188,8 @@ jQuery(document).ready(function($) {
 
     jQuery("#upload_crosses_breeding_program_select_div").change(function() {
         var breeding_program_id = jQuery("#upload_crosses_breeding_program_id").val();
+        jQuery('#manage_page_crossing_experiment').modal("show");
         get_select_box('projects', 'upload_crosses_crossing_experiment_select_div', { 'name' : 'upload_crosses_crossing_experiment_id', 'id' : 'upload_crosses_crossing_experiment_id', 'breeding_program_id' : breeding_program_id, 'get_crossing_trials': '1', 'empty':1});
-
     });
 
     $("#cross_accession_info_format").click(function() {

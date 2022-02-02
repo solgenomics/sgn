@@ -611,7 +611,7 @@ sub upload_intercross_file_POST : Args(0) {
         }
 
         my $file_metadata_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'file_metadata_json', 'project_property');
-
+        my %file_metadata;
         my $crossing_experiment = $schema->resultset("Project::Project")->find({project_id => $crossing_experiment_id});
         my $previous_projectprop_rs = $crossing_experiment->projectprops({type_id=>$file_metadata_cvterm->cvterm_id});
         if ($previous_projectprop_rs->count == 1){

@@ -1357,15 +1357,16 @@ sub get_intercross_file_metadata {
     my $file_metadata_json_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'file_metadata_json', 'project_property')->cvterm_id;
 
     my $projectprop_rs = $schema->resultset("Project::Projectprop")->find({ project_id => $crossing_experiment_id, type_id => $file_metadata_json_type_id });
-    my $file_metadata_json = $projectprop_rs->value();
 
     my @file_ids;
     my @file_info = ();
     my $dbh = $schema->storage->dbh();
-    if ($file_metadata_json){
-        my $file_metadata_ref = decode_json$file_metadata_json;
-        my %file_metadata = %{$file_metadata_ref};
-        @file_ids = keys %file_metadata;
+    if ($projectprop_rs){
+        my $file_metadata_json = $projectprop_rs->value();
+        my $file_metadata = decode_json$file_metadata_json;
+        my $intercross_download_files = $file_metadata->{'intercross_download'};
+        my %intercross_download_hash = %{$intercross_download_files};
+        @file_ids = keys %intercross_download_hash;
         if (scalar @file_ids > 0) {
             foreach my $id (@file_ids){
                 my @each_row = ();
