@@ -84,7 +84,7 @@ sub anova_traits {
 
      my $trial_id = $c->stash->{trial_id};
 
-     my $traits = $c->model('solGS::solGS')->trial_traits($trial_id);
+     my $traits = $c->controller('solGS::Search')->model($c)->trial_traits($trial_id);
      my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($traits);
 
      $c->stash->{rest}{anova_traits} = $clean_traits;

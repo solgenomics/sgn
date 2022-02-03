@@ -157,7 +157,7 @@ sub analysis_breeding_prog {
 	my $program_id;
 	if ($trial_id =~ /^\d+$/)
 	{
-		$program_id = $c->model('solGS::solGS')->trial_breeding_program_id($trial_id);
+		$program_id = $c->controller('solGS::Search')->model($c)->trial_breeding_program_id($trial_id);
 	}
 
 	return $program_id;

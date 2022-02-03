@@ -32,7 +32,7 @@ combinedDataFile <- grep("combined_pca_data_file", outputFiles, value = TRUE)
 if (is.null(scoresFile))
 {
   stop("Scores output file is missing.")
-  q("no", 1, FALSE) 
+  q("no", 1, FALSE)
 }
 
 if (is.null(loadingsFile))
@@ -52,35 +52,35 @@ pcF <- grepl("genotype", ignore.case=TRUE, inputFiles)
 dataType <- ifelse(isTRUE(pcF[1]), 'genotype', 'phenotype')
 
 if (dataType == 'genotype') {
-    if (length(inputFiles) > 1 ) {   
+    if (length(inputFiles) > 1 ) {
         allGenoFiles <- inputFiles
         genoData <- combineGenoData(allGenoFiles)
-        
+
         genoMetaData   <- genoData$trial
         genoData$trial <- NULL
-        
+
     } else {
         genoDataFile <- grep("genotype_data", inputFiles,  value = TRUE)
         genoData     <- fread(genoDataFile,
                               header = TRUE,
                               na.strings = c("NA", " ", "--", "-", "."))
-        
-    
-        if (is.null(genoData)) { 
-       
+
+
+        if (is.null(genoData)) {
+
             filteredGenoFile <- grep("filtered_genotype_data_",
                                  genoDataFile,
                                  value = TRUE)
 
             if (filteredGenoFile) {
                 genoData <- fread(filteredGenoFile,  header = TRUE)
-            }         
+            }
         }
 
         genoData <- unique(genoData, by='V1')
         genoData <- data.frame(genoData)
-        genoData <- column_to_rownames(genoData, 'V1')       
-        
+        genoData <- column_to_rownames(genoData, 'V1')
+
     }
 } else if (dataType == 'phenotype') {
 
@@ -88,25 +88,26 @@ if (dataType == 'genotype') {
     phenoFiles <- grep("phenotype_data", inputFiles,  value = TRUE)
 
     if (length(phenoFiles) > 1 ) {
-        
+
         phenoData <- combinePhenoData(phenoFiles, metaDataFile = metaFile)
         phenoData <- summarizeTraits(phenoData, groupBy=c('studyDbId', 'germplasmName'))
-        
-        if (all(is.na(phenoData$locationName))) {        
+
+        if (all(is.na(phenoData$locationName))) {
             phenoData$locationName <- 'location'
         }
-        
+
         phenoData <- na.omit(phenoData)
         genoMetaData <- phenoData$studyDbId
-    
+
         phenoData <- phenoData %>% mutate(germplasmName = paste0(germplasmName, '_', studyDbId))
         dropCols = c('replicate', 'blockNumber', 'locationName', 'studyDbId', 'studyYear')
         phenoData <- phenoData %>% select(-dropCols)
-        phenoData <- column_to_rownames(phenoData, var="germplasmName")       
-    } else {   
+        rownames(phenoData) <- NULL
+        phenoData <- column_to_rownames(phenoData, var="germplasmName")
+    } else {
         phenoDataFile <- grep("phenotype_data", inputFiles,  value = TRUE)
-  
-        phenoData <- cleanAveragePhenotypes(inputFiles, metaFile)       
+
+        phenoData <- cleanAveragePhenotypes(inputFiles, metaFile)
         phenoData <- na.omit(phenoData)
     }
 
@@ -119,7 +120,7 @@ if (dataType == 'genotype') {
 if (is.null(genoData) && is.null(phenoData)) {
   stop("There is no data to run PCA.")
   q("no", 1, FALSE)
-} 
+}
 
 
 genoDataMissing <- c()
@@ -129,7 +130,7 @@ if (dataType == 'genotype') {
         genoData <- convertToNumeric(genoData)
         genoData <- filterGenoData(genoData, maf=0.01)
         genoData <- roundAlleleDosage(genoData)
-    
+
         message("No. of geno missing values, ", sum(is.na(genoData)) )
         if (sum(is.na(genoData)) > 0) {
             genoDataMissing <- c('yes')
