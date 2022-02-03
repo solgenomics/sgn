@@ -66,9 +66,23 @@ has 'user_id' => (isa => 'Int',
     default => 40
 );
 
+has 'fixture'=>(isa => 'Ref',
+is => 'rw');
+
+
 has 'trials_ids' => (isa => 'ArrayRef',
     is => 'rw',
     default => sub { [139, 141] }
+);
+
+has 'accessions_source_trial' => (isa => 'Int',
+    is => 'rw',
+    default => 141
+);
+
+has 'plots_source_trial' => (isa => 'Int',
+    is => 'rw',
+    default => 139
 );
 
 has 'accessions_list_name' => (isa => 'Str',
@@ -76,9 +90,17 @@ has 'accessions_list_name' => (isa => 'Str',
     default =>'accessions list'
 );
 
+has 'accessions_list_subset' => (isa => 'Int',
+    is => 'rw',
+);
+
 has 'plots_list_name' => (isa => 'Str',
     is => 'rw',
     default =>'plots list'
+);
+
+has 'plots_list_subset' => (isa => 'Int',
+    is => 'rw',
 );
 
 has 'trials_list_name' => (isa => 'Str',
@@ -115,6 +137,52 @@ sub load_plots_list {
     my $plots = $self->get_plots_names($trial_id);
 
     return  $self->load_list_elems($list_id, $plots, 'plots');
+
+}
+
+sub get_list_details {
+    my $self = shift;
+    my $type = shift;
+    my $list_type_name= $type. '_list_name';
+    my $name = $self->$list_type_name;
+    my $owner = $self->user_id;
+print STDERR "\n get_list_details: name: $name -- owner: $owner\n";
+    my $q = "SELECT list_id, name
+                    FROM sgn_people.list
+                    WHERE name = ?
+                        AND owner = ?";
+
+    my $h = $self->get_dbh->prepare($q);
+    $h->execute($name, $owner);
+    my ($list_id, $list_name) = $h->fetchrow_array();
+print STDERR "\n get_list_details: list_name: $list_name -- list_id: $list_id\n";
+    return { list_id => $list_id,
+        list_name => $list_name
+    };
+
+}
+
+
+sub get_dataset_details {
+    my $self = shift;
+    my $type = shift;
+    my $dataset_type_name= $type. '_dataset_name';
+    my $name = $self->$dataset_type_name;
+    my $owner = $self->user_id;
+
+print STDERR "\n get_dataset_details name: $name -- owner: $owner\n";
+    my $q = "SELECT sp_dataset_id, name
+                    FROM sgn_people.sp_dataset
+                    WHERE name = ?
+                        AND sp_person_id = ? ";
+
+    my $h = $self->get_dbh->prepare($q);
+    $h->execute($name, $owner);
+    my ($dataset_id, $dataset_name) = $h->fetchrow_array();
+print STDERR "\n get_list_details: dataset_name: $dataset_name -- dataset_id: $dataset_id\n";
+    return { dataset_id => $dataset_id,
+        dataset_name => $dataset_name
+    };
 
 }
 
@@ -172,9 +240,8 @@ sub load_accessions_list {
     my $self = shift;
     my $trial_id = shift;
 
-    my $list_id = $self->create_accessions_list();
-    my $accs = $self->get_accessions_names($trial_id);
-    #my @accs = $accs->[0..34];
+    my $list_id = $self->create_accessions_list;
+    my $accs = $self->get_accessions_names;
 
     return $self->load_list_elems($list_id, $accs, 'accessions');
 
@@ -200,7 +267,7 @@ sub load_list_elems {
 
     $list->type($type);
 
-    # print STDERR "\nadding $type...: @$elems\n";
+    print STDERR "\nadding $type...: @$elems\n";
     my $res = $list->add_bulk($elems);
 
     return { list_id => $list_id,
@@ -255,17 +322,22 @@ sub load_trials_dataset {
 
 sub load_accessions_dataset {
     my $self = shift;
-    my $trial_id = shift;
 
-   $trial_id = $self->default_accessions_trial if !$trial_id;
+   my $trial_id = $self->accessions_source_trial;
 
     my $dt_name = $self->accessions_dataset_name;
     my $dataset = $self->create_dataset($dt_name);
     $dataset->trials([$trial_id]);
 
-    $dataset->accessions($self->get_accessions_ids);
+    my $accessions_ids = $self->get_accessions_ids;
+    print STDERR "\nload_accessions_dataset: @$accessions_ids\n";
+
+    $dataset->accessions($accessions_ids);
     $dataset->is_live(1);
-    $dataset->store();
+    my $dataset_id = $dataset->store();
+
+    my $sp_dt_id = $dataset->sp_dataset_id();
+    print STDERR "\nstored dataset: $dataset_id -- sp_dataset_id: $sp_dt_id\n";
 
     return {'dataset_name' => $dataset->name,
         'dataset_id' =>$dataset->sp_dataset_id
@@ -274,15 +346,15 @@ sub load_accessions_dataset {
 
 sub load_plots_dataset {
     my $self = shift;
-    my $trial_id = shift;
 
-    $trial_id = $self->default_plots_trial if !$trial_id;
+    my $trial_id =  $self->plots_source_trial;
 
     my $dt_name = $self->plots_dataset_name;
     my $dataset = $self->create_dataset($dt_name);
     $dataset->trials([$trial_id]);
 
-    $dataset->plots($self->get_plots_ids);
+    my $plots_ids = $self->get_plots_ids;
+    $dataset->plots($plots_ids);
     $dataset->is_live(1);
     $dataset->store();
 
@@ -293,6 +365,7 @@ sub load_plots_dataset {
 
 sub get_dataset_obj {
     my $self = shift;
+    # my $sp_dataset_id = shift;
 
     my $dataset = CXGN::Dataset->new({
 	       schema => $self->bcs_schema,
@@ -311,6 +384,7 @@ sub create_dataset {
     my $dataset = $self->get_dataset_obj();
 
     $dataset->sp_person_id($self->user_id);
+
     $dataset->name($dataset_name);
     $dataset->genotyping_protocols([$protocol_id]);
 
@@ -328,7 +402,9 @@ sub get_dbh {
 
 sub get_fixture_obj {
     my $self = shift;
-    return SGN::Test::Fixture->new();
+
+    return $self->fixture;
+    # return SGN::Test::Fixture->new();
 }
 
 sub people_schema {
@@ -364,10 +440,20 @@ sub trials_list {
 
 sub accessions_list {
     my $self = shift;
-    my $trial_id = shift;
 
-    my $trial =  my $trial = $self->get_trial_obj($trial_id);
+    my $trial_id = $self->accessions_source_trial;
+
+print STDERR "\naccessions_list: getting accessions from trial $trial_id\n";
+    my $trial =  $self->get_trial_obj($trial_id);
     my $accessions = $trial->get_accessions();
+
+    my $subset = $self->accessions_list_subset;
+
+    if ($subset) {
+        my @accs_subset = @$accessions[0..$subset-1];
+        $accessions = \@accs_subset;
+        print STDERR "\n subsetting $subset accessions  from trial: $trial_id\n";
+    }
 
     return $accessions;
 
@@ -375,10 +461,19 @@ sub accessions_list {
 
 sub plots_list {
     my $self = shift;
-    my $trial_id = shift;
+
+    my $trial_id = $self->plots_source_trial;
 
     my $trial = $self->get_trial_obj($trial_id);
     my $plots =  $trial->get_plots();
+
+    my $subset = $self->plots_list_subset;
+    if ($subset) {
+        my @plots_subset = @$plots[0..$subset-1];
+        $plots = \@plots_subset;
+
+        print STDERR "\n subsetting $subset plots from trial $trial_id\n";
+    }
 
     return $plots;
 
@@ -395,29 +490,10 @@ sub get_trial_obj {
 
 }
 
-
-sub default_plots_trial {
-    my $self = shift;
-
-    my $trials_ids  = $self->trials_ids;
-    return $trials_ids->[0]; #trial Kasese solgs trial (139)
-
-}
-
-sub default_accessions_trial {
-    my $self = shift;
-
-    my $trials_ids  = $self->trials_ids;
-    return $trials_ids->[1]; #trial2 NaCRRI (141)
-
-}
-
 sub get_plots_ids {
     my $self = shift;
-    my $trial_id = shift;
 
-    $trial_id = $self->default_plots_trial if !$trial_id;
-    my $plots = $self->plots_list($trial_id);
+    my $plots = $self->plots_list;
 
     my @plots_ids;
     foreach my $pl (@$plots){
@@ -430,10 +506,8 @@ sub get_plots_ids {
 
 sub get_plots_names {
     my $self = shift;
-    my $trial_id = shift;
 
-    $trial_id = $self->default_plots_trial if !$trial_id;
-    my $plots = $self->plots_list($trial_id);
+    my $plots = $self->plots_list;
 
     my @plots_names;
     foreach my $pl (@$plots){
@@ -446,11 +520,8 @@ sub get_plots_names {
 
 sub get_accessions_ids {
     my $self = shift;
-    my $trial_id = shift;
 
-    $trial_id = $self->default_accessions_trial if !$trial_id;
-
-    my $accessions = $self->accessions_list($trial_id);
+    my $accessions = $self->accessions_list;
 
     my @accessions_ids;
     foreach my $acc (@$accessions){
@@ -463,11 +534,8 @@ sub get_accessions_ids {
 
 sub get_accessions_names {
     my $self = shift;
-    my $trial_id = shift;
 
-    $trial_id = $self->default_accessions_trial if !$trial_id;
-
-    my $accessions = $self->accessions_list($trial_id);
+    my $accessions = $self->accessions_list;
 
     my @accessions_names;
     foreach my $acc (@$accessions){
