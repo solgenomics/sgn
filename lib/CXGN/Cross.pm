@@ -1372,26 +1372,30 @@ sub get_intercross_file_metadata {
         my $intercross_files;
         my $file_metadata_json = $projectprop_rs->value();
         my $file_metadata = decode_json$file_metadata_json;
+
         if ($file_type eq 'intercross_download') {
             $intercross_files = $file_metadata->{'intercross_download'};
         } elsif ($file_type eq 'intercross_upload') {
             $intercross_files = $file_metadata->{'intercross_upload'};
         }
-        my %intercross_hash = %{$intercross_files};
-        @file_ids = keys %intercross_hash;
-        if (scalar @file_ids > 0) {
-            foreach my $id (@file_ids){
-                my @each_row = ();
-                my $q = "SELECT f.file_id, m.create_date, p.sp_person_id, p.username, f.basename, f.dirname, f.filetype
-                    FROM metadata.md_files AS f
-                    JOIN metadata.md_metadata as m ON (f.metadata_id = m.metadata_id)
-                    JOIN sgn_people.sp_person as p ON (p.sp_person_id = m.create_person_id) WHERE f.file_id = ?
-                   ORDER BY f.file_id ASC";
 
-                my $h = $dbh->prepare($q);
-                $h->execute($id);
-                @each_row = $h->fetchrow_array();
-                push @file_info, [@each_row];
+        if ($intercross_files) {
+            my %intercross_hash = %{$intercross_files};
+            @file_ids = keys %intercross_hash;
+            if (scalar @file_ids > 0) {
+                foreach my $id (@file_ids){
+                    my @each_row = ();
+                    my $q = "SELECT f.file_id, m.create_date, p.sp_person_id, p.username, f.basename, f.dirname, f.filetype
+                        FROM metadata.md_files AS f
+                        JOIN metadata.md_metadata as m ON (f.metadata_id = m.metadata_id)
+                        JOIN sgn_people.sp_person as p ON (p.sp_person_id = m.create_person_id) WHERE f.file_id = ?
+                        ORDER BY f.file_id ASC";
+
+                    my $h = $dbh->prepare($q);
+                    $h->execute($id);
+                    @each_row = $h->fetchrow_array();
+                    push @file_info, [@each_row];
+                }
             }
         }
     }

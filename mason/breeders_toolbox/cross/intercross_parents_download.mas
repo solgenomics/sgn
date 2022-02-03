@@ -193,6 +193,9 @@ jQuery(document).ready(function(){
         });
     });
 
+    jQuery("#intercross_parents_download_close_button").click(function(){
+        location.reload();
+    });
 
 
 });

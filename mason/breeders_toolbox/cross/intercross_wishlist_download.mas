@@ -137,7 +137,7 @@ $trial_id
                         <li><b>maleDbId:</b> stock_id of male parent in the database</li>
                         <li><b>femaleName:</b> female uniquename in the database.</li>
                         <li><b>maleName:</b> male uniquename in the database.</li>
-                        <li><b>wishType:</b> type of field crossing data (flower, fruit, seed).</li>
+                        <li><b>wishType:</b> type of field crossing data (must be one of these types: flower, fruit, seed).</li>
                         <li><b>wishMin:</b> expected minimum number of the specified type.</li>
                         <li><b>wishMax:</b> expected maximum number of the specified type.</li>
                     </ul>
@@ -209,7 +209,7 @@ jQuery(document).ready(function(){
         var male_list_id = jQuery('#wishlist_male_list_select').val();
         var male_list = lo.getList(male_list_id);
 
-        var html = '<table class="table table-bordered" id="wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Info (type, min, max)</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered" id="wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Info (type,min,max). Supported types:flower,fruit,seed.</th></tr></thead><tbody>';
         for(var i=0; i<female_list.length; i++){
             html = html + '<tr><td>' + female_list[i] + '</td><td><div name="wishlist_male_selects" id="wishlist_male_select_' +i+ '"></div></td><td><span id="wishlist_male_accession_id_'+ i +'_info" data-related="'+encodeURI(female_list[i])+'" >Select Male(s)</span></td></tr>';
         };
@@ -285,6 +285,10 @@ jQuery(document).ready(function(){
                 jQuery('#intercross_wishlist_download_dialog').modal("hide");
             },
         });
+    });
+
+    jQuery("#intercross_wishlist_download_close_button").click(function(){
+        location.reload();
     });
 
 });

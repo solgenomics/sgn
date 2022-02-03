@@ -49,6 +49,8 @@ use LWP::UserAgent;
 use HTML::Entities;
 use URI::Encode qw(uri_encode uri_decode);
 use Sort::Key::Natural qw(natsort);
+use Scalar::Util qw(looks_like_number);
+
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -218,14 +220,45 @@ sub create_intercross_wishlist_POST : Args(0) {
         my $female_id = $female_rs->stock_id();
         my $male_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $male_name});
         my $male_id = $male_rs->stock_id();
+
+        @each_combination = ($female_id, $male_id, $female_name, $male_name);
+
         my @info_array = split /,/ , $info_string;
         my $type = $info_array[0];
         $type =~ s/^\s+|\s+$//g;
+
+        my %activity_types;
+        $activity_types{'flower'} = 1;
+        $activity_types{'fruit'} = 1;
+        $activity_types{'seed'} = 1;
+
+        if (!$activity_types{$type}){
+            $c->stash->{rest} = {error => "$type type is not supported. Please use only flower, fruit or seed"};
+            return;
+        } else {
+            push @each_combination, $type;
+        }
+
         my $min = $info_array[1];
         $min =~ s/^\s+|\s+$//g;
+
+        if (looks_like_number($min)) {
+            push @each_combination, $min;
+        } else {
+            $c->stash->{rest} = {error => "$min is not a number. Please indicate minimum number"};
+            return;
+        }
+
         my $max = $info_array[2];
         $max =~ s/^\s+|\s+$//g;
-        @each_combination = ($female_id, $male_id, $female_name, $male_name, $type, $min, $max);
+
+        if (looks_like_number($max)) {
+            push @each_combination, $max;
+        } else {
+            $c->stash->{rest} = {error => "$max is not a number. Please indicate maximum number"};
+            return;
+        }
+
         push @all_combinations, [@each_combination];
     }
 
