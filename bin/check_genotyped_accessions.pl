@@ -13,7 +13,7 @@ perl bin/check_genotyped_accessions.pl -h [dbhost] -d [dbname] -i [infile] -o [o
  -d database name e.g. "cxgn_cassava"
  -p genotyping protocol name
  -i path to infile
- -o path to output file 
+ -o path to output file
 
 =head1 DESCRIPTION
 
@@ -21,7 +21,7 @@ This script checks if accessions are genotyped using a given genotyping protocol
 
 =head1 AUTHOR
 
- Isaak Y Tecle 
+ Isaak Y Tecle
 
 =cut
 
@@ -57,7 +57,7 @@ my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
 my $schema= Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh() });
 
 
-my $q = "SELECT nd_protocol_id, name 
+my $q = "SELECT nd_protocol_id, name
                 FROM nd_protocol
                 WHERE name = ?";
 
@@ -98,7 +98,7 @@ while (my ($gt, $stock) = $h->fetchrow_array()) {
     if ($stock =~ m/(.*?)\.(.*)/) {
 	$stock = $1;
     }
-	 
+
     if (!$g2s{$stock}) {
 	$cnt++;
 	$g2s{$stock} = uc($gt);
@@ -133,10 +133,10 @@ foreach my $clone (@clones) {
 	$genotyped_cnt++;
     }
     else {
-	print STDERR "\n checking genotyped synonyms for clone: $clone\n";
+	print STDERR "\n checking if $clone is a synonym and find its uniquename\n";
 
 	my $syn_rs = $schema->resultset("Stock::Stockprop")->search( { value => { ilike => $clone}, 'me.type_id' => $synonym_id }, { join => 'stock' } );
-	
+
 	if ($syn_rs->count()) {
 	    my $row = $syn_rs->first()->stock();
 	    my $uniquename = $row->uniquename();
@@ -147,14 +147,14 @@ foreach my $clone (@clones) {
 		$genotyped_cnt++;
 	    } else {
 		$uniquename = $clone;
-		$match_type = "not found";
+		$match_type = "--";
 		$genotyped = 'No';
 		$not_genotyped_cnt++;
 	    }
 	}
 	else {
 	    $uniquename = $clone;
-	    $match_type = "not found";
+	    $match_type = "--";
 	    $genotyped = 'No';
 	    $not_genotyped_cnt++;
 	}
