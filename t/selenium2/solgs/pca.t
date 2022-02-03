@@ -12,7 +12,7 @@ use SGN::Test::solGSData;
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
-my $solgs_data = SGN::Test::solGSData->new();
+my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
 
 my $accessions_list =  $solgs_data->load_accessions_list();
 my $accessions_list_name = $accessions_list->{list_name};
@@ -56,8 +56,6 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_list_name. '"]', 'xpath', 'select clones list')->click();
     sleep(5);
-
-
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
@@ -157,6 +155,39 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     `rm -r /tmp/localhost/`;
+
+    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $accessions_dt_name . '"]', 'xpath', 'accessions dataset')->click();
+    sleep(5);
+    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    sleep(20);
+    $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
+    sleep(3);
+    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    sleep(3);
+    $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+    sleep(80);
+    $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check geno pca plot')->click();
+    sleep(5);
+
+    $d->driver->refresh();
+    sleep(5);
+
+    $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $plots_dt_name . '"]', 'xpath', 'plots dataset')->click();
+    sleep(5);
+    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'go btn')->click();
+    sleep(20);
+    $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
+    sleep(3);
+    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    sleep(3);
+    $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+    sleep(80);
+    $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check geno pca plot')->click();
+    sleep(5);
+
+    $d->driver->refresh();
+    sleep(5);
+
 
     $d->find_element_ok('//select[@id="pca_pops_list_select"]/option[text()="' . $trials_dt_name . '"]', 'xpath', 'trials dataset')->click();
     sleep(5);
