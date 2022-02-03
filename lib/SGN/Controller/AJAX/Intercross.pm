@@ -59,6 +59,7 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON'  },
 );
 
+
 sub download_parents_file : Path('/ajax/intercross/download_parents_file') : ActionClass('REST') { }
 
 sub download_parents_file_POST : Args(0) {
@@ -196,6 +197,7 @@ sub download_parents_file_POST : Args(0) {
     $c->stash->{rest} = {
         success => 1,
         file_id => $file_id,
+        data => \@all_rows
     };
 
 }
