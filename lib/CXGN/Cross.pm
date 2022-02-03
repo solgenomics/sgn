@@ -70,6 +70,12 @@ has 'progenies' => (isa => 'Ref',
 		    is => 'rw',
     );
 
+has 'file_type' => (isa => 'Str',
+    is => 'rw',
+    required => 0,
+);
+
+
 
 sub BUILD {
     my $self = shift;
@@ -1353,6 +1359,7 @@ sub get_intercross_file_metadata {
     my $self = shift;
     my $schema = $self->schema;
     my $crossing_experiment_id = $self->trial_id();
+    my $file_type = $self->file_type();
     my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial', 'project_type')->cvterm_id();
     my $file_metadata_json_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'file_metadata_json', 'project_property')->cvterm_id;
 
@@ -1362,11 +1369,16 @@ sub get_intercross_file_metadata {
     my @file_info = ();
     my $dbh = $schema->storage->dbh();
     if ($projectprop_rs){
+        my $intercross_files;
         my $file_metadata_json = $projectprop_rs->value();
         my $file_metadata = decode_json$file_metadata_json;
-        my $intercross_download_files = $file_metadata->{'intercross_download'};
-        my %intercross_download_hash = %{$intercross_download_files};
-        @file_ids = keys %intercross_download_hash;
+        if ($file_type eq 'intercross_download') {
+            $intercross_files = $file_metadata->{'intercross_download'};
+        } elsif ($file_type eq 'intercross_upload') {
+            $intercross_files = $file_metadata->{'intercross_upload'};
+        }
+        my %intercross_hash = %{$intercross_files};
+        @file_ids = keys %intercross_hash;
         if (scalar @file_ids > 0) {
             foreach my $id (@file_ids){
                 my @each_row = ();

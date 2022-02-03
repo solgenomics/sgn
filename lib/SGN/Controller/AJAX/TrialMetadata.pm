@@ -3288,13 +3288,26 @@ sub cross_additional_info_trial : Chained('trial') PathPart('cross_additional_in
 }
 
 
-sub intercross_file_metadata : Chained('trial') PathPart('intercross_file_metadata') Args(0) {
+sub downloaded_intercross_file_metadata : Chained('trial') PathPart('downloaded_intercross_file_metadata') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id = $c->stash->{trial_id};
-    my $crosses = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id});
+    my $crosses = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id, file_type => 'intercross_download'});
+    my $result = $crosses->get_intercross_file_metadata();
+
+    $c->stash->{rest} = { data => $result };
+}
+
+
+sub uploaded_intercross_file_metadata : Chained('trial') PathPart('uploaded_intercross_file_metadata') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $crosses = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id, file_type => 'intercross_upload'});
     my $result = $crosses->get_intercross_file_metadata();
 
     $c->stash->{rest} = { data => $result };
