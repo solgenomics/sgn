@@ -164,7 +164,7 @@ jQuery(document).ready(function(){
         }
 
         jQuery.ajax({
-            url: '/ajax/intercross/download_parents_file',
+            url: '/ajax/intercross/create_parents_file',
             dataType: "json",
             type: 'POST',
             data:{

@@ -60,9 +60,9 @@ __PACKAGE__->config(
 );
 
 
-sub download_parents_file : Path('/ajax/intercross/download_parents_file') : ActionClass('REST') { }
+sub create_parents_file : Path('/ajax/intercross/create_parents_file') : ActionClass('REST') { }
 
-sub download_parents_file_POST : Args(0) {
+sub create_parents_file_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     my $female_list_id = $c->req->param("female_list_id");
@@ -356,6 +356,7 @@ sub create_intercross_wishlist_POST : Args(0) {
     $c->stash->{rest} = {
         success => 1,
         file_id => $file_id,
+        data => \@all_combinations
     };
 
 }

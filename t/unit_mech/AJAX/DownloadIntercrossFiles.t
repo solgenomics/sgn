@@ -6,7 +6,6 @@ use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
 use CXGN::List;
-use CXGN::Genotype::Protocol;
 use Data::Dumper;
 use JSON;
 use CXGN::Pedigree::AddCrossingtrial;
@@ -35,12 +34,10 @@ is($response->{'success'}, '1');
 
 my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name =>'crossing_experiment_1'});
 my $crossing_experiment_id = $crossing_experiment_rs->project_id();
-#print STDERR "CROSSING EXPERIMENT ID =".Dumper($crossing_experiment_id)."\n";
 
 $mech->get_ok('http://localhost:3010/list/new?name=accession_list&desc=test');
 $response = decode_json $mech->content;
 my $accession_list_id = $response->{list_id};
-#print STDERR "FEMALE LIST ID =".Dumper($accession_list_id)."\n";
 ok($accession_list_id);
 
 my @accessions = qw(UG120001 UG120002 UG120003 UG120004);
@@ -49,12 +46,13 @@ my $accession_list = CXGN::List->new( { dbh=>$dbh, list_id => $accession_list_id
 $response = $accession_list->add_bulk(\@accessions);
 is($response->{'count'},4);
 
-$mech->post_ok('http://localhost:3010/ajax/intercross/download_parents_file?female_list_id='.$accession_list_id.'&male_list_id='.$accession_list_id.'&crossing_experiment_id='.$crossing_experiment_id);
+#test creating intercross parents file
+$mech->post_ok('http://localhost:3010/ajax/intercross/create_parents_file?female_list_id='.$accession_list_id.'&male_list_id='.$accession_list_id.'&crossing_experiment_id='.$crossing_experiment_id);
 $response = decode_json $mech->content;
 
-my $rows = $response->{'data'};
+my $parents_rows = $response->{'data'};
 
-is_deeply($rows, [
+is_deeply($parents_rows, [
     [1446,'0','UG120001'],
     [1447,'0','UG120002'],
     [1448,'0','UG120003'],
@@ -65,8 +63,24 @@ is_deeply($rows, [
     [1449,'1','UG120004']
     ], 'intercross parents');
 
+#test creating intercross wishlist
+my @data = ({'female_name'=> 'UG120001','male_name'=> 'UG120002','activity_info'=> 'flower,10,100'},{'female_name'=> 'UG120002','male_name'=> 'UG120003','activity_info'=> 'flower,5,50'},{'female_name'=> 'UG120003','male_name'=> 'UG120004','activity_info'=> 'flower,100,200'});
+my $data_string = encode_json(\@data);
 
+$mech->post_ok('http://localhost:3010/ajax/intercross/create_intercross_wishlist?wishlist_data='.$data_string.'&crossing_experiment_id='.$crossing_experiment_id);
+$response = decode_json $mech->content;
 
+my $wishlist_rows = $response->{'data'};
+
+is_deeply($wishlist_rows, [
+    [38878,38879,'UG120001','UG120002','flower','10','100'],
+    [38879,38880,'UG120002','UG120003','flower','5','50'],
+    [38880,38881,'UG120003','UG120004','flower','100','200']
+    ], 'intercross wishlist');
+
+# remove crossing experiment after test
+my $delete_experiment = $crossing_experiment_rs->delete();
+my $delete_list = CXGN::List::delete_list($f->dbh(), $accession_list_id);
 
 
 done_testing();
