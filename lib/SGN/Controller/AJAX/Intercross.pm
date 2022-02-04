@@ -372,6 +372,7 @@ sub upload_intercross_file_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $cross_id_format = $c->req->param('cross_id_format_option');
+    my $page_crossing_experiment_id = $c->req->param('intercross_experiment_id');
     my $upload = $c->req->upload('intercross_file');
     my $parser;
     my $parsed_data;
@@ -474,6 +475,14 @@ sub upload_intercross_file_POST : Args(0) {
         my $crossing_experiment_name = $intercross_data{'crossing_experiment_name'};
         my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name => $crossing_experiment_name});
         my $crossing_experiment_id = $crossing_experiment_rs->project_id();
+
+        my $page_crossing_experiment_rs = $schema->resultset('Project::Project')->find({project_id => $page_crossing_experiment_id});
+        my $page_crossing_experiment_name = $page_crossing_experiment_rs->name();
+
+        if ($crossing_experiment_id != $page_crossing_experiment_id) {
+            $c->stash->{rest} = {error_string => "Error: You are uploading data for crossing experiment:$crossing_experiment_name on $page_crossing_experiment_name page!"};
+            $c->detach();
+        }
 
         my $crosses_ref = $intercross_data{'crosses'};
         my %crosses_hash = %{$crosses_ref};
