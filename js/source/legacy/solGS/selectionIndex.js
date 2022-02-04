@@ -135,9 +135,10 @@ solGS.sIndex = {
             var row    = selPopsRows[i];
             var popRow = row.innerHTML;
 
-            predictedPop = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
+            // predictedPop = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
+              predictedPop = popRow.match(/predict/ig);
 
-            if (predictedPop) {
+            if (!predictedPop) {
 		if (predictedPop.length) {
                     var selPopsInput  = row.getElementsByTagName("input")[0];
                     var idPopName     = selPopsInput.value;
