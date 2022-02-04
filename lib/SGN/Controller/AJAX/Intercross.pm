@@ -415,6 +415,11 @@ sub upload_intercross_file_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
+    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+        $c->stash->{rest} = { error => 'You do not have the required privileges to upload Intercross file, Intercross file can only be uploaded by accounts with submitter or curator privileges' };
+        return;
+    }
+
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
