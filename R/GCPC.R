@@ -55,8 +55,9 @@ Rcpp::sourceCpp("/home/production/cxgn/QuantGenResources/CalcCrossMeans.cpp") # 
 
 #userPheno <- path2
 #write(paste("READING PHENOTYPEFILE: ",phenotypeFile), stderr())
-userPheno <- read.delim(phenotypeFile, header = TRUE, sep="\t") #testing only
-write(colnames(userPheno), stderr())
+userPheno <- read.delim(phenotypeFile, header = TRUE, sep="\t", fill=TRUE) #testing only
+#write(colnames(userPheno), stderr())
+#write(summary(userPheno), stderr())
 ##userPheno <- userPheno[userPheno$Trial == "SCG", ] #testing only-- needs to replaced with 2-stage
 
 #write("DONE WITH PHENOTYPEFILE"), stderr())
@@ -68,7 +69,7 @@ write(colnames(userPheno), stderr())
 #    besides f are requested.
 #    f is automatically included as a fixed effect- a note to the user would be good.
 
-userFixed <- c()
+#userFixed <- c()
 userFixed <- c("studyYear") # for testing only
 
 
@@ -77,7 +78,7 @@ userFixed <- c("studyYear") # for testing only
 #    also need to be shown somehow. Then, those strings should be passed
 #    to this vector, 'userRandom'.
 
-userRandom <- c()
+#userRandom <- c()
 userRandom <- "blockNumber" # for testing only
 
 
@@ -86,8 +87,8 @@ userRandom <- "blockNumber" # for testing only
 #    column names. No check to ensure matching at this stage. This single string
 #    should be passed to this vector, userID.
 
-userID <- c()
-userID <- "observationUnitName" # for testing only
+#userID <- c()
+userID <- "germplasmName" # for testing only
 
 
 # f. The user must indicate the ploidy level of their organism, and the integer
@@ -122,7 +123,7 @@ write(paste("first element: ", userResponse[1]), stderr())
 
 #userWeights <- c()
 #userWeights <- c(1, 0.8, 0.2) # for YIELD, DMC, and OXBI respectively; for testing only
-userWeights  <- unlist(strsplit(weights, split=",", fixed=T))
+userWeights  <- as.numeric(unlist(strsplit(weights, split=",", fixed=T)))
 
 write(paste("WEIGHTS", userWeights), stderr())
 
@@ -231,10 +232,13 @@ if(userPloidy > 2){
 # 5. Process the phenotypic data.
 ################################################################################
 
+#write(summary(userPheno), stderr())
+
 # a. Paste f into the phenotype dataframe
 write("processing phenotypic data...", stderr())
 userPheno$f <- f[as.character(userPheno[ , userID])]
 
+#write(summary(userPheno), stderr())
 
 # b. Scale the response variables.
 write("processing phenotypic data... scaling...", stderr())
@@ -246,7 +250,18 @@ for(i in 1:length(userResponse)){
 
 write("processing phenotypic data... adding dominance effects", stderr())
 # c. Paste in a second ID column for the dominance effects.
-userPheno[ , paste(userID, 2, sep = "")] <- userPheno[ , userID]
+
+#write(summary(userPheno), stderr())
+
+dominanceEffectCol = paste(userID, "2", sep="")
+write(paste("NEW COL NAME: ", dominanceEffectCol), stderr())
+
+write(paste("USER_ID COLUMN: ", userPheno[ , userID]), stderr());
+
+
+userPheno[ , dominanceEffectCol] <- userPheno[ , userID]
+
+write(paste("USER PHENO userID2 COL", userPheno[ , dominanceEffectCol]), stderr())
 
 
 # Additional steps could be added here to remove outliers etc.
@@ -259,13 +274,15 @@ userPheno[ , paste(userID, 2, sep = "")] <- userPheno[ , userID]
 # 6. Fit the mixed models in sommer.
 ################################################################################
 
+write("Fit mixed model in sommer", stderr());
 
 # 6a. Make a list to save the models.
+
 userModels <- list()
 
 for(i in 1:length(userResponse)){
 
-
+  write(paste("User response: ", userResponse[i]), stderr())
   # check if fixed effects besides f are requested, then paste together
   # response variable and fixed effects
   if(!is.na(userFixed[1])){
@@ -280,6 +297,9 @@ for(i in 1:length(userResponse)){
 
   # check if random effects besides genotypic additive and dominance effects
   # are requested, then paste together the formula
+
+  write("Generate formula...", stderr())
+
   if(!is.na(userRandom[1])){
     randEff <- paste(userRandom, collapse = " + ")
     ID2 <- paste(userID, 2, sep = "")
@@ -290,7 +310,10 @@ for(i in 1:length(userResponse)){
     randArg <- paste("~vs(", userID, ", Gu = A) + vs(", ID2, ", Gu = D)", sep = "")
   }
 
+  write(paste("Fit mixed GBLUP model...", randArg), stderr())
 
+  #  write(paste("USER PHENO:", userPheno), stderr())
+  #  write(paste("COLNAMES: ", colnames(userPheno)), stderr())
   # fit the mixed GBLUP model
   myMod <- mmer(fixed = as.formula(fixedArg),
                 random = as.formula(randArg),
@@ -300,6 +323,9 @@ for(i in 1:length(userResponse)){
 
 
   # save the fit model
+
+  write(paste("I = ", i), stderr());
+  
   userModels[[i]] <- myMod
 }
 
@@ -328,6 +354,8 @@ D.TTinv <- t(D.G) %*% D.Tinv # M'%*% (M'M)-
 
 
 # b. Loop through and backsolve to marker effects.
+
+write("backsolve marker effects...", stderr())
 
 userAddEff <- list() # save them in order
 userDomEff <- list() # save them in order
@@ -367,11 +395,21 @@ for(i in 1:length(userModels)){
 # 8. Weight the marker effects and add them together to form an index of merit.
 ################################################################################
 
+write("weight marker effects...", stderr())
+
 ai <- 0
 di <- 0
 for(i in 1:length(userWeights)){
-  ai <- ai + userAddEff[[i]] * userWeights[i]
+  write(paste("USER ADD EFF : ", userAddEff[[i]]), stderr())
+    write(paste("USER DOM EFF : ", userDomEff[[i]]), stderr())	
+  write(paste("USER WEIGHT : ", userWeights[i]), stderr())
+
+
+       ai <- ai + userAddEff[[i]] *  userWeights[i]
+
+ write("DONE WITH ADDITIVE EFFECTS!\n", stderr())
   di <- di + userDomEff[[i]] * userWeights[i]
+   write("DONE WITH DOM EFFECTS!\n", stderr())
 }
 
 
@@ -388,8 +426,11 @@ for(i in 1:length(userWeights)){
 # for use in calcCrossMean(). calcCrossMean will return predicted cross
 # values for all individuals in the genotype file otherwise.
 
+write("Predict crosses...", stderr())
+
 GP <- G[rownames(G) %in% userPheno[ , userID], ]
 
+write("calcCrossMean...", stderr())
 
 crossPlan <- calcCrossMean(GP,
                            ai,

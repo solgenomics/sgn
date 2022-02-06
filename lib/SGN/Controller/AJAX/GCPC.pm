@@ -264,6 +264,7 @@ sub make_R_trait_name {
     $trait =~ tr/\//./;
     $trait =~ s/\:/\_/g;
     $trait =~ s/\|/\_/g;
+    $trait =~ s/\-/\_/g;
     
     return $trait;
 }
