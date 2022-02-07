@@ -19,56 +19,54 @@ $breeding_program_name => undef
 <div class="modal fade" id="new_folder_dialog" name="set_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="newFolderDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-        <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="newFolderDialog">Create a new folder</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-
-	       <form class="form-horizontal" role="form" method="post" id="new_folder_dialog_form" name="new_folder_dialog_form">
-	        <div class="form-group">
-      	      <label class="col-sm-3 control-label">Folder Name: </label>
-      	      <div class="col-sm-9" >
-                <input name="new_folder_name" id="new_folder_name" class="form-control" type="text" autofocus/>
-              </div>
-	        </div>
-          <div class="form-group">
-      	      <label class="col-sm-3 control-label">Breeding Program: </label>
-      	      <div class="col-sm-9" >
-                <div id="new_folder_breeding_program_select_div">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="newFolderDialog">Create a new folder</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" id="new_folder_dialog_form" name="new_folder_dialog_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Folder Name: </label>
+                            <div class="col-sm-9" >
+                                <input name="new_folder_name" id="new_folder_name" class="form-control" type="text" autofocus/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Breeding Program: </label>
+                            <div class="col-sm-9" >
+                                <div id="new_folder_breeding_program_select_div">
 % if ($breeding_program_id) {
-                <input type="text" class="form-control" value="<% $breeding_program_name %>" disabled/>
-                <input type="hidden" id="new_folder_breeding_program_id" name="new_folder_breeding_program_id" value="<% $breeding_program_id %>" />
+                                    <input type="text" class="form-control" value="<% $breeding_program_name %>" disabled/>
+                                    <input type="hidden" id="new_folder_breeding_program_id" name="new_folder_breeding_program_id" value="<% $breeding_program_id %>" />
 % } else {
   [Loading...]
 % }
-                </div>
-              </div>
-	        </div>
-          <div class="form-group">
-      	      <label class="col-sm-3 control-label">Parent Folder: </label>
-      	      <div class="col-sm-9" >
-                <div id="new_folder_parent_folder_select_div">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Parent Folder: </label>
+                            <div class="col-sm-9" >
+                                <div id="new_folder_parent_folder_select_div">
 % if ($parent_folder_id) {
-                  <input type="text" class="form-control" value="<% $parent_folder_name %>" disabled/>
-                  <input type="hidden" id="new_folder_parent_folder_id" name="new_folder_parent_folder_id" value="<% $parent_folder_id %>" />
+                                    <input type="text" class="form-control" value="<% $parent_folder_name %>" disabled/>
+                                    <input type="hidden" id="new_folder_parent_folder_id" name="new_folder_parent_folder_id" value="<% $parent_folder_id %>" />
 % } else {
   [Loading...]
 % }
+                                </div>
+                            </div>
+                        </div>
+                    </form><br/>
                 </div>
-              </div>
-	        </div>
-
-	       </form><br/>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="new_folder_submit" id="new_folder_submit" title="Save new folder">Save</button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	      <button type="button" class="btn btn-primary" name="new_folder_submit" id="new_folder_submit" title="Save new folder">Save</button>
-      </div>
     </div>
-  </div>
 </div>
 
 <div class="modal fade" id="new_folder_success_dialog_message" name="new_folder_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="newFolderSuccessDialog">
@@ -149,38 +147,38 @@ jQuery(document).ready(function() {
 });
 
 function new_trial_folder() {
-  var parent_id = jQuery('#new_folder_parent_folder_id').val();
-  var folder_name = jQuery('#new_folder_name').val();
-  var breeding_program_id = jQuery('#new_folder_breeding_program_id').val();
+    var parent_id = jQuery('#new_folder_parent_folder_id').val();
+    var folder_name = jQuery('#new_folder_name').val();
+    var breeding_program_id = jQuery('#new_folder_breeding_program_id').val();
 
-  var project_type = "<% $project_type %>";
+    var project_type = "<% $project_type %>";
 
-  jQuery.ajax( {
-    'url': '/ajax/folder/new',
-    'beforeSend' : function(){
-        jQuery('#working_modal').modal('show');
-    },
-    'data': {
-      'parent_folder_id' : parent_id,
-      'folder_name' :  folder_name,
-      'breeding_program_id' : breeding_program_id,
-      'project_type' : project_type
-    },
-    'success': function(response) {
-      jQuery('#working_modal').modal('hide');
-      jQuery('#new_folder_dialog').modal("hide");
-      if (response.error){
-        alert(response.error);
-      } else {
-        jQuery('#new_folder_success_dialog_message').modal("show");
-      }
-    },
-    error: function(response) {
-      jQuery('#working_modal').modal('hide');
-      alert('An error occurred');
-      jQuery('#new_folder_dialog').modal("hide");
-    }
-  });
+    jQuery.ajax( {
+        'url': '/ajax/folder/new',
+        'beforeSend' : function(){
+            jQuery('#working_modal').modal('show');
+        },
+        'data': {
+            'parent_folder_id' : parent_id,
+            'folder_name' :  folder_name,
+            'breeding_program_id' : breeding_program_id,
+            'project_type' : project_type
+        },
+        'success': function(response) {
+            jQuery('#working_modal').modal('hide');
+            jQuery('#new_folder_dialog').modal("hide");
+            if (response.error){
+                alert(response.error);
+            } else {
+                jQuery('#new_folder_success_dialog_message').modal("show");
+            }
+        },
+        error: function(response) {
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred');
+            jQuery('#new_folder_dialog').modal("hide");
+        }
+    });
 }
 
 
