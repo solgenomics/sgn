@@ -353,6 +353,15 @@ sub get_phenotype_matrix {
 }
 
 
+=head2 function get_phenotype_matrix_long()
+
+outputs the data in Fieldbook's "database" format, with the following columns:
+
+plot_id seed_name trait value person timestamp
+
+=cut
+
+
 sub get_phenotype_matrix_long {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
@@ -385,27 +394,14 @@ sub get_phenotype_matrix_long {
 
     my ($data, $unique_traits);
     my @info;
-    my @metadata_headers = ( 'studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber');
+    #    my @metadata_headers = ( 'studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber');
+        my @metadata_headers = ( 'observationUnitName', 'germplasmName', 'trait', 'value', 'person', 'timestamp');
 
     if ($self->search_type eq 'MaterializedViewTable'){
         ($data, $unique_traits) = $phenotypes_search->search();
 
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
-
-        my @line = @metadata_headers;
-        push @line, ('plantedSeedlotStockDbId', 'plantedSeedlotStockUniquename', 'plantedSeedlotCurrentCount', 'plantedSeedlotCurrentWeightGram', 'plantedSeedlotBoxName', 'plantedSeedlotTransactionCount', 'plantedSeedlotTransactionWeight', 'plantedSeedlotTransactionDescription', 'availableGermplasmSeedlotUniquenames');
-
-        if ($include_pedigree_parents){
-            push @line, ('germplasmPedigreeFemaleParentName', 'germplasmPedigreeFemaleParentDbId', 'germplasmPedigreeMaleParentName', 'germplasmPedigreeMaleParentDbId');
-        }
-
-        my @sorted_traits = sort keys(%$unique_traits);
-        foreach my $trait (@sorted_traits) {
-            push @line, $trait;
-        }
-        push @line, 'notes';
-        push @info, \@line;
 
         foreach my $obs_unit (@$data){
             my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
@@ -446,6 +442,7 @@ sub get_phenotype_matrix_long {
                     $trait_observations{$_->{trait_name}} = "$_->{value},$collect_date";
                 }
                 else {
+
                     $trait_observations{$_->{trait_name}} = $_->{value};
                 }
             }
@@ -497,24 +494,7 @@ sub get_phenotype_matrix_long {
                 $trial_desc =~ s/\s+$//g;
 
                 $obsunit_data{$obsunit_id}->{metadata} = [
-                    $d->{year},
-                    $d->{breeding_program_id},
-                    $d->{breeding_program_name},
-                    $d->{breeding_program_description},
-                    $d->{trial_id},
-                    $trial_name,
-                    $trial_desc,
-                    $d->{design},
-                    $d->{plot_width},
-                    $d->{plot_length},
-                    $d->{field_size},
-                    $d->{field_trial_is_planned_to_be_genotyped},
-                    $d->{field_trial_is_planned_to_cross},
-                    $d->{planting_date},
-                    $d->{harvest_date},
-                    $d->{location_id},
-                    $d->{location_name},
-                    $d->{accession_stock_id},
+
                     $d->{accession_uniquename},
                     $synonym_string,
                     $d->{obsunit_type_name},
