@@ -1,0 +1,37 @@
+
+<%args>
+$dataset_id 
+$dataset_name
+$dataset_description => ''
+
+</%args>
+
+
+<& /page/page_title.mas, title => "Dataset '$dataset_name' ($dataset_id)" &>
+
+
+  <div id="dataset_selections">
+
+  </div>
+
+
+
+  <div id="phenotyping data">
+    <select id="dataset_trait_select">
+    </select>
+    
+    </div>
+
+
+  <div id="trait_histogram">
+  </div>
+
+
+  <div id="dataset_summary_table">
+
+    <!-- DataTable with a summary of the different datatypes in the dataset -->
+    
+  </div>
+
+
+  
