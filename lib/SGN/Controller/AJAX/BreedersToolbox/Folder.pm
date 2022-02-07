@@ -29,9 +29,20 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $parent_folder_id = $c->req->param("parent_folder_id");
     my $folder_name = $c->req->param("folder_name");
     my $breeding_program_id = $c->req->param("breeding_program_id");
-    my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
-    my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
-    my $folder_for_genotyping_trials = 1 ? $c->req->param("folder_for_genotyping_trials") eq 'true' : 0;
+
+    my $folder_for_trials;
+    my $folder_for_crosses;
+    my $folder_for_genotyping_trials;
+    my $project_type = $c->req->param("project_type");
+
+    if ($project_type eq 'trial_and_analysis') {
+        $folder_for_trials = 1;
+    } elsif ($project_type eq 'cross') {
+        $folder_for_crosses = 1;
+    } elsif ($project_type = 'genotyping_plate') {
+        $folder_for_genotyping_trials = 1
+    }
+
 
     if (! $self->check_privileges($c)) {
 	return;

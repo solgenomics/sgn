@@ -14,7 +14,7 @@ $design_types => ()
 
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
-<& /breeders_toolbox/folder/folder_set.mas, project_type => 'Trials and Analyses' &>
+<& /breeders_toolbox/folder/folder_set.mas, project_type => 'trial_and_analysis' &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>
 <& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Trial', folder_tree_identifier => 'trial_list', folder_tree_refresh_name => 'refresh_jstree_html' &>

@@ -15,7 +15,7 @@ $user_id => undef
 <& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>\@programs, locations=>\@locations &>
 <& /breeders_toolbox/cross/add_crossing_trial_dialogs.mas, programs=>\@programs, locations=>\@locations &>
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'Cross' &>
-<& /breeders_toolbox/folder/folder_new.mas, project_type=>'Cross' &>
+<& /breeders_toolbox/folder/folder_new.mas, project_type=>'cross' &>
 <& /breeders_toolbox/folder/folder_move.mas, project_type=>'Cross' &>
 <& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Cross', folder_tree_identifier => 'crosses_list', folder_tree_refresh_name => 'refresh_crosses_jstree_html' &>
 
