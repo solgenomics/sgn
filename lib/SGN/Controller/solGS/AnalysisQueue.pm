@@ -70,7 +70,6 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
 
 	my $analysis_profile = $c->req->params;
 	$c->stash->{analysis_profile} = $analysis_profile;
-
 	$self->parse_arguments($c);
 	$self->structure_output_details($c);
 	$self->run_analysis($c);
@@ -90,7 +89,6 @@ sub check_analysis_name :Path('/solgs/check/analysis/name') Args() {
 	my ($self, $c) = @_;
 
 	my $new_name = $c->req->param('name');
-
 	my $match = $self->check_analyses_names($c, $new_name);
 
 	my $ret->{analysis_exists} = $match;
@@ -157,7 +155,7 @@ sub check_analyses_names {
 		$db_match = $schema->resultset("Project::Project")->find({ name => $new_name });
 	}
 
-	my $match = $log_match || $db_match ? 1 : 0;
+	my $match = $log_match || $db_match ? 1 : undef;
 
 	return $match;
 
@@ -490,7 +488,7 @@ sub structure_output_details {
 		$output_details = $self->structure_training_combined_pops_data_output($c);
 	}
 	elsif ( $analysis_page =~ m/solgs\/selection\/(\d+|\w+_\d+)\/model\/|solgs\/combined\/model\/\d+\/selection\// )
-	{
+    {
 		$output_details = $self->structure_selection_prediction_output($c);
 	}
 	elsif ( $analysis_page =~ m/kinship\/analysis/ )
@@ -614,17 +612,27 @@ sub structure_cluster_analysis_output {
 
 	my $pop_id = $c->stash->{cluster_pop_id};
 
-    my $base = $c->controller('solGS::Path')->clean_base_name($c);
+	my $base = $c->controller('solGS::Path')->clean_base_name($c);
 	my $cluster_page = $base . $analysis_page;
 	$analysis_data->{analysis_page} = $cluster_page;
+	my $cluster_type = $c->stash->{cluster_type};
 
 	my %output_details = ();
 	# $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-    # my $geno_file = $c->stash->{genotype_file_name};
-    my $input_file;
-    $c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
-    $c->controller('solGS::Cluster')->kcluster_result_file($c);
-	my $result_file = $c->stash->{'k-means_result_file'};
+	# my $geno_file = $c->stash->{genotype_file_name};
+	my $input_file;
+	$c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
+	$c->controller('solGS::Cluster')->cluster_result_file($c);
+
+	my $result_file;
+	if ($cluster_type =~ /k-means/i)
+	{
+	    $result_file = $c->stash->{"${cluster_type}_result_file"};
+	}
+	else
+	{
+	    $result_file = $c->stash->{"${cluster_type}_result_newick_file"};
+	}
 
 	$output_details{'cluster_' . $pop_id} = {
 		'output_page'    => $cluster_page,

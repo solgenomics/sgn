@@ -116,6 +116,11 @@ sub delete_location :Path('/ajax/location/delete') Args(1) {
         nd_geolocation_id => $location_id
     } );
 
+    if ($location_to_delete->name() eq '[Computation]') {
+	$c->stash->{rest} = { error => "The location [Computation] is needed by the system to store analyses and cannot be deleted." };
+	return;
+    }
+    
     my $delete = $location_to_delete->delete_location();
 
     if ($delete->{'success'}) {

@@ -73,8 +73,11 @@ jQuery(document).ready(function () {
 
 function anovaAlert(msg) {
 
-    	jQuery('<div />')
-	.html(msg)
+    var jobSubmit = '<div id= "anova_msg">' + msg + '</div>';
+
+    jQuery(jobSubmit).appendTo('body');
+
+    	jQuery('#anova_msg')
 	    .dialog({
 		modal  : true,
 		title  : 'Alert',

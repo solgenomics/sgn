@@ -902,14 +902,16 @@ sub get_trait_details {
 
     my ($trait_name, $trait_def, $trait_id, $trait_abbr);
 
+    my $model = $c->controller('solGS::Search')->model($c);
+
     if ($trait =~ /^\d+$/)
     {
-	$trait = $c->model('solGS::solGS')->trait_name($trait);
+	$trait = $model->trait_name($trait);
     }
 
     if ($trait)
     {
-	my $rs = $c->model('solGS::solGS')->trait_details($trait);
+	my $rs = $model->trait_details($trait);
 
 	while (my $row = $rs->next)
 	{
@@ -972,7 +974,8 @@ sub get_trait_details_of_trait_abbr {
 				my $trait_name =  $r->[1];
 				$trait_name    =~ s/^\s+|\s+$//g;
 
-				my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
+                # my $model = $c->controller('solGS::Search')->model($c);
+				my $trait_id = $c->controller('solGS::Search')->model($c)->get_trait_id($trait_name);
 				$self->get_trait_details($c, $trait_id);
 		    }
 		}
@@ -992,7 +995,7 @@ sub build_multiple_traits_models {
 
     for (my $i = 0; $i <= $#selected_traits; $i++)
     {
-	my $tr   = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
+	my $tr   = $c->controller('solGS::Search')->model($c)->trait_name($selected_traits[$i]);
 	my $abbr = $c->controller('solGS::Utils')->abbreviate_term($tr);
 	$traits .= $abbr;
 	$traits .= "\t" unless ($i == $#selected_traits);
@@ -1402,7 +1405,7 @@ sub create_trait_data {
 	    my $trait_name = $_->[1];
 	    $trait_name    =~ s/\n//g;
 
-	    my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
+	    my $trait_id = $c->controller('solGS::Search')->model($c)->get_trait_id($trait_name);
 
 	    if ($trait_id)
 	    {
@@ -1693,7 +1696,7 @@ sub get_rrblup_output {
                 }
             }
 
-	    my $trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
+	    my $trait_id = $c->controller('solGS::Search')->model($c)->get_trait_id($trait_name);
         $self->run_rrblup_trait($c, $trait_id);
 
 	   my $args = {
