@@ -14,3 +14,5 @@ sub dataset :Chained('/') :Path('dataset') Args(1) {
     $c->stash->{template} = '/dataset/index.mas';
     
 }
+
+1;
