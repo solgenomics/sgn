@@ -23,12 +23,12 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 
 #
 # DEFINE ADDITIONAL LABEL DATA FOR LIST ITEMS HERE
-# This info is used to provide additional properties for list items of 
+# This info is used to provide additional properties for list items of
 # specific types to the label designer.
 # - The first-level hash key defines the list type
 # - The second-level hash key defines the propery name (displayed in the label designer)
 #   NOTE: Each list type needs to define (as '_transform') the list transform plugin name used to convert the list item names to database ids
-# - The value of the second-level hash is a subroutine that calculates the 
+# - The value of the second-level hash is a subroutine that calculates the
 #   property value(s) for the specified list item(s)
 #   It accepts the following arguments:
 #       - $c = catalyst context
@@ -76,12 +76,12 @@ my %ADDITIONAL_LIST_DATA = (
             my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
             my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
             my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
-            
+
             my $rs = $schema->resultset("Stock::StockRelationship")->search({
                 'me.object_id' => { in => $list_item_db_ids },
                 'me.type_id' => $type_id,
                 'subject.type_id' => { in => [$accession_type_id, $cross_type_id] }
-            }, { 
+            }, {
                 'join' => 'subject',
                 '+select' => ['subject.uniquename'],
                 '+as' => ['subject_uniquename']
@@ -196,7 +196,7 @@ __PACKAGE__->config(
             my $additional_list_data = get_additional_list_data($c, $source_id, $longest_hash{'list_item_id'}, $longest_hash{'list_item_name'});
             if ( $additional_list_data ) {
                 my $fields = $additional_list_data->{$longest_hash{'list_item_id'}};
-		if ( (ref($fields) eq "HASH") && (keys(%$fields) > 0) ) { 
+		if ( (ref($fields) eq "HASH") && (keys(%$fields) > 0) ) {
 		    %longest_hash = (%longest_hash, %$fields);
 		}
             }
@@ -273,11 +273,6 @@ __PACKAGE__->config(
        my $key_number = 0;
        my $sort_order = $design_params->{'sort_order'};
 
-       # initialize barcode objs
-       my $barcode_object = Barcode::Code128->new();
-       my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
-       open(PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
-
        my $qrcode = Imager::QRCode->new(
            margin        => 0,
            version       => 0,
@@ -328,6 +323,10 @@ __PACKAGE__->config(
                            if ( $element{'type'} eq "Code128" || $element{'type'} eq "QRCode" ) {
 
                                 if ( $element{'type'} eq "Code128" ) {
+                                   # initialize barcode objs
+                                   my $barcode_object = Barcode::Code128->new();
+                                   my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
+                                   open(PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
                                    binmode(PNG);
 
                                    $barcode_object->option("scale", $element{'size'}, "font_align", "center", "padding", 5, "show_text", 0);
