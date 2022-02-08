@@ -15,6 +15,8 @@ $identifier_prefix
 </%args>
 
 <& /breeders_toolbox/folder/folder_new.mas, project_type=>'crossing_experiment', breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id &>
+<& /breeders_toolbox/folder/folder_set.mas, project_type => 'crossing_experiment', breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
+
 
 <div class="row">
     <div class="col-sm-8">
