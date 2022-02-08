@@ -394,15 +394,21 @@ sub get_phenotype_matrix_long {
 
     my ($data, $unique_traits);
     my @info;
-    #    my @metadata_headers = ( 'studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber');
-        my @metadata_headers = ( 'observationUnitName', 'germplasmName', 'trait', 'value', 'person', 'timestamp');
+    
+    my @metadata_headers = ( 'observationUnitName', 'germplasmName', 'trait', 'value', 'person', 'timestamp');
 
+    print STDERR "DATA RETRIEVED: ".Dumper($data);
+    
     if ($self->search_type eq 'MaterializedViewTable'){
         ($data, $unique_traits) = $phenotypes_search->search();
 
-        print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
+        print STDERR "No of lines retrieved from Matview tables: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
 
+	my @sorted_traits = sort keys(%$unique_traits);
+
+	#print STDERR "DATA DOWNLOADED: ".Dumper($data);
+	
         foreach my $obs_unit (@$data){
             my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
             my $synonyms = $obs_unit->{synonyms};
@@ -446,6 +452,9 @@ sub get_phenotype_matrix_long {
                     $trait_observations{$_->{trait_name}} = $_->{value};
                 }
             }
+
+	    @sorted_traits = sort keys(%$unique_traits);
+	    
             foreach my $trait (@sorted_traits) {
                 push @line, $trait_observations{$trait};
             }
@@ -453,7 +462,7 @@ sub get_phenotype_matrix_long {
             push @info, \@line;
         }
     } else {
-        $data = $phenotypes_search->search();
+        ($data, $unique_traits) = $phenotypes_search->search();
 #        print STDERR "DOWNLOAD DATA =".Dumper($data)."\n";
 
         my %obsunit_data;
@@ -464,24 +473,29 @@ sub get_phenotype_matrix_long {
         my @unique_obsunit_list = ();
         my %seen_obsunits;
 
+
+	my @sorted_traits = sort keys(%$unique_traits);
+	
         foreach my $d (@$data) {
             my $cvterm = $d->{trait_name};
             if ($cvterm){
                 my $obsunit_id = $d->{obsunit_stock_id};
-                if (!exists($seen_obsunits{$obsunit_id})) {
-                    push @unique_obsunit_list, $obsunit_id;
-                    $seen_obsunits{$obsunit_id} = 1;
-                }
 
+                #if (!exists($seen_obsunits{$obsunit_id})) {
+                #    push @unique_obsunit_list, $obsunit_id;
+                #    $seen_obsunits{$obsunit_id} = 1;
+                #}
+
+		
+		
                 my $timestamp_value = $d->{timestamp};
                 my $value = $d->{phenotype_value};
-                #my $cvterm = $trait."|".$cvterm_accession;
-                if ($include_timestamp && $timestamp_value) {
-                    $obsunit_data{$obsunit_id}->{$cvterm} = "$value,$timestamp_value";
-                } else {
-                    $obsunit_data{$obsunit_id}->{$cvterm} = $value;
-                }
-                $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
+                #if ($include_timestamp && $timestamp_value) {
+                #    $obsunit_data{$obsunit_id}->{$cvterm} = "$value,$timestamp_value";
+                #} else {
+                #    $obsunit_data{$obsunit_id}->{$cvterm} = $value;
+                #}
+                #$obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
 
                 my $synonyms = $d->{synonyms};
                 my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
@@ -493,48 +507,35 @@ sub get_phenotype_matrix_long {
                 $trial_name =~ s/\s+$//g;
                 $trial_desc =~ s/\s+$//g;
 
-                $obsunit_data{$obsunit_id}->{metadata} = [
+                #$obsunit_data{$obsunit_id}->{metadata} = [
 
-                    $d->{accession_uniquename},
-                    $synonym_string,
-                    $d->{obsunit_type_name},
-                    $d->{obsunit_stock_id},
-                    $d->{obsunit_uniquename},
-                    $d->{rep},
-                    $d->{block},
-                    $d->{plot_number},
-                    $d->{row_number},
-                    $d->{col_number},
-                    $entry_type,
-                    $d->{plant_number}
-                ];
-                $traits{$cvterm}++;
-            }
-        }
+		# plot_id seed_name trait value person timestamp
+		
+		foreach my $trait (@sorted_traits) {
+		    my $measurement = $d->{$trait};
+		    
+		    
+		    push @info, [
+			$d->{obsunit_uniquename},
+			$d->{accession_uniquename},
+			$trait,
+			$measurement,
+			$d->{operator},
+			$d->{timestamp},
+			
+			];
+		    $traits{$cvterm}++;
+		    
+		}
+	    }
+	}
         #print STDERR Dumper \%plot_data;
         #print STDERR Dumper \%traits;
 
-        my @line = @metadata_headers;
+	unshift @info, \@metadata_headers;
 
-        my @sorted_traits = sort keys(%traits);
-        foreach my $trait (@sorted_traits) {
-            push @line, $trait;
-        }
-        push @line, 'notes';
-        push @info, \@line;
-
-        foreach my $p (@unique_obsunit_list) {
-            my @line = @{$obsunit_data{$p}->{metadata}};
-
-            foreach my $trait (@sorted_traits) {
-                push @line, $obsunit_data{$p}->{$trait};
-            }
-            push @line,  $obsunit_data{$p}->{'notes'};
-            push @info, \@line;
-        }
     }
-
-    #print STDERR Dumper \@info;
+    print STDERR Dumper \@info;
     print STDERR "Construct Pheno Matrix End:".localtime."\n";
     return @info;
 }

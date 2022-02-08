@@ -525,7 +525,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     else {
     	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     		bcs_schema=>$schema,
-    		search_type=>'MaterializedViewTable',
+	        search_type=>'MaterializedViewTable',
     		trait_list=>$trait_id_data->{transform},
     		trial_list=>$trial_id_data->{transform},
     		accession_list=>$accession_id_data->{transform},
