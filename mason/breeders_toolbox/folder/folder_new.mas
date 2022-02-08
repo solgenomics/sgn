@@ -14,14 +14,20 @@ $breeding_program_name => undef
 % my $folder_for_genotyping_trials;
 % if ($project_type eq 'trial_and_analysis') { $folder_for_trials = 1; }
 % if ($project_type eq 'genotyping_plate') { $folder_for_genotyping_trials = 1; }
-% if ($project_type eq 'cross') { $folder_for_crosses = 1; }
+% if ($project_type eq 'crossing_experiment') { $folder_for_crosses = 1; }
 
 <div class="modal fade" id="new_folder_dialog" name="set_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="newFolderDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="newFolderDialog">Create a new folder</h4>
+% if ($project_type eq 'trial_and_analysis') {
+                <h4 class="modal-title" id="newFolderDialog">Create a new folder for trials and analyses</h4>
+% } elsif ($project_type eq 'crossing_experiment') {
+                <h4 class="modal-title" id="newFolderDialog">Create a new folder for crossing experiments</h4>
+% } elsif ($project_type eq 'genotyping_plate') {
+                <h4 class="modal-title" id="newFolderDialog">Create a new folder for genotyping plates</h4>
+%}
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
