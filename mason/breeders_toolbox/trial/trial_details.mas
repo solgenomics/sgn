@@ -24,6 +24,8 @@ $trial_owner
 
 </%args>
 
+<& /breeders_toolbox/folder/folder_new.mas, project_type=>'trial_and_analysis', breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id &>
+
 <div class="row">
     <div class="col-sm-8">
 
@@ -94,7 +96,7 @@ $trial_owner
                     </div>
                 </td>
             </tr>
-	    
+
 	    <tr>
                 <td><b>Number of Stocks in This Trial</b></td>
                 <td>

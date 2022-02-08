@@ -2,6 +2,7 @@
 $trial_id
 $trial_name
 $breeding_program_name
+$breeding_program_id
 $location_name
 $country_name
 $year
@@ -12,6 +13,8 @@ $folder_name
 $folder_id
 $identifier_prefix
 </%args>
+
+<& /breeders_toolbox/folder/folder_new.mas, project_type=>'crossing_experiment', breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id &>
 
 <div class="row">
     <div class="col-sm-8">
