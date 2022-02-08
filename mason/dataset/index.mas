@@ -1,7 +1,7 @@
 
 <%args>
 $dataset_id 
-$dataset_name
+$dataset_name => ''
 $dataset_description => ''
 
 </%args>
