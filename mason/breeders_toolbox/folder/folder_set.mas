@@ -16,7 +16,7 @@ $folder_for_genotyping_trials => undef
 % my $get_crossing_trials = $folder_for_crosses ? 1 : 0;
 % my $get_genotyping_trials = $folder_for_genotyping_trials ? 1 : 0;
 % my $dialog_type;
-% if ($project_type eq 'trial_and_analysis') { $get_field_trials = 1; $folder_for_trials = 1; $dialog_type = 'Trial and Analysis', }
+% if ($project_type eq 'field_trial') { $get_field_trials = 1; $folder_for_trials = 1; $dialog_type = 'Trial', }
 % if ($project_type eq 'genotyping_plate') { $get_genotyping_trials = 1; $folder_for_genotyping_trials = 1; $dialog_type = 'Genotyping Plate'}
 % if ($project_type eq 'crossing_experiment') { $get_crossing_trials = 1; $folder_for_crosses = 1; $dialog_type = 'Crossing Experiment' }
 % if (!$project_type) { $dialog_type = 'Trial(s)' }
@@ -198,7 +198,7 @@ function set_trial_folder() {
         });
     });
     if (errors == 0) {
-%  if ($project_type eq 'trial_and_analysis') {
+%  if ($project_type eq 'field_trial') {
                     refreshTrailJsTree(0);
 %  } elsif ($project_type eq 'crossing_experiment') {
                     refreshCrossJsTree(0);

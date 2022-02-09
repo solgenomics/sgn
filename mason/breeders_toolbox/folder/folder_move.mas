@@ -14,7 +14,7 @@ $breeding_program_name => undef
 % my $folder_for_trials;
 % my $folder_for_crosses;
 % my $folder_for_genotyping_trials;
-% if ($project_type eq 'trial_and_analysis') { $folder_for_trials = 1;  $dialog_type = 'trial and analysis'}
+% if ($project_type eq 'field_trial') { $folder_for_trials = 1;  $dialog_type = 'trial'}
 % if ($project_type eq 'genotyping_plate') { $folder_for_genotyping_trials = 1; $dialog_type = 'genotyping plate' }
 % if ($project_type eq 'crossing_experiment') { $folder_for_crosses = 1; $dialog_type = 'crossing experiment' }
 

@@ -35,7 +35,7 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $folder_for_genotyping_trials;
     my $project_type = $c->req->param("project_type");
 
-    if ($project_type eq 'trial_and_analysis') {
+    if ($project_type eq 'field_trial') {
         $folder_for_trials = 1;
     } elsif ($project_type eq 'crossing_experiment') {
         $folder_for_crosses = 1;

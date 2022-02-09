@@ -115,8 +115,8 @@ $trial_owner => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Data Agreement License</h4>", info_section_subtitle => 'View and edit the public data agreement on this experiment.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "trial_data_agreement_section", buttons_html => $data_agreement_link &>
 
-<& /breeders_toolbox/folder/folder_set.mas, project_type => 'Trial', breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
-<& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
+<& /breeders_toolbox/folder/folder_set.mas, project_type => 'field_trial', breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
+<& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, project_type => 'field_trial' &>
 <& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program_id, location => $location_id, year => $year, trial_type => $trial_type, trial_type_id => $trial_type_id, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, field_size => $field_size, plot_width => $plot_width, plot_length => $plot_length, field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross &>
 
 <& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", trial_stock_type => $trial_stock_type &>
