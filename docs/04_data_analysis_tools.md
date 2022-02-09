@@ -248,18 +248,20 @@ There are three pathways to using this tool.
    (A) -- go to the 'Analyze' menu and select the clustering option
 
    (B) -- make sure you are logged in
+   
+   (C) -- Select the relevant genotyping protocol, if you are clustering using genotype data
 
-   (C) -- select your list or dataset, click 'Go'
+   (D) -- select your list or dataset, click 'Go'
 
-   (D) -- select clustering type
+   (E) -- select clustering type
 
-   (E) -- select the data type to use
+   (F) -- select the data type to use
 
-   (F) -- If you are running K-Means clustering, provide the number of partitions (K).  If left blank it will partition the data set into optimal numbers for the dataset.
+   (G) -- If you are running K-Means clustering, provide the number of partitions (K).  If left blank it will partition the data set into optimal numbers for the dataset.
 
-   (G) -- click the 'Run Cluster' and wait for the analysis to finish or queue the request and wait for an email with the analysis result.
+   (H) -- click the 'Run Cluster' and wait for the analysis to finish or queue the request and wait for an email with the analysis result.
 
-   (H) -- You can download the outputs following the download links.
+   (I) -- You can download the outputs following the download links.
 
 (2) From the trial detail page:
 
