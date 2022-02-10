@@ -64,13 +64,13 @@ $folder_for_genotyping_trials => undef
 
 jQuery(document).ready(function() {
 
-  jQuery('#change_folder_categories_button').click( function () {
-    jQuery('#edit_folder_category_dialog').modal("show");
-  });
+    jQuery('#change_folder_categories_button').click( function () {
+        jQuery('#edit_folder_category_dialog').modal("show");
+    });
 
-  jQuery('#edit_folder_categories_save_button').click( function () {
-    save_folder_categories();
-  });
+    jQuery('#edit_folder_categories_save_button').click( function () {
+        save_folder_categories();
+    });
 
 });
 
