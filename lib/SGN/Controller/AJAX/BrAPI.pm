@@ -3774,7 +3774,8 @@ sub observations_GET {
 sub observations_POST {
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id,$user_type) = _authenticate_user($c);
+    my $force_authenticate = 1;
+	my ($auth,$user_id,$user_type) = _authenticate_user($c, $force_authenticate);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $data = $clean_inputs;
     my @all_observations;
