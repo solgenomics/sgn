@@ -2,6 +2,7 @@
 $trial_id
 $trial_name
 $breeding_program_name
+$breeding_program_id
 $location_name
 $country_name
 $year
@@ -12,6 +13,7 @@ $folder_name
 $folder_id
 $identifier_prefix
 </%args>
+
 
 <div class="row">
     <div class="col-sm-8">
