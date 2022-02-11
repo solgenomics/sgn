@@ -248,6 +248,7 @@ for(i in 1:length(userResponse)){
   userPheno[ , userResponse[i]] <- (userPheno[ , userResponse[i]] - mean(userPheno[ , userResponse[i]], na.rm = TRUE)) / sd(userPheno[ , userResponse[i]], na.rm = TRUE)
 }
 
+write(paste("accession count: ", length(userPheno[ , userID])), stderr())
 write("processing phenotypic data... adding dominance effects", stderr())
 # c. Paste in a second ID column for the dominance effects.
 
@@ -430,6 +431,9 @@ write("Predict crosses...", stderr())
 
 GP <- G[rownames(G) %in% userPheno[ , userID], ]
 
+print("GP:")
+print(head(GP))
+
 write("calcCrossMean...", stderr())
 
 crossPlan <- calcCrossMean(GP,
@@ -438,7 +442,7 @@ crossPlan <- calcCrossMean(GP,
                            userPloidy)
 
 
-
+write("Done with calcCrossMean!!!!!!", stderr())
 
 
 
@@ -476,6 +480,13 @@ crossPlan <- calcCrossMean(GP,
   # only subset the number of crosses the user wishes to output
   crossPlan[1:userNCrosses, ]
   outputFile= paste(phenotypeFile, ".out", sep="")
-  write.table(crossPlan, sep="\t", file=outputFile, row.names=TRUE, col.names=TRUE)
+  
+  write(paste("CROSS PLAN HEAD: ", head(crossPlan)), stderr())
+  crossPlanDataFrame = data.frame(crossPlan)
+  write(paste("CROSS PLAN OBJECT: ", str(crossPlanDataFrame)), stderr())
+  message(paste("CROSS PLAN HEAD AFTER: ", head(crossPlanDataFrame)))
+  message("FILE NAME NOW = ", outputFile)
+  write.table(crossPlanDataFrame, sep="\t", file=outputFile, row.names=TRUE, col.names=TRUE)
+  write("DONE", stderr())
 #}
 
