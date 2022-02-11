@@ -62,14 +62,14 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
 
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
-    my $project_location_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_property', 'project location')->cvterm_id();
+    my $project_location_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
 
     my $query = "UPDATE nd_experiment
         SET nd_geolocation_id = projectprop.value::int
         FROM nd_experiment_project
         JOIN projectprop ON(
             nd_experiment_project.project_id = projectprop.project_id AND
-            projectprop.type_id = 76463
+            projectprop.type_id = ?
         )
         WHERE nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id
         AND nd_experiment_project.nd_experiment_id IN (
@@ -95,7 +95,7 @@ sub patch {
 
     # print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($query);
-    $h->execute();
+    $h->execute($project_location_id);
 
     print "You're done!\n";
 }
