@@ -1953,6 +1953,23 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     $c->stash->{rest}={data=>\@stocks};
 }
 
+sub get_siblings:Chained('/stock/get_stock') PathPart('datatables/siblings') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $progenies->get_siblings();
+    my @stocks;
+    foreach my $r (@$result){
+      my ($sibling_id, $sibling_name, $female_id, $female_name, $male_id, $male_name) = @$r;
+      push @sibling_info, [qq{<a href = "/stock/$sibling_id/view">$sibling_name</a>}, qq{<a href = "/stock/$female_id/view">$female_name</a>}, qq{<a href = "/stock/$male_id/view">$male_name</a>}];
+    }
+
+    $c->stash->{rest}={data=>\@sibling_info};
+}
+
 sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_and_member') Args(0){
     my $self = shift;
     my $c = shift;
