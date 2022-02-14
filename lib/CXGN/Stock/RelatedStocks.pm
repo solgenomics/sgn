@@ -82,39 +82,6 @@ sub get_progenies {
 }
 
 
-sub get_siblings {
-    my $self = shift;
-    my $stock_id = $self->stock_id;
-    my $schema = $self->dbic_schema();
-    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
-    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
-    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-
-    my $stock = CXGN::Stock->new({schema => $schema, stock_id=>$stock_id);
-    my $parents = $stock->get_parents();
-    my $female_parent_id = $parents->{'mother_id'};
-    my $male_parent_id = $parents->{'father_id'};
-
-    my $q = "SELECT sibling.stock_id, sibling.uniquename, female.stock_id, female.uniquename, male.stock_id, male.uniquename
-            FROM stock_relationship
-             INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
-             INNER JOIN cvterm ON (stock_relationship.type_id =cvterm.cvterm_id)
-             WHERE stock_relationship.subject_id = ? AND(stock_relationship.type_id =?
-             OR stock_relationship.type_id = ?) AND stock.type_id = ? ORDER BY cvterm.name DESC, stock.uniquename ASC";
-
-    my $h = $schema->storage->dbh->prepare($q);
-    $h->execute($stock_id, $female_parent_type_id, $male_parent_type_id, $accession_type_id);
-
-    my @siblings =();
-        while(my($sibling_id, $sibling_name, $female_id, $female_name, $male_id, $male_name) = $h->fetchrow_array()){
-        push @siblings, [$sibling_id, $sibling_name, $female_id, $female_name, $male_id, $male_name]
-        }
-
-        return\@siblings;
-
-}
-
-
 sub get_group_and_member {
     my $self = shift;
     my $stock_id = $self->stock_id;

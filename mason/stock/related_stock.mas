@@ -75,6 +75,7 @@ $stock_type => undef
                             <th>Accession Name</th>
                             <th>Female Parent</th>
                             <th>Male Parent</th>
+                            <th>Cross Type</th>
                         </tr>
                         </thead>
                     </table>
