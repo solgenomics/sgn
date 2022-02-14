@@ -230,7 +230,7 @@ if (! defined($stock_id_arrayref)) {
 		plant_list=>undef
 	});
 	my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
-	print STDERR Dumper $identifier_metadata;
+#	print STDERR Dumper $identifier_metadata;
 	my %data_matrix = %$data_matrix;
 
 	foreach (@$stock_id_arrayref) {
