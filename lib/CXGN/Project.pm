@@ -405,30 +405,53 @@ sub get_location {
 sub set_location {
     my $self = shift;
     my $location_id = shift;
+    my $schema = $self->bcs_schema();
 
     if (!looks_like_number($location_id)) {
         die "Location_id $location_id not an integer!\n";
     }
 
-		my $project_id = $self->get_trial_id();
-		my $type_id = $self->get_location_type_id();
+	my $project_id = $self->get_trial_id();
+	my $type_id = $self->get_location_type_id();
 
-    my $row = $self->bcs_schema()->resultset('Project::Projectprop')->find({
-	    project_id => $project_id,
-	    type_id => $type_id,
-		});
+    ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
+    my $coderef = sub {
 
-		if ($row) {
-			$row->value($location_id);
-			$row->update();
-		}
-		else {
-			$row = $self->bcs_schema()->resultset('Project::Projectprop')->create({
-				project_id => $project_id,
-				type_id => $type_id,
-				value => $location_id,
-			});
-		}
+        # update or create location id in projectprop
+        my $row = $schema->resultset('Project::Projectprop')->find({
+    	    project_id => $project_id,
+    	    type_id => $type_id,
+    	});
+
+    	if ($row) {
+    		$row->value($location_id);
+    		$row->update();
+    	}
+    	else {
+    		$row = $schema->resultset('Project::Projectprop')->create({
+    			project_id => $project_id,
+    			type_id => $type_id,
+    			value => $location_id,
+    		});
+    	}
+
+        # update location ids for connected rows in nd_experiment
+        my $nd_experiment_rs = $schema->resultset('NaturalDiversity::NdExperimentProject')->search(
+            { project_id => $project_id }
+        )->search_related('nd_experiment');
+
+        foreach my $exp ($nd_experiment_rs->all()) {
+            $exp->nd_geolocation_id($location_id);
+            $exp->update();
+        }
+    };
+
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        print STDERR "Transaction error updating location: $_\n";
+    };
+
 }
 
 =head2 function get_location_noaa_station_id()
