@@ -1973,7 +1973,7 @@ sub get_siblings:Chained('/stock/get_stock') PathPart('datatables/siblings') Arg
             if ($sibling_id != $stock_id) {
                 push @siblings, [ qq{<a href="/stock/$sibling_id/view">$sibling_name</a>},
                 qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
-                qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type];
+                qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type, $sibling_name ];
             }
         }
     }
