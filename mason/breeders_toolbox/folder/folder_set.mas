@@ -1,6 +1,6 @@
 
 <%args>
-$project_type => undef #Trial or Cross or Genotyping Plate
+$project_type => undef
 $trial_id => undef
 $trial_name => undef
 $folder_id => undef
@@ -16,9 +16,9 @@ $folder_for_genotyping_trials => undef
 % my $get_crossing_trials = $folder_for_crosses ? 1 : 0;
 % my $get_genotyping_trials = $folder_for_genotyping_trials ? 1 : 0;
 % my $dialog_type;
-% if ($project_type eq 'Trials and Analyses') { $get_field_trials = 1; $folder_for_trials = 1; $dialog_type = 'Trial(s) and Analyses'}
-% if ($project_type eq 'Genotyping Plate') { $get_genotyping_trials = 1; $folder_for_genotyping_trials = 1; $dialog_type = 'Genotyping Plate(s)'}
-% if ($project_type eq 'Cross') { $get_crossing_trials = 1; $folder_for_crosses = 1; $dialog_type = 'Crossing Experiment(s)' }
+% if ($project_type eq 'field_trial') { $get_field_trials = 1; $folder_for_trials = 1; $dialog_type = 'Trial', }
+% if ($project_type eq 'genotyping_plate') { $get_genotyping_trials = 1; $folder_for_genotyping_trials = 1; $dialog_type = 'Genotyping Plate'}
+% if ($project_type eq 'crossing_experiment') { $get_crossing_trials = 1; $folder_for_crosses = 1; $dialog_type = 'Crossing Experiment' }
 % if (!$project_type) { $dialog_type = 'Trial(s)' }
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
@@ -91,13 +91,13 @@ $folder_for_genotyping_trials => undef
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="setFolderSuccessDialog"><% $project_type %> Move Successful</h4>
+                <h4 class="modal-title" id="setFolderSuccessDialog"><% $dialog_type %> Move Successful</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The <% $project_type %> was moved into the folder successfully
+                        The <% $dialog_type %> was moved into the folder successfully
                     </p>
                 </div>
             </div>
@@ -198,11 +198,11 @@ function set_trial_folder() {
         });
     });
     if (errors == 0) {
-%  if ($project_type eq 'Trial') {
+%  if ($project_type eq 'field_trial') {
                     refreshTrailJsTree(0);
-%  } elsif ($project_type eq 'Cross') {
+%  } elsif ($project_type eq 'crossing_experiment') {
                     refreshCrossJsTree(0);
-%  } elsif ($project_type eq 'Genotyping Plate') {
+%  } elsif ($project_type eq 'genotyping_plate') {
                     refreshGenotypingTrialJsTree(0);
 %  }
         jQuery('#folder_set_success_dialog_message').modal("show");
