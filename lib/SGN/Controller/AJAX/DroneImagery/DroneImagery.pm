@@ -7111,7 +7111,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $template_gcp_q = "SELECT value
         FROM projectprop
         JOIN project USING(project_id)
-        WHERE project_id=? AND type_id=$drone_run_gcp_type_id_cvterm_id;";
+        WHERE project.project_id=? AND projectprop.type_id=$drone_run_gcp_type_id_cvterm_id;";
     my $template_gcp_h = $bcs_schema->storage->dbh()->prepare($template_gcp_q);
     $template_gcp_h->execute($gcp_drone_run_project_id_input);
     my ($template_gcp_points_json) = $template_gcp_h->fetchrow_array();
@@ -7125,7 +7125,7 @@ sub standard_process_apply_ground_control_points_POST : Args(0) {
     my $current_gcp_q = "SELECT value
         FROM projectprop
         JOIN project USING(project_id)
-        WHERE project_id=? AND type_id=$drone_run_gcp_type_id_cvterm_id;";
+        WHERE project.project_id=? AND projectprop.type_id=$drone_run_gcp_type_id_cvterm_id;";
     my $current_gcp_h = $bcs_schema->storage->dbh()->prepare($current_gcp_q);
     $current_gcp_h->execute($drone_run_project_id_input);
     my ($current_gcp_points_json) = $current_gcp_h->fetchrow_array();
