@@ -19,6 +19,7 @@ ok(my $chado_schema = $fix->bcs_schema);
 ok(my $phenome_schema = $fix->phenome_schema);
 ok(my $dbh = $fix->dbh);
 
+$chado_schema->txn_begin();
 # create a location for the trial
 ok(my $trial_location = "test_location_for_trial");
 ok(my $location = $chado_schema->resultset('NaturalDiversity::NdGeolocation')
@@ -127,7 +128,7 @@ my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
   old_accession_id => $stock_id,
   new_accession => $new_accession,
 });
-ok(!$replace_accession_fieldmap->replace_trial_stock_fieldMap(), "replace trial accession");
+ok(!$replace_accession_fieldmap->replace_trial_stock_fieldMap($new_accession, $stock_id), "replace trial accession");
 
 
 my $trial = CXGN::Trial->new( {
@@ -139,32 +140,30 @@ my $trial = CXGN::Trial->new( {
 ok(my @data = $trial->get_plots(), "get plots");
 ok(my $old_plot_id = $data[0]->[0][0]);
 print STDERR Dumper($old_plot_id);
+my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+my $accession_id = $chado_schema->resultset('Stock::Stock')->find({'uniquename' => $new_accession})->stock_id(), "get stock id";
 
 my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
   bcs_schema => $chado_schema,
   trial_id => $trial_id,
-  new_accession => $new_accession,
-  old_accession => $old_accession,
-  old_plot_id => $old_plot_id,
 
 });
-ok(!$replace_plot_accession_fieldmap->replace_plot_accession_fieldMap(), "replace plot accession");
-
+ok(!$replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($old_plot_id, $accession_id, $plot_of_type_id), "replace plot accession");
 # accessions substitution
 ok(my $plot_1_id = $data[0]->[0][0]);
 ok(my $plot_2_id = $data[0]->[1][0]);
 ok(my $accession_1 = "test_stock_for_fieldmap_trial1");
 ok(my $accession_2 = "test_stock_for_fieldmap_trial2");
+$chado_schema->txn_rollback();
+# my $fieldmap = CXGN::Trial::FieldMap->new({
+#   bcs_schema => $chado_schema,
+#   trial_id => $trial_id,
+#   first_plot_selected => $plot_1_id,
+#   second_plot_selected => $plot_2_id,
+#   first_accession_selected => $accession_1,
+#   second_accession_selected => $accession_2,
+# });
 
-my $fieldmap = CXGN::Trial::FieldMap->new({
-  bcs_schema => $chado_schema,
-  trial_id => $trial_id,
-  first_plot_selected => $plot_1_id,
-  second_plot_selected => $plot_2_id,
-  first_accession_selected => $accession_1,
-  second_accession_selected => $accession_2,
-});
-
-ok(!$fieldmap->substitute_accession_fieldmap(), "substituting plots accessions");
+# ok(!$fieldmap->substitute_accession_fieldmap(), "substituting plots accessions");
 
 done_testing();

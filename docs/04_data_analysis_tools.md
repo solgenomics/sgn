@@ -237,9 +237,9 @@ You can do ANOVA from two places: trial detail and training population detail. I
 
 <img src='{{"assets/images/anova-dm.png" | relative_url }}' width="522" />
 
-4.6 K-Means Clustering
+4.6 Clustering (K-means, Hierarchical)
 --------------
-Clustering, currently using the K-Means method, allows you to partition a dataset into groups (K number). You can do this partition based on marker data, phenotype data and GEBVs. When you use phenotype data, first clone averages for each trait are calculated.
+You can run K-means and hierarchical clustering. The K-Means method allows you to partition a dataset into groups (K number). The hierarchical clustering, agglomerative, allows you to estimate and visualize in tree structure (dendrogram) the different levels of similarities (clusters) among samples.  You can do clustering based on marker data, phenotype data and GEBVs. When you use phenotype data, first clone averages for each trait are calculated. Both methods use Euclidean distance as a measure of similarity. For the hierachical clustering, the complete-linkage (farthest neighbour) method is used to link up clusters.
 
 There are three pathways to using this tool.
 
@@ -251,13 +251,15 @@ There are three pathways to using this tool.
 
    (C) -- select your list or dataset, click 'Go'
 
-   (D) -- select the data type to use
+   (D) -- select clustering type
 
-   (E) -- provide the number of partitions, if left blank it will partition the data set into optimal numbers for the dataset.
+   (E) -- select the data type to use
 
-   (F) -- click the 'Run Cluster' and wait for the analysis to finish, depending on the data size this may take minutes.
+   (F) -- If you are running K-means clustering, provide the number of partitions (K).  If left blank it will partition the data set into optimal numbers for the dataset.
 
-   (G) -- You can download the outputs following the download links.
+   (G) -- click the 'Run Cluster' and wait for the analysis to finish or queue the request and wait for an email with the analysis result.
+
+   (H) -- You can download the outputs following the download links.
 
 (2) From the trial detail page:
 
@@ -269,8 +271,13 @@ There are three pathways to using this tool.
 
    (A) -- Once you you are in a model output put page, you will see a section where you can do clustering in the same way as above (option 2).
 
+K-means clustering:
+
  <img src='{{"assets/images/k-means-cluster.png" | relative_url }}' width="522" />
 
+Hierachical clustering:
+
+<img src='{{"assets/images/hclustering.png" | relative_url }}' width="522" />
 
 4.7 Genetic Gain
 --------------
@@ -333,7 +340,7 @@ The procedure is:
 
    -- select 'K-means',
 
-   -- select 'Genotype',   
+   -- select 'Genotype',
 
    -- in the K-numbers textbox, fill in the number of groups you want to create,
 
@@ -476,5 +483,3 @@ On the model build screen, all the factors are displayed that are contained with
 The result view contains two tabs, one with the raw data, either BLUPS or BLUEs, and the other the adjusted means from the raw data.
 
 The results can be stored in the database as an analysis, by clicking the button provided on the top of the data.
-
-

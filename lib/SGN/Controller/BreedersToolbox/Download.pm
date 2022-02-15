@@ -221,6 +221,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xls";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
+    my $entry_numbers_option = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
     my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
     my $trait_list = $c->req->param("trait_list");
@@ -337,18 +338,22 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
     my $plugin = "";
     if ($format eq "xls") {
-        $plugin = "TrialPhenotypeExcel";
+        $plugin = $entry_numbers_option ? "TrialPhenotypeExcelEntryNumbers" : "TrialPhenotypeExcel";
     }
     if ($format eq "csv") {
-        $plugin = "TrialPhenotypeCSV";
+        $plugin = $entry_numbers_option ? "TrialPhenotypeCSVEntryNumbers" : "TrialPhenotypeCSV";
     }
 
     my $temp_file_name;
+    my $download_file_name;
     my $dir = $c->tempfiles_subdir('download');
+
     if ($data_level eq 'metadata'){
         $temp_file_name = "metadata" . "XXXX";
+        $download_file_name = "metadata.$format";
     }else{
         $temp_file_name = "phenotype" . "XXXX";
+        $download_file_name = "phenotype.$format";
     }
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$format";
@@ -381,9 +386,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
     my $error = $download->download();
 
-    my $file_name = "phenotype.$format";
     $c->res->content_type('Application/'.$format);
-    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$download_file_name"]);
 
     my $output = read_file($tempfile);  ## works for xls format
 
@@ -567,7 +571,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         my $temp_file_name = $time_stamp . "$what" . "XXXX";
         my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
         my $tempfile = $c->config->{basepath}."/".$rel_file;
-
         if ($format eq ".csv") {
 
             #build csv with column names
@@ -906,7 +909,7 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    
+
     # Get request params
     my $seedlot_list_id = $c->req->param("seedlot_maintenance_events_list_list_select");
     my $file_format = $c->req->param("file_format") || ".xls";
@@ -920,7 +923,7 @@ sub download_seedlot_maintenance_events_action : Path('/breeders/download_seedlo
     # Get seedlots from list
     my $seedlot_data = SGN::Controller::AJAX::List->retrieve_list($c, $seedlot_list_id);
     my @seedlot_names = map { $_->[1] } @$seedlot_data;
-    
+
     # Get Maintenance Events
     my $m = CXGN::Stock::Seedlot::Maintenance->new({ bcs_schema => $schema });
     my $results = $m->filter_events({ names => \@seedlot_names }, 1, 65000);

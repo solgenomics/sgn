@@ -85,6 +85,8 @@ sub BUILD {
     $self->user($catalyst_user);
     $self->sp_person_id(41);
     $self->username('janedoe');
+
+    $self->dbstats_start($self->get_db_stats());
 }
 
 has 'config' => ( isa => "Ref",
@@ -128,6 +130,10 @@ has 'username' => ( isa => 'Str',
     is => 'rw',
 );
 
+has 'dbstats_start' => (isa => 'HashRef', is => 'rw' );
+
+has 'dbstats_end' => (isa => 'HashRef', is => 'rw');
+
 sub dbic_schema {
     my $self = shift;
     my $name = shift;
@@ -156,6 +162,93 @@ sub get_conf {
     my $name = shift;
 
     return $self->config->{$name};
+}
+
+sub get_db_stats {
+    my $self = shift;
+
+    my $stats = {};
+
+    print STDERR "Gathering DB stats...\n";
+    
+    # count number of stocks
+    #
+    my $rs = $self->bcs_schema()->resultset('Stock::Stock')->search( {} );
+    $stats->{stocks} = $rs->count();
+
+    my $rs = $self->bcs_schema()->resultset('Stock::StockRelationship')->search( {} );
+    $stats->{stock_relationships} = $rs->count();
+
+    # count cvterms
+    #
+    $rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( {} );
+    $stats->{cvterms} = $rs->count();
+
+    # count users
+    #
+    $rs = $self->people_schema()->resultset('SpPerson')->search( {} );
+    $stats->{people} = $rs->count();
+
+    $rs = $self->people_schema()->resultset('SpDataset')->search( {} );
+    $stats->{datasets} = $rs->count();
+    
+    $rs = $self->people_schema()->resultset('List')->search( {} );
+    $stats->{lists} = $rs->count();
+
+    $rs = $self->people_schema()->resultset('ListItem')->search( {} );
+    $stats->{list_elements} = $rs->count();
+    
+    # count projects
+    #
+    $rs = $self->bcs_schema()->resultset('Project::Project')->search( {} );
+    $stats->{projects} = $rs->count();
+
+    $rs = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search( {} );
+    $stats->{project_relationships} = $rs->count();
+
+    # count phenotypes
+    #
+    $rs = $self->bcs_schema()->resultset('Phenotype::Phenotype')->search( {} );
+    $stats->{phenotypes} = $rs->count();
+
+    # count genotypes
+    #
+    $rs = $self->bcs_schema()->resultset('Genetic::Genotypeprop')->search( {} );
+    $stats->{genotypes} = $rs->count();
+    
+    # count locations
+    $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdGeolocation')->search( {} );
+    $stats->{locations} = $rs->count();
+
+    # count nd_protocols
+    $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdProtocol')->search( {} );
+    $stats->{protocols} = $rs->count();
+
+    # count nd_experiments
+    $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search( {} );
+    $stats->{nd_experiments} = $rs->count();
+    
+    print STDERR "STATS : ".Dumper($stats);
+
+    print STDERR "DONE WITH get_db_stats.\n";
+    return $stats;
+}
+
+ sub DEMOLISH {
+     my $self = shift;
+
+     print STDERR  "####DEMOLISHING THIS OBJECT NOW... AND GETTING DBSTATS AGAIN\n";
+     my $stats = $self->get_db_stats();
+
+     print STDERR "# DB STATS AFTER TEST: ".Dumper($stats)."\n";
+     foreach my $table (keys %$stats) {
+ 	if ($self->dbstats_start()->{$table} != $stats->{$table}) {
+ 	    print STDERR "# $0 FOR TABLE $table ENTRIES CHANGED FROM ".
+ 		$self->dbstats_start()->{$table} ." TO ".$stats->{$table}.". PLEASE CLEAN UP THIS TEST!\n";
+ 	}
+
+     }
+    
 }
 
 

@@ -290,6 +290,8 @@ rect.bordered {
 %        $method = 'CRD';
 %    } elsif ($type eq 'Complete Block'){
 %        $method = 'RCBD';
+%    } elsif ($type eq 'Resolvable Row-Column'){
+%        $method = 'RRC';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){
@@ -720,7 +722,7 @@ rect.bordered {
                                         </div>
                                     </div> -->
                                     <div class="form-group form-group-sm" id="field_map_row_aug">
-                                        <label class="col-sm-7 control-label">Number of rows (optional): </label>
+                                        <label class="col-sm-7 control-label">Number of rows (required): </label>
                                         <div class="col-sm-5" >
                                           <input type="text" class="form-control" id="fieldMap_row_number" name="fieldMap_row_number" placeholder="Will use number of blocks by default"/>
                                         </div>

@@ -12,18 +12,25 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <&| /page/explanation.mas, title=>'Template Information' &>
+                    <&| /page/explanation.mas, title=>'Intercross Upload Information' &>
                         <p>
-                            <b>File Format Information</b>
-                            <br>
-                            <a id="upload_intercross_file_spreadsheet_format_info">Spreadsheet Format</a>
-                            <br>
+                            <a id="upload_intercross_file_spreadsheet_format_info">Intercross Upload Information</a>
                         </p>
                     </&>
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_intercross_form" name="upload_intercross_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File (.csv): </label>
-                            <div class="col-sm-9">
+                            <label class="col-sm-4 control-label">Select Cross Unique ID Format: </label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="cross_id_format_option" name="cross_id_format_option">
+                                    <option value="">Select your cross unique id format for intercross file</option>
+                                    <option value="customized_id">Use your customized cross unique ID previously stored in the database</option>
+                                    <option value="auto_generated_id">Use auto-generated cross unique ID</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Upload File (.csv): </label>
+                            <div class="col-sm-8">
                                 <input type="file" name="intercross_file" id="intercross_file" encoding="multipart/form-data" />
                             </div>
                         </div>
@@ -86,17 +93,15 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="intercrossFileInfoDialog">Template Information</h4>
+                <h4 class="modal-title" id="intercrossFileInfoDialog">Cross Unique ID and Template Information</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>
-                        Intercross file is an CSV file (.csv). Crosses in an intercross file must be in the same crossing experiment.
-                    </b>
+                    <b>Cross Unique ID:</b> You can let database automatically generate cross unique IDs for you or you can set up your own cross unique IDs in the database before uploading Intercross file. For the auto-generated cross unique ID, cross unique ID is a combination of crossing experiment name and incremental suffix number.
                     <br><br>
-                    <b>
-                        Header:
-                    </b>
+                    <b>Intercross file is an CSV file (.csv).</b> Crosses in an intercross file must be in the same crossing experiment.
+                    <br><br>
+                    <b>Header:</b>
                     <br>
                     Please do not modify header of the Intercross file. The first row (header) must contain the following:
                     <br>
@@ -152,7 +157,15 @@ jQuery(document).ready(function(){
 
     jQuery("#upload_intercross_file_submit").click(function(){
         var uploadFile = jQuery("#intercross_file").val();
+        var crossIDformat = jQuery("#cross_id_format_option").val();
+
         jQuery('#upload_intercross_form').attr("action", "/ajax/cross/upload_intercross_file");
+
+        if (crossIDformat === ''){
+            alert("Please select your cross ID format");
+            return;
+        }
+
         if (uploadFile === ''){
             alert("Please select a file");
             return;

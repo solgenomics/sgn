@@ -5,7 +5,7 @@ $deleted_phenotype_files => undef
 $locations => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Trial','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Trial','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreedersToolbox.UploadImages', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
 
 <& /page/page_title.mas, title=>"Manage Phenotypic Data" &>
 
@@ -17,12 +17,20 @@ $locations => undef
 <& /fieldbook/create_trait_file_dialog.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
+<<<<<<< HEAD
 <& /breeders_toolbox/update_phenotypes.mas &>
+=======
+<& /breeders_toolbox/upload_images.mas &>
+>>>>>>> master
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
 
 <div class="well">
 
+<<<<<<< HEAD
 <&| /page/info_section.mas, title=>'Your Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook Database File</a>]    [<a id="upload_spreadsheet_phenotypes_link" >Upload Spreadsheet</a>]  [<a id="update_phenotypes_link" >Update Phenotypes</a>]<br/>[<a name="create_fieldbook_link" >Create Fieldbook Layout File</a>]    [<a id="create_new_trait_file_link" >Create Fieldbook Trait File</a>]<br/>[<a name="create_spreadsheet_link" >Create Spreadsheet</a>]' &>
+=======
+<&| /page/info_section.mas, title=>'Your Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link" >Upload Phenotype Spreadsheet</a>] [<a id="upload_images_link" >Upload Images</a>] <br/> [<a name="create_spreadsheet_link" >Create Phenotype Spreadsheet</a>]' &>
+>>>>>>> master
   <br/>
   <& /breeders_toolbox/file_list.mas, files=>$phenotype_files, allow_delete=>1 &>
 

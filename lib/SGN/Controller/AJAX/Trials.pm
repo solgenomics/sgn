@@ -9,6 +9,7 @@ use Data::Dumper;
 use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
+use File::Slurp qw | read_file |;
 use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }

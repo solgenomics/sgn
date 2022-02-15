@@ -951,7 +951,7 @@ sub store_metadata {
 
     while (my ($stock_id, $uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
         $stock_lookup{$uniquename} = { stock_id => $stock_id };
-        if ($type_id && $type_id == $self->synonym_type_id()) {
+        if ($type_id && $self->synonym_type_id() && ($type_id == $self->synonym_type_id())) {
             $stock_lookup{$synonym} = { stock_id => $stock_id };
         }
     }

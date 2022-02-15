@@ -123,12 +123,14 @@ solGS.submitJob = {
 
     askUser: function(page, args) {
 
-	var t = '<p>This analysis may take a long time. '
+	var title = '<p>This analysis may take a long time. '
 	    + 'Do you want to submit the analysis and get an email when it completes?</p>';
 
+    var jobSubmit = '<div id= "job_submission">' + title + '</div>';
 
-	jQuery('<div />')
-	    .html(t)
+    jQuery(jobSubmit).appendTo('body');
+
+	jQuery('#job_submission')
 	    .dialog({
 		height : 200,
 		width  : 400,

@@ -33,6 +33,8 @@ my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_
 my $before_uploading_cross = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $before_uploading_stocks = $schema->resultset("Stock::Stock")->search({})->count();
 my $before_uploading_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
+my $cross_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_identifier', 'stock_property')->cvterm_id();
+my $before_upload_identifier_rows = $schema->resultset("Stock::Stockprop")->search({type_id => $cross_identifier_type_id})->count();
 
 my $file = $f->config->{basepath}."/t/data/cross/intercross_upload.csv";
 my $ua = LWP::UserAgent->new;
@@ -41,7 +43,8 @@ $response = $ua->post(
     Content_Type => 'form-data',
     Content => [
         "intercross_file" => [ $file, 'intercross_upload.csv', Content_Type => 'text/plain', ],
-        "sgn_session_id" => $sgn_session_id
+        "sgn_session_id" => $sgn_session_id,
+        "cross_id_format_option" => 'auto_generated_id'
     ]
 );
 ok($response->is_success);
@@ -83,9 +86,8 @@ my $cross_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cro
 my $transaction_rows = $schema->resultset("Stock::Stockprop")->search({type_id => $cross_transaction_type_id})->count();
 is($transaction_rows, 2);
 
-my $cross_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_identifier', 'stock_property')->cvterm_id();
-my $cross_identifier_rows = $schema->resultset("Stock::Stockprop")->search({type_id => $cross_identifier_type_id})->count();
-is($cross_identifier_rows, 2);
+my $after_upload_identifier_rows = $schema->resultset("Stock::Stockprop")->search({type_id => $cross_identifier_type_id})->count();
+is($after_upload_identifier_rows, $before_upload_identifier_rows + 2);
 
 #deleting crosses and crossing experiment after testing
 $mech->post_ok('http://localhost:3010/ajax/cross/delete', [ 'cross_id' => $intercross_upload_1_id]);

@@ -41,26 +41,6 @@ has 'second_accession_selected' => (isa => "Str",
 	is => 'rw',
 );
 
-has 'new_accession' => (isa => "Str",
-	is => 'rw',
-);
-
-has 'old_accession' => (isa => "Str",
-	is => 'rw',
-);
-
-has 'old_plot_id' => (isa => "Int",
-	is => 'rw',
-);
-
-has 'old_plot_name' => (isa => "Str",
-    is => 'rw',
-);
-
-has 'old_accession_id' => (isa => "Int",
-	is => 'rw',
-);
-
 has 'trial_stock_type' => (isa => "Str",
 	is => 'rw',
 	required => 0,
@@ -390,28 +370,28 @@ sub substitute_accession_fieldmap {
 
 sub replace_plot_accession_fieldMap {
 	my $self = shift;
+	my $plot_id = shift;
+	my $accession_id = shift;
+	my $plot_of_type_id = shift;
 	my $error;
 	my $schema = $self->bcs_schema;
 	my $dbh = $self->bcs_schema->storage->dbh;
-	my $new_accession = $self->new_accession;
-	my $old_accession = $self->old_accession;
-	my $old_plot_id = $self->old_plot_id;
-    my $old_plot_name = $self->old_plot_name;
 
-	print "New Accession: $new_accession, Old Accession: $old_accession, Old Plot Id: $old_plot_id\n";
+	my $stockprop_rs = $schema->resultset("Stock::StockRelationship")->search({
+		subject_id => $plot_id,
+		type_id => $plot_of_type_id
+    });
 
-	my $new_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $new_accession})->first->stock_id();
-	my $old_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $old_accession})->first->stock_id();
-  	print "NEWID.....: $new_accession_id and OLDID......: $old_accession_id\n";
-
-	my $h_replace = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
-	$h_replace->execute($new_accession_id,$old_accession_id,$old_plot_id);
-
-    my $h_replace_accessionName_in_plotName = $dbh->prepare("UPDATE stock SET uniquename = regexp_replace('$old_plot_name', '$old_accession', '$new_accession', 'i') where stock_id=?;");
-	$h_replace_accessionName_in_plotName->execute($old_plot_id);
-
-    $h_replace_accessionName_in_plotName = $dbh->prepare("UPDATE stock SET name = regexp_replace('$old_plot_name', '$old_accession', '$new_accession', 'i') where stock_id=?;");
-	$h_replace_accessionName_in_plotName->execute($old_plot_id);
+	if ($stockprop_rs->count == 1) {
+		$stockprop_rs->update({
+			object_id => $accession_id,
+		});
+	}
+	elsif ($stockprop_rs->count > 1) {
+		$error = "There should only be one accession linked to the plot via plot_of\n";
+	} else {
+		$error = "Plot entry does not exist in database.\n";
+	}
 
     $self->_regenerate_trial_layout_cache();
 
@@ -419,14 +399,40 @@ sub replace_plot_accession_fieldMap {
 
 }
 
+sub replace_plot_name_fieldMap {
+	my $self = shift;
+	my $plot_id = shift;
+	my $new_plot_name = shift;
+	my $error;
+	my $schema = $self->bcs_schema;
+
+	my $new_plot_name_validator = CXGN::List::Validate->new();
+    my $valid_new_plot_name = @{$new_plot_name_validator->validate($schema,'plots',[$new_plot_name])->{'missing'}};
+    if (!$valid_new_plot_name) {
+		$error .= "Plot name $new_plot_name already exists in the database";
+    } else {
+		my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+		my $stock_rs = $schema->resultset("Stock::Stock")->search({
+                stock_id => $plot_id,
+                type_id => $plot_type_id,
+            });
+		$stock_rs->update({
+			uniquename => $new_plot_name,
+		});
+	}
+	
+	$self->_regenerate_trial_layout_cache();
+	return $error;
+}
+
 
 sub replace_trial_stock_fieldMap {
 	my $self = shift;
+	my $new_stock = shift;
+	my $old_stock_id = shift;
 	my $error;
 	my $schema = $self->bcs_schema;
 	my $dbh = $self->bcs_schema->storage->dbh;
-	my $new_stock = $self->new_accession;
-	my $old_stock_id = $self->old_accession_id;
 	my $trial_id = $self->trial_id;
     my $trial_stock_type = $self->trial_stock_type;
 

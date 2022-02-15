@@ -29,6 +29,7 @@
     <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
     <br>
 
+    <button class="btn btn-info" id="createDataset"><span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Create Dataset</button>
     <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
     <br>
     <br>
@@ -129,6 +130,11 @@ jQuery(document).ready(function() {
     alert('You must be logged in to use SolGWAS');
   }
   $('#pheno_select').attr("disabled",true).html('');
+
+  jQuery("#createDataset").click(function(e) {
+    window.location = "/breeders/search/?dsp=genotyping_protocols,trials|traits,accessions&dsr=/tools/solgwas";
+  });
+
   jQuery('#dataset_select').click(function() {
     $('#pheno_select').attr("disabled",true).html('');
     $('#trait_histogram_plot').html('');

@@ -55,7 +55,8 @@ ok($trial_design->set_fieldmap_row_number($fieldmap_row_number), "Set row number
 is_deeply($trial_design->get_fieldmap_row_number(),$fieldmap_row_number, "Get row number for trial design");
 $trial_design->set_fieldmap_col_number(2);
 
-#tests for CRD
+# tests for CRD
+#
 $trial_design->set_number_of_reps(2);
 ok($trial_design->set_design_type("CRD"), "Set design type to CRD");
 ok($trial_design->calculate_design(), "Calculate CRD trial design");
@@ -65,35 +66,47 @@ ok($design{$plot_start_number+((scalar(@stock_names)-1)*$plot_number_increment)}
 ok($design{'101'}->{row_number} == 1, "First plot row_number is 1");
 ok($design{'101'}->{col_number} == 1, "First plot col_number is 1");
 
-print Dumper(\%design);
-
-#tests for RCBD
+# tests for RCBD
+#
 ok($trial_design->set_number_of_blocks($number_of_blocks), "Set number of blocks for trial design");
 is_deeply($trial_design->get_number_of_blocks(),$number_of_blocks, "Get number of blocks for trial design");
 ok($trial_design->set_design_type("RCBD"), "Set design type to RCBD");
 ok($trial_design->calculate_design(), "Calculate RCBD trial design");
 ok(%design = %{$trial_design->get_design()}, "Get RCBD trial design");
-print Dumper(\%design);
+print STDERR "RCDB DESIGN 1:";
+foreach my $k (sort keys %design) {
+    print STDERR $k." ".Dumper($design{$k});
+}
 
 is($design{'101'}->{row_number}, 1, "First plot row_number is 1");
 is($design{'101'}->{col_number}, 1, "First plot col_number is 1");
 is(scalar(keys %design), scalar(@stock_names) * $number_of_blocks,"Result of RCBD design has a number of plots equal to the number of stocks times the number of blocks");
 
 print STDERR $stock_names[0] ."($plot_start_number) vs. ".$design{$plot_start_number}->{stock_name}."\n";
-print STDERR Dumper \%design;
 #ok($design{$plot_start_number}->{stock_name} eq $stock_names[0],"First plot has correct stock name");
 print "stock_number $design{$plot_start_number}->{stock_name}\n";
 ok($design{$plot_start_number}->{block_number} == 1, "First plot is in block 1");
 
 print STDERR "PLOT START NUMBER: $plot_start_number, #STOCK ".scalar(@stock_names)." , PLOT # $plot_number_increment\n";
-print STDERR "INDEX = ".($plot_start_number+((scalar(@stock_names)-1)*$plot_number_increment))."\n";
-print STDERR "DESING OF : ".$design{$plot_start_number+((scalar(@stock_names)-1)*$plot_number_increment)}."\n";
-print STDERR "LENGTH : ".$design{$plot_start_number+((scalar(@stock_names)-1)*$plot_number_increment)}->{block_number}."\n";
 
-my $length = $design{$plot_start_number+((scalar(@stock_names)-1)*$plot_number_increment)}->{block_number};
-is($length, 1, "Block 1 is the right length");
-is($design{$plot_start_number+(scalar(@stock_names)*$plot_number_increment)}->{block_number}, 2, "Block 2 starts after block 1");
+# check next block
+#
+my $next_block_plot_number = $plot_start_number+((scalar(@stock_names)-1)+ 100); #next block
+print STDERR "INDEX = $next_block_plot_number\n";
+print STDERR "DESING OF : ".Dumper($design{$next_block_plot_number})."\n";
+print STDERR "LENGTH : ".$design{$next_block_plot_number}->{block_number}."\n"; # zero indexed, need to substract 1
+
+my $length = $design{$next_block_plot_number}->{block_number};
+is($length, 2, "Block 1 is the right length");
+is($design{$next_block_plot_number}->{block_number}, 2, "Block 2 starts after block 1");
 #is($design{$plot_start_number+$plot_number_increment}->{stock_name}, $stock_names[1], "Second plot has correct stock name");
+
+# check last block
+#
+my $last_block_number = $plot_start_number+((scalar(@stock_names)-1) + 100 * ($number_of_blocks-1)) ; # $plot_number_increment);
+
+print STDERR "LAST BLOCK INDEX: $last_block_number\n";
+print STDERR "DESIGN OF $last_block_number = ".Dumper($design{$last_block_number});
 
 #tests for constructing plot names from plot start number, increment, prefix and suffix
 ok($design{$plot_start_number}->{plot_name} =~ /$plot_name_prefix/, "Plot names contain prefix");
@@ -152,7 +165,7 @@ ok($trial_design->calculate_design(), "Calculate Alpha Lattice trial design");
 ok(%design = %{$trial_design->get_design()}, "Get Alpha trial design");
 ok($design{'101'}->{row_number} == 1, "First plot row_number is 1");
 ok($design{'101'}->{col_number} == 1, "First plot col_number is 1");
-print STDERR Dumper \%design;
+#print STDERR "Alpha Lattice". Dumper \%design;
 
 
 #tests for Augmented design

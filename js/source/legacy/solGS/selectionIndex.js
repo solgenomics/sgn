@@ -135,9 +135,10 @@ solGS.sIndex = {
             var row    = selPopsRows[i];
             var popRow = row.innerHTML;
 
-            predictedPop = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
+            // predictedPop = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
+              predictedPop = popRow.match(/predict/ig);
 
-            if (predictedPop) {
+            if (!predictedPop) {
 		if (predictedPop.length) {
                     var selPopsInput  = row.getElementsByTagName("input")[0];
                     var idPopName     = selPopsInput.value;
@@ -418,8 +419,10 @@ solGS.sIndex = {
         var legend;
 	if (selectedPopName) {
 	    var popName = '<strong>Population name:</strong> ' + selectedPopName;
+
 	    var divId = selectedPopName.replace(/\s/g, "");
-	    legend = '<div id="si_legend_"' + divId + '">'
+        var relWtsId = trRelWts.replace(/[:\s+relative<>b/weigths]/gi, '');
+	    legend = `<div id="si_legend_${divId}_${relWtsId}">`
 		+ popName + ' <strong>|</strong> ' +  trRelWts
 		+ '</div>';
 	}

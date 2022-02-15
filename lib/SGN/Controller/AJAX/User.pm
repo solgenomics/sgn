@@ -5,6 +5,8 @@ use Moose;
 use IO::File;
 use Data::Dumper;
 use HTML::Entities;
+use CXGN::People::Roles;
+use CXGN::BreedingProgram;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -57,6 +59,7 @@ sub logout :Path('/ajax/user/logout') Args(0) {
 sub new_account :Path('/ajax/user/new') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     print STDERR "Adding new account...\n";
     if ($c->config->{is_mirror}) {
@@ -66,8 +69,21 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     }
 
 
-    my ($first_name, $last_name, $username, $password, $confirm_password, $email_address, $organization)
-	= map { $c->req->params->{$_} } (qw|first_name last_name username password confirm_password email_address organization|);
+    my ($first_name, $last_name, $username, $password, $confirm_password, $email_address, $organization, $breeding_program_ids)
+	= map { $c->req->params->{$_} } (qw|first_name last_name username password confirm_password email_address organization breeding_programs|);
+
+    # Set organization from breeding programs, if provided
+    if ($breeding_program_ids && ref($breeding_program_ids) ne 'ARRAY') {
+        $breeding_program_ids = [$breeding_program_ids];
+    }
+    my @breeding_program_names;
+    if ( !$organization && $breeding_program_ids ) {
+        foreach my $breeding_program_id (@$breeding_program_ids) {
+            my $breeding_program = CXGN::BreedingProgram->new({ schema=> $schema , program_id => $breeding_program_id });
+            push(@breeding_program_names, $breeding_program->get_name());
+        }
+        $organization = join(', ', @breeding_program_names);
+    }
 
     if ($username) {
 	#
@@ -76,7 +92,9 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 	my @fail = ();
 	if (length($username) < 7) {
 	    push @fail, "Username is too short. Username must be 7 or more characters";
-	} else {
+	} elsif ( $username =~ /\s/ ) {
+        push @fail, "Username must not contain spaces";
+    } else {
 	    # does user already exist?
 	    #
 	    my $existing_login = CXGN::People::Login -> get_login($c->dbc()->dbh(), $username);
@@ -93,16 +111,18 @@ sub new_account :Path('/ajax/user/new') Args(0) {
 	    push @fail, "Password and confirm password do not match.";
 	}
 
-	if (!$organization) {
-	    push @fail, "'Organization' is required.'";
-	}
-
 	if ($password eq $username) {
 	    push @fail, "Password must not be the same as your username.";
 	}
 	if ($email_address !~ m/[^\@]+\@[^\@]+/) {
 	    push @fail, "Email address is invalid.";
 	}
+    if ( $email_address ) {
+        my @person_ids = CXGN::People::Login->get_login_by_email($c->dbc()->dbh(), $email_address);
+        if ( scalar(@person_ids) > 0 ) {
+            push @fail, "Email address is already associated with an account.";
+        }
+    }
 	unless($first_name) {
 	    push @fail,"You must enter a first name or initial.";
 	}
@@ -137,13 +157,34 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     $new_person->set_last_name($last_name);
     $new_person->store();
 
+    # Add user to breeding programs
+    if ( $c->config->{user_registration_join_breeding_programs} ) {
+        my $person_roles = CXGN::People::Roles->new({ bcs_schema => $schema });
+        my $sp_roles = $person_roles->get_sp_roles();
+        my %roles = map {$_->[0] => $_->[1]} @$sp_roles;
+        foreach my $breeding_program_name (@breeding_program_names) {
+            my $role_id = $roles{$breeding_program_name};
+            if ( !$role_id ) {
+		        my $error = $person_roles->add_sp_role($breeding_program_name);
+                if ( $error ) {
+                    print STDERR "ERROR: Could not create role $breeding_program_name [$error]\n";
+                }
+                else {
+                    my $new_sp_roles = $person_roles->get_sp_roles();
+                    my %new_roles = map {$_->[0] => $_->[1]} @$new_sp_roles;
+                    $role_id = $new_roles{$breeding_program_name};
+                }
+            }
+            if ( $role_id ) {
+                my $add_role = $person_roles->add_sp_person_role($person_id, $role_id);
+            }
+        }
+    }
+
     my $host = $c->config->{main_production_site_url};
     my $project_name = $c->config->{project_name};
     my $subject="[$project_name] Email Address Confirmation Request";
     my $body=<<END_HEREDOC;
-
-Please do *NOT* reply to this message. The return address is not valid.
-Use the contact form instead ($host/contact/form).
 
 This message is sent to confirm the email address for community user
 \"$username\"
@@ -155,6 +196,10 @@ $host/user/confirm?username=$username&confirm_code=$confirm_code
 
 Thank you,
 $project_name Team
+
+Please do *NOT* reply to this message. If you have any trouble confirming your 
+email address or have any other questions, please use the contact form instead:
+$host/contact/form
 
 END_HEREDOC
 
@@ -306,6 +351,21 @@ END_HEREDOC
    CXGN::Contact::send_email($subject, $body, $private_email);
 }
 
+
+sub forgot_username : Path('/ajax/user/forgot_username') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $email = $c->req->param('forgot_username_email');
+    my @person_ids = CXGN::People::Login->get_login_by_email($c->dbc->dbh(), $email);
+    $self->send_forgot_username_email_message($c, $email, \@person_ids);
+
+    $c->stash->{rest} = {
+        message => "Username email sent. Please check your email for a message containing the username(s) of any accounts associated with your email address."
+    };
+}
+
+
 sub reset_password :Path('/ajax/user/reset_password') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -331,7 +391,7 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         $person->update_confirm_code($email_reset_token);
         print STDERR "Sending reset link $reset_link\n";
-        $self->send_reset_email_message($c, $pid, $email, $reset_link);
+        $self->send_reset_email_message($c, $pid, $email, $reset_link, $person->{username});
         push @reset_links, $reset_link;
         push @reset_tokens, $email_reset_token;
     }
@@ -379,21 +439,62 @@ sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(
 }
 
 
-sub send_reset_email_message {
+sub send_forgot_username_email_message {
     my $self = shift;
     my $c = shift;
-    my $pid = shift;
-    my $private_email = shift;
-    my $reset_link = shift;
+    my $email = shift;
+    my $person_ids = shift;
 
-    my $subject = "[SGN] E-mail Address Confirmation Request";
+    my @usernames;
+    foreach my $pid (@$person_ids) {
+        my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
+        push(@usernames, $person->get_username());
+    }
+    my $username_message = @usernames > 0 ? "The following username(s) are associated with your email address: " . join(', ', @usernames)
+        : "There are no accounts associated with your email address.";
+
+    my $project_name = $c->config->{project_name};
+    my $subject = "[$project_name] Forgot Username Request";
     my $main_url = $c->config->{main_production_site_url};
 
     my $body = <<END_HEREDOC;
 
 Hi,
 
-you have requested a password reset on $main_url.
+You have requested the username(s) for accounts associated with this email address on $main_url.
+
+$username_message
+
+If this request did not come from you, please let us know.
+
+To contact us, please do NOT reply to this message; rather, use the contact form ($main_url/contact/form) instead.
+
+Thank you.
+
+Your friends at $project_name
+
+END_HEREDOC
+
+   CXGN::Contact::send_email($subject, $body, $email);
+}
+
+sub send_reset_email_message {
+    my $self = shift;
+    my $c = shift;
+    my $pid = shift;
+    my $private_email = shift;
+    my $reset_link = shift;
+    my $person = shift;
+
+    my $project_name = $c->config->{project_name};
+    my $subject = "[$project_name] Password Reset Request";
+    my $main_url = $c->config->{main_production_site_url};
+
+    my $body = <<END_HEREDOC;
+
+Hi,
+
+The user $person has requested a password reset on $main_url.
 
 If this request did not come from you, please let us know.
 

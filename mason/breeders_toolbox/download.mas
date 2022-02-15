@@ -169,26 +169,23 @@ $(document).ready(function() {
     $('#metadata').click(function() { 
       var trial_list_id = $('#trial_metadata_list_list_select').val();
       var trial_validation = 1;
-      if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true); }
+      if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true).then( 
+         function(r) {
+            if (r.missing.length != 0) {
+               alert("The following lists did not pass validation: "+r.missing.join(", ")+". Please correct the list(s) and try again");
+            }
+            else {
+               
 
-      var problem_lists = new Array();
-      if (trial_validation != 1) {
-        problem_lists.push('trials');
-      }
-
-      if (problem_lists.length > 0) {
-      	  alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
-	        return;
-      }
-
-      var ladda = Ladda.create(this);
-      ladda.start();
-      var token = new Date().getTime(); //use the current timestamp as the token name and value
-      manage_dl_with_cookie(token, ladda);
-      jQuery('#metadata_download_token').val(token);
-      jQuery('#download_metadata_form').submit();
-
-    });
+//      var ladda = Ladda.create(this);
+//      ladda.start();
+//      var token = new Date().getTime(); //use the current timestamp as the token name and value
+//      manage_dl_with_cookie(token, ladda);
+//      jQuery('#metadata_download_token').val(token);
+               jQuery('#download_metadata_form').submit();
+            }
+        });
+      } });
 
     $('#phenotype').click(function() {
 
@@ -196,42 +193,70 @@ $(document).ready(function() {
       var trial_list_id = $('#trial_list_list_select').val();
       var trait_list_id = $('#trait_list_list_select').val();
 
-      var accession_validation = 1;
-      if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
+      var lists = new Array();
+      var types = new Array();
 
-      var trial_validation = 1;
-      if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true); }
-
-      var trait_validation = 1;
-      if (trait_list_id) { trait_validation = lo.validate(trait_list_id, 'traits', true); }
-
-      var problem_lists = new Array();
-
-      if (accession_validation != 1) {
-        problem_lists.push('accessions');
+      if (accession_list_id) {
+         lists.push(accession_list_id);
+         types.push('accessions');
+         //alert("ACC LIST ID = "+accession_list_id);
       }
-      if (trial_validation != 1) {
-        problem_lists.push('trials');
-      }
-      if (trait_validation != 1) {
-        problem_lists.push('trials');
+      if (trial_list_id) {
+          lists.push(trial_list_id);
+          types.push('trials');
       }
 
-      if (problem_lists.length > 0) {
-      	 alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
-	 return;
+      if (trait_list_id) {
+          lists.push(trait_list_id);
+          types.push('traits');
       }
 
-      var ladda = Ladda.create(this);
-      ladda.start();
-      var token = new Date().getTime(); //use the current timestamp as the token name and value
-      manage_dl_with_cookie(token, ladda);
-      jQuery('#phenotype_download_token').val(token);
-      jQuery('#download_form').submit();
+      jQuery('#working_modal').modal('show');
 
-	});
+      validateLists(lists, types).then(function(r) {
+         console.log('validation results: '+JSON.stringify(r));
+         var names_str = '';
+         for (var n=0; n < r.invalid_lists.length; n++) {
+            names_str += r.invalid_lists[n][1];
+	 }
+         if(names_str.length > 0) {
+            alert('Some lists ('+names_str+') are not valid, please check.');
+            jQuery('#working_modal').modal('hide');
+         }
+         else { 
+            download_phenotypes(this);
+            jQuery('#working_modal').modal('hide');
+         
+         }},
+    
+         function(e) { alert(e);     jQuery('#working_modal').modal('hide');
+}
+         );
+
+      });
+
+        
+      
+
+//alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
+//	 return;
+//      
+  
 
 });
+
+
+function download_phenotypes() {
+    //alert("NOW DOWNLOADING!");
+    //var ladda = Ladda.create(data);
+     // ladda.start();
+      var token = new Date().getTime(); //use the current timestamp as the token name and value
+     // manage_dl_with_cookie(token, ladda);
+      jQuery('#phenotype_download_token').val(token);
+      jQuery('#download_form').submit();
+ 
+
+}
 
 </script>
 
@@ -287,26 +312,29 @@ $(document).ready(function() {
             return;
         }
 
-        var accession_validation = 1;
+
         if (accession_list_id) {
-            accession_validation = lo.validate(accession_list_id, 'accessions', true);
+              jQuery('#working_modal').modal('show');
+              lo.validate(accession_list_id, 'accessions', true).then(
+              function(r) {
+                 if (r.valid != 1) { 
+                    alert("The accession list did not pass validation. Please correct the list and try again");
+                    jQuery('#working_modal').modal('hide');
+                 }
+                 else { 
+                    //var ladda = Ladda.create(this);
+                    //ladda.start();
+                    //var token = new Date().getTime(); //use the current timestamp as the token name and value
+                    //manage_dl_with_cookie(token, ladda);
+                    //jQuery('#accession_properties_download_token').val(token);
+                    jQuery('#download_accession_properties').submit();
+                    jQuery('#working_modal').modal('hide');
+                }
+            });
         }
-
-        if (accession_validation != 1) {
-            alert("The accession list did not pass validation. Please correct the list and try again");
-            return;
-        }
-
-        var ladda = Ladda.create(this);
-        ladda.start();
-        var token = new Date().getTime(); //use the current timestamp as the token name and value
-        manage_dl_with_cookie(token, ladda);
-        jQuery('#accession_properties_download_token').val(token);
-        jQuery('#download_accession_properties').submit();
-
     });
-});
 
+});
 </script>
 
 <!-- END OF DOWNLOAD ACCESSION PROPERTIES -->
@@ -374,25 +402,22 @@ $(document).ready(function() {
             return;
         }
 
-        var accession_validation = 1;
         if (accession_list_id) {
-            accession_validation = lo.validate(accession_list_id, 'accessions', true);
-
-        }
-
-        if (accession_validation != 1) {
-            alert("The accession list did not pass validation. Please correct the list and try again");
-            return;
-        }
-
-        var ladda = Ladda.create(this);
-        ladda.start();
-        var token = new Date().getTime(); //use the current timestamp as the token name and value
-        manage_dl_with_cookie(token, ladda);
-        jQuery('#pedigree_download_token').val(token);
-        jQuery('#download_pedigree').submit();
-
-    });
+           accession_validation = lo.validate(accession_list_id, 'accessions', true).then(
+             function(r) { 
+                 if(r.valid != 1) {
+                   alert("The accession list did not pass validation. Please correct the list and try again");
+                 }
+                 else { 
+                    //var ladda = Ladda.create(this);
+                    //ladda.start();
+                    //var token = new Date().getTime(); //use the current timestamp as the token name and value
+                    //manage_dl_with_cookie(token, ladda);
+                    //jQuery('#pedigree_download_token').val(token);
+                    jQuery('#download_pedigree').submit();
+                 }
+             });
+        } });
 });
 
 </script>
@@ -482,7 +507,7 @@ $(document).ready(function() {
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
 <table class="table"  cellpadding="10">
   <thead>
-  <tr><td colspan="2"><h4>Download GBS Genotype </h4><p>Select parameter:</p></tr>
+  <tr><td colspan="2"><h4>Download Genotypes </h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
@@ -530,37 +555,28 @@ $(document).ready(function() {
 
       var accession_validation = 1;
       if (accession_list_id) {
-        accession_validation = lo.validate(accession_list_id, 'accessions', true);
-      }
+  accession_validation = lo.validate(accession_list_id, 'accessions', true).then(
+     function(r) { 
+         if (!( accession_list_id || protocol_list_id) ) {
+             alert("You need to select a list of accessions and a protocol !");
+         }
+         else if(r.valid != 1)  { 
+             alert("The accession list could not be validated. Please correct the list(s) and try again");
+         }
+  else  {
+  
 
-      if (!( accession_list_id || protocol_list_id) ) {
-        alert("You need to select a list of accessions and a protocol !");
-        return;
-      }
-
-      var problem_lists = new Array();
-
-      if (accession_validation != 1) {
-        problem_lists.push('accessions');
-      }
-
-
-      console.log(problem_lists);
-
-      if (problem_lists.length > 0) {
-        alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
-        return;
-      }
-
-      var ladda = Ladda.create(this);
-      ladda.start();
-      var token = new Date().getTime(); //use the current timestamp as the token name and value
-      manage_dl_with_cookie(token, ladda);
-      jQuery('#gbs_download_token').val(token);
+      //var ladda = Ladda.create(this);
+      //ladda.start();
+      //var token = new Date().getTime(); //use the current timestamp as the token name and value
+      //manage_dl_with_cookie(token, ladda);
+      //jQuery('#gbs_download_token').val(token);
       jQuery('#download_gbs').submit();
+   }
+  }, function(e) { alert('An error occurred.'); });
+  }
 
-    });
-
+  });
   });
 </script>
 
@@ -568,7 +584,7 @@ $(document).ready(function() {
 <form id="gbs_qc" action="/breeders/gbs_qc_action" method="POST">
 <table class="table" cellpadding="10">
   <thead>
-  <tr><td colspan="3"><h4>GBS Genotype QC</h4><p>Select parameter:</p></tr>
+  <tr><td colspan="3"><h4>Genotyping QC</h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Trials
@@ -633,43 +649,55 @@ $(document).ready(function() {
 		title: 'Downloading genotype...'
 		});
 
+      var lists = new Array();
+  
       var accession_list_id = $('#genotype_qc_accession_list_list_select').val();
       var trial_list_id = $('#genotype_trial_list_list_select').val();
 
-      var accession_validation = lo.validate(accession_list_id, 'accessions', true);
-      var trial_validation = lo.validate(trial_list_id, 'trials', true);
-
+      
       if (! (accession_list_id || trial_list_id) ) {
-        alert("You need to select an accession or a trail !");
+        alert("You need to select an accession or a trial, or both!");
         return;
       }
 
-      var problem_lists = new Array();
+      var lists = new Array();
+      var types = new Array();
 
-      if (accession_validation != 1) {
-        problem_lists.push('accessions');
-      }
+  if (accession_list_id) {
+  lists.push(accession_list_id);
+  types.push('accessions');
+  }
 
-      if (trial_validation != 1) {
-        problem_lists.push('trials');
-      }
+  if(trial_list_id) {
+  lists.push(trial_list_id);
+  types.push('trials');
+  }
 
+  
+      validateLists(lists, types).then(function(r) {
+         console.log('validation results: '+JSON.stringify(r));
+         var names_str = '';
+         for (var n=0; n < r.invalid_lists.length; n++) {
+            names_str += r.invalid_lists[n][1];
+	 }
+         if(names_str.length > 0) {
+            alert('Some lists ('+names_str+') are not valid, please check.');
+            jQuery('#working_modal').modal('hide');
+         }
+         else { 
+           //      var ladda = Ladda.create(this);
+//         ladda.start();
+//         var token = new Date().getTime(); //use the current timestamp as the token name and value
+//          manage_dl_with_cookie(token, ladda);
+//          jQuery('#qc_download_token').val(token);
+            jQuery('#gbs_qc').submit();
+   
+            jQuery('#working_modal').modal('hide');
+         
+        }
 
-      //alert("problem_lists is " + problem_lists);
+      });
 
-      console.log(problem_lists);
-
-      if (problem_lists.length > 0) {
-        alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
-        return;
-      }
-
-      var ladda = Ladda.create(this);
-      ladda.start();
-      var token = new Date().getTime(); //use the current timestamp as the token name and value
-      manage_dl_with_cookie(token, ladda);
-      jQuery('#qc_download_token').val(token);
-      jQuery('#gbs_qc').submit();
 
     });
 

@@ -229,11 +229,14 @@ solGS.pca = {
 
     selectAnalysisOption: function(page, args) {
 
-	var t = '<p>This analysis may take a long time. '
+	    var title = '<p>This analysis may take a long time. '
 	    + 'Do you want to submit the analysis and get an email when it completes?</p>';
 
-	jQuery('<div />')
-	    .html(t)
+        var jobSubmit = '<div id= "pca_submit">' + title + '</div>';
+
+        jQuery(jobSubmit).appendTo('body');
+
+	jQuery('#pca_submit')
 	    .dialog({
 		height : 200,
 		width  : 400,

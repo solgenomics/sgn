@@ -512,7 +512,7 @@ sub structure_output_details {
 	my $mail_list = $self->mailing_list($c);
 
 	$output_details->{analysis_profile}  = $analysis_data;
-	$output_details->{contact_page}      = $base . 'contact/form';
+	$output_details->{contact_page}      = $base . '/contact/form';
 	$output_details->{data_set_type}     = $c->stash->{data_set_type};
 	$output_details->{analysis_log_file} = $log_file;
 	$output_details->{host}              = qq | $base |;
@@ -614,18 +614,28 @@ sub structure_cluster_analysis_output {
 
 	my $pop_id = $c->stash->{cluster_pop_id};
 
-    my $base = $c->controller('solGS::Path')->clean_base_name($c);
+	my $base = $c->controller('solGS::Path')->clean_base_name($c);
 	my $cluster_page = $base . $analysis_page;
 	$analysis_data->{analysis_page} = $cluster_page;
+	my $cluster_type = $c->stash->{cluster_type};
 
 	my %output_details = ();
 	# $c->controller('solGS::Files')->genotype_file_name($c, $pop_id, $protocol_id);
-    # my $geno_file = $c->stash->{genotype_file_name};
-    my $input_file;
-    $c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
-    $c->controller('solGS::Cluster')->kcluster_result_file($c);
-	my $result_file = $c->stash->{'k-means_result_file'};
-
+	# my $geno_file = $c->stash->{genotype_file_name};
+	my $input_file;
+	$c->stash->{file_id} = $c->controller('solGS::Files')->create_file_id($c);
+	$c->controller('solGS::Cluster')->cluster_result_file($c);
+	
+	my $result_file;
+	if ($cluster_type =~ /k-means/i)
+	{
+	    $result_file = $c->stash->{"${cluster_type}_result_file"};
+	}
+	else
+	{
+	    $result_file = $c->stash->{"${cluster_type}_result_newick_file"};
+	}
+	
 	$output_details{'cluster_' . $pop_id} = {
 		'output_page'    => $cluster_page,
 		'cluster_pop_id' => $pop_id,

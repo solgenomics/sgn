@@ -401,7 +401,7 @@ jQuery(document).ready(function($) {
         var lo = new CXGN.List();
         var accession_validation = 1;
         if (accession_list_id) {
-            accession_validation = lo.validate(accession_list_id, 'accessions', true);
+            accession_validation = lo.legacy_validate(accession_list_id, 'accessions', true);
         }
 
         if (!accession_list_id) {

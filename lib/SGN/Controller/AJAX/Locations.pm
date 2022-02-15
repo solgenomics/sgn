@@ -37,7 +37,7 @@ sub get_all_locations :Path("/ajax/location/all") Args(0) {
 
     my $location = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
-    my $all_locations = $location->get_location_geojson();
+    my $all_locations = $location->get_location_geojson_data();
     #print STDERR "Returning with all locations: ".$all_locations."\n";
     $c->stash->{rest} = { data => $all_locations };
 }
@@ -116,6 +116,11 @@ sub delete_location :Path('/ajax/location/delete') Args(1) {
         nd_geolocation_id => $location_id
     } );
 
+    if ($location_to_delete->name() eq '[Computation]') {
+	$c->stash->{rest} = { error => "The location [Computation] is needed by the system to store analyses and cannot be deleted." };
+	return;
+    }
+    
     my $delete = $location_to_delete->delete_location();
 
     if ($delete->{'success'}) {

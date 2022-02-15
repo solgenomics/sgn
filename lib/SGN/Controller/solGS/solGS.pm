@@ -407,12 +407,13 @@ sub trait :Path('/solgs/trait') Args() {
     }
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    $c->stash->{pop_id}   = $pop_id;
+    $protocol_id = $c->stash->{genotyping_protocol_id};
+
     $c->stash->{training_pop_id} = $pop_id;
     $c->stash->{trait_id} = $trait_id;
 
 	my $pop_name;
-	my $pop_link;
+	my $training_pop_page;
     if ($pop_id && $trait_id)
     {
 	$c->controller('solGS::Search')->project_description($c, $pop_id);
@@ -420,23 +421,19 @@ sub trait :Path('/solgs/trait') Args() {
 	$c->stash->{training_pop_name} = $pop_name;
 	$c->stash->{training_pop_desc} = $c->stash->{project_desc};
 
-	$pop_link = qq | <a href="/solgs/population/$pop_id/gp/$protocol_id">$pop_name </a>| ;
+    my $args = {
+      'training_pop_id' => $pop_id,
+      'genotyping_protocol_id' => $protocol_id,
+      'data_set_type' => 'single population'
+    };
+
+    my $training_pop_url = $c->controller('solGS::Path')->training_page_url($args);
+    $training_pop_page= $c->controller('solGS::Path')->create_hyperlink($training_pop_url, $pop_name);
 
 	my $cached = $c->controller('solGS::CachedResult')->check_single_trial_model_output($c, $pop_id, $trait_id, $protocol_id);
 
 	if (!$cached)
 	{
-	    my $training_pop_name = $c->stash->{project_name};
-	    #my $training_pop_desc = $c->stash->{project_desc};
-		my $args = {
-   		  'training_pop_id' => $pop_id,
-   		  'genotyping_protocol_id' => $protocol_id,
-   		  'data_set_type' => 'single population'
-   	  	};
-
-   	 	my $training_pop_page = $c->controller('solGS::Path')->training_page_url($args);
-	    $training_pop_page = qq | <a href="$training_pop_page">$training_pop_name</a> |;
-
 	    $c->stash->{message} = "Cached output for this model does not exist anymore.\n" .
 	     " Please go to $training_pop_page and run the analysis.";
 
@@ -457,8 +454,7 @@ sub trait :Path('/solgs/trait') Args() {
 
 	    $self->model_phenotype_stat($c);
 
-		$c->stash->{training_pop_url} = $pop_link;
-
+		$c->stash->{training_pop_url} = $training_pop_page;
 	    $c->stash->{template} = $c->controller('solGS::Files')->template("/population/trait.mas");
 	}
     }
@@ -570,6 +566,7 @@ sub output_files {
     $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
     $c->controller('solGS::Files')->validation_file($c);
     $c->controller("solGS::Files")->model_phenodata_file($c);
+    $c->controller("solGS::Files")->trait_raw_phenodata_file($c);
     $c->controller("solGS::Files")->variance_components_file($c);
     $c->controller('solGS::Files')->relationship_matrix_file($c);
     $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
@@ -592,6 +589,7 @@ sub output_files {
                           $c->stash->{marker_effects_file},
                           $c->stash->{validation_file},
                           $c->stash->{model_phenodata_file},
+                          $c->stash->{trait_raw_phenodata_file},
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
 			  $c->stash->{relationship_matrix_table_file},
@@ -932,42 +930,6 @@ sub get_trait_details {
 }
 
 
-sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1) {
-    my ($self, $c, $tr_pop_id) = @_;
-
-    my @traits_ids = $c->req->param('training_traits_ids[]');
-    $c->stash->{training_traits_ids} = \@traits_ids;
-    $c->stash->{training_pop_id} = $tr_pop_id;
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
-
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-
-    $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $tr_pop_id);
-    my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
-
-    my $ret->{result} = 0;
-
-    if (-s $pred_pops_file)
-    {
-	$c->controller('solGS::Search')->list_of_prediction_pops($c, $tr_pop_id);
-	my $selection_pops_ids = $c->stash->{selection_pops_ids};
-	my $formatted_selection_pops = $c->stash->{list_of_prediction_pops};
-
-	$c->controller('solGS::Gebvs')->selection_pop_analyzed_traits($c, $tr_pop_id, $selection_pops_ids->[0]);
-	my $selection_pop_traits = $c->stash->{selection_pop_analyzed_traits_ids};
-
-	$ret->{selection_traits} = $selection_pop_traits;
-	$ret->{data} = $formatted_selection_pops;
-    }
-
-    $ret = to_json($ret);
-
-    $c->res->content_type('application/json');
-    $c->res->body($ret);
-
-}
-
-
 sub selection_population_predicted_traits :Path('/solgs/selection/population/predicted/traits/') Args(0) {
     my ($self, $c) = @_;
 
@@ -1232,8 +1194,11 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 }
 
 
-sub model_phenodata_type {
-    my ($self, $c, $model_pheno_file) = @_;
+sub model_pheno_means_type {
+    my ($self, $c) = @_;
+
+    $c->controller("solGS::Files")->model_phenodata_file($c);
+    my $model_pheno_file = $c->{stash}->{model_phenodata_file};
 
     my $mean_type;
     if (-s $model_pheno_file)
@@ -1271,20 +1236,55 @@ sub model_phenodata_type {
 sub model_phenotype_stat {
     my ($self, $c) = @_;
 
-    $c->controller("solGS::Files")->model_phenodata_file($c);
-    my $model_pheno_file = $c->{stash}->{model_phenodata_file};
+    $c->stash->{model_pheno_means_descriptive_stat} =  $self->model_pheno_means_stat($c);
+    $c->stash->{model_pheno_raw_descriptive_stat} = $self->model_pheno_raw_stat($c);
 
-    my $model_data = $c->controller("solGS::Utils")->read_file_data($model_pheno_file);
+}
 
-    my @desc_stat;
-    my $background_job = $c->stash->{background_job};
 
-    my $pheno_type = $self->model_phenodata_type($c, $model_pheno_file);
+sub model_pheno_means_stat {
+    my ($self, $c) = @_;
 
-    if ($model_data && !$background_job)
+    my $data = $c->controller('solGS::Histogram')->get_trait_pheno_means_data($c);
+
+    my $desc_stat;
+    if ($data && !$c->stash->{background_job})
     {
-	my @pheno_data;
-	foreach (@$model_data)
+        $desc_stat = $self->calc_descriptive_stat($data);
+    }
+
+    my $pheno_type = $self->model_pheno_means_type($c);
+    $desc_stat = [['Phenotype means type', $pheno_type],
+        ['Observation level', 'accession'],
+        @$desc_stat];
+
+   return $desc_stat;
+
+}
+
+
+sub model_pheno_raw_stat {
+    my ($self, $c) = @_;
+
+    my $data = $c->controller("solGS::Histogram")->get_trait_pheno_raw_data($c);
+    my $desc_stat;
+
+    if ($data)
+    {
+        $desc_stat = $self->calc_descriptive_stat($data);
+    }
+
+    $desc_stat = [['Observation level', 'plot'], @$desc_stat];
+    return $desc_stat;
+
+}
+
+
+sub calc_descriptive_stat {
+    my ($self, $data) = @_;
+
+    my @clean_data;
+	foreach (@$data)
 	{
 	    unless (!$_->[0])
 	    {
@@ -1293,22 +1293,22 @@ sub model_phenotype_stat {
 
 		if ($d =~ /\d+/)
 		{
-		    push @pheno_data, $d;
+		    push @clean_data, $d;
 		}
 	    }
 	}
 
-	my $stat = Statistics::Descriptive::Full->new();
-	$stat->add_data(@pheno_data);
+    my $stat = Statistics::Descriptive::Full->new();
+	$stat->add_data(@clean_data);
 
 	my $min  = $stat->min;
 	my $max  = $stat->max;
 	my $mean = $stat->mean;
 	my $med  = $stat->median;
 	my $std  = $stat->standard_deviation;
-	my $cnt  = scalar(@$model_data);
+	my $cnt  = scalar(@$data);
 	my $cv   = ($std / $mean) * 100;
-	my $na   = scalar(@$model_data) - scalar(@pheno_data);
+	my $na   = scalar(@$data) - scalar(@clean_data);
 
 	if ($na == 0) { $na = '--'; }
 
@@ -1318,10 +1318,9 @@ sub model_phenotype_stat {
 	$cv   = $round->round($cv);
 	$cv   = $cv . '%';
 
-	@desc_stat =  (
-	    [ 'Phenotype data type', $pheno_type],
-	    [ 'Total no. of genotypes', $cnt ],
-	    [ 'Genotypes missing data', $na ],
+	my @desc_stat =  (
+	    [ 'Observations count', $cnt ],
+	    [ 'Missing data', $na ],
 	    [ 'Minimum', $min ],
 	    [ 'Maximum', $max ],
 	    [ 'Arithmetic mean', $mean ],
@@ -1329,22 +1328,9 @@ sub model_phenotype_stat {
 	    [ 'Standard deviation', $std ],
 	    [ 'Coefficient of variation', $cv ]
 	    );
-    }
-    else
-    {
-	@desc_stat =  ( [ 'Total no. of genotypes', 'None' ],
-			[ 'Genotypes missing data', 'None' ],
-			[ 'Minimum', 'None' ],
-			[ 'Maximum', 'None' ],
-			[ 'Arithmetic mean', 'None' ],
-			[ 'Median', 'None'],
-			[ 'Standard deviation', 'None' ],
-			[ 'Coefficient of variation', 'None' ]
-	    );
 
-    }
+        return \@desc_stat;
 
-    $c->stash->{descriptive_stat} = \@desc_stat;
 }
 
 

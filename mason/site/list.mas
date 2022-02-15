@@ -137,7 +137,7 @@
 		
 		<h3>Multiple synonym matches</h3>
 		<div id="multiple_synonym_matches_div">
-		  <table id="element_matches_multiple_synonyms" style="margin:0pt">
+		  <table id="element_matches_multiple_synonyms_table" style="margin:0pt">
 		  </table>
 		  
 		  Multiple synonym matches have to be resolved manually. Contact database administrators if necessary.

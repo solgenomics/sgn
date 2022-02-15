@@ -156,11 +156,12 @@ sub upload_genotype_verify_POST : Args(0) {
             my $dir = $c->tempfiles_subdir('/genotype_data_upload_transpose_VCF');
             my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_transpose_VCF/fileXXXX');
 
-            open (my $Fout, ">", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
-            open (my $F, "<", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
+            open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
+            open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
             my @outline;
             my $lastcol;
             while (<$F>) {
+		$_ =~ s/\r//g;
                 if ($_ =~ m/^\##/) {
                     print $Fout $_;
                 } else {
@@ -225,11 +226,12 @@ sub upload_genotype_verify_POST : Args(0) {
 
         my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_upload_tassel_hdf5/fileXXXX');
 
-        open (my $Fout, ">", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
-        open (my $F, "<", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
+        open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
+        open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
         my @outline;
         my $lastcol;
         while (<$F>) {
+	    $_ =~ s/\r//g;
             if ($_ =~ m/^\##/) {
                 print $Fout $_;
             } else {
