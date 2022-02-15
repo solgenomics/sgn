@@ -223,9 +223,9 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
     </&>
 
-    <&| /page/info_section.mas, title => 'Search Accessions Using Genotype', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => 'Search Accessions Using Genotypes', collapsible=>1, collapsed=>1 &>
         <div class="row">
-            <a href="/search/stocks_using_genotypes"><p>Go to Search Accessions Page.</p></a>
+            <a href="/search/stocks_using_genotypes"><p>Go to Search Accessions Using Genotypes Page.</p></a>
         </div>
     </&>
 
