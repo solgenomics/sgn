@@ -174,7 +174,7 @@ sub validate_design {
     my $trial_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_layout_json', 'project_property')->cvterm_id();
     my $plot_number_select = "select projectprop.value from project " .
         "join projectprop on projectprop.project_id = project.project_id " .
-        "where type_id = $trial_layout_cvterm_id and project.project_id = ?";
+        "where projectprop.type_id = $trial_layout_cvterm_id and project.project_id = ?";
     my $sth = $chado_schema->storage->dbh->prepare($plot_number_select);
     $sth->execute($self->get_trial_id());
     while (my ($trial_layout_json) = $sth->fetchrow_array()) {
