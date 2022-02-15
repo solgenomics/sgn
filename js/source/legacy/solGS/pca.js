@@ -77,7 +77,17 @@ solGS.pca = {
 
     },
 
-    loadPcaPops: function(selectId, selectName, dataStructure) {
+    getRunPcaId: function (selectId, dataStr) {
+
+        if (dataStr) {
+            return  `run_pca_${dataStr}_${selectId}`;
+        } else {
+            return 'run_pca';
+        }
+
+    },
+
+    loadPcaPops: function (selectId, selectName, dataStructure) {
 
 	if ( selectId.length === 0) {
             alert('The list is empty. Please select a list with content.' );
@@ -90,7 +100,10 @@ solGS.pca = {
 		jQuery("#pca_pops_section").append(pcaTable).show();
             }
 
-        var onClickVal =  '<button type="button" id="run_pca" class="btn btn-success" onclick="solGS.pca.pcaRun('
+
+        var runPcaId = this.getRunPcaId(selectId, dataStructure);
+
+        var onClickVal =  '<button type="button" id="' + runPcaId +  '" class="btn btn-success" onclick="solGS.pca.pcaRun('
                 + selectId + ",'" + selectName + "'" +  ",'" + dataStructure
 	    	+ "'" + ')">Run PCA</button>';
 
@@ -283,7 +296,12 @@ solGS.pca = {
     	jQuery("#pca_canvas .multi-spinner-container").show();
     	jQuery("#pca_message").prependTo(jQuery("#pca_canvas"));
     	jQuery("#pca_message").html("Running PCA... please wait...it may take minutes.");
-    	jQuery("#run_pca").hide();
+
+        var selectId = pcaArgs.list_id || pcaArgs.dataset_id;
+        var runPcaId = this.getRunPcaId(selectId, pcaArgs.data_structure);
+
+        var runPcaId = '#' + runPcaId; //pcaArgs.pca_pop_id;
+    	jQuery(runPcaId).hide();
 
         pcaArgs = JSON.stringify(pcaArgs);
     	jQuery.ajax({
@@ -320,18 +338,18 @@ solGS.pca = {
                 solGS.pca.plotPca(plotData, downloadLinks);
 
     		    jQuery("#pca_message").empty();
-    		    jQuery("#run_pca").show();
+    		    jQuery(runPcaId).show();
 
     		} else {
                 jQuery("#pca_canvas .multi-spinner-container").hide();
     		    jQuery("#pca_message").html(res.status);
-    		    jQuery("#run_pca").show();
+    		    jQuery(runPcaId).show();
     		}
     	    },
-                error: function(response) {
+                error: function(res) {
                     jQuery("#pca_canvas .multi-spinner-container").hide();
     		        jQuery("#pca_message").html('Error occured running the PCA.');
-    		        jQuery("#run_pca").show();
+    		        jQuery(runPcaId).show();
 
                 }
     	});
