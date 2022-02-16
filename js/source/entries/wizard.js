@@ -40,8 +40,10 @@ function makeURL(target,id){
     case "accessions":
     case "plants":
     case "plots":
-    case "seedlots":
       return document.location.origin+`/stock/${id}/view`;
+      break;
+    case "seedlots":
+      return document.location.origin+`/breeders/seedlot/${id}`;
       break;
     case "breeding_programs":
       return document.location.origin+`/breeders/manage_programs`;

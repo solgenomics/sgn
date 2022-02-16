@@ -12,6 +12,7 @@ $stock_id
     <th>Trait name</th>
     <th>Average Value</th>
     <th>Standard deviation</th>
+    <th>Count</th>
   </tr>
 </thead>
 

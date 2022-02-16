@@ -43,7 +43,7 @@ sub observation_levels {
     my @data_window;
     push @data_window, ({
             levelName => 'replicate',
-            levelOrder => 0 }, 
+            levelOrder => 0 },
         {
             levelName => 'block',
             levelOrder => 1 },
@@ -58,7 +58,7 @@ sub observation_levels {
             levelOrder => 4 },
         {
             levelName => 'tissue_sample',
-            levelOrder => 5 
+            levelOrder => 5
          });
 
     my $total_count = 6;
@@ -66,7 +66,7 @@ sub observation_levels {
     my @data_files;
     my %result = (data=>\@data_window);
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$total_count,$page);
-    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Levels result constructed');   
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Levels result constructed');
 }
 
 sub search {
@@ -95,7 +95,7 @@ sub search {
         my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,$page_size,$page);
         return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
     }
-   
+
     my $join = '';
     my @and_wheres;
 
@@ -181,7 +181,7 @@ sub search {
             if ($study_check) {
                 my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
                 my $traits_assayed = $t->get_traits_assayed();
-                
+
                 foreach (@$traits_assayed){
                     $trait_ids_sql .= ',' . $_->[0] ;
                 }
@@ -245,7 +245,7 @@ sub get_query {
     my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cvterm_additional_info', 'trait_property')->cvterm_id();
 
     #TODO: Can try a pivot to speed up this function so we retrieve all at once;
-    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.dbxref_id, dbxref.accession, array_agg(cvtermsynonym.synonym) filter (where cvtermsynonym.synonym is not null), cvterm.is_obsolete, additional_info.value, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
+    my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, db.url, dbxref.dbxref_id, dbxref.accession, array_agg(cvtermsynonym.synonym ORDER BY CHAR_LENGTH(cvtermsynonym.synonym)) filter (where cvtermsynonym.synonym is not null), cvterm.is_obsolete, additional_info.value, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm ".
         "JOIN dbxref USING(dbxref_id) ".
         "JOIN db using(db_id) ".
         "LEFT JOIN cvtermsynonym using(cvterm_id) ". # left join to include non-synoynm variables, may break field book due to bug
@@ -295,9 +295,8 @@ sub get_query {
     my @data_files;
 
     if ($array) {
-        my $data_window;
-        ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@variables, $page_size, $page);
-        %result = (data => $data_window);
+        %result = (data => \@variables);
+        $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
         return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
     } else {
         $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);

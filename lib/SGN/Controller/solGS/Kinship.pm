@@ -27,7 +27,7 @@ __PACKAGE__->config(
 sub kinship_analysis :Path('/kinship/analysis/') Args() {
     my ($self, $c) = @_;
 
-    $c->stash->{template} = '/solgs/kinship/analysis.mas';
+    $c->stash->{template} = '/solgs/tools/kinship/analysis.mas';
 
 }
 
@@ -272,7 +272,7 @@ sub run_kinship {
     $self->kinship_r_jobs_file($c);
     $c->stash->{dependent_jobs} = $c->stash->{kinship_r_jobs_file};
 
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 
 }
 
@@ -312,7 +312,7 @@ sub kinship_r_jobs {
     $c->stash->{r_temp_file}  = "kinship-${file_id}";
     $c->stash->{r_script}     = 'R/solGS/kinship.r';
 
-    $c->controller('solGS::solGS')->get_cluster_r_job_args($c);
+    $c->controller('solGS::AsyncJob')->get_cluster_r_job_args($c);
     my $jobs  = $c->stash->{cluster_r_job_args};
 
     if (reftype $jobs ne 'ARRAY')
@@ -391,7 +391,7 @@ sub create_kinship_genotype_data_query_jobs {
 	my $trials = $c->stash->{pops_ids_list} || [$c->stash->{kinship_pop_id}];
 	my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
+	$c->controller('solGS::AsyncJob')->get_cluster_genotype_query_job_args($c, $trials, $protocol_id);
 	$c->stash->{kinship_geno_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
 

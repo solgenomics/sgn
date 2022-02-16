@@ -39,8 +39,8 @@ sub search {
     my $study_names = $params->{studyName} || ($params->{studyNames} || ());
     my $parent_db_id = $params->{parentDbId} || ($params->{parentDbIds} || ());
     my $progeny_db_id = $params->{progenyDbId} || ($params->{progenyDbIds} || ());
-    my $external_reference_id = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
-    my $external_reference_source = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
+    my $external_reference_id_arrayref = $params->{externalReferenceID} || ($params->{externalReferenceIDs} || ());
+    my $external_reference_source_arrayref = $params->{externalReferenceSource} || ($params->{externalReferenceSources} || ());
 
     if ( $collection || $progeny_db_id || $parent_db_id ){
         push @$status, { 'error' => 'The following search parameters are not implemented: collection, parentDbId, progenyDbId' };
@@ -64,12 +64,10 @@ sub search {
 
     my %stockprops_values;
     if ($accession_numbers_arrayref && scalar(@$accession_numbers_arrayref)>0){
-        foreach (@$accession_numbers_arrayref) {
-            $stockprops_values{'accession number'} = {
-                matchtype => 'contains',
-                value => $_
-            };
-        }
+        $stockprops_values{'accession number'} = {
+            matchtype => 'one of',
+            value => join(',', @$accession_numbers_arrayref)
+        };
     }
     if ($germplasm_puis_arrayref && scalar(@$germplasm_puis_arrayref)>0){
         foreach (@$germplasm_puis_arrayref) {
@@ -168,13 +166,30 @@ sub search {
             };
         }
 
-        #Get external references
+        #Get external references and check for search params
         my @references;
+        my $external_reference_id = $external_reference_id_arrayref->[0];
+        my $external_reference_source = $external_reference_source_arrayref->[0];
+        my $match_found = $external_reference_id || $external_reference_source ? 0 : 1;
         if (%$reference_result{$_->{stock_id}}){
             foreach (@{%$reference_result{$_->{stock_id}}}){
+
                 push @references, $_;
+                if (!$match_found) {
+                    my $source_found = $external_reference_source ? 0 : 1;
+                    my $id_found = $external_reference_id ? 0 : 1;
+                    if (!$id_found) {
+                        $id_found = $external_reference_id && $_->{referenceID} eq $external_reference_id ? 1 : 0;
+                    }
+                    if (!$source_found) {
+                        $source_found = $external_reference_source && $_->{referenceSource} eq $external_reference_source ? 1 : 0;
+                    }
+                    $match_found = $id_found && $source_found;
+                }
             }
         }
+        # Skip this germplasm if an external reference match was not found
+        if (!$match_found) { next; }
 
         my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'female_parent', 'stock_relationship')->cvterm_id();
         my $q = "SELECT value FROM stock_relationship WHERE object_id = ? AND type_id = ?;";
@@ -805,6 +820,8 @@ sub update {
     my $user_id = shift;
     my $c = shift;
 
+    my $default_species = $c->config->{preferred_species};
+
     if (!$user_id){
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('You must be logged in to add a seedlot!'));
     }
@@ -829,7 +846,7 @@ sub update {
     my $organism_list;
 
     foreach (@$data){
-        my $organism = $_->{species} || undef;
+        my $organism = $_->{species} || $default_species;
         push @$organism_list, $organism;
     }
 
@@ -860,7 +877,7 @@ sub update {
     my @added_stocks;
     my $coderef_bcs = sub {
         foreach my $params (@$data){
-            my $species = $params->{species} || undef;
+            my $species = $params->{species} || $default_species;
             my $name = $params->{defaultDisplayName} || undef;
             my $uniquename = $params->{germplasmName} || undef;
             my $accessionNumber = $params->{accessionNumber} || undef;
@@ -884,6 +901,17 @@ sub update {
             my $locationCode = $params->{additionalInfo}->{locationCode} || undef;
             my $description = $params->{additionalInfo}->{description} || undef;
             my $externalReferences = $params->{externalReferences} || undef;
+            # Get misc additionalInfo and remove specific codes above
+            my %specific_keys = map { $_ => 1 } ("organizationName", "transgenic", "notes", "state", "variety", "locationCode", "description", "stock_id");
+            my $raw_additional_info = $params->{additionalInfo} || undef;
+            my %additional_info;
+            if (defined $raw_additional_info) {
+                foreach my $key (keys %$raw_additional_info) {
+                    if (!exists($specific_keys{$key})) {
+                        $additional_info{$key} = $raw_additional_info->{$key};
+                    }
+                }
+            }
             #not supported
             # speciesAuthority
             # genus
@@ -917,7 +945,7 @@ sub update {
                     accessionNumber=>$accessionNumber,
                     germplasmPUI=>$germplasmPUI,
                     germplasmSeedSource=>$germplasmSeedSource,
-                    synonyms=>[$synonyms],
+                    synonyms=>$synonyms ? [ $synonyms ] : [],
                     instituteCode=>$instituteCode,
                     instituteName=>$instituteName,
                     biologicalStatusOfAccessionCode=>$biologicalStatusOfAccessionCode,
@@ -932,7 +960,8 @@ sub update {
                     locationCode=>$locationCode,
                     sp_person_id => $user_id,
                     user_name => $user_name,
-                    modification_note => 'Bulk load of accession information'
+                    modification_note => 'Bulk load of accession information',
+                    additional_info => \%additional_info
                 });
                 my $added_stock_id = $stock->store();
                 

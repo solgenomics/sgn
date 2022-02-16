@@ -29,14 +29,14 @@ sub create_design {
     my $fieldmap_col_number;
     my $plot_layout_format;
     my @col_number_fieldmaps;
-    
-    
+
+
     if ($self->has_stock_list()) {
 	@stock_list = @{$self->get_stock_list()};
     } else {
 	die "No stock list specified\n";
     }
-    
+
     if ($self->has_control_list()) {
 	@control_list = @{$self->get_control_list()};
 	%control_names_lookup = map { $_ => 1 } @control_list;
@@ -44,7 +44,7 @@ sub create_design {
     } else {
 	die "No list of control stocks specified.  Required for augmented design.\n";
     }
-    
+
     if ($self->has_maximum_block_size()) {
 	$maximum_block_size = $self->get_maximum_block_size();
 	# if ($maximum_block_size <= scalar(@control_list)) {
@@ -72,7 +72,7 @@ sub create_design {
     if ($self->has_fieldmap_col_number()) {
       $fieldmap_col_number = $self->get_fieldmap_col_number();
     }
-    
+
     if ($self->has_fieldmap_row_number()) {
       $fieldmap_row_number = $self->get_fieldmap_row_number();
       my $colNumber = ((scalar(@stock_list) * $number_of_blocks)/$fieldmap_row_number);
@@ -83,7 +83,7 @@ sub create_design {
     if ($self->has_plot_layout_format()) {
       $plot_layout_format = $self->get_plot_layout_format();
     }
-    
+
     $stock_data_matrix =  R::YapRI::Data::Matrix->new(
 	{
 	    name => 'stock_data_matrix',
@@ -94,7 +94,7 @@ sub create_design {
 	);
 
 
-    
+
     $control_stock_data_matrix =  R::YapRI::Data::Matrix->new(
 	{
 	    name => 'control_stock_data_matrix',
@@ -104,7 +104,7 @@ sub create_design {
 	}
 	);
 
-    
+
     $r_block = $rbase->create_block('r_block');
     $stock_data_matrix->send_rbase($rbase, 'r_block');
     $control_stock_data_matrix->send_rbase($rbase, 'r_block');
@@ -112,7 +112,7 @@ sub create_design {
     $r_block->add_command('trt <- stock_data_matrix[1,]');
     $r_block->add_command('control_trt <- control_stock_data_matrix[1,]');
     $r_block->add_command('number_of_blocks <- '.$maximum_block_size);
-    
+
     $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
     if ($self->has_randomization_seed()){
 	$r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
@@ -124,6 +124,9 @@ sub create_design {
 	$r_block->add_command($cmd);
     }
     $r_block->add_command('augmented<-augmented$book'); #added for agricolae 1.1-8 changes in output
+    if($plot_start == 1){ #Use row numbers as plot names to avoid unwanted agricolae plot num pattern
+      $r_block->add_command('augmented$plots <- row.names(augmented)');
+    }
     $r_block->add_command('augmented<-as.matrix(augmented)');
     $r_block->run_block();
     $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','augmented');
@@ -133,10 +136,10 @@ sub create_design {
 
     my $max = max( @block_numbers );
     # @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@block_numbers, $max)};
-    
+
     @fieldmap_row_numbers = @block_numbers;
     my $max_cols = ceil((scalar(@stock_list)+($maximum_block_size*scalar(@control_list)))/$maximum_block_size);
-    
+
     if ($plot_layout_format eq "zigzag") {
         my $i = 1;
         my $count = 0;
@@ -184,7 +187,7 @@ sub create_design {
         }
       }
     }
-    
+
     my %seedlot_hash;
     if($self->get_seedlot_hash){
 	%seedlot_hash = %{$self->get_seedlot_hash};
@@ -201,7 +204,7 @@ sub create_design {
 	$plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
 	$plot_info{'plot_number'} = $plot_numbers[$i];
 	$plot_info{'plot_num_per_block'} = $plot_numbers[$i];
-    
+
     if ($fieldmap_row_numbers[$i]){
         $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
         $plot_info{'col_number'} = $col_number_fieldmaps[$i];
@@ -209,7 +212,7 @@ sub create_design {
 	$augmented_design{$plot_numbers[$i]} = \%plot_info;
     #print Dumper(\%plot_info);
     }
-    
+
     %augmented_design = %{$self->_build_plot_names(\%augmented_design)};
     return \%augmented_design;
 }

@@ -462,7 +462,13 @@ sub search {
                 if ( $matchtype eq 'one of' ) {
                     my @values = split ',', $value;
                     my $search_vals_sql = "'".join ("','" , @values)."'";
-                    push @stockprop_wheres, "\"".$term_name."\"::text \\?| array[$search_vals_sql]";
+                    my $stockprop_list_search_sql = "stock_id in " .
+                        "(" .
+                            "select id from (" .
+	                            "select jsonb_object_keys(\"$term_name\") as accession_number_key, stock_id as id from materialized_stockprop" .
+                            ") as json_return where json_return.accession_number_key in ($search_vals_sql)" .
+                        ")";
+                    push @stockprop_wheres, $stockprop_list_search_sql;
                 } else {
                     push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
                 }

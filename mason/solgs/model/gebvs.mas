@@ -14,13 +14,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$top_blups
-$blups_download_url => ''
+$blups_download_url
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["solGS.gebvs",  "solGS.histogram"] &>
-
+<& /util/import_javascript.mas, classes => [  "solGS.gebvs", "solGS.histogram"] &>
 
 <&| /page/info_section.mas,
   collapsible => 1,
@@ -29,27 +27,15 @@ $blups_download_url => ''
 &>
 
 <div id="gebvs">
-<div id="gebvs_histo_canvas">
-  <div id="gebvs_histo_plot"> </div>
+    <div id="gebvs_histo_canvas">
 </div>
-
 <br/>
 <br/>
-<i>Top 10 genotypes</i>:
-
-<& /page/columnar_table.mas,
-  headings     => ["Genotypes", "GEBVs"],
-  data         => $top_blups,
-  __alt_freq   => 2,
-  __alt_width  => 1,
-  __alt_offset => 3,
-  __align      => 'll',
-&>
-
-<br />
 
 <& /solgs/model/save_gebvs.mas,
 	gebvs_download_url => $blups_download_url
 	&>
 
 </&>
+
+</div>

@@ -1,0 +1,68 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/cluster/plot.mas - cluster analysis plot template
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$pop_id => undef
+$list_id => undef
+$dataset_id => undef
+$data_set_type => undef
+$data_structure => undef
+
+</%args>
+
+<%perl>
+
+$list_id = $pop_id if $pop_id =~ /list/;
+
+my $combo_pops_id;
+
+if ($c->req->referer =~ /solgs\/selection\// || $data_set_type =~ /combined_populations/) {
+$combo_pops_id =  $pop_id
+}
+
+$pop_id = undef if $list_id || $combo_pops_id;
+
+</%perl>
+
+
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.cluster"] &>
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
+
+<style>
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+</style>
+
+<div id="cluster_canvas">
+
+  <& /solgs/spinner.mas &>
+
+<div id="cluster_message" class="message"> </div>
+
+<div id="cluster_plot">
+
+    <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
+    <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />
+    <input type="hidden"  id="cluster_type" value="" />
+    <input type="hidden"  id="dataset_id" value="<% $dataset_id %>" />
+    <input type="hidden"  id="list_id" value="<% $list_id %>" />
+    <input type="hidden"  id="data_structure" value="<% $data_structure %>" />
+</div>
+
+</div>

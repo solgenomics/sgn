@@ -5,8 +5,7 @@ $training_pop_id
 $training_pop_name
 $training_pop_desc
 $show_data => 1;
-$traits_form => ''
-$all_traits_file
+$training_pop_traits_details =>''
 $stocks_no
 $markers_no
 $traits_no
@@ -29,7 +28,7 @@ $training_pop_id = $pop_id;
 
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
-
+<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
 
 <br />
 <br />
@@ -45,9 +44,9 @@ $training_pop_id = $pop_id;
   &>
 
  <& population/summary.mas,
-    pop_id   => $training_pop_id,
-    pop_name => $training_pop_name,
-    pop_desc => $training_pop_desc,
+    training_pop_id   => $training_pop_id,
+    training_pop_name => $training_pop_name,
+    training_pop_desc => $training_pop_desc,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
@@ -67,10 +66,9 @@ $training_pop_id = $pop_id;
       title       => "Train model"
 &>
 
-<& population/select_traits.mas,
+<& population/traits_list.mas,
    training_pop_id    => $training_pop_id,
-  traits_form        => $traits_form,
-  all_traits_file    => $all_traits_file,
+  training_pop_traits_details => $training_pop_traits_details,
   genotyping_protocol_id => $genotyping_protocol_id,
 &>
 
@@ -78,13 +76,13 @@ $training_pop_id = $pop_id;
 </&>
 
 
-  <& population/correlation.mas,
-     training_pop_id  => $training_pop_id,
+  <& /solgs/tools/correlation/correlation.mas,
+     corre_pop_id  => $training_pop_id,
   &>
 
 % if ($training_pop_id !~ /list|dataset/) {
 
-    <& /solgs/anova/analysis.mas,
+    <& /solgs/tools/anova/analysis.mas,
    training_pop_id => $training_pop_id,
   &>
 

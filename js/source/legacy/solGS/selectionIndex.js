@@ -112,12 +112,11 @@ solGS.sIndex = {
 	    }
 	}
 
-	return sIndexList;
+	   return sIndexList;
     },
 
-
-    saveIndexedPops: function(siId) {
-	solGS.sIndex.indexed.push(siId);
+        saveIndexedPops: function(siId) {
+	    solGS.sIndex.indexed.push(siId);
     },
 
     addSelectionPopulations: function() {
@@ -161,7 +160,7 @@ solGS.sIndex = {
 
 	var protocolId = jQuery('#genotyping_protocol_id').val();
 	var trainingTraitsIds = jQuery('#training_traits_ids').val();
-
+    var traitsCode = jQuery('#training_traits_code').val();
 	if (trainingTraitsIds) {
 	    trainingTraitsIds = trainingTraitsIds.split(',');
 	}
@@ -170,14 +169,17 @@ solGS.sIndex = {
 	    'selection_pop_id': selectedPopId,
 	    'training_pop_id': modelId,
 	    'training_traits_ids': trainingTraitsIds,
+        'training_traits_code': traitsCode,
 	    'genotyping_protocol_id': protocolId
 	};
+
+    args = JSON.stringify(args);
 
 	jQuery.ajax({
             type: 'POST',
             dataType: "json",
             url: '/solgs/selection/index/form',
-            data: args,
+            data: {'arguments': args},
             success: function(res) {
 
 		if (res.status == 'success') {
@@ -237,6 +239,7 @@ solGS.sIndex = {
 		trainingTraitsIds = trainingTraitsIds.split(',');
 	    }
 	    var protocolId = jQuery('#genotyping_protocol_id').val();
+        var traitsCode = jQuery('#training_traits_code').val();
 
 	    if (trainingPopId == selectionPopId) { selectionPopId = "";}
 
@@ -245,63 +248,54 @@ solGS.sIndex = {
 		'selection_pop_id': selectionPopId,
 		'rel_wts': params,
 		'training_traits_ids': trainingTraitsIds,
+        'training_traits_code': traitsCode,
 		'genotyping_protocol_id': protocolId
 	    };
+
+        siArgs = JSON.stringify(siArgs);
 
             jQuery.ajax({
 		type: 'POST',
 		dataType: "json",
-		data: siArgs,
+		data: {'arguments': siArgs},
 		url: '/solgs/calculate/selection/index/',
 		success: function(res){
-                    var table;
+
                     if (res.status == 'success' ) {
 
-			var genos = res.top_10_genotypes;
-			var indexFile = res.index_file;
+                        var sindexFile = res.sindex_file;
+                        var gebvsSindexFile = res.gebvs_sindex_file;
 
-			table = '<br /><table class="table table-condensed">';
-			table += '<tr><th>Genotypes</th><th>Selection indices</th></tr>';
+           			    var fileNameSindex = sindexFile.split('/').pop();
+           			    var fileNameGebvsSindex= gebvsSindexFile.split('/').pop();
+           			    var sindexLink= `<a href="${sindexFile}" download="${fileNameSindex}">Indices</a>`;
+           			    var gebvsSindexLink = `<a href="${gebvsSindexFile}" download="${fileNameGebvsSindex}">Weighted GEBVs+indices</a>`;
 
-			var sorted = [];
+           			    let caption = `<br/><strong>Index Name:</strong> ${res.sindex_name} <strong>Download:</strong> ${sindexLink} |  ${gebvsSindexLink} ${legend}`;
+                        let histo = {
+                               canvas: '#si_canvas',
+                               plot_id: `#${res.sindex_name}`,
+                               namedValues: res.indices,
+                               caption: caption
+                           };
 
-			for (var geno in genos) {
-                            sorted.push([geno, genos[geno]]);
-                            sorted = sorted.sort(function(a, b) {return b[1] - a[1]});
-			}
+                        solGS.histogram.plotHistogram(histo);
 
-			for (var i=0; i<sorted.length; i++) {
-                            table += '<tr>';
-                            table += '<td>'
-				+ sorted[i][0] + '</td>' + '<td>'
-				+ sorted[i][1] + '</td>';
-                            table += '</tr>';
-			}
+                        var popType = jQuery("#si_canvas #selected_population_type").val();
+                        var popId   = jQuery("#si_canvas #selected_population_id").val();
 
-			table += '</table>';
+                        solGS.correlation.formatGenCorInputData(popId, popType,  res.index_file);
 
-			table += res.download_link;
-			table += ' <strong>| Index Name:</strong> ' + res.sindex_name;
-			table += legend;
-                    } else {
-			table = res.status + ' Ranking the genotypes failed..Please report the problem.';
-                    }
+            		    jQuery('#si_canvas #selected_pop').val('');
 
-                    jQuery('#si_canvas #si_top_genotypes').append(table).show();
+            		    var sIndexed = {
+            			'sindex_id': popId,
+            			'sindex_name': res.sindex_name
+            		    };
 
-		    var popType = jQuery("#si_canvas #selected_population_type").val();
-		    var popId   = jQuery("#si_canvas #selected_population_id").val();
-                    solGS.correlation.formatGenCorInputData(popId, popType, indexFile);
-
-		    jQuery('#si_canvas #selected_pop').val('');
-
-		    var sIndexed = {
-			'sindex_id': popId,
-			'sindex_name': res.sindex_name
-		    };
-
-		    solGS.sIndex.saveIndexedPops(sIndexed);
-		    solGS.cluster.listClusterPopulations();
+            		    solGS.sIndex.saveIndexedPops(sIndexed);
+            		    solGS.cluster.listClusterPopulations();
+            }
 		},
 		error: function(res){
                     alert('error occured calculating selection index.');
@@ -314,51 +308,53 @@ solGS.sIndex = {
 
     validateRelativeWts: function(nm, val) {
 
-	if (isNaN(val) && nm != 'all') {
-            alert('the relative weight of trait ' + nm + ' must be a number.');
-            return;
-	} else if (!val && nm != 'all') {
-            alert('You need to assign a relative weight to trait ' + nm + '.'
-		  + ' If you want to exclude the trait assign 0 to it.');
-            return;
-	    // }// else if (val < 0 && nm != 'all') {
-	    //   alert('The relative weight to trait '+nm+
-	    //         ' must be a positive number.'
-	    //         );
-	    //    return;
-	} else if (nm == 'all' && val == 0) {
-            alert('At least two traits must be assigned relative weight.');
-            return;
-	} else {
-            return true;
-	}
+         if (isNaN(val) && nm != 'all') {
+                alert(`the relative weight of trait  ${nm} must be a number.
+                    Only numbers and multiplication symbols ('*' or 'x') are allowed.`);
+                return;
+    	}
+        else if (!val && nm != 'all') {
+                alert('You need to assign a relative weight to trait ' + nm + '.'
+    		  + ' If you want to exclude the trait assign 0 to it.');
+                return;
+    	    // }// else if (val < 0 && nm != 'all') {
+    	    //   alert('The relative weight to trait '+nm+
+    	    //         ' must be a positive number.'
+    	    //         );
+    	    //    return;
+    	} else if (nm == 'all' && val == 0) {
+                alert('At least two traits must be assigned relative weight.');
+                return;
+    	} else {
+                return true;
+    	}
 
     },
 
 
      sumElements: function(elements) {
-	 var sum = 0;
-	 for (var i=0; i<elements.length; i++) {
-             if (!isNaN(elements[i])) {
-		 sum = parseFloat(sum) +  parseFloat(elements[i]);
-             }
-	 }
+    	 var sum = 0;
+    	 for (var i=0; i<elements.length; i++) {
+                 if (!isNaN(elements[i])) {
+    		 sum = parseFloat(sum) +  parseFloat(elements[i]);
+                 }
+    	 }
 
-	 return sum;
+    	 return sum;
      },
 
 
     selectionIndex: function(trainingPopId, selectionPopId) {
 
-	var legendValues = this.legendParams();
+    	var legendValues = this.legendParams();
 
-	var legend   = legendValues.legend;
-	var params   = legendValues.params;
-	var validate = legendValues.validate;
+    	var legend   = legendValues.legend;
+    	var params   = legendValues.params;
+    	var validate = legendValues.validate;
 
-	if (params && validate) {
-            this.calcSelectionIndex(params, legend, trainingPopId, selectionPopId);
-	}
+    	if (params && validate) {
+                this.calcSelectionIndex(params, legend, trainingPopId, selectionPopId);
+    	}
 
     },
 
@@ -383,18 +379,29 @@ solGS.sIndex = {
 	for (var i = 0; i < all.length; i++) {
             var nm = all[i].name;
             var val = all[i].value;
+            val = String(val);
+            val = val.replace(/x/ig, '*');
+
+            if (val.match(/\*/)) {
+                var nums = val.split("*");
+                nums = nums.map(Number);
+                val = nums[0];
+                for (var j=1; j < nums.length; j++) {
+                    val = val * nums[j];
+                }
+            }
 
             if (val != 'Calculate')  {
-		if (nm != 'selection_pop_name') {
+        		if (nm != 'selection_pop_name') {
 
-                    allValues.push(val);
-                    validate = this.validateRelativeWts(nm, val);
+                            allValues.push(val);
+                            validate = this.validateRelativeWts(nm, val);
 
-                    if (validate) {
-			params[nm] = val;
-			trRelWts += '<b> ' + nm + '</b>' + ': '+ val;
-                    }
-		}
+                            if (validate) {
+        			params[nm] = val;
+        			trRelWts += '<b> ' + nm + '</b>' + ': '+ val;
+                            }
+        		}
             }
 	}
 
@@ -411,8 +418,10 @@ solGS.sIndex = {
         var legend;
 	if (selectedPopName) {
 	    var popName = '<strong>Population name:</strong> ' + selectedPopName;
+
 	    var divId = selectedPopName.replace(/\s/g, "");
-	    legend = '<div id="si_legend_"' + divId + '">'
+        var relWtsId = trRelWts.replace(/[:\s+relative<>b/weigths]/gi, '');
+	    legend = `<div id="si_legend_${divId}_${relWtsId}">`
 		+ popName + ' <strong>|</strong> ' +  trRelWts
 		+ '</div>';
 	}
@@ -435,24 +444,24 @@ solGS.sIndex = {
 
 	var popsList ='';
 	for (var i = 1; i < listTypeSelPopsRows.length; i++) {
-            var row    = listTypeSelPopsRows[i];
-            var popRow = row.innerHTML;
+        var row    = listTypeSelPopsRows[i];
+        var popRow = row.innerHTML;
 
-            predictedListTypePops = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
+        predictedListTypePops = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
 
-            if (predictedListTypePops) {
-		var selPopsInput  = row.getElementsByTagName("input")[0];
-		var idPopName     = selPopsInput.value;
-		var idPopNameCopy = idPopName;
-		idPopNameCopy     = JSON.parse(idPopNameCopy);
-		var popName       = idPopNameCopy.name;
+        if (predictedListTypePops) {
+    		var selPopsInput  = row.getElementsByTagName("input")[0];
+    		var idPopName     = selPopsInput.value;
+    		var idPopNameCopy = idPopName;
+    		idPopNameCopy     = JSON.parse(idPopNameCopy);
+    		var popName       = idPopNameCopy.name;
 
-		popsList += '<li>'
-                    + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
-                    + '</li>';
-            } else {
-		popsList = undefined;
-            }
+    		popsList += '<li>'
+                        + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
+                        + '</li>';
+        } else {
+		    popsList = undefined;
+        }
 	}
 
 	return popsList;
@@ -472,7 +481,6 @@ solGS.sIndex = {
 	};
 
     },
-
 
 /////
 }
@@ -494,4 +502,8 @@ jQuery(document).on("click", "#calculate_si", function() {
     var popType = jQuery("#si_canvas #selected_population_type").val();
 
     solGS.sIndex.selectionIndex(modelId, selectionPopId);
+});
+
+jQuery(document).ready( function() {
+    jQuery('#si_tooltip[title]').tooltip();
 });

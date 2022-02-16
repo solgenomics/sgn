@@ -15,23 +15,20 @@ use Test::More;
 use SGN::Test::WWW::Mechanize;
 
 
-BEGIN { use_ok( 'SGN::Test::WWW::Mechanize' ) or 
+BEGIN { use_ok( 'SGN::Test::WWW::Mechanize' ) or
             BAIL_OUT('Could not load SGN::Test::WWW::Mechanize');
 }
 
-BEGIN { use_ok( 'Test::More' ) or 
+BEGIN { use_ok( 'Test::More' ) or
             BAIL_OUT('Could not load Test::More');
 }
 
 BEGIN { use_ok(  'SGN::Controller::solGS::solGS'  ) or
-        BAIL_OUT( 'Could not load SGN::Controller::solGS::solGS');   
+        BAIL_OUT( 'Could not load SGN::Controller::solGS::solGS');
 }
 BEGIN { use_ok(  'SGN::Model::solGS::solGS'  ) or
-        BAIL_OUT( 'Could not load SGN::Model::solGS::solGS');   
+        BAIL_OUT( 'Could not load SGN::Model::solGS::solGS');
 }
-BEGIN { use_ok(  'SGN::Controller::solGS::solgsStock'  ) or
-        BAIL_OUT( 'Could not load SGN::Controller::solGS::solgsStock');   
-}   
 
 
 my $mech = SGN::Test::WWW::Mechanize->new;
@@ -61,8 +58,8 @@ $mech->content_contains('select a training population to calculate GEBV', 'list 
 
 # foreach my $tr_pop (@training_pops) {
 #     my $url = $tr_pop->url;
-#     $mech->links_ok( $url, $url ) or 
-#         diag("if similar urls are passing the test, page $url  might be 
+#     $mech->links_ok( $url, $url ) or
+#         diag("if similar urls are passing the test, page $url  might be
 #               failing because of the type of its dataset.");
 # }
 
@@ -71,7 +68,7 @@ $mech->content_contains($_)
       for (
         'Population summary',
         'Trait phenotype data',
-        'Predicted genomc estimated breeding values', 
+        'Predicted genomc estimated breeding values',
         'Top 10 genotypes',
         'Marker Effects',
         '10 folds cross-validation report',
@@ -81,7 +78,7 @@ diag('GEBV data download');
 my $gebv_download_link = $mech->find_link( text_regex => qr/download all gebvs/i );
 ok( $gebv_download_link, 'got a GEBV data download link' );
 my $url = defined $gebv_download_link ? $gebv_download_link->url : '';
-$url ? $mech->links_ok( $url, 'GEBV data download link works' ) 
+$url ? $mech->links_ok( $url, 'GEBV data download link works' )
     : ok(0, 'no GEBV download url found');
 $mech->get_ok($url);
 my $size =  length( $mech->content );
@@ -93,7 +90,7 @@ $mech->get_ok('/solgs/trait/70682/population/128', 'a training population page')
 my $marker_download_link = $mech->find_link( text_regex => qr/download all marker effects/i );
 ok( $marker_download_link, 'got a marker effects data download link' );
 $url = defined $marker_download_link ? $marker_download_link->url : '';
-$url ? $mech->links_ok( $url, 'Marker effects data download link works' ) 
+$url ? $mech->links_ok( $url, 'Marker effects data download link works' )
     : ok(0, 'no marker effects download url found');
 $mech->get_ok($url);
 $size =  length( $mech->content );
@@ -105,7 +102,7 @@ $mech->get_ok('/solgs/trait/70682/population/128', 'a training population page')
 my $accuracy_download_link = $mech->find_link( text_regex => qr/download model accuracy/i );
 ok( $accuracy_download_link, 'got a model accuracy data download link' );
 $url = defined $accuracy_download_link ? $accuracy_download_link->url : '';
-$url ? $mech->links_ok( $url, 'Model accuracy data download link works' ) 
+$url ? $mech->links_ok( $url, 'Model accuracy data download link works' )
     : ok(0, 'no model accuracy download url found');
 $mech->get_ok($url);
 $size =  length( $mech->content);
@@ -132,7 +129,7 @@ $mech->content_contains($_)
       for (
         'Population summary',
         'Trait phenotype data',
-        'Predicted genomc estimated breeding values', 
+        'Predicted genomc estimated breeding values',
         'Top 10 genotypes',
         'Marker Effects',
         '10 folds cross-validation report',
@@ -146,12 +143,10 @@ $mech->content_contains($_)
       for (
         'Population summary',
         'Trait phenotype data',
-        'Predicted genomc estimated breeding values', 
+        'Predicted genomc estimated breeding values',
         'Top 10 genotypes',
         'Marker Effects',
         '10 folds cross-validation report',
       );
 
 done_testing()
-
-

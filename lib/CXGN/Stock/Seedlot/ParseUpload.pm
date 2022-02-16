@@ -35,6 +35,14 @@ has '_parsed_data' => (
     predicate => '_has_parsed_data',
 );
 
+# db:accession term of the event ontology root
+# this is used by the SeedlotMaintenanceEventXLS validator
+# to validate event type names
+has 'event_ontology_root' => (
+    is => 'rw',
+    isa => 'Maybe[Str]'
+);
+
 sub parse {
     my $self = shift;
 

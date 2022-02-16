@@ -466,7 +466,7 @@ sub get_genotyping_data_projects_GET : Args(0) {
 
     my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$bcs_schema,
-        trial_design_list=>['genotype_data_project']
+        trial_design_list=>['genotype_data_project', 'pcr_genotype_data_project']
     });
     my ($data, $total_count) = $trial_search->search();
     my @result;

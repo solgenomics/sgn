@@ -571,4 +571,12 @@ sub generate_label_code {
 }
 
 
+sub read_barcode : Path('/barcode/read') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    $c->stash->{template} = '/barcode/read.mas';
+}
+
+
 1;

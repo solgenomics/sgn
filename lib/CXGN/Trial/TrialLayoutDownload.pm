@@ -105,6 +105,12 @@ has 'include_measured'=> (
     default => 'false',
 );
 
+has 'all_stats'=> (
+    is => 'rw',
+    isa => 'Str',
+    default => 'true',
+);
+
 has 'use_synonyms'=> (
     is => 'rw',
     isa => 'Str',
@@ -175,6 +181,7 @@ sub get_layout_output {
     my $schema = $self->schema();
     my $data_level = $self->data_level();
     my $include_measured = $self->include_measured();
+    my $all_stats = $self->all_stats();
     my $use_synonyms = $self->use_synonyms();
     my %selected_cols = %{$self->selected_columns};
     my $treatments = $self->treatment_project_ids();
@@ -401,6 +408,7 @@ sub get_layout_output {
         trait_header => \@traits,
         exact_performance_hash => $exact_performance_hash,
         overall_performance_hash => \%overall_performance_hash,
+        all_stats => $all_stats,
         trial_stock_type => $trial_stock_type
     };
     my $layout_output;
@@ -455,10 +463,13 @@ sub _add_overall_performance_to_line {
     my $line = shift;
     my $overall_performance_hash = shift;
     my $design_info = shift;
+    my $all_stats = shift;
     foreach my $t (@$overall_trait_names){
         my $perf = $overall_performance_hash->{$t}->{$design_info->{"accession_id"}};
-        if($perf){
+        if($perf && $all_stats eq 'true'){
             push @$line, "Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6];
+        } elsif($perf) {
+            push @$line, "Avg: ".$perf->[3]." Count: ".$perf->[2];
         } else {
             push @$line, '';
         }

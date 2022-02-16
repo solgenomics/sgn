@@ -1,7 +1,7 @@
 <%doc>
 
 =head1 NAME
- 
+
 model/model_summary.mas - displays multiple traits GS analysis output and links to traits' GS detailed output pages
 
 =AUTHOR
@@ -22,19 +22,19 @@ $model_data
 
 </%perl>
 
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 0, 
+<&| /page/info_section.mas,
+    collapsible => 1,
+    collapsed   => 0,
     title       => "Models summary"
-&>     
-  
+&>
+
 <table id="model_summary" style="width:95%">
   <tr>
     <th>Training population</th>
     <th>Description</th>
     <th>Models</th>
   </tr>
-   
+
 % foreach my $model (@$model_data)
 %{
 %
@@ -44,10 +44,10 @@ $model_data
     </td>
     <td>
    <%  $model->[1] %>
-    </td>    
+    </td>
     <td>
       <& /page/columnar_table.mas,
-         headings    => ['Trait', 'Model accuracy', 'Heritability'],
+         headings    => ['Trait', 'Model accuracy', 'Additive variance',  'SNP heritability'],
          data        => $model->[2],
         __alt_freq   => 1,
         __align      => "l",
@@ -61,4 +61,3 @@ $model_data
 </table>
 
 </&>
-

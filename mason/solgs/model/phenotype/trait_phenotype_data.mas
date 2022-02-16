@@ -1,0 +1,49 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/model/phenotype/trait_phenotype_data.mas - displays plots of trait phenotype data.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$model_pheno_means_descriptive_stat
+$model_pheno_raw_descriptive_stat =>''
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ["solGS.phenoHistogram"] &>
+
+<div id="tabs_phenotype" style="width:100%;height:100%;border-color:green;">
+  <ul>
+    <li> <a href="#tabs_means_histogram">Accession phenotype means data distribution</a> </li>
+     <li> <a href="#tabs_raw_histogram">Raw phenotype data distribution</a> </li>
+  </ul>
+
+  <div id="tabs_raw_histogram">
+    <& trait_pheno_raw_histogram.mas &>
+
+    <& trait_pheno_desc_stat.mas,
+     descriptive_stat => $model_pheno_raw_descriptive_stat,
+      &>
+  </div>
+
+  <div id="tabs_means_histogram">
+    <& trait_pheno_means_histogram.mas &>
+
+    <& trait_pheno_desc_stat.mas,
+     descriptive_stat => $model_pheno_means_descriptive_stat,
+      &>
+
+  </div>
+
+
+
+</div>

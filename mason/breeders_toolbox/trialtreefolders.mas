@@ -108,6 +108,9 @@ $design_types => ()
                 },
                 "sampling_trial" : {
                     "icon": 'glyphicon glyphicon-th text-success',
+                },
+                "pcr_genotyping_data_project" : {
+                    "icon": 'glyphicon glyphicon-align-left text-warning',
                 }
             },
             "search" : {

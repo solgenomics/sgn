@@ -1,0 +1,111 @@
+<%doc>
+
+=head1 NAME
+
+/solgs/tools/cluster/analysis.mas - cluster analysis template
+
+To add the cluster analysis interface any where on the website
+add the template '/solgs/tools/cluster/analysis.mas' in your mason template
+and pass any of the arguments listed below.
+Adding the 'data_structure' argument is also recommended.
+A data structure can be any of this: 'list', if of list type; 'dataset', if of dataset type;
+'trial', if of just a trial.
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$trial_id => undef
+$list_id => undef
+$dataset_id => undef
+$data_structure => undef
+$pop_name => undef
+$pop_type => undef
+
+
+</%args>
+
+<%perl>
+
+my $pop_id = $trial_id if $trial_id;
+
+if (!$data_structure) {
+   if ($dataset_id) {
+      $data_structure = 'dataset';
+   } elsif ($list_id) {
+     $data_structure = 'list';
+   }
+}
+
+my $url = $c->req->path;
+my $title;
+my $collapsed = 0;
+
+if ($url =~ /cluster\/analysis/) {
+$title = 'Select a list of accessions or trials and run cluster analysis using k-means method';
+} else {
+$title = 'Clustering';
+$collapsed = 1 if $url =~ /breeders\/trial/;
+}
+
+</%perl>
+
+
+% if ($url =~ /cluster\/analysis/) {
+
+<& /page/page_title.mas,
+   title => "Cluster Analysis"
+  &>
+%}
+
+
+<&| /page/info_section.mas,
+  collapsible => 1,
+  collapsed   => $collapsed,
+  title       => $title
+  &>
+
+  <div id='cluster_div'>
+
+% if ($url =~ /cluster\/analysis|breeders\/trial\//) {
+
+  <& /solgs/genotyping_protocol.mas &>
+
+%}
+
+% if ($url =~ /solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//) {
+
+  <& gebvs_cluster.mas,
+     pop_name => $pop_name,
+    pop_id => $pop_id,
+    pop_type => $pop_type
+    &>
+
+%} elsif ($url =~ /breeders\/trial\/|solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/trials\//) {
+
+    <& cluster_options.mas &>
+
+%} elsif ($url =~ /cluster\/analysis/) {
+
+   <& select_menu.mas &>
+
+%} else {
+    <input id="run_cluster" class="button" type="button" value="Run Cluster" />
+%}
+
+
+<& plot.mas,
+   pop_id => $pop_id,
+  list_id => $list_id,
+  dataset_id => $dataset_id,
+  data_structure => $data_structure,
+  &>
+
+</div>
+</&>

@@ -95,12 +95,12 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my %stocks;
 
     my $header = <$F>;
-    $header =~ s/\r//g; 
+    $header =~ s/\r//g;
     chomp($header);
     my ($progeny_name, $female_parent_accession, $male_parent_accession, $type) =split /\t/, $header;
 
     my %header_errors;
-    
+
     if ($progeny_name ne 'progeny name') {
 	$header_errors{'progeny name'} = "First column must have header 'progeny name' (not '$progeny_name'); ";
     }
@@ -122,8 +122,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 	$c->stash->{rest} = { error => $error, archived_filename_with_path => $archived_filename_with_path };
 	return;
     }
-    
-    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1 );
+
+    my %legal_cross_types = ( biparental => 1, open => 1, self => 1, sib => 1, polycross => 1, backcross => 1, reselected => 1 );
     my %errors;
 
     while (<$F>) {
@@ -147,11 +147,11 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
                 }
             }
         }
-	
+
         # check if the cross types are recognized...
 	#
         if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) {
-            $errors{"not legal cross type: $acc[3] (should be biparental, self, open, sib or polycross)"}=1;
+            $errors{"not legal cross type: $acc[3] (should be biparental, self, open, sib, backcross, reselected or polycross)"}=1;
         }
     }
     close($F);
@@ -248,16 +248,16 @@ sub _get_pedigrees_from_file {
             $c->detach();
         }
         if (!$cross_type){
-            $c->stash->{rest} = { error => "No cross type on line $line_num! Muse be one of these: biparental, open, self, sib, polycross." };
+            $c->stash->{rest} = { error => "No cross type on line $line_num! Must be one of these: biparental, open, self, sib, backcross, reselected, polycross." };
             $c->detach();
         }
-        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross'){
-            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, backcross,sib, polycross." };
+        if ($cross_type ne 'biparental' && $cross_type ne 'open' && $cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'polycross' && $cross_type ne 'backcross' && $cross_type ne 'reselected'){
+            $c->stash->{rest} = { error => "Invalid cross type on line $line_num! Must be one of these: biparental, open, self, backcross, sib, reselected, polycross." };
             $c->detach();
         }
         if ($female eq $male) {
-            if ($cross_type ne 'self' && $cross_type ne 'sib'){
-                $c->stash->{rest} = { error => "Female parent and male parent are the same on line $line_num, but cross type is not self or sib." };
+            if ($cross_type ne 'self' && $cross_type ne 'sib' && $cross_type ne 'reselected'){
+                $c->stash->{rest} = { error => "Female parent and male parent are the same on line $line_num, but cross type is not self, sib or reselected." };
                 $c->detach();
             }
         }
@@ -266,7 +266,7 @@ sub _get_pedigrees_from_file {
             $c->detach();
         }
 
-        if($cross_type eq "self") {
+        if(($cross_type eq "self") || ($cross_type eq "reselected")) {
             $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
             $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
         }
