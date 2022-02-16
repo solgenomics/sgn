@@ -791,12 +791,12 @@ sub _refresh_matviews {
     # Refresh materialized view so data can be retrieved
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
     # Wait until materialized view is reset. Wait 5 minutes total, then throw an error
-    my $refreshing = 0;
+    my $refreshing = 1;
     my $refresh_time = 0;
     while ($refreshing && $refresh_time < $timeout) {
         my $refresh_status = $bs->matviews_status();
-        if ($refresh_status->{timestamp}) {
-            $refreshing = 1;
+        if (!$refresh->{connection}->alive) {
+            $refreshing = 0;
         } elsif ($refresh_time >= $timeout) {
             return {error => CXGN::BrAPI::JSONResponse->return_error($self->status, "Refreshing materialized views is taking too long to return a response", 500)};
         } else {

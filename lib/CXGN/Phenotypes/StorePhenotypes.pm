@@ -367,7 +367,20 @@ sub verify {
                 }
                 if (exists($check_trait_category{$trait_cvterm_id})) {
                     my @trait_categories = split /\//, $check_trait_category{$trait_cvterm_id};
-                    my %trait_categories_hash = map { $_ => 1 } @trait_categories;
+                    my %trait_categories_hash;
+                    if ($check_trait_format{$trait_cvterm_id} eq 'Ordinal') {
+                        # Ordinal looks like <value>=<category>
+                        foreach my $ordinal_category (@trait_categories) {
+                            my @split_value = split('=', $ordinal_category);
+                            if (scalar(@split_value) >= 1) {
+                                $trait_categories_hash{$split_value[0]} = 1;
+                            }
+                        }
+                    } else {
+                        # Nominal, the category is just a value
+                        %trait_categories_hash = map { $_ => 1 } @trait_categories;
+                    }
+
                     if (!exists($trait_categories_hash{$trait_value})) {
                         $error_message = $error_message."<small>This trait value should be one of ".$check_trait_category{$trait_cvterm_id}.": <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
                     }
