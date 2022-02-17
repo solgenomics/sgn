@@ -447,21 +447,6 @@ jQuery(document).ready(function ($) {
         jQuery('#infoToAdd_new_table').DataTable({});
     });
 
-
-
-    jQuery('#accessions_with_pedigree_onswitch').click( function() {
-        jQuery('#accessions_with_pedigree_table').DataTable({
-            'ajax': { 'url': '/ajax/stock/accessions_with_pedigree' },
-            columns: [
-                { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.accession_id+"/view'>"+row.accession_name+"</a>"; } },
-                { title: "Female Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_parent_id+"/view'>"+row.female_parent_name+"</a>"; } },
-                { title: "Male Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.male_parent_id+"/view'>"+row.male_parent_name+"</a>"; } },
-            ]
-        });
-    });
-
-
-
 });
 
 function openWindowWithPost(fuzzyResponse) {

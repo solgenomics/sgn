@@ -2151,7 +2151,28 @@ sub stock_obsolete_GET {
 sub get_accessions_with_pedigree : Path('/ajax/stock/accessions_with_pedigree') : ActionClass('REST') { }
 
 sub get_accessions_with_pedigree_GET {
-    my ($self, $c) = @_;
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $accessions = CXGN::Stock->new({schema => $schema});
+    my $result = $accessions->get_accessions_with_pedigree();
+    print STDERR "RESULT =".Dumper($result)."\n";
+    my @accessions_with_pedigree;
+    foreach my $accession_info (@$result){
+        my ($accession_id, $accession_name, $female_id, $female_name, $male_id, $male_name, $cross_type) =@$accession_info;
+        push @accessions_with_pedigree, {
+            accession_id => $accession_id,
+            accession_name => $accession_name,
+            female_parent_id => $female_id,
+            female_parent_name => $female_name,
+            male_parent_id => $male_id,
+            male_parent_name => $$male_name,
+            cross_type => $cross_type
+        };
+    }
+    print STDERR "ACCESSIONS =".Dumper(\@accessions_with_pedigree)."\n";
+    $c->stash->{rest} = { data => \@accessions_with_pedigree };
 }
 
 
