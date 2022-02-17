@@ -29,6 +29,9 @@ $mech->post_ok('http://localhost:3010/ajax/cross/add_crossingtrial', [ 'crossing
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
+my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name =>'intercross_upload'});
+my $crossing_experiment_id = $crossing_experiment_rs->project_id();
+
 my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
 my $before_uploading_cross = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $before_uploading_stocks = $schema->resultset("Stock::Stock")->search({})->count();
@@ -44,7 +47,8 @@ $response = $ua->post(
     Content => [
         "intercross_file" => [ $file, 'intercross_upload.csv', Content_Type => 'text/plain', ],
         "sgn_session_id" => $sgn_session_id,
-        "cross_id_format_option" => 'auto_generated_id'
+        "cross_id_format_option" => 'auto_generated_id',
+        "intercross_experiment_id" => $crossing_experiment_id
     ]
 );
 ok($response->is_success);
@@ -61,9 +65,6 @@ is($after_uploading_stocks, $before_uploading_stocks + 2);
 is($after_uploading_relationship, $before_uploading_relationship + 4);
 
 # checking number of crosses in intercross_upload experiment
-my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({name =>'intercross_upload'});
-my $crossing_experiment_id = $crossing_experiment_rs->project_id();
-
 $mech->post_ok("http://localhost:3010/ajax/breeders/trial/$crossing_experiment_id/crosses_and_details_in_trial");
 $response = decode_json $mech->content;
 my %data = %$response;

@@ -238,9 +238,9 @@ $design_types => ()
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/cross_wishlist.mas &>
-<& /breeders_toolbox/add_cross_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
-<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
+<& /breeders_toolbox/cross/cross_wishlist.mas &>
+<& /breeders_toolbox/cross/add_cross_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
+<& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
 <& /breeders_toolbox/cross/upload_update_crosses.mas &>
 
 

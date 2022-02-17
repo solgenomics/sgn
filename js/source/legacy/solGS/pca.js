@@ -446,7 +446,10 @@ solGS.pca = {
             pc12.push( [{'name' : pc[0], 'pc1' : parseFloat(pc[2]), 'pc2': parseFloat(pc[3]), 'trial':pc[1] }]);
 	    pc1.push(parseFloat(pc[2]));
 	    pc2.push(parseFloat(pc[3]));
-	    trials.push(pc[1]);
+
+        if (!trials.includes(pc[1])) {
+	           trials.push(pc[1]);
+        }
 	});
 
 	var height = 300;
@@ -690,35 +693,34 @@ solGS.pca = {
 
 	if (trialsNames && Object.keys(trialsNames).length > 1) {
 
-	   var trialsIds = jQuery.unique(trials);
-	    trialsIds = jQuery.unique(trialsIds);
-
+	   var trialsIds = jQuery.uniqueSort(trials);
+	    trialsIds = jQuery.uniqueSort(trialsIds);
 	    var legendValues = [];
 	    var cnt = 0;
 
 	    var allTrialsNames = [];
 
 	    for (var tr in trialsNames) {
-		allTrialsNames.push(trialsNames[tr]);
+		          allTrialsNames.push(trialsNames[tr]);
 	    };
 
 	    trialsIds.forEach( function (id) {
-		var groupName = [];
+    		var groupName = [];
 
-		if (id.match(/\d+-\d+/)) {
-		    var ids = id.split('-');
+    		if (id.match(/\d+-\d+/)) {
+    		    var ids = id.split('-');
 
-		    ids.forEach(function (id) {
-			groupName.push(trialsNames[id]);
-		    });
+    		    ids.forEach(function (id) {
+    			groupName.push(trialsNames[id]);
+    		    });
 
-		    groupName = 'common: ' + groupName.join(', ')
-		} else {
-		    groupName = trialsNames[id];
-		}
+    		    groupName = 'common: ' + groupName.join(', ')
+    		} else {
+    		    groupName = trialsNames[id];
+    		}
 
-		legendValues.push([cnt, id, groupName]);
-		cnt++;
+    		legendValues.push([cnt, id, groupName]);
+    		cnt++;
 	    });
 
 	    var recLH = 20;
@@ -789,7 +791,7 @@ jQuery(document).ready( function() {
             var pcaPopId = pcaArgs.pca_pop_id;
         	if (pcaPopId) {
 
-                if (pcaArgs.data_structure) {
+                if (pcaArgs.data_structure && !pcaPopId.match(/list|dataset/)) {
         		    pcaArgs['pca_pop_id'] = pcaArgs.data_structure + '_' + pcaPopId;
          	    }
         	    solGS.pca.runPcaAnalysis(pcaArgs);
