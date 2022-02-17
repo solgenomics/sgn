@@ -18,7 +18,7 @@ solGS.sIndex = {
 	var trainingPopIdName = JSON.stringify(modelData);
 
 	var  popsList =  '<dl id="selected_population" class="si_dropdown">'
-            + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
+            + '<dt> <a href="#"><span>Select a population</span></a></dt>'
             + '<dd><ul>'
             + '<li>'
             + '<a href="#">' + modelData.name + '<span class=value>' + trainingPopIdName + '</span></a>'
