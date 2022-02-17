@@ -854,6 +854,12 @@ sub manage_markers : Path("/breeders/markers") Args(0) {
     my $self = shift;
     my $c = shift;
 
+    if (!$c->user()) {
+        # redirect to login page
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
     $c->stash->{template} = '/breeders_toolbox/markers/manage_markers.mas';
 }
 
