@@ -33,6 +33,14 @@ $editable_stock_props_definitions => {}
 <div class="well">
     <&| /page/info_section.mas, title=>"Accessions with Pedigree Information", id=> "accessions_with_pedigree", collapsible=>1, collapsed=>1&>
         <table class="table table-hover table-bordered" id="accessions_with_pedigree_table">
+            <thead>
+                <tr>
+                    <th>Accession Name</th>
+                    <th>Female Parent</th>
+                    <th>Male Parent</th>
+                    <th>Cross Type</th>
+                </tr>
+            </thead>
         </table>
     </&>
 </div><!-- closes well -->
@@ -83,12 +91,6 @@ jQuery(document).ready(function (){
 jQuery('#accessions_with_pedigree_onswitch').click( function() {
     jQuery('#accessions_with_pedigree_table').DataTable({
         'ajax': { 'url': '/ajax/stock/accessions_with_pedigree' },
-        columns: [
-            { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.accession_id+"/view'>"+row.accession_name+"</a>"; } },
-            { title: "Female Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_parent_id+"/view'>"+row.female_parent_name+"</a>"; } },
-            { title: "Male Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.male_parent_id+"/view'>"+row.male_parent_name+"</a>"; } },
-            { title: "Cross Type", "data": "cross_type" },
-        ]
     });
 });
 

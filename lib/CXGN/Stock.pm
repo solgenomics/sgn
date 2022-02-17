@@ -1911,9 +1911,9 @@ sub get_accessions_with_pedigree {
         FROM stock
         JOIN stock_relationship AS stock_relationship_1 ON (stock.stock_id = stock_relationship_1.object_id) AND stock_relationship_1.type_id = ?
         JOIN stock AS female ON (stock_relationship_1.subject_id = female.stock_id)
-        LEFT JOIN stock_relationship AS stock_relationship_2 ON (stock_relationship_2.subject_id = stock.stock_id) AND stock_relationship_2.type_id = ?
+        LEFT JOIN stock_relationship AS stock_relationship_2 ON (stock_relationship_2.object_id = stock.stock_id) AND stock_relationship_2.type_id = ?
         LEFT JOIN stock AS male ON (stock_relationship_2.subject_id = male.stock_id)
-        WHERE stock.type_id = ? ORDER BY stock.uniquename ASC";
+        WHERE stock.type_id = ? ORDER BY stock.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($female_parent_type_id, $male_parent_type_id, $accession_type_id);

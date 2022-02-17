@@ -2157,19 +2157,12 @@ sub get_accessions_with_pedigree_GET {
 
     my $accessions = CXGN::Stock->new({schema => $schema});
     my $result = $accessions->get_accessions_with_pedigree();
-    print STDERR "RESULT =".Dumper($result)."\n";
     my @accessions_with_pedigree;
     foreach my $accession_info (@$result){
         my ($accession_id, $accession_name, $female_id, $female_name, $male_id, $male_name, $cross_type) =@$accession_info;
-        push @accessions_with_pedigree, {
-            accession_id => $accession_id,
-            accession_name => $accession_name,
-            female_parent_id => $female_id,
-            female_parent_name => $female_name,
-            male_parent_id => $male_id,
-            male_parent_name => $$male_name,
-            cross_type => $cross_type
-        };
+        push @accessions_with_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>},
+            qq{<a href="/stock/$female_id/view">$female_name</a>},
+            qq{<a href="/stock/$male_id/view">$male_name</a>}, $cross_type, $accession_name ];
     }
     print STDERR "ACCESSIONS =".Dumper(\@accessions_with_pedigree)."\n";
     $c->stash->{rest} = { data => \@accessions_with_pedigree };
