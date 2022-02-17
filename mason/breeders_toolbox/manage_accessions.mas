@@ -31,6 +31,20 @@ $editable_stock_props_definitions => {}
 </div><!-- closes well -->
 
 <div class="well">
+    <&| /page/info_section.mas, title=>"Accessions with Pedigree Information", id=> "accessions_with_pedigree", collapsible=>1, collapsed=>1&>
+        <table class="table table-hover table-bordered" id="accessions_with_pedigree_table">
+            <thead>
+                <tr>
+                    <th>Accession Name</th>
+                    <th>Female Parent</th>
+                    <th>Male Parent</th>
+                </tr>
+            </thead>
+        </table>
+    </&>
+</div><!-- closes well -->
+
+<div class="well">
 <&| /page/info_section.mas, title=>'Find Trials in Common', collapsible=>1, collapsed=>0, subtitle=>'<i>Use a list of accessions to search for trials that contain them all</i>'&>
 
 <& /breeders_toolbox/accessions/find_trials_by_accessions.mas &>

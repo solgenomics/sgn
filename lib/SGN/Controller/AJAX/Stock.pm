@@ -2121,5 +2121,11 @@ sub stock_obsolete_GET {
 }
 
 
+sub get_accessions_with_pedigree : Path('/ajax/stock/accessions_with_pedigree') : ActionClass('REST') { }
+
+sub get_accessions_with_pedigree_GET {
+    my ($self, $c) = @_;
+}
+
 
 1;
