@@ -131,9 +131,9 @@ $trial_name
                     </table>
                     <b>Field Info:</b>
                     <ul>
-                        <li>crossDbId (called transaction ID in the database.)</li>
-                        <li>femaleObsUnitDbId (must exist in the database, can be accession, plot or plant stock type.)</li>
-                        <li>maleObsUnitDbId (must exist in the database, can be accession, plot or plant stock type.)</li>
+                        <li>crossDbId (called transaction ID in the database. Transaction ID is a unique identifier for each activity)</li>
+                        <li>femaleObsUnitDbId (must exist as uniquename in the database, can be accession, plot or plant stock type.)</li>
+                        <li>maleObsUnitDbId (must exist as uniquename in the database, can be accession, plot or plant stock type.)</li>
                         <li>person (operator name, the operator does not need to have database user account)</li>
                         <li>experiment (called crossing experiment in the database. The crossing experiment must exist in the database.)</li>
                         <li>type (cross type, Intercross supports biparental, self, open and polycross cross types)</li>
