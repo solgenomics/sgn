@@ -42,6 +42,13 @@ $editable_stock_props_definitions => {}
                 </tr>
             </thead>
         </table>
+        <br>
+        <br>
+        <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+            <br>
+            <div style="text-align:right" id="accessions_with_pedigree_to_list_menu"></div>
+            <div id="accession_names_with_pedigree" style="display: none;"></div>
+        </&>
     </&>
 </div><!-- closes well -->
 
@@ -87,10 +94,25 @@ jQuery(document).ready(function (){
     verify_accession_list(<% $list_id %>);
 %  }
 
-
-jQuery('#accessions_with_pedigree_onswitch').click( function() {
-    jQuery('#accessions_with_pedigree_table').DataTable({
+jQuery('#accessions_with_pedigree_onswitch').one("click", function(){
+    var result_table = jQuery('#accessions_with_pedigree_table').DataTable({
         'ajax': { 'url': '/ajax/stock/accessions_with_pedigree' },
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#accessions_with_pedigree_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i][4]+"\n";
+                }
+                jQuery("#accession_names_with_pedigree").html(html);
+                addToListMenu("accessions_with_pedigree_to_list_menu", "accession_names_with_pedigree", {
+                    selectText: true,
+                    listType:'accessions'
+                });
+            }
+        }
     });
 });
 
