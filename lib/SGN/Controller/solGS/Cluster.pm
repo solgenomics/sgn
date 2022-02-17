@@ -75,7 +75,6 @@ sub run_cluster_analysis :Path('/run/cluster/analysis/') Args() {
 
     $self->check_cluster_output_files($c);
     my $cluster_plot_exists = $c->stash->{"${cluster_type}_plot_exists"};
-
     my $ret->{result} = 'Cluster analysis failed.';
 
     if (!$cluster_plot_exists)
@@ -175,13 +174,17 @@ sub prepare_response {
 	$json_data = read_file($json_file, {binmode => ':utf8'});
     }
 
-    my $ret->{cluster_plot} = $c->stash->{download_plot};;
+    my $ret ->{result} = 'failed';
+    if (-s $c->stash->{"${cluster_type}_plot_file"}) {
+      $ret->{result} = 'success';
+    }
+
+    $ret->{cluster_plot} = $c->stash->{download_plot};;
     $ret->{kmeans_clusters} = $c->stash->{download_kmeans_clusters};
     $ret->{newick_file} = $c->stash->{download_newick};
     $ret->{json_file} = $c->stash->{download_json};
     $ret->{json_data} = $json_data;
     $ret->{cluster_report} = $c->stash->{download_cluster_report};;
-    $ret->{result} = 'success';
     $ret->{cluster_pop_id} = $c->stash->{cluster_pop_id};
     $ret->{combo_pops_id} = $c->stash->{combo_pops_id};
     $ret->{list_id}       = $c->stash->{list_id};
@@ -509,7 +512,7 @@ sub prep_cluster_download_files {
   my $report_file = $c->stash->{"${cluster_type}_report_file"};
   $report_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $report_file, 'cluster');
 
-  $c->stash->{download_plot}     = $plot_file;
+  $c->stash->{download_plot} = $plot_file;
   $c->stash->{download_kmeans_clusters} = $clusters_file;
   $c->stash->{download_newick} = $newick_file;
   $c->stash->{download_json} = $json_file;
