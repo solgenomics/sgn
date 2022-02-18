@@ -514,7 +514,10 @@ solGS.pca = {
                 pc12.push( [{'name' : pc[0], 'pc1' : parseFloat(pc[2]), 'pc2': parseFloat(pc[3]), 'trial':pc[1] }]);
     	    pc1.push(parseFloat(pc[2]));
     	    pc2.push(parseFloat(pc[3]));
-    	    trials.push(pc[1]);
+
+            if (!trials.includes(pc[1])) {
+	           trials.push(pc[1]);
+        }
     	});
 
     	var height = 300;
@@ -716,8 +719,8 @@ solGS.pca = {
 
     	if (trialsNames && Object.keys(trialsNames).length > 1) {
 
-    	   var trialsIds = jQuery.unique(trials);
-    	    trialsIds = jQuery.unique(trialsIds);
+    	   var trialsIds = jQuery.uniqueSort(trials);
+    	    trialsIds = jQuery.uniqueSort(trialsIds);
 
     	    var legendValues = [];
     	    var cnt = 0;
