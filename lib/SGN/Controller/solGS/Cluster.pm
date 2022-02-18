@@ -427,9 +427,8 @@ sub kcluster_plot_pam_file {
     my ($self, $c) = @_;
 
     my $file_id = $c->stash->{file_id};
-    my $cluster_dir = $c->stash->{cluster_cache_dir};
+    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
     my $cluster_type = $c->stash->{cluster_type};
-    $c->stash->{cache_dir} = $cluster_dir;
 
     my $cache_data = {key       => "${cluster_type}_plot_pam_${file_id}",
                       file      => "${cluster_type}_plot_pam_${file_id}.png",
@@ -445,9 +444,7 @@ sub hierarchical_result_file {
     my ($self, $c) = @_;
 
     my $file_id = $c->stash->{file_id};
-    my $cluster_dir = $c->stash->{cluster_cache_dir};
-
-    $c->stash->{cache_dir} = $cluster_dir;
+    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
     my $cache_data = {key       => "hierarchical_result_${file_id}",
                       file      => "hierarchical_result_${file_id}.txt",
@@ -483,6 +480,8 @@ sub prep_cluster_download_files {
   my ($self, $c) = @_;
 
   my $cluster_type = $c->stash->{cluster_type};
+  $c->stash->{cache_dir}      = $c->stash->{cluster_cache_dir};
+  $c->stash->{analysis_type}  = $cluster_type;
 
   $self->cluster_plot_file($c);
   my $plot_file = $c->stash->{"${cluster_type}_plot_file"};
