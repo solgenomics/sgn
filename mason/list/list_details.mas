@@ -1,0 +1,35 @@
+<%args>
+$list_id
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<& /page/page_title.mas, title => "List Details" &>
+
+
+<&| /page/info_section.mas, title => 'List Items', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "list_items_table" class="table table-hover table-striped">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+<script>
+
+jQuery(document).ready( function() {
+
+    var list_id = '<% $list_id %>';
+
+});
+
+
+
+</script>
