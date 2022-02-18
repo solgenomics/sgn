@@ -102,6 +102,7 @@ sub login {
     my $password = shift;
     
     $self->get("/user/login");
+    sleep(2);
     my $d = $self->driver();
     my $username_field = $d->find_element("username", "id");
     $username_field->click();
