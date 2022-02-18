@@ -1892,42 +1892,6 @@ sub hard_delete {
 }
 
 
-=head2 get_accessions_with_pedigree
-
-    Returns all accessions having pedigree information
-    Example: my @accessions = CXGN::Stock->get_accessions_with_pedigree($schema)
-
-=cut
-
-sub get_accessions_with_pedigree {
-    my $self = shift;
-    my $schema = $self->schema;
-
-    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
-
-    my $q = "SELECT stock.stock_id, stock.uniquename, female.stock_id, female.uniquename, male.stock_id, male.uniquename, stock_relationship_1.value
-        FROM stock
-        JOIN stock_relationship AS stock_relationship_1 ON (stock.stock_id = stock_relationship_1.object_id) AND stock_relationship_1.type_id = ?
-        JOIN stock AS female ON (stock_relationship_1.subject_id = female.stock_id)
-        LEFT JOIN stock_relationship AS stock_relationship_2 ON (stock_relationship_2.object_id = stock.stock_id) AND stock_relationship_2.type_id = ?
-        LEFT JOIN stock AS male ON (stock_relationship_2.subject_id = male.stock_id)
-        WHERE stock.type_id = ? AND stock.is_obsolete <> 't' ORDER BY stock.stock_id ASC";
-
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute($female_parent_type_id, $male_parent_type_id, $accession_type_id);
-
-    my @data = ();
-    while(my($stock_id, $stock_name, $female_id, $female_name, $male_id, $male_name, $cross_type) = $h->fetchrow_array()){
-        push @data, [$stock_id, $stock_name, $female_id, $female_name, $male_id, $male_name, $cross_type]
-    }
-
-    return \@data;
-
-}
-
-
 ###__PACKAGE__->meta->make_immutable;
 
 ##########

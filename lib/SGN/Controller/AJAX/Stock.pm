@@ -2155,11 +2155,11 @@ sub get_accessions_with_pedigree_GET {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $accessions = CXGN::Stock->new({schema => $schema});
-    my $result = $accessions->get_accessions_with_pedigree();
+    my $result = CXGN::Cross->get_progeny_info($schema);
+
     my @accessions_with_pedigree;
     foreach my $accession_info (@$result){
-        my ($accession_id, $accession_name, $female_id, $female_name, $male_id, $male_name, $cross_type) =@$accession_info;
+        my ($female_id, $female_name, $male_id, $male_name, $accession_id, $accession_name, $cross_type) =@$accession_info;
         push @accessions_with_pedigree, [ qq{<a href="/stock/$accession_id/view">$accession_name</a>},
             qq{<a href="/stock/$female_id/view">$female_name</a>},
             qq{<a href="/stock/$male_id/view">$male_name</a>}, $cross_type, $accession_name ];
