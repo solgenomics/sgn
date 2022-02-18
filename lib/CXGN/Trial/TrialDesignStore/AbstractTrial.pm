@@ -927,7 +927,7 @@ sub store {
             print STDERR "Saving treatments\n";
             my %treatments_hash = %{$design{'treatments'}};
 
-            foreach my $treatment_name(keys %treatments_hash){
+            foreach my $treatment_name (sort keys %treatments_hash) {
                 my $stock_names;
                 my $management_factor_type;
                 my $management_factor_year;
@@ -942,7 +942,7 @@ sub store {
                     $management_factor_type = $info_hashes{'new_treatment_type'};
                     $management_factor_year = $info_hashes{'new_treatment_year'};
                     $management_factor_date = $info_hashes{'new_treatment_date'};
-                    $management_factor_description = $info_hashes{'new_treatment_description'};
+                    $management_factor_description = $info_hashes{'new_treatment_description'} || 'No description';
                 } else {
                     $stock_names = $treatments_hash{$treatment_name};
                 }

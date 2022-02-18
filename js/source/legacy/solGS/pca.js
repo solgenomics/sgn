@@ -815,7 +815,7 @@ jQuery(document).ready( function() {
             var pcaPopId = pcaArgs.pca_pop_id;
         	if (pcaPopId) {
 
-                if (pcaArgs.data_structure) {
+                if (pcaArgs.data_structure && !pcaPopId.match(/list|dataset/)) {
         		    pcaArgs['pca_pop_id'] = pcaArgs.data_structure + '_' + pcaPopId;
          	    }
         	    solGS.pca.runPcaAnalysis(pcaArgs);
