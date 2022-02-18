@@ -695,11 +695,6 @@ sub cache_file {
 sub copy_to_tempfiles_subdir {
     my ($self, $c, $file, $dir_name) = @_;
 
-    # $c->stash->{cache_dir}      = $c->stash->{cluster_cache_dir};
-    # $c->stash->{analysis_type}  = $c->stash->{cluster_type};
-
-    # my $analysis_dir = $c->stash->{analysis_type};
-
     my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, $dir_name);
     my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
 
