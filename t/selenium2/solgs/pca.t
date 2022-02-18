@@ -60,7 +60,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run pca')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
     sleep(3);
@@ -79,7 +79,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(5);
     # $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     # sleep(120);
@@ -96,7 +96,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(120);
@@ -112,7 +112,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(2);
-    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(120);
@@ -128,7 +128,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(120);
@@ -144,7 +144,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select genotype')->click();
     sleep(2);
-    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(80);
@@ -162,7 +162,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(20);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(3);
-    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(80);
@@ -178,7 +178,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(20);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(3);
-    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(80);
@@ -195,7 +195,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(20);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(3);
-    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(180);
@@ -211,7 +211,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(20);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(3);
-    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(80);
@@ -234,7 +234,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select phenotype')->click();
     sleep(10);
-    $d->find_element_ok('run_pca', 'id', 'run PCA')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(70);
@@ -257,7 +257,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(10);
-    $d->find_element_ok('run_pca', 'id', 'run PCA')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(70);
@@ -315,7 +315,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(5);
-    $d->find_element_ok('run_pca', 'id', 'run PCA')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(70);
@@ -332,7 +332,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select genotype')->click();
     sleep(5);
-    $d->find_element_ok('run_pca', 'id', 'run PCA')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(70);
@@ -378,7 +378,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(10);
-    $d->find_element_ok('run_pca', 'id', 'run PCA')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(100);
@@ -464,7 +464,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(10);
-    $d->find_element_ok('run_pca', 'id', 'run PCA')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -481,7 +481,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(4);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Phenotype"]', 'xpath', 'select genotype')->click();
     sleep(10);
-    $d->find_element_ok('run_pca', 'id', 'run PCA')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
@@ -527,7 +527,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('//select[@id="pca_data_type_select"]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(10);
-    $d->find_element_ok('run_pca', 'id', 'run PCA')->click();
+    $d->find_element_ok('//*[starts-with(@id, "run_pca")]', 'xpath', 'run_pca')->click();
     sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(80);
