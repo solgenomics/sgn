@@ -7,6 +7,7 @@ use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
+use Math::Round qw | round |;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -117,11 +118,28 @@ $mech->get_ok('http://localhost:3010/brapi/v2/studies/139');
 $response = decode_json $mech->content;
 print STDERR "\n\n" . Dumper$response;
 is_deeply($response, {'metadata' => {'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::Studies','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Studies search result constructed'}],'datafiles' => []},'result' => {'studyCode' => undef,'trialDbId' => '134','environmentParameters' => undef,'externalReferences' => undef,'dataLinks' => [],'commonCropName' => 'Cassava','studyType' => 'Clonal Evaluation','additionalInfo' => {'programDbId' => '134', 'programName' => 'test'},'documentationURL' => '','endDate' => undef,'studyDescription' => 'This trial was loaded into the fixture to test solgs.','studyName' => 'Kasese solgs trial','locationName' => 'test_location','studyPUI' => undef,'lastUpdate' => undef,'experimentalDesign' => {'PUI' => 'Alpha','description' => 'Alpha'},'observationUnitsDescription' => undef,'startDate' => undef,'studyDbId' => '139','observationLevels' => undef,'culturalPractices' => undef,'growthFacility' => undef,'locationDbId' => '23','seasons' => ['2014'],'contacts' => undef,'active' => JSON::true ,'trialName' => 'test','license' => ''}} );
-
+$Data::Dumper::Indent = 1;
+$Data::Dumper::Sortkeys = 1;
 $mech->get_ok('http://localhost:3010/brapi/v2/locations?pageSize=3');
 $response = decode_json $mech->content;
-print STDERR "\n\n" . Dumper$response;
-is_deeply($response, {'result' => {'data' => [{'siteStatus' => undef,'environmentType' => undef,'coordinateUncertainty' => undef,'countryCode' => 'USA','instituteAddress' => '','topography' => undef,'coordinateDescription' => undef,'instituteName' => '','additionalInfo' => {'geodetic datum' => undef,'breeding_program' => '134'},'externalReferences' => undef,'abbreviation' => '','exposure' => undef,'coordinates' => {'type' => 'Feature','geometry' => {'coordinates' => ['-115.86428','32.61359','109'],'type' => 'Point'}},'documentationURL' => undef,'locationType' => '','locationName' => 'test_location','countryName' => 'United States','slope' => undef,'locationDbId' => '23'},{'countryCode' => 'USA','instituteAddress' => '','topography' => undef,'siteStatus' => undef,'environmentType' => undef,'coordinateUncertainty' => undef,'externalReferences' => undef,'additionalInfo' => {'breeding_program' => '134','geodetic datum' => undef},'instituteName' => '','coordinateDescription' => undef,'countryName' => 'United States','locationName' => 'Cornell Biotech','abbreviation' => '','documentationURL' => undef,'exposure' => undef,'coordinates' => {'geometry' => {'type' => 'Point','coordinates' => ['-76.4735','42.45345','274']},'type' => 'Feature'},'locationType' => '','locationDbId' => '24','slope' => undef},{'environmentType' => undef,'coordinateUncertainty' => undef,'siteStatus' => undef,'instituteAddress' => '','topography' => undef,'countryCode' => '','instituteName' => '','coordinateDescription' => undef,'externalReferences' => undef,'additionalInfo' => {'geodetic datum' => undef},'locationType' => '','documentationURL' => undef,'exposure' => undef,'abbreviation' => '','coordinates' => undef,'countryName' => '','locationName' => 'NA','locationDbId' => '25','slope' => undef}]},'metadata' => {'pagination' => {'totalCount' => 4,'totalPages' => 2,'currentPage' => 0,'pageSize' => 3},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=3'},{'message' => 'Loading CXGN::BrAPI::v2::Locations','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Locations list result constructed'}],'datafiles' => []}} );
+
+print STDERR "\n\n Locations repsponse before transormation: ".Dumper($response);
+
+foreach my $d (@{$response->{result}->{data}}) {
+
+    foreach my $coord (@{$d->{coordinates}->{geometry}->{coordinates}}) {
+	$coord = round($coord);
+    }
+}
+
+
+print STDERR "\n\n Locations response after transformation (pagesize = 3): " . Dumper $response;
+
+my $expected = {'result' => {'data' => [{'siteStatus' => undef,'environmentType' => undef,'coordinateUncertainty' => undef,'countryCode' => 'USA','instituteAddress' => '','topography' => undef,'coordinateDescription' => undef,'instituteName' => '','additionalInfo' => {'geodetic datum' => undef,'breeding_program' => '134'},'externalReferences' => undef,'abbreviation' => '','exposure' => undef,'coordinates' => {'type' => 'Feature','geometry' => {'coordinates' => ['-116','33','109'],'type' => 'Point'}},'documentationURL' => undef,'locationType' => '','locationName' => 'test_location','countryName' => 'United States','slope' => undef,'locationDbId' => '23'},{'countryCode' => 'USA','instituteAddress' => '','topography' => undef,'siteStatus' => undef,'environmentType' => undef,'coordinateUncertainty' => undef,'externalReferences' => undef,'additionalInfo' => {'breeding_program' => '134','geodetic datum' => undef},'instituteName' => '','coordinateDescription' => undef,'countryName' => 'United States','locationName' => 'Cornell Biotech','abbreviation' => '','documentationURL' => undef,'exposure' => undef,'coordinates' => {'geometry' => {'type' => 'Point','coordinates' => ['-76','42','274']},'type' => 'Feature'},'locationType' => '','locationDbId' => '24','slope' => undef},{'environmentType' => undef,'coordinateUncertainty' => undef,'siteStatus' => undef,'instituteAddress' => '','topography' => undef,'countryCode' => '','instituteName' => '','coordinateDescription' => undef,'externalReferences' => undef,'additionalInfo' => {'geodetic datum' => undef},'locationType' => '','documentationURL' => undef,'exposure' => undef,'abbreviation' => '','coordinates' => { 'geometry' => { 'coordinates' => [] }},'countryName' => '','locationName' => 'NA','locationDbId' => '25','slope' => undef}]},'metadata' => {'pagination' => {'totalCount' => 4,'totalPages' => 2,'currentPage' => 0,'pageSize' => 3},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=3'},{'message' => 'Loading CXGN::BrAPI::v2::Locations','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Locations list result constructed'}],'datafiles' => []}};
+
+print STDERR "\n\n Locations that were expected: ".Dumper($expected);
+
+is_deeply($response, $expected, "locations test"  );
 
 $data = '[  {    "abbreviation": "L1",    "additionalInfo": {"noaaStationId" : "PALMIRA","programDbId" :"134"},    "coordinateDescription": "North East corner of greenhouse",    "coordinateUncertainty": "20",    "coordinates": {      "geometry": {        "coordinates": [          -76.506042,          42.417373,          123        ],        "type": "Point"      },      "type": "Feature"    },    "countryCode": "PER",    "countryName": "Peru",    "documentationURL": "https://brapi.org",    "environmentType": "Nursery",    "exposure": "Structure, no exposure",    "externalReferences": [      {        "referenceID": "doi:10.155454/12341234",        "referenceSource": "DOI"      },      {        "referenceID": "http://purl.obolibrary.org/obo/ro.owl",        "referenceSource": "OBO Library"      },      {        "referenceID": "75a50e76",        "referenceSource": "Remote Data Collection Upload Tool"      }    ],    "instituteAddress": "71 Pilgrim Avenue Chevy Chase MD 20815",    "instituteName": "Plant Science Institute",    "locationName": "Location 1",    "locationType": "Field",    "siteStatus": "Private",    "slope": "0",    "topography": "Valley"  }]';
 
@@ -139,7 +157,7 @@ $data = '{    "abbreviation": "L2",    "additionalInfo": {"noaaStationId" : "PAL
 
 $resp = $ua->put("http://localhost:3010/brapi/v2/locations/25", Content => $data);
 $response = decode_json $resp->{_content};
-print STDERR "\n\n" . Dumper$response;
+print STDERR "\n\n locations details in the response: " . Dumper$response;
 is_deeply($response, { 'result'=> { 'environmentType'=> undef, 'externalReferences'=> undef, 'instituteAddress'=> '', 'abbreviation'=> 'L2', 'coordinateDescription'=> undef, 'topography'=> undef, 'additionalInfo'=> { 'geodetic datum'=> undef, 'noaa_station_id'=> 'PALMIRA', 'breeding_program'=> '134' }, 'locationDbId'=> '25', 'instituteName'=> '', 'countryCode'=> 'PER', 'countryName'=> 'Peru', 'siteStatus'=> undef, 'locationName'=> 'Location 2', 'coordinates'=> { 'type'=> 'Feature', 'geometry'=> { 'coordinates'=> [ '-76.50604','42.417374','123'], 'type'=> 'Point' } }, 'slope'=> undef, 'documentationURL'=> undef, 'locationType'=> 'Field', 'coordinateUncertainty'=> undef, 'exposure'=> undef }, 'metadata'=> { 'status'=> [ { 'messageType'=> 'INFO', 'message'=> 'BrAPI base call found with page=0, pageSize=10' }, { 'messageType'=> 'INFO', 'message'=> 'Loading CXGN::BrAPI::v2::Locations' }, { 'message'=> 'Locations list result constructed', 'messageType'=> 'INFO' } ], 'pagination'=> { 'totalPages'=> 1, 'pageSize'=> 10, 'totalCount'=> 1, 'currentPage'=> 0 }, 'datafiles'=> [] } });
 
 $mech->post_ok('http://localhost:3010/brapi/v2/search/locations', ['locationDbIds'=>['25','28']]);
@@ -147,12 +165,14 @@ $response = decode_json $mech->content;
 $searchId = $response->{result} ->{searchResultDbId};
 $mech->get_ok('http://localhost:3010/brapi/v2/search/locations/'. $searchId);
 $response = decode_json $mech->content;
-print STDERR "\n\n" . Dumper$response;
+
+print STDERR "\n\n" . Dumper "locations call response : ".$response;
+
 is_deeply($response, {'result' => {'data' => [{'locationType' => 'Field','externalReferences' => undef,'countryCode' => 'PER','instituteName' => '','documentationURL' => undef,'instituteAddress' => '','locationName' => 'Location 2','siteStatus' => undef,'slope' => undef,'exposure' => undef,'coordinateUncertainty' => undef,'abbreviation' => 'L2','additionalInfo' => {'breeding_program' => '134','noaa_station_id' => 'PALMIRA','geodetic datum' => undef},'coordinates' => {'type' => 'Feature','geometry' => {'coordinates' => ['-76.50604','42.417374',123],'type' => 'Point'}},'countryName' => 'Peru','environmentType' => undef,'coordinateDescription' => undef,'topography' => undef,'locationDbId' => '25'},{'documentationURL' => undef,'instituteAddress' => '','countryCode' => 'PER','externalReferences' => undef,'instituteName' => '','locationType' => 'Field','environmentType' => undef,'coordinateDescription' => undef,'topography' => undef,'locationDbId' => '28','countryName' => 'Peru','additionalInfo' => {'geodetic datum' => undef,'noaa_station_id' => 'PALMIRA','breeding_program' => '134'},'coordinateUncertainty' => undef,'abbreviation' => 'L1','exposure' => undef,'coordinates' => {'type' => 'Feature','geometry' => {'coordinates' => ['-76.50604','42.417374',123],'type' => 'Point'}},'locationName' => 'Location 1','slope' => undef,'siteStatus' => undef}]},'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'message' => 'search result constructed','messageType' => 'INFO'}],'pagination' => {'totalCount' => 2,'totalPages' => 1,'pageSize' => 10,'currentPage' => 0},'datafiles' => []}} );
 
 $mech->get_ok('http://localhost:3010/brapi/v2/people');
 $response = decode_json $mech->content;
-print STDERR "\n\n" . Dumper$response;
+print STDERR "\n\n People in the brapi response: " . Dumper$response;
 is_deeply($response, {'result' => {'data' => [{'personDbId' => '40','mailingAddress' => undef,'userID' => 'johndoe','firstName' => 'John','emailAddress' => undef,'description' => undef,'phoneNumber' => undef,'additionalInfo' => {'country' => undef},'lastName' => 'Doe','externalReferences' => {'referenceSource' => undef,'referenceID' => undef},'middleName' => undef},{'middleName' => undef,'externalReferences' => {'referenceID' => undef,'referenceSource' => undef},'lastName' => 'Doe','additionalInfo' => {'country' => undef},'phoneNumber' => undef,'description' => undef,'emailAddress' => undef,'userID' => 'janedoe','firstName' => 'Jane','mailingAddress' => undef,'personDbId' => '41'},{'lastName' => 'Sanger','middleName' => undef,'emailAddress' => undef,'description' => undef,'phoneNumber' => undef,'additionalInfo' => {'country' => undef},'externalReferences' => {'referenceID' => undef,'referenceSource' => undef},'personDbId' => '42','mailingAddress' => undef,'firstName' => 'Fred','userID' => 'freddy'}]},'metadata' => {'pagination' => {'pageSize' => 10,'totalCount' => 3,'totalPages' => 1,'currentPage' => 0},'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::People'},{'message' => 'People result constructed','messageType' => 'INFO'}]}});
 
 $mech->get_ok('http://localhost:3010/brapi/v2/people/41');
