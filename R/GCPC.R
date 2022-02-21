@@ -1,4 +1,3 @@
-
 ################################################################################
 # Genomic prediction of cross performance for YamBase
 ################################################################################
@@ -326,7 +325,7 @@ for(i in 1:length(userResponse)){
   # save the fit model
 
   write(paste("I = ", i), stderr());
-  
+
   userModels[[i]] <- myMod
 }
 
@@ -402,7 +401,7 @@ ai <- 0
 di <- 0
 for(i in 1:length(userWeights)){
   write(paste("USER ADD EFF : ", userAddEff[[i]]), stderr())
-    write(paste("USER DOM EFF : ", userDomEff[[i]]), stderr())	
+    write(paste("USER DOM EFF : ", userDomEff[[i]]), stderr())
   write(paste("USER WEIGHT : ", userWeights[i]), stderr())
 
 
@@ -478,9 +477,19 @@ write("Done with calcCrossMean!!!!!!", stderr())
 #if(is.na(userSexes)){
 
   # only subset the number of crosses the user wishes to output
+  crossPlan <- as.data.frame(crossPlan)
+
+  crossPlan <- crossPlan[order(crossPlan[,3], decreasing = TRUE), ] # orders the plan by predicted merit
+  crossPlan[ ,1] <- rownames(GP)[crossPlan[ ,1]] # replaces internal ID with genotye file ID
+  crossPlan[ ,2] <- rownames(GP)[crossPlan[ ,2]] # replaces internal ID with genotye file ID
+  colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
+
   crossPlan[1:userNCrosses, ]
+  finalcrosses=crossPlan[1:userNCrosses, ]
   outputFile= paste(phenotypeFile, ".out", sep="")
-  
+
+  write.csv(finalcrosses, "Final Crosses.csv")
+
   write(paste("CROSS PLAN HEAD: ", head(crossPlan)), stderr())
   crossPlanDataFrame = data.frame(crossPlan)
   write(paste("CROSS PLAN OBJECT: ", str(crossPlanDataFrame)), stderr())
@@ -489,4 +498,3 @@ write("Done with calcCrossMean!!!!!!", stderr())
   write.table(crossPlanDataFrame, sep="\t", file=outputFile, row.names=TRUE, col.names=TRUE)
   write("DONE", stderr())
 #}
-
