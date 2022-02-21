@@ -356,7 +356,7 @@ jQuery(document).ready(function ($) {
         if (selected_tab == 'Using Lists'){
             accession_list_id = $('#list_div_list_select').val();
             fullParsedData = undefined;
-	    verify_accession_list(accession_list_id); 
+	    verify_accession_list(accession_list_id);
         } else if (selected_tab == 'Uploading a File'){
 	    var uploadFile = jQuery("#new_accessions_upload_file").val();
 	    jQuery('#upload_new_accessions_form').attr("action", "/ajax/accessions/verify_accessions_file");
@@ -364,7 +364,7 @@ jQuery(document).ready(function ($) {
                 alert("Please select a file");
                 return;
 	    }
-	    
+
 	    jQuery("#upload_new_accessions_form").submit();
         }
 	$('#add_accessions_dialog').modal("hide");
@@ -459,7 +459,7 @@ function openWindowWithPost(fuzzyResponse) {
 function verify_accession_list(accession_list_id) {
     accession_list = JSON.stringify(list.getList(accession_list_id));
     doFuzzySearch = jQuery('#fuzzy_check').attr('checked');
-    
+
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/accession_list/verify',
@@ -555,7 +555,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
     }
 
     jQuery('#review_found_matches_hide').click(function(){
-	
+
         if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
             jQuery('#review_fuzzy_matches_dialog').modal('show');
         } else {

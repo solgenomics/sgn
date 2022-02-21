@@ -195,7 +195,7 @@ sub analysis_year {
 	my $log = $self->analysis_log($c);
 	my $time = $log->{analysis_time};
 
-	my $time= (split(/\s+/, $time))[0];
+	$time= (split(/\s+/, $time))[0];
 	my $year = (split(/\//, $time))[2];
 
 	return $year;

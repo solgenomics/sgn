@@ -245,7 +245,7 @@ jQuery(document).ready(function(){
 
 
     jQuery('#related_stock_siblings_onswitch').one("click", function(){
-        var progeny_table = jQuery('#siblings').DataTable({
+        var siblings_table = jQuery('#siblings').DataTable({
             'ordering': false,
             'ajax':'/stock/'+ <% $stock_id %> + '/datatables/siblings',
             "fnInitComplete": function(oSettings, json) {
