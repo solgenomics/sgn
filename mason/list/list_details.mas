@@ -28,6 +28,19 @@ jQuery(document).ready( function() {
 
     var list_id = '<% $list_id %>';
 
+    var items_table = jQuery('#list_items_table').DataTable( {
+            'autoWidth': false,
+            'order': false,
+            'searching': false,
+            'ajax': '/ajax/list/seedlot_details/' + <% $list_id %>,
+            'columns': [
+                { title: "Name", "data": "seedlot_name" },
+                { title: "ID", "data": "seedlot_id" },
+            ],
+    });
+
+
+
 });
 
 

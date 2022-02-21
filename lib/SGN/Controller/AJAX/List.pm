@@ -1272,6 +1272,57 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
     }
 }
 
+
+sub seedlot_list_details :Path('/ajax/list/seedlot_details') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+
+    my $dbh = $c->dbc->dbh;
+    print STDERR "LIST DETAILS ID =".Dumper($list_id)."\n";
+
+    my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
+    my $seedlots = $list->elements();
+    my @seedlot_names = @$seedlots;
+    my @seedlot_details;
+    foreach my $seedlot_uniquename (@seedlot_names) {
+        my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
+        $schema,
+        $people_schema,
+        $phenome_schema,
+        undef,
+        undef,
+        $seedlot_uniquename,
+        undef,
+        undef,
+        undef,
+        undef,
+        undef,
+        1,
+        undef
+
+        );
+        my %seedlot_hash;
+        foreach my $sl (@$list) {
+            push @{$seedlot_hash{$sl->{source_stocks}->[0]->[1]}}, {
+                breeding_program_id => $sl->{breeding_program_id},
+                program => $sl->{breeding_program_name},
+                seedlot => [$sl->{seedlot_stock_uniquename}, $sl->{seedlot_stock_id}],
+                contents => [$sl->{source_stocks}->[0]->[1], $sl->{source_stocks}->[0]->[0]],
+                location => $sl->{location},
+                count => $sl->{current_count},
+                weight_gram => $sl->{current_weight_gram}
+            };
+            push @seedlot_details, \%seedlot_hash;
+        }
+    }
+    print STDERR "SEEDLOT DETAILS =".Dumper(\@seedlot_details)."\n";
+}
+
+
 #########
 1;
 #########
