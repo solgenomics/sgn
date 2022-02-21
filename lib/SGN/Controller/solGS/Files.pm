@@ -692,6 +692,21 @@ sub cache_file {
 
 }
 
+sub copy_to_tempfiles_subdir {
+    my ($self, $c, $file, $dir_name) = @_;
+
+    my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, $dir_name);
+    my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
+
+    mkpath ([$base_tmp_dir], 0, 0755);
+
+    $self->copy_file($file, $base_tmp_dir);
+    $file = catfile($tmp_dir, basename($file));
+
+    return $file;
+
+}
+
 
 sub create_file_id {
     my ($self, $c) = @_;
