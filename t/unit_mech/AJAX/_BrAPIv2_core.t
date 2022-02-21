@@ -154,8 +154,12 @@ foreach my $d (@{$response->{result}->{data}}) {
 	$coord = round($coord);
     }
 }
+my $rs = $f->bcs_schema()->resultset('NaturalDiversity::NdGeolocation')->search( undef, { columns => [ { nd_geolocation_id => { max => "nd_geolocation_id" }} ]} );
+my $row = $rs->next();
 
-$expected = { 'metadata'=> { 'datafiles'=> [], 'pagination'=> { 'currentPage'=> 0, 'totalPages'=> 1, 'totalCount'=> 1, 'pageSize'=> 10 }, 'status'=> [ { 'messageType'=> 'INFO', 'message'=> 'BrAPI base call found with page=0, pageSize=10' }, { 'messageType'=> 'INFO', 'message'=> 'Loading CXGN::BrAPI::v2::Locations' }, { 'messageType'=> 'INFO', 'message'=> 'Locations list result constructed' } ] }, 'result'=> { 'data'=> [ { 'topography'=> undef, 'additionalInfo'=> { 'breeding_program'=> '134', 'geodetic datum'=> undef, 'noaa_station_id'=> 'PALMIRA' }, 'locationDbId'=> '27', 'coordinateDescription'=> undef, 'abbreviation'=> 'L1', 'instituteAddress'=> '', 'environmentType'=> undef, 'externalReferences'=> undef, 'exposure'=> undef, 'coordinateUncertainty'=> undef, 'documentationURL'=> undef, 'slope'=> undef, 'locationType'=> 'Field', 'siteStatus'=> undef, 'locationName'=> 'Location 1', 'coordinates'=> { 'geometry'=> { 'type'=> 'Point', 'coordinates'=> [ '-77','42', '123' ] }, 'type'=> 'Feature' }, 'countryCode'=> 'PER', 'countryName'=> 'Peru', 'instituteName'=> '' } ]}};
+my $location_id = $row->nd_geolocation_id();
+
+$expected = { 'metadata'=> { 'datafiles'=> [], 'pagination'=> { 'currentPage'=> 0, 'totalPages'=> 1, 'totalCount'=> 1, 'pageSize'=> 10 }, 'status'=> [ { 'messageType'=> 'INFO', 'message'=> 'BrAPI base call found with page=0, pageSize=10' }, { 'messageType'=> 'INFO', 'message'=> 'Loading CXGN::BrAPI::v2::Locations' }, { 'messageType'=> 'INFO', 'message'=> 'Locations list result constructed' } ] }, 'result'=> { 'data'=> [ { 'topography'=> undef, 'additionalInfo'=> { 'breeding_program'=> '134', 'geodetic datum'=> undef, 'noaa_station_id'=> 'PALMIRA' }, 'locationDbId'=> $location_id, 'coordinateDescription'=> undef, 'abbreviation'=> 'L1', 'instituteAddress'=> '', 'environmentType'=> undef, 'externalReferences'=> undef, 'exposure'=> undef, 'coordinateUncertainty'=> undef, 'documentationURL'=> undef, 'slope'=> undef, 'locationType'=> 'Field', 'siteStatus'=> undef, 'locationName'=> 'Location 1', 'coordinates'=> { 'geometry'=> { 'type'=> 'Point', 'coordinates'=> [ '-77','42', '123' ] }, 'type'=> 'Feature' }, 'countryCode'=> 'PER', 'countryName'=> 'Peru', 'instituteName'=> '' } ]}};
 is_deeply($response, $expected, "POST locations test"  );
 
 
