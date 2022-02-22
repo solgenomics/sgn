@@ -1,13 +1,27 @@
 <%args>
+
 $list_id
+$list_name
+$list_description => undef
+$list_type
+$list_size
 
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<& /page/page_title.mas, title => "List Details" &>
+<& /page/page_title.mas, title => "Details for List '$list_name'" &>
 
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0,&>
+    <table class="table table-bordered table-hover">
+        <tr><td><b>List Name</b></td><td><% $list_name %></td></tr>
+        <tr><td><b>List ID</b></td><td><% $list_id %></td></tr>
+        <tr><td><b>Type</b></td><td><% $list_type %></td></tr>
+        <tr><td><b>Number of Items</b></td><td><% $list_size %></td></tr>
+        <tr><td><b>Description</b></td><td><% $list_description %></td></tr>
+    </table>
+</&>
 
 <&| /page/info_section.mas, title => 'List Items', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
