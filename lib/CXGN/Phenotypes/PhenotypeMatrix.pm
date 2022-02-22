@@ -475,8 +475,13 @@ sub get_phenotype_matrix_long {
 
 
 	my @sorted_traits = sort keys(%$unique_traits);
+
+	print STDERR "UNIQUE TRAITS: ".Dumper($unique_traits);
 	
         foreach my $d (@$data) {
+
+	    #print STDERR "DATA LINE: ".Dumper($d);
+	    
             my $cvterm = $d->{trait_name};
             if ($cvterm){
                 my $obsunit_id = $d->{obsunit_stock_id};
@@ -539,6 +544,47 @@ sub get_phenotype_matrix_long {
     print STDERR "Construct Pheno Matrix End:".localtime."\n";
     return @info;
 }
+
+
+sub get_phenotype_data {
+
+
+}
+
+sub get_phenotype_data_materialized_view {
+
+}
+
+sub get_phenotype_data_native {
+
+}
+
+sub format_data_wide {
+
+}
+
+sub format_data_long {
+
+}
+
+
+sub get_phenotype_matrix {
+
+    $self->get_phenotype_data();
+
+    $self->format_data_wide();
+    
+}
+
+
+sub get_phenotype_matrix_long {
+
+    $self->get_phenotype_data();
+
+    $self->format_data_long();
+
+}
+
 
 
 1;
