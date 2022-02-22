@@ -1337,6 +1337,89 @@ sub seedlot_list_details :Path('/ajax/list/seedlot_details') :Args(1) {
 }
 
 
+sub download_list_details : Path('/list/download_details') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $list_id = $c->req->param("list_id");
+
+    my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
+    my $list_name = $list->name();
+    my $seedlots = $list->elements();
+    my @seedlot_names = @$seedlots;
+    my @seedlot_ids;
+    my @seedlot_details;
+    my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+
+    foreach my $seedlot(@seedlot_names) {
+        my $seedlot_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot });
+        my $seedlot_id = $seedlot_rs->stock_id();
+        push @seedlot_ids, $seedlot_id;
+    }
+
+    foreach my $id (@seedlot_ids) {
+        my $content_name;
+        my $content_id;
+        my $content_type;
+        my $seedlot_obj = CXGN::Stock::Seedlot->new(
+            schema => $schema,
+            phenome_schema => $phenome_schema,
+            seedlot_id => $id
+        );
+
+        my $accessions = $seedlot_obj->accession();
+        my $crosses = $seedlot_obj->cross();
+
+        if ($accessions) {
+            $content_name = $accessions->[1];
+            $content_type = 'accession'
+        }
+        if ($crosses) {
+            $content_name = $crosses->[1];
+            $content_type = 'cross';
+        }
+
+        push @seedlot_details, "$seedlot_obj->uniquename()\t$content_name\t$content_type\t$seedlot_obj->box_name()\t$seedlot_obj->get_current_count_property()\t$seedlot_obj->get_current_weight_property()\t$seedlot_obj->quality()\n";
+    }
+
+    my $dl_token = $c->req->param("list_details_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    print STDERR "Token is: $dl_token\n";
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "list_details_download_XXXXX", UNLINK=> 0);
+
+    open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
+
+    print $FILE "Seedlot_Name\tContent_Name\tContent_type\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality\n";
+    my $row = 0;
+    foreach my $each_row (@seedlot_details) {
+        print $FILE $each_row;
+        $row++;
+    }
+    close $FILE;
+
+    $c->res->content_type("application/text");
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+
+    $c->res->header("Content-Disposition", qq[attachment; filename="$list_name.txt"]);
+    my $output = "";
+    open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
+    while (<$F>) {
+        $output .= $_;
+    }
+    close($F);
+
+    $c->res->body($output);
+}
+
+
+
 #########
 1;
 #########

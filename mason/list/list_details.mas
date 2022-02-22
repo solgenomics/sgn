@@ -20,6 +20,7 @@ $list_size
         <tr><td><b>Type</b></td><td><% $list_type %></td></tr>
         <tr><td><b>Number of Items</b></td><td><% $list_size %></td></tr>
         <tr><td><b>Description</b></td><td><% $list_description %></td></tr>
+        <tr><td><button class="btn btn-default" type="button" id="list_details_download">Download List Items</button></td><td></td></tr>
     </table>
 </&>
 
