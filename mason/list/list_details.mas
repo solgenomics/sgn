@@ -34,12 +34,14 @@ jQuery(document).ready( function() {
             'searching': false,
             'ajax': '/ajax/list/seedlot_details/' + <% $list_id %>,
             'columns': [
-                { title: "Name", "data": "seedlot_name" },
-                { title: "ID", "data": "seedlot_id" },
+                { title: "Seedlot Name", "data": "seedlot_name" },
+                { title: "Content Name", "data": "content_name" },
+                { title: "Box Name", "data": "box_name" },
+                { title: "Current Count", "data": "current_count" },
+                { title: "Current Weight", "data": "current_weight" },
+                { title: "Quality", "data": "quality" },
             ],
     });
-
-
 
 });
 
