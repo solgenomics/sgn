@@ -12,6 +12,8 @@ my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
     data_level=>$data_level,
     trait_list=>$trait_list,
     trial_list=>$trial_list,
+    program_list=>$self->program_list,
+    folder_list=>$self->folder_list,
     year_list=>$year_list,
     location_list=>$location_list,
     accession_list=>$accession_list,
@@ -64,6 +66,16 @@ has 'data_level' => (
 );
 
 has 'trial_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'program_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'folder_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
@@ -160,6 +172,8 @@ sub get_phenotype_matrix {
             data_level=>$self->data_level,
             trait_list=>$self->trait_list,
             trial_list=>$self->trial_list,
+            program_list=>$self->program_list,
+            folder_list=>$self->folder_list,
             year_list=>$self->year_list,
             location_list=>$self->location_list,
             accession_list=>$self->accession_list,
@@ -202,7 +216,7 @@ sub get_phenotype_matrix {
 
         foreach my $obs_unit (@$data){
             my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
-            my $synonyms = $obs_unit->{synonyms};
+            my $synonyms = $obs_unit->{germplasm_synonyms};
             my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
             my $available_germplasm_seedlots = $obs_unit->{available_germplasm_seedlots};
             my %available_germplasm_seedlots_uniquenames;

@@ -1004,15 +1004,17 @@ jQuery(document).ready(function ($) {
         var stock_type = jQuery('#select_stock_type').val();
 
         if (design_method == "CRD"){
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates completely a randomized design with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Completely Randomized design (CRD) with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
         } else if (design_method == "RCBD") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates Randomized Complete Block Design, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Randomized Complete Block design (RCBD), using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "RRC") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Resolvable Row-Column design (RRC), using the blocksdesign package in R. In addition to the one-way blocks it adds a constraint that no treatment may appear more than once in each row (latinization). Each row becomes an incomplete block.</p></div>');
         } else if (design_method == "Alpha") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Alpha design starting from design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Lattice") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>SIMPLE and TRIPLE lattice designs. It randomizes treatments in K x K lattice. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates SIMPLE and TRIPLE lattice designs using the design.lattice function from the agricolae R package. Randomizes treatments in K x K lattice. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Augmented") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Augmented design. Some treatments (checks) are replicated r times and other treatments (new) are replicated once. Creates plot entities in the database.</p></div>');
         } else if (design_method == "MAD") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Adjustments are calculated using data from all checks. Creates plot entities in the database.</p></div>');
         } else if (design_method == "greenhouse") {
@@ -1020,9 +1022,9 @@ jQuery(document).ready(function ($) {
         } else if (design_method == "splitplot") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment(s) distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database.</p></div>');
         } else if (design_method == "p-rep") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Has some treatments that are unreplicated and relies on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Westcott") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981).</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a fieldplan for an unreplicated design with genotypes randomly allocated within a field with checks following the method described by Westcott (1981).</p></div>');
         } else {
             jQuery('#create_trial_design_description_div').html('');
         }
@@ -1107,6 +1109,84 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         } else if (design_method == "RCBD") {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").show();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").show();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").show();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
+            $("#trial_multi-design_more_info").show();
+            $("#FieldMap").show();
+            $("#prephelp").hide();
+            $("#show_no_of_row_in_design").hide();
+            $("#show_no_of_col_in_design").hide();
+            $("#show_no_of_rep_times").hide();
+            $("#show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
+            $("#rep_count_section").hide();
+            $("#block_number_section").show();
+            $("#block_size_section").hide();
+            $("#max_block_size_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
+            $("#design_info").show();
+            $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
+            $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
+        } else if (design_method == "RRC") {
             if (stock_type == "accession") {
                 $("#show_list_of_accession_section").show();
                 $("#show_list_of_cross_section").hide();
@@ -2251,6 +2331,7 @@ jQuery(document).ready(function ($) {
 
     jQuery('#new_trial_add_treatments_submit').click(function(){
         var new_treatment_year = jQuery('#new_treatment_year').val();
+        var new_treatment_description = jQuery('#new_treatment_description').val();
         var new_treatment_date = jQuery('#new_treatment_date').val();
         var new_treatment_type = jQuery('#new_treatment_type').val();
         new_treatment_date = moment(new_treatment_date).format('YYYY/MM/DD HH:mm:ss')
@@ -2283,6 +2364,7 @@ jQuery(document).ready(function ($) {
                     trial[trial_treatment]["new_treatment_type"] = new_treatment_type;
                     trial[trial_treatment]["new_treatment_date"] = new_treatment_date;
                     trial[trial_treatment]["new_treatment_year"] = new_treatment_year;
+                    trial[trial_treatment]["new_treatment_description"] = new_treatment_description;
 
                     trial_treatments[trial_index] = trial;
                 } else {

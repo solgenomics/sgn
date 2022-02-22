@@ -6,7 +6,6 @@ use lib 't/lib';
 use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
-
 use Data::Dumper;
 use JSON;
 local $Data::Dumper::Indent = 0;
@@ -17,9 +16,15 @@ my $schema = $f->bcs_schema;
 my $mech = Test::WWW::Mechanize->new;
 my $response;
 
-$mech->get_ok('http://localhost:3010/stock/38843/datatables/trial_related_stock');
+my $accession_1_rs = $schema->resultset('Stock::Stock')->find({name =>'test_accession4'});
+my $accession_1_id = $accession_1_rs->stock_id();
+
+my $accession_2_rs = $schema->resultset('Stock::Stock')->find({name =>'new_test_crossP001'});
+my $accession_2_id = $accession_2_rs->stock_id();
+
+$mech->get_ok("http://localhost:3010/stock/$accession_1_id/datatables/trial_related_stock");
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 
 is_deeply($response, {'data'=> [
 ['<a href = "/stock/38857/view">test_trial21</a>', 'plot', 'test_trial21'],
@@ -28,9 +33,9 @@ is_deeply($response, {'data'=> [
 ['<a href = "/breeders/seedlot/41303">test_accession4_001</a>','seedlot','test_accession4_001']
 ]}, 'trial_related_stock');
 
-$mech->get_ok('http://localhost:3010/stock/38843/datatables/progenies');
+$mech->get_ok("http://localhost:3010/stock/$accession_1_id/datatables/progenies");
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 
 is_deeply($response, {'data'=> [
 ['female_parent', '<a href = "/stock/38846/view">new_test_crossP001</a>', 'new_test_crossP001'],
@@ -50,13 +55,23 @@ is_deeply($response, {'data'=> [
 ['female_parent', '<a href = "/stock/38877/view">test5P005</a>', 'test5P005']
 ]}, 'progenies');
 
-$mech->get_ok('http://localhost:3010/stock/38846/datatables/group_and_member');
+$mech->get_ok("http://localhost:3010/stock/$accession_2_id/datatables/group_and_member");
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 
 is_deeply($response, {'data'=> [
 ['<a href="/cross/38845">new_test_cross</a>', 'cross', 'new_test_cross']
 ]}, 'group_and_member');
 
+
+#test retrieving siblings
+$mech->get_ok("http://localhost:3010/stock/$accession_2_id/datatables/siblings");
+$response = decode_json $mech->content;
+#print STDERR Dumper $response;
+
+my $results = $response->{'data'};
+my @siblings = @$results;
+my $number_of_siblings = scalar(@siblings);
+is($number_of_siblings, 14);
 
 done_testing();

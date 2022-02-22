@@ -10,6 +10,7 @@ use POSIX qw(strftime);
 use Scalar::Util qw /weaken reftype/;
 use Storable qw/ nstore retrieve /;
 #BEGIN { extends 'Catalyst::Controller' }
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -70,8 +71,7 @@ sub get_dataset_trials_ids {
     my ($self, $c) = @_;
     my $dataset_id = $c->stash->{dataset_id};
 
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
     my $trials_ids = $data->{categories}->{trials};
 
     $c->controller('solGS::combinedTrials')->catalogue_combined_pops($c, $trials_ids);
@@ -107,8 +107,8 @@ sub get_dataset_genotypes_list {
     my ($self, $c, $dataset_id) = @_;
 
     $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
-	my $model = $self->get_model();
-	my $genotypes_ids = $model->get_genotypes_from_dataset($dataset_id);
+
+    my $genotypes_ids = $self->get_model($c)->get_genotypes_from_dataset($dataset_id);
    	my $genotypes  = $c->controller('solGS::List')->transform_uniqueids_genotypes($c, $genotypes_ids);
     $c->stash->{genotypes_list} = $genotypes;
     $c->stash->{genotypes_ids}  = $genotypes_ids;
@@ -120,8 +120,7 @@ sub submit_dataset_training_data_query {
 
     my $dataset_id = $c->stash->{dataset_id};
 
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
 
     my $geno_protocol = $self->get_dataset_genotyping_protocol($c);
 
@@ -155,14 +154,13 @@ sub get_dataset_phenotype_data {
 
     my $dataset_id = $c->stash->{dataset_id};
 
-    #$self->get_dataset_plots_list($c);
 
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
 
     if ($data->{categories}->{plots}->[0])
     {
-	$c->stash->{plots_names} = $data->{categories}->{plots};
+	$c->stash->{plots_ids} = $data->{categories}->{plots};
 
 	$c->controller('solGS::List')->plots_list_phenotype_file($c);
 	$c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
@@ -180,13 +178,11 @@ sub create_dataset_pheno_data_query_jobs {
     my ($self, $c) = @_;
 
     my $dataset_id = $c->stash->{dataset_id};
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
 
     if ($data->{categories}->{plots}->[0])
     {
-	$c->stash->{plots_names} = $data->{categories}->{plots};
-	my $plots = $data->{categories}->{plots};
+	$c->stash->{plots_ids} = $data->{categories}->{plots};
 
 	$c->controller('solGS::List')->plots_list_phenotype_query_job($c);
 	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{plots_list_phenotype_query_job};
@@ -209,8 +205,7 @@ sub create_dataset_geno_data_query_jobs {
 
     my $dataset_id = $c->stash->{dataset_id};
 
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
 
     my $geno_protocol = $self->get_dataset_genotyping_protocol($c);
 
@@ -276,7 +271,16 @@ sub dataset_genotype_query_jobs {
     nstore $args, $args_file
 		or croak "data query script: $! serializing genotype lists genotype query details to $args_file ";
 
+        my $dbhost = $c->config->{dbhost};
+        my $dbname = $c->config->{dbname};
+        my $dbpass = $c->config->{dbpass};
+        my $dbuser = $c->config->{dbuser};
+
     my $cmd = 'mx-run solGS::queryJobs '
+        . ' --dbhost ' . $dbhost
+        .' --dbname ' . $dbname
+        .' --dbuser ' . $dbuser
+        .' --dbpass ' . $dbpass
     	. ' --data_type genotype '
     	. ' --population_type ' . $pop_type
     	. ' --args_file ' . $args_file;
@@ -298,8 +302,7 @@ sub get_dataset_genotyping_protocol {
 
     $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
 
-    my $model = $self->get_model();
-    my $data = $model->get_dataset_data($dataset_id);
+    my $data = $self->get_model($c)->get_dataset_data($dataset_id);
 
     my $protocol_id = $data->{categories}->{genotyping_protocols};
 
@@ -319,9 +322,7 @@ sub get_dataset_plots_list {
     my ($self, $c) = @_;
 
     my $dataset_id = $c->stash->{dataset_id};
-
-    my $model = $self->get_model();
-    my $plots = $model->get_dataset_plots_list($dataset_id);
+    my $plots = $self->get_model($c)->get_dataset_plots_list($dataset_id);
 
     $c->stash->{plots_names} = $plots;
     $c->controller('solGS::List')->get_plots_list_elements_ids($c);
@@ -331,12 +332,10 @@ sub get_dataset_plots_list {
 
 sub get_model {
     my $self = shift;
+    my $c = shift;
 
-    my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context',
-					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")
-					      });
+    return $c->controller('solGS::Search')->model($c);
 
-    return $model;
 }
 
 
@@ -407,7 +406,7 @@ sub get_dataset_name {
     $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
     $dataset_id =~ s/\w+_//g;
 
-    my $dataset_name = $c->model('solGS::solGS')->get_dataset_name($dataset_id);
+    my $dataset_name = $c->controller('solGS::Search')->model($c)->get_dataset_name($dataset_id);
     return $dataset_name;
 
 
@@ -456,7 +455,7 @@ sub dataset_plots_list_phenotype_file {
     my ($self, $c) = @_;
 
     my $dataset_id  = $c->stash->{dataset_id};
-    my $plots_ids = $c->model('solGS::solGS')->get_dataset_plots_list($dataset_id);
+    my $plots_ids = $c->controller('solGS::Search')->model($c)->get_dataset_plots_list($dataset_id);
     my $file_id = $self->dataset_file_id($c);
 
     $c->stash->{pop_id} = $file_id;

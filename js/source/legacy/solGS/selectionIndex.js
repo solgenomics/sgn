@@ -18,7 +18,7 @@ solGS.sIndex = {
 	var trainingPopIdName = JSON.stringify(modelData);
 
 	var  popsList =  '<dl id="selected_population" class="si_dropdown">'
-            + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
+            + '<dt> <a href="#"><span>Select a population</span></a></dt>'
             + '<dd><ul>'
             + '<li>'
             + '<a href="#">' + modelData.name + '<span class=value>' + trainingPopIdName + '</span></a>'
@@ -134,19 +134,15 @@ solGS.sIndex = {
 	for (var i = 0; i < selPopsRows.length; i++) {
             var row    = selPopsRows[i];
             var popRow = row.innerHTML;
-
-            predictedPop = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
-
-            if (predictedPop) {
-		if (predictedPop.length) {
-                    var selPopsInput  = row.getElementsByTagName("input")[0];
-                    var idPopName     = selPopsInput.value;
-                    var idPopNameCopy = idPopName;
-                    idPopNameCopy     = JSON.parse(idPopNameCopy);
-                    var popName       = idPopNameCopy.name;
-
-                    popsList += '<li><a href="#">' + popName + '<span class=value>' + idPopName + '</span></a></li>';
-		}
+            // predictedPop = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
+            var predict = popRow.match(/predict/ig);
+            if (!predict) {
+                var selPopsInput  = row.getElementsByTagName("input")[0];
+                var idPopName     = selPopsInput.value;
+                var idPopNameCopy = idPopName;
+                idPopNameCopy     = JSON.parse(idPopNameCopy);
+                var popName       = idPopNameCopy.name;
+                popsList += '<li><a href="#">' + popName + '<span class=value>' + idPopName + '</span></a></li>';
             }
 	}
 
@@ -442,14 +438,14 @@ solGS.sIndex = {
 	var listTypeSelPopsRows  = listTypeSelPopsTable[0].rows;
 	var predictedListTypePops = [];
 
-	var popsList ='';
+	var popsList = '';
 	for (var i = 1; i < listTypeSelPopsRows.length; i++) {
         var row    = listTypeSelPopsRows[i];
         var popRow = row.innerHTML;
 
-        predictedListTypePops = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
-
-        if (predictedListTypePops) {
+        // predictedListTypePops = popRow.match(/\/solgs\/selection\/|\/solgs\/combined\/model\/\d+\/selection/g);
+        var predict = popRow.match(/predict/ig);
+        if (!predict) {
     		var selPopsInput  = row.getElementsByTagName("input")[0];
     		var idPopName     = selPopsInput.value;
     		var idPopNameCopy = idPopName;
@@ -459,9 +455,8 @@ solGS.sIndex = {
     		popsList += '<li>'
                         + '<a href="#">' + popName + '<span class=value>' + idPopName + '</span></a>'
                         + '</li>';
-        } else {
-		    popsList = undefined;
         }
+
 	}
 
 	return popsList;

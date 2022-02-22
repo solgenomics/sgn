@@ -45,8 +45,17 @@ jQuery(document).ready(function () {
 
     jQuery('#new_trial_add_treatments_continue').click(function(){
         var treatment_name = jQuery('#new_treatment_name').val();
+        var treatment_description = jQuery('#new_treatment_description').val();
         var treatment_unit = jQuery('#new_treatment_unit').val();
 
+        if (jQuery('#new_treatment_name') == '') {
+            alert('Please give a treatment name.');
+            return false;
+        }
+        if (jQuery('#new_treatment_description') == '') {
+            alert('Please give a treatment description.');
+            return false;
+        }
         if (jQuery('#new_treatment_date') == '') {
             alert('Please select a date.');
             return false;
@@ -119,6 +128,7 @@ jQuery(document).ready(function () {
         }
 
         var new_treatment_year = jQuery('#new_treatment_year').val();
+        var new_treatment_description = jQuery('#new_treatment_description').val();
         var new_treatment_date = jQuery('#new_treatment_date').val();
         var new_treatment_type = jQuery('#new_treatment_type').val();
         new_treatment_date = moment(new_treatment_date).format('YYYY/MM/DD HH:mm:ss')
@@ -153,7 +163,7 @@ jQuery(document).ready(function () {
                     else if (plant_name) {
                         new_treatment_stocks = [plant_name];
                     }
-                } 
+                }
 
                 if (plant_name) {
                     if(plant_names.length > 0){
@@ -195,6 +205,7 @@ jQuery(document).ready(function () {
                 }
                 trial[trial_treatment]["new_treatment_stocks"] = new_treatment_stocks;
                 trial[trial_treatment]["new_treatment_type"] = new_treatment_type;
+                trial[trial_treatment]["new_treatment_description"] = new_treatment_description;
                 trial[trial_treatment]["new_treatment_date"] = new_treatment_date;
                 trial[trial_treatment]["new_treatment_year"] = new_treatment_year;
             }

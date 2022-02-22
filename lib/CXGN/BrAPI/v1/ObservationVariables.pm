@@ -207,7 +207,10 @@ sub search {
 		my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
 		my $categories = $trait->categories;
 		my @brapi_categories = split '/', $categories;
-
+        foreach (@$synonym){
+            $_ =~ s/ EXACT \[\]//;
+            $_ =~ s/\"//g;
+        }
         my %ontologyReference = (
             ontologyDbId => qq|$db_id|,
             ontologyName => $db_name,

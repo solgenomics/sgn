@@ -70,6 +70,12 @@ has 'progenies' => (isa => 'Ref',
 		    is => 'rw',
     );
 
+has 'file_type' => (isa => 'Str',
+    is => 'rw',
+    required => 0,
+);
+
+
 
 sub BUILD {
     my $self = shift;
@@ -394,7 +400,7 @@ sub get_progeny_info {
     my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename, progeny.stock_id, progeny.uniquename, stock_relationship1.value
         FROM stock_relationship as stock_relationship1
         INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id) AND stock_relationship1.type_id = ?
-        INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ?
+        INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id) AND progeny.type_id = ? AND progeny.is_obsolete <> 't'
         LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
         LEFT JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id)
         $where_clause ";
@@ -696,7 +702,7 @@ sub get_crosses_and_details_in_crossingtrial {
         LEFT JOIN stock AS stock6 ON (stock_relationship5.subject_id = stock6.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship6 ON (stock1.stock_id = stock_relationship6.object_id) AND stock_relationship6.type_id = ?
         LEFT JOIN stock AS stock7 ON (stock_relationship6.subject_id = stock7.stock_id)
-        WHERE nd_experiment_project.project_id = ? ";
+        WHERE nd_experiment_project.project_id = ? ORDER BY cross_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -730,7 +736,7 @@ sub get_cross_properties_trial {
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
         LEFT JOIN stockprop AS stockprop1 ON (stock.stock_id = stockprop1.stock_id) AND stockprop1.type_id = ?
         LEFT JOIN stockprop AS stockprop2 ON (stock.stock_id = stockprop2.stock_id) AND stockprop2.type_id = ?
-        WHERE nd_experiment_project.project_id = ?";
+        WHERE nd_experiment_project.project_id = ? ORDER BY stock.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -773,7 +779,7 @@ sub get_seedlots_from_crossingtrial {
         JOIN stock as stock1 on (nd_experiment_stock.stock_id = stock1.stock_id)
         LEFT JOIN stock_relationship ON (stock1.stock_id = stock_relationship.subject_id) and stock_relationship.type_id = ?
         LEFT JOIN stock as stock2 ON (stock_relationship.object_id = stock2.stock_id)
-        WHERE nd_experiment_project.project_id = ?";
+        WHERE nd_experiment_project.project_id = ? ORDER BY stock1.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -821,7 +827,7 @@ sub get_cross_progenies_trial {
         JOIN stock ON (nd_experiment_stock.stock_id = stock.stock_id)
         LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
         WHERE nd_experiment_project.project_id = ? GROUP BY cross_id) AS progeny_count_table
-        ON (cross_table.cross_id = progeny_count_table.cross_id)";
+        ON (cross_table.cross_id = progeny_count_table.cross_id) ORDER BY cross_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -1283,7 +1289,6 @@ sub get_cross_additional_info_trial {
         WHERE nd_experiment_project.project_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    my $h = $schema->storage->dbh()->prepare($q);
 
     $h->execute($cross_combination_typeid, $cross_additional_info_typeid, $trial_id);
 
@@ -1343,6 +1348,62 @@ sub get_nd_experiment_id_with_type_cross_experiment {
 
     return $experiment_id;
 }
+
+
+=head2 get_intercross_file_metadata
+
+
+=cut
+
+sub get_intercross_file_metadata {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $crossing_experiment_id = $self->trial_id();
+    my $file_type = $self->file_type();
+    my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial', 'project_type')->cvterm_id();
+    my $file_metadata_json_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'file_metadata_json', 'project_property')->cvterm_id;
+
+    my $projectprop_rs = $schema->resultset("Project::Projectprop")->find({ project_id => $crossing_experiment_id, type_id => $file_metadata_json_type_id });
+
+    my @file_ids;
+    my @file_info = ();
+    my $dbh = $schema->storage->dbh();
+    if ($projectprop_rs){
+        my $intercross_files;
+        my $file_metadata_json = $projectprop_rs->value();
+        my $file_metadata = decode_json$file_metadata_json;
+
+        if ($file_type eq 'intercross_download') {
+            $intercross_files = $file_metadata->{'intercross_download'};
+        } elsif ($file_type eq 'intercross_upload') {
+            $intercross_files = $file_metadata->{'intercross_upload'};
+        }
+
+        if ($intercross_files) {
+            my %intercross_hash = %{$intercross_files};
+            @file_ids = keys %intercross_hash;
+            if (scalar @file_ids > 0) {
+                foreach my $id (@file_ids){
+                    my @each_row = ();
+                    my $q = "SELECT f.file_id, m.create_date, p.sp_person_id, p.username, f.basename, f.dirname, f.filetype
+                        FROM metadata.md_files AS f
+                        JOIN metadata.md_metadata as m ON (f.metadata_id = m.metadata_id)
+                        JOIN sgn_people.sp_person as p ON (p.sp_person_id = m.create_person_id) WHERE f.file_id = ?
+                        ORDER BY f.file_id ASC";
+
+                    my $h = $dbh->prepare($q);
+                    $h->execute($id);
+                    @each_row = $h->fetchrow_array();
+                    push @file_info, [@each_row];
+                }
+            }
+        }
+    }
+
+    return \@file_info;
+
+}
+
 
 
 1;

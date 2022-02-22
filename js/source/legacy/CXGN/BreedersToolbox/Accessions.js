@@ -281,7 +281,7 @@ jQuery(document).ready(function ($) {
             dataType: "json",
             data: {
                 'species_name': speciesName,
-            },
+            }
             // success: function (response) {
             //     if (response.error) {
             //         alert(response.error);
@@ -318,11 +318,11 @@ jQuery(document).ready(function ($) {
             if (!accessionsToAdd || accessionsToAdd.length == 0) {
                 alert("No accessions to add");
                 return;
-            }
+	    }
 
 	    verify_species_name().then(
 		function(r) {
-		    if (r.error) { alert('Please correct the species name and try again.'); }
+		    if (r.error) { alert(r.error); }
 		    else {
 			for(var i=0; i<accessionsToAdd.length; i++){
 			    infoToAdd.push({
@@ -334,15 +334,19 @@ jQuery(document).ready(function ($) {
 			    });
 			    speciesNames.push(speciesName);
 			}
-			add_accessions(infoToAdd, speciesNames)
-			$('#review_absent_dialog').modal("hide");
 		    }
+		    add_accessions(infoToAdd, speciesNames)
+		    $('#review_absent_dialog').modal("hide");
+
 		},
 		function(r) {
 		    alert('ERROR! Try again later.');
 		}
 	    );
 	}
+
+	add_accessions(infoToAdd, speciesNames)
+	$('#review_absent_dialog').modal("hide");
 
         //window.location.href='/breeders/accessions';
     });
@@ -352,7 +356,7 @@ jQuery(document).ready(function ($) {
         if (selected_tab == 'Using Lists'){
             accession_list_id = $('#list_div_list_select').val();
             fullParsedData = undefined;
-	    verify_accession_list(accession_list_id); 
+	    verify_accession_list(accession_list_id);
         } else if (selected_tab == 'Uploading a File'){
 	    var uploadFile = jQuery("#new_accessions_upload_file").val();
 	    jQuery('#upload_new_accessions_form').attr("action", "/ajax/accessions/verify_accessions_file");
@@ -360,7 +364,7 @@ jQuery(document).ready(function ($) {
                 alert("Please select a file");
                 return;
 	    }
-	    
+
 	    jQuery("#upload_new_accessions_form").submit();
         }
 	$('#add_accessions_dialog').modal("hide");
@@ -455,7 +459,7 @@ function openWindowWithPost(fuzzyResponse) {
 function verify_accession_list(accession_list_id) {
     accession_list = JSON.stringify(list.getList(accession_list_id));
     doFuzzySearch = jQuery('#fuzzy_check').attr('checked');
-    
+
     jQuery.ajax({
         type: 'POST',
         url: '/ajax/accession_list/verify',
@@ -551,17 +555,17 @@ function review_verification_results(doFuzzySearch, verifyResponse, accession_li
     }
 
     jQuery('#review_found_matches_hide').click(function(){
-	
+
         if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
             jQuery('#review_fuzzy_matches_dialog').modal('show');
         } else {
             jQuery('#review_fuzzy_matches_dialog').modal('hide');
-	    alert(JSON.stringify(verifyResponse.absent));
-	    alert(JSON.stringify(infoToAdd));
+	    //alert(JSON.stringify(verifyResponse.absent));
+	    //alert(JSON.stringify(infoToAdd));
             if (verifyResponse.absent.length > 0 || infoToAdd.length>0){
                 populate_review_absent_dialog(verifyResponse.absent, infoToAdd);
             } else {
-                alert('All accessions in your list already exist in the database. 3');
+                alert('All accessions in your list already exist in the database. (3)');
             }
         }
     });

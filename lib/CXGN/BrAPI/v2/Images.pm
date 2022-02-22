@@ -276,6 +276,7 @@ sub image_metadata_store {
         my $imageName = $params->{imageName} ? $params->{imageName} : "";
         my $description = $params->{description} ? $params->{description} : "";
         my $imageFileName = $params->{imageFileName} ? $params->{imageFileName} : "";
+        print STDERR "Image filename in metadata store is: $imageFileName\n";
         my $mimeType = $params->{mimeType} ? $params->{mimeType} : undef;
         my $observationUnitDbId = $params->{observationUnitDbId} ? $params->{observationUnitDbId} : undef;
         my $descriptiveOntologyTerms_arrayref = $params->{descriptiveOntologyTerms} || ();
@@ -415,10 +416,11 @@ sub image_metadata_store {
         my $mimetype = _get_mimetype($_->{'image_file_ext'});
         my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $_->{'image_id'});
         my @cvterms = $image->get_cvterms();
-        my $url = $hostname . $image->get_image_url('medium');
-        my $filename = $image->get_filename();
-        my $size = (stat($filename))[7];
-        my ($width, $height) = imgsize($filename);
+
+        # my $url = $hostname . $image->get_image_url('medium');
+        # my $filename = $image->get_filename();
+        # my $size = (stat($filename))[7];
+        # my ($width, $height) = imgsize($filename);
 
         # Process cvterms
         my @cvterm_names;
@@ -447,12 +449,12 @@ sub image_metadata_store {
             externalReferences => [],
             imageDbId => qq|$_->{'image_id'}|,
             imageFileName => $_->{'image_original_filename'},
-            imageFileSize => $size,
-            imageHeight => $height,
-            imageWidth => $width,
+            # imageFileSize => $size,
+            # imageHeight => $height,
+            # imageWidth => $width,
             imageName => $_->{'image_name'},
             imageTimeStamp => $_->{'image_modified_date'},
-            imageURL => $url,
+            # imageURL => $url,
             mimeType => _get_mimetype($_->{'image_file_ext'}),
             observationUnitDbId => qq|$_->{'stock_id'}|,
             # location and linked phenotypes are not yet available for images in the db
@@ -495,23 +497,27 @@ sub image_data_store {
 
     my ($search_result, $total_count) = $image_search->search();
     my $file_extension = @$search_result[0]->{'image_file_ext'};
+    my $original_filename = @$search_result[0]->{'image_original_filename'};
 
     if (! defined $file_extension) {
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Unsupported image type, %s', $file_extension));
     }
 
     my $tempfile = $inputs->filename();
-    my $file_with_extension = $tempfile.$file_extension;
-    rename($tempfile, $file_with_extension);
+    my ($filename, $tempdir, $extension) = fileparse($tempfile);
 
-    print STDERR "TEMP FILE : $tempfile\n";
+    my $updated_tempfile_name = $tempdir . $original_filename;
+
+    print STDERR "\n\n Updated tempfile name is $updated_tempfile_name\n";
+
+    rename($tempfile, $updated_tempfile_name);
 
     # process image data through CXGN::Image...
     #
     my $cxgn_img = CXGN::Image->new(dbh=>$self->bcs_schema()->storage()->dbh(), image_dir => $image_dir, image_id => $image_id);
 
     eval {
-        $cxgn_img->process_image($file_with_extension);
+        $cxgn_img->process_image($updated_tempfile_name);
     };
 
     if ($@) {

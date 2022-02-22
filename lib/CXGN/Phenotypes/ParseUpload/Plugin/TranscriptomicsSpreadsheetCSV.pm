@@ -73,16 +73,37 @@ sub validate {
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
-        $parse_result{'error'} = "Could not parse header row.";
-        print STDERR "Could not parse header.\n";
-        return \%parse_result;
+        open $fh, "<", $filename;
+        binmode $fh; # for Windows
+        if ($csv->header($fh) && $csv->column_names) {
+            @columns = $csv->column_names;
+        }
+        else {
+            $parse_result{'error'} = "Could not parse header row.";
+            print STDERR "Could not parse header.\n";
+            return \%parse_result;
+        }
     }
-    
+
     my $header_col_1 = shift @columns;
     if ( $header_col_1 ne "sample_name" ) {
       $parse_result{'error'} = "First cell must be 'sample_name'. Please, check your file.";
       print STDERR "First cell must be 'sample_name'\n";
       return \%parse_result;
+    }
+
+    my $header_col_2 = shift @columns;
+    if ($header_col_2 ne "device_id") {
+        $parse_result{'error'} = "Second cell must be 'device_id'. Please, check your file.";
+        print STDERR "Second cell must be 'device_id'\n";
+        return \%parse_result;
+    }
+
+    my $header_col_3 = shift @columns;
+    if ($header_col_3 ne "comments") {
+        $parse_result{'error'} = "Third cell must be 'comments'. Please, check your file.";
+        print STDERR "Third cell must be 'comments'\n";
+        return \%parse_result;
     }
 
     my @transcripts = @columns;
@@ -94,6 +115,8 @@ sub validate {
             @fields = $csv->fields();
         }
         my $sample_name = shift @fields;
+        my $device_id = shift @fields;
+        my $comments = shift @fields;
         push @samples, $sample_name;
 
         foreach (@fields) {
@@ -123,7 +146,7 @@ sub validate {
         print STDERR "Could not parse header.\n";
         return \%parse_result;
     }
-    
+
     if ( $columns[0] ne "transcript_name" ||
         $columns[1] ne "chromosome" ||
         $columns[2] ne "start_position" ||
@@ -218,24 +241,11 @@ sub parse {
     my %parse_result;
 
     my $csv = Text::CSV->new({ sep_char => ',' });
-    my @header;
-    my @fields;
-    my @wave;
-    my @header_row;
-    my $header_column_number = 0;
-    my %header_column_info; #column numbers of key info indexed from 0;
     my %observation_units_seen;
     my %traits_seen;
     my @observation_units;
     my @traits;
     my %data;
-    my %metadata_hash;
-    my $row_number = 0;
-    my $col_number=0;
-    my $number=0;
-    my $size;
-    my $count;
-    my $num_cols;
     my %header_column_details;
 
     open(my $fh, '<', $filename)
@@ -247,29 +257,48 @@ sub parse {
         return \%parse_result;
     }
 
-    while (my $row = $csv->getline ($fh)) {
-        # print STDERR "Row is ".Dumper($row)."\n";
-        if ( $row_number == 0 ) {
-            @header = @{$row};
-            $num_cols = scalar(@header);
-        } elsif ( $row_number > 0 ) {# get data
-            my @columns = @{$row};
-            my $observationunit_name = $columns[0];
-            $observation_units_seen{$observationunit_name} = 1;
-            # print "The plots are $observationunit_name\n";
-            my %spectra;
-            foreach my $col (1..$num_cols-1){
-                my $column_name = $header[$col];
-                if ($column_name ne ''){
-                    my $transcript_name = $column_name;
-                    $traits_seen{$transcript_name}++;
-                    my $transcipt_value = $columns[$col];
-                    $spectra{$transcript_name} = $transcipt_value;
-                }
-            }
-            push @{$data{$observationunit_name}->{'transcriptomics'}->{'transcripts'}}, \%spectra;
+    my $header_row = <$fh>;
+    my @header;
+    if ($csv->parse($header_row)) {
+        @header = $csv->fields();
+    } else {
+        open $fh, "<", $filename;
+        binmode $fh; # for Windows
+        if ($csv->header($fh) && $csv->column_names) {
+            @header = $csv->column_names;
         }
-        $row_number++;
+        else {
+            $parse_result{'error'} = "Could not parse header row.";
+            print STDERR "Could not parse header.\n";
+            return \%parse_result;
+        }
+    }
+    my $num_cols = scalar(@header);
+
+    while (my $line = <$fh>) {
+        my @columns;
+        if ($csv->parse($line)) {
+            @columns = $csv->fields();
+        }
+
+        my $observationunit_name = $columns[0];
+        my $device_id = $columns[1];
+        my $comments = $columns[2];
+        $observation_units_seen{$observationunit_name} = 1;
+        # print "The plots are $observationunit_name\n";
+        my %spectra;
+        foreach my $col (3..$num_cols-1){
+            my $column_name = $header[$col];
+            if ($column_name ne ''){
+                my $transcript_name = $column_name;
+                $traits_seen{$transcript_name}++;
+                my $transcipt_value = $columns[$col];
+                $spectra{$transcript_name} = $transcipt_value;
+            }
+        }
+        $data{$observationunit_name}->{'transcriptomics'}->{'device_id'} = $device_id;
+        $data{$observationunit_name}->{'transcriptomics'}->{'comments'} = $comments;
+        push @{$data{$observationunit_name}->{'transcriptomics'}->{'transcripts'}}, \%spectra;
     }
     close($fh);
 
@@ -282,15 +311,22 @@ sub parse {
         return \%parse_result;
     }
 
-    my $header_row = <$fh>;
+    $header_row = <$fh>;
     my @columns;
     # print STDERR Dumper $csv->fields();
     if ($csv->parse($header_row)) {
         @columns = $csv->fields();
     } else {
-        $parse_result{'error'} = "Could not parse header row.";
-        print STDERR "Could not parse header.\n";
-        return \%parse_result;
+        open $fh, "<", $nd_protocol_filename;
+        binmode $fh; # for Windows
+        if ($csv->header($fh) && $csv->column_names) {
+            @columns = $csv->column_names;
+        }
+        else {
+            $parse_result{'error'} = "Could not parse header row of nd_protocol_file.";
+            print STDERR "Could not parse header of nd_protocol_file.\n";
+            return \%parse_result;
+        }
     }
 
     while (my $line = <$fh>) {

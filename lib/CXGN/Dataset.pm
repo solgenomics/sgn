@@ -288,7 +288,7 @@ sub BUILD {
     $self->breeder_search($bs);
 
     if ($self->has_sp_dataset_id()) {
-        print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
+        #print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
         my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
         if (!$row) { die "The dataset with id ".$self->sp_dataset_id()." does not exist"; }
         my $dataset = JSON::Any->decode($row->dataset());
@@ -483,15 +483,15 @@ sub to_hashref {
 sub store {
     my $self = shift;
 
-    print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
+    #print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
     if (!$self->has_sp_dataset_id()) {
-	print STDERR "Creating new dataset row... ".$self->sp_dataset_id()."\n";
+	#print STDERR "Creating new dataset row... ".$self->sp_dataset_id()."\n";
 	my $row = $self->people_schema()->resultset("SpDataset")->create($self->to_hashref());
 	$self->sp_dataset_id($row->sp_dataset_id());
 	return $row->sp_dataset_id();
     }
     else {
-	print STDERR "Updating dataset row ".$self->sp_dataset_id()."\n";
+	#print STDERR "Updating dataset row ".$self->sp_dataset_id()."\n";
 	my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
 	if ($row) {
 	    $row->name($self->name());
@@ -573,10 +573,15 @@ sub retrieve_genotypes {
     my $marker_name_list = shift || [];
 
     my $accessions = $self->retrieve_accessions();
+
+    #print STDERR "ACCESSIONS: ".Dumper($accessions);
+
     my @accession_ids;
     foreach (@$accessions) {
         push @accession_ids, $_->[0];
     }
+
+    #print STDERR "ACCESSION IDS: ".Dumper(\@accession_ids);
 
     my $trials = $self->retrieve_trials();
     my @trial_ids;
@@ -584,12 +589,19 @@ sub retrieve_genotypes {
         push @trial_ids, $_->[0];
     }
 
+    my $genotyping_protocol_ref = $self->retrieve_genotyping_protocols();
+    my @protocols;
+    foreach my $p (@$genotyping_protocol_ref) {
+	push @protocols, $p->[0];
+
+    }
+
     my $genotypes_search = CXGN::Genotype::Search->new(
         bcs_schema => $self->schema(),
         people_schema=>$self->people_schema,
         accession_list => \@accession_ids,
         trial_list => \@trial_ids,
-        protocol_id_list => [$protocol_id],
+        protocol_id_list => \@protocols,
         chromosome_list => $chromosome_list,
         start_position => $start_position,
         end_position => $end_position,
@@ -702,6 +714,7 @@ sub retrieve_high_dimensional_phenotypes {
     if (!$nd_protocol_id) {
         die "Must provide the protocol id!\n";
     }
+
     if (!$high_dimensional_phenotype_type) {
         die "Must provide the high dimensional phenotype type!\n";
     }
@@ -734,6 +747,7 @@ sub retrieve_high_dimensional_phenotypes {
         plot_list=>\@plot_ids,
         plant_list=>\@plant_ids,
     });
+
     my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
 
     return ($data_matrix, $identifier_metadata, $identifier_names);
@@ -896,7 +910,7 @@ sub retrieve_trials {
         push @$criteria, "trials";
         $trials = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trials"));
     }
-    print STDERR "TRIALS: ".Dumper($trials);
+    #print STDERR "TRIALS: ".Dumper($trials);
     return $trials->{results};
 }
 
@@ -936,16 +950,18 @@ sub retrieve_years {
     my $self = shift;
     my @years;
     if ($self->years() && scalar(@{$self->years()})>0) {
-	return $self->years();
+        foreach my $a (@{$self->years()}) {
+            push @years, [$a, $a];
+        }
     }
     else {
         my $criteria = $self->get_dataset_definition();
         push @$criteria, "years";
         my $year_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("years"));
-        my $year_list = $year_data->{result};
+        my $year_list = $year_data->{results};
 
         foreach my $y (@$year_list) {
-            push @years, $y->[0];
+            push @years, [$y->[0], $y->[0]];
         }
     }
     return \@years;
@@ -959,21 +975,21 @@ retrieves years as a listref of listrefs
 
 sub retrieve_locations {
     my $self = shift;
-    my @locations;
+    my $locations;
     if ($self->locations && scalar(@{$self->locations})>0) {
-        return $self->locations();
+        my @locs;
+        my $rs = $self->schema->resultset("NaturalDiversity::NdGeolocation")->search({'nd_geolocation_id' => {-in => $self->locations}});
+        while (my $a = $rs->next()) {
+            push @locs, [$a->nd_geolocation_id, $a->description];
+        }
+        return \@locs;
     }
     else {
         my $criteria = $self->get_dataset_definition();
         push @$criteria, "locations";
-        my $location_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("locations"));
-        my $location_list = $location_data->{result};
-
-        foreach my $y (@$location_list) {
-            push @locations, $y->[0];
-        }
+        $locations = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("locations"));
     }
-    return \@locations;
+    return $locations->{results};
 }
 
 =head2 retrieve_breeding_programs
@@ -989,21 +1005,21 @@ sub retrieve_locations {
 
 sub retrieve_breeding_programs {
     my $self = shift;
-    my @breeding_programs;
+    my $breeding_programs;
     if ($self->breeding_programs && scalar(@{$self->breeding_programs})>0) {
-        return $self->breeding_programs();
+        my @projects;
+        my $rs = $self->schema->resultset("Project::Project")->search({'project_id' => {-in => $self->breeding_programs}});
+        while (my $a = $rs->next()) {
+            push @projects, [$a->project_id, $a->name];
+        }
+        return \@projects;
     }
     else {
         my $criteria = $self->get_dataset_definition();
         push @$criteria, "breeding_programs";
-        my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("breeding_programs"));
-        my $breeding_program_list = $breeding_program_data->{result};
-
-        foreach my $y (@$breeding_program_list) {
-            push @breeding_programs, $y->[0];
-        }
+        $breeding_programs = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("breeding_programs"));
     }
-    return \@breeding_programs;
+    return $breeding_programs->{results};
 }
 
 =head2 retrieve_genotyping_protocols
@@ -1019,21 +1035,21 @@ sub retrieve_breeding_programs {
 
 sub retrieve_genotyping_protocols {
     my $self = shift;
-    my @genotyping_protocols;
+    my $genotyping_protocols;
     if ($self->genotyping_protocols && scalar(@{$self->genotyping_protocols})>0) {
-        return $self->genotyping_protocols();
+        my @protocols;
+        my $rs = $self->schema->resultset("NaturalDiversity::NdProtocol")->search({'nd_protocol_id' => {-in => $self->genotyping_protocols}});
+        while (my $a = $rs->next()) {
+            push @protocols, [$a->nd_protocol_id, $a->name];
+        }
+        return \@protocols;
     }
     else {
         my $criteria = $self->get_dataset_definition();
         push @$criteria, "genotyping_protocols";
-        my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("genotyping_protocols"));
-        my $breeding_program_list = $breeding_program_data->{result};
-
-        foreach my $y (@$breeding_program_list) {
-            push @genotyping_protocols, $y->[0];
-        }
+        $genotyping_protocols = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("genotyping_protocols"));
     }
-    return \@genotyping_protocols;
+    return $genotyping_protocols->{results};
 }
 
 =head2 retrieve_trial_designs
@@ -1051,16 +1067,18 @@ sub retrieve_trial_designs {
     my $self = shift;
     my @trial_designs;
     if ($self->trial_designs && scalar(@{$self->trial_designs})>0) {
-        return $self->trial_designs();
+        foreach my $a (@{$self->trial_designs()}) {
+            push @trial_designs, [$a, $a];
+        }
     }
     else {
         my $criteria = $self->get_dataset_definition();
         push @$criteria, "trial_designs";
         my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trial_designs"));
-        my $breeding_program_list = $breeding_program_data->{result};
+        my $breeding_program_list = $breeding_program_data->{results};
 
         foreach my $y (@$breeding_program_list) {
-            push @trial_designs, $y->[0];
+            push @trial_designs, [$y->[0], $y->[0]];
         }
     }
     return \@trial_designs;
@@ -1082,16 +1100,18 @@ sub retrieve_trial_types {
     my $self = shift;
     my @trial_types;
     if ($self->trial_types && scalar(@{$self->trial_types})>0) {
-        return $self->trial_types();
+        foreach my $a (@{$self->trial_types()}) {
+            push @trial_types, [$a, $a];
+        }
     }
     else {
         my $criteria = $self->get_dataset_definition();
         push @$criteria, "trial_types";
         my $breeding_program_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trial_types"));
-        my $breeding_program_list = $breeding_program_data->{result};
+        my $breeding_program_list = $breeding_program_data->{results};
 
         foreach my $y (@$breeding_program_list) {
-            push @trial_types, $y->[0];
+            push @trial_types, [$y->[0], $y->[0]];
         }
     }
     return \@trial_types;

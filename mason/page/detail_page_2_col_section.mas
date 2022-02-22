@@ -348,7 +348,7 @@ $analytics_protocol_result_summary => {}
                                 <& /breeders_toolbox/identifier_generation/list_identifier_generation.mas &>
 % } #End identifier_generation_list
 % if ($info_section_id eq 'management_factor_details'){
-                                <& /breeders_toolbox/trial/management_factor_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, year=>$year, management_factor_type=>$management_factor_type, management_factor_date=>$management_factor_date &>
+                                <& /breeders_toolbox/trial/management_factor_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, trial_description=>$trial_description, year=>$year, management_factor_type=>$management_factor_type, management_factor_date=>$management_factor_date &>
 % } #End management_factor_details
 % if ($info_section_id eq 'management_factor_design'){
                                 <& /breeders_toolbox/trial/design_section_management_factor.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name &>
@@ -376,7 +376,7 @@ $analytics_protocol_result_summary => {}
 
 
 % if ($info_section_id eq 'crossingtrial_details'){
-                                <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, location_name=>$location_name, country_name=>$country_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix &>
+                                <& /breeders_toolbox/cross/crossingtrial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, planting_date=>$planting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix &>
 % } #End crossingtrial_details
 
 % if ($info_section_id eq 'crosses_in_crossingtrial_section'){
@@ -410,6 +410,10 @@ $analytics_protocol_result_summary => {}
 % if ($info_section_id eq 'crossing_experiment_deletion_section'){
                                 <& /breeders_toolbox/cross/crossing_experiment_deletion.mas, trial_id => $trial_id  &>
 %} #End crossing_experiment_deletion_section
+
+% if ($info_section_id eq 'intercross_section'){
+                                <& /breeders_toolbox/cross/intercross_file_info.mas, trial_id => $trial_id  &>
+%} #End intercross_section
 
 % if ($info_section_id eq 'progeny_search_section'){
                                 <& /search/cross/progeny_search_section.mas &>

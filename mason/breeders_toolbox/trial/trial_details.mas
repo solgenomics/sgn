@@ -24,6 +24,7 @@ $trial_owner
 
 </%args>
 
+
 <div class="row">
     <div class="col-sm-8">
 
@@ -94,7 +95,7 @@ $trial_owner
                     </div>
                 </td>
             </tr>
-	    
+
 	    <tr>
                 <td><b>Number of Stocks in This Trial</b></td>
                 <td>

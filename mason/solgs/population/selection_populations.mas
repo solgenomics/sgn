@@ -68,6 +68,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 	  <th>Selection population</th>
 	  <th>Description</th>
 	  <th>Year</th>
+      <th>More details</th>
 	  <th>View GEBVs</th>
 	</tr>
       </thead>

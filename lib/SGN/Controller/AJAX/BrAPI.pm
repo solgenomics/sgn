@@ -3533,7 +3533,8 @@ sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->res->redirect("https://accounts.google.com/o/oauth2/auth?scope=profile&response_type=code&client_id=1068256137120-62dvk8sncnbglglrmiroms0f5d7lg111.apps.googleusercontent.com&redirect_uri=https://cassavabase.org/oauth2callback");
+    my $host = $c->config->{main_production_site_url};
+    $c->res->redirect("https://accounts.google.com/o/oauth2/auth?scope=profile&response_type=code&client_id=1068256137120-62dvk8sncnbglglrmiroms0f5d7lg111.apps.googleusercontent.com&redirect_uri=$host/oauth2callback");
 
     $c->stash->{rest} = { success => 1 };
 
@@ -3773,7 +3774,8 @@ sub observations_GET {
 sub observations_POST {
 	my $self = shift;
 	my $c = shift;
-	my ($auth,$user_id,$user_type) = _authenticate_user($c);
+    my $force_authenticate = 1;
+	my ($auth,$user_id,$user_type) = _authenticate_user($c, $force_authenticate);
     my $clean_inputs = $c->stash->{clean_inputs};
     my $data = $clean_inputs;
     my @all_observations;

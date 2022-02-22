@@ -30,10 +30,10 @@ tr.shown td.details-control {
 
 <div class="well well-sm">
     <center>
-    <button class="btn btn-primary" id="upload_spreadsheet_phenotypes_link">Upload New Phenotypes and Associated Images</button>
+    <button class="btn btn-primary" id="upload_images_link">Upload New Images</button>
     </center>
 </div>
-<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
+<& /breeders_toolbox/upload_images.mas &>
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
 
 <&| /page/info_section.mas, title=>"Image Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "All images may not have names, descriptions, or tags associated with them."&>
