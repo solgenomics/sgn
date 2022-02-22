@@ -1278,10 +1278,8 @@ sub seedlot_list_details :Path('/ajax/list/seedlot_details') :Args(1) {
     my $c = shift;
     my $list_id = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
-    print STDERR "LIST DETAILS ID =".Dumper($list_id)."\n";
 
     my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
     my $seedlots = $list->elements();
@@ -1299,6 +1297,7 @@ sub seedlot_list_details :Path('/ajax/list/seedlot_details') :Args(1) {
     foreach my $id (@seedlot_ids) {
         my $content_name;
         my $content_id;
+        my $content_type;
         my $seedlot_obj = CXGN::Stock::Seedlot->new(
             schema => $schema,
             phenome_schema => $phenome_schema,
@@ -1311,11 +1310,13 @@ sub seedlot_list_details :Path('/ajax/list/seedlot_details') :Args(1) {
         if ($accessions) {
             $content_name = $accessions->[1];
             $content_id = $accessions->[0];
+            $content_type = 'accession'
         }
 
         if ($crosses) {
             $content_name = $crosses->[1];
             $content_id = $crosses->[0];
+            $content_type = 'cross';
         }
 
         push @seedlot_details, {
@@ -1323,6 +1324,7 @@ sub seedlot_list_details :Path('/ajax/list/seedlot_details') :Args(1) {
             seedlot_name => $seedlot_obj->uniquename(),
             content_id => $content_id,
             content_name => $content_name,
+            content_type => $content_type,
             box_name => $seedlot_obj->box_name(),
             current_count => $seedlot_obj->get_current_count_property(),
             current_weight => $seedlot_obj->get_current_weight_property(),
