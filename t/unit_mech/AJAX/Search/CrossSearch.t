@@ -72,6 +72,14 @@ is_deeply($response, {'data' => [
 ]},'female parent search');
 
 
+#test retrieving accessions with pedigree info
+$mech->get_ok('http://localhost:3010/ajax/stock/accessions_with_pedigree');
+$response = decode_json $mech->content;
+
+my $results = $response->{'data'};
+my @accessions_with_pedigree = @$results;
+my $number_of_accessions = scalar(@accessions_with_pedigree);
+is($number_of_accessions, 17);
 
 
 done_testing();

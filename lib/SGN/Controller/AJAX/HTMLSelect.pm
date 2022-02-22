@@ -83,13 +83,13 @@ sub get_breeding_program_select : Path('/ajax/html/select/breeding_programs') Ar
     my $breeding_programs = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_breeding_programs();
 
     my $default = $c->req->param("default") || @$breeding_programs[0]->[0];
-    if ($empty) { unshift @$breeding_programs, [ "", "please select" ]; }
+    if ($empty) { unshift @$breeding_programs, [ "", "Please select a program" ]; }
 
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
       choices => $breeding_programs,
-      selected => $default
+#      selected => $default
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -277,7 +277,14 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
         }
     }
 
-    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
+#    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
+    if ($empty) {
+        if ($get_crossing_trials) {
+            unshift @projects, [ "", "Please select a crossing experiment" ];
+        } else {
+            unshift @projects, [ "", "Please select a trial" ];
+        }
+    }
 
     my $html = simple_selectbox_html(
       multiple => $multiple,
@@ -817,7 +824,7 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
     my $checkbox_name = $c->req->param('checkbox_name');
     my $data_type_cvterm_id = $c->req->param('sequence_metadata_data_type_id');
     my $include_query_link = $c->req->param('include_query_link');
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol', 'protocol_type')->cvterm_id();
@@ -2116,6 +2123,33 @@ sub get_drone_imagery_drone_run_band : Path('/ajax/html/select/drone_imagery_dro
     $c->stash->{rest} = { select => $html };
 }
 
+
+sub get_items_select : Path('/ajax/html/select/items') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $params = _clean_inputs($c->req->params);
+    my $items = $params->{list_items},
+    my $size = $params->{size};
+    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
+    my $data_related = $c->req->param("data-related") || "";
+    my $names_as_select = $params->{names_as_select}->[0] || 0;
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+
+    my $html = simple_selectbox_html(
+        multiple => $multiple,
+        choices => $items,
+        size => $size,
+        data_related => $data_related,
+        id => $id,
+        name => $name
+    );
+
+    $c->stash->{rest} = { select => $html };
+
+}
+
+
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
@@ -2136,5 +2170,6 @@ sub _clean_inputs {
 	}
 	return $params;
 }
+
 
 1;

@@ -128,12 +128,12 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 
 #     $c->stash(
 #	       tempfile => $tempfile,
-#	       template => '/breeders_toolbox/upload_crosses_confirm_spreadsheet.mas',
+#	       template => '/breeders_toolbox/cross/upload_crosses_confirm_spreadsheet.mas',
 #	      );
    } elsif ($format_type eq "barcode") {
 #     $c->stash(
 #	       tempfile => $tempfile,
-#	       template => '/breeders_toolbox/upload_crosses_confirm_barcode.mas',
+#	       template => '/breeders_toolbox/cross/upload_crosses_confirm_barcode.mas',
 #	      );
    }
    else {
@@ -147,7 +147,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	       file_name => $basename,
 	       header_error => $header_error,
 	       line_errors_ref => \%line_errors,
-	       template => '/breeders_toolbox/upload_crosses_file_error.mas',
+	       template => '/breeders_toolbox/cross/upload_crosses_file_error.mas',
 	       );
      #print STDERR "there are errors in the upload file\n$line_errors_string";
    }
@@ -193,7 +193,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	       number_of_crosses_added => $number_of_crosses_added,
 	       number_of_unique_parents => $number_of_unique_parents,
 	       upload_data_ref => \%upload_data,
-	       template => '/breeders_toolbox/upload_crosses_confirm_spreadsheet.mas',
+	       template => '/breeders_toolbox/cross/upload_crosses_confirm_spreadsheet.mas',
 	      );
    }
 
