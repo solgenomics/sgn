@@ -182,19 +182,19 @@ jQuery(document).ready(function() {
         show_fieldbook_treatments_TrialLayout();
     });
 
-    jQuery("#trial_fieldmap_download_layout_button").click( function () {
-        jQuery('#management_factore').css("display", "none");
-        jQuery("#create_fieldbook_format_TrialFieldMapLayout option[value='xls']").prop('selected', true);
-        jQuery("#create_fieldbook_format_TrialFieldMapLayout").prop('disabled', 'disabled');
-        jQuery("#create_fieldbook_data_level_TrialFieldMapLayout").prop('disabled', 'disabled');
-        show_available_columns_TrialFieldMapLayout('plots');
-        var lo = new CXGN.List();
-        jQuery('#create_fieldbook_with_trait_list_TrialFieldMapLayout').html(lo.listSelect('create_fieldbook_with_trait_list_select_TrialFieldMapLayout', [ 'traits' ], 'select', undefined, undefined));
-        jQuery('#accession_average_performance').css("display", "none");
-        jQuery('#selected_columns_well').css("display", "none");
-        jQuery('#create_fieldbook_dialog_TrialFieldMapLayout').modal('show');
-        show_fieldbook_treatments_TrialFieldMapLayout();
-    });
+    // jQuery("#trial_fieldmap_download_layout_button").click( function () {
+    //     jQuery('#management_factore').css("display", "none");
+    //     jQuery("#create_fieldbook_format_TrialFieldMapLayout option[value='xls']").prop('selected', true);
+    //     jQuery("#create_fieldbook_format_TrialFieldMapLayout").prop('disabled', 'disabled');
+    //     jQuery("#create_fieldbook_data_level_TrialFieldMapLayout").prop('disabled', 'disabled');
+    //     show_available_columns_TrialFieldMapLayout('plots');
+    //     var lo = new CXGN.List();
+    //     jQuery('#create_fieldbook_with_trait_list_TrialFieldMapLayout').html(lo.listSelect('create_fieldbook_with_trait_list_select_TrialFieldMapLayout', [ 'traits' ], 'select', undefined, undefined));
+    //     jQuery('#accession_average_performance').css("display", "none");
+    //     jQuery('#selected_columns_well').css("display", "none");
+    //     jQuery('#create_fieldbook_dialog_TrialFieldMapLayout').modal('show');
+    //     show_fieldbook_treatments_TrialFieldMapLayout();
+    // });
 
     jQuery("[name='create_fieldbook_link']").click( function () {
         show_available_columns_Fieldbook('plots');

@@ -507,7 +507,7 @@ sub population_metadata_file {
     }
     elsif ($c->stash->{dataset_id})
     {
-	$owner_id = $c->model('solGS::solGS')->get_dataset_owner($c->stash->{dataset_id});
+	       $owner_id = $c->controller('solGS::Search')->model($c)->get_dataset_owner($c->stash->{dataset_id});
     }
 
     my $person = CXGN::People::Person->new($c->dbc()->dbh(), $owner_id);
@@ -689,6 +689,21 @@ sub cache_file {
     }
 
     $c->stash->{$cache_data->{stash_key}} = $file;
+
+}
+
+sub copy_to_tempfiles_subdir {
+    my ($self, $c, $file, $dir_name) = @_;
+
+    my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, $dir_name);
+    my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
+
+    mkpath ([$base_tmp_dir], 0, 0755);
+
+    $self->copy_file($file, $base_tmp_dir);
+    $file = catfile($tmp_dir, basename($file));
+
+    return $file;
 
 }
 

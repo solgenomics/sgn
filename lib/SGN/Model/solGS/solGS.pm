@@ -24,6 +24,8 @@ use Moose;
 use namespace::autoclean;
 use Array::Utils qw(:all);
 use Bio::Chado::Schema;
+use CXGN::People::Schema;
+
 use Bio::Chado::NaturalDiversity::Reports;
 use File::Path qw / mkpath /;
 use File::Spec::Functions;
@@ -38,24 +40,22 @@ use CXGN::Genotype::Search;
 use CXGN::Trial;
 use CXGN::Dataset;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use Data::Dumper;
 
-extends 'Catalyst::Model';
-
-
-__PACKAGE__->mk_accessors(qw/context schema/);
+# extends 'Catalyst::Model';
 
 
 
 
-sub ACCEPT_CONTEXT {
-    my ($self, $c ) = @_;
-    my $new = $self->meta->clone_object($self, context => $c,
-                                        schema => $c->dbic_schema("Bio::Chado::Schema")
-        );
+has 'schema' => (isa => 'Ref',
+    is => 'rw',
+    required => 1
+    );
 
-    return $new;
-
-}
+has 'people_schema' => (isa => 'Ref',
+    is => 'rw',
+    required => 1
+    );
 
 
 sub search_trait {
@@ -70,7 +70,7 @@ sub search_trait {
                             AND cvterm.name ILIKE ?
                         ORDER BY cvterm.name";
 
-    my $sth = $self->context->dbc->dbh->prepare($q);
+    my $sth = $self->schema->storage->dbh->prepare($q);
 
     $sth->execute("%$trait%");
 
@@ -78,8 +78,7 @@ sub search_trait {
 
     while ( my $tr = $sth->fetchrow_array())
     {
-        print STDERR "\ntrait: $trait - tr: $tr\n";
-	push @traits, $tr;
+	       push @traits, $tr;
     }
 
     return \@traits;
@@ -94,7 +93,7 @@ sub search_trait {
 #                     WHERE name ilike ?
 #                     ORDER BY name";
 #
-#     my $sth = $self->context->dbc->dbh->prepare($q);
+#     my $sth = $self->schema->storage->dbh->prepare($q);
 #
 #     $sth->execute("%$trait%");
 #
@@ -137,7 +136,7 @@ sub all_gs_traits {
                         WHERE location_name NOT LIKE '[Computation]'
                         ORDER BY cvterm.name";
 
-    my $sth = $self->context->dbc->dbh->prepare($q);
+    my $sth = $self->schema->storage->dbh->prepare($q);
 
     $sth->execute();
 
@@ -161,7 +160,7 @@ sub materialized_view_all_gs_traits {
                     JOIN cvterm observable ON observable.cvterm_id = me.observable_id
                     GROUP BY observable.cvterm_id, observable.name";
 
-    my $sth = $self->context->dbc->dbh->prepare($q);
+    my $sth = $self->schema->storage->dbh->prepare($q);
 
     $sth->execute();
 
@@ -173,7 +172,7 @@ sub insert_matview_public {
 
     my $q = "INSERT INTO public.matviews (mv_name, last_refresh) VALUES (?, now())";
 
-    my $sth = $self->context->dbc->dbh->prepare($q);
+    my $sth = $self->schema->storage->dbh->prepare($q);
 
     $sth->execute($name);
 
@@ -185,7 +184,7 @@ sub update_matview_public {
 
     my $q = "Update public.matviews SET last_refresh = now() WHERE mv_name ilike ? ";
 
-    my $sth = $self->context->dbc->dbh->prepare($q);
+    my $sth = $self->schema->storage->dbh->prepare($q);
 
     $sth->execute($name);
 
@@ -197,7 +196,7 @@ sub check_matview_exists {
 
     my $q = "SELECT mv_name FROM public.matviews WHERE mv_name ilike ?";
 
-    my $sth = $self->context->dbc->dbh->prepare($q);
+    my $sth = $self->schema->storage->dbh->prepare($q);
 
     $sth->execute($name);
 
@@ -213,7 +212,7 @@ sub refresh_materialized_view_all_gs_traits {
 
     my $q = "REFRESH MATERIALIZED VIEW public.all_gs_traits";
 
-    my $sth = $self->context->dbc->dbh->prepare($q);
+    my $sth = $self->schema->storage->dbh->prepare($q);
 
     $sth->execute();
 
@@ -234,7 +233,7 @@ sub search_trait_trials {
 		 WHERE genotyping_protocols.genotyping_protocol_name ILIKE ?
                  AND trait_id = ?";
 
-    my $sth = $self->context->dbc->dbh->prepare($q);
+    my $sth = $self->schema->storage->dbh->prepare($q);
 
     $sth->execute($protocol, $trait_id);
 
@@ -316,7 +315,7 @@ sub project_location {
                     JOIN locations USING (location_id)
                     WHERE trial_id = ?";
 
-    my $sth = $self->context->dbc->dbh()->prepare($q);
+    my $sth = $self->schema->storage->dbh()->prepare($q);
 
     $sth->execute($pr_id);
 
@@ -345,7 +344,7 @@ sub all_gs_projects {
                        ORDER BY $order_by
                        $limit";
 
-    my $sth = $self->context->dbc->dbh()->prepare($q);
+    my $sth = $self->schema->storage->dbh()->prepare($q);
 
     $sth->execute($protocol);
 
@@ -396,7 +395,7 @@ sub has_phenotype {
                      WHERE trial_id = ?
                      AND trait_id IS NOT NULL";
 
-    	my $sth = $self->context->dbc->dbh->prepare($q);
+    	my $sth = $self->schema->storage->dbh->prepare($q);
     	$sth->execute($pr_id);
 
 	   while ($has_phenotype  = $sth->fetchrow_array())
@@ -422,7 +421,7 @@ sub has_genotype {
                  WHERE trial_id = ?
                  AND genotyping_protocols.genotyping_protocol_name ILIKE ?";
 
-    my $sth = $self->context->dbc->dbh->prepare($q);
+    my $sth = $self->schema->storage->dbh->prepare($q);
     $sth->execute($pr_id, $protocol_name);
 
     ($protocol_name, $protocol_id)  = $sth->fetchrow_array();
@@ -711,7 +710,7 @@ sub get_stock_owners {
                         WHERE stock_id = ? ";
 
 
-        my $sth = $self->context->dbc->dbh()->prepare($q);
+        my $sth = $self->schema->storage->dbh()->prepare($q);
         $sth->execute($stock_id);
 
 
@@ -1993,13 +1992,13 @@ sub genotyping_protocol {
 sub protocol_detail {
     my ($self, $protocol) = @_;
 
-    unless ($protocol)
-    {
-	$protocol = $self->context->config->{default_genotyping_protocol};
-    }
+    # unless ($protocol)
+    # {
+	# $protocol = $self->context->config->{default_genotyping_protocol};
+    # }
 
     my $where;
-    if ($protocol =~ /\D+/)
+    if ($protocol =~ /[A-Za-z]/)
     {
 	$where = 'WHERE name = ?';
     }
@@ -2009,7 +2008,7 @@ sub protocol_detail {
     }
 
     my $q = 'SELECT nd_protocol_id, name, description FROM nd_protocol ' .  $where;
-    my $sth = $self->context->dbc->dbh->prepare($q);
+    my $sth = $self->schema->storage->dbh->prepare($q);
     $sth->execute($protocol);
     my ($protocol_id, $name, $desc) = $sth->fetchrow_array();
 
@@ -2035,7 +2034,7 @@ sub get_all_genotyping_protocols {
                     FROM genotyping_protocolsXtrials' . $where;
 
 
-    my $sth = $self->context->dbc->dbh->prepare($q);
+    my $sth = $self->schema->storage->dbh->prepare($q);
 
     $trial_id ? $sth->execute($trial_id) : $sth->execute();
 
@@ -2054,6 +2053,7 @@ sub get_genotypes_from_dataset {
     my ($self, $dataset_id) = @_;
 
 	my $data = $self->get_dataset_data($dataset_id);
+
 	my $genotypes_ids;
 	if ($data->{categories}->{accessions}->[0])
 	{
@@ -2069,6 +2069,7 @@ sub get_genotypes_from_dataset {
 	    $genotypes_ids  = $dataset->retrieve_accessions();
 	    my @genotypes_ids = uniq(@$genotypes_ids) if $genotypes_ids;
 		$genotypes_ids = \@genotypes_ids;
+
 	}
 
     return $genotypes_ids;
@@ -2081,7 +2082,7 @@ sub get_dataset_data {
     my $dataset = CXGN::Dataset->new({
 	people_schema => $self->people_schema,
 	schema  => $self->schema,
-	sp_dataset_id =>$dataset_id});
+	sp_dataset_id => $dataset_id});
 
     my  $dataset_data = $dataset->get_dataset_data();
 
@@ -2152,10 +2153,10 @@ sub get_dataset_genotype_data {
 
 
 
-sub people_schema {
-    my $self = shift;
-    return $self->context->dbic_schema("CXGN::People::Schema");
-}
+# sub people_schema {
+#     my $self = shift;
+#     return $self->context->dbic_schema("CXGN::People::Schema");
+# }
 
 __PACKAGE__->meta->make_immutable;
 

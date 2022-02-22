@@ -1070,6 +1070,52 @@ jQuery(document).ready( function() {
     }
   });
 
+  jQuery("#trial_fieldmap_download_layout_button").click( function () {
+    let cols_csv_header = [];
+    for (let i = FieldMap.meta_data.min_col; i <= FieldMap.meta_data.max_col; i++) {
+        cols_csv_header.push(i);
+    }
+    let csv = '\n';
+    csv += ['Rows/Columns',cols_csv_header];
+    csv += "\n";
+    // if (FieldMap.meta_data.top_border_selection) {
+    //     csv += ['',FieldMap.meta_data.left_border_selection ? 'border' : '', ...Array(FieldMap.meta_data.num_cols).fill('border'), FieldMap.meta_data.right_border_selection ? 'border': ''];
+    // }
+    let coord_matrix = [];
+    let row = "positionCoordinateY";
+    let col = "positionCoordinateX";
+    let temp_plot_arr = [...FieldMap.plot_arr];
+    for (let plot of temp_plot_arr.filter(plot => plot.type != "border")) {
+        if (!coord_matrix[plot.observationUnitPosition[row] - 1]) {
+            coord_matrix[plot.observationUnitPosition[row] - 1] = [];
+            coord_matrix[plot.observationUnitPosition[row] - 1][plot.observationUnitPosition[col] - 1] = plot.germplasmName;
+        } else {
+            coord_matrix[plot.observationUnitPosition[row] - 1][plot.observationUnitPosition[col] - 1] = plot.germplasmName;
+        }
+    }
+    if (!FieldMap.meta_data.invert_row_checkmark) {
+        coord_matrix.reverse();
+    }
+    let increment = 1;
+    let row_number;
+    for (let plot_arr of coord_matrix.filter(plot_arr => Array.isArray(plot_arr))) {
+        if (!FieldMap.meta_data.invert_row_checkmark) {
+            row_number = FieldMap.meta_data.max_row - increment + 1;
+        } else {
+            row_number = increment;
+        }
+        increment++;
+        csv += [row_number, plot_arr] + '\n';
+
+    }
+    let hiddenElement = document.createElement('a');
+        hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+        hiddenElement.target = '_blank';
+        
+        hiddenElement.download = `Trial_${FieldMap.trial_id}_spatial_layout.csv`;
+        hiddenElement.click();  
+  });
+
   jQuery(document).on('click', '#trial_phenotype_heatmap_download', function(){
       var html = d3.select("svg")
             .attr("version", 1.1)

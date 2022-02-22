@@ -113,7 +113,7 @@ $response = $ua->post(
     Content_Type => 'form-data',
     Content => [
         "xls_crosses_simple_file" => [ $file, 'backcross_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
-        "cross_upload_crossing_trial" => $crossing_trial2_id,
+        "upload_crosses_crossing_experiment_id" => $crossing_trial2_id,
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -134,7 +134,7 @@ $response = $ua->post(
     Content_Type => 'form-data',
     Content => [
         "xls_crosses_simple_file" => [ $file, 'crosses_simple_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
-        "cross_upload_crossing_trial" => $crossing_trial2_id,
+        "upload_crosses_crossing_experiment_id" => $crossing_trial2_id,
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -170,7 +170,7 @@ $response = $ua->post(
     Content_Type => 'form-data',
     Content => [
         "xls_crosses_plots_file" => [ $file, 'crosses_plots_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
-        "cross_upload_crossing_trial" => $crossing_trial2_id,
+        "upload_crosses_crossing_experiment_id" => $crossing_trial2_id,
         "sgn_session_id" => $sgn_session_id
     ]
 );
@@ -209,7 +209,7 @@ $response = $ua->post(
     Content_Type => 'form-data',
     Content => [
         "xls_crosses_plants_file" => [ $file, 'crosses_plants_upload.xls', Content_Type => 'application/vnd.ms-excel', ],
-        "cross_upload_crossing_trial" => $crossing_trial2_id,
+        "upload_crosses_crossing_experiment_id" => $crossing_trial2_id,
         "sgn_session_id" => $sgn_session_id
     ]
 );
