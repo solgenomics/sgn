@@ -63,6 +63,20 @@ jQuery(document).ready( function() {
         ],
     });
 
+
+    jQuery('#list_details_download').click( function() {
+
+        jQuery.ajax({
+            url: '/list/download_details',
+            dataType: "json",
+            data : {
+                'list_id' : list_id,
+            },
+        });
+    });
+
+
+
 });
 
 
