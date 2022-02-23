@@ -1354,7 +1354,6 @@ sub download_list_details : Path('/list/download_details') {
     my $dbh = $c->dbc->dbh;
 
     my $list_id = $c->req->param("list_id");
-    print STDERR "DOWNLOAD LIST ID =".Dumper($list_id)."\n";
     my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
     my $list_name = $list->name();
     my $seedlots = $list->elements();
@@ -1398,8 +1397,8 @@ sub download_list_details : Path('/list/download_details') {
 
         push @seedlot_details, "$seedlot_name\t$content_name\t$content_type\t$box_name\t$current_count\t$current_weight\t$seedlot_quality\n";
     }
-    print STDERR "DOWNLOAD LIST DETAILS =".Dumper(\@seedlot_details)."\n";
-    my $dl_token = $c->req->param("list_details_download_token") || "no_token";
+
+    my $dl_token = $c->req->param("list_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     print STDERR "Token is: $dl_token\n";
 

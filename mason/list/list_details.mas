@@ -20,11 +20,17 @@ $list_size
         <tr><td><b>Type</b></td><td><% $list_type %></td></tr>
         <tr><td><b>Number of Items</b></td><td><% $list_size %></td></tr>
         <tr><td><b>Description</b></td><td><% $list_description %></td></tr>
-        <tr><td><button class="btn btn-default" type="button" id="list_details_download">Download List Items</button></td><td></td></tr>
     </table>
 </&>
 
 <&| /page/info_section.mas, title => 'List Items', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <form id="download_list_details" action="/list/download_details" method="POST">
+            <button class="btn btn-primary" type="button" id="download_details_button">Download List Items</button>
+            <input type="hidden" id="list_download_token" name="list_download_token"/>
+            <input name="list_id" id="list_id" type="hidden" value="<% $list_id %>">
+        </form>
+    </div>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -40,8 +46,6 @@ $list_size
 <script>
 
 jQuery(document).ready( function() {
-
-    var list_id = '<% $list_id %>';
 
     var items_table = jQuery('#list_items_table').DataTable( {
         'autoWidth': false,
@@ -63,22 +67,10 @@ jQuery(document).ready( function() {
         ],
     });
 
-
-    jQuery('#list_details_download').click( function() {
-
-        jQuery.ajax({
-            url: '/list/download_details',
-            dataType: "json",
-            data : {
-                'list_id' : list_id,
-            },
-        });
+    jQuery('#download_details_button').click(function() {
+        jQuery('#download_list_details').submit();
     });
 
-
-
 });
-
-
 
 </script>
