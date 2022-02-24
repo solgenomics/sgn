@@ -1297,7 +1297,7 @@ sub seedlot_list_details :Path('/ajax/list/seedlot_details') :Args(1) {
     my @seedlot_details;
     my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
 
-    foreach my $seedlot(@seedlot_names) {
+    foreach my $seedlot(sort@seedlot_names) {
         my $seedlot_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot });
         my $seedlot_id = $seedlot_rs->stock_id();
         push @seedlot_ids, $seedlot_id;
