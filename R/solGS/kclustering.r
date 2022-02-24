@@ -29,6 +29,7 @@ inputFiles  <- grep("input_files", allArgs, value = TRUE)
 inputFiles <- scan(inputFiles, what = "character")
 
 kResultFile <- grep("result", outputFiles, value = TRUE)
+kElbowPlotFile <-  grep("elbow_plot", outputFiles, value = TRUE)
 reportFile  <- grep("report", outputFiles, value = TRUE)
 errorFile   <- grep("error", outputFiles, value = TRUE)
 
@@ -228,6 +229,10 @@ png(kmeansPlotFile)
 autoplot(kMeansOut, data = clusterData, frame = TRUE,  x = 1, y = 2)
 dev.off()
 
+png(kElbowPlotFile)
+kElbowPlot
+dev.off()
+
 cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
 
 if (length(genoFiles) > 1) {
@@ -247,6 +252,9 @@ if (length(kResultFile) != 0 ) {
        quote     = FALSE,
        )
 }
+
+
+
 
 ####
 q(save = "no", runLast = FALSE)
