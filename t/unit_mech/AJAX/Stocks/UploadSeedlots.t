@@ -99,7 +99,7 @@ $seedlot_list->type("seedlots");
 $seedlot_list->add_bulk(['seedlot_test1','seedlot_test2','seedlot_test_from_cross_1','seedlot_test_from_cross_2']);
 my $items = $seedlot_list->elements;
 
-$mech->get_ok("http://localhost:3010/ajax/list/seedlot_details/$seedlot_list_id");
+$mech->get_ok("http://localhost:3010/ajax/list/details/$seedlot_list_id");
 $response = decode_json $mech->content;
 
 my $results = $response->{'data'};

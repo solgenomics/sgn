@@ -1282,7 +1282,7 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
 }
 
 
-sub seedlot_list_details :Path('/ajax/list/seedlot_details') :Args(1) {
+sub get_list_details :Path('/ajax/list/details') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
@@ -1290,58 +1290,29 @@ sub seedlot_list_details :Path('/ajax/list/seedlot_details') :Args(1) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
 
-    my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
-    my $seedlots = $list->elements();
-    my @seedlot_names = @$seedlots;
-    my @seedlot_ids;
-    my @seedlot_details;
-    my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $list = CXGN::List->new( { dbh=>$dbh, schema=>$schema, phenome_schema=>$phenome_schema, list_id=>$list_id });
+    my $type = $list->type();
+    my @list_details;
 
-    foreach my $seedlot(sort@seedlot_names) {
-        my $seedlot_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot });
-        my $seedlot_id = $seedlot_rs->stock_id();
-        push @seedlot_ids, $seedlot_id;
-    }
-
-    foreach my $id (@seedlot_ids) {
-        my $content_name;
-        my $content_id;
-        my $content_type;
-        my $seedlot_obj = CXGN::Stock::Seedlot->new(
-            schema => $schema,
-            phenome_schema => $phenome_schema,
-            seedlot_id => $id
-        );
-
-        my $accessions = $seedlot_obj->accession();
-        my $crosses = $seedlot_obj->cross();
-
-        if ($accessions) {
-            $content_name = $accessions->[1];
-            $content_id = $accessions->[0];
-            $content_type = 'accession'
-        }
-
-        if ($crosses) {
-            $content_name = $crosses->[1];
-            $content_id = $crosses->[0];
-            $content_type = 'cross';
-        }
-
-        push @seedlot_details, {
-            seedlot_id => $id,
-            seedlot_name => $seedlot_obj->uniquename(),
-            content_id => $content_id,
-            content_name => $content_name,
-            content_type => $content_type,
-            box_name => $seedlot_obj->box_name(),
-            current_count => $seedlot_obj->get_current_count_property(),
-            current_weight => $seedlot_obj->get_current_weight_property(),
-            quality => $seedlot_obj->quality()
+    if ($type eq 'seedlots') {
+        my $result = $list->seedlot_list_details();
+        my @details = @$result;
+        foreach my $seedlot (@details) {
+            push @list_details, {
+                seedlot_id => $seedlot->[0],
+                seedlot_name => $seedlot->[1],
+                content_id => $seedlot->[2],
+                content_name => $seedlot->[3],
+                content_type => $seedlot->[4],
+                box_name => $seedlot->[5],
+                current_count => $seedlot->[6],
+                current_weight => $seedlot->[7],
+                quality => $seedlot->[8]
+            }
         }
     }
-#    print STDERR "SEEDLOT DETAILS =".Dumper(\@seedlot_details)."\n";
-    $c->stash->{rest} = {data => \@seedlot_details};
+
+    $c->stash->{rest} = {data => \@list_details};
 
 }
 
@@ -1354,48 +1325,20 @@ sub download_list_details : Path('/list/download_details') {
     my $dbh = $c->dbc->dbh;
 
     my $list_id = $c->req->param("list_id");
-    my $list = CXGN::List->new( { dbh=>$dbh, list_id=>$list_id });
+    my $list = CXGN::List->new( { dbh=>$dbh, schema=>$schema, phenome_schema=>$phenome_schema, list_id=>$list_id });
+    my $type = $list->type();
     my $list_name = $list->name();
-    my $seedlots = $list->elements();
-    my @seedlot_names = @$seedlots;
-    my @seedlot_ids;
-    my @seedlot_details;
-    my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my @list_details;
+    my $header;
 
-    foreach my $seedlot(@seedlot_names) {
-        my $seedlot_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot });
-        my $seedlot_id = $seedlot_rs->stock_id();
-        push @seedlot_ids, $seedlot_id;
-    }
-
-    foreach my $id (@seedlot_ids) {
-        my $content_name;
-        my $content_id;
-        my $content_type;
-        my $seedlot_obj = CXGN::Stock::Seedlot->new(
-            schema => $schema,
-            phenome_schema => $phenome_schema,
-            seedlot_id => $id
-        );
-
-        my $seedlot_name = $seedlot_obj->uniquename();
-        my $accessions = $seedlot_obj->accession();
-        my $crosses = $seedlot_obj->cross();
-        my $box_name = $seedlot_obj->box_name();
-        my $current_count = $seedlot_obj->get_current_count_property();
-        my $current_weight = $seedlot_obj->get_current_weight_property();
-        my $seedlot_quality = $seedlot_obj->quality();
-
-        if ($accessions) {
-            $content_name = $accessions->[1];
-            $content_type = 'accession'
+    if ($type eq 'seedlots') {
+        my $result = $list->seedlot_list_details();
+        my @details = @$result;
+        foreach my $seedlot_ref (@details) {
+            my @seedlot = @$seedlot_ref;
+            push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\n";
         }
-        if ($crosses) {
-            $content_name = $crosses->[1];
-            $content_type = 'cross';
-        }
-
-        push @seedlot_details, "$seedlot_name\t$content_name\t$content_type\t$box_name\t$current_count\t$current_weight\t$seedlot_quality\n";
+        $header = "Seedlot_Name\tContent_Name\tContent_type\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality";
     }
 
     my $dl_token = $c->req->param("list_download_token") || "no_token";
@@ -1405,10 +1348,9 @@ sub download_list_details : Path('/list/download_details') {
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "list_details_download_XXXXX", UNLINK=> 0);
 
     open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
-
-    print $FILE "Seedlot_Name\tContent_Name\tContent_type\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality\n";
+    print $FILE $header."\n";
     my $row = 0;
-    foreach my $each_row (@seedlot_details) {
+    foreach my $each_row (@list_details) {
         print $FILE $each_row;
         $row++;
     }
