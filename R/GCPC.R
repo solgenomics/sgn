@@ -488,13 +488,13 @@ write("Done with calcCrossMean!!!!!!", stderr())
   finalcrosses=crossPlan[1:userNCrosses, ]
   outputFile= paste(phenotypeFile, ".out", sep="")
 
-  write.csv(finalcrosses, "Final Crosses.csv")
+  write.csv(finalcrosses, outputFile)
 
-  write(paste("CROSS PLAN HEAD: ", head(crossPlan)), stderr())
-  crossPlanDataFrame = data.frame(crossPlan)
-  write(paste("CROSS PLAN OBJECT: ", str(crossPlanDataFrame)), stderr())
-  message(paste("CROSS PLAN HEAD AFTER: ", head(crossPlanDataFrame)))
-  message("FILE NAME NOW = ", outputFile)
-  write.table(crossPlanDataFrame, sep="\t", file=outputFile, row.names=TRUE, col.names=TRUE)
-  write("DONE", stderr())
+#  write(paste("CROSS PLAN HEAD: ", head(crossPlan)), stderr())
+#  crossPlanDataFrame = data.frame(crossPlan)
+#  write(paste("CROSS PLAN OBJECT: ", str(crossPlanDataFrame)), stderr())
+#  message(paste("CROSS PLAN HEAD AFTER: ", head(crossPlanDataFrame)))
+#  message("FILE NAME NOW = ", outputFile)
+#  write.table(crossPlanDataFrame, sep="\t", file=outputFile, row.names=TRUE, col.names=TRUE)
+#  write("DONE", stderr())
 #}
