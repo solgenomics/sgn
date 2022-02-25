@@ -593,13 +593,13 @@ if (document.URL.match(/cluster\/analysis/)) {
     			jQuery('#' + runClusterId).show();
 
             } else {
-                  jQuery("#cluster_message").html('Error occured running the clustering. ');
+                  jQuery("#cluster_message").html('Error occured running the clustering. Possibly the R script failed.');
                   jQuery("#cluster_canvas .multi-spinner-container").hide();
                   jQuery('#' + runClusterId).show();
             }
 		},
 		error: function(res) {
-		    jQuery("#cluster_message").html('Error occured running the clustering.');
+		    jQuery("#cluster_message").html('Error occured running the clustering');
 		    jQuery("#cluster_canvas .multi-spinner-container").hide();
 		    jQuery('#' + runClusterId).show();
 		}
@@ -669,57 +669,93 @@ if (document.URL.match(/cluster\/analysis/)) {
 	console.log('image id: ' + imageId)
 	imageId = 'id="' + imageId + '"';
 	var plot  = '<img '+ imageId + ' src="' + res.cluster_plot + '">';
-	var filePlot  = res.cluster_plot.split('/').pop();
+
+	var clusterPlotFileName = res.cluster_plot.split('/').pop();
 	var plotType;
 	var outFileType;
 	var clustersFile;
+    var elbowPlotFile;
+    var kclusterMeansFile;
+    var kclusterVariancesFile;
 
-	if (filePlot.match(/k-means/i)) {
-            plotType = 'K-means plot';
-            outFileType = 'Clusters';
+	if (clusterPlotFileName.match(/k-means/i)) {
+        plotType = 'K-means plot';
+        outFileType = 'Clusters';
 	    clustersFile = res.kmeans_clusters;
+        elbowPlotFile = res.elbow_plot;
+        kclusterVariancesFile = res.kcluster_variances;
+        kclusterMeansFile= res.kcluster_means;
+
 	} else {
-            plotType = 'Dendrogram';
-            outFileType = 'Newick tree format';
-	    clustersFile = res.newick_file;
+        plotType = 'Dendrogram';
+        outFileType = 'Newick tree format';
+        clustersFile = res.newick_file;
 	}
 
-	var plotLink = "<a href=\""
+	var clusterPlotLink = "<a href=\""
 	    + res.cluster_plot
 	    +  "\" download="
-	    + filePlot
-	    + "\">" + plotType + '</a>';
+	    + clusterPlotFileName
+	    + '">' + plotType + '</a>';
 
-	var fileClusters  = clustersFile.split('/').pop();
-
+	var clustersFileName  = clustersFile.split('/').pop();
 	var clustersLink = "<a href=\""
 	    + clustersFile
 	    +  "\" download="
-	    + fileClusters
-	    + "\">" + outFileType + '</a>';
+	    + clustersFileName
+	    + '">'  + outFileType + '</a>';
+
+    var elbowLink;
+    var kclusterMeansLink;
+    var kclusterVariancesLink;
+
+    if (elbowPlotFile) {
+        var elbowFileName  = elbowPlotFile.split('/').pop();
+    	elbowLink = "<a href=\""
+    	    + elbowPlotFile
+    	    +  "\" download="
+    	    + elbowFileName
+    	    + '">Elbow plot</a>';
+
+        var kclusterMeansFileName = kclusterMeansFile.split('/').pop();
+    	kclusterMeansLink = "<a href=\""
+    	    + kclusterMeansFile
+    	    +  "\" download="
+    	    + kclusterMeansFileName
+    	    + '">Cluster means</a>';
+
+        var kclusterVariancesFileName  = kclusterVariancesFile.split('/').pop();
+    	kclusterVariancesLink = "<a href=\""
+    	    + kclusterVariancesFile
+    	    +  "\" download="
+    	    + kclusterVariancesFileName
+    	    + '">Cluster variances </a>';
+    }
 
 	var reportFile = res.cluster_report;
-	var report  = reportFile.split('/').pop();
-
+	var reportFileName = reportFile.split('/').pop();
 	var reportLink = "<a href=\""
 	    + reportFile
 	    +  "\" download="
-	    + report
-	    + ">Analysis Report </a>";
+	    + reportFileName
+	    + '">Analysis Report </a>';
 
 	var downloadLinks = ' <strong>Download '
 	    + popName + ' </strong>: '
-	    + plotLink + ' | '
+	    + clusterPlotLink + ' | '
 	    + clustersLink + ' | '
 	    + reportLink;
 
-
+    if (elbowPlotFile) {
+        downloadLinks += ' | ' + kclusterVariancesLink + ' | '
+        + kclusterMeansLink + ' | '
+        + elbowLink
+    }
           jQuery('#cluster_plot').prepend('<p style="margin-top: 20px">' + downloadLinks + '</p>');
           jQuery('#cluster_plot').prepend(plot);
 	//     // solGS.dendrogram.plot(res.json_data, '#cluster_canvas', '#cluster_plot', downloadLinks)
 
     },
-
 
 
     getClusterPopsTable: function(tableId) {
