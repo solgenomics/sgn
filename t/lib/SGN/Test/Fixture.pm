@@ -227,6 +227,10 @@ sub get_db_stats {
     # count nd_experiments
     $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search( {} );
     $stats->{nd_experiments} = $rs->count();
+
+    # count metadata entries
+    $rs = $self->metadata_schema()->resultset('MdMetadata')->search( {} );
+    $stats->{md_metadata} = $rs->count();
     
     print STDERR "STATS : ".Dumper($stats);
 
