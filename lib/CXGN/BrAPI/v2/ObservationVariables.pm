@@ -326,6 +326,8 @@ sub store {
             my $name = $params->{observationVariableName};
             my $ontology_id = $params->{ontologyReference}{ontologyDbId};
             my $description = $params->{trait}{traitDescription};
+            my $entity = $params->{trait}{entity};
+            my $attribute = $params->{trait}{attribute};
             my $synonyms = $params->{synonyms};
             my $active = $params->{status} ne "archived";
             my $additional_info = $params->{additionalInfo} || undef;
@@ -351,6 +353,8 @@ sub store {
                 name                                  => $name,
                 ontology_id                           => $ontology_id,
                 definition                            => $description,
+                entity                                => $entity,
+                attribute                             => $attribute,
                 synonyms                              => $synonyms,
                 external_references                   => $external_references,
                 method                                => $method,
@@ -399,6 +403,8 @@ sub update {
     my $name = $data->{observationVariableName};
     my $ontology_id = $data->{ontologyReference}{ontologyDbId};
     my $description = $data->{trait}{traitDescription};
+    my $entity = $data->{trait}{entity};
+    my $attribute = $data->{trait}{attribute};
     my $synonyms = $data->{synonyms};
     my $active = $data->{status} ne "archived";
     my $additional_info = $data->{additionalInfo} || undef;
@@ -423,6 +429,8 @@ sub update {
         name                                  => $name,
         ontology_id                           => $ontology_id,
         definition                            => $description,
+        entity                                => $entity,
+        attribute                             => $attribute,
         synonyms                              => $synonyms,
         external_references                   => $external_references,
         method                                => $method,
@@ -529,8 +537,8 @@ sub _construct_variable_response {
         synonyms => @synonyms,
         trait => {
             alternativeAbbreviations => undef,
-            attribute => undef,
-            entity => undef,
+            attribute => $variable->attribute ? $variable->attribute : undef,
+            entity => $variable->entity ? $variable->entity : undef,
             externalReferences => $external_references_json,
             mainAbbreviation => undef,
             ontologyReference => {

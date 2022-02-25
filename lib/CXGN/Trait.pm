@@ -145,6 +145,42 @@ has 'definition' => (isa => 'Maybe[Str]',
 
     );
 
+has 'entity' => (
+	isa => 'Maybe[Str]',
+	is => 'rw',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $row = $self->bcs_schema()->resultset("Cv::Cvtermprop")->find(
+			{ cvterm_id => $self->cvterm_id(), 'type.name' => 'trait_entity' },
+			{ join => 'type'}
+		);
+
+		if ($row) {
+			return $row->value();
+		}
+		return "";
+	},
+);
+
+has 'attribute' => (
+	isa => 'Maybe[Str]',
+	is => 'rw',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $row = $self->bcs_schema()->resultset("Cv::Cvtermprop")->find(
+			{ cvterm_id => $self->cvterm_id(), 'type.name' => 'trait_attribute' },
+			{ join => 'type'}
+		);
+
+		if ($row) {
+			return $row->value();
+		}
+		return "";
+	},
+);
+
 has 'format' => (isa => 'Str',
 		 is => 'ro',
 		 lazy => 1,
@@ -327,6 +363,58 @@ has 'additional_info' => (
 	isa => 'Maybe[HashRef]'
 );
 
+has 'cv_id' => (
+	isa => 'Int',
+	is => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $cv_id = $self->bcs_schema->resultset("Cv::Cv")->find(
+			{
+				name => 'trait_property'
+			},
+			{ key => 'cv_c1' }
+		)->get_column('cv_id');
+		return $cv_id;
+	}
+);
+
+has 'trait_entity_id' => (
+	isa => 'Int',
+	is => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $trait_entity_id = $self->bcs_schema->resultset("Cv::Cvterm")->find(
+			{
+				name        => 'trait_entity',
+				cv_id       => $self->cv_id,
+				is_obsolete => 0
+			},
+			{ key => 'cvterm_c1' }
+		)->get_column('cvterm_id');
+		return $trait_entity_id;
+	}
+);
+
+has 'trait_attribute_id' => (
+	isa => 'Int',
+	is => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $trait_attribute_id = $self->bcs_schema->resultset("Cv::Cvterm")->find(
+			{
+				name        => 'trait_attribute',
+				cv_id       => $self->cv_id,
+				is_obsolete => 0
+			},
+			{ key => 'cvterm_c1' }
+		)->get_column('cvterm_id');
+		return $trait_attribute_id;
+	}
+);
+
 sub BUILD { 
     #print STDERR "BUILDING...\n";
     my $self = shift;
@@ -358,12 +446,19 @@ sub store {
 	my $synonyms = $self->synonyms();
 	my $active = $self->active();
 	my $additional_info = $self->additional_info();
+	my $trait_entity = $self->entity();
+	my $trait_attribute = $self->attribute();
+
 
 	# get cv_id from sgn_local.conf
 	my $context = SGN::Context->new;
 	my $cv_name = $context->get_conf('trait_ontology_cv_name');
 	my $cvterm_name = $context->get_conf('trait_ontology_cvterm_name');
 	my $ontology_name = $context->get_conf('trait_ontology_db_name');
+
+	# Get trait attributes cvterm ids
+	my $trait_entity_id = $self->trait_entity_id;
+	my $trait_attribute_id = $self->trait_attribute_id;
 
 	# get cv_id for cv_name
 	my $cv = $schema->resultset("Cv::Cv")->find(
@@ -474,6 +569,31 @@ sub store {
 			$new_term->add_synonym($synonym);
 		}
 
+		# Add trait entity
+		if ($trait_entity) {
+			my $prop_entity = $schema->resultset("Cv::Cvtermprop")->create(
+				{
+					cvterm_id => $new_term->get_column('cvterm_id'),
+					type_id   => $trait_entity_id,
+					value     => $trait_entity,
+					rank      => 0
+				}
+			);
+		}
+
+
+		# Add trait attribute
+		if ($trait_attribute) {
+			my $prop_attribute = $schema->resultset("Cv::Cvtermprop")->create(
+				{
+					cvterm_id => $new_term->get_column('cvterm_id'),
+					type_id   => $trait_attribute_id,
+					value     => $trait_attribute,
+					rank      => 0
+				}
+			);
+		}
+
 		# Save additional info
 		my $rank = 0;
 		my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cvterm_additional_info', 'trait_property')->cvterm_id();
@@ -517,10 +637,15 @@ sub update {
 	# new variable
 	my $name = _trim($self->name());
 	my $description = $self->definition();
+	my $entity = $self->entity();
+	my $attribute = $self->attribute();
 	my $active = $self->active();
 	my $synonyms = $self->synonyms();
 	my $cvterm_id = $self->cvterm_id();
 	my $additional_info = $self->additional_info();
+
+	my $trait_entity_id = $self->trait_entity_id();
+	my $trait_attribute_id = $self->trait_attribute_id();
 
 	$self->bcs_schema()->txn_do(sub {
 
@@ -537,6 +662,42 @@ sub update {
 		# Add new synonyms
 		foreach my $synonym (@{$synonyms}) {
 			$self->cvterm->add_synonym($synonym);
+		}
+
+		# Update trait entity
+		$schema->resultset("Cv::Cvtermprop")->search(
+			{
+				cvterm_id => $self->cvterm_id,
+				type_id   => $trait_entity_id
+			}
+		)->delete;
+		if ($entity) {
+			$schema->resultset("Cv::Cvtermprop")->create(
+				{
+					cvterm_id => $self->cvterm_id,
+					type_id   => $trait_entity_id,
+					value     => $entity,
+					rank      => 0
+				}
+			);
+		}
+
+		# Update trait attribute
+		$schema->resultset("Cv::Cvtermprop")->search(
+			{
+				cvterm_id => $self->cvterm_id,
+				type_id   => $trait_attribute_id
+			}
+		)->delete;
+		if ($attribute) {
+			$schema->resultset("Cv::Cvtermprop")->create(
+				{
+					cvterm_id => $self->cvterm_id,
+					type_id   => $trait_attribute_id,
+					value     => $attribute,
+					rank      => 0
+				}
+			);
 		}
 
 		# Delete old additional info
