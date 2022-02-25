@@ -246,11 +246,14 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     open(my $F, "<", $pheno_filepath.".clean.out") || die "Can't open result file $pheno_filepath".".clean.out";
     while (<$F>) {
 	chomp;
-	my @fields = split /\t/;
+	my @fields = split /\,/;
+	#push @data, { 'Cross #' => $fields[0], 'Parent 1' => $fields[1], 'Parent 2' => $fields[2], 'Cross Predicted Merit' => $fields[3] };
 	push @data, \@fields;
     }
+
+    print STDERR "FORMATTED DATA: ".Dumper(\@data);
     
-    $c->stash->{rest}->{
+    $c->stash->{rest} = {
 	data => \@data
     };
 }
