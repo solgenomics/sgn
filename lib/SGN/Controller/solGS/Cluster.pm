@@ -175,7 +175,9 @@ sub prepare_response {
     }
 
     my $ret ->{result} = 'failed';
-    if (-s $c->stash->{"${cluster_type}_plot_file"}) {
+
+    my $plot_file = $c->stash->{"${cluster_type}_plot_file"};
+    if (-s $plot_file) {
       $ret->{result} = 'success';
     }
 
@@ -198,6 +200,9 @@ sub prepare_response {
     $ret->{selection_proportion} = $c->stash->{selection_proportion};
     $ret->{training_traits_ids} =  $c->stash->{training_traits_ids};
     $ret->{plot_name} = "${cluster_type}-plot-${file_id}";
+    $ret->{kcluster_means} = $c->stash->{download_kmeans_means};
+    $ret->{kcluster_variances} = $c->stash->{download_variances};
+    $ret->{elbow_plot} = $c->stash->{download_elbow_plot};
 
     return $ret;
 
@@ -413,8 +418,8 @@ sub cluster_plot_file {
     my $cluster_type = $c->stash->{cluster_type};
     $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
 
-     my $cache_data = {key      => "${cluster_type}-plot-${file_id}",
-                      file      => "${cluster_type}-plot-${file_id}.png",
+     my $cache_data = {key      => "${cluster_type}_plot_${file_id}",
+                      file      => "${cluster_type}_plot_${file_id}.png",
                       stash_key => "${cluster_type}_plot_file"
     };
 
@@ -422,6 +427,58 @@ sub cluster_plot_file {
 
 }
 
+
+sub cluster_elbow_plot_file {
+    my ($self, $c) = @_;
+
+    my $file_id = $c->stash->{file_id};
+    my $cluster_type = $c->stash->{cluster_type};
+    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+
+     my $cache_data = {key      => "${cluster_type}_elbow_plot_${file_id}",
+                      file      => "${cluster_type}_elbow_plot_${file_id}.png",
+                      stash_key => "${cluster_type}_elbow_plot_file"
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+
+sub cluster_means_file {
+    my ($self, $c) = @_;
+
+    my $file_id = $c->stash->{file_id};
+    my $cluster_type = $c->stash->{cluster_type};
+    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+
+     my $cache_data = {key      => "${cluster_type}_means_${file_id}",
+                      file      => "${cluster_type}_means_${file_id}.txt",
+                      stash_key => "${cluster_type}_means_file"
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+
+sub cluster_variances_file {
+    my ($self, $c) = @_;
+
+    my $file_id = $c->stash->{file_id};
+    my $cluster_type = $c->stash->{cluster_type};
+    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+
+     my $cache_data = {key      => "${cluster_type}_variances_${file_id}",
+                      file      => "${cluster_type}_variances_${file_id}.txt",
+                      stash_key => "${cluster_type}_variances_file"
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+
+
+}
 
 sub kcluster_plot_pam_file {
     my ($self, $c) = @_;
@@ -491,12 +548,29 @@ sub prep_cluster_download_files {
   my $clusters_file;
   my $newick_file;
   my $json_file;
-
+  my $elbow_file;
+  my $variances_file;
+  my $means_file;
 
   if ($cluster_type =~ /k-means/i)
   {
       $clusters_file = $c->stash->{"${cluster_type}_result_file"};
       $clusters_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $clusters_file, 'cluster');
+
+      $self->cluster_elbow_plot_file($c);
+      $elbow_file = $c->stash->{"${cluster_type}_elbow_plot_file"};
+      $self->cluster_variances_file($c);
+      $variances_file = $c->stash->{"${cluster_type}_variances_file"};
+      $self->cluster_means_file($c);
+      $means_file = $c->stash->{"${cluster_type}_means_file"};
+
+      $elbow_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $elbow_file, 'cluster');
+      $variances_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $variances_file, 'cluster');
+      $means_file = $c->controller('solGS::Files')->copy_to_tempfiles_subdir($c, $means_file, 'cluster');
+
+      $c->stash->{download_elbow_plot} = $elbow_file;
+      $c->stash->{download_kmeans_means} = $means_file;
+      $c->stash->{download_variances} = $variances_file;
   }
   else
   {
@@ -547,6 +621,13 @@ sub cluster_output_files {
     $self->combined_cluster_trials_data_file($c);
     my $combined_cluster_data_file =  $c->stash->{combined_cluster_data_file};
 
+    $self->cluster_elbow_plot_file($c);
+    my $elbow_file = $c->stash->{"${cluster_type}_elbow_plot_file"};
+    $self->cluster_variances_file($c);
+    my $variances_file = $c->stash->{"${cluster_type}_variances_file"};
+    $self->cluster_means_file($c);
+    my $means_file = $c->stash->{"${cluster_type}_means_file"};
+
     my $file_list = join ("\t",
                           $result_file,
 			  $newick_file,
@@ -554,6 +635,9 @@ sub cluster_output_files {
 			  $plot_file,
 			  $analysis_report_file,
 			  $analysis_error_file,
+              $means_file,
+              $variances_file,
+              $elbow_file,
 			  $combined_cluster_data_file,
 	);
 
