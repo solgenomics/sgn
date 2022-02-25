@@ -14,56 +14,45 @@
 
 
 <& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'CXGN.List', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.SelectionIndex' ] &>
-
-<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
-
-<& /page/page_title.mas, title=>"GCPC" &>
-
-
-<&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
-  <input type="hidden" name="outformat" value="0" />
-
-
-  <div class="form-group form-inline">
-    <label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
-    <br>
-
-    <button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
-    <br>
-    <br>
-
-    </div>
-      <!-- div class = "form-group form-inline">
-       <label for = select_method>Available Methods: </label>
-       <select class="form-control input-sm" id="select_method">
-        <option selected value="ammi">AMMI</option>
-        <option value="gge">GGE</option>
-       </select>
-       <div id = "select_method">
-      </div>
-      <button class="btn btn-primary" id="method_btn" type="submit" name="method_btn" value="method_btn">Select Method</button -->
-
-       <div id="sin_list"></div>
-      
-
-      <center>
-        <div id="trait_histogram_plot">
-        </div>
-      </center>
+  
+  <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+  
+  <& /page/page_title.mas, title=>"GCPC" &>
     
-    <br>
-        </div>
-
-            <div style="text-align: center">
-              <button class="btn btn-primary" id="runGCPC" type="submit" name="runGCPC" value="runGCPC">Run GCPC</button>
-            </div>
-            <br />
-
-    <div id="tempfile" style="display:none" >
-    </div>
-
+    
+    <&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
+      <input type="hidden" name="outformat" value="0" />
+      
+      
+      <div class="form-group form-inline">
+	<label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
+	<br>
+	
+	<button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
+	<br>
+	<br>
+	
+      </div>
+      <div id="sin_list"></div>
+      
+      
+      <center>
+	<div id="trait_histogram_plot">
+	</div>
+      </center>
+      
+      <br>
+      
+      <div style="text-align: center">
+	<button class="btn btn-primary" id="runGCPC" type="submit" name="runGCPC" value="runGCPC">Run GCPC</button>
+      </div>
+      <br />
+      
+      <div id="tempfile" style="display:none" >
+      </div>
+      
 
 
 
@@ -78,25 +67,15 @@
 
       <table id="gcpc_output">
 	<thead>
-	  <tr><th>Cross #</th><th>Accession 1</th><th>Accession2</th></tr>
+	  <tr><th>Cross #</th><th>Parent 1</th><th>Parent 2</th><th>Cross Predicted Merit</tr>
 	</thead>
 
       </table>
 
   <center>
-    <div id="sgn_blast_graph" style="display:none">
-        <div id="myCanvas">
-          Your browser does not support the HTML5 canvas
-        </div>
-    </div>
+   
   </center>
   <br>
-
-  <div id="Overview_output"></div>
-  <div id="Coverage_output"></div>
-  <div id="Table_output" style="min-width:900px;"></div>
-  <div id="Bioperl_output"></div>
-  <div id="Basic_output"></div>
 
 </&>
 
@@ -112,7 +91,8 @@ jQuery(document).ready(function() {
     get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox"});
   }
   else {
-    alert('You must be logged in to use GCPC tool.');
+     alert('Login required!');
+     return;
   }
   $('#pheno_select').attr("disabled",true).html('');
   jQuery('#dataset_select').click(function() {
@@ -221,7 +201,7 @@ jQuery(document).ready(function() {
       $('#gcpc_files').empty();
 
 			      var sin_list_id = jQuery('#sin_list_list_select option:selected').val();
-			      alert("SIN LIST ID "+sin_list_id);
+			      //alert("SIN LIST ID "+sin_list_id);
       if (! sin_list_id || sin_list_id == "") {
           alert("Please select a selection index.")
           $('#gcpc_files').empty();
@@ -230,14 +210,29 @@ jQuery(document).ready(function() {
         var dataset_id = get_dataset_id();
         var method_id = 1;
 
+      $.ajax({
+        'url': '/ajax/gcpc/generate_results?dataset_id='+dataset_id+'&amp;sin_list_id='+sin_list_id+'&amp;method_id='+method_id,
+        'method': "GET",
+	'timeout': 60000000,		      
+        'contentType': 'application/json'
+       }).done( function(data) {
+       if (data.message) { alert(data.message); }
+        if (data.error) { alert(data.error); return; }
+        alert('JSON data retrieved: '+JSON.stringify(data));
         jQuery('#gcpc_output').DataTable( {
-	     destroy: true,		      
-             timeout: 6000000,
-	     ajax: '/ajax/gcpc/generate_results?dataset_id='+dataset_id+'&amp;sin_list_id='+sin_list_id+'&amp;method_id='+method_id
+	     'destroy': true,		      
+             'timeout': 6000000,			      
+             'data' : data.data,
+             //"columns": [
+             //   { "data": "Cross #" },
+             //   { "data": "Parent 1" },
+             //   { "data": "Parent 2" },
+             //   { "data": "Cross Predicted Merit" },
+	     //]
         });
-    });
+     });
+  });
   
-
 function get_dataset_id() {
       var selected_datasets = [];
       jQuery('input[name="dataset_select_checkbox"]:checked').each(function() {
