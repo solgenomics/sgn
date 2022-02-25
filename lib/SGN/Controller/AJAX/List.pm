@@ -1292,8 +1292,16 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
 
     my $list = CXGN::List->new( { dbh=>$dbh, schema=>$schema, phenome_schema=>$phenome_schema, list_id=>$list_id });
     my $type = $list->type();
-    my @list_details;
+    my $items = $list->elements();
 
+    my $item_validator = CXGN::List::Validate->new();
+    my @items_missing = @{$item_validator->validate($schema, $type, $items)->{'missing'}};
+    if (scalar(@items_missing) > 0){
+        $c->stash->{rest} = {error => "The following items are not in the database: ".join(',',@items_missing)};
+        return;
+    }
+
+    my @list_details;
     if ($type eq 'seedlots') {
         my $result = $list->seedlot_list_details();
         my @details = @$result;
