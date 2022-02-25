@@ -11,12 +11,20 @@ use LWP::UserAgent;
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
 use JSON::XS;
+use SGN::Model::Cvterm;
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
 
 my $mech = Test::WWW::Mechanize->new;
+
+# get highest nd_experiment
+my $rs = $f->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search({});
+
+my $max_nd_experiment_id = $rs->get_column('nd_experiment_id')->max();
+
+print STDERR "MAX ND EXPERIMENT ID = $max_nd_experiment_id\n";
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = JSON::XS->new->decode($mech->content);
@@ -95,6 +103,9 @@ is_deeply($message_hash, {'success' => 1});
 
 END{
     #Remove seedlots
+
+    print STDERR "REMOVING SEEDLOTS... ";
+    
     my $dbh = $f->dbh();
     my $seedlot_ids = join ("," , @$added_seedlot);
     my $seedlot_ids2 = join ("," , @$added_seedlot2);
@@ -103,21 +114,39 @@ END{
     $q .= "delete from phenome.stock_owner where stock_id in ($seedlot_ids2);";
     $q .= "delete from stock where stock_id in ($seedlot_ids);";
     $q .= "delete from stock where stock_id in ($seedlot_ids2);";
+    $q .= "delete from nd_experiment where nd_experiment_id > ".$max_nd_experiment_id;
     my $sth = $dbh->prepare($q);
     $sth->execute;
 
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema(), 'seed transaction', 'stock_relationship')->cvterm_id();
     #remove transactions
-    my $rs = $schema->resultset("Stock::Stock")->find({ name => 'test_accession2_001' });
-    my $row = $schema->resultset("Stock::StockRelationship")->find({ subject_id => $rs->stock_id });
-    $row->delete();
+    my $row = $schema->resultset("Stock::Stock")->find({ name => 'test_accession2_001' });
 
-    my $rs = $schema->resultset("Stock::Stock")->find({ name => 'test_accession4_001' });
-    my $row = $schema->resultset("Stock::StockRelationship")->find({ subject_id => $rs->stock_id });
-    $row->delete();
+    my  $rel_rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $row->stock_id, type_id => $cvterm_id });
+    foreach my $rel_row ($rel_rs->all()) {
+	print STDERR "TYPE_ID = ".$rel_row->type_id()."\n";
+	#$rel_row->delete();
+    }
+    
 
-    my $rs = $schema->resultset("Stock::Stock")->find({ name => 'test_accession3_001' });
-    my $row = $schema->resultset("Stock::StockRelationship")->find({ subject_id => $rs->stock_id });
-    $row->delete();
+    $row = $schema->resultset("Stock::Stock")->find({ name => 'test_accession4_001' });
+
+    $rel_rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $row->stock_id, type_id => $cvterm_id });
+    foreach my $rel_row ($rel_rs->all()) {
+	#	$rel_row->delete();
+	print STDERR "TYPE_ID = ".$rel_row->type_id()."\n";
+    }
+    
+    $row = $schema->resultset("Stock::Stock")->find({ name => 'test_accession3_001' });
+
+    $rel_rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $row->stock_id, type_id => $cvterm_id });
+    foreach my $rel_row ($rel_rs->all()) {
+	
+	print STDERR "TYPE_ID = ".$rel_row->type_id()."\n";
+	#	    $rel_row->delete();
+    }
+
+    print STDERR "DONE.\n";
 }
 
 done_testing();
