@@ -823,7 +823,7 @@ sub combined_pops_summary {
         my $pr_name = $c->stash->{project_name};
 
 		$tr_page_args->{training_pop_id} = $pop_id;
-		$tr_page_args->{ 'data_set_type'} => 'single population';
+		$tr_page_args->{ 'data_set_type'} = 'single population';
 
 	   	$training_pop_page = $c->controller('solGS::Path')->training_page_url($tr_page_args);
 

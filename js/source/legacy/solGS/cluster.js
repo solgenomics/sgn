@@ -585,19 +585,18 @@ if (document.URL.match(/cluster\/analysis/)) {
 		success: function(res) {
 
 		    if (res.result == 'success') {
-			jQuery("#cluster_canvas .multi-spinner-container").hide();
+    			jQuery("#cluster_canvas .multi-spinner-container").hide();
 
-			solGS.cluster.plotClusterOutput(res);
+    			solGS.cluster.plotClusterOutput(res);
 
+    			jQuery("#cluster_message").empty();
+    			jQuery('#' + runClusterId).show();
 
-			jQuery("#cluster_message").empty();
-			jQuery('#' + runClusterId).show();
-
-		    } else {
-			jQuery("#cluster_message").html(res.result);
-			jQuery("#cluster_canvas .multi-spinner-container").hide();
-			jQuery('#' + runClusterId).show();
-		    }
+            } else {
+                  jQuery("#cluster_message").html('Error occured running the clustering. ');
+                  jQuery("#cluster_canvas .multi-spinner-container").hide();
+                  jQuery('#' + runClusterId).show();
+            }
 		},
 		error: function(res) {
 		    jQuery("#cluster_message").html('Error occured running the clustering.');
@@ -669,13 +668,13 @@ if (document.URL.match(/cluster\/analysis/)) {
 	var imageId = res.plot_name;
 	console.log('image id: ' + imageId)
 	imageId = 'id="' + imageId + '"';
-	var plot = '<img '+ imageId + ' src="' + res.cluster_plot + '">';
+	var plot  = '<img '+ imageId + ' src="' + res.cluster_plot + '">';
 	var filePlot  = res.cluster_plot.split('/').pop();
 	var plotType;
 	var outFileType;
 	var clustersFile;
 
-	if (plot.match(/k-means/i)) {
+	if (filePlot.match(/k-means/i)) {
             plotType = 'K-means plot';
             outFileType = 'Clusters';
 	    clustersFile = res.kmeans_clusters;
@@ -714,12 +713,10 @@ if (document.URL.match(/cluster\/analysis/)) {
 	    + clustersLink + ' | '
 	    + reportLink;
 
-	// if (plotLink.match(/k-means/i)) {
-	    jQuery('#cluster_plot').prepend('<p style="margin-top: 20px">' + downloadLinks + '</p>');
-	    jQuery('#cluster_plot').prepend(plot);
-	// } else {
-	    // solGS.dendrogram.plot(res.json_data, '#cluster_canvas', '#cluster_plot', downloadLinks)
-	// }
+
+          jQuery('#cluster_plot').prepend('<p style="margin-top: 20px">' + downloadLinks + '</p>');
+          jQuery('#cluster_plot').prepend(plot);
+	//     // solGS.dendrogram.plot(res.json_data, '#cluster_canvas', '#cluster_plot', downloadLinks)
 
     },
 
@@ -815,7 +812,6 @@ if (document.URL.match(/cluster\/analysis/)) {
 	var modelData = solGS.sIndex.getTrainingPopulationData();
 
 	var trainingPopIdName = JSON.stringify(modelData);
-
 	var  popsList =  '<dl id="cluster_selected_population" class="cluster_dropdown">'
             + '<dt> <a href="#"><span>Select a population</span></a></dt>'
             + '<dd><ul>'
@@ -836,7 +832,6 @@ if (document.URL.match(/cluster\/analysis/)) {
 	}
 
 	var listTypeSelPops = jQuery("#list_type_selection_pops_table").length;
-
 	if (listTypeSelPops) {
             var selPopsList = solGS.sIndex.getListTypeSelPopulations();
             if (selPopsList) {

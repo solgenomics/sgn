@@ -15,6 +15,7 @@ library(tibble)
 library(dplyr)
 library(stringr)
 library(phenoAnalysis)
+library(ggplot2)
 
 allArgs <- commandArgs()
 
@@ -25,6 +26,8 @@ inputFile  <- grep("input_files", allArgs, value = TRUE)
 inputFiles <- scan(inputFile, what = "character")
 
 scoresFile       <- grep("pca_scores", outputFiles, value = TRUE)
+screeDataFile       <- grep("pca_scree_data", outputFiles, value = TRUE)
+screeFile       <- grep("pca_scree_plot", outputFiles, value = TRUE)
 loadingsFile     <- grep("pca_loadings", outputFiles, value = TRUE)
 varianceFile     <- grep("pca_variance", outputFiles, value = TRUE)
 combinedDataFile <- grep("combined_pca_data_file", outputFiles, value = TRUE)
@@ -180,60 +183,70 @@ if (!is.null(genoMetaData)) {
 
 scores   <- scores[order(row.names(scores)), ]
 
-variances <- data.frame(pca$importance)
-variances <- variances[2, 1:pcsCnt]
-variances <- round(variances, 4) * 100
-variances <- data.frame(t(variances))
+varianceAllPCs <- data.frame(pca$importance)
+varianceSelectPCs <- varianceAllPCs[2, 1:pcsCnt]
+varianceSelectPCs <- round(varianceSelectPCs, 4) * 100
+varianceSelectPCs <- data.frame(t(varianceSelectPCs))
 
-colnames(variances) <- 'variances'
+colnames(varianceSelectPCs) <- 'Variances'
 
 loadings <- data.frame(pca$rotation)
 loadings <- loadings[, 1:pcsCnt]
 loadings <- round(loadings, 3)
 
-fwrite(scores,
-       file      = scoresFile,
-       sep       = "\t",
-       row.names = TRUE,
-       quote     = FALSE,
-       )
+varianceAllPCs <- varianceAllPCs[2, ] %>%
+    t() %>%
+    round(3) * 100
 
-fwrite(loadings,
-       file      = loadingsFile,
-       sep       = "\t",
-       row.names = TRUE,
-       quote     = FALSE,
-       )
+colnames(varianceAllPCs) <- 'Variances'
+varianceAllPCs <- data.frame(varianceAllPCs)
 
-fwrite(variances,
-       file      = varianceFile,
-       sep       = "\t",
-       row.names = TRUE,
-       quote     = FALSE,
-       )
+varianceAllPCs <- rownames_to_column(varianceAllPCs, 'PCs')
+varianceAllPCs <- data.frame(varianceAllPCs)
 
+screePlot <- ggplot(varianceAllPCs, aes(x = reorder(PCs, -Variances), y = Variances, group = 1)) +
+    geom_line(color="red") +
+    geom_point() +
+    xlab('PCs') +
+    ylab('Explained variance (%)') +
+    theme(axis.text.x = element_text(angle = 90))
+
+png(screeFile)
+screePlot
+dev.off()
+
+
+fwriteOutput <- function (data, dataFile) {
+    fwrite(data,
+    file      = dataFile,
+    sep       = "\t",
+    row.names = TRUE,
+    quote     = FALSE,
+    )
+
+}
+
+fwriteOutput(scores, scoresFile)
+fwriteOutput(varianceAllPCs, screeDataFile)
+fwriteOutput(loadings, loadingsFile)
+fwriteOutput(varianceSelectPCs, varianceFile)
 
 if (!is.null(genoData)) {
     if (length(inputFiles) > 1) {
-        fwrite(genoData,
-               file      = combinedDataFile,
-               sep       = "\t",
-               row.names = TRUE,
-               quote     = FALSE,
-               )
-
+        fwriteOutput(genoData, combinedDataFile)
     }
 }
 
-## if (!is.null(genoDataMissing)) {
-## fwrite(genoData,
-##        file      = genoDataFile,
-##        sep       = "\t",
-##        row.names = TRUE,
-##        quote     = FALSE,
-##        )
 
-## }
+# ## if (!is.null(genoDataMissing)) {
+# ## fwrite(genoData,
+# ##        file      = genoDataFile,
+# ##        sep       = "\t",
+# ##        row.names = TRUE,
+# ##        quote     = FALSE,
+# ##        )
+#
+# ## }
 
 
 q(save = "no", runLast = FALSE)

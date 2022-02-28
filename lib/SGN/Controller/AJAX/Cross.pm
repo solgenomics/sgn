@@ -140,6 +140,11 @@ sub upload_cross_file_POST : Args(0) {
         $user_role = $c->user->get_object->get_user_type();
     }
 
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload crosses'};
+        $c->detach();
+    }
+
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
@@ -1693,7 +1698,6 @@ sub get_cross_additional_info :Path('/ajax/cross/additional_info') Args(1) {
     my $cross_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $cross_additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_additional_info', 'stock_property')->cvterm_id();
     my $cross_additional_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $cross_id, type_id => $cross_additional_info_cvterm});
 

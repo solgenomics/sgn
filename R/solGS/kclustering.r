@@ -1,4 +1,4 @@
- #SNOPSIS
+#SNOPSIS
 
  #runs k-means cluster analysis
 
@@ -35,7 +35,7 @@ errorFile   <- grep("error", outputFiles, value = TRUE)
 combinedDataFile <- grep("combined_cluster_data_file", outputFiles, value = TRUE)
 
 plotPamFile    <- grep("plot_pam", outputFiles, value = TRUE)
-plotKmeansFile <- grep("k-means-plot", outputFiles, value = TRUE)
+kmeansPlotFile <- grep("k-means-plot", outputFiles, value = TRUE)
 optionsFile    <- grep("options", inputFiles,  value = TRUE)
 
 clusterOptions <- read.table(optionsFile,
@@ -53,7 +53,7 @@ predictedTraits <- unlist(strsplit(predictedTraits, ','))
 
 if (is.null(kResultFile)) {
   stop("Clustering output file is missing.")
-  q("no", 1, FALSE) 
+  q("no", 1, FALSE)
 }
 
 clusterData <- c()
@@ -65,32 +65,32 @@ genoDataMissing <- c()
 extractGenotype <- function(inputFiles) {
 
     genoFiles <- grep("genotype_data", inputFiles,  value = TRUE)
-   
+
     genoMetaData <- c()
     filteredGenoFile <- c()
 
-    if (length(genoFiles) > 1) {   
+    if (length(genoFiles) > 1) {
         genoData <- combineGenoData(genoFiles)
-    
+
         genoMetaData   <- genoData$trial
         genoData$trial <- NULL
-        
+
     } else {
         genoFile <- genoFiles
         genoData <- fread(genoFile,
                           header = TRUE,
                           na.strings = c("NA", " ", "--", "-", "."))
-        
-        if (is.null(genoData)) { 
+
+        if (is.null(genoData)) {
             filteredGenoFile <- grep("filtered_genotype_data_",  genoFile, value = TRUE)
             genoData <- fread(filteredGenoFile, header = TRUE)
         }
 
         genoData <- unique(genoData, by = 'V1')
         genoData <- data.frame(genoData)
-        genoData <- column_to_rownames(genoData, 'V1')               
+        genoData <- column_to_rownames(genoData, 'V1')
     }
-   
+
     if (is.null(genoData)) {
         stop("There is no genotype dataset.")
         q("no", 1, FALSE)
@@ -108,7 +108,7 @@ extractGenotype <- function(inputFiles) {
         }
 
         genoData <- data.frame(genoData)
-    } 
+    }
 }
 
 set.seed(235)
@@ -116,8 +116,8 @@ set.seed(235)
 clusterDataNotScaled <- c()
 
 if (grepl('genotype', dataType, ignore.case = TRUE)) {
-    clusterData <- extractGenotype(inputFiles)   
-    
+    clusterData <- extractGenotype(inputFiles)
+
     pca    <- prcomp(clusterData, retx = TRUE)
     pca    <- summary(pca)
 
@@ -127,7 +127,7 @@ if (grepl('genotype', dataType, ignore.case = TRUE)) {
     varProp        <- data.frame(t(varProp))
     names(varProp) <- c('cumVar')
 
-    selectPcs <- varProp %>% filter(cumVar <= 0.9) 
+    selectPcs <- varProp %>% filter(cumVar <= 0.9)
     pcsCnt    <- nrow(selectPcs)
 
     reportNotes <- paste0('Before clustering this dataset, principal component analysis (PCA) was done on it. ', "\n")
@@ -148,13 +148,13 @@ if (grepl('genotype', dataType, ignore.case = TRUE)) {
     if (grepl('gebv', dataType, ignore.case = TRUE)) {
         gebvsFile <- grep("combined_gebvs", inputFiles,  value = TRUE)
         gebvsData <- data.frame(fread(gebvsFile, header = TRUE))
-       
+
         clusterNa   <- gebvsData %>% filter_all(any_vars(is.na(.)))
-        clusterData <- column_to_rownames(gebvsData, 'V1')    
+        clusterData <- column_to_rownames(gebvsData, 'V1')
     } else if (grepl('phenotype', dataType, ignore.case = TRUE)) {
 
         metaFile <- grep("meta", inputFiles,  value = TRUE)
-      
+
         clusterData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
 
         if (!is.na(predictedTraits) & length(predictedTraits) > 1) {
@@ -165,7 +165,7 @@ if (grepl('genotype', dataType, ignore.case = TRUE)) {
     }
 
     clusterDataNotScaled <- na.omit(clusterData)
-    
+
     clusterData <- scale(clusterDataNotScaled, center=TRUE, scale=TRUE)
     reportNotes <- paste0(reportNotes, 'Note: Data was standardized before clustering.', "\n")
 }
@@ -173,18 +173,18 @@ if (grepl('genotype', dataType, ignore.case = TRUE)) {
 sIndexFile <- grep("selection_index", inputFiles, value = TRUE)
 selectedIndexGenotypes <- c()
 
-if (length(sIndexFile) != 0) {   
+if (length(sIndexFile) != 0) {
     sIndexData <- data.frame(fread(sIndexFile, header = TRUE))
     selectionProp <- selectionProp * 0.01
     selectedIndexGenotypes <- sIndexData %>% top_frac(selectionProp)
-  
+
     selectedIndexGenotypes <- column_to_rownames(selectedIndexGenotypes, var = 'V1')
 
     if (!is.null(selectedIndexGenotypes)) {
-        clusterData <- rownames_to_column(clusterData, var = "germplasmName")    
+        clusterData <- rownames_to_column(clusterData, var = "germplasmName")
         clusterData <- clusterData %>%
             filter(germplasmName %in% rownames(selectedIndexGenotypes))
-        
+
         clusterData <- column_to_rownames(clusterData, var = 'germplasmName')
     }
 }
@@ -208,14 +208,14 @@ names(kClusters) <- c('germplasmName', 'Cluster')
 if (!is.null(clusterDataNotScaled)) {
     clusterDataNotScaled <- rownames_to_column(clusterDataNotScaled,
                                                var="germplasmName")
-    
+
     clusteredData <- inner_join(kClusters, clusterDataNotScaled,
                                 by="germplasmName")
 } else if (!is.null(selectedIndexGenotypes)) {
     selectedIndexGenotypes <- rownames_to_column(selectedIndexGenotypes,
                                                  var="germplasmName")
     clusteredData <- inner_join(kClusters, selectedIndexGenotypes,
-                                by="germplasmName")   
+                                by="germplasmName")
 } else {
     clusteredData <- kClusters
 }
@@ -224,7 +224,7 @@ clusteredData <- clusteredData %>%
     mutate_if(is.numeric, funs(round(., 2))) %>%
     arrange(Cluster)
 
-png(plotKmeansFile)
+png(kmeansPlotFile)
 autoplot(kMeansOut, data = clusterData, frame = TRUE,  x = 1, y = 2)
 dev.off()
 
