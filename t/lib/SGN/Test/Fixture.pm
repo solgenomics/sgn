@@ -236,7 +236,7 @@ sub get_db_stats {
 
     # count metadata entries
     $rs = $self->metadata_schema()->resultset('MdMetadata')->search( {}, { columns => [ { 'metadata_id_max' => { max => 'metadata_id' }} ] } );
-    $stats->{md_metadata} = $rs->get_column('metadata_id_max')->first();
+    $stats->{metadata} = $rs->get_column('metadata_id_max')->first();
     
     print STDERR "STATS : ".Dumper($stats);
 
@@ -256,7 +256,7 @@ sub clean_up_db {
 
     if (! defined($self->dbstats_start())) { print STDERR "Can't clean up becaues dbstats were not run at the beginning of the test!\n"; }
 
-    my @deletion_order = ('stock_owners', 'stock_relationships', 'stocks', 'project_relationship', 'project_owners', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata', 'experiment_files', 'experiments');
+    my @deletion_order = ('stock_owners', 'stock_relationships', 'stocks', 'project_relationships', 'project_owners', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata', 'experiment_files', 'experiments');
     foreach my $table (@deletion_order) {
 	print STDERR "CLEANING $table...\n";
 	my $count = $stats->{$table} - $self->dbstats_start()->{$table};
@@ -348,7 +348,7 @@ sub delete_table_entries {
 	$rs = $self->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search( { nd_experiment_id => { '>' => $previous_max_id } } );
     }
 
-    if ($table eq "md_metadata") { 
+    if ($table eq "metadata") { 
 	$rs = $self->metadata_schema()->resultset('MdMetadata')->search( { metadata_id => { '>' => $previous_max_id } } );
     }
 
