@@ -11,7 +11,7 @@ use LWP::UserAgent;
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
 use JSON;
-local $Data::Dumper::Indent = 0;
+local $Data::Dumper::Indent = 1;
 
 my $f = SGN::Test::Fixture->new(); # calculate db stats
 
@@ -92,10 +92,14 @@ is_deeply($response, {'metadata' => {'pagination' => {'totalPages' => 1,'current
 
 $mech->get_ok('http://localhost:3010/brapi/v2/crossingprojects/?pageSize=6');
 $response = decode_json $mech->content;
-print STDERR "\n\n" . Dumper $response;
+print STDERR "\n\nCROSSING PROJECTS RESPONSE: " . Dumper $response;
 #$response->{metadata}->{pagination}= {};
 
-is_deeply($response->{result}, {'data' => [{'commonCropName' => undef,'externalReferences' => [],'additionalInfo' => {},'crossingProjectDescription' => 'CASS_6Genotypes_Sampling_2015','programDbId' => '134','programName' => 'test','crossingProjectDbId' => '165','crossingProjectName' => 'CASS_6Genotypes_Sampling_2015'},{'commonCropName' => undef,'externalReferences' => [],'crossingProjectDescription' => 'Kasese solgs trial','additionalInfo' => {},'programName' => 'test','programDbId' => '134','crossingProjectDbId' => '139','crossingProjectName' => 'Kasese solgs trial'},{'crossingProjectDbId' => '135','crossingProjectName' => 'new_test_cross','additionalInfo' => {},'crossingProjectDescription' => 'new_test_cross','externalReferences' => [],'programName' => 'test','programDbId' => '134','commonCropName' => undef},{'programName' => 'test','programDbId' => '134','externalReferences' => [],'additionalInfo' => {},'crossingProjectDescription' => 'test_t','commonCropName' => undef,'crossingProjectName' => 'test_t','crossingProjectDbId' => '144'},{'crossingProjectName' => 'test_trial','crossingProjectDbId' => '137','commonCropName' => undef,'programDbId' => '134','programName' => 'test','additionalInfo' => {},'crossingProjectDescription' => 'test_trial','externalReferences' => []},{'crossingProjectName' => 'trial2 NaCRRI','crossingProjectDbId' => '141','programDbId' => '134','programName' => 'test','externalReferences' => [],'additionalInfo' => {},'crossingProjectDescription' => 'trial2 NaCRRI','commonCropName' => undef}]}, "testing  crossingprojects");
+my $expected_results = {'data' => [{'commonCropName' => undef,'externalReferences' => [],'additionalInfo' => {},'crossingProjectDescription' => 'CASS_6Genotypes_Sampling_2015','programDbId' => '134','programName' => 'test','crossingProjectDbId' => '165','crossingProjectName' => 'CASS_6Genotypes_Sampling_2015'},{'commonCropName' => undef,'externalReferences' => [],'crossingProjectDescription' => 'Kasese solgs trial','additionalInfo' => {},'programName' => 'test','programDbId' => '134','crossingProjectDbId' => '139','crossingProjectName' => 'Kasese solgs trial'},{'crossingProjectDbId' => '135','crossingProjectName' => 'new_test_cross','additionalInfo' => {},'crossingProjectDescription' => 'new_test_cross','externalReferences' => [],'programName' => 'test','programDbId' => '134','commonCropName' => undef},{'programName' => 'test','programDbId' => '134','externalReferences' => [],'additionalInfo' => {},'crossingProjectDescription' => 'test_t','commonCropName' => undef,'crossingProjectName' => 'test_t','crossingProjectDbId' => '144'},{'crossingProjectName' => 'test_trial','crossingProjectDbId' => '137','commonCropName' => undef,'programDbId' => '134','programName' => 'test','additionalInfo' => {},'crossingProjectDescription' => 'test_trial','externalReferences' => []},{'crossingProjectName' => 'trial2 NaCRRI','crossingProjectDbId' => '141','programDbId' => '134','programName' => 'test','externalReferences' => [],'additionalInfo' => {},'crossingProjectDescription' => 'trial2 NaCRRI','commonCropName' => undef}]};
+
+print STDERR "\n\nCROSSING PROJECTS EXPECTED: ".Dumper($expected_results);
+
+is_deeply($response->{result}, $expected_results, "testing crossing projects");
 
 $mech->get_ok('http://localhost:3010/brapi/v2/crossingprojects/139');
 $response = decode_json $mech->content;
@@ -104,12 +108,23 @@ is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','mess
 
 $mech->get_ok('http://localhost:3010/brapi/v2/breedingmethods');
 $response = decode_json $mech->content;
-print STDERR "\n\n" . Dumper $response;
-is_deeply($response, {'metadata' => {'pagination' => {'totalPages' => 1,'currentPage' => 0,'pageSize' => 10,'totalCount' => 1},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::BreedingMethods'},{'message' => 'Breeding methods result constructed','messageType' => 'INFO'}],'datafiles' => []},'result' => {'data' => [{'breedingMethodName' => 'doubled_haploid','description' => 'doubled_haploid','breedingMethodDbId' => 'doubled_haploid','abbreviation' => 'doubled_haploid'},{'description' => 'self','breedingMethodDbId' => 'self','breedingMethodName' => 'self','abbreviation' => 'self'},{'description' => 'open','breedingMethodDbId' => 'open','breedingMethodName' => 'open','abbreviation' => 'open'},{'breedingMethodDbId' => 'bulk','description' => 'bulk','breedingMethodName' => 'bulk','abbreviation' => 'bulk'},{'abbreviation' => 'bulk_self','breedingMethodName' => 'bulk_self','description' => 'bulk_self','breedingMethodDbId' => 'bulk_self'},{'abbreviation' => 'biparental','description' => 'biparental','breedingMethodDbId' => 'biparental','breedingMethodName' => 'biparental'},{'abbreviation' => 'bulk_open','breedingMethodDbId' => 'bulk_open','description' => 'bulk_open','breedingMethodName' => 'bulk_open'}]}});
+print STDERR "\n\nBREEDING METHODS RESPONSE:" . Dumper $response;
+
+my $expected_response = {'metadata' => {'pagination' => {'totalPages' => 1,'currentPage' => 0,'pageSize' => 10,'totalCount' => 1},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::BreedingMethods'},{'message' => 'Breeding methods result constructed','messageType' => 'INFO'}],'datafiles' => []},'result' => {'data' => [{'breedingMethodName' => 'doubled_haploid','description' => 'doubled_haploid','breedingMethodDbId' => 'doubled_haploid','abbreviation' => 'doubled_haploid'},{'description' => 'self','breedingMethodDbId' => 'self','breedingMethodName' => 'self','abbreviation' => 'self'},{'description' => 'open','breedingMethodDbId' => 'open','breedingMethodName' => 'open','abbreviation' => 'open'},{'breedingMethodDbId' => 'bulk','description' => 'bulk','breedingMethodName' => 'bulk','abbreviation' => 'bulk'},{'abbreviation' => 'bulk_self','breedingMethodName' => 'bulk_self','description' => 'bulk_self','breedingMethodDbId' => 'bulk_self'},{'abbreviation' => 'biparental','description' => 'biparental','breedingMethodDbId' => 'biparental','breedingMethodName' => 'biparental'},{'abbreviation' => 'bulk_open','breedingMethodDbId' => 'bulk_open','description' => 'bulk_open','breedingMethodName' => 'bulk_open'}]}};
+
+print STDERR "BREEDING METHODS EXPECTED: ".Dumper($expected_response);
+
+# response has different order if run individually or together with other tests; sort to prevent test failure
+#
+my $expected_response_sorted = sort { $a->{breedingMethodName} cmp $b->{breedingMethodName} } @{$expected_response->{result}->{data}};
+
+my $response_sorted = sort { $a->{breedingMethodName} cmp $b->{breedingMethodName} } @{$response->{result}->{data}};
+
+is_deeply($response_sorted, $expected_response_sorted, "breeding methods test");
 
 $mech->get_ok('http://localhost:3010/brapi/v2/seedlots');
 $response = decode_json $mech->content;
-print STDERR "\n\n" . Dumper $response;
+print STDERR "\n\nSEEDSLOTS RESPONSE: " . Dumper $response;
 foreach my $t (@{$response->{result}->{data}}) {
     $t->{storageLocation} = "NA";
 }
@@ -130,6 +145,8 @@ foreach my $t (@{$response->{result}->{data}}) {
 print STDERR "CLEANED RESPONSE: ". Dumper $response;
 
 my $data_expected = { 'metadata' => {'pagination' => {'pageSize' => 10,'totalCount' => 479,'currentPage' => 0,'totalPages' => 48},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::SeedLots'},{'messageType' => 'INFO','message' => 'Transactions result constructed'}],'datafiles' => []},'result' => {'data' => [{'additionalInfo' => {},'transactionDbId' => 'NA','toSeedLotDbId' => 'NA','externalReferences' => [],'fromSeedLotDbId' => 'NA','units' => 'seeds','transactionDescription' => 'Auto generated seedlot from accession. DbPatch 00085','transactionTimestamp' => 'NA','amount' => 'NA'},{'transactionTimestamp' => 'NA','amount' => 'NA','transactionDescription' => 'Auto generated seedlot from accession. DbPatch 00085','toSeedLotDbId' => 'NA','fromSeedLotDbId' => 'NA','units' => 'seeds','externalReferences' => [],'transactionDbId' => 'NA','additionalInfo' => {}},{'units' => 'seeds','fromSeedLotDbId' => 'NA','externalReferences' => [],'toSeedLotDbId' => 'NA','transactionDbId' => 'NA','additionalInfo' => {},'amount' => 'NA','transactionTimestamp' => 'NA','transactionDescription' => 'Auto generated seedlot from accession. DbPatch 00085'},{'transactionTimestamp' => 'NA','amount' => 'NA','transactionDescription' => 'Auto generated seedlot from accession. DbPatch 00085','externalReferences' => [],'units' => 'seeds','fromSeedLotDbId' => 'NA','toSeedLotDbId' => 'NA','additionalInfo' => {},'transactionDbId' => 'NA'},{'amount' => 'NA','transactionTimestamp' => 'NA','transactionDescription' => 'Auto generated seedlot from accession. DbPatch 00085','toSeedLotDbId' => 'NA','externalReferences' => [],'fromSeedLotDbId' => 'NA','units' => 'seeds','additionalInfo' => {},'transactionDbId' => 'NA'},{'externalReferences' => [],'units' => 'seeds','fromSeedLotDbId' => 'NA','toSeedLotDbId' => 'NA','additionalInfo' => {},'transactionDbId' => 'NA','amount' => 'NA','transactionTimestamp' => 'NA','transactionDescription' => 'Auto generated seedlot from accession. DbPatch 00085'},{'transactionDbId' => 'NA','additionalInfo' => {},'units' => 'seeds','fromSeedLotDbId' => 'NA','externalReferences' => [],'toSeedLotDbId' => 'NA','transactionDescription' => 'Auto generated seedlot from accession. DbPatch 00085','transactionTimestamp' => 'NA','amount' => 'NA'},{'toSeedLotDbId' => 'NA','fromSeedLotDbId' => 'NA','units' => 'seeds','externalReferences' => [],'transactionDbId' => 'NA','additionalInfo' => {},'amount' => 'NA','transactionTimestamp' => 'NA','transactionDescription' => 'Auto generated seedlot from accession. DbPatch 00085'},{'transactionDescription' => 'Auto generated seedlot from accession. DbPatch 00085','amount' => 'NA','transactionTimestamp' => 'NA','additionalInfo' => {},'transactionDbId' => 'NA','externalReferences' => [],'units' => 'seeds','fromSeedLotDbId' => 'NA','toSeedLotDbId' => 'NA'},{'transactionDescription' => 'Auto generated seedlot from accession. DbPatch 00085','amount' => 'NA','transactionTimestamp' => 'NA','additionalInfo' => {},'transactionDbId' => 'NA','toSeedLotDbId' => 'NA','externalReferences' => [],'fromSeedLotDbId' => 'NA','units' => 'seeds'}]}};
+
+print STDERR "EXPECTED RESPONSE FOR SESEDLOT TRANSACTIONS: ".Dumper($data_expected);
 
 is_deeply($response, $data_expected, "compare clean response with clean data");
 
@@ -212,6 +229,8 @@ $resp = $ua->put("http://localhost:3010/brapi/v2/crossingprojects/140", Content 
 $response = decode_json $resp->{_content};
 print STDERR "\n\n" . Dumper $response;
 is_deeply($response, {'metadata' => {'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Crossing','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Crossing project updated'}],'pagination' => {'currentPage' => 0,'totalPages' => 1,'pageSize' => 10,'totalCount' => 1},'datafiles' => []},'result' => {'commonCropName' => undef,'crossingProjectDescription' => 'Ibadan_Crosses_2018 - 2','crossingProjectName' => 'Ibadan_Crosses_2018 - 2','additionalInfo' => {},'programName' => 'test','programDbId' => '134','externalReferences' => [],'crossingProjectDbId' => '140'}});
+
+$f->clean_up_db();
 
 done_testing();
 	

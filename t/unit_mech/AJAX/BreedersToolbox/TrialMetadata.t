@@ -222,5 +222,6 @@ is($management_factor_date, '2019-July-01', "check management factors 4");
 $treatment_project->delete_field_layout();
 $treatment_project->delete_project_entry();
 
+$f->clean_up_db();
 
 done_testing();

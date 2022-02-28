@@ -173,70 +173,198 @@ sub get_db_stats {
     
     # count number of stocks
     #
-    my $rs = $self->bcs_schema()->resultset('Stock::Stock')->search( {} );
-    $stats->{stocks} = $rs->count();
+    my $rs = $self->bcs_schema()->resultset('Stock::Stock')->search( {}, { columns => [ { 'stock_id_max' => { max => 'stock_id' }} ] } );
+    $stats->{stocks} = $rs->get_column('stock_id_max')->first();
 
-    my $rs = $self->bcs_schema()->resultset('Stock::StockRelationship')->search( {} );
-    $stats->{stock_relationships} = $rs->count();
+    my $rs = $self->phenome_schema()->resultset('StockOwner')->search( {}, { columns => [ { 'stock_owner_id_max' => { max => 'stock_owner_id' }} ] });
+    $stats->{stock_owners} = $rs->get_column('stock_owner_id_max')->first();
+
+    my $rs = $self->bcs_schema()->resultset('Stock::StockRelationship')->search( {}, { columns => [ { 'stock_relationship_id_max' => { max => 'stock_relationship_id' }} ] } );
+    $stats->{stock_relationships} = $rs->get_column('stock_relationship_id_max')->first();
 
     # count cvterms
     #
-    $rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( {} );
-    $stats->{cvterms} = $rs->count();
+    $rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( {}, { columns => [ { 'cvterm_id_max' => { max => 'cvterm_id' }} ] } );
+    $stats->{cvterms} = $rs->get_column('cvterm_id_max')->first();
 
     # count users
     #
-    $rs = $self->people_schema()->resultset('SpPerson')->search( {} );
-    $stats->{people} = $rs->count();
+    $rs = $self->people_schema()->resultset('SpPerson')->search( {}, { columns => [ { 'sp_person_id_max' => { max => 'sp_person_id' }} ] } );
+    $stats->{people} = $rs->get_column('sp_person_id_max')->first();
 
-    $rs = $self->people_schema()->resultset('SpDataset')->search( {} );
-    $stats->{datasets} = $rs->count();
+    $rs = $self->people_schema()->resultset('SpDataset')->search( {}, { columns => [ { 'sp_dataset_id_max' => { max => 'sp_dataset_id' }} ] } );
+    $stats->{datasets} = $rs->get_column('sp_dataset_id_max')->first();
     
-    $rs = $self->people_schema()->resultset('List')->search( {} );
-    $stats->{lists} = $rs->count();
+    $rs = $self->people_schema()->resultset('List')->search( {}, { columns => [ { 'list_id_max' => { max => 'list_id' }} ] } );
+    $stats->{lists} = $rs->get_column('list_id_max')->first();
 
-    $rs = $self->people_schema()->resultset('ListItem')->search( {} );
-    $stats->{list_elements} = $rs->count();
+    $rs = $self->people_schema()->resultset('ListItem')->search( {}, { columns => [ { 'list_item_id_max' => { max => 'list_item_id' }} ] } );
+    $stats->{list_elements} = $rs->get_column('list_item_id_max')->first();
     
     # count projects
     #
-    $rs = $self->bcs_schema()->resultset('Project::Project')->search( {} );
-    $stats->{projects} = $rs->count();
+    $rs = $self->bcs_schema()->resultset('Project::Project')->search( {}, { columns => [ { 'project_id_max' => { max => 'project_id' }} ] } );
+    $stats->{projects} = $rs->get_column('project_id_max')->first();
 
-    $rs = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search( {} );
-    $stats->{project_relationships} = $rs->count();
+    $rs = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search( {}, { columns => [ { 'project_relationship_id_max' => { max => 'project_relationship_id' }} ] } );
+    $stats->{project_relationships} = $rs->get_column('project_relationship_id_max')->first();
 
     # count phenotypes
     #
-    $rs = $self->bcs_schema()->resultset('Phenotype::Phenotype')->search( {} );
-    $stats->{phenotypes} = $rs->count();
+    $rs = $self->bcs_schema()->resultset('Phenotype::Phenotype')->search( {}, { columns => [ { 'phenotype_id_max' => { max => 'phenotype_id' }} ] } );
+    $stats->{phenotypes} = $rs->get_column('phenotype_id_max')->first();
 
     # count genotypes
     #
-    $rs = $self->bcs_schema()->resultset('Genetic::Genotypeprop')->search( {} );
-    $stats->{genotypes} = $rs->count();
+    $rs = $self->bcs_schema()->resultset('Genetic::Genotypeprop')->search( {}, { columns => [ { 'genotypeprop_id_max' => { max => 'genotypeprop_id' }} ] } );
+    $stats->{genotypes} = $rs->get_column('genotypeprop_id_max')->first();
     
     # count locations
-    $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdGeolocation')->search( {} );
-    $stats->{locations} = $rs->count();
+    $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdGeolocation')->search( {}, { columns => [ { 'nd_geolocation_id_max' => { max => 'nd_geolocation_id' }} ] } );
+    $stats->{locations} = $rs->get_column('nd_geolocation_id_max')->first();
 
     # count nd_protocols
-    $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdProtocol')->search( {} );
-    $stats->{protocols} = $rs->count();
+    $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdProtocol')->search( {}, { columns => [ { 'nd_protocol_id_max' => { max => 'nd_protocol_id' }} ] } );
+    $stats->{protocols} = $rs->get_column('nd_protocol_id_max')->first();
 
     # count nd_experiments
-    $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search( {} );
-    $stats->{nd_experiments} = $rs->count();
+    $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search( {}, { columns => [ { 'nd_experiment_id_max' => { max => 'nd_experiment_id' }} ] } );    
+    $stats->{experiments} = $rs->get_column('nd_experiment_id_max')->first();
+
+    $rs = $self->phenome_schema()->resultset('NdExperimentMdFiles')->search( {}, { columns => [ { 'nd_experiment_md_files_id_max' => { max => 'nd_experiment_md_files_id' }} ] });
+    $stats->{experiment_files} = $rs->get_column('nd_experiment_md_files_id_max')->first();
 
     # count metadata entries
-    $rs = $self->metadata_schema()->resultset('MdMetadata')->search( {} );
-    $stats->{md_metadata} = $rs->count();
+    $rs = $self->metadata_schema()->resultset('MdMetadata')->search( {}, { columns => [ { 'metadata_id_max' => { max => 'metadata_id' }} ] } );
+    $stats->{md_metadata} = $rs->get_column('metadata_id_max')->first();
     
     print STDERR "STATS : ".Dumper($stats);
 
     print STDERR "DONE WITH get_db_stats.\n";
     return $stats;
 }
+
+
+# for tests that cannot use a transaction, such as unit_mech or selenium tests, this function can be used to bring
+# the database back to approx the state before the test. dbstats_start needs to contain the result of the dbstats function
+# beginning of the test.
+
+sub clean_up_db {
+    my $self = shift;
+    
+    my $stats = $self->get_db_stats();
+
+    if (! defined($self->dbstats_start())) { print STDERR "Can't clean up becaues dbstats were not run at the beginning of the test!\n"; }
+
+    my @deletion_order = ('stock_owners', 'stock_relationships', 'stocks', 'project_relationship', 'project_owners', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata', 'experiment_files', 'experiments');
+    foreach my $table (@deletion_order) {
+	print STDERR "CLEANING $table...\n";
+	my $count = $stats->{$table} - $self->dbstats_start()->{$table};
+ 	if ($count > 0) {
+	    print STDERR "Deleting...\n";
+	    $self->delete_table_entries($table, $self->dbstats_start()->{$table}, $stats->{$table});
+ 	}
+
+     }
+
+
+}
+
+sub delete_table_entries {
+    my $self = shift;
+    my $table = shift;
+    my $previous_max_id = shift;
+    my $current_max_id = shift;
+
+    print STDERR "DELETING TABLE $table (".($current_max_id - $previous_max_id)." entries)\n";
+    
+    my $rs;
+
+    if ($table eq "stock_owners") {
+	$rs = $self->phenome_schema()->resultset('StockOwner')->search( { stock_owner_id => { '>' => $previous_max_id }});
+    }
+    
+    if ($table eq "stocks") { 
+	$rs = $self->bcs_schema()->resultset('Stock::Stock')->search( { stock_id => { '>' => $previous_max_id }}  );
+    }
+
+    if ($table eq "stock_relationships") { 
+	$rs = $self->bcs_schema()->resultset('Stock::StockRelationship')->search( { stock_relationship_id => { '>' => $previous_max_id }});
+    }
+
+    if ($table eq "cvterms") { 
+	$rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( { cvterm_id => { '>' => $previous_max_id }} );
+    }
+
+    if ($table eq "people") { 
+	$rs = $self->people_schema()->resultset('SpPerson')->search( { sp_person_id => { '>' => $previous_max_id } } );
+    }
+
+    if ($table eq "datasets") { 
+	$rs = $self->people_schema()->resultset('SpDataset')->search( { sp_dataset_id => { '>' => $previous_max_id }} );
+    }
+
+    if ($table eq "lists") { 
+	$rs = $self->people_schema()->resultset('List')->search( { list_id => { '>' => $previous_max_id }} );
+    }	
+
+    if ($table eq "list_elements") { 
+	$rs = $self->people_schema()->resultset('ListItem')->search( { list_item_id => { '>' => $previous_max_id }} );
+    }
+
+    if ($table eq "project_owners") {
+	$rs = $self->metadata_schema()->resultset('ProjectOwner')->search( { project_owner_id => { '>' => $previous_max_id }});
+    }
+    
+    if ($table eq "projects") {
+	$rs = $self->bcs_schema()->resultset('Project::Project')->search( { project_id => { '>' => $previous_max_id }} );
+    }
+
+    if ($table eq "project_relationships") {
+	$rs = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search( { project_relationship_id => { '>' => $previous_max_id }} );
+    }
+
+    if ($table eq "phenotypes") { 
+	$rs = $self->bcs_schema()->resultset('Phenotype::Phenotype')->search( { phenotype_id => { '>' => $previous_max_id }} );
+    }
+
+    if ($table eq "genotypes") { 
+	$rs = $self->bcs_schema()->resultset('Genetic::Genotypeprop')->search( { genotypeprop_id => { '>' => $previous_max_id }} );
+    }
+
+    if ($table eq "locations") { 
+	$rs = $self->bcs_schema()->resultset('NaturalDiversity::NdGeolocation')->search( { nd_geolocation_id => { '>' => $previous_max_id }} );
+    }
+
+    if ($table eq "protocols") { 
+	$rs = $self->bcs_schema()->resultset('NaturalDiversity::NdProtocol')->search( { nd_protocol_id => { '>' => $previous_max_id } } );
+    }
+
+    if ($table eq "experiment_files") {
+	$rs = $self->phenome_schema()->resultset('NdExperimentMdFiles')->search( { nd_experiment_md_files_id => { '>' => $previous_max_id }} );
+    }
+    
+    if ($table eq "experiments") { 
+	$rs = $self->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search( { nd_experiment_id => { '>' => $previous_max_id } } );
+    }
+
+    if ($table eq "md_metadata") { 
+	$rs = $self->metadata_schema()->resultset('MdMetadata')->search( { metadata_id => { '>' => $previous_max_id } } );
+    }
+
+
+    my $count = 0;
+    while (my $row = $rs->next()) {
+	$count++;
+	print STDERR "Delete $table entries $count  \r";
+	$row->delete();
+    }
+    
+    print STDERR "\n";
+}
+
+
+
 
  sub DEMOLISH {
      my $self = shift;
@@ -254,6 +382,7 @@ sub get_db_stats {
      }
     
 }
+
 
 
 
