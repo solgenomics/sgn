@@ -82,5 +82,5 @@ is_deeply($wishlist_rows, [
 my $delete_experiment = $crossing_experiment_rs->delete();
 my $delete_list = CXGN::List::delete_list($f->dbh(), $accession_list_id);
 
-
+$f->clean_up_db();
 done_testing();

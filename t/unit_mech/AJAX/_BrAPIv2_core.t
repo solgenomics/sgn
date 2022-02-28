@@ -291,5 +291,12 @@ print STDERR "\n\n" . Dumper $response;
 is_deeply($response, {'result' => {'data' => [{'startDate' => undef,'programDbId' => '134','datasetAuthorships' => undef,'active' => JSON::true ,'publications' => undef,'trialName' => 'Peru Yield Trial 2020-1','trialPUI' => undef,'trialDbId' => $trial_id,'contacts' => undef,'additionalInfo' => {},'commonCropName' => undef,'documentationURL' => undef,'trialDescription' => 'Trial initiated in Peru','programName' => 'test','endDate' => undef,'externalReferences' => undef}]},'metadata' => {'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'message' => 'search result constructed','messageType' => 'INFO'}],'pagination' => {'totalPages' => 1,'pageSize' => 10,'currentPage' => 0,'totalCount' => 1}}} );
 
 
+
+## REMOVE created objects...
+
+print STDERR "CLEANING DB... ";
+$f->clean_up_db();
+print STDERR "Done.\n";
+
 done_testing();
 

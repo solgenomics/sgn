@@ -149,4 +149,6 @@ END{
     print STDERR "DONE.\n";
 }
 
+$f->clean_up_db();
+
 done_testing();
