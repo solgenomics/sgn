@@ -80,6 +80,9 @@ try {
     if ($mode eq 'phenotypes') {
        @mv_names = ("materialized_phenoview", "materialized_phenotype_jsonb_table");
     }
+    if ($mode eq 'all_but_genoview') {
+       @mv_names = ("materialized_stockprop", "materialized_phenoview", "materialized_phenotype_jsonb_table");
+    }
 
     my $status = refresh_mvs($dbh, \@mv_names, $concurrent);
 
