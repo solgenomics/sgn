@@ -133,6 +133,7 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'result' => {'data' => [{'callSetCount' => 280,'variantSetDbId' => '142p1','variantCount' => 500,'studyDbId' => '142','referenceSetDbId' => '1','variantSetName' => 'test_population2 - GBS ApeKI genotyping v4','availableFormats' => [{'fileURL' => undef,'fileFormat' => 'json','dataFormat' => 'json'}],'additionalInfo' => {},'analysis' => [{'software' => undef,'description' => undef,'created' => undef,'analysisName' => 'GBS ApeKI genotyping v4','type' => undef,'analysisDbId' => '1','updated' => undef}]}]},'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 1,'totalPages' => 1,'pageSize' => 10,'currentPage' => 0},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::VariantSets'},{'messageType' => 'INFO','message' => 'VariantSets result constructed'}]}});
 
+$f->clean_up_db();
 
 done_testing();
 

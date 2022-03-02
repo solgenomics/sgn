@@ -7,6 +7,7 @@ use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
+use CXGN::BreederSearch;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -229,6 +230,28 @@ $resp = $ua->put("http://localhost:3010/brapi/v2/crossingprojects/140", Content 
 $response = decode_json $resp->{_content};
 print STDERR "\n\n" . Dumper $response;
 is_deeply($response, {'metadata' => {'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Crossing','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Crossing project updated'}],'pagination' => {'currentPage' => 0,'totalPages' => 1,'pageSize' => 10,'totalCount' => 1},'datafiles' => []},'result' => {'commonCropName' => undef,'crossingProjectDescription' => 'Ibadan_Crosses_2018 - 2','crossingProjectName' => 'Ibadan_Crosses_2018 - 2','additionalInfo' => {},'programName' => 'test','programDbId' => '134','externalReferences' => [],'crossingProjectDbId' => '140'}});
+
+$f->clean_up_db();
+
+# rename back changed stock names and synonyms
+#
+my $row = $f->bcs_schema()->resultset('Stock::Stock')->find( { uniquename => 'test_Germplasm' });
+
+$row->uniquename('IITA-TMS-IBA30572');
+$row->update();
+
+$row = $f->bcs_schema()->resultset('Stock::Stockprop')->find( { value => 'variety_17' });
+if ($row) { $row->delete(); }
+
+ my $bs = CXGN::BreederSearch->new( { dbh=>$f->dbh, dbname=>$f->config->{dbname} } );
+ $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'fullview', 'basic', $f->config->{basepath});
+$bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'stockprop', 'basic', $f->config->{basepath});
+ $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'phenotype', 'basic', $f->config->{basepath});
+
+ while (exists($bs->matviews_status()->{refreshing})) {
+     print STDERR "Matview refreshing... Waiting.\n";
+     sleep(1);
+ }
 
 $f->clean_up_db();
 

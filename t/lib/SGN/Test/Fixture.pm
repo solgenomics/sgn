@@ -55,13 +55,13 @@ sub BUILD {
 	print "ERROR! sgn_fixture.conf does not exist. Abort. Are you running test_fixture.pl ?\n";
 	exit();
     }
-	
+
     my $all_config = Config::Any->load_files({
 	files=> ['sgn_fixture.conf'], use_ext=>1
-					 });
+					     });
 
     my $config = $all_config->[0]->{'sgn_fixture.conf'};
-    
+
     $self->config($config);
 
     my $dsn = 'dbi:Pg:database='.$self->config->{dbname}.";host=".$self->config->{dbhost}.";port=5432";
@@ -69,11 +69,11 @@ sub BUILD {
     $self->dbh(DBI->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}, { on_connect_do => ['SET search_path TO phenome, public, sgn, metadata' ]} ));
 
     $self->bcs_schema(Bio::Chado::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}));
-    
+
     $self->phenome_schema(CXGN::Phenome::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}, { on_connect_do => [ 'SET search_path TO phenome, public, sgn, metadata' ] } ));
-    
+
     $self->sgn_schema(SGN::Schema->connect($dsn, $self->config->{dbuser}, $self->config->{dbpass}, { on_connect_do => [ 'SET search_path TO metadata, public, sgn' ] }));
-    
+
     $self->metadata_schema(CXGN::Metadata::Schema->connect($dsn, $self->config->{dbuser}, $self->{config}->{dbpass}, { on_connect_do => [ 'SET search_path TO metadata, public, sgn' ] }));
 
     $self->people_schema(CXGN::People::Schema->connect($dsn, $self->config->{dbuser}, $self->{config}->{dbpass}, { on_connect_do => [ 'SET search_path TO sgn_people, public, sgn' ]}));
@@ -176,11 +176,14 @@ sub get_db_stats {
     my $rs = $self->bcs_schema()->resultset('Stock::Stock')->search( {}, { columns => [ { 'stock_id_max' => { max => 'stock_id' }} ] } );
     $stats->{stocks} = $rs->get_column('stock_id_max')->first();
 
-    my $rs = $self->phenome_schema()->resultset('StockOwner')->search( {}, { columns => [ { 'stock_owner_id_max' => { max => 'stock_owner_id' }} ] });
+    $rs = $self->phenome_schema()->resultset('StockOwner')->search( {}, { columns => [ { 'stock_owner_id_max' => { max => 'stock_owner_id' }} ] });
     $stats->{stock_owners} = $rs->get_column('stock_owner_id_max')->first();
 
-    my $rs = $self->bcs_schema()->resultset('Stock::StockRelationship')->search( {}, { columns => [ { 'stock_relationship_id_max' => { max => 'stock_relationship_id' }} ] } );
+    $rs = $self->bcs_schema()->resultset('Stock::StockRelationship')->search( {}, { columns => [ { 'stock_relationship_id_max' => { max => 'stock_relationship_id' }} ] } );
     $stats->{stock_relationships} = $rs->get_column('stock_relationship_id_max')->first();
+
+    $rs = $self->bcs_schema()->resultset('Stock::Stockprop')->search( {}, { columns => [ { 'stockprop_id_max' => { max => 'stockprop_id' }} ] } );
+    $stats->{stockprops} = $rs->get_column('stockprop_id_max')->first();
 
     # count cvterms
     #
@@ -194,13 +197,13 @@ sub get_db_stats {
 
     $rs = $self->people_schema()->resultset('SpDataset')->search( {}, { columns => [ { 'sp_dataset_id_max' => { max => 'sp_dataset_id' }} ] } );
     $stats->{datasets} = $rs->get_column('sp_dataset_id_max')->first();
-    
+
     $rs = $self->people_schema()->resultset('List')->search( {}, { columns => [ { 'list_id_max' => { max => 'list_id' }} ] } );
     $stats->{lists} = $rs->get_column('list_id_max')->first();
 
     $rs = $self->people_schema()->resultset('ListItem')->search( {}, { columns => [ { 'list_item_id_max' => { max => 'list_item_id' }} ] } );
     $stats->{list_elements} = $rs->get_column('list_item_id_max')->first();
-    
+
     # count projects
     #
     $rs = $self->bcs_schema()->resultset('Project::Project')->search( {}, { columns => [ { 'project_id_max' => { max => 'project_id' }} ] } );
@@ -208,6 +211,9 @@ sub get_db_stats {
 
     $rs = $self->bcs_schema()->resultset('Project::ProjectRelationship')->search( {}, { columns => [ { 'project_relationship_id_max' => { max => 'project_relationship_id' }} ] } );
     $stats->{project_relationships} = $rs->get_column('project_relationship_id_max')->first();
+
+    $rs = $self->bcs_schema()->resultset('Project::Projectprop')->search( {}, { columns => [ { 'projectprop_id_max' => { max => 'projectprop_id' } } ] } );
+    $stats->{projectprops} = $rs->get_column('projectprop_id_max')->first();
 
     # count phenotypes
     #
@@ -218,7 +224,7 @@ sub get_db_stats {
     #
     $rs = $self->bcs_schema()->resultset('Genetic::Genotypeprop')->search( {}, { columns => [ { 'genotypeprop_id_max' => { max => 'genotypeprop_id' }} ] } );
     $stats->{genotypes} = $rs->get_column('genotypeprop_id_max')->first();
-    
+
     # count locations
     $rs = $self->bcs_schema()->resultset('NaturalDiversity::NdGeolocation')->search( {}, { columns => [ { 'nd_geolocation_id_max' => { max => 'nd_geolocation_id' }} ] } );
     $stats->{locations} = $rs->get_column('nd_geolocation_id_max')->first();
@@ -234,10 +240,14 @@ sub get_db_stats {
     $rs = $self->phenome_schema()->resultset('NdExperimentMdFiles')->search( {}, { columns => [ { 'nd_experiment_md_files_id_max' => { max => 'nd_experiment_md_files_id' }} ] });
     $stats->{experiment_files} = $rs->get_column('nd_experiment_md_files_id_max')->first();
 
+    # count metadata file entries
+    $rs = $self->metadata_schema()->resultset('MdFiles')->search( {}, { columns => [ { 'file_id_max' => { max => 'file_id' }} ] } );
+    $stats->{metadata_files} = $rs->get_column('file_id_max')->first();
+
     # count metadata entries
     $rs = $self->metadata_schema()->resultset('MdMetadata')->search( {}, { columns => [ { 'metadata_id_max' => { max => 'metadata_id' }} ] } );
     $stats->{metadata} = $rs->get_column('metadata_id_max')->first();
-    
+
     print STDERR "STATS : ".Dumper($stats);
 
     print STDERR "DONE WITH get_db_stats.\n";
@@ -251,12 +261,12 @@ sub get_db_stats {
 
 sub clean_up_db {
     my $self = shift;
-    
+
     my $stats = $self->get_db_stats();
 
     if (! defined($self->dbstats_start())) { print STDERR "Can't clean up becaues dbstats were not run at the beginning of the test!\n"; }
 
-    my @deletion_order = ('stock_owners', 'stock_relationships', 'stocks', 'project_relationships', 'project_owners', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata', 'experiment_files', 'experiments');
+    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_relationships', 'project_owners', 'projectprops', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiments');
     foreach my $table (@deletion_order) {
 	print STDERR "CLEANING $table...\n";
 	my $count = $stats->{$table} - $self->dbstats_start()->{$table};
@@ -264,10 +274,7 @@ sub clean_up_db {
 	    print STDERR "Deleting...\n";
 	    $self->delete_table_entries($table, $self->dbstats_start()->{$table}, $stats->{$table});
  	}
-
      }
-
-
 }
 
 sub delete_table_entries {
@@ -277,13 +284,17 @@ sub delete_table_entries {
     my $current_max_id = shift;
 
     print STDERR "DELETING TABLE $table (".($current_max_id - $previous_max_id)." entries)\n";
-    
+
     my $rs;
 
     if ($table eq "stock_owners") {
 	$rs = $self->phenome_schema()->resultset('StockOwner')->search( { stock_owner_id => { '>' => $previous_max_id }});
     }
-    
+
+    if ($table eq "stockprops") {
+	$rs = $self->bcs_schema()->resultset('Stock::Stockprop')->search( { stockprop_id => { '>' => $previous_max_id }});
+    }												 
+
     if ($table eq "stocks") { 
 	$rs = $self->bcs_schema()->resultset('Stock::Stock')->search( { stock_id => { '>' => $previous_max_id }}  );
     }
@@ -315,7 +326,11 @@ sub delete_table_entries {
     if ($table eq "project_owners") {
 	$rs = $self->metadata_schema()->resultset('ProjectOwner')->search( { project_owner_id => { '>' => $previous_max_id }});
     }
-    
+
+    if ($table eq "projectprops") {
+	$rs = $self->bcs_schema()->resultset('Project::Projectprop')->search( { projectprop_id => { '>' => $previous_max_id }});
+    }
+
     if ($table eq "projects") {
 	$rs = $self->bcs_schema()->resultset('Project::Project')->search( { project_id => { '>' => $previous_max_id }} );
     }
@@ -343,47 +358,54 @@ sub delete_table_entries {
     if ($table eq "experiment_files") {
 	$rs = $self->phenome_schema()->resultset('NdExperimentMdFiles')->search( { nd_experiment_md_files_id => { '>' => $previous_max_id }} );
     }
-    
+
     if ($table eq "experiments") { 
 	$rs = $self->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search( { nd_experiment_id => { '>' => $previous_max_id } } );
     }
 
-    if ($table eq "metadata") { 
-	$rs = $self->metadata_schema()->resultset('MdMetadata')->search( { metadata_id => { '>' => $previous_max_id } } );
+    if ($table eq "metadata_files") {
+	#$rs = $self->metadata_schema()->resultset('MdFiles')->search( { file_id => { '>' => $previous_max_id }});
+    }
+
+    if ($table eq "metadata") {
+	my $rs = undef;
+	my $q = "DELETE FROM metadata.md_files where metadata_id > ?";
+	my $h = $self->dbh()->prepare($q);
+	$h->execute($previous_max_id);
+
+	my $q2 = "DELETE FROM metadata.md_metadata where metadata_id > ? ";
+	my $h2 = $self->dbh()->prepare($q2);
+	$h2->execute($previous_max_id);
     }
 
 
     my $count = 0;
-    while (my $row = $rs->next()) {
-	$count++;
-	print STDERR "Delete $table entries $count  \r";
-	$row->delete();
+    if ($rs) { 
+	while (my $row = $rs->next()) {
+	    $count++;
+	    print STDERR "Delete $table entries $count  \r";
+	    $row->delete();
+	}
     }
-    
     print STDERR "\n";
 }
 
 
 
 
- sub DEMOLISH {
-     my $self = shift;
+sub DEMOLISH {
+    my $self = shift;
 
-     print STDERR  "####DEMOLISHING THIS OBJECT NOW... AND GETTING DBSTATS AGAIN\n";
-     my $stats = $self->get_db_stats();
+    print STDERR  "####DEMOLISHING THIS OBJECT NOW... AND GETTING DBSTATS AGAIN\n";
+    my $stats = $self->get_db_stats();
 
-     print STDERR "# DB STATS AFTER TEST: ".Dumper($stats)."\n";
-     foreach my $table (keys %$stats) {
+    print STDERR "# DB STATS AFTER TEST: ".Dumper($stats)."\n";
+    foreach my $table (keys %$stats) {
  	if ($self->dbstats_start()->{$table} != $stats->{$table}) {
  	    print STDERR "# $0 FOR TABLE $table ENTRIES CHANGED FROM ".
  		$self->dbstats_start()->{$table} ." TO ".$stats->{$table}.". PLEASE CLEAN UP THIS TEST!\n";
  	}
-
-     }
-    
+    }
 }
-
-
-
 
 1;

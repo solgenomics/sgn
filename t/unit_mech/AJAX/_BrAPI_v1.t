@@ -318,4 +318,6 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'result' => {'data' => []},'metadata' => {'datafiles' => [],'pagination' => {'totalPages' => 0,'pageSize' => 10,'currentPage' => 0,'totalCount' => 0},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v1::Samples','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Sample search result constructed'}]}}, 'samples');
 
+$f->clean_up_db();
+
 done_testing();
