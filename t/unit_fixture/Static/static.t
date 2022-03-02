@@ -80,7 +80,7 @@ $mech->get_ok($_) for
 #         /js/CXGN/BreedersToolbox/CrossDetailPage.js
 #     );
 
-#Called by application from sgn/mason/breeders_toolbox/crosses.mas
+#Called by application from sgn/mason/breeders_toolbox/crossing_experiment_tree.mas
 # $mech->get_ok($_) for
 #     qw(
 #         /js/jquery/iframe-post-form.js

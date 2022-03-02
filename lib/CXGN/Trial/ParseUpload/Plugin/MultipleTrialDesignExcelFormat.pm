@@ -420,7 +420,7 @@ sub _validate_with_plugin {
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
-            if (defined($apply_treatment) && $apply_treatment ne '1'){
+            if ( ($apply_treatment ne '') && defined($apply_treatment) && $apply_treatment ne '1'){
                 push @error_messages, "Treatment value for treatment <b>$treatment_name</b> in row $row_name should be either 1 or empty";
             }
         }
