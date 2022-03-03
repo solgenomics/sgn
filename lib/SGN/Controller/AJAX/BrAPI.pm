@@ -3386,7 +3386,7 @@ sub observationvariable_list_POST {
 	_validate_request($c, 'ARRAY', $data, [
 		'observationVariableName',
 		{'scale' => ['dataType', 'scaleName']},
-		{'method' => ['methodName', 'methodClass', 'description']},
+		{'method' => ['methodName', 'methodClass']},
 		{'trait' => ['traitName', 'status']}
 	]);
 
