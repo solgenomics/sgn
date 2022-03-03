@@ -28,6 +28,12 @@ outputFiles <- scan(outputFiles, what = "character")
 inputFiles <- grep("input_files", allArgs, value = TRUE)
 inputFiles <- scan(inputFiles, what = "character")
 
+optionsFile <- grep("options", inputFiles, value = TRUE)
+clusterOptions <- read.table(optionsFile, header = TRUE, sep = "\t", stringsAsFactors = FALSE,
+    na.strings = "")
+print(clusterOptions)
+
+kmeansPlotFile <- grep("k-means_plot", outputFiles, value = TRUE)
 kResultFile <- grep("result", outputFiles, value = TRUE)
 elbowPlotFile <- grep("elbow_plot", outputFiles, value = TRUE)
 clusterMeansFile <- grep("k-means_means", outputFiles, value = TRUE)
@@ -37,13 +43,6 @@ errorFile <- grep("error", outputFiles, value = TRUE)
 
 combinedDataFile <- grep("combined_cluster_data_file", outputFiles, value = TRUE)
 
-plotPamFile <- grep("plot_pam", outputFiles, value = TRUE)
-kmeansPlotFile <- grep("k-means_plot", outputFiles, value = TRUE)
-optionsFile <- grep("options", inputFiles, value = TRUE)
-
-clusterOptions <- read.table(optionsFile, header = TRUE, sep = "\t", stringsAsFactors = FALSE,
-    na.strings = "")
-print(clusterOptions)
 clusterOptions <- column_to_rownames(clusterOptions, var = "Params")
 userKNumbers <- as.numeric(clusterOptions["k_numbers", 1])
 dataType <- clusterOptions["data_type", 1]
@@ -230,7 +229,7 @@ clusteredData <- clusteredData %>%
     mutate_if(is.double, round, 2) %>%
     arrange(Cluster)
 
-print(paste("size: ", "\n", "\n", round(kMeansOut$size, 2)))
+# print(paste('size: ', '\n', '\n', round(kMeansOut$size, 2)))
 # print(paste('centers: ','\n', round(kMeansOut$centers, 2)))
 
 if (length(elbowPlotFile) & !file.info(elbowPlotFile)$size) {
@@ -245,7 +244,6 @@ png(kmeansPlotFile)
 fviz_cluster(kMeansOut, geom = "point", main = "", data = clusterData)
 dev.off()
 
-print(head(kMeansOut$cluster))
 clusterMeans <- aggregate(clusterDataNotScaled, by = list(cluster = kMeansOut$cluster),
     mean)
 
@@ -255,32 +253,20 @@ clusterMeans <- clusterMeans %>%
 
 cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
 
-message("variancesFile ", variancesFile)
 variances <- paste0("Variances output: ")
-variances <- append(variances, paste0("\n\n", "Total sum of squares (totss): ", round(kMeansOut$totss,
-    2)))
+variances <- append(variances, (paste0("\nBetween clusters sum of squares (betweenss): ",
+    "\t", round(kMeansOut$betweenss, 2))))
 withinss <- round(kMeansOut$withinss, 2)
-print(withinss)
-variances <- append(variances, paste0("\n\n", "Within cluster sum of squares (withinss): "),
-    withinss)
-print(variances)
-variances <- append(variances, paste0("\n\n", "Total within cluster sum of squares (tot.withinss): ",
-    round(kMeansOut$tot.withinss, 2)))
-variances <- append(variances, paste0("\n\n", "Between clusters sum of squares (betweenss): ",
-    round(kMeansOut$betweenss, 2)))
+withinss <- c(paste0("\nWithin clusters sum of squares (withinss): "), "\t", paste("\n\t",
+    withinss))
+variances <- append(variances, withinss)
+variances <- append(variances, (paste0("\nTotal within cluster sum of squares (tot.withinss): ",
+    "\t", round(kMeansOut$tot.withinss, 2))))
 
-# variances <- paste0('Variances output: ', '\n') variances <-
-# paste0(variances, '\n', 'Total sum of squares (totss): ',
-# round(kMeansOut$totss, 2), '\n') variances <- paste0(variances, '\n', 'Within
-# cluster sum of squares (withinss): ', round(kMeansOut$withinss, 2), '\n')
-# variances <- paste0(variances, '\n', 'Total within cluster sum of squares
-# (tot.withinss): ', round(kMeansOut$tot.withinss, 2), '\n') variances <-
-# paste0(variances, '\n', 'Between clusters sum of squares (betweenss): ',
-# round(kMeansOut$betweenss, 2), '\n')
+variances <- append(variances, (paste0("\nTotal sum of squares (totss): ", "\t",
+    round(kMeansOut$totss, 2))))
 
-print(variances)
-cat(variances, file = variancesFile, sep = "\n", append = TRUE)
-
+cat(variances, file = variancesFile, sep = "", append = TRUE)
 
 if (length(genoFiles) > 1) {
     fwrite(genoData, file = combinedDataFile, sep = "\t", row.names = TRUE, quote = FALSE,
