@@ -244,10 +244,11 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     my @data;
 
     open(my $F, "<", $pheno_filepath.".clean.out") || die "Can't open result file $pheno_filepath".".clean.out";
+    my $header = <$F>;
     while (<$F>) {
 	chomp;
 	my @fields = split /\,/;
-	#push @data, { 'Cross #' => $fields[0], 'Parent 1' => $fields[1], 'Parent 2' => $fields[2], 'Cross Predicted Merit' => $fields[3] };
+	foreach my $f (@fields) { $f =~ s/\"//g; }
 	push @data, \@fields;
     }
 

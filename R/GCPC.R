@@ -130,7 +130,7 @@ write(paste("WEIGHTS", userWeights), stderr())
 #    The maximum possible is a full diallel.
 
 #userNCrosses <- c()
-userNCrosses <- 40 # for testing only
+userNCrosses <- 100 # for testing only
 
 
 # j. The user can (optionally) input the individuals' sexes and indicate the column
