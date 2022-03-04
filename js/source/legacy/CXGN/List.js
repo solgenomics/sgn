@@ -1215,25 +1215,25 @@ function getData(id, selectText) {
         data = jQuery('#'+id).html();
     }
     if (divType == 'SELECT' && selectText) {
-        if (jQuery.browser.msie) {
-            // Note: MS IE unfortunately removes all whitespace
-            // in the jQuery().text() call. Program it out...
-            //
-            var selectbox = document.getElementById(id);
-            var datalist = new Array();
-            for (var n=0; n<selectbox.length; n++) {
-                if (selectbox.options[n].selected) {
-                    var x=selectbox.options[n].text;
-                    datalist.push(x);
-                }
-            }
-            data = datalist.join("\n");
-            //alert("data:"+data);
+        //if (jQuery.browser.msie) {
+        //    // Note: MS IE unfortunately removes all whitespace
+        //    // in the jQuery().text() call. Program it out...
+        //    //
+        //    var selectbox = document.getElementById(id);
+        //    var datalist = new Array();
+        //    for (var n=0; n<selectbox.length; n++) {
+        //         if (selectbox.options[n].selected) {
+        //             var x=selectbox.options[n].text;
+        //             datalist.push(x);
+        //         }
+        //     }
+        //     data = datalist.join("\n");
+        //     //alert("data:"+data);
 
-        }
-        else {
+        // }
+        // else {
             data = jQuery('#'+id+" option:selected").text();
-        }
+        //}
 
     }
     if (divType == 'SELECT' && ! selectText) {
