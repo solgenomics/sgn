@@ -17,8 +17,9 @@
 				var tipY = e.pageY + 12;
 				$(this).attr("title", "");
 				$("body").append("<div id='simpleTooltip' style='position: absolute; z-index: 100; display: none;'>" + text + "</div>");
-				if($.browser.msie) var tipWidth = $("#simpleTooltip").outerWidth(true)
-				else var tipWidth = $("#simpleTooltip").width()
+				//if($.browser.msie) var tipWidth = $("#simpleTooltip").outerWidth(true)
+			        //else
+				var tipWidth = $("#simpleTooltip").width()
 				$("#simpleTooltip").width(tipWidth);
 				$("#simpleTooltip").css("left", tipX).css("top", tipY).fadeIn("medium");
 			}, function(){
