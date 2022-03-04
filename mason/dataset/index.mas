@@ -8,10 +8,10 @@ $dataset_description => ''
 
 
 <& /page/page_title.mas, title => "Dataset '$dataset_name' ($dataset_id)" &>
+<& /util/import_javascript.mas, entries => ['dataset_histogram'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
 
 
   <div id="dataset_selections">
-
   </div>
 
 
@@ -24,6 +24,7 @@ $dataset_description => ''
 
 
   <div id="trait_histogram">
+
   </div>
 
 
@@ -34,4 +35,11 @@ $dataset_description => ''
   </div>
 
 
-  
+<script>
+
+jQuery(document).ready( function() {
+  var DataSet = window.jsMod['dataset_histogram'].init();
+  DataSet.render();
+});  
+
+</script>
