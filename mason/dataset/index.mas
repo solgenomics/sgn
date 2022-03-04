@@ -11,6 +11,14 @@ $dataset_description => ''
 <& /util/import_javascript.mas, entries => ['dataset_histogram'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
 
 
+<style>
+  #trait_histogram {
+    margin: 0 auto;
+    width: 50%;
+
+  }
+</style>
+
   <div id="dataset_selections">
   </div>
 
