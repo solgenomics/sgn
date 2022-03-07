@@ -69,4 +69,6 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is(scalar(@{$response->{files}}), 2);
 
+$f->clean_up_db();
+
 done_testing();
