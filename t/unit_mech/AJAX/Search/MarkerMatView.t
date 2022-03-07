@@ -157,4 +157,6 @@ is($delete_results->{'success'}, 1, "Delete genotype protocol");
 
 $schema->resultset("Project::Project")->find({project_id=>$vcf_project_id})->delete();
 
+$t->clean_up_db();
+
 done_testing();
