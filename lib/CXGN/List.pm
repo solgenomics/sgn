@@ -33,6 +33,7 @@ package CXGN::List;
 
 use Moose;
 use Data::Dumper;
+use CXGN::Stock::Seedlot;
 
 has 'dbh' => ( isa => 'DBI::db',
 	       is => 'rw',
@@ -63,6 +64,11 @@ has 'type' => (isa => 'Str',
 has 'elements' => (isa => 'ArrayRef',
 		   is => 'rw',
     );
+
+has 'schema' => (isa => 'Bio::Chado::Schema', is => 'rw');
+
+has 'phenome_schema' => (isa => 'CXGN::Phenome::Schema',is => 'rw');
+
 
 # class method: Use like so: CXGN::List::create_list
 sub create_list {
@@ -646,6 +652,56 @@ sub sort_items {
     $self->delete_bulk(\@item_ids);
     $self->add_bulk(\@sorted, $self->list_id);
     return 1;
+}
+
+
+sub seedlot_list_details {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $phenome_schema = $self->phenome_schema();
+    my $items = $self->elements();
+    my @seedlot_names = @$items;
+    my @seedlot_ids;
+    my @seedlot_details;
+    my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+
+    foreach my $seedlot(sort@seedlot_names) {
+        my $seedlot_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $seedlot });
+        my $seedlot_id = $seedlot_rs->stock_id();
+        push @seedlot_ids, $seedlot_id;
+    }
+
+    foreach my $id (@seedlot_ids) {
+        my $content_name;
+        my $content_id;
+        my $content_type;
+        my $seedlot_obj = CXGN::Stock::Seedlot->new(
+            schema => $schema,
+            phenome_schema => $phenome_schema,
+            seedlot_id => $id
+        );
+
+        my $accessions = $seedlot_obj->accession();
+        my $crosses = $seedlot_obj->cross();
+
+        if ($accessions) {
+            $content_name = $accessions->[1];
+            $content_id = $accessions->[0];
+            $content_type = 'accession'
+        }
+
+        if ($crosses) {
+            $content_name = $crosses->[1];
+            $content_id = $crosses->[0];
+            $content_type = 'cross';
+        }
+
+        push @seedlot_details, [$id, $seedlot_obj->uniquename(), $content_id, $content_name, $content_type, $seedlot_obj->box_name(), $seedlot_obj->get_current_count_property(), $seedlot_obj->get_current_weight_property(), $seedlot_obj->quality()];
+
+    }
+
+    return \@seedlot_details;
+
 }
 
 1;

@@ -7,6 +7,7 @@ use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
+use CXGN::List;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -98,6 +99,40 @@ $message = $response->decoded_content;
 $message_hash = JSON::XS->new()->decode($message);
 print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
+
+#test seedlot list details
+my $seedlot_list_id = CXGN::List::create_list($f->dbh(), 'test_seedlot_list', 'test_desc', 41);
+my $seedlot_list = CXGN::List->new( { dbh => $f->dbh(), list_id => $seedlot_list_id } );
+$seedlot_list->type("seedlots");
+$seedlot_list->add_bulk(['seedlot_test1','seedlot_test2','seedlot_test_from_cross_1','seedlot_test_from_cross_2']);
+my $items = $seedlot_list->elements;
+
+$mech->get_ok("http://localhost:3010/ajax/list/details/$seedlot_list_id");
+$response = decode_json $mech->content;
+
+my $results = $response->{'data'};
+my @seedlots = @$results;
+my $number_of_rows = scalar(@seedlots);
+is($number_of_rows, 4);
+my $first_row = $seedlots[0];
+my $third_row = $seedlots[2];
+
+is($first_row->{'seedlot_name'}, 'seedlot_test1');
+is($first_row->{'content_name'}, 'test_accession1');
+is($first_row->{'content_type'}, 'accession');
+is($first_row->{'current_count'}, '10');
+is($first_row->{'box_name'}, 'box1');
+is($first_row->{'quality'}, 'mold');
+
+is($third_row->{'seedlot_name'}, 'seedlot_test_from_cross_1');
+is($third_row->{'content_name'}, 'cross_test1');
+is($third_row->{'content_type'}, 'cross');
+is($third_row->{'current_count'}, '5');
+is($third_row->{'box_name'}, 'b1');
+is($third_row->{'quality'}, '');
+
+#delete seedlot list
+my $delete = CXGN::List::delete_list($f->dbh(), $seedlot_list_id);
 
 #Clean up
 
