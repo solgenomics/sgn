@@ -1761,7 +1761,7 @@ sub get_cached_file_VCF {
                 my $name = $m->{name};
                 my $format = $m->{format};
                 my @format;
-		my $gt;
+		my $val;
 
                 #In case of old genotyping protocols where there was no protocolprop marker info
                 if (!$format) {
@@ -1777,16 +1777,19 @@ sub get_cached_file_VCF {
 
 		#VCF requires the GT field to be first
 		if (defined($geno->{selected_genotype_hash}->{$m->{name}}->{'GT'})) {
-		    my $val = $geno->{selected_genotype_hash}->{$m->{name}}->{'GT'};
+		    $val = $geno->{selected_genotype_hash}->{$m->{name}}->{'GT'};
 		    if ($val eq '') {
                         $val = './.';
                     }
 		    push @current_geno, $val;
+		} else {
+		    $val = './.';
+		    push @current_geno, $val;
 		}
                 foreach my $format_key (@format) {
                     my $val = $geno->{selected_genotype_hash}->{$m->{name}}->{$format_key};
-                    if ($format_key eq 'GT') {
-                    } else {
+		    if ($format_key eq 'GT') {
+		    } else {
                         push @current_geno, $val;
 		    }
                 }
