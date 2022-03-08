@@ -129,11 +129,9 @@ if (grepl("genotype", dataType, ignore.case = TRUE)) {
         filter(cumVar <= 0.9)
     pcsCnt <- nrow(selectPcs)
 
-    reportNotes <- paste0("Before clustering this dataset, principal component analysis (PCA) was done on it. ",
-        "\n")
-    reportNotes <- paste0(reportNotes, "Based on the PCA, ", pcsCnt, " PCs are used to cluster this dataset. ",
-        "\n")
-    reportNotes <- paste0(reportNotes, "They explain 90% of the variance in the original dataset.",
+    reportNotes <- paste0("Before clustering this dataset, principal component analysis (PCA) was perforemd on it to reduce the number of variables (dimensions). ")
+    reportNotes <- paste0(reportNotes, "Based on the PCA, ", pcsCnt, " PCs were used to do the clustering. ")
+    reportNotes <- paste0(reportNotes, "\n\nThe ", pcsCnt, " PCs explain 90% of the variance in the original dataset.",
         "\n")
 
     scores <- data.frame(pca$x)
@@ -198,16 +196,17 @@ if (length(sIndexFile) != 0) {
 
 kMeansOut <- kmeansruns(clusterData, runs = 10)
 kCenters <- kMeansOut$bestk
-reportNotes <- paste0(reportNotes, "Recommended number of clusters (k) for this data set is: ",
-    kCenters, "\n")
 
 if (!is.na(userKNumbers)) {
     if (userKNumbers != 0) {
         kCenters <- as.integer(userKNumbers)
-        reportNotes <- paste0(reportNotes, "However, Clustering was based on ", userKNumbers,
-            "\n")
+        reportNotes <- paste0(reportNotes, "\n\nThe data was partitioned into ", userKNumbers,
+            " clusters.\n")
     }
 }
+
+reportNotes <- paste0(reportNotes, "\n\nAccording the kmeansruns algorithm from the fpc R package, the recommended number of clusters (k) for this data set is: ",
+    kCenters, "\n\nYou can also check the Elbow plot to evaluate how many clusters may be better suited for your purpose.")
 
 kMeansOut <- kmeans(clusterData, centers = kCenters, nstart = 10)
 kClusters <- data.frame(kMeansOut$cluster)
@@ -235,21 +234,26 @@ clusteredData <- clusteredData %>%
 if (length(elbowPlotFile) & !file.info(elbowPlotFile)$size) {
     message("running elbow method...")
     png(elbowPlotFile)
-    print(fviz_nbclust(clusterData, FUNcluster = kmeans, method = "wss"))
+    print(fviz_nbclust(clusterData, k.max = 20, FUNcluster = kmeans, method = "wss"))
     dev.off()
 }
 
 png(kmeansPlotFile)
-# autoplot(kMeansOut, data = clusterData, frame = TRUE, x = 1, y = 2)
-fviz_cluster(kMeansOut, geom = "point", main = "", data = clusterData)
+ggplot2::autoplot(kMeansOut, data = clusterData, frame = TRUE, x = 1, y = 2)
+# fviz_cluster(kMeansOut, geom = "point", main = "", data = clusterData)
 dev.off()
 
-clusterMeans <- aggregate(clusterDataNotScaled, by = list(cluster = kMeansOut$cluster),
+clusterMeans <- c()
+if (!grepl('genotype', kResultFile)) {
+    message('adding cluster means to clusters...')
+    clusterMeans <- aggregate(clusterDataNotScaled, by = list(cluster = kMeansOut$cluster),
     mean)
 
-clusterMeans <- clusterMeans %>%
-    select(-germplasmName) %>%
-    mutate_if(is.double, round, 2)
+    clusterMeans <- clusterMeans %>%
+        select(-germplasmName) %>%
+        mutate_if(is.double, round, 2)
+
+}
 
 cat(reportNotes, file = reportFile, sep = "\n", append = TRUE)
 
