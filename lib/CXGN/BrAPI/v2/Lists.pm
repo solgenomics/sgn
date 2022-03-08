@@ -15,7 +15,7 @@ sub search {
     my $hostname = $page_obj->get_hostname();
     my $status = $self->status;
 
-    my $types_arrayref = $params->{listType} || ($params->{listTypes} || ());
+    my $list_type = $params->{listType} || ($params->{listTypes});
     my $names_arrayref = $params->{listName} || ($params->{listNames} || ());
     my $list_ids_arrayref = $params->{listDbId} || ($params->{listDbIds} || ());
     my $list_source_arrayref = $params->{listSource} || ($params->{listSources} || ());
@@ -36,7 +36,7 @@ sub search {
 	my @data;
 	my $lists;
 
-	my $list_type = convert_to_breedbase_type($types_arrayref->[0]);
+	my $list_type = convert_to_breedbase_type($list_type);
 	if ($list_type) {
 		my $q = "SELECT cvterm_id FROM cvterm WHERE name =?";
 		my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
