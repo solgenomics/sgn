@@ -29,7 +29,7 @@ $design_types => ()
                                 <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                <button class="btn btn-primary" id="go_to_second_step_trial_workflow" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "File Formatting" &>
@@ -49,7 +49,7 @@ $design_types => ()
                                                     <a id="upload_single_trial_design_format_info">Single trial spreadsheet</a>
                                                 </p>
                                             </&>
-                                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                                            <button class="btn btn-primary" id="go_to_third_step_trial_workflow" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                                         </center>
                                     </div>
 

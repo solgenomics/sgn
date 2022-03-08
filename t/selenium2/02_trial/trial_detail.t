@@ -10,13 +10,34 @@ my $f = SGN::Test::Fixture->new();
 $t->login_as("curator");
 #Upload New Trial
 
-
+print STDERR "Get /breeders/trials...\n";
 $t->get_ok('/breeders/trials');
-my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "name", "refresh tree")->click();
+sleep(1);
+
+print STDERR "Click on trial refresh button...\n";
+my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree")->click();
 sleep(3);
-$t->find_element_ok("upload_trial_link", "id", "click on upload_trial_link ")->click();
+
+print STDERR "Click on trial upload button...\n";
+$t->find_element_ok("upload_trial_link", "name", "click on upload_trial_link ")->click();
 sleep(2);
+
+print STDERR "Click on 'Go to Next Step' button...\n";
+$t->find_element_ok("go_to_second_step_trial_workflow", "id", "click on Go to Next Step button 1")->click();
+
+sleep(1);
+
+$t->find_element_ok("upload_single_trial_design_tab", "id", "select Single Trial Design Tab")->click();
+sleep(1);
+
+print STDERR "click on Go to Next Step (2)\n";
+$t->find_element_ok("go_to_third_step_trial_workflow", "id", "click on Go to Next Step button 2")->click();
+sleep(1);
+
+print STDERR "Find breeding program select...\n";
 my $program_select = $t->find_element_ok("trial_upload_breeding_program", "id", "find breeding program select");
+sleep(1);
+
 $program_select->send_keys('test');
 my $location_select = $t->find_element_ok("trial_upload_location", "id", "find location select");
 $location_select->send_keys('test_location');
@@ -29,6 +50,7 @@ $trial_description->send_keys('T100 trial test description');
 my $trial_design = $t->find_element_ok("trial_upload_design_method", "id", "find trial design select");
 $trial_design->send_keys('Completely Randomized');
 my $upload_input = $t->find_element_ok("trial_uploaded_file", "id", "find file input");
+
 my $filename = $f->config->{basepath}."/t/data/trial/T100_trial_layout.xls";
 my $remote_filename = $t->driver()->upload_file($filename);
 $upload_input->send_keys($filename);
