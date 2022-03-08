@@ -12,7 +12,13 @@ $has_plant_entries => undef
 $folder_id => undef
 $design_name => undef
 $phenotypes_fully_uploaded => undef
+$user_can_modify => undef
 </%args>
+
+%  if ($user_can_modify) {
+<button class="btn btn-sm btn-primary" style="margin:3px" id="update_trial_status_link">Update Trial Status</button>
+<br/><br/>
+% }
 
 <div data-offset-top="0" style="max-height: 100%; overflow-y: auto;">
     <div class="panel panel-info">
@@ -101,6 +107,8 @@ $phenotypes_fully_uploaded => undef
         </div>
     </div>
 </div>
+
+<& /breeders_toolbox/trial/update_trial_status_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 <script defer="defer">
 

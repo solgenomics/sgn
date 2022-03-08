@@ -1,0 +1,52 @@
+<%args>
+
+$trial_id
+$trial_name
+
+</%args>
+
+
+<div class="modal fade" id="update_trial_status_dialog" name="update_trial_status_dialog" tabindex="-1" role="dialog" aria-labelledby="updateTrialStatusDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateTrialStatusDialog">Update <% $trial_name %> Status</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Trial Status: </label>
+                            <div class="col-sm-6" >
+                                <select class="form-control" id="trial_status_select">
+                                    <option value="">Please select a status</option>
+                                    <option value="started_phenotyping">Started phenotyping</option>
+                                    <option value="phenotyping_completed">Phenotyping completed</option>
+                                    <option value="data_cleaning_completed">Data cleaning completed</option>
+                                    <option value="data_analysis_completed">Data analysis completed</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trial_set_phenotypes_fully_loaded_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="update_trial_status_submit" id="update_trial_status_submit" >Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery("#update_trial_status_link").click(function(){
+        jQuery("#update_trial_status_dialog").modal("show");
+    });
+
+});
+
+</script>
