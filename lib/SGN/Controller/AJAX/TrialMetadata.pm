@@ -30,6 +30,7 @@ use CXGN::Genotype::DownloadFactory;
 use POSIX qw | !qsort !bsearch |;
 use CXGN::Phenotypes::StorePhenotypes;
 use Statistics::Descriptive::Full;
+use CXGN::TrialStatus;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -4729,6 +4730,48 @@ sub upload_entry_number_template_POST : Args(0) {
         warning => $parse_warnings->{'warning_messages'}
     };
     return;
+}
+
+
+sub update_trial_status : Chained('trial') PathPart('update_trial_status') : ActionClass('REST'){ }
+
+sub update_trial_status_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->stash->{trial_id};
+    my $trial_status = $c->req->param("trial_status");
+    my $user_name = $c->req->param("user_name");
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd();
+
+    if (!$c->user()) {
+        $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my %status_hash;
+    $status_hash{'user_id'} = $user_id;
+    $status_hash{'timestamp'} = $timestamp;
+    my $status_info = encode_json \%status_hash;
+
+    my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+    if ($trial_status eq 'started_phenotyping') {
+        $trial_status_obj->started_phenotyping($status_info);
+    } elsif ($trial_status eq 'phenotyping_completed') {
+        $trial_status_obj->phenotyping_completed($status_info);
+    } elsif ($trial_status eq 'data_cleaning_completed') {
+        $trial_status_obj->data_cleaning_completed($status_info);
+    } elsif ($trial_status eq 'data_analysis_completed') {
+        $trial_status_obj->data_analysis_completed($status_info);
+    }
+    $trial_status_obj->parent_id($trial_id);
+    my $project_prop_id = $trial_status_obj->store();
+    print STDERR "PROJECTPROP ID =".Dumper($project_prop_id)."\n";
+    $c->stash->{rest} = {success => 1 };
+    return;
+
 }
 
 1;

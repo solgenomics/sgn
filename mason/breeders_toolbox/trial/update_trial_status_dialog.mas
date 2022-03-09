@@ -83,9 +83,10 @@ jQuery(document).ready(function(){
             dataType: "json",
             type: 'POST',
             data : {
+                'trial_id': "<% $trial_id %>",
                 'trial_status': trial_status,
-                'user_name': "<% $user_name %>,
-                'timestamp': "<% $timestamp %>
+                'user_name': "<% $user_name %>",
+                'timestamp': "<% $timestamp %>"
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
