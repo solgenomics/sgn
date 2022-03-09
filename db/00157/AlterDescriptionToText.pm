@@ -72,13 +72,14 @@ do \$\$
     DECLARE exec_text text;
 begin
     phenotype_jsonb_def = pg_get_viewdef('materialized_phenotype_jsonb_table');
-    DROP MATERIALIZED VIEW materialized_phenotype_jsonb_table;
+    DROP MATERIALIZED VIEW public.materialized_phenotype_jsonb_table;
 
     ALTER TABLE project ALTER COLUMN description TYPE text;
 
-    exec_text = FORMAT('CREATE MATERIALIZED VIEW materialized_phenotype_jsonb_table AS %s',
+    exec_text = FORMAT('CREATE MATERIALIZED VIEW public.materialized_phenotype_jsonb_table AS %s',
       phenotype_jsonb_def);
     EXECUTE exec_text;
+    ALTER MATERIALIZED VIEW public.materialized_phenotype_jsonb_table OWNER TO web_usr;
 end \$\$;
 
 
