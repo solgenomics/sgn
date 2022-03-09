@@ -253,9 +253,19 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     }
 
     print STDERR "FORMATTED DATA: ".Dumper(\@data);
+
+
+    
+    my $basename = basename($pheno_filepath.".clean.out");
+
+    copy($pheno_filepath.".clean.out", $c->config->{basepath}."/static/documents/tempfiles/gcpc_files/".$basename);
+    
+    my $download_url = '/documents/tempfiles/gcpc_files/'.$basename;
+    my $download_link = "<a href=\"$download_url\">Download Results</a>";
     
     $c->stash->{rest} = {
-	data => \@data
+	data => \@data,
+	download_link => $download_link,
     };
 }
 

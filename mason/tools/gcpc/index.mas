@@ -52,18 +52,12 @@
       
       <div id="tempfile" style="display:none" >
       </div>
-      
-
-
-
-
 </&>
 
 
-
+<div id="gcpc_results_download_link">Waiting for link...</div>
 
 <&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
-
 
       <table id="gcpc_output">
 	<thead>
@@ -78,9 +72,6 @@
   <br>
 
 </&>
-
-
-
 
 
 <script>
@@ -224,8 +215,13 @@ jQuery(document).ready(function() {
        if (data.error) {
           jQuery('#working_modal').modal('hide');
 	  alert(data.error); return;
-	}
-	//alert('JSON data retrieved: '+JSON.stringify(data));
+      }
+
+      alert('Download link = '+data.download_link);
+     if (data.download_link) {
+      jQuery('#gcpc_results_download_link').html(data.download_link);
+      }			      
+      //alert('JSON data retrieved: '+JSON.stringify(data));
 	jQuery('#working_modal').modal('hide');
         jQuery('#gcpc_output').DataTable( {
 	     'destroy': true,		      
