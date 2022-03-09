@@ -79,6 +79,12 @@ begin
     exec_text = FORMAT('CREATE MATERIALIZED VIEW public.materialized_phenotype_jsonb_table AS %s',
       phenotype_jsonb_def);
     EXECUTE exec_text;
+    CREATE UNIQUE INDEX materialized_phenotype_jsonb_table_obsunit_stock_idx ON public.materialized_phenotype_jsonb_table(observationunit_stock_id) WITH (fillfactor=100);
+    CREATE INDEX materialized_phenotype_jsonb_table_obsunit_uniquename_idx ON public.materialized_phenotype_jsonb_table(observationunit_uniquename) WITH (fillfactor=100);
+    CREATE INDEX materialized_phenotype_jsonb_table_germplasm_stock_idx ON public.materialized_phenotype_jsonb_table(germplasm_stock_id) WITH (fillfactor=100);
+    CREATE INDEX materialized_phenotype_jsonb_table_germplasm_uniquename_idx ON public.materialized_phenotype_jsonb_table(germplasm_uniquename) WITH (fillfactor=100);
+    CREATE INDEX materialized_phenotype_jsonb_table_trial_idx ON public.materialized_phenotype_jsonb_table(trial_id) WITH (fillfactor=100);
+    CREATE INDEX materialized_phenotype_jsonb_table_trial_name_idx ON public.materialized_phenotype_jsonb_table(trial_name) WITH (fillfactor=100);
     ALTER MATERIALIZED VIEW public.materialized_phenotype_jsonb_table OWNER TO web_usr;
 end \$\$;
 
