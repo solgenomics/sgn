@@ -451,30 +451,36 @@ write("Done with calcCrossMean!!!!!!", stderr())
 
 # Add option to remove crosses with incompatible sexes.
 
-#if(!is.na(userSexes)){
+if(!is.na(userSexes)){
 
   # Reformat the cross plan
-  #crossPlan <- as.data.frame(crossPlan)
+  crossPlan <- as.data.frame(crossPlan)
 
-#  crossPlan <- crossPlan[order(crossPlan[,3], decreasing = TRUE), ] # orders the plan by predicted merit
-  #crossPlan[ ,1] <- rownames(GP)[crossPlan[ ,1]] # replaces internal ID with genotye file ID
-  #crossPlan[ ,2] <- rownames(GP)[crossPlan[ ,2]] # replaces internal ID with genotye file ID
-  #colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
+  crossPlan <- crossPlan[order(crossPlan[,3], decreasing = TRUE), ] # orders the plan by predicted merit
+  crossPlan[ ,1] <- rownames(GP)[crossPlan[ ,1]] # replaces internal ID with genotye file ID
+  crossPlan[ ,2] <- rownames(GP)[crossPlan[ ,2]] # replaces internal ID with genotye file ID
+  colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
 
   # Look up the parent sexes and subset
-  #crossPlan$P1Sex <- userPheno[match(crossPlan$Parent1, userPheno$Accession), userSexes] # get sexes ordered by Parent1
-  #crossPlan$P2Sex <- userPheno[match(crossPlan$Parent2, userPheno$Accession), userSexes] # get sexes ordered by Parent2
+  crossPlan$P1Sex <- userPheno[match(crossPlan$Parent1, userPheno$Accession), userSexes] # get sexes ordered by Parent1
+  crossPlan$P2Sex <- userPheno[match(crossPlan$Parent2, userPheno$Accession), userSexes] # get sexes ordered by Parent2
+  crossPlan <- crossPlan[!(crossPlan$P1Sex==1 & crossPlan$P2Sex==1),] #remove same sex crosses with score of 1
+  crossPlan <- crossPlan[!(crossPlan$P1Sex==2 & crossPlan$P2Sex==2),] #remove same sex crosses with score of 2
+
   #crossPlan <- crossPlan[crossPlan$P1Sex != crossPlan$P2Sex, ] # remove crosses with same-sex parents
 
 
   # subset the number of crosses the user wishes to output
-  #crossPlan[1:userNCrosses, ]
-  #outputFile= paste(phenotypeFile, ".out", sep="")
+  crossPlan[1:userNCrosses, ]
+  finalcrosses=crossPlan[1:userNCrosses, ]
+  outputFile= paste(phenotypeFile, ".out", sep="")
 
-#}
+  write.csv(finalcrosses, outputFile)
+
+}
 
 
-#if(is.na(userSexes)){
+if(is.na(userSexes)){
 
   # only subset the number of crosses the user wishes to output
   crossPlan <- as.data.frame(crossPlan)
@@ -490,11 +496,5 @@ write("Done with calcCrossMean!!!!!!", stderr())
 
   write.csv(finalcrosses, outputFile)
 
-#  write(paste("CROSS PLAN HEAD: ", head(crossPlan)), stderr())
-#  crossPlanDataFrame = data.frame(crossPlan)
-#  write(paste("CROSS PLAN OBJECT: ", str(crossPlanDataFrame)), stderr())
-#  message(paste("CROSS PLAN HEAD AFTER: ", head(crossPlanDataFrame)))
-#  message("FILE NAME NOW = ", outputFile)
-#  write.table(crossPlanDataFrame, sep="\t", file=outputFile, row.names=TRUE, col.names=TRUE)
-#  write("DONE", stderr())
-#}
+
+}
