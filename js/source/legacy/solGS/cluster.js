@@ -258,7 +258,7 @@ solGS.cluster = {
 			'<tr>' +
 			'<th>Name</th>' +
 			'<th>Data structure</th>' +
-			'<th>Cluster type</th>' +
+			'<th>Clustering method</th>' +
 			'<th>Data type</th>' +
 			'<th>No. of  clusters (K)</th>' +
 			'<th>Run cluster</th>' +
