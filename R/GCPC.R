@@ -24,6 +24,7 @@ phenotypeFile = args[1]
 genotypeFile = args[2]
 traits = args[3]
 weights = args[4]
+userSexes = args[5]
 
 ################################################################################
 # 1. Load software needed
