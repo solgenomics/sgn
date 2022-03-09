@@ -1646,6 +1646,7 @@ sub get_cached_file_VCF {
         @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
         my $counter = 0;
+	my $missing = ""; # value if no genotype
         while (my $geno = $self->get_next_genotype_info) {
 
             # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
@@ -1723,6 +1724,7 @@ sub get_cached_file_VCF {
                     if (!$format) {
                         my $first_g = $geno->{selected_genotype_hash}->{$m->{name}};
 			if (defined($first_g->{'GT'})) {
+			    $missing = "./.";
 			    push @format_array, 'GT';
 			}
                         foreach my $k (sort keys %$first_g) {
@@ -1743,7 +1745,11 @@ sub get_cached_file_VCF {
                         if (!exists($format_check{'DS'})) {
                             push @format_array, 'DS';
                         }
-                    }
+                    } else {
+			if ($format_array[0] eq 'GT') {
+			    $missing = "./.";
+			}
+		    }
                     $format = join ':', @format_array;
                     $genotype_string .= $format . "\t";
                     $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{format} = $format;
@@ -1779,16 +1785,17 @@ sub get_cached_file_VCF {
 		if (defined($geno->{selected_genotype_hash}->{$m->{name}}->{'GT'})) {
 		    $val = $geno->{selected_genotype_hash}->{$m->{name}}->{'GT'};
 		    if ($val eq '') {
-                        $val = './.';
+                        $val = $missing;
                     }
 		    push @current_geno, $val;
 		} else {
-		    $val = './.';
+		    $val = $missing; 
 		    push @current_geno, $val;
 		}
                 foreach my $format_key (@format) {
                     my $val = $geno->{selected_genotype_hash}->{$m->{name}}->{$format_key};
 		    if ($format_key eq 'GT') {
+			$missing = "./.";
 		    } else {
                         push @current_geno, $val;
 		    }
