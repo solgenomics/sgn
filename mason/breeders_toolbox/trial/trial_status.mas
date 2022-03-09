@@ -3,6 +3,7 @@ $trial_id
 $trial_name
 $breeding_program_name
 $location_name
+$user_name
 $year => undef
 $trial_type => undef
 $planting_date => undef
@@ -108,7 +109,7 @@ $user_can_modify => undef
     </div>
 </div>
 
-<& /breeders_toolbox/trial/update_trial_status_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/update_trial_status_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, user_name => $user_name &>
 
 <script defer="defer">
 

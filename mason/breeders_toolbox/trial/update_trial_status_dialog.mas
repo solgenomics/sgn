@@ -2,9 +2,10 @@
 
 $trial_id
 $trial_name
+$user_name
+$timestamp => localtime()
 
 </%args>
-
 
 <div class="modal fade" id="update_trial_status_dialog" name="update_trial_status_dialog" tabindex="-1" role="dialog" aria-labelledby="updateTrialStatusDialog">
     <div class="modal-dialog" role="document">
@@ -39,12 +40,75 @@ $trial_name
     </div>
 </div>
 
+<div class="modal fade" id="update_trial_status_message" name="update_trial_status_message" tabindex="-1" role="dialog" aria-labelledby="updateTrialStatusMessage">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateTrialStatusMessage">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Trial status was updated successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_update_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 
 jQuery(document).ready(function(){
 
     jQuery("#update_trial_status_link").click(function(){
         jQuery("#update_trial_status_dialog").modal("show");
+    });
+
+
+    jQuery("#update_trial_status_submit").click(function() {
+        var trial_status = jQuery("#trial_status_select").val();
+        if (!trial_status) {
+            alert("Please select a status");
+            return;
+        }
+
+        jQuery.ajax({
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/update_trial_status',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'trial_status': trial_status,
+                'user_name': "<% $user_name %>,
+                'timestamp': "<% $timestamp %>
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#update_trial_status_dialog').modal('hide');
+                    jQuery('#update_trial_status_message').modal("show");
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating trial status');
+            }
+        });
+    });
+
+    jQuery("#dismiss_update_message_dialog").click(function(){
+        location.reload();
     });
 
 });
