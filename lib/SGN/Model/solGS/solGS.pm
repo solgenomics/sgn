@@ -857,28 +857,6 @@ sub project_genotypes_rs {
         }
       );
 
-    # my $protocol = $self->genotyping_protocol();
-
-# my $pr_genotypes_rs = $self->schema->resultset('NaturalDiversity::NdExperiment')
-# 	->search(
-#  {      'nd_experiment_projects.project_id' => $project_id,
-# 	    'nd_protocol.name' => $protocol,
-# 	    'type.name'  => 'snp genotyping',
-# 	    'cv.name' => 'genotype_property',
-# 	},
-# 	{
-# 	    join => [
-# 		{'nd_experiment_genotypes' => {'genotype' => {'genotypeprops'=> {'type' => 'cv'}}}},
-# 		{'nd_experiment_protocols' => 'nd_protocol'},
-# 		'nd_experiment_projects',
-# 		{'nd_experiment_stocks' => 'stock'}
-# 		],
-
-    # 	    select => [ qw / stock.stock_id stock.uniquename / ],
-    # 	    as     => [ qw / stock_id stock_name/ ],
-    # 	    distinct => 1,
-    # 	});
-
     return $pr_genotypes_rs;
 
 }
@@ -2045,7 +2023,6 @@ sub get_all_genotyping_protocols {
     my $where = ' WHERE genotyping_protocol_id > 0';
     my $q;
 
-    print STDERR "\ntrial id: $trial_id\n";
     if ($trial_id) {
         $where = ' WHERE trial_id = ?';
         $q     = 'SELECT distinct(genotyping_protocol_id)
@@ -2056,8 +2033,6 @@ sub get_all_genotyping_protocols {
     else {
         $q = 'SELECT distinct(genotyping_protocol_id)
                         FROM genotyping_protocols' . $where;
-
-        print STDERR "\nthere is NO trial id: $trial_id -- $q\n";
     }
 
     my $sth = $self->schema->storage->dbh->prepare($q);
@@ -2181,11 +2156,6 @@ sub get_dataset_genotype_data {
     return $geno_search;
 
 }
-
-# sub people_schema {
-#     my $self = shift;
-#     return $self->context->dbic_schema("CXGN::People::Schema");
-# }
 
 __PACKAGE__->meta->make_immutable;
 
