@@ -308,6 +308,7 @@ for(i in 1:length(userResponse)){
     randArg <- paste(randEff2, randEff, sep = " + ")
   }
   if(is.na(userRandom[1])){
+    ID2 <- paste(userID, 2, sep ="")
     randArg <- paste("~vs(", userID, ", Gu = A) + vs(", ID2, ", Gu = D)", sep = "")
   }
 
@@ -465,6 +466,7 @@ if(!is.na(userSexes)){
   # Look up the parent sexes and subset
   crossPlan$P1Sex <- userPheno[match(crossPlan$Parent1, userPheno$Accession), userSexes] # get sexes ordered by Parent1
   crossPlan$P2Sex <- userPheno[match(crossPlan$Parent2, userPheno$Accession), userSexes] # get sexes ordered by Parent2
+  crossPlan <- crossPlan[!(crossPlan$P1Sex==0 | crossPlan$P2Sex==0),] #remove the 0s 
   crossPlan <- crossPlan[!(crossPlan$P1Sex==1 & crossPlan$P2Sex==1),] #remove same sex crosses with score of 1
   crossPlan <- crossPlan[!(crossPlan$P1Sex==2 & crossPlan$P2Sex==2),] #remove same sex crosses with score of 2
 
