@@ -47,7 +47,7 @@
       return (!!o.value || o.value === 0 || o.value === -0.0) && (!isNaN(o.value));
     });
     if (observations.length<3){
-      histLoc.html("<center><h4>There is not enough numeric data to plot.</h4></center>");
+      histLoc.html("<center><h4>This trait is not numeric, or there are fewer than 3 values. Unable to draw a histogram.</h4></center>");
       return;
     } else {
       histLoc.selectAll(function(s){return this.children;})
@@ -57,7 +57,11 @@
       return d.value;
     });
 
-    console.log("all values: "+JSON.stringify(allValues));
+    if (allValues.every( (val, i, arr) => val === arr[0] )){
+      histLoc.html("<center><h4>All values are the same ("+allValues[0]+") for this trait. Unable to draw a histogram.</h4></center>");
+      return;
+    }
+
     var accessions = {};
     var emptyBlocks = {};
     observations.forEach(function(observation){
@@ -195,10 +199,7 @@
     var newBits = bits.enter().append("rect").classed("bit",true);
     var allBits = newBits.merge(bits)
       .attr("x",function(d){return x(d.data.bin.x0)+1})
-      .attr("width",function(d){
-          console.log("d is "+d+" and x1 is "+d.data.bin.x1+" and x0 is "+d.data.bin.x0);
-          return x(d.data.bin.x1)-x(d.data.bin.x0)-1
-      })
+      .attr("width",function(d){return x(d.data.bin.x1)-x(d.data.bin.x0)-1})
       .attr("y",function(d){return y(d[1])})
       .attr("height",function(d){return y(d[0])-y(d[1])})
       .on("mouseover",function(d){
