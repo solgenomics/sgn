@@ -29,13 +29,9 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 
 
-has 'started_phenotyping' => (isa => 'Str', is => 'rw');
+has 'latest_trial_activity' => (isa => 'Str', is => 'rw');
 
-has 'phenotyping_completed' => (isa => 'Str', is => 'rw');
-
-has 'data_cleaning_completed' => (isa => 'Str', is => 'rw');
-
-has 'data_analysis_completed' => (isa => 'Str', is => 'rw');
+has 'trial_activities' => (isa => 'Str', is => 'rw');
 
 sub BUILD {
     my $self = shift;
@@ -46,7 +42,7 @@ sub BUILD {
     $self->prop_primary_key('projectprop_id');
     $self->prop_type('trial_status_json');
     $self->cv_name('project_property');
-    $self->allowed_fields([ qw | started_phenotyping phenotyping_completed data_cleaning_completed data_analysis_completed | ]);
+    $self->allowed_fields([ qw | latest_trial_activity trial_activities | ]);
     $self->parent_table('project');
     $self->parent_primary_key('project_id');
 

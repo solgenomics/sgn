@@ -4751,22 +4751,34 @@ sub update_trial_status_POST : Args(0) {
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
-    my %status_hash;
-    $status_hash{'user_id'} = $user_id;
-    $status_hash{'timestamp'} = $timestamp;
-    my $status_info = encode_json \%status_hash;
+    my $trial_status_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_status_json', 'project_property')->cvterm_id();
+    my $prop = $schema->resultset("Project::Projectprop")->find({project_id => $trial_id, type_id => $trial_status_type_id});
+    my $prop_id;
+    my %latest_activity_hash;
+    my %all_activities_hash;
+    if ($prop) {
+        $prop_id = $prop->projectprop_id();
+        my $status_json = $prop->value();
+        my $status_hash_ref = decode_json $status_json;
+        my %status_hash = %{$status_hash_ref};
+        my $all_activities_json =  $status_hash{'trial_activities'};
+        my $all_activities_ref = decode_json $all_activities_json;
+        %all_activities_hash = %{$all_activities_ref};
+    }
+
+    $all_activities_hash{$trial_status}{'user_id'} = $user_id;
+    $all_activities_hash{$trial_status}{'timestamp'} = $timestamp;
+    my $updated_activities = encode_json \%all_activities_hash;
+
+    $latest_activity_hash{$trial_status}{'user_id'} = $user_id;
+    $latest_activity_hash{$trial_status}{'timestamp'} = $timestamp;
+    my $latest_activity = encode_json \%latest_activity_hash;
 
     my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
-    if ($trial_status eq 'started_phenotyping') {
-        $trial_status_obj->started_phenotyping($status_info);
-    } elsif ($trial_status eq 'phenotyping_completed') {
-        $trial_status_obj->phenotyping_completed($status_info);
-    } elsif ($trial_status eq 'data_cleaning_completed') {
-        $trial_status_obj->data_cleaning_completed($status_info);
-    } elsif ($trial_status eq 'data_analysis_completed') {
-        $trial_status_obj->data_analysis_completed($status_info);
-    }
+    $trial_status_obj->latest_trial_activity($latest_activity);
+    $trial_status_obj->trial_activities($updated_activities);
     $trial_status_obj->parent_id($trial_id);
+    $trial_status_obj->prop_id($prop_id);
     my $project_prop_id = $trial_status_obj->store();
     print STDERR "PROJECTPROP ID =".Dumper($project_prop_id)."\n";
     $c->stash->{rest} = {success => 1 };
