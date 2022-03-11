@@ -61,7 +61,7 @@ export function init(main_div){
           "programDbIds" : data["categories"]["breeding_programs"],
           "observationLevelName" : ou,
           "includeObservations" : "true",
-          "pageSize" : 1000
+          "pageSize" : 100000
         })
         boxplot.setData(obsUnits);
         obsUnits.all(function(d){
