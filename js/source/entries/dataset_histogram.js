@@ -2,7 +2,7 @@ export function init() {
     class Dataset {
         constructor() {
             this.dataset = [];
-            this.stdDevMultiplier = 1;
+            this.stdDevMultiplier = Number;
         }
 
 
@@ -42,13 +42,15 @@ export function init() {
         }
 
         render() {
+          this.stdDevMultiplier = document.getElementById("myRange").value;
           const LocalThis = this;
           this.slider();
-          console.log(this.stdDevMultiplier);
+
+
 
           var margin = {top: 10, right: 30, bottom: 30, left: 60},
               width = 1170 - margin.left - margin.right,
-              height = 620 - margin.top - margin.bottom;
+              height = 600 - margin.top - margin.bottom;
           
           var svg = d3.select("#trait_graph")
             .append("svg")
@@ -85,11 +87,14 @@ export function init() {
           }
 
           const [mean, stdDev] = this.standardDeviation(traitVals)
-
+          const xAxisDomain = [];
+          for (let i = 0; i < 40; i++) {
+            xAxisDomain.push('Trait' + String(i+1));
+          }
           // Add X axis
           var x = d3.scaleLinear()
-          .domain([0, 200])
-          .range([ 0, width ]);
+          .domain([0,200])
+          .range([ 0, width]);
           svg.append("g")
           .style("font", "18px times")
           .attr("transform", "translate(0," + height + ")")
@@ -101,7 +106,7 @@ export function init() {
           .range([ height, 0]);
           svg.append("g")
           .style("font", "18px times")
-          .call(d3.axisLeft(y));
+          .call(d3.axisLeft(y))
       
           // Add dots
           svg.append('g')
