@@ -9,6 +9,7 @@ use File::Slurp;
 use File::Spec qw | catfile|;
 use File::Basename qw | basename |;
 use File::Copy;
+use List::Util qw | any |;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::Tools::Run;
@@ -16,6 +17,7 @@ use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
+use SGN::Model::Cvterm;
 use Cwd qw(cwd);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -138,6 +140,34 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     my $temppath =  $tempfile;
 
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes=>0);
+
+
+    # check if the plant_sex_variable_name is set in sgn_local.conf
+    # and get the trait_ontolog_db_name as well as its associated cv.name.
+    # get the cvterm_id for the trait and add it to the dataset if it isn't already there.
+    # 
+    my $plant_sex_variable_name = $c->config->{plant_sex_variable_name};
+    my @cv_names = SGN::Model::Cvterm->get_cv_names_from_db_name($schema, $c->config->{trait_ontology_db_name});
+
+    my $plant_sex_cvterm_id;
+    my $plant_sex_variable_name_R = "";
+    
+    if (@cv_names) { 
+	$plant_sex_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plant_sex_variable_name, $cv_names[0])->cvterm_id();
+    }
+    
+    if ($plant_sex_variable_name && $plant_sex_cvterm_id) {
+	
+	my $traits = $ds->retrieve_traits();
+	if (! any { $_ eq $plant_sex_variable_name } @$traits) {
+	    $ds->traits(@$traits, $plant_sex_cvterm_id);
+	}
+	$plant_sex_variable_name_R = make_R_trait_name($plant_sex_variable_name);
+    }
+
+
+
+
     
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
@@ -232,7 +262,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 	$geno_filepath,
 	"'".$si_traits."'",
 	"'".$si_weights."'",
-	
+	"'".$plant_sex_variable_name_R."'",
 	);
 
     while ($cmd->alive) { 
