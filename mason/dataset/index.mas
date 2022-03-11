@@ -7,31 +7,83 @@ $dataset_description => ''
 </%args>
 
 
-<& /page/page_title.mas, title => "Dataset '$dataset_name' ($dataset_id)" &>
+<& /page/page_title.mas, title => "Dataset $dataset_name $dataset_id" &>
 <& /util/import_javascript.mas, entries => ['dataset_histogram'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
 
 
 <style>
-  #trait_histogram {
-    margin: 0 auto;
-    width: 50%;
-
+  .slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 20px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  border-radius: 5px;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
   }
+
+  .slider:hover {
+    opacity: 1;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    background: #04AA6D;
+    cursor: pointer;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    background: darkslategrey;
+    cursor: pointer;
+  }
+  #top-row {
+    display: flex;
+  }
+  #pagefooter {
+    min-height: 150px !important;
+  }
+  #data_selections {
+    float: left;
+  }
+
+  #dataset_slider {
+    margin: 0 auto;
+    padding: 10px;
+    width: 200px;
+  }
+
+  #trait_graph {
+
+    width: 60%;
+  }
+
 </style>
 
-  <div id="dataset_selections">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Dataset Introspection</title>
+</head>
+
+
+<body>
+  <div class="top-row">
+    <div id="dataset_slider">
+      <input type="range" min="1" max="5" value="3" class="slider" id="myRange">
+    </div>
   </div>
 
 
-
-  <div id="phenotyping data">
-    <select id="dataset_trait_select">
-    </select>
-    
-    </div>
-
-
-  <div id="trait_histogram">
+  <div id="trait_graph">
 
   </div>
 
@@ -43,11 +95,12 @@ $dataset_description => ''
   </div>
 
 
-<script>
+  <script>
 
-jQuery(document).ready( function() {
-  var DataSet = window.jsMod['dataset_histogram'].init();
-  DataSet.render();
-});  
+    jQuery(document).ready( function() {
+      var DataSet = window.jsMod['dataset_histogram'].init();
+      DataSet.render(); 
+    });  
 
-</script>
+  </script>
+</body>
