@@ -7,6 +7,9 @@ $timestamp => localtime()
 
 </%args>
 
+% my $activities = $c->config->{'trial_activities'};
+% my @all_activities= split ',',$activities;
+
 <div class="modal fade" id="update_trial_status_dialog" name="update_trial_status_dialog" tabindex="-1" role="dialog" aria-labelledby="updateTrialStatusDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -21,11 +24,9 @@ $timestamp => localtime()
                             <label class="col-sm-4 control-label">Trial Status: </label>
                             <div class="col-sm-6" >
                                 <select class="form-control" id="trial_status_select">
-                                    <option value="">Please select a status</option>
-                                    <option value="started_phenotyping">Started phenotyping</option>
-                                    <option value="phenotyping_completed">Phenotyping completed</option>
-                                    <option value="data_cleaning_completed">Data cleaning completed</option>
-                                    <option value="data_analysis_completed">Data analysis completed</option>
+% foreach my $activity(@all_activities){
+                                    <option value="<%$activity%>"><%$activity%></option>
+%}
                                 </select>
                             </div>
                         </div>

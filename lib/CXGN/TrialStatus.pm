@@ -25,7 +25,6 @@ use Moose;
 extends 'CXGN::JSONProp';
 
 use JSON::Any;
-use JSON;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 
@@ -33,6 +32,9 @@ use SGN::Model::Cvterm;
 has 'latest_trial_activity' => (isa => 'Str', is => 'rw');
 
 has 'trial_activities' => (isa => 'Str', is => 'rw');
+
+has 'activity_list' => (isa => 'ArrayRef', is => 'rw');
+
 
 sub BUILD {
     my $self = shift;
@@ -56,6 +58,8 @@ sub get_trial_activities {
     my $project_id = $self->parent_id();
     my $type = $self->prop_type();
     my $type_id = $self->_prop_type_id();
+    my $activity_list = $self->activity_list();
+    my @activities = @$activity_list;
     my $key_ref = $self->allowed_fields();
     my @fields = @$key_ref;
 
@@ -66,12 +70,16 @@ sub get_trial_activities {
         my $activities_json = $trial_activities_rs->value();
         my $activities_hash = JSON::Any->jsonToObj($activities_json);
         my $all_activities_json = $activities_hash->{'trial_activities'};
-        my $all_activities = decode_json $all_activities_json;
+        my $all_activities = JSON::Any->jsonToObj($all_activities_json);
         my %activities_hash = %{$all_activities};
-        foreach my $activity (keys %activities_hash) {
-            my $user_id = $activities_hash{$activity}{'user_id'};
-            my $timestamp = $activities_hash{$activity}{'timestamp'};
-            push @all_trial_activities, [$activity, $timestamp, $user_id];
+        foreach my $activity_type (@activities) {
+            if ($activities_hash{$activity_type}) {
+                my $user_id = $activities_hash{$activity_type}{'user_id'};
+                my $timestamp = $activities_hash{$activity_type}{'timestamp'};
+                push @all_trial_activities, [$activity_type, $timestamp, $user_id];
+            } else {
+                push @all_trial_activities, [$activity_type, 'NA', 'NA']
+            }
         }
     }
 

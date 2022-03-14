@@ -34,7 +34,7 @@ $user_can_modify => undef
                         <tr>
                             <th>Status Type</th>
                             <th>Date</th>
-                            <th>User ID</th>
+                            <th>Updated by</th>
                         </tr>
                     </thead>
                 </table>
@@ -142,6 +142,7 @@ jQuery(document).ready(function () {
         'searching': false,
         'info': false,
         'paging': false,
+        'order': false,
         'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/all_trial_activities',
     });
 
