@@ -205,28 +205,75 @@ solGS.cluster = {
 		return dataTypeGroup;
 	},
 
+	getDataTypeOpts: function(args) {
+
+		if (args) {
+			var dataStr = args.data_str;
+			var selectId = args.select_id;
+			var popType = args.pop_type;
+		}
+
+		var dataTypeOpts = [];
+		var page = document.URL;
+		if (page.match(/cluster\/analysis/)) {
+
+			if (dataStr.match(/list/)) {
+				selectId = selectId.replace('list_', '')
+				list = this.getListMetaData(selectId)
+
+				if (list.list_type.match(/accessions/)) {
+					dataTypeOpts = ['Genotype']
+				} else if (list.list_type.match(/plots/)) {
+					dataTypeOpts = ['Penotype']
+				} else if (list.list_type.match(/trials/)) {
+					dataTypeOpts = ['Genotype', 'Phenotype']
+				}
+			} else if (dataStr.match(/dataset/)) {
+				selectId = selectId.replace('dataset_', '')
+				var dataset = new CXGN.Dataset();
+				dt = dataset.getDataset(selectId)
+
+				if (dt.categories['accessions']) {
+					dataTypeOpts = ['Genotype']
+				} else if (dt.categories['plots']) {
+					dataTypeOpts = ['Phenotype']
+				} else if (dt.categories['trials']) {
+					dataTypeOpts = ['Genotype', 'Phenotype']
+				}
+			}
+		} else if (page.match(/breeders\/trial/)) {
+			dataTypeOpts = ['Genotype', 'Phenotype'];
+		} else if (page.match(/solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/trials\//)) {
+			dataTypeOpts = ['Genotype'];
+		} else {
+			if (!popType) {
+				popType = 'undef';
+			}
+
+			if (popType.match(/^selection$/)) {
+				dataTypeOpts = ['Genotype', 'GEBV'];
+			} else if (popType.match(/selection_index/)) {
+				dataTypeOpts = ['Genotype'];
+			} else {
+				dataTypeOpts = ['Genotype', 'GEBV', 'Phenotype'];
+			}
+
+		}
+
+		return dataTypeOpts;
+	},
+
 
 	selectRow: function(selectId, selectName, dataStr) {
 		var clusterPopId = this.getClusterPopId(selectId, dataStr);
 		var clusterTypeOpts = this.createClusterTypeSelect(clusterPopId);
 
-		var dataTypeOpts;
-		var url = document.URL;
-		var pagesTr = '/breeders/trial/' +
-			'|cluster/analysis' +
-			'|solgs/trait/\d+/population\/' +
-			'|solgs/model/combined/populations/';
+		var dataTypeOpts = this.getDataTypeOpts({
+			'select_id': selectId,
+			'data_str': dataStr
+		})
 
-		var pagesMultiModels = '/solgs/traits/all/population/' +
-			'|solgs/models/combined/trials\/';
-
-		if (url.match(pagesTr)) {
-			dataTypeOpts = ['Genotype', 'Phenotype'];
-		} else if (url.match(pagesMultiModels)) {
-			dataTypeOpts = ['Genotype', 'GEBV', 'Phenotype'];
-		}
-
-		var dataTypeOpts = this.createDataTypeSelect(dataTypeOpts, clusterPopId);
+		dataTypeOpts = this.createDataTypeSelect(dataTypeOpts, clusterPopId);
 
 		var kNumId = this.clusterKnumSelectId(clusterPopId);
 		var runClusterId = this.clusterRunClusterId(clusterPopId);
@@ -629,7 +676,7 @@ solGS.cluster = {
 
 		if (popType == 'selection_index') {
 
-			if (dataType.match(/genotype/i) == null) {
+			if (dataType.match(/phenotype/i) || dataType.match(/gebv/i)) {
 				msg = 'K-means clustering for selection index type' +
 					' data works with genotype data only.';
 			}
@@ -834,7 +881,7 @@ solGS.cluster = {
 
 	},
 
-	getClusterGenotypesListData: function(listId) {
+	getListMetaData: function(listId) {
 
 		var list = new CXGN.List();
 
@@ -845,7 +892,7 @@ solGS.cluster = {
 
 			return {
 				'name': listName,
-				'listType': listType,
+				'list_type': listType,
 			};
 		} else {
 			return;
@@ -907,11 +954,22 @@ solGS.cluster = {
 			var selectedPopName = idPopName.name;
 			var selectedPopType = idPopName.pop_type;
 
+			var dataTypeId = solGS.cluster.clusterDataTypeSelectId(selectedPopId);
+			var dataType = jQuery('#' + dataTypeId).val();
+
+
 			jQuery("#cluster_selected_population_name").val(selectedPopName);
 			jQuery("#cluster_selected_population_id").val(selectedPopId);
 			jQuery("#cluster_selected_population_type").val(selectedPopType);
 
-			if (selectedPopType.match(/selection_index/)) {
+			var dataTypeOpts = solGS.cluster.getDataTypeOpts({
+				'pop_type': selectedPopType
+			});
+
+			dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypeOpts, selectedPopId);
+			jQuery('#cluster_div #cluster_options #cluster_data_type_opts').html(dataTypeOpts);
+
+			if (selectedPopType.match(/selection_index/) && dataType.match(/Genotype/i)) {
 				jQuery('#cluster_div #cluster_options #selection_proportion_div').show();
 			} else {
 				jQuery('#cluster_div #cluster_options #selection_proportion_div').hide();
@@ -988,6 +1046,19 @@ jQuery(document).ready(function() {
 			jQuery('#k_number_div').show();
 			jQuery('#' + kNumId).prop('disabled', false);
 		}
+	});
+});
+
+
+jQuery(document).ready(function() {
+	jQuery("#cluster_div").on('change', '#cluster_selected_population', function() {
+		var rowId = jQuery(this).closest('tr').attr('id');
+
+		var popType = jQuery("#cluster_selected_population_type").val();
+		var clusterTypeId = solGS.cluster.clusterTypeSelectId(rowId);
+
+		var clusterDataType = jQuery('#' + clusterDataTypeId).val();
+
 	});
 });
 
@@ -1093,16 +1164,15 @@ jQuery(document).ready(function() {
 jQuery(document).ready(function() {
 	var page = document.URL;
 
-	if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//) != null) {
+	if (page.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)) {
 
 		setTimeout(function() {
 			solGS.cluster.listClusterPopulations()
 		}, 5000);
 
+		var dataTypeOpts = solGS.cluster.getDataTypeOpts();
 
-		var dataTypeOpts = ['Genotype', 'GEBV', 'Phenotype'];
 		dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypeOpts);
-
 		var clusterTypeOpts = solGS.cluster.createClusterTypeSelect();
 
 		jQuery(document).ready(checkClusterPop);
@@ -1119,15 +1189,7 @@ jQuery(document).ready(function() {
 	} else {
 
 		if (!page.match(/cluster\/analysis/)) {
-
-			var dataTypeOpts;
-			if (page.match(/breeders\/trial\//)) {
-
-				dataTypeOpts = ['Genotype', 'Phenotype'];
-			} else if (page.match(/solgs\/trait\/\d+\/population\/|solgs\/model\/combined\/trials\//)) {
-				dataTypeOpts = ['Genotype'];
-			}
-
+			var dataTypeOpts = solGS.cluster.getDataTypeOpts();
 			dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypeOpts);
 			var clusterTypeOpts = solGS.cluster.createClusterTypeSelect();
 
