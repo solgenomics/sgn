@@ -63,11 +63,12 @@ sub image_analysis_submit_POST : Args(0) {
     my $trait = $c->req->param('trait');
     my ($user_id, $user_name, $user_role) = _check_user_login($c);
     my $main_production_site_url = $c->config->{main_production_site_url};
+    _log_analysis_activity($c,$image_ids,$service,$trait);
 
     unless (ref($image_ids) eq 'ARRAY') { $image_ids = [$image_ids]; }
 
     my ($trait_name, $db_accession) = split(/\|/, $trait);
-    my ($db, $accession) = split(/:/, $db_accession);
+    myq ($db, $accession) = split(/:/, $db_accession);
     my ($trait_details, $record_number) = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
         ontology_db_name_list => [$db],
@@ -384,6 +385,31 @@ sub _check_user_login {
         $user_role = $c->user->get_object->get_user_type();
     }
     return ($user_id, $user_name, $user_role);
+}
+
+sub _log_analysis_activity {
+    my $c = shift;
+    my $image_ids = shift;
+    my $service = shift;
+    my $trait = shift;
+    my $now = DateTime->now();
+
+    if ($c->config->{image_analysis_log}) {
+      my $logfile = $c->config->{image_analysis_log};
+      open (my $F, ">> :encoding(UTF-8)", $logfile) || die "Can't open logfile $logfile\n";
+      print $F join("\t", (
+            $c->user->get_object->get_username(),
+            $service,
+            $trait,
+            $image_ids,
+            $now->year()."-".$now->month()."-".$now->day()." ".$now->hour().":".$now->minute()));
+      print $F "\n";
+      close($F);
+      print STDERR "Analysis submission logged in $logfile\n";
+    }
+    else {
+      print STDERR "Note: set config variable image_analysis_log to obtain a log and graph of image analysis activity.\n";
+    }
 }
 
 1;
