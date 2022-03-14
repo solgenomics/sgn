@@ -187,7 +187,7 @@ $latest_trial_activity => undef
                 <td>
                         <div id="latest_trial_activity">
 % if ($latest_trial_activity) {
-%  print "<span style = 'color:blue'>$latest_trial_activity</span>";
+%  print "<span class='text-success'>$latest_trial_activity</span>";
 % } else {
 %  print "<span class='text-danger'>[No Record]</span>";
 % }

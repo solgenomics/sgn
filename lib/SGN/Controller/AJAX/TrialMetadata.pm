@@ -4786,4 +4786,16 @@ sub update_trial_status_POST : Args(0) {
 
 }
 
+
+sub get_all_trial_activities :Chained('trial') PathPart('all_trial_activities') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->stash->{trial_id};
+    my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema, parent_id => $trial_id });
+    my $activity_info = $trial_status_obj->get_trial_activities();
+
+    $c->stash->{rest} = { data => $activity_info };
+}
+
 1;

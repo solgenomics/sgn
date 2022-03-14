@@ -16,10 +16,32 @@ $phenotypes_fully_uploaded => undef
 $user_can_modify => undef
 </%args>
 
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
 %  if ($user_can_modify) {
 <button class="btn btn-sm btn-primary" style="margin:3px" id="update_trial_status_link">Update Trial Status</button>
 <br/><br/>
 % }
+
+
+<&| /page/info_section.mas, title => "Trial Activities", collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <table id = "trial_activities_table" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Status Type</th>
+                            <th>Date</th>
+                            <th>User ID</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
 
 <div data-offset-top="0" style="max-height: 100%; overflow-y: auto;">
     <div class="panel panel-info">
@@ -114,6 +136,14 @@ $user_can_modify => undef
 <script defer="defer">
 
 jQuery(document).ready(function () {
+
+    jQuery('#trial_activities_table').DataTable({
+        'autoWidth': false,
+        'searching': false,
+        'info': false,
+        'paging': false,
+        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/all_trial_activities',
+    });
 
     jQuery('#trial_completion_layout_section_onswitch').click( function() {
         jQuery.ajax ( {
