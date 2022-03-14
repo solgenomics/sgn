@@ -21,6 +21,7 @@ $field_trial_is_planned_to_cross
 $trial_stock_type
 $trial_stock_count
 $trial_owner
+$latest_trial_activity => undef
 
 </%args>
 
@@ -180,6 +181,19 @@ $trial_owner
                     </div>
                 </td>
             </tr>
+
+            <tr>
+                <td><b>Latest Trial Activity</b></td>
+                <td>
+                        <div id="latest_trial_activity">
+% if ($latest_trial_activity) {
+%  print "<span style = 'color:blue'>$latest_trial_activity</span>";
+% } else {
+%  print "<span class='text-danger'>[No Record]</span>";
+% }
+                        </div>
+                    </td>
+                </tr>
 
         </table>
 
