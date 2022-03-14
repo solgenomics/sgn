@@ -1646,7 +1646,7 @@ sub get_cached_file_VCF {
         @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
         my $counter = 0;
-	my $missing = ""; # value if no genotype
+	my $usingGT;
         while (my $geno = $self->get_next_genotype_info) {
 
             # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
@@ -1724,7 +1724,6 @@ sub get_cached_file_VCF {
                     if (!$format) {
                         my $first_g = $geno->{selected_genotype_hash}->{$m->{name}};
 			if (defined($first_g->{'GT'})) {
-			    $missing = "./.";
 			    push @format_array, 'GT';
 			}
                         foreach my $k (sort keys %$first_g) {
@@ -1745,11 +1744,7 @@ sub get_cached_file_VCF {
                         if (!exists($format_check{'DS'})) {
                             push @format_array, 'DS';
                         }
-                    } else {
-			if ($format_array[0] eq 'GT') {
-			    $missing = "./.";
-			}
-		    }
+                    }
                     $format = join ':', @format_array;
                     $genotype_string .= $format . "\t";
                     $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{format} = $format;
@@ -1767,7 +1762,7 @@ sub get_cached_file_VCF {
                 my $name = $m->{name};
                 my $format = $m->{format};
                 my @format;
-		my $val;
+		my $gt;
 
                 #In case of old genotyping protocols where there was no protocolprop marker info
                 if (!$format) {
@@ -1783,20 +1778,19 @@ sub get_cached_file_VCF {
 
 		#VCF requires the GT field to be first
 		if (defined($geno->{selected_genotype_hash}->{$m->{name}}->{'GT'})) {
-		    $val = $geno->{selected_genotype_hash}->{$m->{name}}->{'GT'};
-		    if ($val eq '') {
-                        $val = $missing;
-                    }
+		    $usingGT = 1;
+		    my $val = $geno->{selected_genotype_hash}->{$m->{name}}->{'GT'};
+		    #if ($val eq '') {
+		    #    $val = './.';
+		    #}
 		    push @current_geno, $val;
-		} else {
-		    $val = $missing; 
-		    push @current_geno, $val;
+		} elsif ($usingGT) {
+		    push @current_geno, './.';
 		}
                 foreach my $format_key (@format) {
                     my $val = $geno->{selected_genotype_hash}->{$m->{name}}->{$format_key};
-		    if ($format_key eq 'GT') {
-			$missing = "./.";
-		    } else {
+                    if ($format_key eq 'GT') {
+                    } else {
                         push @current_geno, $val;
 		    }
                 }
