@@ -8,7 +8,9 @@ $timestamp => localtime()
 </%args>
 
 % my $activities = $c->config->{'trial_activities'};
-% my @all_activities= split ',',$activities;
+% my @all_activities = ('Please select a status');
+% my @activity_list= split ',',$activities;
+% push @all_activities, @activity_list;
 
 <div class="modal fade" id="update_trial_status_dialog" name="update_trial_status_dialog" tabindex="-1" role="dialog" aria-labelledby="updateTrialStatusDialog">
     <div class="modal-dialog" role="document">
@@ -74,7 +76,7 @@ jQuery(document).ready(function(){
 
     jQuery("#update_trial_status_submit").click(function() {
         var trial_status = jQuery("#trial_status_select").val();
-        if (!trial_status) {
+        if (trial_status == 'Please select a status') {
             alert("Please select a status");
             return;
         }

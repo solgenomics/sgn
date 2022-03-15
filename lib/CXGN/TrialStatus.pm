@@ -67,17 +67,35 @@ sub get_trial_activities {
     my $trial_activities_rs = $schema->resultset("Project::Projectprop")->find({ project_id => $project_id, type_id => $type_id });
     my @all_trial_activities;
     if ($trial_activities_rs) {
+        my $user_id;
+        my $timestamp;
+        my $person;
+        my $person_name;
         my $activities_json = $trial_activities_rs->value();
         my $activities_hash = JSON::Any->jsonToObj($activities_json);
         my $all_activities_json = $activities_hash->{'trial_activities'};
         my $all_activities = JSON::Any->jsonToObj($all_activities_json);
         my %activities_hash = %{$all_activities};
+        if ($activities_hash{'Trial Created'}) {
+            $user_id = $activities_hash{'Trial Created'}{'user_id'};
+            $timestamp = $activities_hash{'Trial Created'}{'timestamp'};
+            $person = $people_schema->resultset("SpPerson")->find( { sp_person_id => $user_id } );
+            $person_name = $person->first_name." ".$person->last_name();
+            push @all_trial_activities, ['Trial Created', $timestamp, $person_name];
+        } elsif ($activities_hash{'Trial Uploaded'}) {
+            $user_id = $activities_hash{'Trial Uploaded'}{'user_id'};
+            $timestamp = $activities_hash{'Trial Uploaded'}{'timestamp'};
+            $person = $people_schema->resultset("SpPerson")->find( { sp_person_id => $user_id } );
+            $person_name = $person->first_name." ".$person->last_name();
+            push @all_trial_activities, ['Trial Uploaded', $timestamp, $person_name];
+        }
+
         foreach my $activity_type (@activities) {
             if ($activities_hash{$activity_type}) {
-                my $user_id = $activities_hash{$activity_type}{'user_id'};
-                my $timestamp = $activities_hash{$activity_type}{'timestamp'};
-                my $person = $people_schema->resultset("SpPerson")->find( { sp_person_id => $user_id } );
-                my $person_name = $person->first_name." ".$person->last_name();
+                $user_id = $activities_hash{$activity_type}{'user_id'};
+                $timestamp = $activities_hash{$activity_type}{'timestamp'};
+                $person = $people_schema->resultset("SpPerson")->find( { sp_person_id => $user_id } );
+                $person_name = $person->first_name." ".$person->last_name();
                 push @all_trial_activities, [$activity_type, $timestamp, $person_name];
             } else {
                 push @all_trial_activities, [$activity_type, 'NA', 'NA']

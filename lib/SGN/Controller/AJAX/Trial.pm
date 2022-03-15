@@ -47,6 +47,7 @@ use JSON::XS;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreederSearch;
 use YAML;
+use CXGN::TrialStatus;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -663,6 +664,24 @@ sub save_experimental_design_POST : Args(0) {
                 $folder1->associate_parent($folder_id);
             }
         }
+    }
+
+    my $trial_id = $save->{'trial_id'};
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd();
+    my %trial_status;
+    $trial_status{'Trial Created'}{'user_id'} = $user_id;
+    $trial_status{'Trial Created'}{'timestamp'} = $timestamp;
+    my $status = encode_json \%trial_status;
+
+    my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+    $trial_status_obj->latest_trial_activity($status);
+    $trial_status_obj->trial_activities($status);
+    $trial_status_obj->parent_id($trial_id);
+    my $status_prop_id = $trial_status_obj->store();
+    if (!$status_prop_id) {
+        $c->stash->{rest} = {error => "Error saving trial status info" };
+        return;
     }
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
