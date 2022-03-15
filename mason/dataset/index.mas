@@ -44,13 +44,20 @@ $dataset_description => ''
     cursor: pointer;
   }
   #top-row {
-    display: flex;
+    display: inline-block;
   }
   #pagefooter {
     min-height: 150px !important;
   }
   #data_selections {
     float: left;
+    padding: 5px;
+    max-width: 400px;
+  }
+
+  #get_outliers {
+    float: right;
+    padding: 5px;
   }
 
   #dataset_slider {
@@ -77,8 +84,22 @@ $dataset_description => ''
 
 <body>
   <div class="top-row">
+    <div id="data_selections">
+      <label for="dataset_selection">Select a Dataset: </label>
+      <select id="dataset_selection" name="dataset_selection">
+        <option value="default">Select Dataset</option>
+        <option value="dataset_1">dataset 1</option>
+        <option value="dataset_2">dataset 2</option>
+        <option value="dataset_3">dataset 3</option>
+      </select>
+    </div>
+
+    <div id="get_outliers">
+      <button class="btn btn-primary" id="download_outliers">Download Outliers</button>
+    </div>
+    
     <div id="dataset_slider">
-      <input type="range" min="1" max="5" value="3" class="slider" id="myRange">
+      <input type="range" min="2" max="5" value="3" class="slider" id="myRange">
     </div>
   </div>
 
