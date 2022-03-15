@@ -664,6 +664,18 @@ retrieves phenotypes as a hashref representation
 sub retrieve_phenotypes_ref {
     my $self = shift;
 
+    my $plots = $self->retrieve_plots();
+    my @plot_ids;
+    foreach (@$plots) {
+        push @plot_ids, $_->[0];
+    }
+
+    my $plants = $self->retrieve_plants();
+    my @plant_ids;
+    foreach (@$plants) {
+        push @plant_ids, $_->[0];
+    }
+
     my $accessions = $self->retrieve_accessions();
     my @accession_ids;
     foreach (@$accessions) {
@@ -689,6 +701,8 @@ sub retrieve_phenotypes_ref {
             data_level=>$self->data_level(),
             trait_list=>\@trait_ids,
             trial_list=>\@trial_ids,
+            plot_list=>\@plot_ids,
+            plant_list=>\@plant_ids,
             accession_list=>\@accession_ids,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
         }
@@ -714,7 +728,6 @@ sub retrieve_high_dimensional_phenotypes {
     if (!$nd_protocol_id) {
         die "Must provide the protocol id!\n";
     }
-
     if (!$high_dimensional_phenotype_type) {
         die "Must provide the high dimensional phenotype type!\n";
     }
@@ -747,7 +760,6 @@ sub retrieve_high_dimensional_phenotypes {
         plot_list=>\@plot_ids,
         plant_list=>\@plant_ids,
     });
-
     my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
 
     return ($data_matrix, $identifier_metadata, $identifier_names);
