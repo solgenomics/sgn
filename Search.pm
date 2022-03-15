@@ -1646,7 +1646,6 @@ sub get_cached_file_VCF {
         @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
         my $counter = 0;
-	my $usingGT;
         while (my $geno = $self->get_next_genotype_info) {
 
             # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
@@ -1778,13 +1777,12 @@ sub get_cached_file_VCF {
 
 		#VCF requires the GT field to be first
 		if (defined($geno->{selected_genotype_hash}->{$m->{name}}->{'GT'})) {
-		    $usingGT = 1;
 		    my $val = $geno->{selected_genotype_hash}->{$m->{name}}->{'GT'};
-		    #if ($val eq '') {
-		    #    $val = './.';
-		    #}
+		    if ($val eq '') {
+                        $val = './.';
+                    }
 		    push @current_geno, $val;
-		} elsif ($usingGT) {
+		} else {
 		    push @current_geno, './.';
 		}
                 foreach my $format_key (@format) {
