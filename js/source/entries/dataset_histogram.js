@@ -1,8 +1,12 @@
 export function init() {
     class Dataset {
         constructor() {
-            this.dataset = [];
+            this.datasets = {};
+            this.data = [];
+            this.outliers = [];
+            this.firstRefresh = true;
             this.stdDevMultiplier = Number;
+            this.selection = "default";
         }
 
 
@@ -30,22 +34,47 @@ export function init() {
             return [avg, stdDev];
         }
         
-        slider() {
+        addEventListeners() {
           let LocalThis = this;
           let stdDevMultiplier = 1;
           var slider = document.getElementById("myRange");
           slider.oninput = function() {
             LocalThis.stdDevMultiplier = this.value;
             d3.select("svg").remove();
+            LocalThis.firstRefresh = false;
             LocalThis.render();
-          } 
+          }
+        
+          let selection = document.getElementById("dataset_selection");
+          selection.addEventListener("change", (event) => {
+            d3.select("svg").remove();
+            LocalThis.selection = event.target.value;
+            LocalThis.render(); 
+          });
+
+          let downloadOutliersButton = document.getElementById("download_outliers");
+          downloadOutliersButton.onclick = function() {
+            let csv = 'outliers\n' + LocalThis.outliers.map((outlier) => outlier + '\n');
+            var hiddenElement = document.createElement('a');
+            hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+            hiddenElement.target = '_blank';
+            hiddenElement.download = `test.csv`;
+            hiddenElement.click();    
+          }
+
+
         }
 
-        render() {
-          this.stdDevMultiplier = document.getElementById("myRange").value;
-          const LocalThis = this;
-          this.slider();
+        // getDatasets() {
+        //   const endpoint = '/ajax/dataset/get';
+        // }
 
+        render() {
+          if (this.firstRefresh) {
+            this.addEventListeners();   
+          };
+          console.log(this.selection);
+          const LocalThis = this;
 
 
           var margin = {top: 10, right: 30, bottom: 30, left: 60},
@@ -60,40 +89,65 @@ export function init() {
               .attr("transform",
                     "translate(" + margin.left + "," + margin.top + ")");
 
-          var isOutlier = function(d) {
+          var isOutlier = function(d, mean, stdDev) {
               let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
-
-              return d.value >= mean - stdDev * filter && d.value <= mean + stdDev * filter ? "green" : "red";
+              if (d.value >= mean - stdDev * filter && d.value <= mean + stdDev * filter) {
+                return "green";
+              } else {
+                LocalThis.outliers.push(d.unit);
+                return "red";
+              }
           }
           
           //Read the data
-          const data = [
-              {observationUnit: "One", xVal: 0, value: 10}, {observatioUnit: "Two", xVal: 5, value: 15}, {observationUnit: "Three", xVal: 10, value: 20}, {observationUnit: "Four", xVal: 15, value: 25}, {observationUnit: "Five", xVal: 20, value: 30},
-              {observationUnit: "Six", xVal: 25, value: 35}, {observatioUnit: "Seven", xVal: 30, value: 40}, {observationUnit: "Eight", xVal: 35,value: 22}, {observationUnit: "Nine", xVal: 40, value: 24}, {observationUnit: "Ten", xVal: 45, value: 11},
-              {observationUnit: "Eleven", xVal: 50, value: 3}, {observatioUnit: "Twelve", xVal: 55, value: 29}, {observationUnit: "Thirteen", xVal: 60, value: 16}, {observationUnit: "Fourteen", xVal: 65, value: 25}, {observationUnit: "Fifteen", xVal: 70, value: 23},
-              {observationUnit: "Sixteen", xVal: 75, value: 43}, {observatioUnit: "Seventeen", xVal: 80, value: 19}, {observationUnit: "Eighteen", xVal: 85, value: 2}, {observationUnit: "Nineteen", xVal: 90, value: 42}, {observationUnit: "Twenty", xVal: 95, value: 31},
-              {observationUnit: "Sixteen", xVal: 100, value: 18}, {observatioUnit: "Seventeen", xVal: 105, value: 26}, {observationUnit: "Eighteen", xVal: 110, value: 38}, {observationUnit: "Nineteen", xVal: 115, value: 12}, {observationUnit: "Twenty", xVal: 120, value: 25},
-              {observationUnit: "Sixteen", xVal: 125, value: 9}, {observatioUnit: "Seventeen", xVal: 130, value: 6}, {observationUnit: "Eighteen", xVal: 135, value: 11}, {observationUnit: "Nineteen", xVal: 140, value: 35}, {observationUnit: "Twenty", xVal: 145, value: 40},
-              {observationUnit: "Sixteen", xVal: 150, value: 26}, {observatioUnit: "Seventeen", xVal: 155, value: 34}, {observationUnit: "Eighteen", xVal: 160, value: 3}, {observationUnit: "Nineteen", xVal: 165, value: 32}, {observationUnit: "Twenty", xVal: 170, value: 2},
-              {observationUnit: "Sixteen", xVal: 175, value: 21}, {observatioUnit: "Seventeen", xVal: 180, value: 19}, {observationUnit: "Eighteen", xVal: 185, value: 43}, {observationUnit: "Nineteen", xVal: 190, value: 16}, {observationUnit: "Twenty", xVal: 195, value: 17},
-
-
-
-          ]
-      
-          let traitVals = [];
-          for (let point of data) {
-              traitVals.push(point.value);
-          }
-
-          const [mean, stdDev] = this.standardDeviation(traitVals)
-          const xAxisDomain = [];
+          const data = [];
           for (let i = 0; i < 40; i++) {
-            xAxisDomain.push('Trait' + String(i+1));
+            data.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
           }
+          data.push({unit: 100, value: 148});
+
+          const data2 = [];
+          for (let i = 0; i < 40; i++) {
+            data2.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
+          }
+          data2.push({unit: 100, value: 148});
+
+          const data3 = [];
+          for (let i = 0; i < 40; i++) {
+            data3.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
+          }
+          data3.push({unit: 100, value: 148});
+
+          if (this.firstRefresh) {
+            this.datasets["dataset_1"] = data;
+            this.datasets["dataset_2"] = data2;
+            this.datasets["dataset_3"] = data3;
+          }
+          
+          switch(this.selection) {
+            case "dataset_1":
+              this.data = this.datasets['dataset_1'];
+              break;
+            case "dataset_2":
+              this.data = this.datasets['dataset_2'];
+              break;
+            case "dataset_3":
+              this.data = this.datasets['dataset_3'];
+            default:
+              break;
+          }
+          
+      
+          let unitVals = [];
+          for (let point of this.data) {
+              unitVals.push(point.value);
+          }
+
+          const [mean, stdDev] = this.standardDeviation(unitVals);
+          this.outliers = [];
           // Add X axis
           var x = d3.scaleLinear()
-          .domain([0,200])
+          .domain([0, 200])
           .range([ 0, width]);
           svg.append("g")
           .style("font", "18px times")
@@ -102,7 +156,7 @@ export function init() {
       
           // Add Y axis
           var y = d3.scaleLinear()
-          .domain([0, 50])
+          .domain([0, 150])
           .range([ height, 0]);
           svg.append("g")
           .style("font", "18px times")
@@ -111,13 +165,13 @@ export function init() {
           // Add dots
           svg.append('g')
           .selectAll("dot")
-          .data(data)
+          .data(LocalThis.data)
           .enter()
           .append("circle")
-              .attr("cx", function (d) { return x(d.xVal); } )
+              .attr("cx", function (d) { return x(d.unit); } )
               .attr("cy", function (d) { return y(d.value); } )
               .attr("r", 7)
-              .style("fill", function(d) {return isOutlier(d)})
+              .style("fill", function(d) {return isOutlier(d, mean, stdDev)})
       
         }
     }
