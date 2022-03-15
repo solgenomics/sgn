@@ -168,6 +168,37 @@ sub get_dataset :Path('/ajax/dataset/get') Args(1) {
     $c->stash->{rest} = { dataset => $dataset_data };
 }
 
+
+sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $dimension = shift;
+
+    my $dataset = CXGN::Dataset->new(
+	{
+	    schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
+	    sp_dataset_id=> $dataset_id,
+	});
+
+
+    my $dimension_data;
+    my $function_name = 'retrieve_'.$dimension;
+    if ($dataset->can($function_name)) {
+	
+	$dimension_data = $dataset->$function_name();
+    }
+    else {
+	$c->stash->{rest} = { error => "The specified dimension '$dimension' does not exist" };
+	return;
+    }
+
+    $c->stash->{rest} = { dataset_id => $dataset_id,
+			  $dimension => $dimension_data,
+    };
+}
+
 sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
     my $self = shift;
     my $c = shift;
