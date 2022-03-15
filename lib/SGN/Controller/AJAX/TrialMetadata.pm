@@ -4791,11 +4791,12 @@ sub get_all_trial_activities :Chained('trial') PathPart('all_trial_activities') 
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $trial_id = $c->stash->{trial_id};
     my $activities = $c->config->{'trial_activities'};
     my @activity_list = split ',', $activities;
 
-    my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema, parent_id => $trial_id, activity_list => \@activity_list });
+    my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema, people_schema => $people_schema, parent_id => $trial_id, activity_list => \@activity_list });
     my $activity_info = $trial_status_obj->get_trial_activities();
 
     $c->stash->{rest} = { data => $activity_info };

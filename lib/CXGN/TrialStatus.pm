@@ -55,6 +55,7 @@ sub BUILD {
 sub get_trial_activities {
     my $self = shift;
     my $schema = $self->bcs_schema();
+    my $people_schema = $self->people_schema();
     my $project_id = $self->parent_id();
     my $type = $self->prop_type();
     my $type_id = $self->_prop_type_id();
@@ -64,7 +65,6 @@ sub get_trial_activities {
     my @fields = @$key_ref;
 
     my $trial_activities_rs = $schema->resultset("Project::Projectprop")->find({ project_id => $project_id, type_id => $type_id });
-
     my @all_trial_activities;
     if ($trial_activities_rs) {
         my $activities_json = $trial_activities_rs->value();
@@ -76,7 +76,9 @@ sub get_trial_activities {
             if ($activities_hash{$activity_type}) {
                 my $user_id = $activities_hash{$activity_type}{'user_id'};
                 my $timestamp = $activities_hash{$activity_type}{'timestamp'};
-                push @all_trial_activities, [$activity_type, $timestamp, $user_id];
+                my $person = $people_schema->resultset("SpPerson")->find( { sp_person_id => $user_id } );
+                my $person_name = $person->first_name." ".$person->last_name();
+                push @all_trial_activities, [$activity_type, $timestamp, $person_name];
             } else {
                 push @all_trial_activities, [$activity_type, 'NA', 'NA']
             }
