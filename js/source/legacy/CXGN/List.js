@@ -159,7 +159,7 @@ CXGN.List.prototype = {
                 }
             }
         });
-
+        types.sort((a,b) => a[1].toUpperCase().localeCompare(b[1].toUpperCase()));
         return types;
     },
 
