@@ -3,7 +3,20 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.cookie', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+<& /util/import_javascript.mas,
+  classes => ['jquery.dataTables-buttons-min',
+      'jquery.iframe-post-form',
+      'jszip-min', 'pdfmake.pdfmake-min',
+      'pdfmake.vfs_fonts',
+      'buttons.bootstrap-min',
+      'buttons.html5-min',
+      'jquery',
+      'jquery.cookie',
+      'thickbox',
+      'CXGN.BreedersToolbox.HTMLSelect',
+      'd3.d3v4Min'
+  ]
+&>
 
 <style>
 td.details-control {
@@ -107,6 +120,10 @@ tr.shown td.details-control {
         <div class="panel panel-default">
             <div class="panel-body">
                 <div class="form-group">
+                <div id="image_analysis_stats">
+
+                </div>
+                <br/><br/><br/>
                     <label class="col-sm-6 control-label">Image Analysis Service: </label>
                     <div class="col-sm-6" >
                         <select class="form-control" id="image_analysis_service_select" name="image_analysis_service_select">
@@ -185,11 +202,11 @@ var service_traits = {
 
 jQuery(document).ready(function(){
 
-    var values_hash;
-
     get_select_box('trials', 'image_analysis_trial_select', { 'name' : 'html_image_analysis_trial_select', 'id' : 'html_image_analysis_trial_select', 'multiple':0, 'size':10, 'trial_name_values':1 });
 
     _load_image_search_results();
+
+    _load_analysis_activity_graph();
 
     jQuery('#image_search_submit').click(function(){
         if (jQuery('#html_image_analysis_trial_select').val() == '') {
@@ -484,6 +501,103 @@ function _load_image_search_results() {
               d.image_project_name = jQuery('#html_image_analysis_trial_select').val();
             }
         }
+    });
+}
+
+function _load_analysis_activity_graph() {
+    var activity = [];
+    var margin = {top: 20, right: 20, bottom: 30, left: 50};
+    var width  = 800 - margin.left - margin.right;
+    var height = 500 - margin.top - margin.bottom;
+
+    var parseTime = d3.timeParse("%Y-%m-%d");
+
+    // Create the SVG drawing area
+    var svg = d3.select("image_analysis_stats")
+              .append("svg")
+              .attr("width", width + margin.left + margin.right)
+              .attr("height", height + margin.top + margin.bottom)
+              .append("g")
+              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    d3.json('/ajax/image_analysis/activity', function(error, response) {
+
+        var data = JSON.parse(response.activity);
+
+        jQuery.each(data, function (index, element) {
+            activity.push({
+                'date': parseTime(element.date),
+                'value': element.value
+            })
+        });
+
+        console.log(activity);
+
+        // Determine the first and last dates in the data set
+        var dayExtent = d3.extent(activity, function (d) { return d.date; });
+
+        // Create one bin per day, use an offset to include the first and last days
+        var dayBins = d3.timeDays(d3.timeDay.offset(dayExtent[0],-1),
+                                  d3.timeDay.offset(dayExtent[1], 1));
+
+        var x = d3.scaleTime()
+                    .domain(dayExtent)
+                    .rangeRound([0, width]);
+
+        // Scale the range of the data in the y domain
+        var y = d3.scaleLinear()
+// 		   		   .domain([0, 10])
+                   .range([height, 0]);
+
+        var xAxis = d3.axisBottom(x)
+                       .tickArguments([d3.timeDay.every(1)]);
+
+        // Set the parameters for the histogram
+        var histogram = d3.histogram()
+                           .value(function(d) { return d.date; })
+                           .domain(x.domain())
+                           .thresholds(x.ticks(dayBins.length));
+
+        // Group the data for the bars
+        var bins = histogram(activity);
+
+        y.domain([0, d3.max(bins, function(d) {
+            return d.length;
+        })]);
+
+        // Append the bar rectangles to the svg element
+        svg.selectAll("rect")
+             .data(bins)
+             .enter().append("rect")
+             .attr("class", "bar")
+             .attr("x", 1)
+             .attr("transform", function(d) {
+                return "translate(" + x(d.x0) + "," + y(d.length) + ")";
+             })
+             .attr("width", function(d) {
+                return x(d.x1) - x(d.x0) -1 ;
+             })
+             .attr("height", function(d) {
+                return height - y(d.length);
+             });
+
+        // Add the x axis
+        svg.append("g")
+             .attr("transform", "translate(0," + height + ")")
+             .call(xAxis);
+
+        // Add the y axis
+        svg.append("g")
+             .call(d3.axisLeft(y).ticks(d3.max(bins, function(d) { return d.length; })))
+             .append("text")
+             .attr("fill", "#000")
+             .attr("transform", "rotate(-90)")
+             .attr("y", 6)
+             .attr("dy", "0.71em")
+             .style("text-anchor", "end")
+             .text("Number of events");
+
     });
 }
 
