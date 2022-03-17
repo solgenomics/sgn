@@ -499,6 +499,7 @@ sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) {
     $c->stash->{template} = '/breeders_toolbox/view_file.mas';
 }
 
+
 sub make_cross_form :Path("/stock/cross/new") :Args(0) {
     my ($self, $c) = @_;
     $c->stash->{template} = '/breeders_toolbox/new_cross.mas';
