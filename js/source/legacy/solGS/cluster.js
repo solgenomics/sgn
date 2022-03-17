@@ -224,7 +224,7 @@ solGS.cluster = {
 				if (list.list_type.match(/accessions/)) {
 					dataTypeOpts = ['Genotype']
 				} else if (list.list_type.match(/plots/)) {
-					dataTypeOpts = ['Penotype']
+					dataTypeOpts = ['Phenotype']
 				} else if (list.list_type.match(/trials/)) {
 					dataTypeOpts = ['Genotype', 'Phenotype']
 				}
