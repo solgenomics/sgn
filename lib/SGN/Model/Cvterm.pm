@@ -336,7 +336,8 @@ sub get_cv_names_from_db_name {
     
     my $q = "select distinct(cv.name) from db join dbxref using(db_id) join cvterm using(dbxref_id) join cv using(cv_id) where db.name=?";
     my $h = $schema->storage->dbh()->prepare($q);
-
+    $h->execute($db_name);
+    
     my @cv_names;
 
     while (my $cvn = $h->fetchrow_array()) { 
