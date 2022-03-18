@@ -22,6 +22,7 @@ on:
     branches:
       - develop
       - master
+      - release/**
   workflow_dispatch:
 
 jobs:
@@ -86,3 +87,9 @@ jobs:
         run: |
           docker tag ${{steps.vars.outputs.imageName}} breedinginsight/breedbase:latest
           docker push breedinginsight/breedbase:latest
+
+      - name: Tag release
+        if: contains(github.ref, '/release/')
+        run: |
+          docker tag ${{steps.vars.outputs.imageName}} breedinginsight/breedbase:rc
+          docker push breedinginsight/breedbase:rc
