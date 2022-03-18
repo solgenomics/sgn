@@ -368,7 +368,7 @@ sub verify {
                 if (exists($check_trait_category{$trait_cvterm_id})) {
                     my @trait_categories = split /\//, $check_trait_category{$trait_cvterm_id};
                     my %trait_categories_hash;
-                    if ($check_trait_format{$trait_cvterm_id} eq 'Ordinal') {
+                    if ($check_trait_format{$trait_cvterm_id} eq 'Ordinal' || $check_trait_format{$trait_cvterm_id} eq 'Nominal') {
                         # Ordinal looks like <value>=<category>
                         foreach my $ordinal_category (@trait_categories) {
                             my @split_value = split('=', $ordinal_category);
@@ -377,7 +377,7 @@ sub verify {
                             }
                         }
                     } else {
-                        # Nominal, the category is just a value
+                        # Catch everything else
                         %trait_categories_hash = map { $_ => 1 } @trait_categories;
                     }
 
