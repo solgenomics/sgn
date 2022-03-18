@@ -11,6 +11,7 @@ export function init(main_div){
   main_div.innerHTML = `
   <div class="container-fluid">
     <div class="row">
+      <div class="col-sm-12 boxplotter-loading"></div>
       <div class="form col-sm-12 form-group boxplotter-variable-select-div" style="display:none;">
         <label for="sort" class="control-label">Variable</label>
         <select class="form-control boxplotter-variable-select"></select>
@@ -46,6 +47,7 @@ export function init(main_div){
     };
     console.log(d);
     bp.find(".boxplotter-variable-select-div, .boxplotter-group-list, .boxplotter-result").hide();
+    bp.find(".boxplotter-loading").html('Loading ...');
     $.ajax({
       url : document.location.origin+'/ajax/tools/boxplotter/get_constraints',
       type : 'GET',
@@ -79,7 +81,9 @@ export function init(main_div){
             bp.find('.boxplotter-result .not-enough-data').remove();
             bp.find(".boxplotter-variable-select-div, .boxplotter-group-list, .brapp-wrapper, .boxplots").show();
           }
+          bp.find(".boxplotter-loading").html('');
           bp.find(".boxplotter-result").show();
+
         })
       }
     });
