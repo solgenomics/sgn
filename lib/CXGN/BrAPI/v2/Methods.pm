@@ -181,14 +181,16 @@ sub store {
             }
         );
 
-        my $prop_description = $schema->resultset("Cv::Cvtermprop")->create(
-            {
-                cvterm_id => $cvterm_id,
-                type_id   => $method_description_id,
-                value     => $method_description,
-                rank      => 0
-            }
-        );
+        if ($method_description) {
+            my $prop_description = $schema->resultset("Cv::Cvtermprop")->create(
+                {
+                    cvterm_id => $cvterm_id,
+                    type_id   => $method_description_id,
+                    value     => $method_description,
+                    rank      => 0
+                }
+            );
+        }
 
         my $prop_class = $schema->resultset("Cv::Cvtermprop")->create(
             {
