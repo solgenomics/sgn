@@ -796,7 +796,6 @@ sub build_accession_properties_info {
         my $table = "sp" . $count;
         $select .= ", string_agg($table.value, ', ') AS \"$sp\"";
         $joins .= " LEFT JOIN public.stockprop AS $table ON (stock.stock_id = $table.stock_id AND $table.type_id = (SELECT cvterm_id FROM cvterm WHERE name = '$sp' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_property')))";
-        $group .= ", $table.value";
     }
 
     # Build where block using accession ids
