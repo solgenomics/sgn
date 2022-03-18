@@ -567,7 +567,9 @@ export function init() {
             var grid = d3.select("#fieldmap_chart")
             .append("svg")
             .attr("width", width * 50 + 20 + "px")
-            .attr("height", height * 50 + 20 + "px");
+            .attr("height", height * 50 + 20 + "px")
+            .style("display", "block")
+            .style("margin", "auto");
 
             var tooltip = d3.select("#fieldmap_chart")
             .append("rect")
@@ -594,8 +596,8 @@ export function init() {
                 .on("mouseover", function(d) { if (d.observationUnitPosition.observationLevel) { 
                     d3.select(this).style('fill', 'green').style('cursor', 'pointer');
                     tooltip.style('opacity', .9)
-                    .style('left', (window.event.pageX - 600)+"px")
-                    .style('top', (window.event.pageY - 1100)+"px")
+                    .style('left', (window.event.pageX - 420)+"px")
+                    .style('top', (window.event.pageY - 1000)+"px")
                     .text(get_plot_message(d))
                 }})
                 .on("mouseout", function(d) { 
