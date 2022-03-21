@@ -28,6 +28,11 @@ tr.shown td.details-control {
     text-align:center;
     color:red;
 }
+
+.bar {
+  fill: steelblue;
+  shape-rendering: crispEdges;
+}
 </style>
 
 <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
@@ -120,10 +125,6 @@ tr.shown td.details-control {
         <div class="panel panel-default">
             <div class="panel-body">
                 <div class="form-group">
-                <div id="image_analysis_stats">
-
-                </div>
-                <br/><br/><br/>
                     <label class="col-sm-6 control-label">Image Analysis Service: </label>
                     <div class="col-sm-6" >
                         <select class="form-control" id="image_analysis_service_select" name="image_analysis_service_select">
@@ -167,6 +168,17 @@ tr.shown td.details-control {
                 </div>
             </div>
         </div>
+    </div>
+
+    <br/><br/>
+    <div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+        <div class="form-group" id="image_analysis_usage">
+            <label class="col-sm-6 control-label">Image Analysis Usage: </label>
+        </div>
+        </div>
+    </div>
     </div>
 
     <div class="modal fade" id="saveResultModal" tabindex="-1" role="dialog" aria-labelledby="saveResultModal" aria-hidden="true">
@@ -505,98 +517,100 @@ function _load_image_search_results() {
 }
 
 function _load_analysis_activity_graph() {
-    var activity = [];
-    var margin = {top: 20, right: 20, bottom: 30, left: 50};
-    var width  = 800 - margin.left - margin.right;
-    var height = 500 - margin.top - margin.bottom;
-
-    var parseTime = d3.timeParse("%Y-%m-%d");
-
-    // Create the SVG drawing area
-    var svg = d3.select("image_analysis_stats")
-              .append("svg")
-              .attr("width", width + margin.left + margin.right)
-              .attr("height", height + margin.top + margin.bottom)
-              .append("g")
-              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 
     d3.json('/ajax/image_analysis/activity', function(error, response) {
 
-        var data = JSON.parse(response.activity);
+        var activity = JSON.parse(response.activity);
+        // console.log("Activity array is: ");
+        // console.log(activity);
 
-        jQuery.each(data, function (index, element) {
-            activity.push({
-                'date': parseTime(element.date),
-                'value': element.value
+        // Iterate through each data point and parse date strings into dates
+        var parseTime = d3.timeParse("%Y-%m-%d");
+        var data = [];
+
+        jQuery.each(activity, function (index, element) {
+            data.push({
+                'date': parseTime(element.date)
             })
         });
 
-        console.log(activity);
+        // Set canvas margins
+        var margin = {top: 20, right: 50, bottom: 30, left: 50};
+        var width = 800 - margin.left - margin.right;
+        var height = 500 - margin.top - margin.bottom;
 
-        // Determine the first and last dates in the data set
-        var dayExtent = d3.extent(activity, function (d) { return d.date; });
+        // Create svg object
+        var svg = d3.select('#image_analysis_usage').append('svg')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append('g')
+            .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-        // Create one bin per day, use an offset to include the first and last days
-        var dayBins = d3.timeDays(d3.timeDay.offset(dayExtent[0],-1),
-                                  d3.timeDay.offset(dayExtent[1], 1));
+        // Set x (timeseries) and y (linear) scales
+        var xScale = d3.scaleTime().range([0, width]);
+        var yScale = d3.scaleLinear().range([height, 0]);
 
-        var x = d3.scaleTime()
-                    .domain(dayExtent)
-                    .rangeRound([0, width]);
+       var dayExtent = d3.extent(data, function (d) { return d.date; });
 
-        // Scale the range of the data in the y domain
-        var y = d3.scaleLinear()
-// 		   		   .domain([0, 10])
-                   .range([height, 0]);
+       // Create one bin per day, use an offset to include the first and last days
+       var dayBins = d3.timeDays(d3.timeDay.offset(dayExtent[0],-1),
+                                 d3.timeDay.offset(dayExtent[1], 1));
 
-        var xAxis = d3.axisBottom(x)
-                       .tickArguments([d3.timeDay.every(1)]);
+       var x = d3.scaleTime()
+           .domain(dayExtent)
+           .rangeRound([0, width]);
 
-        // Set the parameters for the histogram
-        var histogram = d3.histogram()
-                           .value(function(d) { return d.date; })
-                           .domain(x.domain())
-                           .thresholds(x.ticks(dayBins.length));
+       // Scale the range of the data in the y domain
+       var y = d3.scaleLinear()
+                  .range([height, 0]);
 
-        // Group the data for the bars
-        var bins = histogram(activity);
+       var xAxis = d3.axisBottom(x)
+                      .tickArguments([d3.timeDay.every(1)])
+                      .tickFormat(d3.timeFormat('%d-%b'));
 
-        y.domain([0, d3.max(bins, function(d) {
-            return d.length;
-        })]);
+       // Set the parameters for the histogram
+       var histogram = d3.histogram()
+                          .value(function(d) { return d.date; })
+                          .domain(x.domain())
+                          .thresholds(x.ticks(dayBins.length));
 
-        // Append the bar rectangles to the svg element
-        svg.selectAll("rect")
-             .data(bins)
-             .enter().append("rect")
-             .attr("class", "bar")
-             .attr("x", 1)
-             .attr("transform", function(d) {
-                return "translate(" + x(d.x0) + "," + y(d.length) + ")";
-             })
-             .attr("width", function(d) {
-                return x(d.x1) - x(d.x0) -1 ;
-             })
-             .attr("height", function(d) {
-                return height - y(d.length);
-             });
 
-        // Add the x axis
-        svg.append("g")
-             .attr("transform", "translate(0," + height + ")")
-             .call(xAxis);
+       // Group the data for the bars
+       var bins = histogram(data);
 
-        // Add the y axis
-        svg.append("g")
-             .call(d3.axisLeft(y).ticks(d3.max(bins, function(d) { return d.length; })))
-             .append("text")
-             .attr("fill", "#000")
-             .attr("transform", "rotate(-90)")
-             .attr("y", 6)
-             .attr("dy", "0.71em")
-             .style("text-anchor", "end")
-             .text("Number of events");
+       y.domain([0, d3.max(bins, function(d) { return d.length; })]);
+
+       var hist = svg.selectAll("rect")
+            .data(bins)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", 1)
+            .attr("transform", function(d) {
+               return "translate(" + x(d.x0) + "," + y(d.length) + ")";
+            })
+            .attr("width", function(d) {
+               return x(d.x1) - x(d.x0) -1 ;
+            })
+            .attr("height", function(d) {
+               return height - y(d.length);
+            });
+
+       // Add the x axis
+       svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+
+       // Add the y axis
+       svg.append("g")
+            .call(d3.axisLeft(y).ticks(d3.max(bins, function(d) { return d.length; })))
+            .append("text")
+            .attr("fill", "#000")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left)
+            .attr("x",0 - (height / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .text("Number of Images Analyzed");
 
     });
 }
