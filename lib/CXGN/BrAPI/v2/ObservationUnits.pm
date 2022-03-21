@@ -31,7 +31,8 @@ sub search {
     my $location_ids_arrayref = $params->{locationDbId} || ($params->{locationDbIds} || ());
     my $study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
     my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
-    my $trait_list_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
+    my $trait_list_arrayref = $params->{observationVariableName} || ($params->{observationVariableNames} || ());
+    my $trait_ids_arrayref = $params->{observationVariableDbId} || ($params->{observationVariableDbIds} || ());
     my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
     my $folder_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
     my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
@@ -69,7 +70,10 @@ sub search {
     my $reference_result = $references->search();
 
     my $lt = CXGN::List::Transform->new();
-    my $trait_ids_arrayref = $lt->transform($self->bcs_schema, "traits_2_trait_ids", $trait_list_arrayref)->{transform};
+    
+    if (!$trait_ids_arrayref && $trait_list_arrayref) {
+        $trait_ids_arrayref = $lt->transform($self->bcs_schema, "traits_2_trait_ids", $trait_list_arrayref)->{transform};
+    }
 
     my $limit = $page_size;
     my $offset = $page_size*$page;

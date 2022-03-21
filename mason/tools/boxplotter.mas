@@ -56,7 +56,8 @@ $datasets
         <option value="plant">Plants</option>
       </select>
       <div class="well well-sm"> Note: Constraints other than accessions, traits, trials, locations, and program will be ignored </div>
-    </div>
+    </div><br>
+    <center><button id="createBtn" class="btn btn-default btn-sm btn-primary">Create</button></center>
   </div>
 </div>
 
@@ -67,6 +68,9 @@ $datasets
         <div id="boxplotResults" style="max-width: 100%; overflow-x:scroll; position: relative; margin:0.5em;"></div>
         <div style="clear:both"></div>
       </div>
+      <div>
+      <a id="downloadBxpltBtn" download="" class="btn btn-default">Download Boxplot SVG</a>
+    </div>
       <div class="brapp-footer" style="background-color:#ddd;border-top:solid 1px #ccc;font-family:Arial;color:#555;font-size:11px;padding:0.3em;border-bottom-left-radius:4px;border-bottom-right-radius:4px;">
         <div style="min-height:14px;text-align:right;">
           <a href="https://github.com/solgenomics/BrAPI-BoxPlotter" style="color:inherit;white-space:nowrap;text-decoration:underline;">Phenotype BoxPlotter</a> developed at the <a href="https://btiscience.org/" style="color:inherit;white-space:nowrap;text-decoration:underline;">Boyce Thompson Institute</a>
@@ -74,9 +78,6 @@ $datasets
       </div>
     </div>
     <br>
-    <div>
-      <a id="downloadBxpltBtn" download="" class="btn btn-default">Download Boxplot SVG</a>
-    </div>
   </div>
 </div>
 
@@ -89,12 +90,13 @@ $datasets
       auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
       if (!auth_token){ alert("Login required to display boxplots"); }
   } 
-  
-  $("#datasetSelect, #obsunitSelect").change(function(){
+  $("#downloadBxpltBtn").hide();
+  $("#createBtn").click(function(){
     var ds = $("#datasetSelect option:selected").val();
     var ou = $("#obsunitSelect option:selected").val();
-    if(ds=="") return;
+    if(ds=="") { alert("Choose a dataset!"); return; }
     boxplotter.loadDatasetObsUnits(ds,ou,auth_token);
+    $("#downloadBxpltBtn").show();
   });
   
   $("#downloadBxpltBtn").on("mousedown",function(){
