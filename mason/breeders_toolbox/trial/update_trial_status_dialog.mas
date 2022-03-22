@@ -32,6 +32,12 @@ $timestamp => localtime()
                                 </select>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label" for="trial_activity_date">Trial Activity Date: </label>
+                            <div class="col-sm-6">
+                                <input class="form-control" id="trial_activity_date" title="activity_date" type="text" value=""/>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -71,6 +77,20 @@ jQuery(document).ready(function(){
 
     jQuery("#update_trial_status_link").click(function(){
         jQuery("#update_trial_status_dialog").modal("show");
+
+        var trial_activity_date_element = jQuery("#trial_activity_date");
+        set_daterangepicker_default (trial_activity_date_element);
+        jQuery('input[title="activity_date"]').daterangepicker(
+            {
+                "singleDatePicker": true,
+                "showDropdowns": true,
+                "autoUpdateInput": false,
+            },
+            function(start){
+                trial_activity_date_element.val(start.format('MM/DD/YYYY'));
+//                highlight_changed_details(trial_activity_date_element);
+            }
+        );
     });
 
 
@@ -78,6 +98,12 @@ jQuery(document).ready(function(){
         var trial_status = jQuery("#trial_status_select").val();
         if (trial_status == 'Please select a status') {
             alert("Please select a status");
+            return;
+        }
+
+        var activity_date = jQuery("#trial_activity_date").val();
+        if (activity_date == '') {
+            alert("Please select a date");
             return;
         }
 
