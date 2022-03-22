@@ -5105,8 +5105,8 @@ sub get_latest_activity {
         my $latest_activity_ref = decode_json $latest_activity_json;
         my %latest_activity_hash = %{$latest_activity_ref};
         my $activity_type = ((keys %latest_activity_hash)[0]);
-        my $activity_timestamp = $latest_activity_hash{$activity_type}{'timestamp'};
-        $latest_trial_activity = $activity_type." ".$activity_timestamp;
+        my $activity_date = $latest_activity_hash{$activity_type}{'activity_date'};
+        $latest_trial_activity = $activity_type." ".$activity_date;
     }
 
     return $latest_trial_activity

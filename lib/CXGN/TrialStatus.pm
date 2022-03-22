@@ -93,10 +93,10 @@ sub get_trial_activities {
         foreach my $activity_type (@activities) {
             if ($activities_hash{$activity_type}) {
                 $user_id = $activities_hash{$activity_type}{'user_id'};
-                $timestamp = $activities_hash{$activity_type}{'timestamp'};
+                $activity_date = $activities_hash{$activity_type}{'activity_date'};
                 $person = $people_schema->resultset("SpPerson")->find( { sp_person_id => $user_id } );
                 $person_name = $person->first_name." ".$person->last_name();
-                push @all_trial_activities, [$activity_type, $timestamp, $person_name];
+                push @all_trial_activities, [$activity_type, $activity_date, $person_name];
             } else {
                 push @all_trial_activities, [$activity_type, 'NA', 'NA']
             }

@@ -3,7 +3,6 @@
 $trial_id
 $trial_name
 $user_name
-$timestamp => localtime()
 
 </%args>
 
@@ -88,7 +87,6 @@ jQuery(document).ready(function(){
             },
             function(start){
                 trial_activity_date_element.val(start.format('MM/DD/YYYY'));
-//                highlight_changed_details(trial_activity_date_element);
             }
         );
     });
@@ -115,7 +113,7 @@ jQuery(document).ready(function(){
                 'trial_id': "<% $trial_id %>",
                 'trial_status': trial_status,
                 'user_name': "<% $user_name %>",
-                'timestamp': "<% $timestamp %>"
+                'activity_date': activity_date
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
