@@ -44,15 +44,20 @@ $dataset_description => ''
     cursor: pointer;
   }
   #top-row {
-    display: inline-block;
+    display: flex;
+    justify-content: center;
+
+  }
+
+  #trait_selection {
   }
   #pagefooter {
     min-height: 150px !important;
   }
-  #data_selections {
+  #trait_selections {
     float: left;
-    padding: 5px;
     max-width: 400px;
+    height: 100px;
   }
 
   #get_outliers {
@@ -84,13 +89,10 @@ $dataset_description => ''
 
 <body>
   <div class="top-row">
-    <div id="data_selections">
-      <label for="dataset_selection">Select a Dataset: </label>
-      <select id="dataset_selection" name="dataset_selection">
-        <option value="default">Select Dataset</option>
-        <option value="dataset_1">dataset 1</option>
-        <option value="dataset_2">dataset 2</option>
-        <option value="dataset_3">dataset 3</option>
+    <div id="trait_selections">
+      <label for="trait_selection">Select a Trait: </label>
+      <select id="trait_selection" name="trait_selection">
+        <option value="default">Select Trait</option>
       </select>
     </div>
 
@@ -119,7 +121,8 @@ $dataset_description => ''
   <script>
 
     jQuery(document).ready( function() {
-      var DataSet = window.jsMod['dataset_histogram'].init();
+      console.log('dataset id', '<% $dataset_name %>');
+      var DataSet = window.jsMod['dataset_histogram'].init(<% $dataset_id %>);
       DataSet.render(); 
     });  
 
