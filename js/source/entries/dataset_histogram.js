@@ -1,4 +1,4 @@
-export function init() {
+export function init(dataset_id) {
     class Dataset {
         constructor() {
             this.datasets = {};
@@ -7,8 +7,59 @@ export function init() {
             this.firstRefresh = true;
             this.stdDevMultiplier = Number;
             this.selection = "default";
+            this.dataset_id = dataset_id;
+            this.phenotypes = {};
+            this.traits = {};
+            this.xAxisData = [];
+            this.yAxisData = [];
         }
 
+        getPhenotypes() {
+          const LocalThis = this;
+          this.firstRefresh = false;
+          new jQuery.ajax({
+            url: '/ajax/dataset/retrieve/' + this.dataset_id + '/phenotypes/',
+            success: function(response) {
+              LocalThis.phenotypes = response.phenotypes;
+              LocalThis.setDropDownTraits();
+            },
+            error: function(response) {
+              alert('Error');
+            }
+            
+            
+          })
+        }
+
+        setDropDownTraits() {
+          const phenotypes = this.phenotypes;
+          const keys = phenotypes[0];
+          this.traits[keys[39]] = {};
+          this.traits[keys[40]] = {};
+          this.traits[keys[41]] = {};
+
+          // Construct trait object
+          for (let i = 1; i < phenotypes.length; i++) {
+            this.traits[keys[39]][phenotypes[i][25]] = phenotypes[i][39];
+            this.traits[keys[40]][phenotypes[i][25]] = phenotypes[i][40];
+            this.traits[keys[41]][phenotypes[i][25]] = phenotypes[i][41];
+          }
+
+          // Use traits to set select options
+          const select = document.getElementById("trait_selection");
+          for (const traitName of Object.keys(this.traits)) {
+            const option = document.createElement("option");
+            option.value = traitName;
+            option.innerHTML = traitName;
+            select.appendChild(option);
+          }
+
+        }
+
+        setData() {
+          this.xAxisData = Object.keys(this.traits[this.selection]).filter((plotNumber) => this.traits[this.selection][plotNumber] != null);
+          this.yAxisData = Object.values(this.traits[this.selection]).filter((value) => value != null).map(string => parseInt(string));
+        }
 
         standardDeviation(values){
             function average(data){
@@ -37,18 +88,21 @@ export function init() {
         addEventListeners() {
           let LocalThis = this;
           let stdDevMultiplier = 1;
+          
+          // Handle Slider Events
           var slider = document.getElementById("myRange");
           slider.oninput = function() {
             LocalThis.stdDevMultiplier = this.value;
             d3.select("svg").remove();
-            LocalThis.firstRefresh = false;
             LocalThis.render();
           }
-        
-          let selection = document.getElementById("dataset_selection");
+          
+          // Handle Select Events
+          let selection = document.getElementById("trait_selection");
           selection.addEventListener("change", (event) => {
             d3.select("svg").remove();
             LocalThis.selection = event.target.value;
+            LocalThis.setData();
             LocalThis.render(); 
           });
 
@@ -65,17 +119,12 @@ export function init() {
 
         }
 
-        // getDatasets() {
-        //   const endpoint = '/ajax/dataset/get';
-        // }
-
         render() {
           if (this.firstRefresh) {
-            this.addEventListeners();   
+            this.getPhenotypes();
+            this.addEventListeners();
           };
-          console.log(this.selection);
           const LocalThis = this;
-
 
           var margin = {top: 10, right: 30, bottom: 30, left: 60},
               width = 1170 - margin.left - margin.right,
@@ -89,65 +138,66 @@ export function init() {
               .attr("transform",
                     "translate(" + margin.left + "," + margin.top + ")");
 
-          var isOutlier = function(d, mean, stdDev) {
+          var isOutlier = function(unit, value, mean, stdDev) {
               let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
-              if (d.value >= mean - stdDev * filter && d.value <= mean + stdDev * filter) {
+              if (value >= mean - stdDev * filter && value <= mean + stdDev * filter) {
                 return "green";
               } else {
-                LocalThis.outliers.push(d.unit);
+                LocalThis.outliers.push(unit);
                 return "red";
               }
           }
           
           //Read the data
-          const data = [];
-          for (let i = 0; i < 40; i++) {
-            data.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
-          }
-          data.push({unit: 100, value: 148});
+          // const data = [];
+          // for (let i = 0; i < 40; i++) {
+          //   data.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
+          // }
+          // data.push({unit: 100, value: 148});
 
-          const data2 = [];
-          for (let i = 0; i < 40; i++) {
-            data2.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
-          }
-          data2.push({unit: 100, value: 148});
+          // const data2 = [];
+          // for (let i = 0; i < 40; i++) {
+          //   data2.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
+          // }
+          // data2.push({unit: 100, value: 148});
 
-          const data3 = [];
-          for (let i = 0; i < 40; i++) {
-            data3.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
-          }
-          data3.push({unit: 100, value: 148});
+          // const data3 = [];
+          // for (let i = 0; i < 40; i++) {
+          //   data3.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
+          // }
+          // data3.push({unit: 100, value: 148});
 
-          if (this.firstRefresh) {
-            this.datasets["dataset_1"] = data;
-            this.datasets["dataset_2"] = data2;
-            this.datasets["dataset_3"] = data3;
-          }
+          // if (this.firstRefresh) {
+          //   this.datasets["dataset_1"] = data;
+          //   this.datasets["dataset_2"] = data2;
+          //   this.datasets["dataset_3"] = data3;
+          // }
           
-          switch(this.selection) {
-            case "dataset_1":
-              this.data = this.datasets['dataset_1'];
-              break;
-            case "dataset_2":
-              this.data = this.datasets['dataset_2'];
-              break;
-            case "dataset_3":
-              this.data = this.datasets['dataset_3'];
-            default:
-              break;
-          }
+          // switch(this.selection) {
+          //   case "dataset_1":
+          //     this.data = this.datasets['dataset_1'];
+          //     break;
+          //   case "dataset_2":
+          //     this.data = this.datasets['dataset_2'];
+          //     break;
+          //   case "dataset_3":
+          //     this.data = this.datasets['dataset_3'];
+          //   default:
+          //     break;
+          // }
           
       
-          let unitVals = [];
-          for (let point of this.data) {
-              unitVals.push(point.value);
-          }
+          // let unitVals = [];
+          // for (let point of this.data) {
+          //     unitVals.push(point.value);
+          // }
 
-          const [mean, stdDev] = this.standardDeviation(unitVals);
+          
+          const [mean, stdDev] = this.standardDeviation(this.yAxisData);
           this.outliers = [];
           // Add X axis
           var x = d3.scaleLinear()
-          .domain([0, 200])
+          .domain([0, this.xAxisData.length])
           .range([ 0, width]);
           svg.append("g")
           .style("font", "18px times")
@@ -156,23 +206,26 @@ export function init() {
       
           // Add Y axis
           var y = d3.scaleLinear()
-          .domain([0, 150])
+          .domain([0, Math.max(this.yAxisData)])
           .range([ height, 0]);
           svg.append("g")
           .style("font", "18px times")
           .call(d3.axisLeft(y))
       
           // Add dots
-          svg.append('g')
-          .selectAll("dot")
-          .data(LocalThis.data)
-          .enter()
-          .append("circle")
-              .attr("cx", function (d) { return x(d.unit); } )
-              .attr("cy", function (d) { return y(d.value); } )
+          if (this.selection != null) {
+            svg.append('g')
+            .selectAll("dot")
+            .data([...Array(this.xAxisData.length).keys()])
+            .enter()
+            .append("circle")
+              .attr("cx", function (d) { return x(LocalThis.xAxisData[d]); } )
+              .attr("cy", function (d) { return y(LocalThis.yAxisData[d]); } )
               .attr("r", 7)
-              .style("fill", function(d) {return isOutlier(d, mean, stdDev)})
-      
+              .style("fill", function(d) {return isOutlier(LocalThis.xAxisData[d], LocalThis.yAxisData[d], mean, stdDev)})
+        
+          }
+          
         }
     }
     const dataset = new Dataset;    
