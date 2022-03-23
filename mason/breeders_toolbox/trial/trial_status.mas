@@ -43,58 +43,7 @@ $user_can_modify => undef
     </div>
 </&>
 
-<div data-offset-top="0" style="max-height: 100%; overflow-y: auto;">
-    <div class="panel panel-info">
-        <div class="panel-heading">Completion</div>
-        <div class="panel-body">
-
-<&| /page/info_section.mas, title=>"Trial Info", collapsible=>1, collapsed=>0 &>
-%  if ($trial_name) {
-            <p class="text-success" title="This trial has a name saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a name. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($breeding_program_name) {
-            <p class="text-success" title="This trial has a breeding program saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a breeding program. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($location_name) {
-            <p class="text-success" title="This trial has a location saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a location. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($year) {
-            <p class="text-success" title="This trial has a year saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a year. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($trial_type) {
-            <p class="text-success" title="This trial has a trial type saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a trial type. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($planting_date) {
-            <p class="text-success" title="This trial has a planting date saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a planting date. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($harvest_date) {
-            <p class="text-success" title="This trial has a harvest date saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a harvest date. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($trial_description) {
-            <p class="text-success" title="This trial has a description saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a description. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($folder_id) {
-            <p class="text-success" title="This trial is saved in a folder or breeding program. You can change this by clicking [Change] in the Folder section on this page."><small>In Folder&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-info" title="This trial is not in a folder! If this happens please contact us because this should not happen. A trial should always be in a folder or breeding program."><small>Not In Folder&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
-%  }
-</&>
+<div class="panel-body">
 
 <&| /page/info_section.mas, id=>"trial_completion_layout_section", title=>"Field Design", collapsible=>1, collapsed=>1 &>
 %  if ($design_name) {
@@ -127,8 +76,6 @@ $user_can_modify => undef
 %  }
 </&>
 
-        </div>
-    </div>
 </div>
 
 <& /breeders_toolbox/trial/update_trial_status_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, user_name => $user_name &>
