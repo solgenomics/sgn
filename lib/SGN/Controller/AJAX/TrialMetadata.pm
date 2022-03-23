@@ -4742,8 +4742,7 @@ sub update_trial_status_POST : Args(0) {
     my $trial_id = $c->stash->{trial_id};
     my $trial_status = $c->req->param("trial_status");
     my $user_name = $c->req->param("user_name");
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd();
+    my $activity_date = $c->req->param("activity_date");
 
     if (!$c->user()) {
         $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
@@ -4767,11 +4766,11 @@ sub update_trial_status_POST : Args(0) {
     }
 
     $all_activities_hash{$trial_status}{'user_id'} = $user_id;
-    $all_activities_hash{$trial_status}{'timestamp'} = $timestamp;
+    $all_activities_hash{$trial_status}{'activity_date'} = $activity_date;
     my $updated_activities = encode_json \%all_activities_hash;
 
     $latest_activity_hash{$trial_status}{'user_id'} = $user_id;
-    $latest_activity_hash{$trial_status}{'timestamp'} = $timestamp;
+    $latest_activity_hash{$trial_status}{'activity_date'} = $activity_date;
     my $latest_activity = encode_json \%latest_activity_hash;
 
     my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
@@ -4780,7 +4779,7 @@ sub update_trial_status_POST : Args(0) {
     $trial_status_obj->parent_id($trial_id);
     $trial_status_obj->prop_id($prop_id);
     my $project_prop_id = $trial_status_obj->store();
-    print STDERR "PROJECTPROP ID =".Dumper($project_prop_id)."\n";
+
     $c->stash->{rest} = {success => 1 };
     return;
 

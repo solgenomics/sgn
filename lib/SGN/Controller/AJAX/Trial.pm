@@ -671,11 +671,12 @@ sub save_experimental_design_POST : Args(0) {
     my $time = DateTime->now();
     my $timestamp = $time->ymd();
     my $calendar_funcs = CXGN::Calendar->new({});
-    my $formatted_date = $calendar_funcs->check_value_format($timestamp) ) {
+    my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+    my $create_date = $calendar_funcs->display_start_date($formatted_date);
 
     my %trial_status;
     $trial_status{'Trial Created'}{'user_id'} = $user_id;
-    $trial_status{'Trial Created'}{'activity_date'} = $formatted_date;
+    $trial_status{'Trial Created'}{'activity_date'} = $create_date;
     my $status = encode_json \%trial_status;
 
     my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });

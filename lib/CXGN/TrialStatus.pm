@@ -28,7 +28,6 @@ use JSON::Any;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 
-
 has 'latest_trial_activity' => (isa => 'Str', is => 'rw');
 
 has 'trial_activities' => (isa => 'Str', is => 'rw');
@@ -68,7 +67,7 @@ sub get_trial_activities {
     my @all_trial_activities;
     if ($trial_activities_rs) {
         my $user_id;
-        my $timestamp;
+        my $activity_date;
         my $person;
         my $person_name;
         my $activities_json = $trial_activities_rs->value();
@@ -78,16 +77,16 @@ sub get_trial_activities {
         my %activities_hash = %{$all_activities};
         if ($activities_hash{'Trial Created'}) {
             $user_id = $activities_hash{'Trial Created'}{'user_id'};
-            $timestamp = $activities_hash{'Trial Created'}{'timestamp'};
+            $activity_date = $activities_hash{'Trial Created'}{'activity_date'};
             $person = $people_schema->resultset("SpPerson")->find( { sp_person_id => $user_id } );
             $person_name = $person->first_name." ".$person->last_name();
-            push @all_trial_activities, ['Trial Created', $timestamp, $person_name];
+            push @all_trial_activities, ['Trial Created', $activity_date, $person_name];
         } elsif ($activities_hash{'Trial Uploaded'}) {
             $user_id = $activities_hash{'Trial Uploaded'}{'user_id'};
-            $timestamp = $activities_hash{'Trial Uploaded'}{'timestamp'};
+            $activity_date = $activities_hash{'Trial Uploaded'}{'activity_date'};
             $person = $people_schema->resultset("SpPerson")->find( { sp_person_id => $user_id } );
             $person_name = $person->first_name." ".$person->last_name();
-            push @all_trial_activities, ['Trial Uploaded', $timestamp, $person_name];
+            push @all_trial_activities, ['Trial Uploaded', $activity_date, $person_name];
         }
 
         foreach my $activity_type (@activities) {

@@ -79,18 +79,17 @@ jQuery(document).ready(function(){
 
         var trial_activity_date_element = jQuery("#trial_activity_date");
         set_daterangepicker_default (trial_activity_date_element);
-        jQuery('input[title="activity_date"]').daterangepicker(
+        trial_activity_date_element.daterangepicker(
             {
                 "singleDatePicker": true,
                 "showDropdowns": true,
                 "autoUpdateInput": false,
             },
             function(start){
-                trial_activity_date_element.val(start.format('MM/DD/YYYY'));
+                trial_activity_date_element.val(start.format('YYYY-MMMM-DD'));
             }
         );
     });
-
 
     jQuery("#update_trial_status_submit").click(function() {
         var trial_status = jQuery("#trial_status_select").val();
