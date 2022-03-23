@@ -56,7 +56,7 @@ $data_level => 'plot'
         margin-left: auto;
         margin-right: auto;
         overflow-x: scroll;
-        margin-top: 4%;
+        margin-top: 1%;
     }
 
     .interactive_fieldmap_buttons {
