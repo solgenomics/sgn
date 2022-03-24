@@ -184,7 +184,35 @@ sub generate_model {
     return $model;
 }
 
+sub generate_model_sommer {
+    my $self = shift;
 
+    my $tempfile = $self->tempfile();
+    my $dependent_variables = $self->dependent_variables();
+    my $fixed_factors = $self->fixed_factors();
+    my $fixed_factors_interaction = $self->fixed_factors_interaction();
+    my $variable_slope_intersects = $self->variable_slope_intersects();
+    my $random_factors = $self->random_factors();
+
+    my $error;
+
+    ## generate the fixed factor formula
+    #
+    my $mmer_fixed_factors = "";
+
+    if (scalar(@$dependent_variables) > 1) { die "Works only with one trait for now! :-("; }
+    if (scalar(@$dependent_variables) > 0) {
+	if (scalar(@$fixed_factors) == 0) { $mmer_fixed_factors = "1"; }
+	else { $mmer_fixed_factors = join(" + ", @$fixed_factors); }
+	       
+	$mmer_fixed_factors = $dependent_variables->[0] ." ~ ". $mmer_fixed_factors;
+    }
+
+    print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
+
+    return $mmer_fixed_factors;
+    
+}
 
 =head2 run_model()
 
