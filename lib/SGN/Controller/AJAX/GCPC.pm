@@ -151,27 +151,31 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     my $plant_sex_cvterm_id;
     my $plant_sex_variable_name_R = "";
-    
+
+    print STDERR "CVNAMES = ".Dumper(\@cv_names);
     if (@cv_names) { 
 	$plant_sex_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plant_sex_variable_name, $cv_names[0])->cvterm_id();
     }
     
     if ($plant_sex_variable_name && $plant_sex_cvterm_id) {
-	
-	my $traits = $ds->retrieve_traits();
-	if (! any { $_ eq $plant_sex_variable_name } @$traits) {
-	    $ds->traits(@$traits, $plant_sex_cvterm_id);
-	}
+	my $accessions = $ds->accessions();
+
+	print STDERR "ACCESSIONS: ".Dumper($accessions);
+
+	my @accession_ids = map { $_->[0] } @$accessions;
+	$self->get_trait_for_accessions($c, $plant_sex_cvterm_id, \@accession_ids);
 	$plant_sex_variable_name_R = make_R_trait_name($plant_sex_variable_name);
     }
-
+    else {
+	print STDERR "NOT RETRIEVING sEX DATA with $plant_sex_variable_name, $plant_sex_cvterm_id\n";
+    }
 
 
 
     
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
-    print STDERR "PHENOTYPES REF: ".Dumper($phenotype_data_ref);
+    #print STDERR "PHENOTYPES REF: ".Dumper($phenotype_data_ref);
     
 
     open(my $PF, "<", $pheno_filepath) || die "Can't open pheno file $pheno_filepath";
@@ -313,5 +317,64 @@ sub make_R_trait_name {
     return $trait;
 }
 
-1
+
+sub get_trait_for_accessions {
+    my $self = shift;
+    my $c = shift;
+    my $trait_id = shift;
+    my $accessions = shift;
+
+    print STDERR "GET TRAIT FOR ACCESSIONS...\n";
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+
+    $c->tempfiles_subdir("gcpc_files");
+    my $gcpc_tmp_output = $c->config->{cluster_shared_tempdir}."/gcpc_files";
+    mkdir $gcpc_tmp_output if ! -d $gcpc_tmp_output;
+    my ($tmp_fh, $tempfile) = tempfile(
+	"gcpc_trait_phenotypes_XXXXX",
+      DIR=> $gcpc_tmp_output,
+    );
+    my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, quotes=>0);
+    
+    $ds->accessions($accessions);
+    $ds->traits( [ $trait_id ]);
+
+    my $phenotypes = $ds->retrieve_phenotypes();
+
+    my $header = shift(@$phenotypes);
+    
+    my %accession_scores;
+
+    foreach my $p (@$phenotypes) {
+	my $accession_name = $p->[18];
+	my $score = $p->[39];
+
+	$accession_scores{$accession_name}->{$score}++;
+    }
+
+    my @highest_accession_scores = ();
+
+    foreach my $acc (keys %accession_scores) {
+	my $highest_score_count = 0;
+	my $highest_score = 0;
+	foreach my $score (keys %{$accession_scores{$acc}}) {
+	    if ($accession_scores{$acc}->{$score} > $highest_score_count) {
+		$highest_score_count = $accession_scores{$acc}->{$score};
+		$highest_score = $score;
+	    }
+	}
+	push @highest_accession_scores, [ $acc, $highest_score ];
+
+    }
+    
+    #xprint STDERR "PHENOTYPES RETRIEVED: ".Dumper($phenotypes);
+
+    print STDERR "SEXES: ".Dumper(\@highest_accession_scores);
+
+    return \@highest_accession_scores;
+}
+
+
+1;
 
