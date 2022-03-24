@@ -46,7 +46,7 @@ GetOptions(
 );
 
 
-unless ($mode =~ m/^(fullview|stockprop|phenotypes)$/ ) { die "Option -m must be fullview, stockprop, or phenotypes. -m  = $mode\n"; }
+unless ($mode =~ m/^(fullview|stockprop|phenotypes|all_but_genoview)$/ ) { die "Option -m must be fullview, stockprop, phenotypes, or all_but_genoview. -m  = $mode\n"; }
 
 print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$dbname.";host=".$dbhost.";port=5432";
