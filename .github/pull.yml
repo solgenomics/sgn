@@ -1,0 +1,8 @@
+version: "1"
+rules:
+  - base: develop
+    upstream: solgenomics:master
+    mergeMethod: merge  # Optional, one of [none, merge, squash, rebase, hardreset], Default: none.
+    reviewers:
+      - Breeding-Insight/dev-team
+label: "upstream-pull"
