@@ -669,18 +669,12 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
     my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
     my @accession_ids = @{$accession_id_hash->{transform}};
 
-    # Create list of accession objects
-    my @accessions = ();
-    foreach (@accession_ids) {
-        push @accessions, CXGN::Accession->new( $dbh, $_ );
-    }
-
     # Create tempfile
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_accessions_XXXXX", UNLINK=> 0);
 
     # Build Accession Info
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
-    my $rows = $self->build_accession_properties_info($schema, \@accession_ids, \@editable_stock_props);
+    my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@editable_stock_props);
 
     # Create and Return XLS file
     if ( $file_format eq ".xls" ) {
@@ -698,14 +692,12 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         # Return the xls file
         $c->res->content_type('Application/xls');
         $c->res->cookies->{$dl_cookie} = {
-          value => $dl_token,
-          expires => '+1m',
+            value => $dl_token,
+            expires => '+1m',
         };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
-
         my $output = read_file($file_path);  ### works here because it is xls, otherwise does not work with utf8
-
         $c->res->body($output);
     }
 
@@ -740,18 +732,17 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         # Return the csv file
         $c->res->content_type('text/csv');
         $c->res->cookies->{$dl_cookie} = {
-          value => $dl_token,
-          expires => '+1m',
+            value => $dl_token,
+            expires => '+1m',
         };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-        #my $output = read_file($file_path);   ### Does not work with UTF8 text files
-	my $output = "";
-	open(my $F, "< :encoding(UTF-8)", $file_path) || die "Can't open file $file_path for reading.";
-	while (<$F>) {
-	    $output .= $_;
-	}
-	close($F);
 
+        my $output = "";
+        open(my $F, "< :encoding(UTF-8)", $file_path) || die "Can't open file $file_path for reading.";
+        while (<$F>) {
+            $output .= $_;
+        }
+        close($F);
         $c->res->body($output);
     }
 
@@ -762,55 +753,63 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
 #
 # Generate the rows in the accession info table for the specified Accessions
 #
-# Usage: my $rows = $self->build_accession_properties_info($schema, \@accession_ids, \@editable_stock_props);
+# Usage: my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@editable_stock_props);
 # Returns: an arrayref where each array item is an array of accession properties
 #          the first item is an array of the header values
 #
 sub build_accession_properties_info {
     my $self = shift;
-    my $schema = shift;
+    my $dbh = shift;
     my $accession_ids = shift;
     my $editable_stock_props = shift;
 
     # Setup Stock Props
-    my @required_stock_props = ("accession_name", "species_name", "population_name", "organization", "synonym", "PUI");
-    my @parsed_editable_stock_props = ();
+    my @stock_props = ("organization", "synonym", "PUI");
     foreach my $esp (@$editable_stock_props) {
-        if ( !grep(/^$esp$/, @required_stock_props) ) {
-            push(@parsed_editable_stock_props, $esp)
+        if ( !grep(/^$esp$/, @stock_props) ) {
+            push(@stock_props, $esp)
         }
     }
 
     # Build Header
-    my @accession_headers = ();
-    push(@accession_headers, @required_stock_props);
-    push(@accession_headers, @parsed_editable_stock_props);
+    my @accession_headers = ("accession_name", "species_name", "population_name");
+    push(@accession_headers, @stock_props);
 
     # Add Header to Rows
     my @accession_rows = ();
     push(@accession_rows, \@accession_headers);
 
-    # Build Row for each Accession
-    foreach my $stock_id ( @$accession_ids ) {
-        my $a = new CXGN::Stock::Accession({ schema => $schema, stock_id => $stock_id});
-        my $synonym_string = join(',', @{$a->synonyms()});
+    # Start query blocks
+    my $select = "SELECT stock.uniquename AS accession_name, organism.species AS species_name, string_agg(rs.uniquename, ', ') AS population_name";
+    my $from = "FROM public.stock";
+    my $joins = "LEFT JOIN public.organism USING (organism_id)";
+    $joins .= " LEFT JOIN public.stock_relationship ON (stock.stock_id = stock_relationship.subject_id)";
+    $joins .= " LEFT JOIN public.stock AS rs ON (stock_relationship.object_id = rs.stock_id)";
+    my $group = "GROUP BY stock.stock_id, organism.species";
+    my $order = "ORDER BY stock.uniquename ASC;";
+    my @params;
 
-        # Setup row with required stock props
-        my @r = (
-            $a->uniquename(),
-            $a->get_species(),
-            $a->population_name(),
-            $a->organization_name(),
-            $synonym_string,
-            $a->germplasmPUI()
-        );
+    # Add each of the stock props
+    my $count = 0;
+    foreach my $sp (@stock_props) {
+        $count++;
+        my $table = "sp" . $count;
+        $select .= ", string_agg($table.value, ', ') AS \"$sp\"";
+        $joins .= " LEFT JOIN public.stockprop AS $table ON (stock.stock_id = $table.stock_id AND $table.type_id = (SELECT cvterm_id FROM cvterm WHERE name = '$sp' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_property')))";
+    }
 
-        # Add parsed editable stock props
-        foreach my $esp (@parsed_editable_stock_props) {
-            push(@r, $a->_retrieve_stockprop($esp));
-        }
+    # Build where block using accession ids
+    my $where = "WHERE stock.stock_id IN (" . join(',', ('?') x @$accession_ids) . ")";
+    push(@params, @$accession_ids);
 
-        push(@accession_rows, \@r);
+    # Put query together
+    my $q = "$select $from $joins $where $group $order";
+
+    # Execute the query and add results to accession rows
+    my $h = $dbh->prepare($q);
+    $h->execute(@params);
+    while (my @results = $h->fetchrow_array()) {
+        push(@accession_rows, \@results);
     }
 
     return \@accession_rows;
