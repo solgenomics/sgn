@@ -172,13 +172,27 @@ tr.shown td.details-control {
 
     <br/><br/>
     <div class="well well-sm">
-    <div class="panel panel-default">
-        <div class="panel-body">
-        <div class="form-group" id="image_analysis_usage">
-            <label class="col-sm-6 control-label">Image Analysis Usage: </label>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="form-group">
+                    <div class="col-sm-9">
+                    <label class="col-sm-6 control-label">Image Analysis Usage </label>
+                    </div>
+                    <div class="col-sm-3" >
+                        <label class="control-label">Date Range: </label>
+                        <select class="form-control" id="usage_range_select" name="usage_range_select">
+                            <option value="all">All Dates</option>
+                            <option value="year">Latest Year</option>
+                            <option value="month">Latest Month</option>
+                            <option value="week">Latest Week</option>
+                        </select>
+                    </div>
+                </div>
+                <br/>
+                <div class="form-group" id="image_analysis_usage">
+                </div>
+            </div>
         </div>
-        </div>
-    </div>
     </div>
 
     <div class="modal fade" id="saveResultModal" tabindex="-1" role="dialog" aria-labelledby="saveResultModal" aria-hidden="true">
@@ -218,7 +232,8 @@ jQuery(document).ready(function(){
 
     _load_image_search_results();
 
-    _load_analysis_activity_graph();
+    var date_range = jQuery('#usage_range_select').val();
+    _load_analysis_activity_graph(date_range);
 
     jQuery('#image_search_submit').click(function(){
         if (jQuery('#html_image_analysis_trial_select').val() == '') {
@@ -516,7 +531,7 @@ function _load_image_search_results() {
     });
 }
 
-function _load_analysis_activity_graph() {
+function _load_analysis_activity_graph(date_range) {
 
     d3.json('/ajax/image_analysis/activity', function(error, response) {
 
@@ -552,6 +567,8 @@ function _load_analysis_activity_graph() {
 
        var dayExtent = d3.extent(data, function (d) { return d.date; });
 
+       console.log("day extent is "+dayExtent);
+
        // Create one bin per day, use an offset to include the first and last days
        var dayBins = d3.timeDays(d3.timeDay.offset(dayExtent[0],-1),
                                  d3.timeDay.offset(dayExtent[1], 1));
@@ -566,7 +583,8 @@ function _load_analysis_activity_graph() {
 
        var xAxis = d3.axisBottom(x)
                       .tickArguments([d3.timeDay.every(1)])
-                      .tickFormat(d3.timeFormat('%d-%b'));
+                      .tickFormat(d3.timeFormat('%d-%b'))
+                      .ticks(10);
 
        // Set the parameters for the histogram
        var histogram = d3.histogram()
@@ -602,7 +620,8 @@ function _load_analysis_activity_graph() {
 
        // Add the y axis
        svg.append("g")
-            .call(d3.axisLeft(y).ticks(d3.max(bins, function(d) { return d.length; })))
+            // .call(d3.axisLeft(y).ticks(d3.max(bins, function(d) { return d.length; })))
+            .call(d3.axisLeft(y).ticks(15))
             .append("text")
             .attr("fill", "#000")
             .attr("transform", "rotate(-90)")
