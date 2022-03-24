@@ -13,6 +13,6 @@ $mm->fixed_factors( [ "locations", "years" ] );
 
 my $ff = $mm->generate_model_sommer();
 
-is($ff, "yield ~ locations + yearsasdf", "fixed factor test");
+is($ff, "yield ~ locations + years", "fixed factor test");
 
 done_testing();
