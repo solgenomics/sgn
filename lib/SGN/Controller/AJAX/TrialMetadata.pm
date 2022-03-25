@@ -4769,12 +4769,7 @@ sub update_trial_status_POST : Args(0) {
     $all_activities_hash{$trial_status}{'activity_date'} = $activity_date;
     my $updated_activities = encode_json \%all_activities_hash;
 
-    $latest_activity_hash{$trial_status}{'user_id'} = $user_id;
-    $latest_activity_hash{$trial_status}{'activity_date'} = $activity_date;
-    my $latest_activity = encode_json \%latest_activity_hash;
-
     my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
-    $trial_status_obj->latest_trial_activity($latest_activity);
     $trial_status_obj->trial_activities($updated_activities);
     $trial_status_obj->parent_id($trial_id);
     $trial_status_obj->prop_id($prop_id);

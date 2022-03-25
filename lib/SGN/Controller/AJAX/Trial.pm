@@ -674,18 +674,17 @@ sub save_experimental_design_POST : Args(0) {
     my $formatted_date = $calendar_funcs->check_value_format($timestamp);
     my $create_date = $calendar_funcs->display_start_date($formatted_date);
 
-    my %trial_status;
-    $trial_status{'Trial Created'}{'user_id'} = $user_id;
-    $trial_status{'Trial Created'}{'activity_date'} = $create_date;
-    my $status = encode_json \%trial_status;
+    my %trial_activity;
+    $trial_activity{'Trial Created'}{'user_id'} = $user_id;
+    $trial_activity{'Trial Created'}{'activity_date'} = $create_date;
+    my $activity = encode_json \%trial_activity;
 
-    my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
-    $trial_status_obj->latest_trial_activity($status);
-    $trial_status_obj->trial_activities($status);
-    $trial_status_obj->parent_id($trial_id);
-    my $status_prop_id = $trial_status_obj->store();
-    if (!$status_prop_id) {
-        $c->stash->{rest} = {error => "Error saving trial status info" };
+    my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+    $trial_activity_obj->trial_activities($activity);
+    $trial_activity_obj->parent_id($trial_id);
+    my $activity_prop_id = $trial_activity_obj->store();
+    if (!$activity_prop_id) {
+        $c->stash->{rest} = {error => "Error saving trial activity info" };
         return;
     }
 

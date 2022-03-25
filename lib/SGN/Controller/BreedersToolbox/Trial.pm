@@ -92,6 +92,10 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{field_trial_is_planned_to_cross} = $trial->get_field_trial_is_planned_to_cross();
 
     $c->stash->{trial_description} = $trial->get_description();
+
+    my $activities = $c->config->{'trial_activities'};
+    my @activity_list = split ',', $activities;
+    $trial->activity_list(\@activity_list);
     $c->stash->{latest_trial_activity} = $trial->get_latest_activity();
 
     my $location_data = $trial->get_location();

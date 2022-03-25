@@ -100,6 +100,12 @@ has 'additional_info' => (
     isa => 'Maybe[HashRef]'
 );
 
+has 'activity_list' => (
+    is  => 'rw',
+    isa => 'Maybe[ArrayRef]'
+);
+
+
 sub BUILD {
     my $self = shift;
     my $args = shift;
@@ -5096,17 +5102,28 @@ sub get_latest_activity {
         project_id => $self->get_trial_id(),
         type_id => $cvterm_id,
     });
+
+    my $activity_list = $self->activity_list();
+    my @activity_array = @$activity_list;
+    my @reverse_activities = reverse@activity_array;
+    push @reverse_activities, ("Trial Created", "Trial Uploaded");
     my $latest_trial_activity;
+
     if ($row) {
         my $trial_activity_json = $row->value();
         my $activity_hash_ref = decode_json $trial_activity_json;
         my %activity_hash = %{$activity_hash_ref};
-        my $latest_activity_json =  $activity_hash{'latest_trial_activity'};
-        my $latest_activity_ref = decode_json $latest_activity_json;
-        my %latest_activity_hash = %{$latest_activity_ref};
-        my $activity_type = ((keys %latest_activity_hash)[0]);
-        my $activity_date = $latest_activity_hash{$activity_type}{'activity_date'};
-        $latest_trial_activity = $activity_type." ".$activity_date;
+        my $activity_json =  $activity_hash{'trial_activities'};
+        my $activity_ref = decode_json $activity_json;
+        my %activities_hash = %{$activity_ref};
+
+        foreach my $activity_type (@reverse_activities) {
+            if ($activities_hash{$activity_type}) {
+                my $activity_date = $activities_hash{$activity_type}{'activity_date'};
+                $latest_trial_activity = $activity_type." : ".$activity_date;
+                last;
+            }
+        }
     }
 
     return $latest_trial_activity

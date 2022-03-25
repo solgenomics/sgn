@@ -28,8 +28,6 @@ use JSON::Any;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 
-has 'latest_trial_activity' => (isa => 'Str', is => 'rw');
-
 has 'trial_activities' => (isa => 'Str', is => 'rw');
 
 has 'activity_list' => (isa => 'ArrayRef', is => 'rw');
@@ -44,7 +42,7 @@ sub BUILD {
     $self->prop_primary_key('projectprop_id');
     $self->prop_type('trial_status_json');
     $self->cv_name('project_property');
-    $self->allowed_fields([ qw | latest_trial_activity trial_activities | ]);
+    $self->allowed_fields([ qw | trial_activities | ]);
     $self->parent_table('project');
     $self->parent_primary_key('project_id');
 
