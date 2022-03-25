@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@solgenomics/brapijs": "github:solgenomics/brapi-js#develop",
-    "BrAPI-BoxPlotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git",
+    "BrAPI-BoxPlotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git#daae16cb02a4ed935e39148e8adaf91242829d92",
     "d3": "^5.9.2",
     "d3-sankey": "^0.12.3",
     "d3-array": "^2.11.0",
