@@ -469,6 +469,8 @@ sub _validate_with_plugin {
     "CRD" => 1,
     "RCBD" => 1,
     "RRC" => 1,
+    "DRRC" => 1,
+    "ARC" => 1,
     "Alpha" => 1,
     "Lattice" => 1,
     "Augmented" => 1,
