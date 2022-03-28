@@ -85,6 +85,8 @@ sub patch {
 	;";
     my $h1_1 = $schema->storage->dbh()->prepare($q1_1);
 
+    # GETS MARKER INFORMATION FOR ALL PROTOCOLS LOADED UNDER vcf_map_details
+
     my %protocol_geno_check;
     while (my ($nd_protocol_id, $markers_array_json) = $h->fetchrow_array()) {
         my $markers_array = $markers_array_json ? decode_json $markers_array_json : [];
@@ -95,6 +97,8 @@ sub patch {
         }
     }
     # print STDERR Dumper \%protocol_geno_check;
+
+    # GETS STOCKS GENOTYPED UNDER ALL PROTOCOLS
 
     my %protocols_hash;
     my %protocols_all_stock_ids;
@@ -113,6 +117,8 @@ sub patch {
     }
     # print STDERR Dumper \%protocols_hash;
     # print STDERR Dumper \%protocols_all_stock_ids;
+
+    # CHECK IF THE GENOTYPING PROTOCOL WAS SAVED UNDER THE OLD DOSAGE SCHEME
 
     my $q2 = "SELECT genotypeprop.genotypeprop_id, genotype.genotype_id, genotypeprop.value
         FROM genotypeprop
@@ -179,6 +185,7 @@ sub patch {
 
     }
 
+    # UPDATE GENOTYPING PROTOCOLS TO NEW DOSAGE SCHEME
     print STDERR "GENOTYPING PROTOCOLS TO CHANGE DS IN:\n";
     print STDERR Dumper \%protocol_to_change;
 
