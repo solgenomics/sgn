@@ -399,7 +399,7 @@ sub next_genotype {
                 my @alt_calls;
                 foreach (@alleles) {
                     if (looks_like_number($_)) {
-                        if ($_ eq '0' || $_ == 0) {
+                        if ($_ ne '0' && $_ != 0) {
                             $gt_dosage++;
                         }
                         my $index = $_ + 0;
@@ -424,10 +424,10 @@ sub next_genotype {
             if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
                 $value{'DS'} = $gt_dosage_val;
             }
-            if (looks_like_number($value{'DS'})) {
-                my $rounded_ds = round($value{'DS'});
-                $value{'DS'} = "$rounded_ds";
-            }
+            # if (looks_like_number($value{'DS'})) {
+            #     my $rounded_ds = round($value{'DS'});
+            #     $value{'DS'} = "$rounded_ds";
+            # }
             $genotypeprop->{$chrom}->{$marker_name} = \%value;
         }
         $self->_is_first_line(0);
