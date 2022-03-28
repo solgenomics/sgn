@@ -5,7 +5,7 @@ export function init(dataset_id) {
             this.data = [];
             this.outliers = [];
             this.firstRefresh = true;
-            this.stdDevMultiplier = Number;
+            this.stdDevMultiplier = document.getElementById("myRange").value;
             this.selection = "default";
             this.dataset_id = dataset_id;
             this.phenotypes = {};
@@ -59,6 +59,7 @@ export function init(dataset_id) {
         setData() {
           this.xAxisData = Object.keys(this.traits[this.selection]).filter((plotNumber) => this.traits[this.selection][plotNumber] != null);
           this.yAxisData = Object.values(this.traits[this.selection]).filter((value) => value != null).map(string => parseInt(string));
+          this.yAxisData.sort((a,b) => a - b);
         }
 
         standardDeviation(values){
@@ -87,7 +88,6 @@ export function init(dataset_id) {
         
         addEventListeners() {
           let LocalThis = this;
-          let stdDevMultiplier = 1;
           
           // Handle Slider Events
           var slider = document.getElementById("myRange");
@@ -191,7 +191,8 @@ export function init(dataset_id) {
           // for (let point of this.data) {
           //     unitVals.push(point.value);
           // }
-
+          console.log(this.xAxisData);
+          console.log(this.yAxisData);
           
           const [mean, stdDev] = this.standardDeviation(this.yAxisData);
           this.outliers = [];
@@ -206,7 +207,7 @@ export function init(dataset_id) {
       
           // Add Y axis
           var y = d3.scaleLinear()
-          .domain([0, Math.max(this.yAxisData)])
+          .domain([Math.min(...this.yAxisData), Math.max(...this.yAxisData)])
           .range([ height, 0]);
           svg.append("g")
           .style("font", "18px times")
@@ -219,9 +220,9 @@ export function init(dataset_id) {
             .data([...Array(this.xAxisData.length).keys()])
             .enter()
             .append("circle")
-              .attr("cx", function (d) { return x(LocalThis.xAxisData[d]); } )
+              .attr("cx", function (d) { return x(d); } )
               .attr("cy", function (d) { return y(LocalThis.yAxisData[d]); } )
-              .attr("r", 7)
+              .attr("r", 4)
               .style("fill", function(d) {return isOutlier(LocalThis.xAxisData[d], LocalThis.yAxisData[d], mean, stdDev)})
         
           }

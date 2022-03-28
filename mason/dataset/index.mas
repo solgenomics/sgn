@@ -101,7 +101,7 @@ $dataset_description => ''
     </div>
     
     <div id="dataset_slider">
-      <input type="range" min="2" max="5" value="3" class="slider" id="myRange">
+      <input type="range" min="4" max="8" value="6" class="slider" id="myRange">
     </div>
   </div>
 
