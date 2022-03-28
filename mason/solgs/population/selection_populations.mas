@@ -41,6 +41,8 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
     title       => $title,
 &>
 
+<& /solgs/genotyping_protocol.mas &>
+
   <div  class="form-inline">
     <input  type="text"
 	    class="form-control"
@@ -58,7 +60,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
   <!--   </button> -->
   </div>
 
-
+  
   <div id="selection_pops_message"  class="message"></div>
 
   <div id="selection_populations" style="display:none;">
