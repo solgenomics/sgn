@@ -29,7 +29,7 @@ use File::Basename;
 use CXGN::Tools::Run;
 use CXGN::Phenotypes::File;
 
-=head2 dependent_variables() 
+=head2 dependent_variables()
 
 sets the dependent variables (a listref of traits)
 
@@ -42,7 +42,7 @@ has 'dependent_variables' => (is => 'rw', isa => 'ArrayRef[Str]|Undef');
 sets the fixed factors (listref)
 
 =cut
-    
+
 has 'fixed_factors' => (is => 'rw', isa => 'Ref', default => sub {[]});
 
 =head2 fixed_factors_interaction()
@@ -50,25 +50,33 @@ has 'fixed_factors' => (is => 'rw', isa => 'Ref', default => sub {[]});
 sets the fixed factors with interaction (listref)
 
 =cut
-    
+
 has 'fixed_factors_interaction' => (is => 'rw', isa => 'Ref', default => sub{[]});
+
+=head2 random_factors_interaction()
+
+sets the random factors with interaction (listref)
+
+=cut
+
+has 'random_factors_interaction' => (is => 'rw', isa => 'Ref', default => sub{[]});
 
 =head2 variable_slope_factors()
 
 =cut
-    
+
 has 'variable_slope_factors' => (is => 'rw', isa => 'Ref', default => sub{[]});
 
 =head2 random_factors()
 
 =cut
-    
+
 has 'random_factors' => (is => 'rw', isa => 'Ref', default => sub {[]});
 
 =head2 variable_slop_intersects
 
 =cut
-   
+
 has 'variable_slope_intersects' => (is => 'rw', isa => 'Ref', default => sub {[]});
 
 =head2 traits()
@@ -94,7 +102,7 @@ has 'phenotype_file' => (is => 'rw', isa => 'CXGN::Phenotypes::File|Undef');
 the tempfile that contains the phenotypic information.
 
 =cut
-    
+
 has 'tempfile' => (is => 'rw', isa => 'Str|Undef');
 
 sub BUILD {
@@ -191,6 +199,7 @@ sub generate_model_sommer {
     my $dependent_variables = $self->dependent_variables();
     my $fixed_factors = $self->fixed_factors();
     my $fixed_factors_interaction = $self->fixed_factors_interaction();
+    my $random_factors_interaction = $self->random_factors_interaction();
     my $variable_slope_intersects = $self->variable_slope_intersects();
     my $random_factors = $self->random_factors();
 
@@ -199,19 +208,33 @@ sub generate_model_sommer {
     ## generate the fixed factor formula
     #
     my $mmer_fixed_factors = "";
+    my $mmer_random_factors = "";
+    my $mmer_random_factors_interaction = "";
 
     if (scalar(@$dependent_variables) > 1) { die "Works only with one trait for now! :-("; }
     if (scalar(@$dependent_variables) > 0) {
 	if (scalar(@$fixed_factors) == 0) { $mmer_fixed_factors = "1"; }
 	else { $mmer_fixed_factors = join(" + ", @$fixed_factors); }
-	       
+
 	$mmer_fixed_factors = $dependent_variables->[0] ." ~ ". $mmer_fixed_factors;
+
+  if (scalar(@$random_factors)== 0) {$mmer_random_factors = "1"; }
+  else { $mmer_random_factors = join("+", @$random_factors);}
+
+  if (scalar(@$random_factors_interaction)== 0) {$mmer_random_factors_interaction = "1"; }
+  if (scalar(@$random_factors_interaction) != 2) {die "Works only with one interaction for now! :-(";}
+  #if (scalar(@$random_factors_interaction)== 1) {die "Works only with one interaction for now! :-(";}
+  else { $mmer_random_factors_interaction = join(":", @$random_factors_interaction);}
+
+  $mmer_random_factors = " ~ ". $mmer_random_factors . "+" . $mmer_random_factors_interaction;
     }
 
     print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
+    print STDERR "mmer_random_factors = $mmer_random_factors\n";
 
     return $mmer_fixed_factors;
-    
+    return $mmer_random_factors;
+
 }
 
 =head2 run_model()
@@ -221,7 +244,7 @@ runs the model along with the data provided in the phenotyping file.
 Produces two results files. If germplasm was a random factor, is will produce files
 with the tempfiles stem and the extensions .adjustedBLUPs and .BLUPs, if it was a
 fixed factor, the extension are .adjustedBLUEs and .BLUEs. The files have the
-accession identifiers in the first column, with the remaining columns being the 
+accession identifiers in the first column, with the remaining columns being the
 adjusted BLUEs, BLUEs, adjusted BLUPs or BLUPs for all the initially selected
 traits.
 
@@ -237,7 +260,7 @@ sub run_model {
     my $dependent_variables = '"'.join('","',@{$self->dependent_variables()}).'"';
 
     my $model = $self->generate_model();
-    
+
     # generate params_file
     #
     my $param_file = $self->tempfile().".params";
