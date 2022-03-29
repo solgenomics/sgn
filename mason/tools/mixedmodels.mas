@@ -110,6 +110,13 @@
 
 <&| /util/workflow.mas:step, title=> "Build Model" &>
   <& /page/page_title.mas, title=>"Build mixed model" &>
+
+    <div class="container form-check form-switch">
+      <h4>Choose engine</h4>
+      <input class="form-check-input" type="radio" id="select_engine" name="select_engine" value="lme4"> lme4</input> | 
+      <input class="form-check-input" type="radio" id="select_engine" name="select_engine" value="sommer"> sommer</input>
+	<br /><br />
+    </div>
     
     <div class="model_bg" >
       <div id="model_string" style="margin-top:10px;margin-bottom:10px;text-align:center;font-weight:bold">[model will appear here in lme4 format]</div>

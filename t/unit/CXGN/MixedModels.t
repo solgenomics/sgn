@@ -15,8 +15,8 @@ $mm->random_factors(["genotypes", "blocks" ]);
 
 $mm->random_factors_interaction(["locations", "genotypes"]);
 
-my $ff = $mm->generate_model_sommer();
+my ($ff, $error) = $mm->generate_model_sommer();
 
-#is($ff, "yield ~ locations + years", "fixed factor test");
+is($ff, "mmer( yield ~ locations + years, random= ~ genotypes+blocks+locations:genotypes", "sommer expression test");
 
 done_testing();

@@ -31,7 +31,9 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 
     my $params = $c->req->body_data();
 
-    my $fixed_factors = $params->{"fixed_factors"};
+    my $engine = $params->{engine};
+    print STDERR "ENGINE: $engine\n";
+    my $fixed_factors = $params->{fixed_factors};
 
     my $fixed_factors_interaction = $params->{fixed_factors_interaction};
 
@@ -57,7 +59,13 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 	$mm->random_factors( $random_factors );
     }
 
-    my ($model, $error) =  $mm->generate_model();
+    my ($model, $error);
+    if ($engine eq "sommer") {
+	($model, $error) = $mm->generate_model_sommer();
+    }
+    else { 
+	($model, $error) =  $mm->generate_model();
+    }
 
     $c->stash->{rest} = {
 	error => $error,

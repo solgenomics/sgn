@@ -11,6 +11,7 @@ export function init(main_div){
 
     var dataset_id;
 
+    alert("WELCOME TO MIXED MODELS!");
     get_select_box("datasets", "mixed_model_dataset_select", {"checkbox_name":"mixed_model_dataset_select_checkbox"});
     
     jQuery('#mixed_model_analysis_prepare_button').removeClass('active').addClass('inactive');
@@ -400,6 +401,10 @@ function extract_model_parameters() {
     var variable_slope_intersects = parse_factor_collection("variable_slope_intersect_collection_panel");
     
     var random_factors = parse_simple_factors("random_factors");
+
+    var engine = jQuery('input[name=select_engine]:checked').val();
+
+    alert("ENGINE IS NOW: "+engine);
     
         // var random_factors = $('#random_factors').text();
     // random_factors = random_factors.replace(/X /g, '","');
@@ -423,8 +428,8 @@ function extract_model_parameters() {
         'fixed_factors_interaction' : interaction_factors,
 	'variable_slope_intersects' : variable_slope_intersects,
 	'random_factors' : random_factors,
-	'dependent_variables' : dependent_variables
-	
+	'dependent_variables' : dependent_variables,
+	'engine' : engine
     };
     console.log(json);
     return json;
@@ -507,6 +512,7 @@ function parse_random_factors() {
 
 function get_model_string() {
     var params = extract_model_parameters();
+    alert("PARAMS: "+JSON.stringify(params));
     $.ajax( {
 	url  : '/ajax/mixedmodels/modelstring',
 	method: 'POST',
