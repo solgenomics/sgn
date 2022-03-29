@@ -16,6 +16,7 @@ use CXGN::List::Validate;
 use CXGN::List;
 use JSON::XS;
 use Data::Dumper;
+use CXGN::TrialStatus;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -95,8 +96,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     my $activities = $c->config->{'trial_activities'};
     my @activity_list = split ',', $activities;
-    $trial->activity_list(\@activity_list);
-    $c->stash->{latest_trial_activity} = $trial->get_latest_activity();
+    my $trial_status = CXGN::TrialStatus->new({ bcs_schema => $schema, parent_id => $c->stash->{trial_id}, activity_list => \@activity_list });
+    $c->stash->{latest_trial_activity} = $trial_status->get_latest_activity();
 
     my $location_data = $trial->get_location();
     $c->stash->{location_id} = $location_data->[0];

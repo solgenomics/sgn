@@ -104,5 +104,44 @@ sub get_trial_activities {
 }
 
 
+sub get_latest_activity {
+
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $project_id = $self->parent_id();
+    my $type = $self->prop_type();
+    my $type_id = $self->_prop_type_id();
+
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $project_id,
+        type_id => $type_id,
+    });
+
+    my $activity_list = $self->activity_list();
+    my @activity_array = @$activity_list;
+    my @reverse_activities = reverse@activity_array;
+    push @reverse_activities, ("Trial Created", "Trial Uploaded");
+    my $latest_trial_activity;
+
+    if ($row) {
+        my $trial_activity_json = $row->value();
+        my $activity_hash_ref =  JSON::Any->jsonToObj($trial_activity_json);
+        my %activity_hash = %{$activity_hash_ref};
+        my $activity_json =  $activity_hash{'trial_activities'};
+        my $activity_ref = JSON::Any->jsonToObj($activity_json);
+        my %activities_hash = %{$activity_ref};
+
+        foreach my $activity_type (@reverse_activities) {
+            if ($activities_hash{$activity_type}) {
+                my $activity_date = $activities_hash{$activity_type}{'activity_date'};
+                $latest_trial_activity = $activity_type." : ".$activity_date;
+                last;
+            }
+        }
+    }
+
+    return $latest_trial_activity
+}
+
 
 1;

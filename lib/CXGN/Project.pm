@@ -100,11 +100,6 @@ has 'additional_info' => (
     isa => 'Maybe[HashRef]'
 );
 
-has 'activity_list' => (
-    is  => 'rw',
-    isa => 'Maybe[ArrayRef]'
-);
-
 
 sub BUILD {
     my $self = shift;
@@ -5083,51 +5078,6 @@ sub cross_count {
     return $count;
 }
 
-
-=head2 accessors get_latest_activity()
-
- Usage:
- Desc:
- Ret:
- Args:
- Side Effects:
- Example:
-
-=cut
-
-sub get_latest_activity {
-    my $self = shift;
-    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_status_json', 'project_property')->cvterm_id;
-    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
-        project_id => $self->get_trial_id(),
-        type_id => $cvterm_id,
-    });
-
-    my $activity_list = $self->activity_list();
-    my @activity_array = @$activity_list;
-    my @reverse_activities = reverse@activity_array;
-    push @reverse_activities, ("Trial Created", "Trial Uploaded");
-    my $latest_trial_activity;
-
-    if ($row) {
-        my $trial_activity_json = $row->value();
-        my $activity_hash_ref = decode_json $trial_activity_json;
-        my %activity_hash = %{$activity_hash_ref};
-        my $activity_json =  $activity_hash{'trial_activities'};
-        my $activity_ref = decode_json $activity_json;
-        my %activities_hash = %{$activity_ref};
-
-        foreach my $activity_type (@reverse_activities) {
-            if ($activities_hash{$activity_type}) {
-                my $activity_date = $activities_hash{$activity_type}{'activity_date'};
-                $latest_trial_activity = $activity_type." : ".$activity_date;
-                last;
-            }
-        }
-    }
-
-    return $latest_trial_activity
-}
 
 1;
 
