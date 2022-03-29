@@ -253,7 +253,7 @@ my $breeding_programs_select = simple_selectbox_html(
               <div class="input-group">
                 <span class="input-group-btn">
                   <select class="form-control" id="editable_stockprop_view_column_term" name="editable_stockprop_view_column_term">
-%  foreach my $stockprop (@$editable_stock_props){
+%  foreach my $stockprop (sort { "\L$a" cmp "\L$b" } @$editable_stock_props){
                     <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
 %  }
                   </select>

@@ -22,12 +22,12 @@ $data_level => 'plot'
         position: absolute;			
         width: 220px;					
         height: 100px;					
-        padding: 2px;				
+        padding: 5px;				
         font: 12px sans-serif;		
         background: lightsteelblue;	
         border: 0px;		
         border-radius: 8px;			
-        pointer-events: none;		
+        pointer-events: none;
     }
     
     #container_heatmap {
@@ -43,12 +43,27 @@ $data_level => 'plot'
         /*border:2px dashed #000;*/
         height: 100%;
         /*width: 390px;*/
-        width: 90%;
+        width: 100%;
         overflow: auto;
         /*overflow: scroll;*/
         display: none;
         margin: 10px;
         transition: all 1s ease-in-out;
+    }
+
+    #fieldmap_wrapper {
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+        overflow-x: scroll;
+        margin-top: 4%;
+    }
+
+    .interactive_fieldmap_buttons {
+        margin-top: 4%;
+        width: 405px;
+        margin-left: auto;
+        margin-right: auto;
     }
     
     rect.bordered {
@@ -129,9 +144,9 @@ $data_level => 'plot'
 </div>
 <br><br>
 <div id="container_fm">
-    <div style="position: absolute">
-        <div style="display: flex;">
-            <button class="btn btn-primary btn-sm" style="margin-left: 2%;" id="planting_order_button"> Download Planting Order </button>
+    <div style="margin-top: 2%; position: relative">
+        <div>
+            <button class="btn btn-primary" style="margin-left: 3%;" id="planting_order_button"> Download Planting Order </button>
             <select style="margin-left: 1%;" name="planting_order" id="planting_order">
                 <option value="">--Select Layout--</option>
                 <option value="by_col_serpentine">By Column: Serpentine</option>
@@ -139,7 +154,7 @@ $data_level => 'plot'
                 <option value="by_row_serpentine">By Row: Serpentine</option>
                 <option value="by_row_zigzag">By Row: Zigzag</option>
             </select>
-            <button class="btn btn-primary btn-sm" id="harvesting_order_button" style="margin-left: 2%;"> Download Harvesting Order </button>
+            <button class="btn btn-primary" id="harvesting_order_button" style="margin-left: 2%;"> Download Harvesting Order </button>
             <select style="margin-left: 1%;" name="harvesting_order" id="harvesting_order">
                 <option value="">--Select Layout--</option>
                 <option value="by_col_serpentine">By Column: Serpentine</option>
@@ -147,10 +162,14 @@ $data_level => 'plot'
                 <option value="by_row_serpentine">By Row: Serpentine</option>
                 <option value="by_row_zigzag">By Row: Zigzag</option>
             </select>
-            <button style="margin-left: 2%;" type="button" class="btn btn-primary btn-sm" id="change_dimensions_button">Change Dimensions</button>
-            <button style="margin-left: 1%;" type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success btn-sm">Submit Field Layout</button>
         </div><br>
         <div style="display: inline;">
+            <label style="margin-left: 3%;">Plot Layout</label>
+            <select name="plot_layout" id="plot_layout">
+                <option value="">--Select Layout--</option>
+                <option value="serpentine">Serpentine</option>
+                <option value="zigzag">Zigzag</option>
+            </select>
             <label style="margin-left: 2%;" for="invert_rows">Invert Rows</label>
             <input type="checkbox" id="invert_row_checkmark" name="invert_row_checkmark" value="yes">
             <label style="margin-left: 3%;" for="top_border_selection">Top Border</label>                       
@@ -161,15 +180,16 @@ $data_level => 'plot'
             <input type="checkbox" id="right_border_selection" name="right_border_selection" value="yes">
             <label style="margin-left: 3%;" for="bottom_border_selection">Bottom Border</label>                       
             <input type="checkbox" id="bottom_border_selection" name="bottom_border_selection" value="yes">
-            <label style="margin-left: 3%;">Plot Layout</label>
-            <select name="plot_layout" id="plot_layout">
-                <option value="">--Select Layout--</option>
-                <option value="serpentine">Serpentine</option>
-                <option value="zigzag">Zigzag</option>
-            </select>
         </div><br>
-    </div>  
-    <div style="margin-top: 8%;" id="fieldmap_chart"></div>
+        <div class="interactive_fieldmap_buttons">
+            <button type="button" class="btn btn-primary" id="transpose_fieldmap">Transpose</button>
+            <button type="button" class="btn btn-primary" id="change_dimensions_button">Change Dimensions</button>
+            <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success">Submit Field Layout</button>  
+        </div>
+    </div>
+    <div id="fieldmap_wrapper">
+        <div id="fieldmap_chart"></div>
+    </div>
 </div>
 
 
@@ -637,6 +657,7 @@ jQuery(document).ready( function() {
                     num_real_plots = Object.keys(FieldMap.plot_object).length;
                     FieldMap.fill_holes();
                     FieldMap.meta_data.retain_layout = true;
+                    FieldMap.meta_data.transpose = false;
                     FieldMap.load();
             }
         )

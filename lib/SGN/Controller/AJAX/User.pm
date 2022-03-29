@@ -25,6 +25,7 @@ sub login : Path('/ajax/user/login') Args(0) {
     my $password = $c->req->param("password");
     my $goto_url = $c->req->param("goto_url");
 
+    $goto_url = $c->req->referer if $goto_url eq '/';
     print STDERR "Goto URL = $goto_url\n";
 
     my $login = CXGN::Login->new($c->dbc->dbh());
@@ -197,7 +198,7 @@ $host/user/confirm?username=$username&confirm_code=$confirm_code
 Thank you,
 $project_name Team
 
-Please do *NOT* reply to this message. If you have any trouble confirming your 
+Please do *NOT* reply to this message. If you have any trouble confirming your
 email address or have any other questions, please use the contact form instead:
 $host/contact/form
 

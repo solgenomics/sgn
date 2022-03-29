@@ -2009,6 +2009,31 @@ sub get_trial_additional_file_uploaded : Chained('trial') PathPart('get_uploaded
     $c->stash->{rest} = {success=>1, files=>$files};
 }
 
+sub obsolete_trial_additional_file_uploaded :Chained('trial') PathPart('obsolete_uploaded_additional_file') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $file_id = shift;
+    
+    if (!$c->user) {
+	$c->stash->{rest} = { error => "You must be logged in to obsolete additional files!" };
+	$c->detach();
+    }
+
+    my $user_id = $c->user->get_object()->get_sp_person_id();
+
+    my @roles = $c->user->roles();
+    my $result = $c->stash->{trial}->obsolete_additional_uploaded_file($file_id, $user_id, $roles[0]);
+
+    if (exists($result->{errors})) {
+	$c->stash->{rest} = { error => $result->{errors} }; 
+    }
+    else {
+	$c->stash->{rest} = { success => 1 };
+    }
+    
+}
+    
+
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;
     my $c = shift;
