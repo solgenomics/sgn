@@ -28,10 +28,9 @@ use JSON::Any;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 
-has 'trial_activities' => (isa => 'Str', is => 'rw');
+has 'trial_activities' => (isa => 'HashRef', is => 'rw');
 
 has 'activity_list' => (isa => 'ArrayRef', is => 'rw');
-
 
 sub BUILD {
     my $self = shift;
@@ -70,8 +69,7 @@ sub get_trial_activities {
         my $person_name;
         my $activities_json = $trial_activities_rs->value();
         my $activities_hash = JSON::Any->jsonToObj($activities_json);
-        my $all_activities_json = $activities_hash->{'trial_activities'};
-        my $all_activities = JSON::Any->jsonToObj($all_activities_json);
+        my $all_activities = $activities_hash->{'trial_activities'};
         my %activities_hash = %{$all_activities};
         if ($activities_hash{'Trial Created'}) {
             $user_id = $activities_hash{'Trial Created'}{'user_id'};
@@ -126,10 +124,8 @@ sub get_latest_activity {
     if ($row) {
         my $trial_activity_json = $row->value();
         my $activity_hash_ref =  JSON::Any->jsonToObj($trial_activity_json);
-        my %activity_hash = %{$activity_hash_ref};
-        my $activity_json =  $activity_hash{'trial_activities'};
-        my $activity_ref = JSON::Any->jsonToObj($activity_json);
-        my %activities_hash = %{$activity_ref};
+        my $all_activities = $activity_hash_ref->{'trial_activities'};
+        my %activities_hash = %{$all_activities};
 
         foreach my $activity_type (@reverse_activities) {
             if ($activities_hash{$activity_type}) {

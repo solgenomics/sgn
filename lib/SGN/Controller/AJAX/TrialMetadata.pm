@@ -2013,7 +2013,7 @@ sub obsolete_trial_additional_file_uploaded :Chained('trial') PathPart('obsolete
     my $self = shift;
     my $c = shift;
     my $file_id = shift;
-    
+
     if (!$c->user) {
 	$c->stash->{rest} = { error => "You must be logged in to obsolete additional files!" };
 	$c->detach();
@@ -2025,14 +2025,14 @@ sub obsolete_trial_additional_file_uploaded :Chained('trial') PathPart('obsolete
     my $result = $c->stash->{trial}->obsolete_additional_uploaded_file($file_id, $user_id, $roles[0]);
 
     if (exists($result->{errors})) {
-	$c->stash->{rest} = { error => $result->{errors} }; 
+	$c->stash->{rest} = { error => $result->{errors} };
     }
     else {
 	$c->stash->{rest} = { success => 1 };
     }
-    
+
 }
-    
+
 
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;
@@ -4778,24 +4778,20 @@ sub update_trial_status_POST : Args(0) {
     my $trial_status_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_status_json', 'project_property')->cvterm_id();
     my $prop = $schema->resultset("Project::Projectprop")->find({project_id => $trial_id, type_id => $trial_status_type_id});
     my $prop_id;
-    my %latest_activity_hash;
     my %all_activities_hash;
     if ($prop) {
         $prop_id = $prop->projectprop_id();
         my $status_json = $prop->value();
         my $status_hash_ref = decode_json $status_json;
-        my %status_hash = %{$status_hash_ref};
-        my $all_activities_json =  $status_hash{'trial_activities'};
-        my $all_activities_ref = decode_json $all_activities_json;
-        %all_activities_hash = %{$all_activities_ref};
+        my $all_activities = $status_hash_ref->{'trial_activities'};
+        %all_activities_hash = %{$all_activities};
     }
 
     $all_activities_hash{$trial_status}{'user_id'} = $user_id;
     $all_activities_hash{$trial_status}{'activity_date'} = $activity_date;
-    my $updated_activities = encode_json \%all_activities_hash;
 
     my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
-    $trial_status_obj->trial_activities($updated_activities);
+    $trial_status_obj->trial_activities(\%all_activities_hash);
     $trial_status_obj->parent_id($trial_id);
     $trial_status_obj->prop_id($prop_id);
     my $project_prop_id = $trial_status_obj->store();
@@ -4820,5 +4816,6 @@ sub get_all_trial_activities :Chained('trial') PathPart('all_trial_activities') 
 
     $c->stash->{rest} = { data => $activity_info };
 }
+
 
 1;

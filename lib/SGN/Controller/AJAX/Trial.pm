@@ -667,25 +667,26 @@ sub save_experimental_design_POST : Args(0) {
         }
     }
 
-    my $trial_id = $save->{'trial_id'};
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd();
-    my $calendar_funcs = CXGN::Calendar->new({});
-    my $formatted_date = $calendar_funcs->check_value_format($timestamp);
-    my $create_date = $calendar_funcs->display_start_date($formatted_date);
+    if ($save->{'trial_id'}) {
+        my $trial_id = $save->{'trial_id'};
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd();
+        my $calendar_funcs = CXGN::Calendar->new({});
+        my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+        my $create_date = $calendar_funcs->display_start_date($formatted_date);
 
-    my %trial_activity;
-    $trial_activity{'Trial Created'}{'user_id'} = $user_id;
-    $trial_activity{'Trial Created'}{'activity_date'} = $create_date;
-    my $activity = encode_json \%trial_activity;
+        my %trial_activity;
+        $trial_activity{'Trial Created'}{'user_id'} = $user_id;
+        $trial_activity{'Trial Created'}{'activity_date'} = $create_date;
 
-    my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
-    $trial_activity_obj->trial_activities($activity);
-    $trial_activity_obj->parent_id($trial_id);
-    my $activity_prop_id = $trial_activity_obj->store();
-    if (!$activity_prop_id) {
-        $c->stash->{rest} = {error => "Error saving trial activity info" };
-        return;
+        my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+        $trial_activity_obj->trial_activities(\%trial_activity);
+        $trial_activity_obj->parent_id($trial_id);
+        my $activity_prop_id = $trial_activity_obj->store();
+        if (!$activity_prop_id) {
+            $c->stash->{rest} = {error => "Error saving trial activity info" };
+            return;
+        }
     }
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -1059,6 +1060,23 @@ sub upload_trial_file_POST : Args(0) {
         $save->{'error'} = $_;
     };
 
+    if ($save->{'trial_id'}) {
+        my $trial_id = $save->{'trial_id'};
+        my $timestamp = $time->ymd();
+        my $calendar_funcs = CXGN::Calendar->new({});
+        my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+        my $upload_date = $calendar_funcs->display_start_date($formatted_date);
+
+        my %trial_activity;
+        $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
+        $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
+
+        my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+        $trial_activity_obj->trial_activities(\%trial_activity);
+        $trial_activity_obj->parent_id($trial_id);
+        my $activity_prop_id = $trial_activity_obj->store();
+    }
+
     #print STDERR "Check 5: ".localtime()."\n";
     if ($save->{'error'}) {
         print STDERR "Error saving trial: ".$save->{'error'};
@@ -1234,8 +1252,22 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         if ($current_save->{error}){
             $chado_schema->txn_rollback();
             push @{$save{'errors'}}, $current_save->{'error'};
-        }
+        } elsif ($current_save->{'trial_id'}) {
+            my $trial_id = $current_save->{'trial_id'};
+            my $timestamp = $time->ymd();
+            my $calendar_funcs = CXGN::Calendar->new({});
+            my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+            my $upload_date = $calendar_funcs->display_start_date($formatted_date);
 
+            my %trial_activity;
+            $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
+            $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
+
+            my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+            $trial_activity_obj->trial_activities(\%trial_activity);
+            $trial_activity_obj->parent_id($trial_id);
+            my $activity_prop_id = $trial_activity_obj->store();
+        }
       }
 
     };
