@@ -1071,7 +1071,7 @@ sub upload_trial_file_POST : Args(0) {
         $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
         $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
 
-        my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+        my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
         $trial_activity_obj->trial_activities(\%trial_activity);
         $trial_activity_obj->parent_id($trial_id);
         my $activity_prop_id = $trial_activity_obj->store();
@@ -1263,7 +1263,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
             $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
 
-            my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+            my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
             $trial_activity_obj->trial_activities(\%trial_activity);
             $trial_activity_obj->parent_id($trial_id);
             my $activity_prop_id = $trial_activity_obj->store();
