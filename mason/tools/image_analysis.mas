@@ -169,32 +169,7 @@ tr.shown td.details-control {
             </div>
         </div>
     </div>
-
-    <br/><br/>
-    <div class="well well-sm">
-        <div class="panel panel-default">
-            <div class="panel-body">
-                <div class="form-group">
-                    <div class="col-sm-9">
-                    <label class="col-sm-6 control-label">Image Analysis Usage </label>
-                    </div>
-                    <div class="col-sm-3" >
-                        <label class="control-label">Date Range: </label>
-                        <select class="form-control" id="usage_range_select" name="usage_range_select">
-                            <option value="all">All Dates</option>
-                            <option value="year">Latest Year</option>
-                            <option value="month">Latest Month</option>
-                            <option value="week">Latest Week</option>
-                        </select>
-                    </div>
-                </div>
-                <br/>
-                <div class="form-group" id="image_analysis_usage">
-                </div>
-            </div>
-        </div>
-    </div>
-
+    
     <div class="modal fade" id="saveResultModal" tabindex="-1" role="dialog" aria-labelledby="saveResultModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -211,6 +186,30 @@ tr.shown td.details-control {
           </div>
         </div>
       </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title=>"Image Analysis Usage", collapsible => 1, collapsed => 1 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="form-group">
+                    <div class="col-sm-9"></div>
+                    <div class="col-sm-3" >
+                        <label class="control-label">Date Range: </label>
+                        <select class="form-control" id="usage_range_select" name="usage_range_select">
+                            <option value="all">All Dates</option>
+                            <option value="year">Latest Year</option>
+                            <option value="month">Latest Month</option>
+                            <option value="week">Latest Week</option>
+                        </select>
+                    </div>
+                </div>
+                <br/>
+                <div class="form-group" id="image_analysis_usage">
+                </div>
+            </div>
+        </div>
     </div>
 </&>
 
