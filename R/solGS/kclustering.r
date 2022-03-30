@@ -228,9 +228,6 @@ clusteredData <- clusteredData %>%
     mutate_if(is.double, round, 2) %>%
     arrange(Cluster)
 
-# print(paste('size: ', '\n', '\n', round(kMeansOut$size, 2)))
-# print(paste('centers: ','\n', round(kMeansOut$centers, 2)))
-
 if (length(elbowPlotFile) & !file.info(elbowPlotFile)$size) {
     message("running elbow method...")
     png(elbowPlotFile)
@@ -240,7 +237,6 @@ if (length(elbowPlotFile) & !file.info(elbowPlotFile)$size) {
 
 png(kmeansPlotFile)
 ggplot2::autoplot(kMeansOut, data = clusterData, frame = TRUE, x = 1, y = 2)
-# fviz_cluster(kMeansOut, geom = "point", main = "", data = clusterData)
 dev.off()
 
 clusterMeans <- c()
@@ -282,7 +278,7 @@ if (length(kResultFile)) {
         )
 }
 
-if (length(clusterMeansFile)) {
+if (length(clusterMeansFile) && !is.null(clusterMeans)) {
     fwrite(clusterMeans, file = clusterMeansFile, sep = "\t", row.names = FALSE,
         quote = FALSE, )
 }
