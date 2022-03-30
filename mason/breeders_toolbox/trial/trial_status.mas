@@ -68,12 +68,13 @@ $user_can_modify => undef
             <div id="trial_completion_phenotype_section_div">
                 <div class="well well-sm">LOADING...</div>
             </div>
-
+<!--
 %  if ($phenotypes_fully_uploaded) {
             <p class="text-success" title="All recorded phenotypes for this trial are saved in the database. You can change this by clicking [Phenotypes Fully Uploaded?] in the Files section on this page."><small>Phenotyping<br/>Complete&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
 %  } else {
             <p class="text-info" title="Once phenotypes are fully uploaded for a trial, you can click [Phenotypes Fully Uploaded?] in the Files section on this page."><small>Phenotyping<br/>Incomplete&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
 %  }
+-->
 </&>
 
 </div>
