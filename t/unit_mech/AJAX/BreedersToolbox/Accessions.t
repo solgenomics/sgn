@@ -221,4 +221,6 @@ foreach (@stock_ids){
     $row->delete();
 }
 
+$f->clean_up_db();
+
 done_testing();

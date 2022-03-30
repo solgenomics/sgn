@@ -234,8 +234,8 @@ sub _parse_with_plugin {
                         }
                         elsif ($a eq '?' || $a eq 'Uncallable') {
                             $gt_dosage = 'NA';
-                            push @gt_vcf_genotype, 'NA';
-                            push @alt_calls, 'NA';
+                            push @gt_vcf_genotype, './.';
+                            push @alt_calls, './.';
                         } else {
                             push @error_messages, "Allele Call Does Not Match Ref or Alt for Sample: $sample_id_with_lab_id Marker: $marker_name Alt: $alt Ref: $ref Allele: $a";
                         }

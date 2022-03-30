@@ -895,7 +895,7 @@ function getDataSourceSelect() {
         {
             name: 'source_select',
             id: 'source_select',
-            default: 'Select a data source',
+            default: 'Select a list, crossing exp, trial, or GT plate',
             live_search: 1,
             // workflow_trigger: 1,
         });

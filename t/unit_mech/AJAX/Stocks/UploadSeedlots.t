@@ -7,16 +7,25 @@ use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
+use CXGN::List;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
 use JSON::XS;
+use SGN::Model::Cvterm;
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
 
 my $mech = Test::WWW::Mechanize->new;
+
+# get highest nd_experiment
+my $rs = $f->bcs_schema()->resultset('NaturalDiversity::NdExperiment')->search({});
+
+my $max_nd_experiment_id = $rs->get_column('nd_experiment_id')->max();
+
+print STDERR "MAX ND EXPERIMENT ID = $max_nd_experiment_id\n";
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = JSON::XS->new->decode($mech->content);
@@ -91,10 +100,47 @@ $message_hash = JSON::XS->new()->decode($message);
 print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
+#test seedlot list details
+my $seedlot_list_id = CXGN::List::create_list($f->dbh(), 'test_seedlot_list', 'test_desc', 41);
+my $seedlot_list = CXGN::List->new( { dbh => $f->dbh(), list_id => $seedlot_list_id } );
+$seedlot_list->type("seedlots");
+$seedlot_list->add_bulk(['seedlot_test1','seedlot_test2','seedlot_test_from_cross_1','seedlot_test_from_cross_2']);
+my $items = $seedlot_list->elements;
+
+$mech->get_ok("http://localhost:3010/ajax/list/details/$seedlot_list_id");
+$response = decode_json $mech->content;
+
+my $results = $response->{'data'};
+my @seedlots = @$results;
+my $number_of_rows = scalar(@seedlots);
+is($number_of_rows, 4);
+my $first_row = $seedlots[0];
+my $third_row = $seedlots[2];
+
+is($first_row->{'seedlot_name'}, 'seedlot_test1');
+is($first_row->{'content_name'}, 'test_accession1');
+is($first_row->{'content_type'}, 'accession');
+is($first_row->{'current_count'}, '10');
+is($first_row->{'box_name'}, 'box1');
+is($first_row->{'quality'}, 'mold');
+
+is($third_row->{'seedlot_name'}, 'seedlot_test_from_cross_1');
+is($third_row->{'content_name'}, 'cross_test1');
+is($third_row->{'content_type'}, 'cross');
+is($third_row->{'current_count'}, '5');
+is($third_row->{'box_name'}, 'b1');
+is($third_row->{'quality'}, '');
+
+#delete seedlot list
+my $delete = CXGN::List::delete_list($f->dbh(), $seedlot_list_id);
+
 #Clean up
 
 END{
     #Remove seedlots
+
+    print STDERR "REMOVING SEEDLOTS... ";
+    
     my $dbh = $f->dbh();
     my $seedlot_ids = join ("," , @$added_seedlot);
     my $seedlot_ids2 = join ("," , @$added_seedlot2);
@@ -103,21 +149,41 @@ END{
     $q .= "delete from phenome.stock_owner where stock_id in ($seedlot_ids2);";
     $q .= "delete from stock where stock_id in ($seedlot_ids);";
     $q .= "delete from stock where stock_id in ($seedlot_ids2);";
+    $q .= "delete from nd_experiment where nd_experiment_id > ".$max_nd_experiment_id;
     my $sth = $dbh->prepare($q);
     $sth->execute;
 
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema(), 'seed transaction', 'stock_relationship')->cvterm_id();
     #remove transactions
-    my $rs = $schema->resultset("Stock::Stock")->find({ name => 'test_accession2_001' });
-    my $row = $schema->resultset("Stock::StockRelationship")->find({ subject_id => $rs->stock_id });
-    $row->delete();
+    my $row = $schema->resultset("Stock::Stock")->find({ name => 'test_accession2_001' });
 
-    my $rs = $schema->resultset("Stock::Stock")->find({ name => 'test_accession4_001' });
-    my $row = $schema->resultset("Stock::StockRelationship")->find({ subject_id => $rs->stock_id });
-    $row->delete();
+    my  $rel_rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $row->stock_id, type_id => $cvterm_id });
+    foreach my $rel_row ($rel_rs->all()) {
+	print STDERR "TYPE_ID = ".$rel_row->type_id()."\n";
+	#$rel_row->delete();
+    }
+    
 
-    my $rs = $schema->resultset("Stock::Stock")->find({ name => 'test_accession3_001' });
-    my $row = $schema->resultset("Stock::StockRelationship")->find({ subject_id => $rs->stock_id });
-    $row->delete();
+    $row = $schema->resultset("Stock::Stock")->find({ name => 'test_accession4_001' });
+
+    $rel_rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $row->stock_id, type_id => $cvterm_id });
+    foreach my $rel_row ($rel_rs->all()) {
+	#	$rel_row->delete();
+	print STDERR "TYPE_ID = ".$rel_row->type_id()."\n";
+    }
+    
+    $row = $schema->resultset("Stock::Stock")->find({ name => 'test_accession3_001' });
+
+    $rel_rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $row->stock_id, type_id => $cvterm_id });
+    foreach my $rel_row ($rel_rs->all()) {
+	
+	print STDERR "TYPE_ID = ".$rel_row->type_id()."\n";
+	#	    $rel_row->delete();
+    }
+
+    print STDERR "DONE.\n";
 }
+
+$f->clean_up_db();
 
 done_testing();

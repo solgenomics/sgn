@@ -8,6 +8,8 @@ use Test::More;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
 use CXGN::Dataset;
+use CXGN::Phenotypes::ParseUpload;
+use CXGN::Phenotypes::StorePhenotypes;
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -34,6 +36,46 @@ my $location_id = $location_rs->first->nd_geolocation_id;
 my $bp_rs = $schema->resultset('Project::Project')->search({name => 'test'});
 my $breeding_program_id = $bp_rs->first->project_id;
 
+my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(), trial_id => 137 });
+$tn->create_plant_entities(2);
+
+my $parser = CXGN::Phenotypes::ParseUpload->new();
+my $filename = "t/data/trial/upload_phenotypin_spreadsheet_large.xls";
+my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
+ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
+
+my %phenotype_metadata;
+$phenotype_metadata{'archived_file'} = $filename;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-17_05:15:21";
+my %parsed_data = %{$parsed_file->{'data'}};
+my @plots = @{$parsed_file->{'units'}};
+my @traits = @{$parsed_file->{'variables'}};
+
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    basepath=>$f->config->{basepath},
+    dbhost=>$f->config->{dbhost},
+    dbname=>$f->config->{dbname},
+    dbuser=>$f->config->{dbuser},
+    dbpass=>$f->config->{dbpass},
+    temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>0,
+    overwrite_values=>0,
+    metadata_hash=>\%phenotype_metadata,
+);
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
+ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
+
 print STDERR "Uploading NIRS\n";
 
 my $file = $f->config->{basepath}."/t/data/NIRS/C16Mval_spectra.csv";
@@ -45,7 +87,7 @@ $response = $ua->post(
         Content => [
             upload_nirs_spreadsheet_file_input => [ $file, 'nirs_data_upload' ],
             "sgn_session_id"=>$sgn_session_id,
-            "upload_nirs_spreadsheet_data_level"=>"plots",
+            "upload_nirs_spreadsheet_data_level"=>"plants",
             "upload_nirs_spreadsheet_protocol_name"=>"NIRS SCIO Protocol",
             "upload_nirs_spreadsheet_protocol_desc"=>"description",
             "upload_nirs_spreadsheet_protocol_device_type"=>"SCIO"
@@ -68,7 +110,7 @@ $response = $ua->post(
         Content => [
             upload_nirs_spreadsheet_file_input => [ $file, 'nirs_data_upload' ],
             "sgn_session_id"=>$sgn_session_id,
-            "upload_nirs_spreadsheet_data_level"=>"plots",
+            "upload_nirs_spreadsheet_data_level"=>"plants",
             "upload_nirs_spreadsheet_protocol_name"=>"NIRS SCIO Protocol",
             "upload_nirs_spreadsheet_protocol_desc"=>"description",
             "upload_nirs_spreadsheet_protocol_device_type"=>"SCIO"
@@ -82,8 +124,10 @@ my $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 ok($message_hash->{figure});
 is(scalar(@{$message_hash->{success}}), 8);
-like($message_hash->{success}->[6], qr/All values in your file have been successfully processed!/, "return message test");
+is($message_hash->{success}->[6], 'All values in your file have been successfully processed!<br><br>30 new values stored<br>0 previously stored values skipped<br>0 previously stored values overwritten<br><br>');
 my $nirs_protocol_id = $message_hash->{nd_protocol_id};
+
+my $dry_matter_trait_id = $f->bcs_schema()->resultset("Cv::Cvterm")->find({name => 'dry matter content percentage'})->cvterm_id();
 
 my $ds = CXGN::Dataset->new( people_schema => $f->people_schema(), schema => $f->bcs_schema());
 $ds->plots([
@@ -98,6 +142,9 @@ $ds->plots([
     $f->bcs_schema()->resultset("Stock::Stock")->find({uniquename => 'test_trial29'})->stock_id(),
     $f->bcs_schema()->resultset("Stock::Stock")->find({uniquename => 'test_trial210'})->stock_id(),
     $f->bcs_schema()->resultset("Stock::Stock")->find({uniquename => 'test_trial211'})->stock_id()
+]);
+$ds->traits([
+    $dry_matter_trait_id
 ]);
 $ds->name("nirs_dataset_test");
 $ds->description("test nirs description");
@@ -184,5 +231,33 @@ $message = $response->decoded_content;
 $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 ok($message_hash->{download_file_link});
+
+# $ua = LWP::UserAgent->new;
+# $response = $ua->post(
+#         'http://localhost:3010/ajax/Nirs/generate_results',
+#         Content_Type => 'form-data',
+#         Content => [
+#             train_dataset_id => $sp_dataset_id,
+#             trait_id => $dry_matter_trait_id,
+#             "format"=>"SCIO",
+#             "cv"=>"random",
+#             "algorithm"=>"pls",
+#             "niter"=>10,
+#             "tune"=>10,
+#             "preprocessing"=>"1",
+#             "rf"=>0,
+#             "sgn_session_id"=>$sgn_session_id
+#         ]
+#     );
+#
+# print STDERR Dumper $response;
+# ok($response->is_success);
+# $message = $response->decoded_content;
+# $message_hash = decode_json $message;
+# print STDERR Dumper $message_hash;
+# ok($message_hash->{model_properties});
+# ok($message_hash->{model_file});
+# ok($message_hash->{training_data_file});
+# ok($message_hash->{performance_output});
 
 done_testing();

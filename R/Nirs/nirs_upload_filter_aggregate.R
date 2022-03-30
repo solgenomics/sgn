@@ -36,7 +36,7 @@ spec.plot <- raw.spectra %>%
   rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
   rownames_to_column(var = "unique.id") %>%
   dplyr::select(-device_type) %>%
-  PlotSpectra(wavelengths = wls, num.col.before.spectra = 3, window.size = 100)
+  plot_spectra(wls, num.col.before.spectra = 3, window.size = 100)
 
 #### Output plot ####
 ggsave(plot = spec.plot, filename = args[4], units = "in", height = 7, width = 10)
@@ -45,7 +45,7 @@ ggsave(plot = spec.plot, filename = args[4], units = "in", height = 7, width = 1
 chisq95 <- qchisq(.95, df = length(wls))
 spectra.tagged <- raw.spectra %>%
   drop_na(observationUnitId, starts_with("nirs_spectra")) %>% # allows for case that no device type is present
-  FilterSpectra(., filter = F, return.distances = T,
+  filter_spectra(., filter = F, return.distances = T,
                 num.col.before.spectra = 2, # observationUnitId, device_type
                 window.size = 100) %>% # TODO write trycatch with different window sizes?
   mutate(outlier = ifelse(.data$h.distances > chisq95, T, F)) %>%

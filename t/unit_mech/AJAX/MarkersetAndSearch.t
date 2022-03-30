@@ -138,4 +138,6 @@ CXGN::List::delete_list($schema->storage->dbh, $markerset2_list_id);
 CXGN::List::delete_list($schema->storage->dbh, $accession_list_id);
 $schema->resultset("Project::Project")->find({project_id=>$project_id})->delete();
 
+$f->clean_up_db();
+
 done_testing();
