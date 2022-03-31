@@ -83,7 +83,7 @@ sub patch {
     JOIN nd_experiment ON(nd_experiment.nd_experiment_id=nd_experiment_protocol.nd_experiment_id AND nd_experiment.type_id=$geno_cvterm_id)
     JOIN nd_experiment_stock ON(nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
     JOIN nd_experiment_genotype ON(nd_experiment.nd_experiment_id=nd_experiment_genotype.nd_experiment_id)
-    JOIN genotype ON(genotypeprop.genotype_id=genotype.genotype_id)
+    JOIN genotype ON(nd_experiment_genotype.genotype_id=genotype.genotype_id)
     JOIN genotypeprop ON(genotype.genotype_id=genotypeprop.genotype_id)
 	WHERE nd_protocol.nd_protocol_id=?
 	;";
