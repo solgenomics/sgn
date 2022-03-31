@@ -279,6 +279,8 @@ sub patch {
             }
         }
 
+        print STDERR Dumper [$nd_protocol_id, $stock_id];
+
         while (my($check_marker_name, $p) = each %$check_marker_obj) {
             # print STDERR Dumper $check_marker_name;
             my $check_geno = $check_geno_all_chrom{$check_marker_name};
@@ -329,7 +331,7 @@ sub patch {
                 }
             }
         }
-
+        print STDERR "End Protocol Check $nd_protocol_id.....\n";
     }
 
     print STDERR "GENOTYPING PROTOCOLS TO CHANGE DS IN:\n";
