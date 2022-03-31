@@ -77,11 +77,14 @@ sub patch {
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
-    my $q1_1 = "SELECT nd_experiment_stock.stock_id
-	FROM nd_protocol
-	JOIN nd_experiment_protocol ON(nd_protocol.nd_protocol_id=nd_experiment_protocol.nd_protocol_id)
-	JOIN nd_experiment ON(nd_experiment.nd_experiment_id=nd_experiment_protocol.nd_experiment_id AND nd_experiment.type_id=$geno_cvterm_id)
-	JOIN nd_experiment_stock ON(nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+    my $q1_1 = "SELECT nd_experiment_stock.stock_id, genotypeprop.genotypeprop_id, genotype.genotype_id
+    FROM nd_protocol
+    JOIN nd_experiment_protocol ON(nd_protocol.nd_protocol_id=nd_experiment_protocol.nd_protocol_id)
+    JOIN nd_experiment ON(nd_experiment.nd_experiment_id=nd_experiment_protocol.nd_experiment_id AND nd_experiment.type_id=$geno_cvterm_id)
+    JOIN nd_experiment_stock ON(nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+    JOIN nd_experiment_genotype ON(nd_experiment.nd_experiment_id=nd_experiment_genotype.nd_experiment_id)
+    JOIN genotype ON(genotypeprop.genotype_id=genotype.genotype_id)
+    JOIN genotypeprop ON(genotype.genotype_id=genotypeprop.genotype_id)
 	WHERE nd_protocol.nd_protocol_id=?
 	;";
     my $h1_1 = $schema->storage->dbh()->prepare($q1_1);
@@ -102,7 +105,7 @@ sub patch {
     while (my($nd_protocol_id, $marker_check) = each %protocol_geno_check) {
         $h1_1->execute($nd_protocol_id);
 
-        while (my ($stock_id) = $h1_1->fetchrow_array()) {
+        while (my ($stock_id, $genotypeprop_id, $genotype_id) = $h1_1->fetchrow_array()) {
             if ($stock_id) {
                 $protocols_hash{$nd_protocol_id} = {
                     marker_check => $marker_check,
@@ -270,7 +273,7 @@ sub patch {
         my $check_marker_obj = $o->{marker_check};
 
         CHECK: foreach my $stock_id (sort keys %{$protocols_all_stock_ids{$nd_protocol_id}}) {
-            print STDERR Dumper [$nd_protocol_id, $stock_id];
+            print STDERR "$nd_protocol_id.$stock_id ";
 
             $h2->execute($stock_id, $nd_protocol_id);
             my %check_geno_all_chrom;
