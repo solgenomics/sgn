@@ -38,6 +38,7 @@ use Try::Tiny;
 use SGN::Model::Cvterm;
 use JSON;
 use Data::Dumper;
+use Scalar::Util qw(looks_like_number);
 
 extends 'CXGN::Metadata::Dbpatch';
 
@@ -85,8 +86,6 @@ sub patch {
 	;";
     my $h1_1 = $schema->storage->dbh()->prepare($q1_1);
 
-    # GETS MARKER INFORMATION FOR ALL PROTOCOLS LOADED UNDER vcf_map_details
-
     my %protocol_geno_check;
     while (my ($nd_protocol_id, $markers_array_json) = $h->fetchrow_array()) {
         my $markers_array = $markers_array_json ? decode_json $markers_array_json : [];
@@ -97,8 +96,6 @@ sub patch {
         }
     }
     # print STDERR Dumper \%protocol_geno_check;
-
-    # GETS STOCKS GENOTYPED UNDER ALL PROTOCOLS
 
     my %protocols_hash;
     my %protocols_all_stock_ids;
@@ -118,8 +115,6 @@ sub patch {
     # print STDERR Dumper \%protocols_hash;
     # print STDERR Dumper \%protocols_all_stock_ids;
 
-    # CHECK IF THE GENOTYPING PROTOCOL WAS SAVED UNDER THE OLD DOSAGE SCHEME
-
     my $q2 = "SELECT genotypeprop.genotypeprop_id, genotype.genotype_id, genotypeprop.value
         FROM genotypeprop
         JOIN genotype ON(genotypeprop.genotype_id=genotype.genotype_id)
@@ -129,6 +124,145 @@ sub patch {
         JOIN nd_experiment_protocol ON(nd_experiment.nd_experiment_id=nd_experiment_protocol.nd_experiment_id)
         WHERE stock_id=? AND genotypeprop.type_id=$snp_vcf_cvterm_id AND nd_protocol_id=?;";
     my $h2 = $schema->storage->dbh()->prepare($q2);
+
+    # Distinct GT in localhost, cassavabase, cassava-test, musabase, musabase-test, sweetpotatobase
+    # ""
+    # "0|1"
+    # "0|0"
+    # "1/1"
+    # "NA"
+    # "1|0"
+    # "0/0"
+    # "1/0"
+    # "1|1"
+    # "0/1"
+    # "4/1"
+    # "0/5"
+    # "2/2"
+    # "0/4"
+    # "1/5"
+    # "5/5"
+    # "0/2"
+    # "4/4"
+    # "3/2"
+    # "2/5"
+    # "4/3"
+    # "2/4"
+    # "1/3"
+    # "4/5"
+    # "3/3"
+    # "1/0"
+    # "2/0"
+    # "3/1"
+    # "./."
+    # "0/3"
+    # "1/2"
+    # "3/0"
+    # "4/2"
+    # "3/4"
+    # "2/3"
+    # "4/0"
+    # "3/5"
+    # "1/4"
+    # "2/1"
+    # "1/1/1/1"
+    # "0/0/0"
+    # "0/1/1"
+    # "0/1/1/1"
+    # "-/-/-"
+    # "0/0/0/0"
+    # "0/0/1/1"
+    # "0/0/1"
+    # "1/1/1"
+    # "-/-"
+    # "-/-/-/-"
+    # "0/0/0/1"
+    # "1/2/2"
+    # "3/3/3"
+    # "0/0/2"
+    # "2/2/2"
+    # "././."
+    # "1/1/2"
+    # "0/1/2"
+    # "0/0/0/1"
+    # "0/2/2"
+    # "././.\n"
+
+    # Distinct DS in localhost, cassavabase, cassava-test, musabase
+    # ""
+    # "2"
+    # "4"
+    # "1"
+    # "NA"
+    # "3"
+    # "0"
+    # "0.019"
+    # "0.026"
+    # "0.038"
+    # "1.865"
+    # "0.825"
+    # "0.889"
+    # "1.926"
+    # "0.999"
+    # "0.928"
+    # "0.017"
+    # "0.938"
+    # "0.525"
+    # "0.915"
+    # "0.002"
+    # "1.859"
+    # "1.856"
+    # "0.913"
+    # 2
+    # "0.943"
+    # "0.891"
+    # "0.003"
+    # "0.027"
+    # "1.779"
+    # 1
+    # "0.032"
+    # "0.048"
+    # "0.945"
+    # "0.484"
+    # "0.305"
+    # "0.466"
+    # "1.87"
+    # "0.858"
+    # "0.932"
+    # "1.876"
+    # "0.985"
+    # "1.721"
+    # "0.481"
+    # "0.848"
+    # "0.692"
+    # "0.001"
+    # "0.031"
+    # "1.104"
+    # "0.939"
+    # "0.042"
+    # "0.034"
+    # "0.897"
+    # 0
+    # "0.974"
+    # "0.033"
+    # "0.87"
+    # "0.475"
+    # "0.286"
+    # "0.005"
+    # "0.958"
+    # "1.932"
+    # "0.935"
+    # "0.029"
+    # "0.004"
+    # "0.901"
+    # "0.559"
+    # "0.892"
+    # "0.028"
+    # "0.679"
+    # "0.364"
+    # "0.03"
+    # null
+    # 'A/C' # Lots of allele combos... like "CTAATTATAAAACTAT/CTAATTATAAAACTAT"
 
     my %protocol_to_change;
     while (my($nd_protocol_id, $o) = each %protocols_hash) {
@@ -146,38 +280,51 @@ sub patch {
         }
 
         while (my($check_marker_name, $p) = each %$check_marker_obj) {
-            print STDERR Dumper $check_marker_name;
+            # print STDERR Dumper $check_marker_name;
             my $check_geno = $check_geno_all_chrom{$check_marker_name};
-            print STDERR Dumper $check_geno;
+            # print STDERR Dumper $check_geno;
 
             if ($check_geno) {
                 my $check_ds = $check_geno->{DS};
                 my $check_gt = $check_geno->{GT};
-                if ($check_ds ne 'NA' && $check_gt ne './.' && $check_gt ne 'NA/NA' && $check_gt ne 'NA') {
+
+                # Check genotype call with DS set and not equal to 1 (e.g. 0 or 2) and has GT defined and not equal to NA
+                if (defined($check_gt) && defined($check_ds) && looks_like_number($check_ds) && $check_ds ne '1' && $check_ds ne '' && $check_gt ne '' && $check_gt ne 'NA') {
+                    chomp($check_gt);
+                    chomp($check_ds);
 
                     my @gts = split '/', $check_gt;
                     if (scalar(@gts) <= 1) {
                         @gts = split '|', $check_gt;
                     }
-                    print STDERR Dumper \@gts;
+                    # print STDERR Dumper \@gts;
 
                     if (scalar(@gts) > 0) {
                         my $old_ds = 0;
                         my $new_ds = 0;
+                        my $has_calls = 0;
                         foreach my $gt (@gts) {
-                            if ($gt eq '0' || $gt == 0) {
-                                $old_ds++;
+                            # Check that call is defined and is not 'NA', '.', or '-'
+                            if (looks_like_number($gt)) {
+                                if ($gt eq '0') {
+                                    $old_ds++;
+                                }
+                                else {
+                                    $new_ds++;
+                                }
+                                $has_calls = 1;
                             }
-                            if ($gt ne '0' && $gt != 0) {
-                                $new_ds++;
-                            }
-                        }
-                        print STDERR Dumper [$old_ds, $new_ds, $check_ds];
-                        if ($check_ds == $old_ds) {
-                            $protocol_to_change{$nd_protocol_id}++;
                         }
 
-                        last;
+                        if ($has_calls) {
+                            print STDERR Dumper [$old_ds, $new_ds, $check_ds];
+                            if ($check_ds == $old_ds) {
+                                print STDERR Dumper $check_geno;
+                                $protocol_to_change{$nd_protocol_id}++;
+                            }
+
+                            last;
+                        }
                     }
                 }
             }
@@ -185,19 +332,12 @@ sub patch {
 
     }
 
-    # UPDATE GENOTYPING PROTOCOLS TO NEW DOSAGE SCHEME
     print STDERR "GENOTYPING PROTOCOLS TO CHANGE DS IN:\n";
     print STDERR Dumper \%protocol_to_change;
 
-    sub _change_genotype_dosage_sub {
-        my $schema = shift;
-        my $protocols_all_stock_ids = shift;
-        my $nd_protocol_id = shift;
-
-        my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
-        my $vcf_map_details_markers_array_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers_array', 'protocol_property')->cvterm_id();
-        my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
-        my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+    my $nd_protocol_id;
+    my $coderef = sub {
+        my $start_time = time();
 
         my $q3 = "SELECT genotypeprop.value, genotypeprop.genotypeprop_id, genotypeprop.rank
             FROM genotypeprop
@@ -212,10 +352,9 @@ sub patch {
             ORDER BY genotypeprop.genotypeprop_id ASC;";
         my $h3 = $schema->storage->dbh()->prepare($q3);
 
-        my $q4 = "UPDATE genotypeprop SET value=? WHERE genotypeprop_id=?;";
-        my $h4 = $schema->storage->dbh()->prepare($q4);
+        my $genotypeprop_rs = $schema->resultset('Genetic::Genotypeprop');
 
-        my @stock_ids = sort keys %{$protocols_all_stock_ids->{$nd_protocol_id}};
+        my @stock_ids = sort keys %{$protocols_all_stock_ids{$nd_protocol_id}};
         my $total_stocks = scalar(@stock_ids);
         print STDERR "STOCKS IN $nd_protocol_id: ".$total_stocks."\n";
 
@@ -229,32 +368,75 @@ sub patch {
 
                     while (my($marker_name,$v) = each %$prop) {
                         if ($marker_name ne 'CHROM') {
-                            my $ds = $v->{DS};
-                            my $gt = $v->{GT};
 
-                            if ($ds ne 'NA') {
-                                if ($ds == 2) {
-                                    $v->{DS} = 0;
+                            my $gt = $v->{GT};
+                            # Check that GT is defined and is not NA
+                            if (defined($gt) && $gt ne '' && $gt ne 'NA') {
+
+                                my @gts = split '/', $gt;
+                                if (scalar(@gts) <= 1) {
+                                    @gts = split '|', $gt;
                                 }
-                                elsif ($ds == 0) {
-                                    $v->{DS} = 2;
+                                # print STDERR Dumper \@gts;
+
+                                my $ref_ds = 0;
+                                my $alt_ds = 0;
+                                my $has_calls;
+                                foreach my $gt (@gts) {
+                                    # Check that call is defined and is not 'NA', '.', or '-'
+                                    if (looks_like_number($gt)) {
+                                        if ($gt eq '0') {
+                                            $ref_ds++;
+                                        }
+                                        else {
+                                            $alt_ds++;
+                                        }
+                                        $has_calls = 1;
+                                    }
                                 }
+                                if ($has_calls) {
+                                    $v->{DS} = $alt_ds;
+                                    $v->{DR} = $ref_ds;
+                                }
+                                else {
+                                    $v->{DS} = "NA";
+                                    $v->{DR} = "NA";
+                                }
+
+                                chomp($gt);
+                                $v->{GT} = $gt;
                             }
+                            else {
+                                # GT is "NA"
+                                $v->{DS} = "NA";
+                                $v->{DR} = "NA";
+                            }
+
                         }
                     }
 
                     my $prop_save = encode_json $prop;
-                    $h4->execute($prop_save, $genotypeprop_id);
+
+                    my $row = $genotypeprop_rs->find({genotypeprop_id=>$genotypeprop_id});
+                    $row->value($prop_save);
+                    $row->update();
                 }
             }
-            print STDERR "$nd_protocol_id $stock_id: $stock_count / $total_stocks\n";
+            my $end_time = time();
+            my $seconds_passed = $end_time - $start_time;
+            print STDERR "$nd_protocol_id:$stock_id ($stock_count"."/"."$total_stocks) $seconds_passed"."s. ";
             $stock_count++;
         }
+
+        my $end_time = time();
+        my $seconds_passed = $end_time - $start_time;
+        print STDERR "Protocol $nd_protocol_id completed $seconds_passed seconds\n";
     };
 
-    foreach my $nd_protocol_id (sort keys %protocol_to_change) {
+    foreach my $nd_protocol_id_ref (sort keys %protocol_to_change) {
+        $nd_protocol_id = $nd_protocol_id_ref;
         try {
-            $schema->txn_do(_change_genotype_dosage_sub($schema, \%protocols_all_stock_ids, $nd_protocol_id));
+            $schema->txn_do($coderef);
             print "You're done protocol $nd_protocol_id!\n";
         } catch {
             my $transaction_error =  $_;
