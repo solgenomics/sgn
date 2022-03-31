@@ -189,7 +189,16 @@ sub patch {
     print STDERR "GENOTYPING PROTOCOLS TO CHANGE DS IN:\n";
     print STDERR Dumper \%protocol_to_change;
 
-    my $coderef = sub {
+    sub _change_genotype_dosage_sub {
+        my $schema = shift;
+        my $protocols_all_stock_ids = shift;
+        my $nd_protocol_id = shift;
+
+        my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
+        my $vcf_map_details_markers_array_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers_array', 'protocol_property')->cvterm_id();
+        my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
+        my $snp_vcf_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_snp_genotyping', 'genotype_property')->cvterm_id();
+
         my $q3 = "SELECT genotypeprop.value, genotypeprop.genotypeprop_id, genotypeprop.rank
             FROM genotypeprop
             JOIN genotype ON(genotype.genotype_id=genotypeprop.genotype_id)
@@ -206,51 +215,54 @@ sub patch {
         my $q4 = "UPDATE genotypeprop SET value=? WHERE genotypeprop_id=?;";
         my $h4 = $schema->storage->dbh()->prepare($q4);
 
-        foreach my $nd_protocol_id (sort keys %protocol_to_change) {
+        my @stock_ids = sort keys %{$protocols_all_stock_ids->{$nd_protocol_id}};
+        my $total_stocks = scalar(@stock_ids);
+        print STDERR "STOCKS IN $nd_protocol_id: ".$total_stocks."\n";
 
-            my @stock_ids = sort keys %{$protocols_all_stock_ids{$nd_protocol_id}};
-            print STDERR "STOCKS IN $nd_protocol_id: ".scalar(@stock_ids)."\n";
+        my $stock_count = 1;
+        foreach my $stock_id (@stock_ids) {
 
-            foreach my $stock_id (@stock_ids) {
+            $h3->execute($nd_protocol_id, $stock_id);
+            while (my($prop_json, $genotypeprop_id, $rank) = $h3->fetchrow_array()) {
+                if ($prop_json) {
+                    my $prop = decode_json $prop_json;
 
-                $h3->execute($nd_protocol_id, $stock_id);
-                while (my($prop_json, $genotypeprop_id, $rank) = $h3->fetchrow_array()) {
-                    if ($prop_json) {
-                        my $prop = decode_json $prop_json;
+                    while (my($marker_name,$v) = each %$prop) {
+                        if ($marker_name ne 'CHROM') {
+                            my $ds = $v->{DS};
+                            my $gt = $v->{GT};
 
-                        while (my($marker_name,$v) = each %$prop) {
-                            if ($marker_name ne 'CHROM') {
-                                my $ds = $v->{DS};
-                                my $gt = $v->{GT};
-
-                                if ($ds ne 'NA') {
-                                    if ($ds == 2) {
-                                        $v->{DS} = 0;
-                                    }
-                                    elsif ($ds == 0) {
-                                        $v->{DS} = 2;
-                                    }
+                            if ($ds ne 'NA') {
+                                if ($ds == 2) {
+                                    $v->{DS} = 0;
+                                }
+                                elsif ($ds == 0) {
+                                    $v->{DS} = 2;
                                 }
                             }
                         }
-
-                        my $prop_save = encode_json $prop;
-                        $h4->execute($prop_save, $genotypeprop_id);
                     }
+
+                    my $prop_save = encode_json $prop;
+                    $h4->execute($prop_save, $genotypeprop_id);
                 }
-                print STDERR "$nd_protocol_id $stock_id \n";
             }
+            print STDERR "$nd_protocol_id $stock_id: $stock_count / $total_stocks\n";
+            $stock_count++;
         }
     };
 
-    try {
-        $schema->txn_do($coderef);
-        print "You're done!\n";
-    } catch {
-        my $transaction_error =  $_;
-        print STDERR Dumper $transaction_error;
-    };
+    foreach my $nd_protocol_id (sort keys %protocol_to_change) {
+        try {
+            $schema->txn_do(_change_genotype_dosage_sub($schema, \%protocols_all_stock_ids, $nd_protocol_id));
+            print "You're done protocol $nd_protocol_id!\n";
+        } catch {
+            my $transaction_error =  $_;
+            print STDERR Dumper $transaction_error;
+        };
+    }
 
+    print "You're done!\n";
 }
 
 
