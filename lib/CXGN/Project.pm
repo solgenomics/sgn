@@ -100,6 +100,7 @@ has 'additional_info' => (
     isa => 'Maybe[HashRef]'
 );
 
+
 sub BUILD {
     my $self = shift;
     my $args = shift;
@@ -5131,6 +5132,7 @@ sub cross_count {
     my ($count) = $h->fetchrow_array();
     return $count;
 }
+
 
 1;
 
