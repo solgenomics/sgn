@@ -14,12 +14,8 @@ solGS.genotypingProtocol = {
       divPlace = divPlace + " ";
     }
 
-    jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_message").val(
-      arg.protocol_id
-    );
-    jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_message").html(
-      msg
-    );
+    jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_message").val(arg.protocol_id);
+    jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_message").html(msg);
 
     var page = document.URL;
     var host = window.location.protocol + "//" + window.location.host;
@@ -33,19 +29,12 @@ solGS.genotypingProtocol = {
 
     if (popType.filter((item) => item.match(/page/))) {
       console.log("setting selection pop genotype pop...");
-      jQuery(
-        divPlace + "#genotyping_protocol #selection_pop_genotyping_protocol_id"
-      ).val(arg.protocol_id);
-    } else {
-      jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_id").val(
+      jQuery(divPlace + "#genotyping_protocol #selection_pop_genotyping_protocol_id").val(
         arg.protocol_id
       );
+    } else {
+      jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_id").val(arg.protocol_id);
     }
-
-    console.log(
-      "sel pop GP id: " + jQuery("#selection_pop_genotyping_protocol_id").val()
-    );
-    console.log("default GP id: " + jQuery("#genotyping_protocol_id").val());
   },
 
   getAllProtocols: function () {
@@ -60,10 +49,7 @@ solGS.genotypingProtocol = {
         }
 
         for (i = 0; i < divPlaces.length; i++) {
-          solGS.genotypingProtocol.setGenotypingProtocol(
-            divPlaces[i],
-            res.default_protocol
-          );
+          solGS.genotypingProtocol.setGenotypingProtocol(divPlaces[i], res.default_protocol);
         }
 
         solGS.genotypingProtocol.populateMenu(res.all_protocols);
@@ -76,11 +62,7 @@ solGS.genotypingProtocol = {
 
     for (var i = 0; i < allProtocols.length; i++) {
       genoProtocols +=
-        '<option value="' +
-        allProtocols[i].protocol_id +
-        '">' +
-        allProtocols[i].name +
-        "</option>";
+        '<option value="' + allProtocols[i].protocol_id + '">' + allProtocols[i].name + "</option>";
     }
 
     return genoProtocols;
@@ -88,9 +70,7 @@ solGS.genotypingProtocol = {
 
   populateMenu: function (allProtocols) {
     var menu = this.createGenoProtocolsOpts(allProtocols);
-    jQuery("#genotyping_protocol #genotyping_protocols_list_select").append(
-      menu
-    );
+    jQuery("#genotyping_protocol #genotyping_protocols_list_select").append(menu);
   },
 
   formatId: function (divPlace) {
@@ -104,19 +84,13 @@ jQuery(document).ready(function () {
 });
 
 jQuery(document).ready(function () {
-  jQuery("#genotyping_protocol #genotyping_protocols_change").click(
-    function () {
-      var divPlace = jQuery(this).parent().parent().parent().attr("id");
-      divPlace = solGS.genotypingProtocol.formatId(divPlace);
+  jQuery("#genotyping_protocol #genotyping_protocols_change").click(function () {
+    var divPlace = jQuery(this).parent().parent().parent().attr("id");
+    divPlace = solGS.genotypingProtocol.formatId(divPlace);
 
-      jQuery(
-        divPlace + " #genotyping_protocol #genotyping_protocols_list_div"
-      ).show();
-      jQuery(
-        divPlace + " #genotyping_protocol #genotyping_protocols_change"
-      ).hide();
-    }
-  );
+    jQuery(divPlace + " #genotyping_protocol #genotyping_protocols_list_div").show();
+    jQuery(divPlace + " #genotyping_protocol #genotyping_protocols_change").hide();
+  });
 });
 
 jQuery(document).ready(function () {
@@ -124,40 +98,23 @@ jQuery(document).ready(function () {
     "#genotyping_protocol #genotyping_protocols_list_select"
   );
 
-  jQuery("#genotyping_protocol #genotyping_protocols_list_select").change(
-    function () {
-      var selectedId = jQuery(this).find("option:selected").val();
-      var selectedName = jQuery(this).find("option:selected").text();
+  jQuery("#genotyping_protocol #genotyping_protocols_list_select").change(function () {
+    var selectedId = jQuery(this).find("option:selected").val();
+    var selectedName = jQuery(this).find("option:selected").text();
 
-      var selected = {
-        protocol_id: selectedId,
-        name: selectedName,
-      };
+    var selected = {
+      protocol_id: selectedId,
+      name: selectedName,
+    };
 
-      var divPlace = jQuery(this).parent().parent().parent().attr("id");
-      console.log("divPlace " + divPlace);
-      divPlace = solGS.genotypingProtocol.formatId(divPlace);
+    var divPlace = jQuery(this).parent().parent().parent().attr("id");
+    divPlace = solGS.genotypingProtocol.formatId(divPlace);
+    solGS.genotypingProtocol.setGenotypingProtocol(divPlace, selected);
 
-      console.log(
-        "divPlace " +
-          divPlace +
-          " selectId: " +
-          selectedId +
-          " name " +
-          selectedName
-      );
-      solGS.genotypingProtocol.setGenotypingProtocol(divPlace, selected);
-
-      jQuery(
-        divPlace + " #genotyping_protocol #genotyping_protocols_list_div"
-      ).hide();
-      jQuery(
-        divPlace +
-          " #genotyping_protocol #genotyping_protocols_list_select option:selected"
-      ).prop("selected", false);
-      jQuery(
-        divPlace + " #genotyping_protocol #genotyping_protocols_change"
-      ).show();
-    }
-  );
+    jQuery(divPlace + " #genotyping_protocol #genotyping_protocols_list_div").hide();
+    jQuery(
+      divPlace + " #genotyping_protocol #genotyping_protocols_list_select option:selected"
+    ).prop("selected", false);
+    jQuery(divPlace + " #genotyping_protocol #genotyping_protocols_change").show();
+  });
 });
