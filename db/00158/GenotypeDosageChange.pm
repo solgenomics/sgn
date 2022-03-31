@@ -269,7 +269,7 @@ sub patch {
         my $o = $protocols_hash{$nd_protocol_id};
         my $check_marker_obj = $o->{marker_check};
 
-        foreach my $stock_id (sort keys %{$protocols_all_stock_ids{$nd_protocol_id}}) {
+        CHECK: foreach my $stock_id (sort keys %{$protocols_all_stock_ids{$nd_protocol_id}}) {
             print STDERR Dumper [$nd_protocol_id, $stock_id];
 
             $h2->execute($stock_id, $nd_protocol_id);
@@ -326,7 +326,7 @@ sub patch {
                                     $protocol_to_change{$nd_protocol_id}++;
                                 }
 
-                                last;
+                                last CHECK;
                             }
                         }
                     }
