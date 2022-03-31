@@ -340,9 +340,7 @@ sub next_genotype {
                 my @fvalues = split /:/, $values[$i];
                 my %value;
                 @value{@format} = @fvalues;
-                my $gt_dosage_ref_val = 'NA';
                 my $gt_dosage_alt_val = 'NA';
-                my $gt_dosage_ref = 0;
                 my $gt_dosage_alt = 0;
                 if (exists($value{'GT'})) {
                     my $gt = $value{'GT'};
@@ -363,10 +361,7 @@ sub next_genotype {
                     my $has_calls = 0;
                     foreach (@alleles) {
                         if (looks_like_number($_)) {
-                            if ($_ eq '0') {
-                                $gt_dosage_ref++;
-                            }
-                            else {
+                            if ($_ ne '0') {
                                 $gt_dosage_alt++;
                             }
                             my $index = $_ + 0;
@@ -383,7 +378,6 @@ sub next_genotype {
                         }
                     }
                     if ($has_calls) {
-                        $gt_dosage_ref_val = $gt_dosage_ref;
                         $gt_dosage_alt_val = $gt_dosage_alt;
                     }
                     if ($separator eq '/') {
@@ -391,7 +385,6 @@ sub next_genotype {
                         @nucleotide_genotype = (@ref_calls, @alt_calls);
                     }
                     $value{'NT'} = join $separator, @nucleotide_genotype;
-                    $value{'DR'} = $gt_dosage_ref_val;
                 }
                 # If DS is provided in uploaded file and is a number, then this will be skipped
                 if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {

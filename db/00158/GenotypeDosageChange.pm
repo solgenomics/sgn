@@ -379,16 +379,12 @@ sub patch {
                                 }
                                 # print STDERR Dumper \@gts;
 
-                                my $ref_ds = 0;
                                 my $alt_ds = 0;
                                 my $has_calls;
                                 foreach my $gt (@gts) {
                                     # Check that call is defined and is not 'NA', '.', or '-'
                                     if (looks_like_number($gt)) {
-                                        if ($gt eq '0') {
-                                            $ref_ds++;
-                                        }
-                                        else {
+                                        if ($gt ne '0') {
                                             $alt_ds++;
                                         }
                                         $has_calls = 1;
@@ -396,11 +392,9 @@ sub patch {
                                 }
                                 if ($has_calls) {
                                     $v->{DS} = $alt_ds;
-                                    $v->{DR} = $ref_ds;
                                 }
                                 else {
                                     $v->{DS} = "NA";
-                                    $v->{DR} = "NA";
                                 }
 
                                 chomp($gt);
@@ -409,7 +403,6 @@ sub patch {
                             else {
                                 # GT is "NA"
                                 $v->{DS} = "NA";
-                                $v->{DR} = "NA";
                             }
 
                         }
