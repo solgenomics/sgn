@@ -1,12 +1,61 @@
+name: test breedbase
+
 on:
   pull_request:
     paths-ignore:
       - 'docs/**'
       - '**.md'
+  workflow_dispatch:
 
 jobs:
+  test_docker_build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Get the sgn repo
+        uses: actions/checkout@v2
+
+      - name: Get breedbase_dockerfile
+        uses: actions/checkout@master
+        with:
+          repository: Breeding-Insight/breedbase_dockerfile
+          path: breedbase_dockerfile
+
+      - name: Get the submodules
+        working-directory: ./breedbase_dockerfile
+        run: git submodule update --init --recursive --remote
+
+      - name: Extract branch name
+        shell: bash
+        run: echo ::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/})
+        id: extract_branch
+
+      - name: Checkout sgn branch
+        working-directory: ./breedbase_dockerfile/cxgn/sgn
+        run: git switch ${{steps.extract_branch.outputs.branch}}
+
+      - name: Debug sgn branch
+        working-directory: ./breedbase_dockerfile/cxgn/sgn
+        run: git status
+
+      - name: Set tag
+        id: vars
+        run: echo ::set-output name=imageName::$(echo breedinginsight/breedbase:test_build)
+        
+      - name: Build Docker image
+        working-directory: ./breedbase_dockerfile
+        run: |
+          docker build . --file Dockerfile --tag ${{steps.vars.outputs.imageName}}
+          
   test_breedbase:
     runs-on: ubuntu-latest
+    needs: [test_docker_build]
     container:
       image: breedbase/breedbase:v0.36
       env:
