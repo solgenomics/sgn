@@ -1,0 +1,66 @@
+on:
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+
+jobs:
+  test_breedbase:
+    runs-on: ubuntu-latest
+    container:
+      image: breedbase/breedbase:v0.36
+      env:
+        HOME: /root
+        MODE: 'TESTING'
+        PGPASSWORD: postgres
+        SGN_TEST_SERVER: http://test_breedbase:3010
+        SGN_REMOTE_SERVER_ADDR: selenium
+      volumes:
+        - ${{ github.workspace }}:/home/production/cxgn/sgn
+        - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+      options: --network-alias test_breedbase
+
+    services:
+      breedbase_db:
+        image: postgres:12.9
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      selenium:
+        image: selenium/standalone-firefox:3.141.59
+        options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
+
+    steps:
+      - name: Checkout sgn
+        uses: actions/checkout@v2
+    
+      - name: Run unit tests
+        run: prove --recurse t/unit 2>/dev/null
+      
+      - name: Load/dump fixture database and build node modules
+        run: |
+          echo "--version" > ~/.proverc
+          perl t/test_fixture.pl --dumpupdatedfixture
+          rm ~/.proverc
+        # work around run_all_patches.pl "what the heck - no TTY??" error
+        # https://github.com/actions/runner/issues/241#issuecomment-842566950
+        shell: 'script --flush --quiet --return --command "bash --noprofile --norc -eo pipefail {0}"'
+
+      - name: Run unit_fixture tests
+        # need entrypoint.sh to start slurm
+        # --nopatch to skip running fixture and db patches (already done in previous step)
+        run: /entrypoint.sh --nopatch t/unit_fixture 2>/dev/null
+
+      - name: Run unit_mech tests
+        run: /entrypoint.sh --nopatch t/unit_mech 2>/dev/null
+#
+#      - name: Run selenium tests
+#        # Run selenium tests even if unit_mech tests fail for now
+#        if: always()
+#        run: /entrypoint.sh --nopatch t/selenium2 2>/dev/null
