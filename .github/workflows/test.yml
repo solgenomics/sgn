@@ -70,10 +70,13 @@ jobs:
       options: --network-alias test_breedbase
 
     services:
-      breedbase_db:
+      breedbase_db11:
         image: postgres:12.9
+        ports:
+          - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: db
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
