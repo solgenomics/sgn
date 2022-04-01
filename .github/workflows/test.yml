@@ -54,6 +54,7 @@ jobs:
           docker build . --file Dockerfile --tag ${{steps.vars.outputs.imageName}}
           
   test_breedbase:
+    if: false #disabled for now, as testing script is broken
     runs-on: ubuntu-latest
     needs: [test_docker_build]
     container:
