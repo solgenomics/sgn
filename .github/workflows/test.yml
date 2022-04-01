@@ -31,15 +31,20 @@ jobs:
       - name: Get the submodules
         working-directory: ./breedbase_dockerfile
         run: git submodule update --init --recursive --remote
-
-      - name: Extract branch name
+        
+      - name: Get branch name (merge)
+        if: github.event_name != 'pull_request'
         shell: bash
-        run: echo ::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/})
-        id: extract_branch
+        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+
+      - name: Get branch name (pull request)
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: echo "branch=$(echo ${GITHUB_HEAD_REF})" >> $GITHUB_ENV
 
       - name: Checkout sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
-        run: git switch ${{steps.extract_branch.outputs.branch}}
+        run: git switch ${{env.branch}}
 
       - name: Debug sgn branch
         working-directory: ./breedbase_dockerfile/cxgn/sgn
@@ -47,12 +52,12 @@ jobs:
 
       - name: Set tag
         id: vars
-        run: echo ::set-output name=imageName::$(echo breedinginsight/breedbase:test_build)
+        run: echo "imageName=$(echo breedinginsight/breedbase:test_build)" >> $GITHUB_ENV
         
       - name: Build Docker image
         working-directory: ./breedbase_dockerfile
         run: |
-          docker build . --file Dockerfile --tag ${{steps.vars.outputs.imageName}}
+          docker build . --file Dockerfile --tag ${{env.imageName}}
           
   test_breedbase:
     if: false #disabled for now, as testing script is broken
