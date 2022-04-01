@@ -5,6 +5,7 @@ on:
     paths-ignore:
       - 'docs/**'
       - '**.md'
+    types: [opened, edited]
   workflow_dispatch:
 
 jobs:
