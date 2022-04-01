@@ -369,7 +369,8 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     my $selection_pop_name = $c->req->param('selection_pop_name');
     my $trait_id           = $c->req->param('trait_id');
     my $protocol_id        = $c->req->param('genotyping_protocol_id');
-
+    my $sel_pop_protocol_id= $c->req->param('selection_pop_genotyping_protocol_id');
+    $sel_ppop_protocol_id = $protocol_id if !$selection_pop_genotyping_protocol_id;
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 	$c->stash->{trait_id} = $trait_id;
 
@@ -395,33 +396,32 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 	    my $has_genotype;
     	if ($selection_pop_id)
     	{
-    	    $has_genotype = $self->check_population_has_genotype($c, $selection_pop_id, $protocol_id);
+    	    $has_genotype = $self->check_population_has_genotype($c, $selection_pop_id, $sel_pop_protocol_id);
     	}
 
     	if ($has_genotype)
     	{
-	    # $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
-	    # my $selection_geno_file = $c->stash->{genotype_file_name};
-        #
-	    # if (!-s $selection_geno_file)
-	    # {
-		# 	# $c->controller('solGS::solGS')->first_stock_genotype_data($c, $selection_pop_id, $protocol_id);
-        #
-		# 	$c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $protocol_id);
-		# 	$selection_geno_file = $c->stash->{first_stock_genotype_file};
-	    # }
+	        $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
+	        my $selection_geno_file = $c->stash->{genotype_file_name};
+        
+            if (!-s $selection_geno_file)
+            {
+                $c->controller('solGS::solGS')->first_stock_genotype_data($c, $selection_pop_id, $protocol_id);
+                $c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $sel_pop_protocol_id);
+                $selection_geno_file = $c->stash->{first_stock_genotype_file};
+            }
 
-	    # $c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $protocol_id);
-	    # my $selection_geno_file = $c->stash->{first_stock_genotype_file};
+            # $c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $protocol_id);
+            # my $selection_geno_file = $c->stash->{first_stock_genotype_file};
 
-	    # $c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
-	    # my $training_geno_file = $c->stash->{genotype_file_name};
+            $c->controller('solGS::Files')->genotype_file_name($c, $training_pop_id, $protocol_id);
+            my $training_geno_file = $c->stash->{genotype_file_name};
 
-	    $similarity = 1;  #$self->compare_marker_set_similarity([$selection_geno_file, $training_geno_file]);
+            $similarity = $self->compare_marker_set_similarity([$selection_geno_file, $training_geno_file]);
 	   }
 
     	my $selection_pop_data;
-    	unless ($similarity < 0.5 )
+    	if ($similarity > 0.5 )
     	{
     	    $c->stash->{training_pop_id} = $training_pop_id;
     	    $self->format_selection_pops($c, [$selection_pop_id]);
