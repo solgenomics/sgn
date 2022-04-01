@@ -65,7 +65,7 @@ is_deeply($response, {
           'metadata' => {
                           'status' => [
                                         {
-                                          'messageType' => '400',
+                                          'messageType' => 'ERROR',
                                           'message' => 'You must login and have permission to access this BrAPI call.'
                                         }
                                       ],
@@ -129,7 +129,7 @@ is_deeply($response, {
                                               'observationTimeStamp' => '2015-06-16T00:53:26Z',
                                               'germplasmName' => 'test_accession3',
                                               'observationUnitName' => 'test_trial210',
-                                              'uploadedBy' => 41,
+                                              'uploadedBy' => 'collector1',
                                               'collector' => 'collector1',
                                               'germplasmDbId' => 38842,
                                               'observationUnitDbId' => 38866,
@@ -143,7 +143,7 @@ is_deeply($response, {
                                               'observationTimeStamp' => '2015-06-16T00:53:26Z',
                                               'germplasmName' => 'test_accession4',
                                               'observationUnitName' => 'test_trial214',
-                                              'uploadedBy' => 41,
+                                              'uploadedBy' => 'collector1',
                                               'collector' => 'collector1',
                                               'germplasmDbId' => 38843,
                                               'observationUnitDbId' => 38870,
@@ -179,7 +179,7 @@ is_deeply($response, {
                                         },
                                         {
                                           'messageType' => 'INFO',
-                                          'message' => 'All values in your file are now saved in the database!'
+                                          'message' => 'All values in your file have been successfully processed!<br><br>2 new values stored<br>0 previously stored values skipped<br>0 previously stored values overwritten<br><br>'
                                         }
                                       ],
                           'pagination' => {

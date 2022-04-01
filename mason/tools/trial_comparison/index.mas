@@ -105,10 +105,11 @@
           auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
           if (!auth_token){ alert("Login required to display graphical filtering"); }
       } 
-      BrAPI("/brapi/v1",'v1.3',auth_token)
-        .phenotypes_search({
+      BrAPI("/brapi/v2",'v2.0',auth_token)
+        .search_observationunits({
             "studyDbIds" : ids,
-            "observationLevel" : $('#unit_select').val(),
+            "observationLevels": [{'levelName': $('#unit_select').val() }],
+            "includeObservations" : "true",
             "pageSize" : 10000000})
         .all(createSComp);
       $('#unit_select').change(call_change);

@@ -47,6 +47,8 @@ use JSON::XS;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreederSearch;
 use YAML;
+use CXGN::TrialStatus;
+use CXGN::Calendar;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -160,6 +162,13 @@ sub generate_experimental_design_POST : Args(0) {
         }
     }
 
+    if ($design_type eq 'RRC'){
+        if (!$fieldmap_row_number){
+            $c->stash->{rest} = { error => "You need to provide number of rows for a resolvable row-column design."};
+            return;
+        }
+    }
+
     my $row_in_design_number = $c->req->param('row_in_design_number');
     my $col_in_design_number = $c->req->param('col_in_design_number');
     my $no_of_rep_times = $c->req->param('no_of_rep_times');
@@ -184,7 +193,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $use_same_layout = $c->req->param('use_same_layout');
     my $number_of_checks = scalar(@control_names_crbd);
 
-    if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
+    if ($design_type eq "RCBD" || $design_type eq "RRC" || $design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
         if (@control_names_crbd) {
             @stock_names = (@stock_names, @control_names_crbd);
         }
@@ -272,6 +281,15 @@ sub generate_experimental_design_POST : Args(0) {
         #strip name of any invalid filename characters
         $trial_name =~ s/[\\\/\s:,"*?<>|]+//;
         $trial_design->set_trial_name($trial_name);
+
+        my $dir = $c->tempfiles_subdir('trial_designs');
+        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"trial_designs/$design_type-XXXXX");
+        my $design_tempfile = $c->config->{basepath}.$filename;
+        # my $design_tempfile = "".$filename;
+        $trial_design->set_tempfile($design_tempfile);
+        $trial_design->set_backend($c->config->{backend});
+        $trial_design->set_submit_host($c->config->{cluster_host});
+        $trial_design->set_temp_base($c->config->{cluster_shared_tempdir});
 
         my $design_created = 0;
         if ($use_same_layout) {
@@ -648,9 +666,31 @@ sub save_experimental_design_POST : Args(0) {
             }
         }
     }
-    
+
+    if ($save->{'trial_id'}) {
+        my $trial_id = $save->{'trial_id'};
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd();
+        my $calendar_funcs = CXGN::Calendar->new({});
+        my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+        my $create_date = $calendar_funcs->display_start_date($formatted_date);
+
+        my %trial_activity;
+        $trial_activity{'Trial Created'}{'user_id'} = $user_id;
+        $trial_activity{'Trial Created'}{'activity_date'} = $create_date;
+
+        my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+        $trial_activity_obj->trial_activities(\%trial_activity);
+        $trial_activity_obj->parent_id($trial_id);
+        my $activity_prop_id = $trial_activity_obj->store();
+        if (!$activity_prop_id) {
+            $c->stash->{rest} = {error => "Error saving trial activity info" };
+            return;
+        }
+    }
+
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'all_but_genoview', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = {success => "1", trial_id => $save->{'trial_id'}};
     return;
@@ -1020,6 +1060,23 @@ sub upload_trial_file_POST : Args(0) {
         $save->{'error'} = $_;
     };
 
+    if ($save->{'trial_id'}) {
+        my $trial_id = $save->{'trial_id'};
+        my $timestamp = $time->ymd();
+        my $calendar_funcs = CXGN::Calendar->new({});
+        my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+        my $upload_date = $calendar_funcs->display_start_date($formatted_date);
+
+        my %trial_activity;
+        $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
+        $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
+
+        my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
+        $trial_activity_obj->trial_activities(\%trial_activity);
+        $trial_activity_obj->parent_id($trial_id);
+        my $activity_prop_id = $trial_activity_obj->store();
+    }
+
     #print STDERR "Check 5: ".localtime()."\n";
     if ($save->{'error'}) {
         print STDERR "Error saving trial: ".$save->{'error'};
@@ -1029,7 +1086,7 @@ sub upload_trial_file_POST : Args(0) {
 
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'all_but_genoview', 'concurrent', $c->config->{basepath});
 
         $c->stash->{rest} = {warnings => $return_warnings, success => "1", trial_id => $save->{'trial_id'}};
         return;
@@ -1195,6 +1252,21 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         if ($current_save->{error}){
             $chado_schema->txn_rollback();
             push @{$save{'errors'}}, $current_save->{'error'};
+        } elsif ($current_save->{'trial_id'}) {
+            my $trial_id = $current_save->{'trial_id'};
+            my $timestamp = $time->ymd();
+            my $calendar_funcs = CXGN::Calendar->new({});
+            my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+            my $upload_date = $calendar_funcs->display_start_date($formatted_date);
+
+            my %trial_activity;
+            $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
+            $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
+
+            my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
+            $trial_activity_obj->trial_activities(\%trial_activity);
+            $trial_activity_obj->parent_id($trial_id);
+            my $activity_prop_id = $trial_activity_obj->store();
         }
       }
 
@@ -1216,8 +1288,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     } else {
         my $dbh = $c->dbc->dbh();
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-        $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-        $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'all_but_genoview', 'concurrent', $c->config->{basepath});
+
         $c->stash->{rest} = {success => "1",};
         return;
     }

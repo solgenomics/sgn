@@ -260,6 +260,21 @@ sub get_query {
     $sth->execute();
     while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $db_url, $dbxref_id, $accession, $synonym, $obsolete, $additional_info_string, $count) = $sth->fetchrow_array()) {
         $total_count = $count;
+        foreach (@$synonym){
+            $_ =~ s/ EXACT \[\]//;
+            $_ =~ s/\"//g;
+        }
+
+        my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
+        my $categories = $trait->categories;
+        my @categories = split '/', $categories;
+        my @brapi_categories;
+        foreach (@categories) {
+            push @brapi_categories, {
+                label => $_,
+                value => $_
+            };
+        }
 
         # Get the external references
         my @references_cvterms = ($cvterm_id);
@@ -504,7 +519,15 @@ sub _construct_variable_response {
     my $variable = shift;
 
     my $external_references_json;
-    if (defined($variable->external_references)) { $external_references_json = $variable->external_references->search()->{$variable->cvterm_id};}
+    if (defined($variable->external_references)) {
+        $external_references_json = $variable->external_references->search()->{$variable->cvterm_id};
+
+        # TODO figure out how to integrate this with external references stored in the db
+        # push @external_references_json, {
+        #     referenceID => "http://www.cropontology.org/terms/".$db_name.":".$accession . "/",
+        #     referenceSource => "Crop Ontology"
+        # };
+    }
     my $method_json;
     if (defined($variable->method)) { $method_json = $variable->method->method_db();}
     my $scale_json;
@@ -536,6 +559,7 @@ sub _construct_variable_response {
         submissionTimestamp => undef,
         synonyms => @synonyms,
         trait => {
+            additionalInfo => {},
             alternativeAbbreviations => undef,
             attribute => $variable->attribute ? $variable->attribute : undef,
             entity => $variable->entity ? $variable->entity : undef,

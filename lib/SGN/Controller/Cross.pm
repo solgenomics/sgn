@@ -128,12 +128,12 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 
 #     $c->stash(
 #	       tempfile => $tempfile,
-#	       template => '/breeders_toolbox/upload_crosses_confirm_spreadsheet.mas',
+#	       template => '/breeders_toolbox/cross/upload_crosses_confirm_spreadsheet.mas',
 #	      );
    } elsif ($format_type eq "barcode") {
 #     $c->stash(
 #	       tempfile => $tempfile,
-#	       template => '/breeders_toolbox/upload_crosses_confirm_barcode.mas',
+#	       template => '/breeders_toolbox/cross/upload_crosses_confirm_barcode.mas',
 #	      );
    }
    else {
@@ -147,7 +147,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	       file_name => $basename,
 	       header_error => $header_error,
 	       line_errors_ref => \%line_errors,
-	       template => '/breeders_toolbox/upload_crosses_file_error.mas',
+	       template => '/breeders_toolbox/cross/upload_crosses_file_error.mas',
 	       );
      #print STDERR "there are errors in the upload file\n$line_errors_string";
    }
@@ -193,7 +193,7 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
 	       number_of_crosses_added => $number_of_crosses_added,
 	       number_of_unique_parents => $number_of_unique_parents,
 	       upload_data_ref => \%upload_data,
-	       template => '/breeders_toolbox/upload_crosses_confirm_spreadsheet.mas',
+	       template => '/breeders_toolbox/cross/upload_crosses_confirm_spreadsheet.mas',
 	      );
    }
 
@@ -632,25 +632,41 @@ sub family_name_detail : Path('/family') Args(1) {
     my $self = shift;
     my $c = shift;
     my $id = shift;
-    my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'family_name', 'stock_type')->cvterm_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $family_stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_type', 'stock_property')->cvterm_id();
 
     #get family_name from stock id
-    my $family = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->search( { stock_id => $id, type_id => $family_type_id } )->first();
+    my $family = $schema->resultset("Stock::Stock")->find( { stock_id => $id, type_id => $family_stock_type_id } );
 
     my $family_id;
     my $family_name;
+    my $family_type;
+    my $family_type_string;
 	if (!$family) {
     	$c->stash->{template} = '/generic_message.mas';
     	$c->stash->{message} = 'The requested family name does not exist.';
     	return;
     } else {
         $family_id = $family->stock_id();
-		$family_name = $family->uniquename();
+        $family_name = $family->uniquename();
+        my $family_prop = $schema->resultset("Stock::Stockprop")->find({ stock_id => $family_id, type_id => $family_type_id});
+
+        if ($family_prop){
+            $family_type = $family_prop->value();
+            if ($family_type eq 'same_parents'){
+                $family_type_string = 'This family includes only crosses having the same female parent and the same male parent';
+            } elsif ($family_type eq 'reciprocal_parents'){
+                $family_type_string = 'This family includes reciprocal crosses';
+            }
+        }
     }
 
     $c->stash->{family_name} = $family_name;
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{family_id} = $family_id;
+    $c->stash->{family_type} = $family_type;
+    $c->stash->{family_type_string} = $family_type_string;
     $c->stash->{template} = '/breeders_toolbox/cross/family.mas';
 
 }

@@ -1,0 +1,20 @@
+<%args>
+$file_name => undef
+$header_error => undef
+$line_errors_ref => undef
+</%args>
+
+<table>
+<%perl>
+my %line_errors = %{$line_errors_ref};
+my $line_errors_string;
+foreach my $line_key (keys %line_errors) {
+    $line_errors_string .= "<tr><td>".$line_errors{$line_key}."</td></tr>";
+}
+print "<tr><td><b>Error in upload file: $file_name</b></td></tr>";
+if ($header_error) {
+  print "<tr><td>$header_error</td></tr>";
+}
+print "<tr><td><b>Errors were found in the following lines:</b></td></tr>".$line_errors_string."\n";
+</%perl>
+</table>

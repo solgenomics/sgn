@@ -3,7 +3,20 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.cookie', 'thickbox', 'CXGN.BreedersToolbox.HTMLSelect'] &>
+<& /util/import_javascript.mas,
+  classes => ['jquery.dataTables-buttons-min',
+      'jquery.iframe-post-form',
+      'jszip-min', 'pdfmake.pdfmake-min',
+      'pdfmake.vfs_fonts',
+      'buttons.bootstrap-min',
+      'buttons.html5-min',
+      'jquery',
+      'jquery.cookie',
+      'thickbox',
+      'CXGN.BreedersToolbox.HTMLSelect',
+      'd3.d3v4Min'
+  ]
+&>
 
 <style>
 td.details-control {
@@ -14,6 +27,11 @@ td.details-control {
 tr.shown td.details-control {
     text-align:center;
     color:red;
+}
+
+.bar {
+  fill: steelblue;
+  shape-rendering: crispEdges;
 }
 </style>
 
@@ -30,10 +48,10 @@ tr.shown td.details-control {
 
 <div class="well well-sm">
     <center>
-    <button class="btn btn-primary" id="upload_spreadsheet_phenotypes_link">Upload New Phenotypes and Associated Images</button>
+    <button class="btn btn-primary" id="upload_images_link">Upload New Images</button>
     </center>
 </div>
-<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
+<& /breeders_toolbox/upload_images.mas &>
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
 
 <&| /page/info_section.mas, title=>"Image Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "All images may not have names, descriptions, or tags associated with them."&>
@@ -152,6 +170,31 @@ tr.shown td.details-control {
         </div>
     </div>
 
+    <br/><br/>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="form-group">
+                    <div class="col-sm-9">
+                    <label class="col-sm-6 control-label">Image Analysis Usage </label>
+                    </div>
+                    <div class="col-sm-3" >
+                        <label class="control-label">Date Range: </label>
+                        <select class="form-control" id="usage_range_select" name="usage_range_select">
+                            <option value="all">All Dates</option>
+                            <option value="year">Latest Year</option>
+                            <option value="month">Latest Month</option>
+                            <option value="week">Latest Week</option>
+                        </select>
+                    </div>
+                </div>
+                <br/>
+                <div class="form-group" id="image_analysis_usage">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="saveResultModal" tabindex="-1" role="dialog" aria-labelledby="saveResultModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -185,11 +228,12 @@ var service_traits = {
 
 jQuery(document).ready(function(){
 
-    var values_hash;
-
     get_select_box('trials', 'image_analysis_trial_select', { 'name' : 'html_image_analysis_trial_select', 'id' : 'html_image_analysis_trial_select', 'multiple':0, 'size':10, 'trial_name_values':1 });
 
     _load_image_search_results();
+
+    var date_range = jQuery('#usage_range_select').val();
+    _load_analysis_activity_graph(date_range);
 
     jQuery('#image_search_submit').click(function(){
         if (jQuery('#html_image_analysis_trial_select').val() == '') {
@@ -484,6 +528,109 @@ function _load_image_search_results() {
               d.image_project_name = jQuery('#html_image_analysis_trial_select').val();
             }
         }
+    });
+}
+
+function _load_analysis_activity_graph(date_range) {
+
+    d3.json('/ajax/image_analysis/activity', function(error, response) {
+
+        var activity = JSON.parse(response.activity);
+        // console.log("Activity array is: ");
+        // console.log(activity);
+
+        // Iterate through each data point and parse date strings into dates
+        var parseTime = d3.timeParse("%Y-%m-%d");
+        var data = [];
+
+        jQuery.each(activity, function (index, element) {
+            data.push({
+                'date': parseTime(element.date)
+            })
+        });
+
+        // Set canvas margins
+        var margin = {top: 20, right: 50, bottom: 30, left: 50};
+        var width = 800 - margin.left - margin.right;
+        var height = 500 - margin.top - margin.bottom;
+
+        // Create svg object
+        var svg = d3.select('#image_analysis_usage').append('svg')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append('g')
+            .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+        // Set x (timeseries) and y (linear) scales
+        var xScale = d3.scaleTime().range([0, width]);
+        var yScale = d3.scaleLinear().range([height, 0]);
+
+       var dayExtent = d3.extent(data, function (d) { return d.date; });
+
+       console.log("day extent is "+dayExtent);
+
+       // Create one bin per day, use an offset to include the first and last days
+       var dayBins = d3.timeDays(d3.timeDay.offset(dayExtent[0],-1),
+                                 d3.timeDay.offset(dayExtent[1], 1));
+
+       var x = d3.scaleTime()
+           .domain(dayExtent)
+           .rangeRound([0, width]);
+
+       // Scale the range of the data in the y domain
+       var y = d3.scaleLinear()
+                  .range([height, 0]);
+
+       var xAxis = d3.axisBottom(x)
+                      .tickArguments([d3.timeDay.every(1)])
+                      .tickFormat(d3.timeFormat('%d-%b'))
+                      .ticks(10);
+
+       // Set the parameters for the histogram
+       var histogram = d3.histogram()
+                          .value(function(d) { return d.date; })
+                          .domain(x.domain())
+                          .thresholds(x.ticks(dayBins.length));
+
+
+       // Group the data for the bars
+       var bins = histogram(data);
+
+       y.domain([0, d3.max(bins, function(d) { return d.length; })]);
+
+       var hist = svg.selectAll("rect")
+            .data(bins)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", 1)
+            .attr("transform", function(d) {
+               return "translate(" + x(d.x0) + "," + y(d.length) + ")";
+            })
+            .attr("width", function(d) {
+               return x(d.x1) - x(d.x0) -1 ;
+            })
+            .attr("height", function(d) {
+               return height - y(d.length);
+            });
+
+       // Add the x axis
+       svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+
+       // Add the y axis
+       svg.append("g")
+            // .call(d3.axisLeft(y).ticks(d3.max(bins, function(d) { return d.length; })))
+            .call(d3.axisLeft(y).ticks(15))
+            .append("text")
+            .attr("fill", "#000")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left)
+            .attr("x",0 - (height / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .text("Number of Images Analyzed");
+
     });
 }
 

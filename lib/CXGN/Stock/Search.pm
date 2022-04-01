@@ -447,8 +447,8 @@ sub search {
                 my $start = '%';
                 my $end = '%';
                 if ( $matchtype eq 'exactly' ) {
-                    $start = '';
-                    $end = '';
+                    $start = '%"';
+                    $end = '"%';
                 } elsif ( $matchtype eq 'starts_with' ) {
                     $start = '';
                 } elsif ( $matchtype eq 'ends_with' ) {

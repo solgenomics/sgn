@@ -13,7 +13,7 @@ use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
-use CXGN::BrAPI::TimeUtils;
+use CXGN::TimeUtils;
 use JSON;
 
 extends 'CXGN::BrAPI::v1::Common';
@@ -677,7 +677,7 @@ sub observation_units {
             push @brapi_observations, {
 				collector => $_->{operator},
                 observationDbId => qq|$_->{phenotype_id}|,
-				observationTimestamp => CXGN::BrAPI::TimeUtils::db_time_to_iso($obs_timestamp),
+				observationTimestamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
                 observationVariableDbId => qq|$_->{trait_id}|,
                 observationVariableName => $_->{trait_name},
                 season => {
@@ -857,7 +857,7 @@ sub observation_units_granular {
                 observationLevel => $d->{observationunit_type_name},
                 observationVariableDbId => $o->{trait_id},
                 observationVariableName => $o->{trait_name},
-                observationTimestamp => CXGN::BrAPI::TimeUtils::db_time_to_iso($obs_timestamp),
+                observationTimestamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
                 uploadedBy => $o->{operator},
                 operator => $o->{operator},
                 germplasmDbId => $d->{germplasm_stock_id},

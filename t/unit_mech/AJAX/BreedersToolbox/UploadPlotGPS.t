@@ -45,4 +45,5 @@ my $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
 
+$f->clean_up_db();
 done_testing();

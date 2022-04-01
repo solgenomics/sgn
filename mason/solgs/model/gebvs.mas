@@ -20,14 +20,14 @@ $blups_download_url
 
 <& /util/import_javascript.mas, classes => [  "solGS.gebvs", "solGS.histogram"] &>
 
-<&| /page/info_section.mas,
+<&|  /page/info_section.mas,
   collapsible => 1,
   collapsed   => 0,
-  title       => "Genomic estimated breeding values (GEBVs) - GBLUP method"
+  title     => "Genomic estimated breeding values (GEBVs) - GBLUP method"
 &>
 
 <div id="gebvs">
-    <div id="gebvs_histo_canvas">
+    <div id="gebvs_histo_canvas"></div>
 </div>
 <br/>
 <br/>
@@ -37,5 +37,3 @@ $blups_download_url
 	&>
 
 </&>
-
-</div>

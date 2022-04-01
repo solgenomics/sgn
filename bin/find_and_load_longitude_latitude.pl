@@ -70,7 +70,7 @@ my $program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema, 
 my $project_location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "project location", "project_property")->cvterm_id();
 
 my $project_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
-my $all_locations = decode_json $project_object->get_location_geojson();
+my $all_locations = $project_object->get_location_geojson_data();
 
 foreach my $location_hash (@$all_locations) {
 

@@ -1,0 +1,204 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<div class="modal fade" id="intercross_parents_download_dialog" name="intercross_parents_download_dialog" tabindex="-1" role="dialog" aria-labelledby="intercrossParentsDownloaddialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossParentsDownloaddialog">Download Intercross Parents File</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <&| /page/explanation.mas, title=>'File Information' &>
+                                <p>
+                                    <b>File Information</b>
+                                    <br>
+                                    <a id="intercross_parents_file_info">Intercross Parents</a>
+                                    <br>
+                                </p>
+                            </&>
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">Female parents:</label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="female_parents_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">Male parents:</label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="male_parents_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="download_intercross_parents_submit" type="button" class="btn btn-primary" >Download</button>
+                <input type="hidden" id="intercross_parents_download_token" name="intercross_parents_download_token"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="intercross_parents_download_message" name="intercross_parents_download_message" tabindex="-1" role="dialog" aria-labelledby="intercrossParentsDownloadMessage">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossParentsDownloadMessage">Intercross Parents File Created</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The Intercross parents file was created successfully.
+                    </p>
+                    <p>
+                        <a id="intercross_parents_download_link">Download Intercross Parents</a>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="intercross_parents_download_close_button" id="intercross_parents_download_close_button" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="intercross_parents_file_info_dialog" name="intercross_parents_file_info_dialog" tabindex="-1" role="dialog" aria-labelledby="intercrossParentsFileInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="intercrossParentsFileInfoDialog">Intercross Parents</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Names in the list must be uniquenames.
+                    </b>
+                    <br>
+                        Intercross Parents file is a CSV file (.csv).
+                    <br>
+                        The file can be used directly with Intercross app.
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) contains the following:
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>codeId</td>
+                                <td>sex</td>
+                                <td>name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Column Information:
+                    </b>
+                    <ul>
+                        <li><b>codeId:</b> stock_ids in the database.</li>
+                        <li><b>sex:</b> 0 (female), 1 (male)</li>
+                        <li><b>name:</b> uniquenames in the database.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var crossing_experiment_id = "<% $trial_id %>";
+    var lo = new CXGN.List();
+
+    jQuery('#female_parents_list_select').html(lo.listSelect('female_parents_list_select', ['accessions'], 'Select a list of female parents', undefined, undefined));
+    jQuery('#male_parents_list_select').html(lo.listSelect('male_parents_list_select', ['accessions'], 'Select a list of male parents', undefined, undefined));
+
+    jQuery('#download_intercross_parents').click(function(){
+        jQuery('#intercross_parents_download_dialog').modal("show");
+    });
+
+    jQuery("#intercross_parents_file_info").click(function(){
+        jQuery("#intercross_parents_file_info_dialog").modal("show");
+    });
+
+    jQuery('#download_intercross_parents_submit').click(function(){
+
+        var female_list_id = jQuery('#female_parents_list_select').val();
+        var male_list_id = jQuery('#male_parents_list_select').val();
+
+        if (!female_list_id) {
+            alert("Please choose a list of female parents");
+            return;
+        }
+
+        if (!male_list_id) {
+            alert("Please choose a list of male parents");
+            return;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/intercross/create_parents_file',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'female_list_id': female_list_id,
+                'male_list_id': male_list_id,
+                'crossing_experiment_id': crossing_experiment_id
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery('#intercross_parents_download_link').attr('href', "/fieldbook/trait_file_download/" + response.file_id);
+                    jQuery("#intercross_parents_download_message").modal("show");
+                    jQuery('#intercross_parents_download_dialog').modal("hide");
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred creating the parents file.');
+                jQuery('#intercross_parents_download_dialog').modal("hide");
+            },
+        });
+    });
+
+    jQuery("#intercross_parents_download_close_button").click(function(){
+        location.reload();
+    });
+
+
+});
+
+
+</script>

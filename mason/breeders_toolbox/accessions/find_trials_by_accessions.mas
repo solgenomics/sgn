@@ -82,7 +82,7 @@ jQuery('#shared_trials_2_lists').hide();
 	var accession_list_id = jQuery('#accession_list_list_select').val();
 
       	var accession_validation = 1;
-      	if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
+      	if (accession_list_id) { accession_validation = lo.legacy_validate(accession_list_id, 'accessions', true); }
 
 	if (!accession_list_id) {
       	    enable_ui();
