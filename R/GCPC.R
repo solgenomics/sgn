@@ -192,6 +192,7 @@ G <- G[,colSums(is.na(G))<nrow(G)]
 # 4. Get the genetic predictors needed.
 ################################################################################
 
+write("GENETIC PREDICTIONS...", stderr())
 # 4a. Get the inbreeding coefficent, f, as described by Xiang et al., 2016
 # The following constructs f as the average heterozygosity of the individual
 # The coefficient of f estimated later then needs to be divided by the number of markers
@@ -209,7 +210,7 @@ f <- rowSums(GC, na.rm = TRUE) / apply(GC, 1, function(x) sum(!is.na(x)))
 # f <- rowSums(D, na.rm = TRUE)
 
 
-
+write("DISTANCE MATRIX...", stderr())
 # 4b. Get the additive and dominance relationship matrices. This uses AGHmatrix.
 
 A <- Gmatrix(G, method = "VanRaden", ploidy = userPloidy, missingValue = NA)
@@ -218,6 +219,8 @@ if(userPloidy == 2){
   D <- Gmatrix(G, method = "Su", ploidy = userPloidy, missingValue = NA)
 }
 
+
+write("PLOIDY...", stderr())
 # I haven't tested this yet
 if(userPloidy > 2){
   D <- Gmatrix(G, method = "Slater", ploidy = userPloidy, missingValue = NA)
@@ -453,26 +456,43 @@ write("Done with calcCrossMean!!!!!!", stderr())
 
 # Add option to remove crosses with incompatible sexes.
 
-if(!is.na(userSexes)){
+
+#hash <- new.env(hash = TRUE, parent = emptyenv(), size = 100L)
+
+#assign_hash(userPheno$germplasmName, userPheno$userSexes, hash)
+
+if(!is.na(userSexes)){  # "plant sex estimation 0-4"
+
+
+  write(paste("userSexes", head(userSexes)), stderr())
 
   # Reformat the cross plan
   crossPlan <- as.data.frame(crossPlan)
 
+  write(paste("CROSSPLAN = ", head(crossPlan)), stderr())
   crossPlan <- crossPlan[order(crossPlan[,3], decreasing = TRUE), ] # orders the plan by predicted merit
   crossPlan[ ,1] <- rownames(GP)[crossPlan[ ,1]] # replaces internal ID with genotye file ID
   crossPlan[ ,2] <- rownames(GP)[crossPlan[ ,2]] # replaces internal ID with genotye file ID
   colnames(crossPlan) <- c("Parent1", "Parent2", "CrossPredictedMerit")
 
+  write(paste("CROSSPLAN REPLACED = ", head(crossPlan)), stderr());	
+
   # Look up the parent sexes and subset
-  crossPlan$P1Sex <- userPheno[match(crossPlan$Parent1, userPheno$Accession), userSexes] # get sexes ordered by Parent1
-  crossPlan$P2Sex <- userPheno[match(crossPlan$Parent2, userPheno$Accession), userSexes] # get sexes ordered by Parent2
+  crossPlan$P1Sex <- userPheno[match(crossPlan$Parent1, userPheno$germplasmName), userSexes] # get sexes ordered by Parent1
+
+  write(paste("PARENTS1 ", head(crossPlan)), stderr())
+
+  crossPlan$P2Sex <- userPheno[match(crossPlan$Parent2, userPheno$germplasmName), userSexes] # get sexes ordered by Parent2
+
+  write(paste("PARENTS2 ", head(crossPlan)), stderr())		      
+  
   crossPlan <- crossPlan[!(crossPlan$P1Sex==0 | crossPlan$P2Sex==0),] #remove the 0s 
   crossPlan <- crossPlan[!(crossPlan$P1Sex==1 & crossPlan$P2Sex==1),] #remove same sex crosses with score of 1
   crossPlan <- crossPlan[!(crossPlan$P1Sex==2 & crossPlan$P2Sex==2),] #remove same sex crosses with score of 2
 
+  write(paste("CROSSPLAN FILTERED = ", head(crossPlan)), stderr())      
   #crossPlan <- crossPlan[crossPlan$P1Sex != crossPlan$P2Sex, ] # remove crosses with same-sex parents
-
-
+  
   # subset the number of crosses the user wishes to output
   crossPlan[1:userNCrosses, ]
   finalcrosses=crossPlan[1:userNCrosses, ]

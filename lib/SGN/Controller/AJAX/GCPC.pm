@@ -144,7 +144,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     # check if the plant_sex_variable_name is set in sgn_local.conf
     # and get the trait_ontolog_db_name as well as its associated cv.name.
-    # get the cvterm_id for the trait and add it to the dataset if it isn't already there.
+    # retrieve .
     # 
     my $plant_sex_variable_name = $c->config->{plant_sex_variable_name};
     my @cv_names = SGN::Model::Cvterm->get_cv_names_from_db_name($schema, $c->config->{trait_ontology_db_name});
@@ -156,6 +156,8 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     if (@cv_names) { 
 	$plant_sex_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plant_sex_variable_name, $cv_names[0])->cvterm_id();
     }
+
+    my $accession_sex_scores;
     
     if ($plant_sex_variable_name && $plant_sex_cvterm_id) {
 	my $accessions = $ds->accessions();
@@ -163,15 +165,12 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 	print STDERR "ACCESSIONS: ".Dumper($accessions);
 
 	my @accession_ids = map { $_->[0] } @$accessions;
-	$self->get_trait_for_accessions($c, $plant_sex_cvterm_id, \@accession_ids);
+	$accession_sex_scores = $self->get_trait_for_accessions($c, $plant_sex_cvterm_id, \@accession_ids);
 	$plant_sex_variable_name_R = make_R_trait_name($plant_sex_variable_name);
     }
     else {
 	print STDERR "NOT RETRIEVING sEX DATA with $plant_sex_variable_name, $plant_sex_cvterm_id\n";
     }
-
-
-
     
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
@@ -188,6 +187,11 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 
     my @file_traits = @fields[ 39 .. @fields-1 ];
     my @other_headers = @fields[ 0 .. 38 ];
+
+    if ($plant_sex_cvterm_id) {
+	print STDERR "Adding $plant_sex_variable_name to the file trait list...\n";
+	push @file_traits, $plant_sex_variable_name;
+    }
     
     print STDERR "FIELDS: ".Dumper(\@file_traits);
 
@@ -196,11 +200,25 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     }
 
     print STDERR "FILE TRAITS: ".Dumper(\@file_traits);
-    
-    print $CLEAN join("\t", @other_headers, @file_traits)."\n";
 
+    my @new_header = (@other_headers, @file_traits);
+    print $CLEAN join("\t", @new_header)."\n";
+
+    my $last_index = scalar(@new_header)-1;
+    
     while(<$PF>) {
-	print $CLEAN $_;
+	chomp;
+	my @f = split /\t/;
+
+	# add a column with the plant sex score if the cvterm is defined
+	#
+	if ($plant_sex_cvterm_id) {
+	    my $acc = $f[18];
+	    print STDERR "ACCESSION = $acc has score $accession_sex_scores->{$acc}\n";
+
+	    if (defined($accession_sex_scores->{$acc})) { $f[$last_index]= $accession_sex_scores->{$acc}; }
+	}
+	print $CLEAN join("\t", @f)."\n";
     }
 
     close($CLEAN);
@@ -211,6 +229,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     my %file_traits_hash = ();
     foreach my $ft (@file_traits) {
 	$file_traits_hash{$ft}++;
+       
     }
 
     my @missing_traits;
@@ -287,8 +306,6 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     }
 
     print STDERR "FORMATTED DATA: ".Dumper(\@data);
-
-
     
     my $basename = basename($pheno_filepath.".clean.out");
 
@@ -353,8 +370,9 @@ sub get_trait_for_accessions {
 	$accession_scores{$accession_name}->{$score}++;
     }
 
-    my @highest_accession_scores = ();
-
+#    my @highest_accession_scores = ();
+    my %highest_accession_scores = ();
+    
     foreach my $acc (keys %accession_scores) {
 	my $highest_score_count = 0;
 	my $highest_score = 0;
@@ -364,15 +382,15 @@ sub get_trait_for_accessions {
 		$highest_score = $score;
 	    }
 	}
-	push @highest_accession_scores, [ $acc, $highest_score ];
-
+	#push @highest_accession_scores, [ $acc, $highest_score ];
+	$highest_accession_scores{$acc}=$highest_score;
     }
     
     #xprint STDERR "PHENOTYPES RETRIEVED: ".Dumper($phenotypes);
 
-    print STDERR "SEXES: ".Dumper(\@highest_accession_scores);
+    print STDERR "SEXES: ".Dumper(\%highest_accession_scores);
 
-    return \@highest_accession_scores;
+    return \%highest_accession_scores;
 }
 
 
