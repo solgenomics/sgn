@@ -30,6 +30,7 @@ jQuery(document).ready(function(){
 jQuery('#intercross_section_onswitch').click(function(){
 
     jQuery('#downloaded_intercross_files_table').DataTable({
+        'autoWidth': false,
         'destroy': true,
         'ajax': { 'url': '/ajax/breeders/trial/<% $trial_id %>/downloaded_intercross_file_metadata' },
         columns: [
@@ -42,6 +43,7 @@ jQuery('#intercross_section_onswitch').click(function(){
     });
 
     jQuery('#uploaded_intercross_files_table').DataTable({
+        'autoWidth': false,
         'destroy': true,
         'ajax': { 'url': '/ajax/breeders/trial/<% $trial_id %>/uploaded_intercross_file_metadata' },
         columns: [
