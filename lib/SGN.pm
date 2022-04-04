@@ -148,7 +148,15 @@ after 'setup_finalize' => sub {
     $self->_update_static_symlinks;
     
     if(! $ENV{SGN_WEBPACK_WATCH}){
-        system("cd js && npm run build && cd -");
+	my $uid = (lstat("js/package.json"))[4];
+
+	my $user_exists = `id $uid`;
+	if ($user_exists !~ /no such user/) {
+	    `useradd -u $uid -d /home/devel devel`;
+	}
+
+	print STDERR "\n\nUSING USER ID $uid FOR npm...\n\n\n";
+        system("cd js && sudo -u $uid npm run build && cd -");
     }
 };
 
