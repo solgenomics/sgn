@@ -402,12 +402,13 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 
     	if ($has_genotype)
     	{
+            if ($sel_pop_protocol_id != $protocol_id) {
 	        $c->controller('solGS::Files')->genotype_file_name($c, $selection_pop_id, $protocol_id);
 	        my $selection_geno_file = $c->stash->{genotype_file_name};
         
             if (!-s $selection_geno_file)
             {
-                $c->controller('solGS::solGS')->first_stock_genotype_data($c, $selection_pop_id, $protocol_id);
+                $c->controller('solGS::solGS')->first_stock_genotype_data($c, $selection_pop_id, $sel_pop_protocol_id);
                 $c->controller('solGS::Files')->first_stock_genotype_file($c, $selection_pop_id, $sel_pop_protocol_id);
                 $selection_geno_file = $c->stash->{first_stock_genotype_file};
             }
@@ -419,6 +420,9 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
             my $training_geno_file = $c->stash->{genotype_file_name};
 
             $similarity = $self->compare_marker_set_similarity([$selection_geno_file, $training_geno_file]);
+            } else {
+                $similarity = 1;
+            }
 	   }
 
     	my $selection_pop_data;
