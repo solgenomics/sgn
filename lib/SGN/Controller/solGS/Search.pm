@@ -370,7 +370,8 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     my $trait_id           = $c->req->param('trait_id');
     my $protocol_id        = $c->req->param('genotyping_protocol_id');
     my $sel_pop_protocol_id= $c->req->param('selection_pop_genotyping_protocol_id');
-    $sel_ppop_protocol_id = $protocol_id if !$selection_pop_genotyping_protocol_id;
+    $sel_pop_protocol_id = $protocol_id if !$sel_pop_protocol_id;
+
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 	$c->stash->{trait_id} = $trait_id;
 
