@@ -1492,7 +1492,7 @@ sub first_stock_genotype_data {
 
     if (!-s $geno_file && !-s $f_geno_file)
     {
-	$self->submit_cluster_genotype_query($c, [$pop_id], $protocol_id);
+	$c->controller('solGS::AsyncJob')->submit_cluster_genotype_query($c, [$pop_id], $protocol_id);
     }
 }
 
