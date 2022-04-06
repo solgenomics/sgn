@@ -156,7 +156,7 @@ after 'setup_finalize' => sub {
 	}
 
 	print STDERR "\n\nUSING USER ID $uid FOR npm...\n\n\n";
-        system("cd js && sudo -u $uid npm run build && cd -");
+        system("cd js && sudo -u \\#$uid npm run build && cd -");
     }
 };
 
