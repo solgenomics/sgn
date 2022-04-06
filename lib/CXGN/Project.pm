@@ -5135,7 +5135,7 @@ sub cross_count {
 
 
 
-=head2 delete_linkage_genotyping_plate_from_field_trial
+=head2 delete_genotyping_plate_and_field_trial_linkage
 
  Usage:
  Desc:
@@ -5146,7 +5146,7 @@ sub cross_count {
 
 =cut
 
-sub delete_linkage_genotyping_plate_from_field_trial {
+sub delete_genotyping_plate_from_field_trial_linkage {
     my $self = shift;
     my $field_trial_id = shift;
     my $role = shift;
@@ -5156,7 +5156,7 @@ sub delete_linkage_genotyping_plate_from_field_trial {
 
     #Make sure to have the right access to delete
     if ($role ne "curator") {
-        push @errors, "Only a curator can delete this file.";
+        push @errors, "Only a curator can delete this linkage.";
         return { errors => \@errors };
     }
 
