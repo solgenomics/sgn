@@ -3620,6 +3620,29 @@ sub genotyping_trial_from_field_trial : Chained('trial') PathPart('genotyping_tr
     $c->stash->{rest} = {success => 1, genotyping_trials_from_field_trial => $genotyping_trials_from_field_trial, field_trials_source_of_genotyping_trial => $field_trials_source_of_genotyping_trial};
 }
 
+sub delete_linkage_genotyping_plate_from_field_trial : Chained('trial') PathPart('delete_linkage_genotyping_plate_from_field_trial') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $field_trial_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if (!$c->user) {
+        $c->stash->{rest} = { error => "You must be logged in to remove genotyping plate and field trial linkage!" };
+        $c->detach();
+    }
+
+    my @roles = $c->user->roles();
+    my $result = $c->stash->{trial}->delete_linkage_genotyping_plate_from_field_trial($field_trial_id, $roles[0]);
+
+    if (exists($result->{errors})) {
+        $c->stash->{rest} = { error => $result->{errors} };
+    }
+    else {
+        $c->stash->{rest} = { success => 1 };
+    }
+
+}
+
 sub crossing_trial_from_field_trial : Chained('trial') PathPart('crossing_trial_from_field_trial') Args(0) {
     my $self = shift;
     my $c = shift;
