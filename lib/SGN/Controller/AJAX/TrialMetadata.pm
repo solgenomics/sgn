@@ -30,6 +30,7 @@ use CXGN::Genotype::DownloadFactory;
 use POSIX qw | !qsort !bsearch |;
 use CXGN::Phenotypes::StorePhenotypes;
 use Statistics::Descriptive::Full;
+use CXGN::TrialStatus;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -2012,7 +2013,7 @@ sub obsolete_trial_additional_file_uploaded :Chained('trial') PathPart('obsolete
     my $self = shift;
     my $c = shift;
     my $file_id = shift;
-    
+
     if (!$c->user) {
 	$c->stash->{rest} = { error => "You must be logged in to obsolete additional files!" };
 	$c->detach();
@@ -2024,14 +2025,14 @@ sub obsolete_trial_additional_file_uploaded :Chained('trial') PathPart('obsolete
     my $result = $c->stash->{trial}->obsolete_additional_uploaded_file($file_id, $user_id, $roles[0]);
 
     if (exists($result->{errors})) {
-	$c->stash->{rest} = { error => $result->{errors} }; 
+	$c->stash->{rest} = { error => $result->{errors} };
     }
     else {
 	$c->stash->{rest} = { success => 1 };
     }
-    
+
 }
-    
+
 
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;
@@ -4755,5 +4756,66 @@ sub upload_entry_number_template_POST : Args(0) {
     };
     return;
 }
+
+
+sub update_trial_status : Chained('trial') PathPart('update_trial_status') : ActionClass('REST'){ }
+
+sub update_trial_status_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->stash->{trial_id};
+    my $trial_status = $c->req->param("trial_status");
+    my $user_name = $c->req->param("user_name");
+    my $activity_date = $c->req->param("activity_date");
+
+    if (!$c->user()) {
+        $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $trial_status_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_status_json', 'project_property')->cvterm_id();
+    my $prop = $schema->resultset("Project::Projectprop")->find({project_id => $trial_id, type_id => $trial_status_type_id});
+    my $prop_id;
+    my %all_activities_hash;
+    if ($prop) {
+        $prop_id = $prop->projectprop_id();
+        my $status_json = $prop->value();
+        my $status_hash_ref = decode_json $status_json;
+        my $all_activities = $status_hash_ref->{'trial_activities'};
+        %all_activities_hash = %{$all_activities};
+    }
+
+    $all_activities_hash{$trial_status}{'user_id'} = $user_id;
+    $all_activities_hash{$trial_status}{'activity_date'} = $activity_date;
+
+    my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+    $trial_status_obj->trial_activities(\%all_activities_hash);
+    $trial_status_obj->parent_id($trial_id);
+    $trial_status_obj->prop_id($prop_id);
+    my $project_prop_id = $trial_status_obj->store();
+
+    $c->stash->{rest} = {success => 1 };
+    return;
+
+}
+
+
+sub get_all_trial_activities :Chained('trial') PathPart('all_trial_activities') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $trial_id = $c->stash->{trial_id};
+    my $activities = $c->config->{'trial_activities'};
+    my @activity_list = split ',', $activities;
+
+    my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema, people_schema => $people_schema, parent_id => $trial_id, activity_list => \@activity_list });
+    my $activity_info = $trial_status_obj->get_trial_activities();
+
+    $c->stash->{rest} = { data => $activity_info };
+}
+
 
 1;

@@ -12,6 +12,8 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
+                    <label class="col-sm-12 control-label">If you are uploading an Intercross file, please use manage Intercross section</label>
+                    <br>
                     <&| /page/explanation.mas, title=>'Template Information' &>
                         <p>
                             <b>File Format Information</b>
