@@ -32,7 +32,7 @@ jQuery(document).ready(function () {
 % if ($trial_type eq 'genotyping_trial'){
                 html1 = '<table class="table table-hover table-bordered"><thead><tr><th>Field Trial(s) That Are Source of This Genotyping Plate</th></tr></thead><tbody>';
                 for (var i=0; i<response.field_trials_source_of_genotyping_trial.length; i++){
-                    html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.field_trials_source_of_genotyping_trial[i][0]+'">'+response.field_trials_source_of_genotyping_trial[i][1]+'</a></td></tr>';
+                    html1 = html1 + '<tr><td><a href="/breeders/trial/'+response.field_trials_source_of_genotyping_trial[i][0]+'">'+response.field_trials_source_of_genotyping_trial[i][1]+'</a></td><td> <a href="javascript:remove_linkage('+<% $trial_id %>+', '+response.field_trials_source_of_genotyping_trial[i][0]+')">Remove linkage</a></td></tr>';
                 }
 % }
                 html1 = html1 + '</tbody></table>';
@@ -46,5 +46,21 @@ jQuery(document).ready(function () {
     });
 
 });
+
+function remove_linkage(plate_id, trial_id) {
+   var yes = confirm('Are you sure you want to remove the linkage between this genotyping plate and the field trial? This operation cannot be undone.');
+   if (yes) {
+      jQuery.ajax({
+          url: '/ajax/breeders/trial/'+plate_id+'/delete_linkage_genotyping_plate_from_field_trial/'+trial_id,
+          success: function(r) {
+              if (r.error) { alert(r.error); }
+              else {
+                  alert("The genotyping plate link has been removed from the field trial.");
+              }
+           },
+           error: function(r) {  alert("An error occurred!") }
+      });
+    }
+}
 
 </script>
