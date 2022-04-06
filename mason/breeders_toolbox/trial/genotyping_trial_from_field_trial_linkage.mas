@@ -48,7 +48,7 @@ jQuery(document).ready(function () {
 });
 
 function remove_linkage(plate_id, trial_id) {
-   var yes = confirm('Are you sure you want to remove the genotyping plate and field trial linkage? <br>This operation cannot be undone.');
+   var yes = confirm('Are you sure you want to remove the genotyping plate and field trial linkage? This operation cannot be undone.');
    if (yes) {
       jQuery.ajax({
           url: '/ajax/breeders/trial/'+plate_id+'/delete_genotyping_plate_from_field_trial_linkage/'+trial_id,
