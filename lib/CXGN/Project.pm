@@ -5135,7 +5135,7 @@ sub cross_count {
 
 
 
-=head2 delete_linkage_genotyping_plate_from_field
+=head2 delete_linkage_genotyping_plate_from_field_trial
 
  Usage:
  Desc:
@@ -5146,7 +5146,7 @@ sub cross_count {
 
 =cut
 
-sub delete_linkage_genotyping_plate_from_field {
+sub delete_linkage_genotyping_plate_from_field_trial {
     my $self = shift;
     my $field_trial_id = shift;
     my $role = shift;
@@ -5154,6 +5154,7 @@ sub delete_linkage_genotyping_plate_from_field {
 
     my @errors;
 
+    #Make sure to have the right access to delete
     if ($role ne "curator") {
         push @errors, "Only a curator can delete this file.";
         return { errors => \@errors };
@@ -5171,9 +5172,8 @@ sub delete_linkage_genotyping_plate_from_field {
     if ($h->rows() == 1){
         if (my ($project_relationship_id) = $h->fetchrow_array()) {
             my $uq = "DELETE from project_relationship where project_relationship_id = ? and type_id = ? ";
-            # my $uh = $dbh->prepare($uq);
-            # $uh->execute($project_relationship_id,$genotyping_trial_from_field_trial_cvterm_id);
-            push @errors, $uq . $plate_id."-". $field_trial_id."-".$genotyping_trial_from_field_trial_cvterm_id . "PR:". $project_relationship_id;
+            my $uh = $dbh->prepare($uq);
+            $uh->execute($project_relationship_id,$genotyping_trial_from_field_trial_cvterm_id);
         }
         else {
             push @errors, "An error occurred during deletion.";
