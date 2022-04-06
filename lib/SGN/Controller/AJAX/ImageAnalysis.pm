@@ -363,8 +363,8 @@ sub get_activity_data : Path('/ajax/image_analysis/activity') Args(0) {
   my $c = shift;
 
   my @activity;
-  if ($c->config->{image_analysis_log}) {
-    my $logfile = $c->config->{image_analysis_log};
+  if ($c->config->{archive_path}) {
+    my $logfile = my $logfile = File::Spec->catfile($c->config->{archive_path}, 'image_analysis.log');
     my @file_data = read_file($logfile, chomp => 1);
     foreach my $line (@file_data) {
         my @values = split("\t", $line);
@@ -415,8 +415,8 @@ sub _log_analysis_activity {
     my $trait = shift;
     my $now = DateTime->now();
 
-    if ($c->config->{image_analysis_log}) {
-      my $logfile = $c->config->{image_analysis_log};
+    if ($c->config->{archive_path}) {
+      my $logfile = File::Spec->catfile($c->config->{archive_path}, 'image_analysis.log');
       open (my $F, ">> :encoding(UTF-8)", $logfile) || die "Can't open logfile $logfile\n";
       print $F join("\t", (
             $now->year()."-".$now->month()."-".$now->day()." ".$now->hour().":".$now->minute(),
@@ -430,7 +430,7 @@ sub _log_analysis_activity {
       print STDERR "Analysis submission logged in $logfile\n";
     }
     else {
-      print STDERR "Note: set config variable image_analysis_log to obtain a log and graph of image analysis activity.\n";
+      print STDERR "Note: set config variable archive_path to obtain a log and graph of image analysis activity.\n";
     }
 }
 
