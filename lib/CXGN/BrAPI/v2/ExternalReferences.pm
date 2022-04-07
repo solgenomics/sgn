@@ -85,6 +85,9 @@ sub store {
     my $id = $self->id();
     my $external_references = $self->external_references();
 
+    # Clear old external references
+    $self->_remove_external_references();
+
     foreach (@$external_references){
         my $ref_name = $_->{'referenceSource'};
         my $ref_id = $_->{'referenceID'};
@@ -156,6 +159,37 @@ sub store {
 
     return { success => "External References added successfully" };
 
+}
+
+sub _remove_external_references {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $table = $self->table_name();
+    my $table_id = $self->table_id_key();
+    my $id = $self->id();
+
+    # Find dbxref connected to the external references
+    my $query = "select dbxref.dbxref_id from
+                    $table\_dbxref as ref join
+                    dbxref on (ref.dbxref_id=dbxref.dbxref_id)
+                    where ref.$table_id = $id";
+    my $sth = $self->bcs_schema->storage()->dbh()->prepare($query);
+    $sth->execute();
+
+    # Clear dbxref
+    my @ids;
+    while (my @r = $sth->fetchrow_array()) {
+        push @ids, @r[0];
+    }
+    my $list_ids = join ("," , @ids);
+
+    if (scalar(@ids) > 0) {
+        my $delete_dbxref_query = "delete from dbxref where dbxref_id in ($list_ids)";
+        $self->bcs_schema->storage()->dbh()->prepare($delete_dbxref_query)->execute();
+    }
+    # Clear $table_dbxref
+    my $delete_table_dbxref_query = "delete from $table\_dbxref where $table_id = $id";
+    $self->bcs_schema->storage()->dbh()->prepare($delete_table_dbxref_query)->execute();
 }
 
 
