@@ -22,6 +22,7 @@ on:
     branches:
       - develop
       - master
+      - release/**
   workflow_dispatch:
 
 jobs:
@@ -57,6 +58,14 @@ jobs:
         run: echo ::set-output name=branch::$(echo ${GITHUB_REF#refs/heads/})
         id: extract_branch
 
+      - name: Checkout sgn branch
+        working-directory: ./breedbase_dockerfile/cxgn/sgn
+        run: git switch ${{steps.extract_branch.outputs.branch}}
+
+      - name: Debug sgn branch
+        working-directory: ./breedbase_dockerfile/cxgn/sgn
+        run: git status
+
       - name: Set tag
         id: vars
         run: echo ::set-output name=imageName::$(echo breedinginsight/breedbase:${{ steps.get-latest-tag.outputs.tag }}-$GITHUB_RUN_NUMBER)
@@ -78,3 +87,9 @@ jobs:
         run: |
           docker tag ${{steps.vars.outputs.imageName}} breedinginsight/breedbase:latest
           docker push breedinginsight/breedbase:latest
+
+      - name: Tag release
+        if: contains(github.ref, '/release/')
+        run: |
+          docker tag ${{steps.vars.outputs.imageName}} breedinginsight/breedbase:rc
+          docker push breedinginsight/breedbase:rc

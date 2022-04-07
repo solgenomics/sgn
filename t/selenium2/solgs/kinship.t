@@ -88,7 +88,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('kinship analysis');
     sleep(2);
-    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(60);
@@ -167,7 +167,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('analysis_name', 'id', 'job queueing')->send_keys('kinship analysis');
     sleep(2);
-    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(90);
@@ -228,7 +228,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test Kasese Tr pop');
     sleep(2);
-    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(80);
@@ -250,7 +250,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP-FRW modeling  Kasese');
     sleep(2);
-    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(200);
@@ -331,7 +331,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('combo trials tr pop');
     sleep(2);
-    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(80);
@@ -369,10 +369,10 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP-FRW modeling combo trials');
     sleep(2);
-    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('iyt2');
+    $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(150);
+    sleep(300);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(15);
 
@@ -384,7 +384,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
 
     my $kin = $d->find_element('Kinship', 'partial_link_text', 'scroll up');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $kin);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $kin);
     sleep(5);
     $d->find_element_ok('Kinship', 'partial_link_text', 'toogle kinship')->click();
     sleep(5);

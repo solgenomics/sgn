@@ -90,7 +90,7 @@ sub _validate_with_plugin {
         } else {
             #file must not contain duplicate plant names
             for my $i (1 .. $num_plants_per_plot) {
-                my $plant_name = $plot_name."_".$i;
+                my $plant_name = $plot_name."_plant_".$i;
                 if ($seen_plant_names{$plant_name}) {
                     push @error_messages, "Cell B$row_name: duplicate plant_name at cell A".$seen_plant_names{$plant_name}.": $plant_name";
                 }
@@ -179,7 +179,7 @@ sub _parse_with_plugin {
         }
 
         for my $i (1 .. $num_plants_per_plot) {
-            my $plant_name = $plot_name."_".$i;
+            my $plant_name = $plot_name."_plant_".$i;
 
             #skip blank lines
             if (!$plot_name && !$plant_name) {

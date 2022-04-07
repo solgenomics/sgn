@@ -504,11 +504,32 @@ sub _validate_with_plugin {
 
   ## ACCESSIONS OVERALL VALIDATION
   my @accessions = keys %seen_accession_names;
-  my @accessions_missing = @{$validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+  my $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
 
+  #find unique synonyms. Sometimes trial uploads use synonym names instead of the unique accession name. We allow this if the synonym is unique and matches one accession in the database
+  my @synonyms =  @{$accessions_hashref->{'synonyms'}};
+  foreach my $synonym (@synonyms) {
+      my $found_acc_name_from_synonym = $synonym->{'uniquename'};
+      my $matched_synonym = $synonym->{'synonym'};
+
+      push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
+
+      @accessions = grep !/$matched_synonym/, @accessions;
+      push @accessions, $found_acc_name_from_synonym;
+  }
+  
+  #now validate again the accession names
+  $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
+  
+  my @accessions_missing = @{$accessions_hashref->{'missing'}};
+  my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
+  
   if (scalar(@accessions_missing) > 0) {
       # $errors{'missing_accessions'} = \@accessions_missing;
       push @error_messages, "Accession(s) <b>".join(',',@accessions_missing)."</b> are not in the database as uniquenames or synonyms.";
+  }
+  if (scalar(@multiple_synonyms) > 0) {
+      push @error_messages, "Accession(s) <b>".join(',',@multiple_synonyms)."</b> appear in the database as synonyms of more than one unique accession. Please change to the unique accession name or delete the multiple synonyms";
   }
 
   ## SEEDLOTS OVERALL VALIDATION

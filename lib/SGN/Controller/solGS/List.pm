@@ -645,7 +645,7 @@ sub genotypes_list_genotype_file {
     $self->genotypes_list_genotype_query_job($c);
     my $args = $c->stash->{genotypes_list_genotype_query_job};
 
-    $c->controller('solGS::solGS')->submit_job_cluster($c, $args);
+    $c->controller('solGS::AsyncJob')->submit_job_cluster($c, $args);
 
 }
 
@@ -675,7 +675,7 @@ sub genotypes_list_genotype_query_job {
     };
 
     $c->stash->{r_temp_file} = $args->{r_temp_file};
-    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+    $c->controller('solGS::AsyncJob')->create_cluster_accessible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
@@ -692,7 +692,7 @@ sub genotypes_list_genotype_query_job {
 	'cluster_host' => 'localhost'
      };
 
-    my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+    my $config = $c->controller('solGS::AsyncJob')->create_cluster_config($c, $config_args);
 
     my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-query-job-args-file-${pop_id}");
 
@@ -741,7 +741,7 @@ sub plots_list_phenotype_query_job {
     my $data_dir = $c->stash->{solgs_lists_dir};
 
     $c->stash->{r_temp_file} = 'plots-phenotype-data-query';
-    $c->controller('solGS::solGS')->create_cluster_accesible_tmp_files($c);
+    $c->controller('solGS::AsyncJob')->create_cluster_accessible_tmp_files($c);
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
@@ -782,7 +782,7 @@ sub plots_list_phenotype_query_job {
 	'cluster_host' => 'localhost'
      };
 
-    my $config = $c->controller('solGS::solGS')->create_cluster_config($c, $config_args);
+    my $config = $c->controller('solGS::AsyncJob')->create_cluster_config($c, $config_args);
 
     my $job_args = {
 	'cmd' => $cmd,
@@ -814,7 +814,7 @@ sub create_list_pheno_data_query_jobs {
 
 	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
 	$c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
-	$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials_ids);
+	$c->controller('solGS::AsyncJob')->get_cluster_phenotype_query_job_args($c, $trials_ids);
 	$c->stash->{list_pheno_data_query_jobs} = $c->stash->{cluster_phenotype_query_job_args};
     }
 }
@@ -840,7 +840,7 @@ sub create_list_geno_data_query_jobs {
 
 	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids, $protocol_id);
 	$c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
-	$c->controller('solGS::solGS')->get_cluster_genotype_query_job_args($c, $trials_ids, $protocol_id);
+	$c->controller('solGS::AsyncJob')->get_cluster_genotype_query_job_args($c, $trials_ids, $protocol_id);
 	$c->stash->{list_geno_data_query_jobs} = $c->stash->{cluster_genotype_query_job_args};
     }
 }
@@ -872,7 +872,7 @@ sub plots_list_phenotype_file {
 
     $self->plots_list_phenotype_query_job($c);
     my $args = $c->stash->{plots_list_phenotype_query_job};
-    $c->controller('solGS::solGS')->submit_job_cluster($c, $args);
+    $c->controller('solGS::AsyncJob')->submit_job_cluster($c, $args);
 
 }
 
@@ -927,12 +927,12 @@ sub submit_list_training_data_query {
     {
 	$self->get_list_trials_ids($c);
 	my $trials = $c->stash->{trials_ids};
-	$c->controller('solGS::solGS')->get_training_pop_data_query_job_args_file($c, $trials, $protocol_id);
+	$c->controller('solGS::AsyncJob')->get_training_pop_data_query_job_args_file($c, $trials, $protocol_id);
 	$query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
     }
 
     $c->stash->{dependent_jobs} = $query_jobs_file;
-    $c->controller('solGS::solGS')->run_async($c);
+    $c->controller('solGS::AsyncJob')->run_async($c);
 }
 
 
@@ -1030,7 +1030,7 @@ sub get_trials_list_pheno_data {
     my $trials_ids = $c->stash->{pops_ids_list};
 
     #$c->controller('solGS::combinedTrials')->multi_pops_phenotype_data($c, $trials_ids);
-    $c->controller('solGS::solGS')->submit_cluster_phenotype_query($c, $trials_ids);
+    $c->controller('solGS::AsyncJob')->submit_cluster_phenotype_query($c, $trials_ids);
     #$c->controller('solGS::solGS')->get_cluster_phenotype_query_job_args($c, $trials_ids);
 
     $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
@@ -1046,7 +1046,7 @@ sub get_trials_list_geno_data {
     my $trials_ids = $c->stash->{pops_ids_list};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    $c->controller('solGS::solGS')->submit_cluster_genotype_query($c, $trials_ids, $protocol_id);
+    $c->controller('solGS::AsyncJob')->submit_cluster_genotype_query($c, $trials_ids, $protocol_id);
     $c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
     my @geno_files = split("\t", $c->stash->{multi_pops_geno_files});
     $c->stash->{genotype_files_list} = \@geno_files;

@@ -165,4 +165,24 @@ $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
 ok($message_hash->{download_file_link});
 
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/highdimensionalphenotypes/download_relationship_matrix_file',
+        Content_Type => 'form-data',
+        Content => [
+            dataset_id => $sp_dataset_id,
+            nd_protocol_id => $nirs_protocol_id,
+            "sgn_session_id"=>$sgn_session_id,
+            "high_dimensional_phenotype_type"=>"NIRS",
+            "query_associated_stocks"=>"yes",
+        ]
+    );
+
+#print STDERR Dumper $response;
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+print STDERR Dumper $message_hash;
+ok($message_hash->{download_file_link});
+
 done_testing();

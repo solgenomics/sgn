@@ -98,7 +98,7 @@ $check_vendor_role
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Your order has been submitted successfully.
+                        Your order has been submitted successfully and the vendor has been notified.
                     </p>
                 </div>
             </div>

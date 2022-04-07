@@ -117,7 +117,7 @@ sub parse {
     my $data_level = shift;
     my $schema = shift;
     my $zipfile = shift; #not relevant for this plugin
-    my $user_id = shift; #not relevant for this plugin
+    my $user_name = shift;
     my $c = shift; #not relevant for this plugin
     my $nd_protocol_id = shift; #not relevant for this plugin
     my $nd_protocol_filename = shift; #not relevant for this plugin
@@ -135,9 +135,10 @@ sub parse {
         my $obsunit_db_id = $obs->{'observationUnitDbId'};
         my $variable_db_id = $obs->{'observationVariableDbId'};
         my $timestamp = $obs->{'observationTimeStamp'} ? $obs->{'observationTimeStamp'} : undef;
-        my $collector = $obs->{'collector'} ? $obs->{'collector'} : '';
+        my $collector = $obs->{'collector'} ? $obs->{'collector'} : $user_name;
         my $obs_db_id = $obs->{'observationDbId'} ? $obs->{'observationDbId'} : '';
         my $value = $obs->{'value'};
+        my $additional_info = $obs->{'additionalInfo'} ? $obs->{'additionalInfo'} : undef;
         my $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $variable_db_id,"extended");
         my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
 
@@ -167,7 +168,8 @@ sub parse {
         push @values, $value;
 
         # track data for store
-        push @{$data{$obsunit_db_id}->{$trait_name}}, [$value, $timestamp, $collector, $obs_db_id];
+        push @{$data{$obsunit_db_id}->{$trait_name}}, [$value, $timestamp, $collector, $obs_db_id, undef, $additional_info];
+
     }
     #print STDERR "Data is ".Dumper(%data)."\n";
     @observations = uniq @observations;
