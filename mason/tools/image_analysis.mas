@@ -169,7 +169,7 @@ tr.shown td.details-control {
             </div>
         </div>
     </div>
-    
+
     <div class="modal fade" id="saveResultModal" tabindex="-1" role="dialog" aria-labelledby="saveResultModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -560,42 +560,44 @@ function _load_analysis_activity_graph(date_range) {
             .append('g')
             .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-        // Set x (timeseries) and y (linear) scales
-        var xScale = d3.scaleTime().range([0, width]);
-        var yScale = d3.scaleLinear().range([height, 0]);
 
        var dayExtent = d3.extent(data, function (d) { return d.date; });
 
        console.log("day extent is "+dayExtent);
 
        // Create one bin per day, use an offset to include the first and last days
-       var dayBins = d3.timeDays(d3.timeDay.offset(dayExtent[0],-1),
-                                 d3.timeDay.offset(dayExtent[1], 1));
+       var dayBins = d3.timeDays(
+           d3.timeDay.offset(dayExtent[0],-1),
+           d3.timeDay.offset(dayExtent[1], 1)
+       );
 
+       // Set x (timeseries) scale
        var x = d3.scaleTime()
            .domain(dayExtent)
            .rangeRound([0, width]);
 
-       // Scale the range of the data in the y domain
-       var y = d3.scaleLinear()
-                  .range([height, 0]);
-
        var xAxis = d3.axisBottom(x)
-                      .tickArguments([d3.timeDay.every(1)])
-                      .tickFormat(d3.timeFormat('%d-%b'))
-                      .ticks(10);
+          .tickArguments([d3.timeDay.every(1)])
+          .tickFormat(d3.timeFormat('%d-%b-%y'))
+          .ticks(10);
 
        // Set the parameters for the histogram
        var histogram = d3.histogram()
-                          .value(function(d) { return d.date; })
-                          .domain(x.domain())
-                          .thresholds(x.ticks(dayBins.length));
-
+          .value(function(d) { return d.date; })
+          .domain(dayExtent)
+          .thresholds(x.ticks(dayBins.length));
 
        // Group the data for the bars
        var bins = histogram(data);
 
-       y.domain([0, d3.max(bins, function(d) { return d.length; })]);
+       // Set y (linear) scale
+       var y = d3.scaleLinear()
+          .domain([0, d3.max(bins, function(d) { return d.length; })])
+          .nice();
+
+        var yAxis = d3.axisLeft(y)
+            .tickFormat(d3.format("d"))
+            .ticks(15);
 
        var hist = svg.selectAll("rect")
             .data(bins)
@@ -620,7 +622,7 @@ function _load_analysis_activity_graph(date_range) {
        // Add the y axis
        svg.append("g")
             // .call(d3.axisLeft(y).ticks(d3.max(bins, function(d) { return d.length; })))
-            .call(d3.axisLeft(y).ticks(15))
+            .call(yAxis)
             .append("text")
             .attr("fill", "#000")
             .attr("transform", "rotate(-90)")
