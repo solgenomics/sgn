@@ -301,7 +301,7 @@ for(i in 1:length(userResponse)){
 # a. Get the matrices and inverses needed
 #    This is not correct for polyploids yet.
 A.G <- G - (userPloidy / 2) # this is the additive genotype matrix (coded -1 0 1 for diploids)
-D.G <- 1 - abs(A.G)     # this is the dominance genotype matrix (coded 0 1 0 for diploids)
+D.G <- GC     # this is the dominance genotype matrix (coded 0 1 0 for diploids)
 
 
 A.T <- A.G %*% t(A.G) ## additive genotype matrix
