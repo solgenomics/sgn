@@ -208,6 +208,9 @@ sub _convert_plot_numbers {
   } elsif ($rep_plot_count > 9) {
     $plot_increment = 100;
     $first_plot_number = 101;
+  } else {
+    $plot_increment = 10;
+    $first_plot_number = 1;
   }
   my $idx = 0;
   for (my $i = 0; $i < $number_of_reps; $i++) {
