@@ -1417,8 +1417,7 @@ sub _remove_stockprop_all_of_type {
     my $value = shift;
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
     my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { type_id=>$type_id, stock_id => $self->stock_id() } );
-
-    print 'ROWCOUNT! ' . $rs->count() . $value;
+    
     if ($rs->count() > 0) {
         while (my $row = $rs->next()) {
             $row->delete();
