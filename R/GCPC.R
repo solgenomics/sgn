@@ -199,8 +199,13 @@ write("GENETIC PREDICTIONS...", stderr())
 # in the matrix D before adding it to the estimated dominance marker effects
 # One unit of change in f represents changing all loci from homozygous to heterozygous
 
+if(userPloidy == 2){
 GC <- G - (userPloidy/2) #this centers G
 f <- rowSums(GC, na.rm = TRUE) / apply(GC, 1, function(x) sum(!is.na(x)))
+}
+if(userPloidy > 2){
+  GC <- G * (userPloidy - G) * (2 / userPloidy)^2
+}
 
 # Another alternate way to construct f is the total number of heterozygous loci in the individual
 # The coefficient of this construction of f does not need to be divided by the number of markers
