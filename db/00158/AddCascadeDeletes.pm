@@ -60,138 +60,129 @@ sub patch {
 
 BEGIN;
 
-ALTER TABLE phenome.stock_image
-DROP CONSTRAINT stock_image_image_id_fkey
-DROP CONSTRAINT stock_image_metadata_id_fkey
-DROP CONSTRAINT stock_image_stock_id_fkey
-ADD CONSTRAINT stock_image_image_id_fkey
+ALTER TABLE phenome.stock_image DROP CONSTRAINT stock_image_image_id_fkey;
+ALTER TABLE phenome.stock_image DROP CONSTRAINT stock_image_metadata_id_fkey;
+ALTER TABLE phenome.stock_image DROP CONSTRAINT stock_image_stock_id_fkey;
+ALTER TABLE phenome.stock_image ADD CONSTRAINT stock_image_image_id_fkey
     FOREIGN KEY (image_id)
     REFERENCES metadata.md_image(image_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT stock_image_metadata_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.stock_image ADD CONSTRAINT stock_image_metadata_id_fkey
     FOREIGN KEY (metadata_id)
     REFERENCES metadata.md_metadata(metadata_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT stock_image_stock_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.stock_image ADD CONSTRAINT stock_image_stock_id_fkey
     FOREIGN KEY (stock_id)
     REFERENCES stock(stock_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE phenome.locus_owner
-DROP CONSTRAINT locus_owner_granted_by_fkey
-DROP CONSTRAINT locus_owner_locus_id_fkey
-DROP CONSTRAINT locus_owner_sp_person_id_fkey
-ADD CONSTRAINT locus_owner_granted_by_fkey
+ALTER TABLE phenome.locus_owner DROP CONSTRAINT locus_owner_granted_by_fkey;
+ALTER TABLE phenome.locus_owner DROP CONSTRAINT locus_owner_locus_id_fkey;
+ALTER TABLE phenome.locus_owner DROP CONSTRAINT locus_owner_sp_person_id_fkey;
+ALTER TABLE phenome.locus_owner ADD CONSTRAINT locus_owner_granted_by_fkey
     FOREIGN KEY (granted_by)
     REFERENCES sgn_people.sp_person(sp_person_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT locus_owner_locus_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.locus_owner ADD CONSTRAINT locus_owner_locus_id_fkey
     FOREIGN KEY (locus_id)
     REFERENCES phenome.locus(locus_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT locus_owner_sp_person_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.locus_owner ADD CONSTRAINT locus_owner_sp_person_id_fkey
     FOREIGN KEY (sp_person_id)
     REFERENCES sgn_people.sp_person(sp_person_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE phenome.nd_experiment_md_files
-DROP CONSTRAINT nd_experiment_md_files_file_id_fkey
-DROP CONSTRAINT nd_experiment_md_files_nd_experiment_id_fkey
-ADD CONSTRAINT nd_experiment_md_files_file_id_fkey
+ALTER TABLE phenome.nd_experiment_md_files DROP CONSTRAINT nd_experiment_md_files_file_id_fkey;
+ALTER TABLE phenome.nd_experiment_md_files DROP CONSTRAINT nd_experiment_md_files_nd_experiment_id_fkey;
+ALTER TABLE phenome.nd_experiment_md_files ADD CONSTRAINT nd_experiment_md_files_file_id_fkey
     FOREIGN KEY (file_id)
     REFERENCES metadata.md_files(file_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT nd_experiment_md_files_nd_experiment_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.nd_experiment_md_files ADD CONSTRAINT nd_experiment_md_files_nd_experiment_id_fkey
     FOREIGN KEY (nd_experiment_id)
     REFERENCES nd_experiment(nd_experiment_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE phenome.nd_experiment_md_json
-DROP CONSTRAINT nd_experiment_md_files_file_id_fkey
-DROP CONSTRAINT nd_experiment_md_files_nd_experiment_id_fkey
-ADD CONSTRAINT nd_experiment_md_files_file_id_fkey
-    FOREIGN KEY (file_id)
-    REFERENCES metadata.md_files(file_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT nd_experiment_md_files_nd_experiment_id_fkey
+ALTER TABLE phenome.nd_experiment_md_json DROP CONSTRAINT nd_experiment_md_json_json_id_fkey;
+ALTER TABLE phenome.nd_experiment_md_json DROP CONSTRAINT nd_experiment_md_json_nd_experiment_id_fkey;
+ALTER TABLE phenome.nd_experiment_md_json ADD CONSTRAINT nd_experiment_md_json_json_id_fkey
+    FOREIGN KEY (json_id)
+    REFERENCES metadata.md_json(json_id)
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.nd_experiment_md_json ADD CONSTRAINT nd_experiment_md_json_nd_experiment_id_fkey
     FOREIGN KEY (nd_experiment_id)
     REFERENCES nd_experiment(nd_experiment_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE phenome.nd_experiment_md_images
-DROP CONSTRAINT nd_experiment_md_images_image_id_fkey
-DROP CONSTRAINT nd_experiment_md_images_nd_experiment_id_fkey
-ADD CONSTRAINT nd_experiment_md_images_image_id_fkey
+ALTER TABLE phenome.nd_experiment_md_images DROP CONSTRAINT nd_experiment_md_images_image_id_fkey;
+ALTER TABLE phenome.nd_experiment_md_images DROP CONSTRAINT nd_experiment_md_images_nd_experiment_id_fkey;
+ALTER TABLE phenome.nd_experiment_md_images ADD CONSTRAINT nd_experiment_md_images_image_id_fkey
     FOREIGN KEY (image_id)
     REFERENCES metadata.md_image(image_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT nd_experiment_md_images_nd_experiment_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.nd_experiment_md_images ADD CONSTRAINT nd_experiment_md_images_nd_experiment_id_fkey
     FOREIGN KEY (nd_experiment_id)
     REFERENCES nd_experiment(nd_experiment_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE phenome.project_md_image
-DROP CONSTRAINT project_md_image_image_id_fkey
-DROP CONSTRAINT project_md_image_project_id_fkey
-DROP CONSTRAINT project_md_image_type_id_fkey
-ADD CONSTRAINT project_md_image_image_id_fkey
+ALTER TABLE phenome.project_md_image DROP CONSTRAINT project_md_image_image_id_fkey;
+ALTER TABLE phenome.project_md_image DROP CONSTRAINT project_md_image_project_id_fkey;
+ALTER TABLE phenome.project_md_image DROP CONSTRAINT project_md_image_type_id_fkey;
+ALTER TABLE phenome.project_md_image ADD CONSTRAINT project_md_image_image_id_fkey
     FOREIGN KEY (image_id)
     REFERENCES metadata.md_image(image_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT project_md_image_project_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.project_md_image ADD CONSTRAINT project_md_image_project_id_fkey
     FOREIGN KEY (project_id)
     REFERENCES project(project_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT project_md_image_type_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.project_md_image ADD CONSTRAINT project_md_image_type_id_fkey
     FOREIGN KEY (type_id)
     REFERENCES cvterm(cvterm_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE phenome.project_owner
-DROP CONSTRAINT project_owner_project_id_fkey
-DROP CONSTRAINT project_owner_sp_person_id_fkey
-ADD CONSTRAINT project_owner_project_id_fkey
+ALTER TABLE phenome.project_owner DROP CONSTRAINT project_owner_project_id_fkey;
+ALTER TABLE phenome.project_owner DROP CONSTRAINT project_owner_sp_person_id_fkey;
+ALTER TABLE phenome.project_owner ADD CONSTRAINT project_owner_project_id_fkey
     FOREIGN KEY (project_id)
     REFERENCES project(project_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT project_owner_sp_person_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.project_owner ADD CONSTRAINT project_owner_sp_person_id_fkey
     FOREIGN KEY (sp_person_id)
     REFERENCES sgn_people.sp_person(sp_person_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE phenome.stock_owner
-DROP CONSTRAINT stock_owner_metadata_id_fkey
-DROP CONSTRAINT stock_owner_sp_person_id_fkey
-DROP CONSTRAINT stock_owner_stock_id_fkey
-ADD CONSTRAINT stock_owner_metadata_id_fkey
+ALTER TABLE phenome.stock_owner DROP CONSTRAINT stock_owner_metadata_id_fkey;
+ALTER TABLE phenome.stock_owner DROP CONSTRAINT stock_owner_sp_person_id_fkey;
+ALTER TABLE phenome.stock_owner DROP CONSTRAINT stock_owner_stock_id_fkey;
+ALTER TABLE phenome.stock_owner ADD CONSTRAINT stock_owner_metadata_id_fkey
     FOREIGN KEY (metadata_id)
     REFERENCES metadata.md_metadata(metadata_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT stock_owner_sp_person_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.stock_owner ADD CONSTRAINT stock_owner_sp_person_id_fkey
     FOREIGN KEY (sp_person_id)
     REFERENCES sgn_people.sp_person(sp_person_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT stock_owner_stock_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE phenome.stock_owner ADD CONSTRAINT stock_owner_stock_id_fkey
     FOREIGN KEY (stock_id)
     REFERENCES stock(stock_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE metadata.md_image_cvterm
-DROP CONSTRAINT md_image_cvterm_cvterm_id_fkey
-DROP CONSTRAINT md_image_cvterm_image_id_fkey
-DROP CONSTRAINT md_image_cvterm_sp_person_id_fkey
-ADD CONSTRAINT md_image_cvterm_cvterm_id_fkey
+ALTER TABLE metadata.md_image_cvterm DROP CONSTRAINT md_image_cvterm_cvterm_id_fkey;
+ALTER TABLE metadata.md_image_cvterm DROP CONSTRAINT md_image_cvterm_image_id_fkey;
+ALTER TABLE metadata.md_image_cvterm DROP CONSTRAINT md_image_cvterm_sp_person_id_fkey;
+ALTER TABLE metadata.md_image_cvterm ADD CONSTRAINT md_image_cvterm_cvterm_id_fkey
     FOREIGN KEY (cvterm_id)
     REFERENCES cvterm(cvterm_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT md_image_cvterm_image_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE metadata.md_image_cvterm ADD CONSTRAINT md_image_cvterm_image_id_fkey
     FOREIGN KEY (image_id)
     REFERENCES metadata.md_image(image_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
-ADD CONSTRAINT md_image_cvterm_sp_person_id_fkey
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE metadata.md_image_cvterm ADD CONSTRAINT md_image_cvterm_sp_person_id_fkey
     FOREIGN KEY (sp_person_id)
     REFERENCES sgn_people.sp_person(sp_person_id)
-    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
 
 COMMIT;
 
