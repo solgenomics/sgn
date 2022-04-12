@@ -568,6 +568,8 @@ sub rrblup_selection_gebvs_file {
     my $trait_abbr  = $c->stash->{trait_abbr};
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
+    $protocol_id .= '-' . $sel_pop_protocol_id if $sel_pop_protocol_id;
     my $file_id = "${training_pop_id}_${selection_pop_id}-${trait_abbr}-GP-${protocol_id}";
 
     my $cache_data = {key  => 'rrblup_selection_gebvs_' . $file_id,
