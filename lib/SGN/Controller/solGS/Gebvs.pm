@@ -24,25 +24,21 @@ BEGIN { extends 'Catalyst::Controller' }
 sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
     my ($self, $c) = @_;
 
-    my $training_pop_id  = $c->req->param('training_pop_id');
-    my $trait_id         = $c->req->param('trait_id');
-    my $selection_pop_id = $c->req->param('selection_pop_id');
-    my $combo_pops_id    = $c->req->param('combo_pops_id');
-    my $protocol_id      = $c->req->param('genotyping_protocol_id');
+    $c->controller('solGS::Utils')->stash_json_args($c, $c->req->param('arguments'));
 
+    my $training_pop_id = $c->stash->{training_pop_id};
+    my $selection_pop_id  = $c->stash->{selection_pop_id};
+    my $trait_id = $c->stash->{trait_id};
+    my $combo_pops_id = $c->stash->{combo_pops_id};
 
     if ($combo_pops_id)
     {
-	$c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
-	$c->stash->{data_set_type} = 'combined populations';
-	$training_pop_id = $combo_pops_id;
-	$c->stash->{combo_pops_id} = $combo_pops_id;
+        $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
+        $c->stash->{data_set_type} = 'combined populations';
+        $training_pop_id = $combo_pops_id;
     }
 
     $c->stash->{pop_id} = $training_pop_id;
-    $c->stash->{training_pop_id} = $training_pop_id;
-    $c->stash->{selectiion_pop_id} = $selection_pop_id;
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 
     my $gebvs_file;
@@ -165,10 +161,10 @@ sub combined_gebvs_file {
     my $identifier = $self->combined_gebvs_file_id($c);
 
     my $cache_data = {
-           key => "combined_gebvs_${identifier}",
-           file      => "combined_gebvs_${identifier}" . '.txt',
-           stash_key => 'combined_gebvs_file',
-		   cache_dir => $c->stash->{solgs_cache_dir}
+        key => "combined_gebvs_${identifier}",
+        file      => "combined_gebvs_${identifier}" . '.txt',
+        stash_key => 'combined_gebvs_file',
+        cache_dir => $c->stash->{solgs_cache_dir}
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
@@ -217,7 +213,7 @@ sub get_gebv_files_of_traits {
     if ($selection_pop_id)
     {
         $self->selection_pop_analyzed_traits($c, $training_pop_id, $selection_pop_id);
-	$gebv_files = join("\t", @{$c->stash->{selection_pop_analyzed_traits_files}});
+	    $gebv_files = join("\t", @{$c->stash->{selection_pop_analyzed_traits_files}});
     }
     else
     {
@@ -416,7 +412,7 @@ sub selection_pop_analyzed_traits {
 
     @trait_abbrs = @selected_trait_abbrs if @selected_trait_abbrs;
     @files       = @selected_files if @selected_files;
-
+    print STDERR "\nselection_pop_analyzed_traits files: @files\n";
     $c->stash->{selection_pop_analyzed_traits}       = \@trait_abbrs;
     $c->stash->{selection_pop_analyzed_traits_ids}   = \@trait_ids;
     $c->stash->{selection_pop_analyzed_traits_files} = \@files;
