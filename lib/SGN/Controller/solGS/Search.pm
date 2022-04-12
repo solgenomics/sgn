@@ -371,10 +371,9 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     my $protocol_id        = $c->req->param('genotyping_protocol_id');
     my $sel_pop_protocol_id= $c->req->param('selection_pop_genotyping_protocol_id');
     $sel_pop_protocol_id = $protocol_id if !$sel_pop_protocol_id;
-
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    $c->stash->{selection_pop_genotyping_protocol_id} = $sel_pop_protocol_id;
 	$c->stash->{trait_id} = $trait_id;
-
     my $referer = $c->req->referer;
 
     if ($referer =~ /combined\//)
@@ -438,6 +437,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     	$ret->{similarity}         = $similarity;
     	$ret->{has_genotype}       = $has_genotype;
     	$ret->{selection_pop_id}   = $selection_pop_id;
+        $ret->{selection_pop_genotyping_protocol_id} = $sel_pop_protocol_id;
     }
     else
     {
@@ -455,12 +455,15 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 sub check_selection_pops_list :Path('/solgs/check/selection/populations') Args(1) {
     my ($self, $c, $tr_pop_id) = @_;
 
-    my @traits_ids = $c->req->param('training_traits_ids[]');
-    $c->stash->{training_traits_ids} = \@traits_ids;
-    $c->stash->{training_pop_id} = $tr_pop_id;
-    my $protocol_id = $c->req->param('genotyping_protocol_id');
+    # my @traits_ids = $c->req->param('training_traits_ids[]');
+    # $c->stash->{training_traits_ids} = \@traits_ids;
+    # $c->stash->{training_pop_id} = $tr_pop_id;
 
-    $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
+    # my $protocol_id = $c->req->param('genotyping_protocol_id');
+    $c->controller('solGS::Utils')->stash_json_args($c, $c->req->param('arguments'));
+
+
+    # $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
 
     $c->controller('solGS::Files')->list_of_prediction_pops_file($c, $tr_pop_id);
     my $pred_pops_file = $c->stash->{list_of_prediction_pops_file};
