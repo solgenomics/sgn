@@ -248,12 +248,15 @@ sub selection_trait :Path('/solgs/selection/') Args() {
         $model_key, $training_pop_id,
         $trait_key, $trait_id, $gp, $protocol_id) = @_;
 
+    my ($protocol_id, $sel_pop_protocol_id) = split(/-/, $protocol_id);
     $self->get_trait_details($c, $trait_id);
 	my $trait_abbr = $c->stash->{trait_abbr};
 
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selection_pop_id} = $selection_pop_id;
     $c->stash->{data_set_type} = 'single population';
+    $c->stash->{selection_pop_genotyping_protocol_id} = $sel_pop_protocol_id;
+
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
 
@@ -264,6 +267,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
 		'trait_id' => $trait_id,
 		'training_pop_id' => $training_pop_id,
 		'genotyping_protocol_id' => $protocol_id,
+        'selection_pop_genotyping_protocol_id' => $sel_pop_protocol_id,
 		'data_set_type' => 'single population'
 	};
 
@@ -408,6 +412,8 @@ sub trait :Path('/solgs/trait') Args() {
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
+
+    $c->stash->{selection_pop_genotyping_protocol_id} = $protocol_id;
 
     $c->stash->{training_pop_id} = $pop_id;
     $c->stash->{trait_id} = $trait_id;
