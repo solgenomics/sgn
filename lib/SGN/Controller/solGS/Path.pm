@@ -54,9 +54,11 @@ sub selection_page_url {
 
     my $tr_pop_id      = $args->{training_pop_id};
     my $sel_pop_id    = $args->{selection_pop_id};
-    my $trait_id           = $args->{trait_id};
+    my $trait_id        = $args->{trait_id};
     my $protocol_id     = $args->{genotyping_protocol_id};
+	my $sel_protocol_id = $args->{selection_pop_genotyping_protocol_id};
 
+	$protocol_id .= '-' .$sel_protocol_id if $sel_protocol_id;
 	if ($args->{data_set_type} =~ /combined populations/)
 	{
 	   return "/solgs/combined/model/$tr_pop_id/selection/$sel_pop_id/trait/$trait_id/gp/$protocol_id";
@@ -119,7 +121,7 @@ sub parse_ids {
 	{
 		my @parts = split(/\//, $path);
 		my @num = grep(/\d+/, @parts);
-
+		
 		if ($path =~ /combined/)
 		{
 			$ids = {
