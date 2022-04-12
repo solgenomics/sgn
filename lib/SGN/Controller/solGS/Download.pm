@@ -46,20 +46,27 @@ sub download_validation :Path('/solgs/download/validation/pop') Args() {
 sub download_gebvs :Path('/solgs/download/gebvs/pop') Args() {
     my ($self, $c, $gebvs_id, $trait, $trait_id, $gp, $protocol_id) = @_;
 
-	my @pops_ids;
+	my $selection_pop_id;
+	my $sel_protocol_id;
+	my $training_pop_id;
+
 	if ($gebvs_id =~ /-/)
 	{
-		@pops_ids = split(/-/, $gebvs_id);
+		($training_pop_id, $selection_pop_id) = split(/-/, $gebvs_id);
 	}
 	else
 	{
-		@pops_ids = $gebvs_id;
+		$training_pop_id = $gebvs_id;
 	}
 
-	my $training_pop_id = $pops_ids[0];
-	my $selection_pop_id = $pops_ids[1];
-
+	if ($protocol_id =~ /-/)
+	{
+		($protocol_id, $sel_protocol_id)= split(/-/, $protocol_id);
+	}
+	
     $c->stash->{genotyping_protocol_id} = $protocol_id;
+	$c->stash->{selection_pop_genotyping_protocol_id} = $sel_protocol_id;
+
     $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
 
 	my $gebvs_file;
@@ -139,11 +146,15 @@ sub gebvs_download_url {
 
 	my $data_set_type = $c->stash->{data_set_type};
 	my $protocol_id = $c->stash->{genotyping_protocol_id};
+	my $sel_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
 	my $trait_id = $c->stash->{trait_id};
 	my $selection_pop_id = $c->stash->{selection_pop_id};
 	my $pop_id = $c->stash->{training_pop_id};
 
-	$pop_id .= '-' . $selection_pop_id if $selection_pop_id;
+	if ($selection_pop_id) {
+		$pop_id .= '-' . $selection_pop_id;
+		$protocol_id .= '-' .$sel_protocol_id;
+	}
 
 	my $url = "/solgs/download/gebvs/pop/$pop_id/trait/$trait_id/"
 	. "gp/$protocol_id";
@@ -189,6 +200,7 @@ sub selection_prediction_download_urls {
 
     my $selected_model_traits = $c->stash->{training_traits_ids} || [$c->stash->{trait_id}];
     my $protocol_id = $c->stash->{genotyping_protocol_id};
+	my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
 
     no warnings 'uninitialized';
 
@@ -196,6 +208,7 @@ sub selection_prediction_download_urls {
 	  'training_pop_id' => $training_pop_id,
 	  'selection_pop_id' => $selection_pop_id,
 	  'genotyping_protocol_id' => $protocol_id,
+	  'selection_pop_genotyping_protocol_id' => $sel_pop_protocol_id
 	};
 
 	my $selection_traits_ids;
