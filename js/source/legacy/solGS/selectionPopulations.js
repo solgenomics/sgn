@@ -14,6 +14,11 @@ function checkSelectionPopulations() {
 
   var trainingTraitsIds = jQuery("#training_traits_ids").val();
   var protocolId = jQuery("#genotyping_protocol_id").val();
+  var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+
+  if (!selPopProtocolId) {
+    selPopProtocolId = protocolId;
+  }
 
   if (trainingTraitsIds) {
     trainingTraitsIds = trainingTraitsIds.split(",");
@@ -27,12 +32,15 @@ function checkSelectionPopulations() {
   var args = {
     training_traits_ids: trainingTraitsIds,
     genotyping_protocol_id: protocolId,
+    selection_pop_genotyping_protocol_id: selPopProtocolId,
     training_pop_id: popId,
   };
 
+  args = JSON.stringify(args);
+
   jQuery.ajax({
     type: "POST",
-    data: args,
+    data: { arguments: args },
     dataType: "json",
     url: "/solgs/check/selection/populations/" + popId,
     success: function (response) {
@@ -83,6 +91,10 @@ function checkSelectionPopulationRelevance(popName) {
   var traitId = jQuery("#trait_id").val();
   var protocolId = jQuery("#genotyping_protocol_id").val();
   var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+
+  if (!selPopProtocolId) {
+    selPopProtocolId = protocolId;
+  }
 
   if (combinedPopsId) {
     dataSetType = "combined populations";
@@ -168,10 +180,16 @@ function searchSelectionPopulations() {
     dataSetType = "combined populations";
   }
   var protocolId = jQuery("#genotyping_protocol_id").val();
+  var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+
+  if (!selPopProtocolId) {
+    selPopProtocolId = protocolId;
+  }
 
   var args = {
     data_set_type: dataSetType,
     genotyping_protocol_id: protocolId,
+    selection_pop_genotyping_protocol_id: selPopProtocolId,
     training_pop_id: popId,
   };
 
