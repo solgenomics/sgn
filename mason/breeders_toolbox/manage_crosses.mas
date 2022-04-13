@@ -24,7 +24,7 @@ $odk_service => undef
 
 <&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=> $subtitle &>
 
-<& /breeders_toolbox/crossing_experiment_tree.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles  &>
+<& /breeders_toolbox/crossing_experiment_tree.mas, user_id=>$user_id, locations=>$locations, programs=>$programs, roles=>$roles, odk_service=>$odk_service &>
 
 </&>
 
