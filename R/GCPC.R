@@ -26,6 +26,8 @@ traits = args[3]
 weights = args[4]
 userSexes = args[5]
 
+write(paste('PLANT SEX CVTERM: ', userSexes), stderr())
+
 ################################################################################
 # 1. Load software needed
 ################################################################################
@@ -214,6 +216,8 @@ write("DISTANCE MATRIX...", stderr())
 # 4b. Get the additive and dominance relationship matrices. This uses AGHmatrix.
 
 A <- Gmatrix(G, method = "VanRaden", ploidy = userPloidy, missingValue = NA)
+
+write(paste('User ploidy: ', userPloidy), stderr());
 
 if(userPloidy == 2){
   D <- Gmatrix(G, method = "Su", ploidy = userPloidy, missingValue = NA)

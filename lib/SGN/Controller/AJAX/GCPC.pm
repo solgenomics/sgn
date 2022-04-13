@@ -210,6 +210,8 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
 	chomp;
 	my @f = split /\t/;
 
+	print $CLEAN $_;
+
 	# add a column with the plant sex score if the cvterm is defined
 	#
 	if ($plant_sex_cvterm_id) {
