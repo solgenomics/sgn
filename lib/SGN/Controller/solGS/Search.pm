@@ -428,7 +428,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
     	if ($similarity > 0.5 )
     	{
     	    $c->stash->{training_pop_id} = $training_pop_id;
-    	    $self->format_selection_pops($c, [$selection_pop_id]);
+    	    $self->format_selection_pops_search_result($c, [$selection_pop_id]);
     	    $selection_pop_data = $c->stash->{selection_pops_list};
     	    $self->save_selection_pops($c, [$selection_pop_id]);
     	}
@@ -791,7 +791,7 @@ sub list_of_prediction_pops {
 
     $c->stash->{selection_pops_ids} = \@pred_pops_ids;
 
-    $self->format_selection_pops($c, \@pred_pops_ids);
+    $self->format_selection_pops_search_result($c, \@pred_pops_ids);
     $c->stash->{list_of_prediction_pops} = $c->stash->{selection_pops_list};
 
 }
@@ -918,7 +918,7 @@ sub search_all_relevant_selection_pops {
 
     $self->save_selection_pops($c, \@pred_pops_ids);
 
-    $self->format_selection_pops($c, \@pred_pops_ids);
+    $self->format_selection_pops_search_result($c, \@pred_pops_ids);
 
     $c->stash->{all_relevant_selection_pops} = $c->stash->{selection_pops_list};
 
@@ -949,7 +949,7 @@ sub get_project_owners {
 }
 
 
-sub format_selection_pops {
+sub format_selection_pops_search_result {
     my ($self, $c, $selection_pops_ids) = @_;
 
     my $training_pop_id = $c->stash->{training_pop_id};
