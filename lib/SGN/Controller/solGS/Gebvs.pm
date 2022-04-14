@@ -120,13 +120,11 @@ sub combine_gebvs_jobs_args {
         }
 
 	my $identifier = $self->combined_gebvs_file_id($c);
-    print STDERR "\ncombined_gebvs_file_id: $identifier\n";
 	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
 
         #my $combined_gebvs_file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, "combined_gebvs_${identifier}");
         $self->combined_gebvs_file($c);
         my  $combined_gebvs_file = $c->stash->{combined_gebvs_file};
-        print STDERR "\ncombined_gebvs_file --  $combined_gebvs_file\n";
         $c->stash->{input_files}  = $gebvs_files;
         $c->stash->{output_files} = $combined_gebvs_file;
         $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
@@ -144,11 +142,8 @@ sub combine_gebvs_jobs_args {
 sub combined_gebvs_file_id {
     my ($self, $c) = @_;
 
-    my $selection_pop_id = $c->stash->{selection_pop_id};
-    my $training_pop_id    = $c->stash->{training_pop_id};
-    my $traits_code = $c->stash->{training_traits_code};
-
-    my $file_id  =  $selection_pop_id ? "${training_pop_id}-${selection_pop_id}-${traits_code}"  :  "${training_pop_id}-${traits_code}";
+    $c->stash->{data_type} = 'gebvs';
+    my $file_id = $c->controller('solGS::Files')->create_file_id($c);
 
     return $file_id;
 
