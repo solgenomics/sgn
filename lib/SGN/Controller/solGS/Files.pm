@@ -726,6 +726,7 @@ sub create_file_id {
     my $sindex_name      = $c->stash->{sindex_weigths} || $c->stash->{sindex_name};
     my $sel_prop         = $c->stash->{selection_proportion};
     my $protocol_id      = $c->stash->{genotyping_protocol_id};
+    my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
     my $cluster_pop_id   = $c->stash->{cluster_pop_id};
     my $pca_pop_id   = $c->stash->{pca_pop_id};
     my $training_traits_code = $c->stash->{training_traits_code};
@@ -810,7 +811,12 @@ sub create_file_id {
 
     $file_id = $data_type ? $file_id . '-' . lc($data_type) : $file_id;
     $file_id = $k_number  ? $file_id . '-k-' . $k_number : $file_id;
-    $file_id = $protocol_id && $data_type =~ /genotype/i ? $file_id . '-gp-' . $protocol_id : $file_id;
+    if ($data_type =~ /genotype|gebv/i || ($sindex_name && $data_type !~ /phenotype/i)) {  
+        $file_id = $protocol_id ? $file_id . '-gp-' . $protocol_id : $file_id;
+        if ($selection_pop_id) {
+            $file_id = $sel_pop_protocol_id ? $file_id . '-' . $sel_pop_protocol_id : $file_id;
+        }
+    }
 
     if ($sindex_name)
     {
