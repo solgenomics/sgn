@@ -18,7 +18,7 @@ solGS.cluster = {
     var clusterPopId;
     var traitId;
     var protocolId;
-	var selPopProtocolId;
+    var selPopProtocolId;
     var kNumber;
     var dataType;
     var sIndexName;
@@ -42,9 +42,12 @@ solGS.cluster = {
       }
 
       protocolId = args.pop();
-	  if (protocolId.match(/-/)) {
-		  (protocolId, selPopProtocolId) = protocolId.split(/-/);
-	  }
+
+      if (protocolId.match(/-/)) {
+        var ids = protocolId.split(/-/);
+        protocolId = ids[0];
+        selPopProtocolId = ids[1];
+      }
 
       if (!dataType.match(/phenotype|genotype|gebv/)) {
         sIndexName = dataType;
@@ -75,7 +78,7 @@ solGS.cluster = {
         dataset_id: datasetId,
         data_structure: dataStr,
         genotyping_protocol_id: protocolId,
-		selection_pop_genotyping_protocol_id: selPopProtocolId,
+        selection_pop_genotyping_protocol_id: selPopProtocolId,
         cluster_type: clusterType,
       };
 
@@ -344,10 +347,12 @@ solGS.cluster = {
     dataType = dataType.toLowerCase();
     cluseterType = clusterType.toLowerCase();
     var protocolId = jQuery("#cluster_div #genotyping_protocol #genotyping_protocol_id").val();
-    var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+    var selPopProtocolId = jQuery(
+      "#genotyping_protocol #selection_pop_genotyping_protocol_id"
+    ).val();
 
     if (!protocolId) {
-      var protocolId = jQuery("#genotyping_protocol_id").val();
+      protocolId = jQuery("#genotyping_protocol_id").val();
     }
 
     var trainingTraitsIds = jQuery("#training_traits_ids").val();
@@ -528,11 +533,13 @@ solGS.cluster = {
           }
 
           page = page + "/gp/" + protocolId;
+
           if (selPopProtocolId && popDetails.selection_pop_id) {
             page += "-" + selPopProtocolId;
           }
         }
       }
+
       var clusterArgs = {
         training_pop_id: popDetails.training_pop_id,
         selection_pop_id: popDetails.selection_pop_id,
