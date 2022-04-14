@@ -244,6 +244,7 @@ sub create_itemized_prediction_log_entries {
         'training_pop_id'        => $args->{training_pop_id}->[0],
         'selection_pop_id'       => $args->{selection_pop_id}->[0],
         'genotyping_protocol_id' => $args->{genotyping_protocol_id},
+        'selection_pop_genotyping_protocol_id'=> $args->{selection_pop_genotyping_protocol_id},
         'data_set_type'          => $args->{data_set_type},
     };
 
@@ -903,6 +904,7 @@ sub structure_selection_prediction_output {
 
         my $tr_pop_id  = $c->stash->{training_pop_id};
         my $sel_pop_id = $c->stash->{selection_pop_id};
+        my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
 
         my $tr_pop_page;
         my $model_page;
@@ -915,6 +917,7 @@ sub structure_selection_prediction_output {
             'selection_pop_id'       => $sel_pop_id,
             'trait_id'               => $trait_id,
             'genotyping_protocol_id' => $protocol_id,
+            'selection_pop_genotyping_protocol_id' => $sel_pop_protocol_id,
             'data_set_type'          => $data_set_type,
         };
 
