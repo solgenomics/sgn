@@ -66,35 +66,34 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
     genotyping_protocol_id => $genotyping_protocol_id,
     training_traits_ids    => $training_traits_ids,
     selection_traits_ids   => $selection_traits_ids,
-    training_traits_code => $training_traits_code
+    training_traits_code => $training_traits_code,
    &>
 
 <& selection_populations.mas,
-   selection_prediction_download  => $selection_prediction_download,
-   training_pop_analyzed_traits                => $training_pop_analyzed_traits,
+   selection_prediction_download => $selection_prediction_download,
+   training_pop_analyzed_traits  => $training_pop_analyzed_traits,
    training_pop_id               => $training_pop_id,
-   training_pop_name                   => $training_pop_name,
+   training_pop_name             => $training_pop_name,
    selection_pop_id              => $selection_pop_id,
-    selection_pop_name            => $selection_pop_name,
-   list_of_prediction_pops        => $list_of_prediction_pops,
-
+    selection_pop_name           => $selection_pop_name,
+   list_of_prediction_pops       => $list_of_prediction_pops,
    selection_pop_analyzed_traits => $selection_pop_analyzed_traits,
 &>
 
 <& /solgs/tools/correlation/genetic_correlation.mas,
-     training_pop_analyzed_traits     => $training_pop_analyzed_traits,
-     training_pop_id                         => $training_pop_id,
-     training_pop_name                    => $training_pop_name,
-     selection_pop_id                       => $selection_pop_id,
-     selection_pop_name                 => $selection_pop_name,
+     training_pop_analyzed_traits => $training_pop_analyzed_traits,
+     training_pop_id  => $training_pop_id,
+     training_pop_name => $training_pop_name,
+     selection_pop_id => $selection_pop_id,
+     selection_pop_name => $selection_pop_name,
      selection_pop_analyzed_traits => $selection_pop_analyzed_traits,
 &>
 
 
 <& /solgs/tools/genetic_gain/genetic_gain.mas,
-     training_pop_analyzed_traits                => $training_pop_analyzed_traits,
-     training_pop_analyzed_traits_ids            => $training_pop_analyzed_traits_ids,
-     training_pop_id                         => $training_pop_id,
+     training_pop_analyzed_traits => $training_pop_analyzed_traits,
+     training_pop_analyzed_traits_ids => $training_pop_analyzed_traits_ids,
+     training_pop_id => $training_pop_id,
      project_name                   => $training_pop_name,
      selection_pop_id              => $selection_pop_id,
      selection_pop_name            => $selection_pop_name,
