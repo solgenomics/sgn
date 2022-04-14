@@ -113,33 +113,39 @@ sub page_type {
 sub parse_ids {
 	my ($self, $c) = @_;
 
-	my $page_type = $self->page_type($c);
 	my $path = $c->req->path;
-
+	my $page_type = $self->page_type($c, $path);
+	
 	my $ids = {};
 	if ($page_type =~ /selection/)
 	{
 		my @parts = split(/\//, $path);
 		my @num = grep(/\d+/, @parts);
+		my $protocol_id = $num[3];
+
+		my ($protocol_id, $sel_pop_protocol_id);
 		
+		if ($num[3] =~ /-/) {
+			($protocol_id, $sel_pop_protocol_id) = split(/-/, $protocol_id);
+		} else {
+			$protocol_id = $num[3];
+		}
+
+		$ids = {
+			'genotyping_protocol_id' => $protocol_id,
+			'selection_pop_genotyping_protocol_id' => $sel_pop_protocol_id,
+			'trait_id' => $num[2]
+		};
+
 		if ($path =~ /combined/)
 		{
-			$ids = {
-				'training_pop_id' => $num[0],
-				'selection_pop_id' => $num[1],
-				'trait_id' => $num[2],
-				'genotyping_protocol_id' => $num[3]
-			};
+			$ids->{'training_pop_id'} = $num[0];
+			$ids->{'selection_pop_id'} = $num[1];
 		}
 		else
 		{
-			$ids = {
-				'training_pop_id' => $num[1],
-				'selection_pop_id' => $num[0],
-				'trait_id' => $num[2],
-				'genotyping_protocol_id' => $num[3]
-			};
-
+			$ids->{'training_pop_id'} = $num[1];
+			$ids->{'selection_pop_id'} = $num[0];
 		}
 	}
 
