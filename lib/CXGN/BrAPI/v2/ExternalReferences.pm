@@ -182,11 +182,7 @@ sub _remove_external_references {
         push @ids, @r[0];
     }
     my $list_ids = join ("," , @ids);
-
-    if (scalar(@ids) > 0) {
-        my $delete_dbxref_query = "delete from dbxref where dbxref_id in ($list_ids)";
-        $self->bcs_schema->storage()->dbh()->prepare($delete_dbxref_query)->execute();
-    }
+    
     # Clear $table_dbxref
     my $delete_table_dbxref_query = "delete from $table\_dbxref where $table_id = $id";
     $self->bcs_schema->storage()->dbh()->prepare($delete_table_dbxref_query)->execute();
