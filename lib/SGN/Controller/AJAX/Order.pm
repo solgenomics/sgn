@@ -63,13 +63,11 @@ sub submit_order_POST : Args(0) {
         $group_by_contact_id{$contact_person_id}{$item_name}{'item_type'} = $item_type;
         $group_by_contact_id{$contact_person_id}{$item_name}{'material_source'} = $item_source;
 
-        if ($number_of_fields == 2) {
-            my $quantity = $ordered_item_split[1];
-            my @quantity_info = split /:/, $quantity;
-            my $quantity_number = $quantity_info[1];
-            $quantity_number =~ s/^\s+|\s+$//g;
-            $group_by_contact_id{$contact_person_id}{$item_name}{'quantity'} = $quantity_number;
-        }
+        my $quantity = $ordered_item_split[1];
+        my @quantity_info = split /:/, $quantity;
+        my $quantity_number = $quantity_info[1];
+        $quantity_number =~ s/^\s+|\s+$//g;
+        $group_by_contact_id{$contact_person_id}{$item_name}{'quantity'} = $quantity_number;
 
         if ($number_of_fields == 3) {
             my $comments = $ordered_item_split[2];
