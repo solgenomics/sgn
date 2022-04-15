@@ -14,10 +14,15 @@ function checkSelectionPopulations() {
 
   var trainingTraitsIds = jQuery("#training_traits_ids").val();
   var protocolId = jQuery("#genotyping_protocol_id").val();
-  var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
-
+  var selPopProtocolId = jQuery("#genotyping_protocol #selection_pop_genotyping_protocol_id").val();
+  console.log("checkselpops protocol id " + selPopProtocolId);
   if (!selPopProtocolId) {
-    selPopProtocolId = protocolId;
+    var sessionData = solGS.genotypingProtocol.getSessionGenoProtocol();
+    if (sessionData) {
+      selPopProtocolId = sessionData.protocol_id;
+    } else {
+      selPopProtocolId = protocolId;
+    }
   }
 
   if (trainingTraitsIds) {
