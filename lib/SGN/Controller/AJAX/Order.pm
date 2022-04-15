@@ -50,25 +50,45 @@ sub submit_order_POST : Args(0) {
     my @all_items = @$items;
     foreach my $ordered_item (@all_items) {
         my @ordered_item_split = split /,/, $ordered_item;
+        my $number_of_fields = @ordered_item_split;
         my $item_name = $ordered_item_split[0];
         my $item_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $item_name });
         my $item_id = $item_rs->stock_id();
-#        print STDERR "ITEM ID =".Dumper($item_id)."\n";
         my $item_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $catalog_cvterm_id});
         my $item_info_string = $item_info_rs->value();
         my $item_info_hash = decode_json $item_info_string;
         $contact_person_id = $item_info_hash->{'contact_person_id'};
         my $item_type = $item_info_hash->{'item_type'};
-        $group_by_contact_id{$contact_person_id}{$ordered_item} = $item_type;
+        my $item_source = $item_info_hash->{'material_source'};
+        $group_by_contact_id{$contact_person_id}{$item_name}{'item_type'} = $item_type;
+        $group_by_contact_id{$contact_person_id}{$item_name}{'material_source'} = $item_source;
+
+        if ($number_of_fields == 2) {
+            my $quantity = $ordered_item_split[1];
+            my @quantity_info = split /:/, $quantity;
+            my $quantity_number = $quantity_info[1];
+            $quantity_number =~ s/^\s+|\s+$//g;
+            $group_by_contact_id{$contact_person_id}{$item_name}{'quantity'} = $quantity_number;
+        }
+
+        if ($number_of_fields == 3) {
+            my $comments = $ordered_item_split[2];
+            my @comment_info = split /:/, $comments;
+            my $comment_detail = $comment_info[1];
+            $comment_detail =~ s/^\s+|\s+$//g;
+            $group_by_contact_id{$contact_person_id}{$item_name}{'comments'} = $comment_detail;
+        }
     }
 
+    my @item_list;
     my @contact_email_list;
     foreach my $contact_id (keys %group_by_contact_id) {
         my @history = ();
         my $history_info = {};
         my $item_ref = $group_by_contact_id{$contact_id};
-        my $order_list = encode_json $item_ref;
-#        print STDERR "ORDER LIST =".Dumper($order_list)."\n";
+        my %item_hashes = %{$item_ref};
+        my @item_list = map { { $_ => $item_hashes{$_} } } keys %item_hashes;
+
         my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema, dbh => $dbh});
         $new_order->order_from_id($user_id);
         $new_order->order_to_id($contact_id);
@@ -85,7 +105,7 @@ sub submit_order_POST : Args(0) {
         push @history, $history_info;
 
         my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
-        $order_prop->clone_list($order_list);
+        $order_prop->clone_list(\@item_list);
         $order_prop->parent_id($order_id);
         $order_prop->history(\@history);
     	my $order_prop_id = $order_prop->store_sp_orderprop();
