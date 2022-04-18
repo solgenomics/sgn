@@ -8,7 +8,13 @@ extends 'Catalyst::Script::Server';
 
 if (@ARGV && "-r" ~~ @ARGV) {
     $ENV{SGN_WEBPACK_WATCH} = 1;
-    system("cd js && npm run build-watch &");
+    my $uid = (lstat("js/package.json"))[4];
+    my $user_exists = `id $uid`;
+    if ($user_exists =~ /no such user/) {
+	`useradd -u $uid -d /home/devel devel`;
+    }
+    print STDERR "\n\nSGN_WEBPACK_WATCH: USING USER ID $uid FOR npm...\n\n\n";
+    system("cd js && sudo -u \\#$uid npm run build-watch &");
 } 
 
 1;
