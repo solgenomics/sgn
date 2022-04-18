@@ -113,6 +113,20 @@ solGS.genotypingProtocol = {
     divPlace = divPlace ? "#" + divPlace : " ";
     return divPlace;
   },
+
+  getPredictionGenotypingProtocols: function () {
+    var protocolId = jQuery("#genotyping_protocol_id").val();
+    var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+
+    if (!selPopProtocolId) {
+      selPopProtocolId = protocolId;
+    }
+
+    return {
+      genotyping_protocol_id: protocolId,
+      selection_pop_genotyping_protocol_id: selPopProtocolId,
+    };
+  },
 };
 
 jQuery(document).ready(function () {
