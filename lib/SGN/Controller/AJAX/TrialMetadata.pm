@@ -2460,6 +2460,21 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   $c->stash->{rest} = { success => 1};
 }
 
+sub refresh_cache : Chained('trial') PathPart('refresh_cache') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->stash->{trial_id};
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
+    my $refresh_fieldmap_cache = CXGN::Trial::FieldMap->new({
+        trial_id => $trial_id,
+        bcs_schema => $schema,
+    });
+
+    $refresh_fieldmap_cache->_regenerate_trial_layout_cache();
+    $c->stash->{rest} = { success => 1};
+}
+
 sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions') Args(0) {
     my $self = shift;
     my $c = shift;
