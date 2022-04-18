@@ -531,25 +531,18 @@ solGS.submitJob = {
       args["trait_id"] = trainingTraitsIds;
     }
 
+    var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
     var protocolId = args.genotyping_protocol_id;
     if (!protocolId) {
-      protocolId = jQuery("#genotyping_protocol_id").val();
+      protocolId = protocols.genotyping_protocol_id;
     }
-
-    var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
-    console.log("geargsfromurl protocol id" + protocolId + " sel pop prid " + selPopProtocolId);
-
-    if (!selPopProtocolId) {
-      selPopProtocolId = protocolId;
-    }
-    console.log("geargsfromurl protocol id" + protocolId + " sel pop prid " + selPopProtocolId);
 
     var popDesc = jQuery("#training_pop_desc").val();
 
     args["training_pop_desc"] = jQuery("#training_pop_desc").val();
     args["selection_pop_desc"] = jQuery("#selection_pop_desc").val();
     args["genotyping_protocol_id"] = protocolId;
-    args["selection_pop_genotyping_protocol_id"] = selPopProtocolId;
+    args["selection_pop_genotyping_protocol_id"] = protocols.selection_pop_genotyping_protocol_id;
     args["referer"] = referer;
 
     return args;
