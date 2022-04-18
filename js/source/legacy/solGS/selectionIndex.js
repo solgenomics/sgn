@@ -148,8 +148,8 @@ solGS.sIndex = {
   },
 
   getSelectionIndexArgs: function (modelId, selectedPopId) {
-    var protocolId = jQuery("#genotyping_protocol_id").val();
-    var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+    var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+
     var traitsCode = jQuery("#training_traits_code").val();
 
     var trainingTraitsIds = jQuery("#training_traits_ids").val();
@@ -162,8 +162,8 @@ solGS.sIndex = {
       selection_pop_id: selectedPopId,
       training_traits_ids: trainingTraitsIds,
       training_traits_code: traitsCode,
-      genotyping_protocol_id: protocolId,
-      selection_pop_genotyping_protocol_id: selPopProtocolId,
+      genotyping_protocol_id: protocols.genotyping_protocol_id,
+      selection_pop_genotyping_protocol_id: protocols.selection_pop_genotyping_protocol_id,
     };
 
     return args;
