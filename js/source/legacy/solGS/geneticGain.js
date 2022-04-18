@@ -46,8 +46,8 @@ solGS.geneticGain = {
     var selectionPopId = jQuery("#gg_canvas #selection_pop_id").val();
     var trainingTraitsIds = jQuery("#gg_canvas").find("#training_traits_ids").val();
     var traitId = jQuery("#trait_id").val();
-    var protocolId = jQuery("#genotyping_protocol_id").val();
-    var selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
+
+    var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
 
     if (document.URL.match(/solgs\/traits\/all\/population\/|solgs\/models\/combined\/trials\//)) {
       if (trainingTraitsIds) {
@@ -61,8 +61,8 @@ solGS.geneticGain = {
       selection_pop_id: selectionPopId,
       training_traits_ids: trainingTraitsIds,
       trait_id: traitId,
-      genotyping_protocol_id: protocolId,
-      selection_pop_genotyping_protocol_id: selPopProtocolId,
+      genotyping_protocol_id: protocols.genotyping_protocol_id,
+      selection_pop_genotyping_protocol_id: protocols.selection_pop_genotyping_protocol_id,
     };
 
     return ggArgs;
