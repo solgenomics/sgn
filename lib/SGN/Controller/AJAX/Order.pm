@@ -30,6 +30,7 @@ sub submit_order_POST : Args(0) {
     my $list_id = $c->req->param('list_id');
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $request_date = $time->ymd();
 #    print STDERR "LIST ID =".Dumper($list_id)."\n";
 
     if (!$c->user()) {
@@ -45,10 +46,11 @@ sub submit_order_POST : Args(0) {
     my $items = $list->elements();
 #    print STDERR "ITEMS =".Dumper($items)."\n";
     my $catalog_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_catalog_json', 'stock_property')->cvterm_id();
-    my $contact_person_id;
     my %group_by_contact_id;
+    my @btract_rows;
     my @all_items = @$items;
     foreach my $ordered_item (@all_items) {
+        my @btract_info = ();
         my @ordered_item_split = split /,/, $ordered_item;
         my $number_of_fields = @ordered_item_split;
         my $item_name = $ordered_item_split[0];
@@ -57,24 +59,27 @@ sub submit_order_POST : Args(0) {
         my $item_info_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $item_id, type_id => $catalog_cvterm_id});
         my $item_info_string = $item_info_rs->value();
         my $item_info_hash = decode_json $item_info_string;
-        $contact_person_id = $item_info_hash->{'contact_person_id'};
+        my $contact_person_id = $item_info_hash->{'contact_person_id'};
         my $item_type = $item_info_hash->{'item_type'};
         my $item_source = $item_info_hash->{'material_source'};
-        $group_by_contact_id{$contact_person_id}{$item_name}{'item_type'} = $item_type;
-        $group_by_contact_id{$contact_person_id}{$item_name}{'material_source'} = $item_source;
+        $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'item_type'} = $item_type;
+        $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'material_source'} = $item_source;
 
-        my $quantity = $ordered_item_split[1];
-        my @quantity_info = split /:/, $quantity;
-        my $quantity_number = $quantity_info[1];
-        $quantity_number =~ s/^\s+|\s+$//g;
-        $group_by_contact_id{$contact_person_id}{$item_name}{'quantity'} = $quantity_number;
+        my $quantity_string = $ordered_item_split[1];
+        my @quantity_info = split /:/, $quantity_string;
+        my $quantity = $quantity_info[1];
+        $quantity =~ s/^\s+|\s+$//g;
+        $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'quantity'} = $quantity;
+
+        push @btract_info, [$item_source, $item_name, $quantity, $request_date];
+        $group_by_contact_id{$contact_person_id}{'btract'} = \@btract_info;
 
         if ($number_of_fields == 3) {
             my $comments = $ordered_item_split[2];
             my @comment_info = split /:/, $comments;
             my $comment_detail = $comment_info[1];
             $comment_detail =~ s/^\s+|\s+$//g;
-            $group_by_contact_id{$contact_person_id}{$item_name}{'comments'} = $comment_detail;
+            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $comment_detail;
         }
     }
 
@@ -83,7 +88,7 @@ sub submit_order_POST : Args(0) {
     foreach my $contact_id (keys %group_by_contact_id) {
         my @history = ();
         my $history_info = {};
-        my $item_ref = $group_by_contact_id{$contact_id};
+        my $item_ref = $group_by_contact_id{$contact_id}{'item_list'};
         my %item_hashes = %{$item_ref};
         my @item_list = map { { $_ => $item_hashes{$_} } } keys %item_hashes;
 
@@ -114,10 +119,20 @@ sub submit_order_POST : Args(0) {
             return;
         }
 
-        my $contact_person = CXGN::People::Person -> new($dbh, $contact_person_id);
+        my $contact_person = CXGN::People::Person -> new($dbh, $contact_id);
         my $contact_email = $contact_person->get_contact_email();
         push @contact_email_list, $contact_email;
+
+        my $btract_ref = $group_by_contact_id{$contact_id}{'btract'};
+        my @btract_info = @$btract_ref;
+        foreach my $btract_item (@btract_info) {
+            my @btract_row = @$btract_item;
+            splice @btract_row, 1, 0, $order_id;
+            push @btract_rows, [@btract_row];
+        }
     }
+
+    print STDERR "BTRACK ROWS =".Dumper(\@btract_rows)."\n";
 #    print STDERR "EMAIL LIST =".Dumper(\@contact_email_list)."\n";
 
     my $host = $c->config->{main_production_site_url};
