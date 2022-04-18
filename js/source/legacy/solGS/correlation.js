@@ -363,11 +363,7 @@ jQuery(document).on("click", "#run_genetic_correlation", function () {
   var popId = jQuery("#corre_selected_population_id").val();
   var popType = jQuery("#corre_selected_population_type").val();
 
-  var protocolId = jQuery("#genotyping_protocol_id").val();
-  var selPopProtocolId;
-  if (popType.match(/selection/)) {
-    selPopProtocolId = jQuery("#selection_pop_genotyping_protocol_id").val();
-  }
+  var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
 
   //jQuery("#correlation_canvas").empty();
   var traitsIds = jQuery("#training_traits_ids").val();
@@ -384,8 +380,8 @@ jQuery(document).on("click", "#run_genetic_correlation", function () {
     pop_type: popType,
     training_traits_ids: traitsIds,
     training_traits_code: traitsCode,
-    genotyping_protocol_id: protocolId,
-    selection_pop_genotyping_protocol_id: selPopProtocolId,
+    genotyping_protocol_id: protocols.genotyping_protocol_id,
+    selection_pop_genotyping_protocol_id: protocols.selection_pop_genotyping_protocol_id,
   };
 
   solGS.correlation.formatGenCorInputData(corrArgs);
