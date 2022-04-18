@@ -347,12 +347,11 @@ solGS.cluster = {
     dataType = dataType.toLowerCase();
     cluseterType = clusterType.toLowerCase();
     var protocolId = jQuery("#cluster_div #genotyping_protocol #genotyping_protocol_id").val();
-    var selPopProtocolId = jQuery(
-      "#genotyping_protocol #selection_pop_genotyping_protocol_id"
-    ).val();
+    var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
+    var selPopProtocolId = protocols.selection_pop_genotyping_protocol_id;
 
     if (!protocolId) {
-      protocolId = jQuery("#genotyping_protocol_id").val();
+      protocolId = protocols.genotyping_protocol_id;
     }
 
     var trainingTraitsIds = jQuery("#training_traits_ids").val();
