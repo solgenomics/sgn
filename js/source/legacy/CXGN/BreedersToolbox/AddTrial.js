@@ -976,21 +976,21 @@ jQuery(document).ready(function ($) {
 
         //add lists to the list select and list of checks select dropdowns based on stock type.
         if (stock_type == "accession"){
-            document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], 'select a list', 'refresh', undefined);
             document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh', undefined);
-            document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], 'select optional check list', 'refresh', undefined);
             document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
             document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh', undefined);
             document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh', undefined);
         } else if (stock_type == "cross") {
-            document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], '', 'refresh', undefined);
-            document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], 'select a list', 'refresh', undefined);
+            document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'accessions' ], 'select optional check list', 'refresh', undefined);
             document.getElementById("crbd_list_of_cross_checks_section").innerHTML = list.listSelect("crbd_list_of_cross_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
             document.getElementById("list_of_unrep_cross").innerHTML = list.listSelect("list_of_unrep_cross", [ 'crosses' ], "Required: e.g. 200", 'refresh', undefined);
             document.getElementById("list_of_rep_cross").innerHTML = list.listSelect("list_of_rep_cross", [ 'crosses' ], "Required: e.g. 119", 'refresh', undefined);
         } else if (stock_type == "family_name") {
-            document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_family_name_list", [ 'family_names' ], '', 'refresh', undefined);
-            document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_family_name_list", [ 'family_names' ], 'select a list', 'refresh', undefined);
+            document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'accessions' ], 'select optional check list', 'refresh', undefined);
             document.getElementById("crbd_list_of_family_name_checks_section").innerHTML = list.listSelect("crbd_list_of_family_name_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
             document.getElementById("list_of_unrep_family_name").innerHTML = list.listSelect("list_of_unrep_family_name", [ 'family_names' ], "Required: e.g. 200", 'refresh', undefined);
             document.getElementById("list_of_rep_family_name").innerHTML = list.listSelect("list_of_rep_family_name", [ 'family_names' ], "Required: e.g. 119", 'refresh', undefined);
@@ -1711,7 +1711,6 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
-            greenhouse_show_num_plants_section();
         }
         else if (design_method == 'splitplot') {
             if (stock_type == "accession") {
