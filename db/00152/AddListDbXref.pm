@@ -57,6 +57,8 @@ sub patch {
         $self->dbh->do(<<EOSQL);
 
  --do your SQL here
+delete from sgn_people.list where list_id in (11, 9, 3, 5, 4, 10, 6, 14, 13, 808, 7, 12, 810, 811, 809, 8);
+alter table sgn_people.list add constraint list_id_unique unique(list_id);
 CREATE TABLE sgn_people.list_dbxref (
 	list_dbxref_id serial4 NOT null,
 	list_id int4 NOT NULL,

@@ -732,9 +732,6 @@ sub _refresh_materialized_stockprop {
         my $h = $schema->storage->dbh()->prepare($q);
 
         my $stockprop_refresh_q = "
-        DROP EXTENSION IF EXISTS tablefunc CASCADE;
-        CREATE EXTENSION tablefunc;
-
         DROP MATERIALIZED VIEW IF EXISTS public.materialized_stockprop CASCADE;
         CREATE MATERIALIZED VIEW public.materialized_stockprop AS
         SELECT *

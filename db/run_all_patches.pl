@@ -64,9 +64,9 @@ for (my $i = 0; $i < (scalar @folders); $i++) {
 
             my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser" . ($test ? ' -t' : '');
             print STDERR $cmd . "\n";
-            my $returnCode = system("bash -c '$cmd'");
+            system("bash -c '$cmd'");
 
-            if ($returnCode != 0 && $returnCode != 1) {
+            if (($? >> 8) == 255) { #execution error
                 die "Failed executing patch: $patch";
             }
 
