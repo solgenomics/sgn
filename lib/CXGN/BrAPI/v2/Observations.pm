@@ -87,7 +87,7 @@ sub search {
         foreach (@$observations){
             my $observation_id = "$_->{phenotype_id}";
             # if ( ! $observation_db_id || grep{/^$observation_id$/} @{$observation_db_id} ){
-                my $season = {
+                my %season = {
                     year => $obs_unit->{year},
                     seasonName => $obs_unit->{year},
                     seasonDbId => $obs_unit->{year}
@@ -109,7 +109,7 @@ sub search {
                         observationVariableDbId => qq|$_->{trait_id}|,
                         observationVariableName => $_->{trait_name},
                         observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
-                        season => \@season,
+                        season => \%season,
                         collector => $_->{operator},
                         studyDbId => qq|$obs_unit->{trial_id}|,
                         uploadedBy=> $_->{operator},

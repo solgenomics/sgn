@@ -88,6 +88,9 @@ sub search {
     my ($result, $total_count) = $image_search->search();
 
     my @data;
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size - 1;
+    my $counter = 0;
 
     foreach (@$result) {
         my $mimetype = _get_mimetype($_->{'image_file_ext'});
@@ -166,6 +169,7 @@ sub search {
                 observationDbIds         => [ @observationDbIds ],
             };
         }
+        $counter++;
     }
 
     my %result = (data => \@data);
