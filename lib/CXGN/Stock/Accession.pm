@@ -419,9 +419,12 @@ sub store {
     if ($self->germplasmSeedSource){
         $self->_update_stockprop('seed source', $self->germplasmSeedSource);
     }
+    # Delete synonyms
+    $self->_remove_stockprop_all_of_type('stock_synonym');
+    # Reinsert
     if ($self->synonyms){
         foreach (@{$self->synonyms}){
-            $self->_update_stockprop('stock_synonym', $_);
+            $self->_store_stockprop('stock_synonym', $_);
         }
     }
     if ($self->instituteCode){
@@ -450,10 +453,12 @@ sub store {
             $self->_update_stockprop('donor PUI', $_->{germplasmPUI});
         }
     }
+    $self->_remove_parent_relationship('female_parent');
     if ($self->mother_accession) {
         my $return = $self->_store_parent_relationship('female_parent', $self->mother_accession, 'biparental');
         # TODO: delete accession if error and return error
     }
+    $self->_remove_parent_relationship('male_parent');
     if ($self->father_accession) {
         my $return = $self->_store_parent_relationship('male_parent', $self->father_accession, 'biparental');
         # TODO: delete accession if error and return error

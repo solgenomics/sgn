@@ -85,6 +85,9 @@ sub store {
     my $id = $self->id();
     my $external_references = $self->external_references();
 
+    # Clear old external references
+    $self->_remove_external_references();
+
     foreach (@$external_references){
         my $ref_name = $_->{'referenceSource'};
         my $ref_id = $_->{'referenceID'};
@@ -156,6 +159,18 @@ sub store {
 
     return { success => "External References added successfully" };
 
+}
+
+sub _remove_external_references {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+    my $table = $self->table_name();
+    my $table_id = $self->table_id_key();
+    my $id = $self->id();
+
+    # Clear $table_dbxref, we'll leave the dbxref because those can be shared
+    my $delete_table_dbxref_query = "delete from $table\_dbxref where $table_id = $id";
+    $self->bcs_schema->storage()->dbh()->prepare($delete_table_dbxref_query)->execute();
 }
 
 
