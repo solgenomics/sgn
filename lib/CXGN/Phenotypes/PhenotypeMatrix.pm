@@ -128,6 +128,8 @@ has 'include_timestamp' => (
     default => 0
 );
 
+# has 'include_phenotype_primary_key' = 
+
 has 'exclude_phenotype_outlier' => (
     isa => 'Bool',
     is => 'ro',
@@ -163,6 +165,7 @@ sub get_phenotype_matrix {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $include_timestamp = $self->include_timestamp;
+    my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
 
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
 
@@ -299,6 +302,8 @@ sub get_phenotype_matrix {
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
         my @unique_obsunit_list = ();
         my %seen_obsunits;
+
+        print STDERR Dumper($data);
 
         foreach my $d (@$data) {
             my $cvterm = $d->{trait_name};
