@@ -98,7 +98,7 @@ sub search {
 
     my @data;
     my $total_count = 0;
-    while (my ($treatment_id, $treatment_name, $treatment_desc, $treatment_create_date, $trial_id, $trial_name, $trial_desc, $trial_create_date, $trial_nd_experiment_id, $treatment_type, $treatment_year, $treatment_date, $full_count) = $h->fetchrow_array()) {
+    while (my ($treatment_id, $treatment_name, $treatment_desc, $treatment_create_date, $trial_id, $trial_name, $trial_desc, $trial_create_date, $trial_nd_experiment_id, $treatment_type_raw, $treatment_year, $treatment_date, $full_count) = $h->fetchrow_array()) {
         $total_count = $full_count;
         my $treatment_date_display = $treatment_date ? $calendar_funcs->display_start_date($treatment_date) : '';
         my $treatment_date_timestamp = '';
@@ -113,22 +113,32 @@ sub search {
             push @stock_ids, $stock_id;
         }
 
+        if (!$treatment_desc || $treatment_desc eq 'No description'){
+            $treatment_desc = $treatment_name;
+        } 
+
+        my $treatment_type = _get_event_type($treatment_type_raw);
+
         push @data, {
             additionalInfo => {
-                year => $treatment_year,
-                studyName => $trial_name,
+                year => $treatment_year,    
                 studyDescription => $trial_desc,
                 eventCreateDate => $treatment_create_date,
                 studyCreateDate => $trial_create_date
             },
-            date => [$treatment_date_timestamp],
+            date => {
+                discreteDates => [ _format_date($treatment_date_timestamp) ],
+                endDate => undef,
+                startDate => undef
+            },
             eventDbId => $treatment_id,
-            eventDescription => $treatment_desc,
+            eventDescription => $treatment_type_raw . ": " .  $treatment_desc,
             eventParameters => [],
             eventType => $treatment_type,
             eventTypeDbId => $treatment_type,
             observationUnitDbIds => \@stock_ids,
-            studyDbId => $trial_id
+            studyDbId => $trial_id,
+            studyName => $trial_name,
         };
     }
 
@@ -137,5 +147,42 @@ sub search {
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Event search result constructed');
 }
+
+sub _get_event_type{
+    my $value = shift;
+
+    my %types = (
+        fertilizer => 'fertilizer',
+        fungicide => 'chemicals',
+        irrigation => 'irrigation',
+        drought => 'other',
+        herbicide => 'chemicals',
+        weeding => 'weeding',
+        pruning => 'other',
+        'hormone treatment' => 'other',
+        'light treatment' => 'other',
+
+    );
+    return $types{lc $value} ;
+
+}
+
+
+
+sub _format_date {
+
+    my $str_date = shift; #It gets 2022-04-19T000000
+    my $date; 
+
+    if ($str_date ) {
+        my  $formatted_time = Time::Piece->strptime($str_date, '%Y-%m-%d');
+        #Desired output format: 2017-06-01T00:00:00Z
+        $date =  $formatted_time->strftime("%Y-%m-%dT%H:%M:%SZ");
+    }
+    else { $date = $str_date;}
+
+    return $date;
+}
+
 
 1;
