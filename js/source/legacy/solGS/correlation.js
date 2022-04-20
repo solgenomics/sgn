@@ -366,13 +366,10 @@ jQuery(document).on("click", "#run_genetic_correlation", function () {
   var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
 
   //jQuery("#correlation_canvas").empty();
-  var traitsIds = jQuery("#training_traits_ids").val();
-  var traitsCode = jQuery("#training_traits_code").val();
+  var traitsIds = solGS.getTrainingTraitsIds();
+  var traitsCode = solGS.getTrainingTraitsCode();
   var trainingPopId = jQuery("#training_pop_id").val();
   //var divPlace;
-  if (traitsIds) {
-    traitsIds = traitsIds.split(",");
-  }
 
   var corrArgs = {
     training_pop_id: trainingPopId,
