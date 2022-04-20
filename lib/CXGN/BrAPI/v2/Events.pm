@@ -58,9 +58,22 @@ sub search {
         my $string = join ',', @$eventdbid_arrayref;
         push @where_clause, "treatment.project_id IN ($string)";
     }
+
+    #Others are everything besides fertilizer, fungicide, irrigation, herbicide, weeding 
     if ($eventtypedbid_arrayref && scalar(@$eventtypedbid_arrayref)>0) {
-        my $string = join '","', @$eventtypedbid_arrayref;
-        push @where_clause, 'treatment_type.value IN ("'.$string.'")';
+        if ("chemicals" ~~ @$eventtypedbid_arrayref ) {
+            my $string = join '","', @$eventtypedbid_arrayref;
+            push @where_clause, "lower(treatment_type.value) IN ('fungicide', 'herbicide' )";
+
+        } elsif ("other" ~~ @$eventtypedbid_arrayref ) {
+            my $string = join '","', @$eventtypedbid_arrayref;
+            push @where_clause, "lower(treatment_type.value) NOT IN ('fertilizer', 'fungicide', 'irrigation', 'herbicide', 'weeding' )";
+
+        } else {
+
+            my $string = join '","', @$eventtypedbid_arrayref;
+            push @where_clause, "lower(treatment_type.value) IN ('". lc $string."')";
+        }
     }
 
     my $where_clause_string = scalar(@where_clause) ? " WHERE ".join(' AND ', @where_clause) : '';
@@ -85,7 +98,6 @@ sub search {
         LIMIT $limit
         OFFSET $offset
         ;";
-    # print STDERR $q."\n";
 
     my $q2 = "SELECT stock_id
         FROM stock
@@ -110,7 +122,7 @@ sub search {
         $h2->execute($trial_nd_experiment_id);
         my @stock_ids;
         while (my($stock_id) = $h2->fetchrow_array()) {
-            push @stock_ids, $stock_id;
+            push @stock_ids, qq|$stock_id|;
         }
 
         if (!$treatment_desc || $treatment_desc eq 'No description'){
@@ -131,13 +143,13 @@ sub search {
                 endDate => undef,
                 startDate => undef
             },
-            eventDbId => $treatment_id,
+            eventDbId => qq|$treatment_id|,
             eventDescription => $treatment_type_raw . ": " .  $treatment_desc,
             eventParameters => [],
             eventType => $treatment_type,
             eventTypeDbId => $treatment_type,
             observationUnitDbIds => \@stock_ids,
-            studyDbId => $trial_id,
+            studyDbId => qq|$trial_id|,
             studyName => $trial_name,
         };
     }
@@ -148,7 +160,9 @@ sub search {
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Event search result constructed');
 }
 
-sub _get_event_type{
+
+#These types comes from Brapi compaitble with ICASA format
+sub _get_event_type {
     my $value = shift;
 
     my %types = (
