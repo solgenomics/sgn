@@ -354,20 +354,7 @@ solGS.cluster = {
       protocolId = protocols.genotyping_protocol_id;
     }
 
-    var trainingTraitsIds = jQuery("#training_traits_ids").val();
-
-    if (trainingTraitsIds) {
-      trainingTraitsIds = trainingTraitsIds.split(",");
-    }
-
-    if (!trainingTraitsIds) {
-      var traitId = jQuery("#trait_id").val();
-      trainingTraitsIds = [traitId];
-    }
-
-    if (trainingTraitsIds == "") {
-      trainingTraitsIds = [];
-    }
+    var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
     var popDetails = solGS.getPopulationDetails();
     if (popDetails == undefined) {
@@ -490,7 +477,7 @@ solGS.cluster = {
           page = page + "/gp/" + protocolId;
         }
       } else {
-        traitsCode = jQuery("#training_traits_code").val();
+        traitsCode = solGS.getTrainingTraitsCode();
         if (
           popType.match(/selection/) &&
           document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\/trials\//)
