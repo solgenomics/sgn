@@ -565,7 +565,7 @@ jQuery(document).ready(function ($) {
 
         var control_list;
         var control_list_array;
-        if(control_stock_list_id !== "undefined") {
+        if(control_stock_list_id) {
             control_list_array = list.getList(control_stock_list_id);
             control_list = JSON.stringify(control_list_array);
         }
@@ -584,7 +584,7 @@ jQuery(document).ready(function ($) {
         var control_list_crbd;
         var control_list_crbd_array;
 
-        if (control_stock_list_id_crbd !== "undefined") {
+        if (control_stock_list_id_crbd) {
             control_list_crbd_array = list.getList(control_stock_list_id_crbd);
             control_list_crbd = JSON.stringify(control_list_crbd_array);
         }
@@ -640,7 +640,7 @@ jQuery(document).ready(function ($) {
         }
 
         var unreplicated_stock_list;
-        if (unreplicated_stock_list_id !== "undefined") {
+        if (unreplicated_stock_list_id) {
             unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_stock_list_id));
         }
 
@@ -653,7 +653,7 @@ jQuery(document).ready(function ($) {
 //        }
 
         var replicated_stock_list;
-        if (replicated_stock_list_id !== "undefined") {
+        if (replicated_stock_list_id) {
             replicated_stock_list = JSON.stringify(list.getList(replicated_stock_list_id));
         }
 
@@ -2091,12 +2091,12 @@ jQuery(document).ready(function ($) {
         var stock_list_id = jQuery('#select_list_list_select').val();
         var control_list_id = jQuery('#list_of_checks_section_list_select').val();
         var stock_list;
-        if (stock_list_id !== "undefined") {
+        if (stock_list_id) {
             stock_list_array = list.getList(stock_list_id);
             stock_list = JSON.stringify(list.getList(stock_list_id));
         }
         var control_list;
-        if (control_list_id !== "undefined") {
+        if (control_list_id) {
            control_list = JSON.stringify(list.getList(control_list_id));
         }
         var design_type = jQuery('#select_design_method').val();
@@ -2104,7 +2104,7 @@ jQuery(document).ready(function ($) {
             var design_type = jQuery('#select_multi-design_method').val();
         }
         var greenhouse_num_plants = [];
-        if (stock_list_id !== "undefined" && design_type == 'greenhouse') {
+        if (stock_list_id && design_type == 'greenhouse') {
             for (var i=0; i<stock_list_array.length; i++) {
                 var value = jQuery("input#greenhouse_num_plants_input_" + i).val();
                 if (value == '') {
