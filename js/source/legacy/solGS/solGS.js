@@ -47,7 +47,7 @@ solGS.submitJob = {
   },
 
   checkCachedResult: function (page, args) {
-    var trainingTraitsIds = jQuery("#training_traits_ids").val();
+    var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
     if (trainingTraitsIds) {
       trainingTraitsIds = trainingTraitsIds.split(",");
@@ -523,7 +523,7 @@ solGS.submitJob = {
       args["data_set_type"] = dataSetType;
     }
 
-    var trainingTraitsIds = jQuery("#training_traits_ids").val();
+    var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
     if (trainingTraitsIds) {
       trainingTraitsIds = trainingTraitsIds.split(",");
@@ -790,7 +790,15 @@ solGS.getTrainingTraitsIds = function () {
     trainingTraitsIds = [traitId];
   }
 
+  var traitsCode = jQuery("#training_traits_code").val();
+
   return trainingTraitsIds;
+};
+
+solGS.getTrainingTraitsCode = function () {
+  var trainingTraitsCode = jQuery("#training_traits_code").val();
+
+  return trainingTraitsCode;
 };
 
 solGS.getPopulationDetails = function () {
