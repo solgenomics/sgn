@@ -149,13 +149,8 @@ solGS.sIndex = {
 
   getSelectionIndexArgs: function (modelId, selectedPopId) {
     var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
-
-    var traitsCode = jQuery("#training_traits_code").val();
-
-    var trainingTraitsIds = jQuery("#training_traits_ids").val();
-    if (trainingTraitsIds) {
-      trainingTraitsIds = trainingTraitsIds.split(",");
-    }
+    var traitsCode = solGS.getTrainingTraitsCode();
+    var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
     var args = {
       training_pop_id: modelId,
