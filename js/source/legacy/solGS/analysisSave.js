@@ -100,6 +100,8 @@ jQuery(document).ready(function () {
 
   jQuery("#save_gebvs").click(function () {
     jQuery("#gebvs_output .multi-spinner-container").show();
+    var msg = "Please wait...Analysis results are being stored.";
+    jQuery("#gebvs_save_message").html(msg).show();
     jQuery("#save_gebvs").hide();
 
     solGS.save.checkUserStatus().done(function (res) {
@@ -114,9 +116,6 @@ jQuery(document).ready(function () {
     });
 
     solGS.save.getResultDetails().done(function (res) {
-      console.log("saveGebvs analysis_details " + JSON.stringify(res.analysis_details));
-      console.log("saveGebvs error " + res.error);
-
       if (res.error) {
         console.log("getResultDetails " + res.error);
         jQuery("#gebvs_output .multi-spinner-container").hide();
@@ -138,6 +137,7 @@ jQuery(document).ready(function () {
           } else {
             var link = '<a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a>';
             jQuery("#gebvs_output").append(link);
+            jQuery("#gebvs_save_message").empty().hide();
           }
         });
 
