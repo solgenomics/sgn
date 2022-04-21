@@ -151,7 +151,7 @@ after 'setup_finalize' => sub {
 	my $uid = (lstat("js/package.json"))[4];
 
 	my $user_exists = `id $uid`;
-	if ($user_exists !~ /no such user/) {
+	if ($user_exists =~ /no such user/) {
 	    `useradd -u $uid -d /home/devel devel`;
 	}
 
