@@ -49,19 +49,14 @@ solGS.submitJob = {
   checkCachedResult: function (page, args) {
     var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
-    if (trainingTraitsIds) {
-      trainingTraitsIds = trainingTraitsIds.split(",");
-
-      if (args === undefined) {
-        args = { training_traits_ids: trainingTraitsIds };
-      } else {
-        args["training_traits_ids"] = trainingTraitsIds;
-      }
+    if (!args) {
+      args = { training_traits_ids: trainingTraitsIds };
+    } else if (!args["training_traits_ids"]) {
+      args["training_traits_ids"] = trainingTraitsIds;
     }
 
     args = this.getArgsFromUrl(page, args);
     args = JSON.stringify(args);
-
     jQuery.ajax({
       type: "POST",
       dataType: "json",
@@ -523,12 +518,13 @@ solGS.submitJob = {
       args["data_set_type"] = dataSetType;
     }
 
-    var trainingTraitsIds = solGS.getTrainingTraitsIds();
+    if (!args["training_traits_ids"]) {
+      var trainingTraitsIds = solGS.getTrainingTraitsIds();
 
-    if (trainingTraitsIds) {
-      trainingTraitsIds = trainingTraitsIds.split(",");
-      args["training_traits_ids"] = trainingTraitsIds;
-      args["trait_id"] = trainingTraitsIds;
+      if (trainingTraitsIds) {
+        args["training_traits_ids"] = trainingTraitsIds;
+        args["trait_id"] = trainingTraitsIds;
+      }
     }
 
     var protocols = solGS.genotypingProtocol.getPredictionGenotypingProtocols();
