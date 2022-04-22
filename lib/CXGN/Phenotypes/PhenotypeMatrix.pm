@@ -127,7 +127,11 @@ has 'include_timestamp' => (
     default => 0
 );
 
-# has 'include_phenotype_primary_key' = 
+has 'include_phenotype_primary_key' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 0
+);
 
 has 'exclude_phenotype_outlier' => (
     isa => 'Bool',
@@ -199,7 +203,7 @@ sub get_phenotype_matrix {
 
     if ($self->search_type eq 'MaterializedViewTable'){
         ($data, $unique_traits) = $phenotypes_search->search();
-
+        print STDERR "Look at Data here! ".Dumper($data);
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
 
@@ -213,6 +217,9 @@ sub get_phenotype_matrix {
         my @sorted_traits = sort keys(%$unique_traits);
         foreach my $trait (@sorted_traits) {
             push @line, $trait;
+            if ($include_phenotype_primary_key) {
+                push @line, $trait.'_phenotype_id'
+            }
         }
         push @line, 'notes';
         push @info, \@line;
@@ -261,6 +268,9 @@ sub get_phenotype_matrix {
             }
             foreach my $trait (@sorted_traits) {
                 push @line, $trait_observations{$trait};
+                if ($include_phenotype_primary_key) {
+                    push @line, $trait_observations{$trait->{phenotype_id}};
+                }
             }
             push @line, $obs_unit->{notes};
             push @info, \@line;
@@ -277,7 +287,7 @@ sub get_phenotype_matrix {
         my @unique_obsunit_list = ();
         my %seen_obsunits;
 
-        print STDERR Dumper($data);
+        print STDERR "Look at Data here! ".Dumper($data);
 
         foreach my $d (@$data) {
             my $cvterm = $d->{trait_name};
