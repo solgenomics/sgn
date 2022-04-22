@@ -13,7 +13,7 @@ solGS.save = {
     var stored = jQuery.ajax({
       dataType: "json",
       type: "POST",
-      data: args,
+      data: { arguments: JSON.stringify(args) },
       url: "/solgs/check/stored/analysis/",
     });
 
@@ -26,7 +26,7 @@ solGS.save = {
     var details = jQuery.ajax({
       dataType: "json",
       type: "POST",
-      data: args,
+      data: { arguments: JSON.stringify(args) },
       url: "/solgs/analysis/result/details",
     });
 
