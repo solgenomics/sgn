@@ -252,8 +252,9 @@ sub gebvs_values {
 	my $selection_pop_id = $params->{selection_pop_id};
 	my $trait_id = $params->{trait_id};
 	my $protocol_id = $params->{genotyping_protocol_id};
-
+	my $sel_pop_protocol_id = $params->{selection_pop_genotyping_protocol_id};
 	$c->stash->{genotyping_protocol_id} = $protocol_id;
+	$c->stash->{selection_pop_genotyping_protocol_id} = $sel_pop_protocol_id;
 
 	my $ref = $c->req->referer;
 	my $path = $c->req->path;
