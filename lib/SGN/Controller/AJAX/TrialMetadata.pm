@@ -2460,6 +2460,21 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   $c->stash->{rest} = { success => 1};
 }
 
+sub refresh_cache : Chained('trial') PathPart('refresh_cache') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->stash->{trial_id};
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
+    my $refresh_fieldmap_cache = CXGN::Trial::FieldMap->new({
+        trial_id => $trial_id,
+        bcs_schema => $schema,
+    });
+
+    $refresh_fieldmap_cache->_regenerate_trial_layout_cache();
+    $c->stash->{rest} = { success => 1};
+}
+
 sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -3618,6 +3633,29 @@ sub genotyping_trial_from_field_trial : Chained('trial') PathPart('genotyping_tr
     my $field_trials_source_of_genotyping_trial = $c->stash->{trial}->get_field_trials_source_of_genotyping_trial();
 
     $c->stash->{rest} = {success => 1, genotyping_trials_from_field_trial => $genotyping_trials_from_field_trial, field_trials_source_of_genotyping_trial => $field_trials_source_of_genotyping_trial};
+}
+
+sub delete_genotyping_plate_from_field_trial_linkage : Chained('trial') PathPart('delete_genotyping_plate_from_field_trial_linkage') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $field_trial_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if (!$c->user) {
+        $c->stash->{rest} = { error => "You must be logged in to remove genotyping plate and field trial linkage!" };
+        $c->detach();
+    }
+
+    my @roles = $c->user->roles();
+    my $result = $c->stash->{trial}->delete_genotyping_plate_from_field_trial_linkage($field_trial_id, $roles[0]);
+
+    if (exists($result->{errors})) {
+        $c->stash->{rest} = { error => $result->{errors} };
+    }
+    else {
+        $c->stash->{rest} = { success => 1 };
+    }
+
 }
 
 sub crossing_trial_from_field_trial : Chained('trial') PathPart('crossing_trial_from_field_trial') Args(0) {

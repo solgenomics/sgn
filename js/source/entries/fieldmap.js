@@ -179,7 +179,7 @@ export function init() {
                 }
                 final_arr.push(...plot_arr);
             }
-            var csv = [planting_or_harvesting_order_layout == "planting_order_layout" ? 'Planting_Order': "Harvesting_Order", 'Plot_Number', 'Plot_Name', 'Accession_Name'].join(',');
+            var csv = [planting_or_harvesting_order_layout == "planting_order_layout" ? 'Planting_Order': "Harvesting_Order", 'plot_Number', 'plot_Name', 'accession_Name'].join(',');
             csv += "\n";
             final_arr = final_arr.filter(plot => plot !== undefined);
             let order_number = 1;

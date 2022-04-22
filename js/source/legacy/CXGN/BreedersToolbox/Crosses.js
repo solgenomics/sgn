@@ -270,6 +270,11 @@ jQuery(document).ready(function($) {
         location.reload();
     });
 
+    jQuery(document).on('click', '[name="upload_crosses_dismiss_button"]', function(){
+        jQuery('#upload_crosses_dialog').modal('hide');
+        jQuery(".modal-backdrop").remove();
+    });
+
 
     function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, female_plot, male_plot, cross_combination) {
 

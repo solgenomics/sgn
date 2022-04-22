@@ -62,7 +62,7 @@ $trial_name => undef
                                     <br/><br/><br/><br/>
                                     <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
                                 </center>
-                            </dvi>
+                            </div>
                         </&>
                         <&| /util/workflow.mas:step, title=> "Upload your crosses" &>
                             <& /page/page_title.mas, title=>"Enter basic information about the crosses and upload your file" &>
@@ -244,7 +244,7 @@ $trial_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button name="upload_crosses_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

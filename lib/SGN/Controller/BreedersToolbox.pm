@@ -278,13 +278,13 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
 
     my $locations = $crossingtrial->get_all_locations_by_breeding_program();
 
+    my $odk_service = $c->config->{odk_crossing_data_service_name};
+
+    $c->stash->{odk_service} = $odk_service;
+
     $c->stash->{locations} = $locations;
 
     $c->stash->{programs} = \@breeding_programs;
-
-    #$c->stash->{locations} = $bp->get_all_locations($c);
-
-    #$c->stash->{programs} = $breeding_programs;
 
     $c->stash->{crossing_trials} = $crossing_trials;
 
