@@ -174,12 +174,14 @@ sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
     my $c = shift;
     my $dataset_id = shift;
     my $dimension = shift;
+    my $include_phenotype_primary_key = $c->req->param('include_phenotype_primary_key');
 
     my $dataset = CXGN::Dataset->new(
 	{
 	    schema => $c->dbic_schema("Bio::Chado::Schema"),
 	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
 	    sp_dataset_id=> $dataset_id,
+        include_phenotype_primary_key => $include_phenotype_primary_key,
 	});
 
 
