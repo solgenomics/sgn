@@ -40,12 +40,13 @@ sub result_details :Path('/solgs/analysis/result/details') Args() {
 
 	if (!$stored)
 	{
-		my $params = $c->req->params;
+		# my $params = $c->req->params;
+		$c->controller('solGS::Utils')->stash_json_args($c, $c->req->param('arguments'));
 		my $analysis_details;
 
 		eval
 		{
-			$analysis_details = $self->structure_gebvs_result_details($c, $params);
+			$analysis_details = $self->structure_gebvs_result_details($c);
 		};
 
 		if ($@)
@@ -64,9 +65,9 @@ sub result_details :Path('/solgs/analysis/result/details') Args() {
 
 
 sub structure_gebvs_result_details {
-	my ($self, $c, $params) = @_;
+	my ($self, $c) = @_;
 
-	my $gebvs = $self->structure_gebvs_values($c, $params);
+	my $gebvs = $self->structure_gebvs_values($c);
 	my @accessions = keys %$gebvs;
 
 	my $trait_names		= $self->analysis_traits($c);
@@ -246,15 +247,13 @@ sub extended_trait_name {
 
 
 sub gebvs_values {
-	my ($self, $c, $params) = @_;
+	my ($self, $c) = @_;
 
-	my $training_pop_id = $params->{training_pop_id};
-	my $selection_pop_id = $params->{selection_pop_id};
-	my $trait_id = $params->{trait_id};
-	my $protocol_id = $params->{genotyping_protocol_id};
-	my $sel_pop_protocol_id = $params->{selection_pop_genotyping_protocol_id};
-	$c->stash->{genotyping_protocol_id} = $protocol_id;
-	$c->stash->{selection_pop_genotyping_protocol_id} = $sel_pop_protocol_id;
+	my $training_pop_id = $c->stash->{training_pop_id};
+	my $selection_pop_id = $c->stash->{selection_pop_id};
+	my $trait_id = $c->stash->{trait_id};
+	my $protocol_id = $c->stash->{genotyping_protocol_id};
+	my $sel_pop_protocol_id = $c->stash->{selection_pop_genotyping_protocol_id};
 
 	my $ref = $c->req->referer;
 	my $path = $c->req->path;
@@ -276,11 +275,11 @@ sub gebvs_values {
 
 
 sub structure_gebvs_values {
-	my ($self, $c, $params) = @_;
+	my ($self, $c) = @_;
 
-	my $trait_name = $self->extended_trait_name($c, $params->{trait_id});
+	my $trait_name = $self->extended_trait_name($c, $c->stash->{trait_id});
 
-	my $gebvs = $self->gebvs_values($c, $params);
+	my $gebvs = $self->gebvs_values($c);
 	my $gebvs_ref = $c->controller('solGS::Utils')->convert_arrayref_to_hashref($gebvs);
 
 	my %gebvs_hash;
