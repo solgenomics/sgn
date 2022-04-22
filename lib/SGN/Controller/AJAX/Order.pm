@@ -10,6 +10,15 @@ use DateTime;
 use CXGN::People::Person;
 use CXGN::Contact;
 
+use File::Basename qw | basename dirname|;
+use File::Copy;
+use File::Slurp;
+use File::Spec::Functions;
+use Digest::MD5;
+use File::Path qw(make_path);
+use File::Spec::Functions qw / catfile catdir/;
+
+
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -50,7 +59,7 @@ sub submit_order_POST : Args(0) {
     my @btract_rows;
     my @all_items = @$items;
     foreach my $ordered_item (@all_items) {
-        my @btract_info = ();
+        my @btract_info;
         my @ordered_item_split = split /,/, $ordered_item;
         my $number_of_fields = @ordered_item_split;
         my $item_name = $ordered_item_split[0];
@@ -134,6 +143,78 @@ sub submit_order_POST : Args(0) {
 
     print STDERR "BTRACK ROWS =".Dumper(\@btract_rows)."\n";
 #    print STDERR "EMAIL LIST =".Dumper(\@contact_email_list)."\n";
+
+    my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
+    my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
+
+    my $file_id;
+    if ($odk_crossing_data_service_name eq 'ONA') {
+        my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+        my $btract_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate","initiationDate","initiatedBy","subcultureDate","numberOfCopies","rootingDate","numberInRooting","weaning1Date","numberInWeaning1","weaning2Date","numberInWeaning2","screenhouseTransferDate","numberInScreenhouse","hardeningDate","numberInHardening","currentStatus","percentageComplete"';
+
+        my $template_file_name = 'btract_order_info';
+        my $user_id = $c->user()->get_object()->get_sp_person_id();
+        my $user_name = $c->user()->get_object()->get_username();
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
+        my $subdirectory_name = "btract_order_info";
+        my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
+        my $archive_path = $c->config->{archive_path};
+        my $file_destination =  catfile($archive_path, $archived_file_name);
+        print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
+        my $dir = $c->tempfiles_subdir('/download');
+        my $rel_file = $c->tempfile( TEMPLATE => 'download/btract_order_infoXXXXX');
+        my $tempfile = $c->config->{basepath}."/".$rel_file.".csv";
+    #    print STDERR "TEMPFILE =".Dumper($tempfile)."\n";
+        open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
+
+        print $FILE $btract_header."\n";
+        my $order_row = 0;
+        foreach my $row (@btract_rows) {
+            my @row_array = ();
+            @row_array = @$row;
+            my $csv_format = join(',',@row_array);
+            print $FILE $csv_format."\n";
+            $order_row++;
+        }
+        close $FILE;
+
+        open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
+        binmode $F;
+        my $md5 = Digest::MD5->new();
+        $md5->addfile($F);
+        close($F);
+
+        if (!-d $archive_path) {
+            mkdir $archive_path;
+        }
+
+        if (! -d catfile($archive_path, $user_id)) {
+            mkdir (catfile($archive_path, $user_id));
+        }
+
+        if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
+            mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+        }
+        my $md_row = $metadata_schema->resultset("MdMetadata")->create({
+            create_person_id => $user_id,
+        });
+        $md_row->insert();
+        my $file_row = $metadata_schema->resultset("MdFiles")->create({
+            basename => basename($file_destination),
+            dirname => dirname($file_destination),
+            filetype => 'intercross_parents',
+            md5checksum => $md5->hexdigest(),
+            metadata_id => $md_row->metadata_id(),
+        });
+        $file_row->insert();
+        $file_id = $file_row->file_id();
+
+        move($tempfile,$file_destination);
+        unlink $tempfile;
+    print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
+    }
+    print STDERR "FILE ID =".Dumper($file_id)."\n";
 
     my $host = $c->config->{main_production_site_url};
     my $project_name = $c->config->{project_name};
