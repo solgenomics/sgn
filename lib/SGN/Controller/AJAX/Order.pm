@@ -59,7 +59,7 @@ sub submit_order_POST : Args(0) {
     my @btract_rows;
     my @all_items = @$items;
     foreach my $ordered_item (@all_items) {
-        my @btract_info;
+        my @btract_info = ();
         my @ordered_item_split = split /,/, $ordered_item;
         my $number_of_fields = @ordered_item_split;
         my $item_name = $ordered_item_split[0];
@@ -80,8 +80,8 @@ sub submit_order_POST : Args(0) {
         $quantity =~ s/^\s+|\s+$//g;
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'quantity'} = $quantity;
 
-        push @btract_info, [$item_source, $item_name, $quantity, $request_date];
-        $group_by_contact_id{$contact_person_id}{'btract'} = \@btract_info;
+        @btract_info = ($item_source, $item_name, $quantity, $request_date);
+        $group_by_contact_id{$contact_person_id}{'btract'}{$item_name} = \@btract_info;
 
         if ($number_of_fields == 3) {
             my $comments = $ordered_item_split[2];
@@ -132,10 +132,11 @@ sub submit_order_POST : Args(0) {
         my $contact_email = $contact_person->get_contact_email();
         push @contact_email_list, $contact_email;
 
-        my $btract_ref = $group_by_contact_id{$contact_id}{'btract'};
-        my @btract_info = @$btract_ref;
-        foreach my $btract_item (@btract_info) {
-            my @btract_row = @$btract_item;
+        my $each_contact_id_btract = $group_by_contact_id{$contact_id}{'btract'};
+        foreach my $item (keys %{$each_contact_id_btract}) {
+            my @btract_row = ();
+            my $btract_ref = $each_contact_id_btract->{$item};
+            @btract_row = @$btract_ref;
             splice @btract_row, 1, 0, $order_id;
             push @btract_rows, [@btract_row];
         }
