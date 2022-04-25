@@ -844,6 +844,21 @@ solGS.showMessage = function (divId, msg) {
   jQuery(divId).html(msg).show();
 };
 
+solGS.pageType = function () {
+  var type;
+  var path = location.pathname;
+
+  if (path.match(/solgs\/trait\/\d+\/population\/\d+\//)) {
+    type = "single model";
+  } else if (path.match(/solgs\/traits\/all\/population\/\d+\//)) {
+    type = "multiple models";
+  } else if (path.match(/solgs\/selection\/\d+\/model\/\d+\//)) {
+    type = "selection prediction";
+  }
+
+  return type;
+};
+
 //executes two functions alternately
 jQuery.fn.alternateFunctions = function (a, b) {
   return this.each(function () {

@@ -66,17 +66,7 @@ solGS.save = {
   },
 
   analysisResultType: function () {
-    var type;
-    var path = location.pathname;
-
-    if (path.match(/solgs\/trait\/\d+\/population\/\d+\//)) {
-      type = "single model";
-    } else if (path.match(/solgs\/traits\/all\/population\/\d+\//)) {
-      type = "multiple models";
-    } else if (path.match(/solgs\/selection\/\d+\/model\/\d+\//)) {
-      type = "selection prediction";
-    }
-
+    var type = solGS.pageType();
     return type;
   },
 
@@ -87,14 +77,17 @@ solGS.save = {
       url: "/solgs/check/user/login/",
     });
   },
+
+  getResultsPageLink: function (id) {
+    var link = '<a href="/analyses/' + id + '">View stored GEBVs</a>';
+    return link;
+  },
 };
 
 jQuery(document).ready(function () {
   solGS.save.checkStoredAnalysis().done(function (res) {
-    console.log("stored analysis id " + res.analysis_id);
-
     jQuery("#save_gebvs").hide();
-    var link = '<a href="/analyses/' + res.analysis_id + '">View stored GEBVs</a>';
+    var link = solGS.save.getResultsPageLink(res.analysis_id);
     jQuery("#gebvs_output").append(link);
   });
 
