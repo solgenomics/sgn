@@ -37,7 +37,7 @@ sub generate_spectral_plot_POST : Args(0) {
     my $dbh = $c->dbc->dbh();
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my ($user_id, $user_name, $user_role) = _check_user_login_nirs($c, 0);
     my $dataset_id = $c->req->param('dataset_id');
     my $nd_protocol_id = $c->req->param('nd_protocol_id');
     my $query_associated_stocks = $c->req->param('query_associated_stocks') eq 'yes' ? 1 : 0;
@@ -108,7 +108,8 @@ sub generate_results_POST : Args(0) {
     my $dbh = $c->dbc->dbh();
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my ($user_id, $user_name, $user_role) = _check_user_login_nirs($c, 'submitter');
+
     print STDERR Dumper $c->req->params();
 
     my $format_id = $c->req->param('format');
@@ -125,9 +126,9 @@ sub generate_results_POST : Args(0) {
     my $rf_var_imp = $c->req->param('rf');
 
     if ($preprocessing_boolean == 0){
-        $preprocessing_boolean = "FALSE";
+        $preprocessing_boolean = '1';
     } else {
-        $preprocessing_boolean = "TRUE";
+        $preprocessing_boolean = '1:13';
     }
 
     if ($rf_var_imp == 0){
@@ -161,10 +162,12 @@ sub generate_results_POST : Args(0) {
     my ($training_pheno_data, $train_unique_traits) = $training_dataset->retrieve_phenotypes_ref();
 
     my %training_pheno_data;
+    my %training_pheno_data_seen_germplasm_ids;
     my $seltrait;
     foreach my $d (@$training_pheno_data) {
         my $obsunit_id = $d->{observationunit_stock_id};
         my $germplasm_name = $d->{germplasm_uniquename};
+        my $germplasm_id = $d->{germplasm_stock_id};
         foreach my $o (@{$d->{observations}}) {
             my $t_id = $o->{trait_id};
             my $t_name = $o->{trait_name};
@@ -177,12 +180,14 @@ sub generate_results_POST : Args(0) {
                     trait_name => $t_name,
                     germplasm_name => $germplasm_name
                 };
+                $training_pheno_data_seen_germplasm_ids{$germplasm_id}++;
             }
         }
     }
     # print STDERR Dumper \%training_pheno_data;
 
     my %testing_pheno_data;
+    my %testing_pheno_data_seen_germplasm_ids;
     if ($test_dataset_id) {
         my $test_dataset = CXGN::Dataset->new({
             people_schema => $people_schema,
@@ -195,6 +200,7 @@ sub generate_results_POST : Args(0) {
         foreach my $d ($test_pheno_data) {
             my $obsunit_id = $d->{observationunit_stock_id};
             my $germplasm_name = $d->{germplasm_uniquename};
+            my $germplasm_id = $d->{germplasm_stock_id};
             foreach my $o (@{$d->{observations}}) {
                 my $t_id = $o->{trait_id};
                 my $t_name = $o->{trait_name};
@@ -206,6 +212,7 @@ sub generate_results_POST : Args(0) {
                         trait_name => $t_name,
                         germplasm_name => $germplasm_name
                     };
+                    $testing_pheno_data_seen_germplasm_ids{$germplasm_id}++;
                 }
             }
         }
@@ -234,31 +241,48 @@ sub generate_results_POST : Args(0) {
     #     %training_pheno_data = %training_pheno_data_split;
     #     %testing_pheno_data = %testing_pheno_data_split;
     # }
+    # print STDERR Dumper \%testing_pheno_data;
 
     if (scalar(keys %training_pheno_data) == 0 ) {
         $c->stash->{rest} = { error => "Not enough data! Are you sure phenotypes were uploaded for the trait in your training dataset?"};
         $c->detach();
     }
 
-    my @all_plot_ids = (keys %training_pheno_data, keys %testing_pheno_data);
-    my $stock_ids_sql = join ',', @all_plot_ids;
-    my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra'
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+    my $subplot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+
+    my @all_germplasm_ids = (keys %training_pheno_data_seen_germplasm_ids, keys %testing_pheno_data_seen_germplasm_ids);
+    my $germplasm_ids_sql = join ',', @all_germplasm_ids;
+    my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, cvterm.name, accession.uniquename, accession.stock_id, up_rel.object_id, metadata.md_json.json->>'spectra'
         FROM stock
-        JOIN nd_experiment_stock USING(stock_id)
-        JOIN nd_experiment USING(nd_experiment_id)
-        JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
-        JOIN metadata.md_json USING(json_id)
-        WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ? ;";
+        JOIN stock_relationship ON(stock.stock_id=stock_relationship.subject_id AND stock_relationship.type_id IN ($plot_of_type_id, $plant_of_type_id, $tissue_sample_of_type_id, $subplot_of_type_id))
+        LEFT JOIN stock_relationship AS up_rel ON(stock.stock_id=up_rel.subject_id AND up_rel.type_id IN ($plot_of_type_id, $plant_of_type_id, $tissue_sample_of_type_id, $subplot_of_type_id))
+        JOIN cvterm ON(cvterm.cvterm_id=stock.type_id)
+        JOIN stock AS accession ON(stock_relationship.object_id=accession.stock_id AND accession.type_id=$accession_type_id)
+        JOIN nd_experiment_stock ON(stock.stock_id=nd_experiment_stock.stock_id)
+        JOIN nd_experiment ON(nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
+        JOIN phenome.nd_experiment_md_json AS d ON(nd_experiment.nd_experiment_id=d.nd_experiment_id)
+        JOIN metadata.md_json ON(d.json_id=metadata.md_json.json_id)
+        WHERE accession.stock_id IN ($germplasm_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ? ;";
     print STDERR Dumper $nirs_training_q;
     my $nirs_training_h = $dbh->prepare($nirs_training_q);
     $nirs_training_h->execute($format_id);
-    while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {
+    while (my ($stock_uniquename, $stock_id, $stock_type, $germplasm_name, $germplasm_id, $up_rel_id, $spectra) = $nirs_training_h->fetchrow_array()) {
         $spectra = decode_json $spectra;
         if (exists($training_pheno_data{$stock_id})) {
             $training_pheno_data{$stock_id}->{spectra} = $spectra;
         }
+        elsif (exists($training_pheno_data{$up_rel_id})) {
+            $training_pheno_data{$up_rel_id}->{spectra} = $spectra;
+        }
         if (exists($testing_pheno_data{$stock_id})) {
             $testing_pheno_data{$stock_id}->{spectra} = $spectra;
+        }
+        elsif (exists($testing_pheno_data{$up_rel_id})) {
+            $testing_pheno_data{$up_rel_id}->{spectra} = $spectra;
         }
     }
     # print STDERR Dumper \%training_pheno_data;
@@ -377,8 +401,7 @@ sub generate_results_POST : Args(0) {
     }
 
     my $performance_output = '';
-    open(my $fh, '<', $output_table_filepath)
-        or die "Could not open file '$output_table_filepath' $!";
+    open(my $fh, '<', $output_table_filepath) or die "Could not open file '$output_table_filepath' $!";
 
         print STDERR "Opened $output_table_filepath\n";
         while(my $l = <$fh>) {
@@ -418,7 +441,7 @@ sub generate_predictions_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my ($user_id, $user_name, $user_role) = _check_user_login($c);
+    my ($user_id, $user_name, $user_role) = _check_user_login_nirs($c, 'submitter');
     print STDERR Dumper $c->req->params();
 
     my $model_id = $c->req->param('model_id');
@@ -461,12 +484,14 @@ sub generate_predictions_POST : Args(0) {
     my $tissue_sample_plot_h = $dbh->prepare($tissue_sample_plot_q);
 
     my %training_pheno_data;
+    my %training_pheno_data_seen_germplasm_ids;
     my $obs_unit_type_name;
     my %seen_accessions;
     foreach my $d (@$training_pheno_data) {
         my $obsunit_id = $d->{observationunit_stock_id};
         my $obsunit_name = $d->{observationunit_uniquename};
         my $germplasm_name = $d->{germplasm_uniquename};
+        my $germplasm_id = $d->{germplasm_stock_id};
         $obs_unit_type_name = $d->{observationunit_type_name};
 
         my $plot_id;
@@ -489,23 +514,38 @@ sub generate_predictions_POST : Args(0) {
             obsunit_name => $obsunit_name,
             plot_id => $plot_id
         };
+        $training_pheno_data_seen_germplasm_ids{$germplasm_id}++;
     }
 
-    my @all_obsunit_ids = keys %training_pheno_data;
-    my $stock_ids_sql = join ',', @all_obsunit_ids;
-    my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra'
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+    my $subplot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+
+    my @all_germplasm_ids = keys %training_pheno_data_seen_germplasm_ids;
+    my $germplasm_ids_sql = join ',', @all_germplasm_ids;
+    my $nirs_training_q = "SELECT stock.uniquename, stock.stock_id, cvterm.name, accession.uniquename, accession.stock_id, up_rel.object_id, metadata.md_json.json->>'spectra'
         FROM stock
-        JOIN nd_experiment_stock USING(stock_id)
-        JOIN nd_experiment USING(nd_experiment_id)
-        JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
-        JOIN metadata.md_json USING(json_id)
-        WHERE stock.stock_id IN ($stock_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ? ;";
+        JOIN stock_relationship ON(stock.stock_id=stock_relationship.subject_id AND stock_relationship.type_id IN ($plot_of_type_id, $plant_of_type_id, $tissue_sample_of_type_id, $subplot_of_type_id))
+        LEFT JOIN stock_relationship AS up_rel ON(stock.stock_id=up_rel.subject_id AND up_rel.type_id IN ($plot_of_type_id, $plant_of_type_id, $tissue_sample_of_type_id, $subplot_of_type_id))
+        JOIN cvterm ON(cvterm.cvterm_id=stock.type_id)
+        JOIN stock AS accession ON(stock_relationship.object_id=accession.stock_id AND accession.type_id=$accession_type_id)
+        JOIN nd_experiment_stock ON(stock.stock_id=nd_experiment_stock.stock_id)
+        JOIN nd_experiment ON(nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
+        JOIN phenome.nd_experiment_md_json AS d ON(nd_experiment.nd_experiment_id=d.nd_experiment_id)
+        JOIN metadata.md_json ON(d.json_id=metadata.md_json.json_id)
+        WHERE accession.stock_id IN ($germplasm_ids_sql) AND metadata.md_json.json_type = 'nirs_spectra' AND metadata.md_json.json->>'device_type' = ? ;";
+    print STDERR Dumper $nirs_training_q;
     my $nirs_training_h = $dbh->prepare($nirs_training_q);
     $nirs_training_h->execute($format_id);
-    while (my ($stock_uniquename, $stock_id, $spectra) = $nirs_training_h->fetchrow_array()) {
+    while (my ($stock_uniquename, $stock_id, $stock_type, $germplasm_name, $germplasm_id, $up_rel_id, $spectra) = $nirs_training_h->fetchrow_array()) {
         $spectra = decode_json $spectra;
         if (exists($training_pheno_data{$stock_id})) {
             $training_pheno_data{$stock_id}->{spectra} = $spectra;
+        }
+        elsif (exists($training_pheno_data{$up_rel_id})) {
+            $training_pheno_data{$up_rel_id}->{spectra} = $spectra;
         }
     }
     # print STDERR Dumper \%training_pheno_data;
@@ -647,8 +687,10 @@ sub generate_predictions_POST : Args(0) {
     };
 }
 
-sub _check_user_login {
+sub _check_user_login_nirs {
     my $c = shift;
+    my $check_priv = shift;
+
     my $user_id;
     my $user_name;
     my $user_role;
@@ -658,8 +700,7 @@ sub _check_user_login {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
-            $c->detach();
+            return {error=>'You must be logged in to do this!'};
         }
         $user_id = $user_info[0];
         $user_role = $user_info[1];
@@ -667,17 +708,34 @@ sub _check_user_login {
         $user_name = $p->get_username;
     } else{
         if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to do this!'};
-            $c->detach();
+            return {error=>'You must be logged in to do this!'};
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
-    if ($user_role ne 'submitter' && $user_role ne 'curator') {
-        $c->stash->{rest} = {error=>'You do not have permission in the database to do this! Please contact us.'};
-        $c->detach();
+
+    if ($check_priv) {
+        if ($user_role eq 'user') {
+            if ($check_priv ne 'user') {
+                return {error=>'You must be logged in and have privileges to do this!'};
+            }
+        }
+        elsif ($user_role eq 'submitter') {
+            if ($check_priv ne 'user' && $check_priv ne 'submitter') {
+                return {error=>'You must be logged in and have privileges to do this!'};
+            }
+        }
+        elsif ($user_role eq 'sequencer') {
+            if ($check_priv ne 'user' && $check_priv ne 'submitter' && $check_priv ne 'sequencer') {
+                return {error=>'You must be logged in and have privileges to do this!'};
+            }
+        }
+        elsif ($user_role eq 'curator') {
+            #max priv
+        }
     }
+
     return ($user_id, $user_name, $user_role);
 }
 

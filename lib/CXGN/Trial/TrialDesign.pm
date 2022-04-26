@@ -196,28 +196,61 @@ sub _convert_plot_numbers {
   my @rep_numbers = @{$rep_numbers_ref};
   my $total_plot_count = scalar(@plot_numbers);
   my $rep_plot_count = $total_plot_count / $number_of_reps;
-  for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
-    my $plot_number;
-    my $first_plot_number;
-    if($self->has_plot_start_number || $self->has_plot_number_increment){
-        if ($self->has_plot_start_number()){
-          $first_plot_number = $self->get_plot_start_number();
-        } else {
-          $first_plot_number = 1;
-        }
-        if ($self->has_plot_number_increment()){
-          $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
-        }
-        else {
-          $plot_number = $first_plot_number + $i;
-        }
+  my $first_plot_number = 1;
+
+  my $plot_increment;
+  if ($rep_plot_count > 999) {
+    $plot_increment = 10000;
+    $first_plot_number = 10001;
+  } elsif ($rep_plot_count > 99) {
+    $plot_increment = 1000;
+    $first_plot_number = 1001;
+  } elsif ($rep_plot_count > 9) {
+    $plot_increment = 100;
+    $first_plot_number = 101;
+  } else {
+    $plot_increment = 10;
+    $first_plot_number = 1;
+  }
+  my $idx = 0;
+  for (my $i = 0; $i < $number_of_reps; $i++) {
+    for (my $j = 0; $j < $rep_plot_count; $j++) {
+      if ($i == 0) {
+        $plot_numbers[$idx] = $first_plot_number + $j;
+        $idx++;
+      } else {
+        $plot_numbers[$idx] = $plot_increment + $first_plot_number + $j;
+        $idx++;
+      }
     }
-    else {
-        $plot_number = $plot_numbers[$i];
+    if ($i > 0) {
+      $plot_increment += $plot_increment;
     }
-    $plot_numbers[$i] = $plot_number;
   }
   return \@plot_numbers;
+
+#   for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
+#     my $plot_number;
+#     my $first_plot_number;
+#     if($self->has_plot_start_number || $self->has_plot_number_increment){
+#         if ($self->has_plot_start_number()){
+#           $first_plot_number = $self->get_plot_start_number();
+#         } else {
+#           $first_plot_number = 1;
+#         }
+#         if ($self->has_plot_number_increment()){
+#           $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
+#         }
+#         else {
+#           $plot_number = $first_plot_number + $i;
+#         }
+#     }
+#     else {
+#         $plot_number = $plot_numbers[$i];
+#     }
+#     $plot_numbers[$i] = $plot_number;
+#   }
+#   return \@plot_numbers;
 }
 
 # the function below should be split up and moved to the relevant plugin...

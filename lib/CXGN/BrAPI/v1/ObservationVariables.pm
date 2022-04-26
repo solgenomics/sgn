@@ -188,7 +188,7 @@ sub search {
 	my $total_count = 0;
 	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, array_agg(cvtermsynonym.synonym ORDER BY CHAR_LENGTH(cvtermsynonym.synonym)), count(cvterm.cvterm_id) OVER() AS full_count
 		FROM cvterm JOIN dbxref USING(dbxref_id)
-		JOIN db using(db_id) JOIN cvtermsynonym using(cvterm_id)
+		JOIN db using(db_id) LEFT JOIN cvtermsynonym using(cvterm_id)
 		JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id)
 		JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id)
 		$join WHERE $and_where_clause

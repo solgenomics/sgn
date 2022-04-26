@@ -298,7 +298,7 @@ sub next_genotype {
     my $self = shift;
     my %genotypeprop_observation_units;
     my $observation_unit_names = $self->observation_unit_names;
-    
+
     my $line;
     my $F = $self->_fh();
 

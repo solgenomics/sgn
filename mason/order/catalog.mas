@@ -179,9 +179,9 @@ jQuery(document).ready( function() {
         var item_comments = jQuery('#item_comments').val();
 
         if (!item_comments) {
-            var item_string = item_name.concat(" ","Quantity:"," ",item_quantity);
+            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity;
         } else {
-            var item_string = item_name.concat(" ","Quantity:"," ",item_quantity,","," ", "Comments:"," ",item_comments);
+            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Comments:' + ' ' + item_comments;
         }
 
         var lo = new CXGN.List();

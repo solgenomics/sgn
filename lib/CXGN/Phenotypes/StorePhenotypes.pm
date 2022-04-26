@@ -513,18 +513,21 @@ sub store {
             my $nirs_hashref = $plot_trait_value{$plot_name}->{'nirs'};
             if (defined $nirs_hashref) {
                 $self->store_high_dimensional_data($nirs_hashref, $experiment->nd_experiment_id(), 'nirs_spectra');
+                $new_count++;
             }
 
             # Check if there is transcriptomics data for this plot
             my $transcriptomics_hashref = $plot_trait_value{$plot_name}->{'transcriptomics'};
             if (defined $transcriptomics_hashref) {
                 $self->store_high_dimensional_data($transcriptomics_hashref, $experiment->nd_experiment_id(), 'transcriptomics');
+                $new_count++;
             }
 
             # Check if there is metabolomics data for this plot
             my $metabolomics_hashref = $plot_trait_value{$plot_name}->{'metabolomics'};
             if (defined $metabolomics_hashref) {
                 $self->store_high_dimensional_data($metabolomics_hashref, $experiment->nd_experiment_id(), 'metabolomics');
+                $new_count++;
             }
 
             foreach my $trait_name (@trait_list) {
@@ -637,7 +640,7 @@ sub store {
                             $nd_experiment_md_images{$experiment->nd_experiment_id()} = $image_id;
                         }
                     }
-                    
+
                     if($additional_info){
                         my $pheno_additional_info = $schema->resultset("Phenotype::Phenotypeprop")->create({
                             phenotype_id => $phenotype->phenotype_id,
