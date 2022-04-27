@@ -619,7 +619,7 @@ export function init() {
                     d3.select(this).style('fill', 'green').style('cursor', 'pointer');
                     tooltip.style('opacity', .9)
                     .style('left', (window.event.pageX - 420)+"px")
-                    .style('top', (window.event.pageY - 1000)+"px")
+                    .style('top', (window.event.pageY - 1200)+"px")
                     .text(get_plot_message(d))
                 }})
                 .on("mouseout", function(d) { 
