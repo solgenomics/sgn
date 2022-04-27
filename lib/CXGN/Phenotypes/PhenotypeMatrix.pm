@@ -218,7 +218,7 @@ sub get_phenotype_matrix {
         foreach my $trait (@sorted_traits) {
             push @line, $trait;
             if ($include_phenotype_primary_key) {
-                push @line, $trait.'_phenotype_id'
+                push @line, $trait.'_phenotype_id';
             }
         }
         push @line, 'notes';
@@ -268,9 +268,9 @@ sub get_phenotype_matrix {
             }
             foreach my $trait (@sorted_traits) {
                 push @line, $trait_observations{$trait};
-                if ($include_phenotype_primary_key) {
-                    push @line, $trait_observations{$trait->{phenotype_id}};
-                }
+                # if ($include_phenotype_primary_key) {
+                #     push @line, $trait_observations{$trait->{phenotype_id}};
+                # }
             }
             push @line, $obs_unit->{notes};
             push @info, \@line;
