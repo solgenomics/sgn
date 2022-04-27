@@ -324,7 +324,7 @@ $design_types => ()
 
                                 <br/><br/>
                                 <center>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go To Next Step</button>
+                                <button id="go_to_next_step_after_upload_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go To Next Step</button>
                                 </center>
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
@@ -380,7 +380,7 @@ $design_types => ()
                                 <br/>
                                 <center>
                                     <button type="button" class="btn btn-lg btn-primary" name="upload_trial_validate_form_button" id="upload_trial_validate_form_button">First validate the form</button>
-                                    <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit_first" onclick="Workflow.complete(this, false); return false;" >Upload Trial</button>
+                                    <button type="button" class="btn btn-lg btn-primary" disabled name="upload_trial_submit_first" id="submit_trial_upload_button"  onclick="Workflow.complete(this, false); return false;" >Upload Trial</button>
                                 <center>
                             </&>
 

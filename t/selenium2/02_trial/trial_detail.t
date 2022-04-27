@@ -1,3 +1,6 @@
+
+use strict;
+
 use lib 't/lib';
 
 use Test::More;
@@ -12,7 +15,7 @@ $t->login_as("curator");
 
 print STDERR "Get /breeders/trials...\n";
 $t->get_ok('/breeders/trials');
-sleep(1);
+sleep(2);
 
 print STDERR "Click on trial refresh button...\n";
 my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree")->click();
@@ -39,32 +42,74 @@ my $program_select = $t->find_element_ok("trial_upload_breeding_program", "id", 
 sleep(1);
 
 $program_select->send_keys('test');
+
 my $location_select = $t->find_element_ok("trial_upload_location", "id", "find location select");
+
 $location_select->send_keys('test_location');
 my $trial_name = $t->find_element_ok("trial_upload_name", "id", "find trial name input");
+
 $trial_name->send_keys('T100');
+
 my $trial_year = $t->find_element_ok("trial_upload_year", "id", "find trial year input");
+
 $trial_year->send_keys('2016');
+
 my $trial_description = $t->find_element_ok("trial_upload_description", "id", "find trial description input");
+
 $trial_description->send_keys('T100 trial test description');
+
+
+my $stock_type = $t->find_element_ok("trial_upload_trial_stock_type", "id", "find trial stock type property selector");
+$stock_type->send_keys("a\n");
+
+
 my $trial_design = $t->find_element_ok("trial_upload_design_method", "id", "find trial design select");
+sleep(2);
 $trial_design->send_keys('Completely Randomized');
+
+sleep(2);
+
 my $upload_input = $t->find_element_ok("trial_uploaded_file", "id", "find file input");
 
 my $filename = $f->config->{basepath}."/t/data/trial/T100_trial_layout.xls";
 my $remote_filename = $t->driver()->upload_file($filename);
 $upload_input->send_keys($filename);
 sleep(1);
-$t->find_element_ok("upload_trial_submit_first", "name", "submit upload trial file ")->click();
-sleep(5);
 
-$t->find_element_ok("close_trial_upload_success_dialog", "id", "success msg")->click();
-sleep(1);
+#$t->find_element_ok("upload_trial_submit_first", "name", "submit upload trial file ")->click();
+#sleep(2);
+
+
+my $go_to_next_step_button = $t->find_element_ok("go_to_next_step_after_upload_button", "id", "go to next step");
+sleep(2);
+print STDERR "FOUND THE BUTTON, NOW SCROLLING INTO VIEW...\n";
+
+$go_to_next_step_button->click();
+
+sleep(2);
+
+my $trial_validate_button = $t->find_element_ok("upload_trial_validate_form_button", "id", "find validate button");
+$trial_validate_button->click();
+sleep(2);
+
+
+my $trial_submit_button = $t->find_element_ok("submit_trial_upload_button", "id", "find trial submit button");
+$trial_submit_button->click();
+sleep(10);
+
+
+# the following dialog was removed...
+#$t->find_element_ok("close_trial_upload_success_dialog", "id", "success msg")->click();
+#sleep(1);
+
+
 $t->find_element_ok("close_trial_upload_dialog", "id", "close trial upload dialog")->click();
-sleep(1);
 
-my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "name", "refresh tree")->click();
-sleep(3);
+# force reload the page, there seems to be an issue with reloading (although it's in the code...')
+$t->get_ok('/breeders/trials');
+
+my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree")->click();
+sleep(5);
 my $open_tree = $t->find_element_ok("jstree-icon", "class", "open up tree")->click();
 sleep(2);
 my $open_tree = $t->find_element_ok("T100", "partial_link_text", "open up tree")->click();
@@ -74,15 +119,23 @@ my $trial_id = $f->bcs_schema->resultset('Project::Project')->search({name=>'T10
 #Upload Trial Coordinates -> New Trial ID 144
 $t->get_ok('/breeders/trial/'.$trial_id);
 sleep(10);
-$t->find_element_ok("upload_trial_coords_link", "id", "click on upload_trial_coords_link ")->click();
+
+my $pheno_heatmap_offswitch = $t->find_element_ok("pheno_heatmap_onswitch", "id", "find pheno heatmap offswitch");
+$pheno_heatmap_offswitch->click();
+sleep(60);
+#$t->find_element_ok("upload_trial_coords_ok_button", "id", "submit upload trial coords file ")->click();
+my $upload_trial_coords_button = $t->find_element_ok("heatmap_upload_trial_coords_link", "id", "submit upload trial coords file ");
+sleep(1);
+$upload_trial_coords_button->click();
 sleep(2);
+
 my $upload_input = $t->find_element_ok("trial_coordinates_uploaded_file", "id", "find file input");
 my $filename = $f->config->{basepath}."/t/data/trial/T100_trial_coords.csv";
 my $remote_filename = $t->driver()->upload_file($filename);
 $upload_input->send_keys($filename);
 sleep(1);
-$t->find_element_ok("upload_trial_coords_ok_button", "id", "submit upload trial coords file ")->click();
-sleep(2); 
+
+
 $t->find_element_ok("dismiss_trial_coord_upload_dialog", "id", "close success msg")->click();
 sleep(3);    
 $t->find_element_ok("physical_layout_onswitch", "id", "view field map ")->click();

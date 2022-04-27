@@ -324,8 +324,10 @@ rect.bordered {
                                 <hr>
                                 <center>
                                 <button type="button" class="btn btn-lg btn-primary" name="create_trial_validate_form_button" id="create_trial_validate_form_button">First validate the form</button>
-                                <button type="button" class="btn btn-lg btn-primary" disabled onclick="Workflow.complete(this); return false;" name="create_trial_submit">Continue to Next Step</button>
+                                <button type="button" class="btn btn-lg btn-primary" disabled onclick="Workflow.complete(this); return false;" id="create_trial_submit_button" name="create_trial_submit">Continue to Next Step</button>
                                 <center>
+				  <select id="dummy_select">
+				    </select>
 
                             </&>
                             <&| /util/workflow.mas:step, title=> "Design Information" &>
