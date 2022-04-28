@@ -18,6 +18,12 @@ use Digest::MD5;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
 
+use LWP::UserAgent;
+use LWP::Simple;
+use HTML::Entities;
+use URI::Encode qw(uri_encode uri_decode);
+use Tie::UrlEncoder; our(%urlencode);
+
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -159,19 +165,18 @@ sub submit_order_POST : Args(0) {
             if ($resp->is_success) {
                 my $message = $resp->decoded_content;
                 my $all_info = decode_json $message;
-                my $form_id;
                 foreach my $info (@$all_info) {
                     my %info_hash = %{$info};
-                    if ($info_hash{'id_string'} eq 'SendusuOrderingSystem') {
+                    if ($info_hash{'id_string'} eq 'OrderingSystemTest') {
                         $form_id = $info_hash{'id'};
-                        print STDERR "FORM ID =".Dumper($form_id)."\n";
                     }
                 }
             }
+            print STDERR "FORM ID =".Dumper($form_id)."\n";
 
             my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
-            my $btract_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate","initiationDate","initiatedBy","subcultureDate","numberOfCopies","rootingDate","numberInRooting","weaning1Date","numberInWeaning1","weaning2Date","numberInWeaning2","screenhouseTransferDate","numberInScreenhouse","hardeningDate","numberInHardening","currentStatus","percentageComplete"';
-
+#            my $btract_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate","initiationDate","initiatedBy","subcultureDate","numberOfCopies","rootingDate","numberInRooting","weaning1Date","numberInWeaning1","weaning2Date","numberInWeaning2","screenhouseTransferDate","numberInScreenhouse","hardeningDate","numberInHardening","currentStatus","percentageComplete"';
+            my $btract_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate"';
 #            my $template_file_name = 'btract_order_info';
             my $template_file_name = 'sendusu_orders';
             my $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -179,11 +184,10 @@ sub submit_order_POST : Args(0) {
             my $time = DateTime->now();
             my $timestamp = $time->ymd()."_".$time->hms();
             my $subdirectory_name = "btract_order_info";
-#           my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
-            my $archived_file_name = catfile($user_id, $subdirectory_name,$template_file_name.".csv");
+           my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
+#            my $archived_file_name = catfile($user_id, $subdirectory_name,$template_file_name.".csv");
             my $archive_path = $c->config->{archive_path};
             my $file_destination =  catfile($archive_path, $archived_file_name);
-            print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
             my $dir = $c->tempfiles_subdir('/download');
             my $rel_file = $c->tempfile( TEMPLATE => 'download/btract_order_infoXXXXX');
             my $tempfile = $c->config->{basepath}."/".$rel_file.".csv";
@@ -235,7 +239,43 @@ sub submit_order_POST : Args(0) {
             move($tempfile,$file_destination);
             unlink $tempfile;
             print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
+
+            my $ua = LWP::UserAgent->new;
+            $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
+            my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
+
+            my $server_endpoint2 = "https://api.ona.io/api/v1/metadata";
+            my $resp = $ua->post(
+                $server_endpoint2,
+                Content_Type => 'form-data',
+                Content => [
+                    data_file => [ $file_destination, $file_destination, Content_Type => 'text/plain', ],
+                    "xform"=>$form_id,
+                    "data_type"=>"media",
+                    "data_value"=>$file_destination
+                ]
+            );
+
+            if ($resp->is_success) {
+                my $message = $resp->decoded_content;
+                my $message_hash = decode_json $message;
+                print STDERR "ONA MESSAGE HASH =".Dumper($message_hash)."\n";
+                print STDERR "ONA MESSAGE ID =".Dumper($message_hash->{id})."\n";
+
+#                if ($message_hash->{id}){
+#                    $c->stash->{rest}->{success} .= 'The order was sucessfully sent to the BANANA ORDERING SYSTEM. The progress of your order can be tracked on Musabase.';
+#                } else {
+#                        $c->stash->{rest}->{error} = 'Error sending your order to the BANANA ORDERING SYSTEM.';
+#                    }
+                } else {
+                    print STDERR "ERROR RESPONSE =".Dumper($resp)."\n";
+#                    $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
+                }
+
         }
+
+
+
     }
 
     my $host = $c->config->{main_production_site_url};
