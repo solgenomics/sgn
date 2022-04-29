@@ -62,10 +62,10 @@ sub submit_order_POST : Args(0) {
 #    print STDERR "ITEMS =".Dumper($items)."\n";
     my $catalog_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_catalog_json', 'stock_property')->cvterm_id();
     my %group_by_contact_id;
-    my @btract_rows;
+    my @all_new_rows;
     my @all_items = @$items;
     foreach my $ordered_item (@all_items) {
-        my @btract_info = ();
+        my @ona_info = ();
         my @ordered_item_split = split /,/, $ordered_item;
         my $number_of_fields = @ordered_item_split;
         my $item_name = $ordered_item_split[0];
@@ -86,8 +86,8 @@ sub submit_order_POST : Args(0) {
         $quantity =~ s/^\s+|\s+$//g;
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'quantity'} = $quantity;
 
-        @btract_info = ($item_source, $item_name, $quantity, $request_date);
-        $group_by_contact_id{$contact_person_id}{'btract'}{$item_name} = \@btract_info;
+        @ona_info = ($item_source, $item_name, $quantity, $request_date);
+        $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
 
         if ($number_of_fields == 3) {
             my $comments = $ordered_item_split[2];
@@ -141,19 +141,21 @@ sub submit_order_POST : Args(0) {
         my $contact_email = $contact_person->get_contact_email();
         push @contact_email_list, $contact_email;
 
-        my $each_contact_id_btract = $group_by_contact_id{$contact_id}{'btract'};
-        my $order_location;
-        foreach my $item (keys %{$each_contact_id_btract}) {
-            my @btract_row = ();
-            my $btract_ref = $each_contact_id_btract->{$item};
-            $order_location = $btract_ref->[0];
-            @btract_row = @$btract_ref;
-            splice @btract_row, 1, 0, $order_id;
-            push @btract_rows, [@btract_row];
-        }
-        print STDERR "ORDER LOCATION =".Dumper($order_location)."\n";
-
         if ($odk_crossing_data_service_name eq 'ONA') {
+            my $each_contact_id_ona = $group_by_contact_id{$contact_id}{'ona'};
+            my $order_location;
+            foreach my $item (keys %{$each_contact_id_ona}) {
+                my @new_order_row = ();
+                my $ona_ref = $each_contact_id_ona->{$item};
+                $order_location = $ona_ref->[0];
+                @new_order_row = @$ona_ref;
+                splice @new_order_row, 1, 0, $order_id;
+                push @all_new_rows, [@new_order_row];
+            }
+            print STDERR "ORDER LOCATION =".Dumper($order_location)."\n";
+            print STDERR "ALL NEW ROWS =".Dumper(\@all_new_rows)."\n";
+
+            my $order_file_name = 'test_orders.csv';
             my $id_string;
             my $form_id;
             my $ua = LWP::UserAgent->new;
@@ -173,30 +175,78 @@ sub submit_order_POST : Args(0) {
                 }
             }
             print STDERR "FORM ID =".Dumper($form_id)."\n";
+            my $order_ona_id;
+            my $file_url;
+            my $server_endpoint_d = "https://api.ona.io/api/v1/metadata?xform=".$form_id;
+            my $resp_d = $ua->get($server_endpoint_d);
+            if ($resp_d->is_success) {
+                my $message_d = $resp_d->decoded_content;
+                my $message_hash_d = decode_json $message_d;
+                foreach my $t (@$message_hash_d) {
+                    if ($t->{'data_value'} eq $order_file_name) {
+#                        print STDERR "DELETE INFO =".Dumper($t)."\n";
+                        getstore($t->{media_url}, $order_file_name);
+                        $order_ona_id = $t->{id};
+                        print STDERR "ORDER ONA ID=".Dumper($order_ona_id);
+                    }
+                }
+            }
+            my @previous_order_rows;
+            if ($order_ona_id) {
+                    open(my $fh, '<', $order_file_name)
+                    or die "Could not open file!";
+                    my $old_header_row = <$fh>;
+                    while ( my $row = <$fh> ){
+                        chomp $row;
+                        push @previous_order_rows, [split ',', $row];
+                    }
+            }
+            print STDERR "PREVIOUS ORDER INFO =".Dumper(\@previous_order_rows)."\n";
+
+            push my @all_order_rows, (@previous_order_rows);
+            push @all_order_rows, (@all_new_rows);
+            print STDERR "ALL ORDER ROWS =".Dumper(\@all_order_rows)."\n";
+
+
+            return;
+
+#            if ($order_ona_id) {
+#                my $server_endpoint = "https://api.ona.io/api/v1/metadata";
+#                my $delete_resp = $ua->delete(
+#                        $server_endpoint."/$order_ona_id"
+#                    );
+#                    if ($delete_resp->is_success) {
+#                        print STDERR "Deleted order file on ONA $order_ona_id.\n";
+#                    }
+#                    else {
+#                        print STDERR "ERROR: Did not delete order file on ONA $order_ona_id.\n";
+                        #print STDERR Dumper $delete_resp;
+#                    }
+#            }
 
             my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
-#            my $btract_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate","initiationDate","initiatedBy","subcultureDate","numberOfCopies","rootingDate","numberInRooting","weaning1Date","numberInWeaning1","weaning2Date","numberInWeaning2","screenhouseTransferDate","numberInScreenhouse","hardeningDate","numberInHardening","currentStatus","percentageComplete"';
-            my $btract_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate"';
-#            my $template_file_name = 'btract_order_info';
-            my $template_file_name = 'sendusu_orders';
+#            my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate","initiationDate","initiatedBy","subcultureDate","numberOfCopies","rootingDate","numberInRooting","weaning1Date","numberInWeaning1","weaning2Date","numberInWeaning2","screenhouseTransferDate","numberInScreenhouse","hardeningDate","numberInHardening","currentStatus","percentageComplete"';
+            my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate"';
+#            my $template_file_name = 'ona_order_info';
+            my $template_file_name = 'test_orders';
             my $user_id = $c->user()->get_object()->get_sp_person_id();
             my $user_name = $c->user()->get_object()->get_username();
             my $time = DateTime->now();
             my $timestamp = $time->ymd()."_".$time->hms();
-            my $subdirectory_name = "btract_order_info";
-           my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
-#            my $archived_file_name = catfile($user_id, $subdirectory_name,$template_file_name.".csv");
+            my $subdirectory_name = "ona_order_info";
+#           my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
+            my $archived_file_name = catfile($user_id, $subdirectory_name,$template_file_name.".csv");
             my $archive_path = $c->config->{archive_path};
             my $file_destination =  catfile($archive_path, $archived_file_name);
             my $dir = $c->tempfiles_subdir('/download');
-            my $rel_file = $c->tempfile( TEMPLATE => 'download/btract_order_infoXXXXX');
+            my $rel_file = $c->tempfile( TEMPLATE => 'download/ona_order_infoXXXXX');
             my $tempfile = $c->config->{basepath}."/".$rel_file.".csv";
     #        print STDERR "TEMPFILE =".Dumper($tempfile)."\n";
             open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
 
-            print $FILE $btract_header."\n";
+            print $FILE $ona_header."\n";
             my $order_row = 0;
-            foreach my $row (@btract_rows) {
+            foreach my $row (@all_new_rows) {
                 my @row_array = ();
                 @row_array = @$row;
                 my $csv_format = join(',',@row_array);
@@ -267,15 +317,12 @@ sub submit_order_POST : Args(0) {
 #                } else {
 #                        $c->stash->{rest}->{error} = 'Error sending your order to the BANANA ORDERING SYSTEM.';
 #                    }
-                } else {
-                    print STDERR "ERROR RESPONSE =".Dumper($resp)."\n";
+#                } else {
+#                    print STDERR "ERROR RESPONSE =".Dumper($resp)."\n";
 #                    $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
-                }
-
+#                }
+            }
         }
-
-
-
     }
 
     my $host = $c->config->{main_production_site_url};
