@@ -5,6 +5,7 @@ use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/blue_section_html page_title_html html_break_string/;
 use CXGN::Chromatogram;
 use URI::Escape;
+use CXGN::Tools::Text qw | sanitize_string |;
 use CatalystX::GlobalContext '$c';
 use CXGN::DB::Connection;
 
@@ -118,6 +119,14 @@ $table = 'table cellspacing="0" cellpadding="0" border="0" width="100%"';
 my ($request_id, $request_type, $request_from, $show_hierarchy, $random) =
   $page->get_arguments("request_id","request_type","request_from",
 		       "show_hierarchy","random");
+
+$request_id = sanitize_string($request_id);
+$request_type = sanitize_string($request_type);
+$request_from = sanitize_string($request_from);
+$show_hierarchy = sanitize_string($show_hierarchy);
+$random = sanitize_string($random);
+
+
 
 # If the identifier is not given, or the identifier parameter is 
 # screwed up, we want to give the right error instead of failing

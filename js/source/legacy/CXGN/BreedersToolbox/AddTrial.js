@@ -171,7 +171,7 @@ jQuery(document).ready(function ($) {
         if ($('#list_of_cross_checks_section_list_select').val()) {
             check_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
             check_cross_list = JSON.stringify(list.getList(check_cross_list_id));
-            verify_cross_list(check_cross_list);
+            verify_stock_list(check_cross_list);
         }
     });
 
@@ -179,7 +179,7 @@ jQuery(document).ready(function ($) {
         if ($('#list_of_family_name_checks_section_list_select').val()) {
             check_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
             check_family_name_list = JSON.stringify(list.getList(check_family_name_list_id));
-            verify_family_name_list(check_family_name_list);
+            verify_stock_list(check_family_name_list);
         }
     });
 
@@ -200,7 +200,7 @@ jQuery(document).ready(function ($) {
         if ($('#crbd_list_of_cross_checks_section_list_select').val()) {
             crbd_check_cross_list_id = $('#crbd_list_of_cross_checks_section_list_select').val();
             crbd_check_cross_list = JSON.stringify(list.getList(crbd_check_cross_list_id));
-            verify_cross_list(crbd_check_cross_list);
+            verify_stock_list(crbd_check_cross_list);
         }
     });
 
@@ -208,7 +208,7 @@ jQuery(document).ready(function ($) {
         if ($('#crbd_list_of_family_name_checks_section_list_select').val()) {
             crbd_check_family_name_list_id = $('#crbd_list_of_family_name_checks_section_list_select').val();
             crbd_check_family_name_list = JSON.stringify(list.getList(crbd_check_family_name_list_id));
-            verify_family_name_list(crbd_check_family_name_list);
+            verify_stock_list(crbd_check_family_name_list);
         }
     });
 
