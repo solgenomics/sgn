@@ -618,16 +618,28 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 
             <ul>
                 <li>metabolite_name (required): This should be the same name as present in a column in your metabolomics data matrix file.</li>
-                <li>inchi_key (optional): The International Chemical Identifier for the metabolite.</li>
-                <li>compound_name (optional): Name for the compound.</li>
+                <li>MZ (required): m/z ratio from standard output.</li>
+                <li>RT (required): Retention time from standard output. Units should be in seconds.</li>
+                <li>CmpdID_ChEBI (at least one of four compound identifiers is required): Chemical Entities of Biological Interest (ChEBI) identifier for the metabolite.</li>
+                <li>CmpdID_PubChem (at least one of four compound identifiers is required): PubChem identifier for the metabolite.</li>
+                <li>CmpdID_inchi (at least one of four compound identifiers is required): The standard International Chemical Identifier for the metabolite.</li>
+                <li>inchi_key (at least one of four compound identifiers is required): Hashed version of the International Chemical Identifier for the metabolite.</li>
+                <li>compound_name (optional): Putative annotation/name for the compound.</li>
+                <li>synonyms (optional): Additional or alternate names for the compound.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
                 <tbody>
                     <tr>
                         <td>metabolite_name</td>
+                        <td>MZ</td>
+                        <td>RT</td>
+                        <td>CmpdID_ChEBI</td>
+                        <td>CmpdID_PubChem</td>
+                        <td>CmpdID_inchi</td>
                         <td>inchi_key</td>
                         <td>compound_name</td>
+                        <td>synonyms</td>
                     </tr>
                 </tbody>
             </table>
