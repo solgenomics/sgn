@@ -57,9 +57,12 @@ if ($mode eq 'stockprop'){
     $cur_refreshing_q .= " WHERE mv_name = 'materialized_stockprop'";
 }
 if ($mode eq 'phenotypes') {
-    $cur_refreshing_q .= " WHERE mv_name = 'materialized_phenotype_jsonb_table'";
+    $cur_refreshing_q .= " WHERE mv_name = 'materialized_phenotype_jsonb_table' or mv_name = 'materialized_phenoview' ";
 }
-
+if ($mode eq 'all_but_genoview') {
+    $cur_refreshing_q .= " WHERE mv_name = 'materialized_stockprop' or mv_name = 'materialized_phenoview' or mv_name= 'materialized_phenotype_jsonb_table' ";
+}
+    
 #set TRUE before the transaction begins
 my $state = 'TRUE';
 print STDERR "*Setting currently_refreshing = TRUE\n";
