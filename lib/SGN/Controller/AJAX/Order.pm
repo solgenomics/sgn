@@ -161,8 +161,8 @@ sub submit_order_POST : Args(0) {
             my $ua = LWP::UserAgent->new;
             $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
             my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
-            my $server_endpoint = "https://api.ona.io/api/v1/data";
-            my $resp = $ua->get($server_endpoint);
+            my $server_endpoint_1 = "https://api.ona.io/api/v1/data";
+            my $resp = $ua->get($server_endpoint_1);
 
             if ($resp->is_success) {
                 my $message = $resp->decoded_content;
@@ -176,9 +176,8 @@ sub submit_order_POST : Args(0) {
             }
             print STDERR "FORM ID =".Dumper($form_id)."\n";
             my $order_ona_id;
-            my $file_url;
-            my $server_endpoint_d = "https://api.ona.io/api/v1/metadata?xform=".$form_id;
-            my $resp_d = $ua->get($server_endpoint_d);
+            my $server_endpoint_2 = "https://api.ona.io/api/v1/metadata?xform=".$form_id;
+            my $resp_d = $ua->get($server_endpoint_2);
             if ($resp_d->is_success) {
                 my $message_d = $resp_d->decoded_content;
                 my $message_hash_d = decode_json $message_d;
@@ -192,37 +191,21 @@ sub submit_order_POST : Args(0) {
                 }
             }
             my @previous_order_rows;
+            my @all_order_rows;
             if ($order_ona_id) {
-                    open(my $fh, '<', $order_file_name)
-                    or die "Could not open file!";
-                    my $old_header_row = <$fh>;
-                    while ( my $row = <$fh> ){
-                        chomp $row;
-                        push @previous_order_rows, [split ',', $row];
-                    }
+                open(my $fh, '<', $order_file_name)
+                or die "Could not open file!";
+                my $old_header_row = <$fh>;
+                while ( my $row = <$fh> ){
+                    chomp $row;
+                    push @previous_order_rows, [split ',', $row];
+                }
+                print STDERR "PREVIOUS ORDER INFO =".Dumper(\@previous_order_rows)."\n";
+                push @all_order_rows, (@previous_order_rows);
             }
-            print STDERR "PREVIOUS ORDER INFO =".Dumper(\@previous_order_rows)."\n";
 
-            push my @all_order_rows, (@previous_order_rows);
             push @all_order_rows, (@all_new_rows);
             print STDERR "ALL ORDER ROWS =".Dumper(\@all_order_rows)."\n";
-
-
-            return;
-
-#            if ($order_ona_id) {
-#                my $server_endpoint = "https://api.ona.io/api/v1/metadata";
-#                my $delete_resp = $ua->delete(
-#                        $server_endpoint."/$order_ona_id"
-#                    );
-#                    if ($delete_resp->is_success) {
-#                        print STDERR "Deleted order file on ONA $order_ona_id.\n";
-#                    }
-#                    else {
-#                        print STDERR "ERROR: Did not delete order file on ONA $order_ona_id.\n";
-                        #print STDERR Dumper $delete_resp;
-#                    }
-#            }
 
             my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
 #            my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate","initiationDate","initiatedBy","subcultureDate","numberOfCopies","rootingDate","numberInRooting","weaning1Date","numberInWeaning1","weaning2Date","numberInWeaning2","screenhouseTransferDate","numberInScreenhouse","hardeningDate","numberInHardening","currentStatus","percentageComplete"';
@@ -246,7 +229,7 @@ sub submit_order_POST : Args(0) {
 
             print $FILE $ona_header."\n";
             my $order_row = 0;
-            foreach my $row (@all_new_rows) {
+            foreach my $row (@all_order_rows) {
                 my @row_array = ();
                 @row_array = @$row;
                 my $csv_format = join(',',@row_array);
@@ -288,15 +271,25 @@ sub submit_order_POST : Args(0) {
 
             move($tempfile,$file_destination);
             unlink $tempfile;
+            print STDERR "FILE ID =".Dumper($file_id)."\n";
             print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
 
-            my $ua = LWP::UserAgent->new;
-            $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
-            my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
+            if ($order_ona_id) {
+                my $server_endpoint_3 = "https://api.ona.io/api/v1/metadata";
+                my $delete_resp = $ua->delete(
+                    $server_endpoint_3."/$order_ona_id"
+                );
+                if ($delete_resp->is_success) {
+                    print STDERR "Deleted order file on ONA $order_ona_id.\n";
+                } else {
+                    print STDERR "ERROR: Did not delete order file on ONA $order_ona_id.\n";
+                    #print STDERR Dumper $delete_resp;
+                }
+            }
 
-            my $server_endpoint2 = "https://api.ona.io/api/v1/metadata";
-            my $resp = $ua->post(
-                $server_endpoint2,
+            my $server_endpoint_4 = "https://api.ona.io/api/v1/metadata";
+            my $add_resp = $ua->post(
+                $server_endpoint_4,
                 Content_Type => 'form-data',
                 Content => [
                     data_file => [ $file_destination, $file_destination, Content_Type => 'text/plain', ],
@@ -306,8 +299,8 @@ sub submit_order_POST : Args(0) {
                 ]
             );
 
-            if ($resp->is_success) {
-                my $message = $resp->decoded_content;
+            if ($add_resp->is_success) {
+                my $message = $add_resp->decoded_content;
                 my $message_hash = decode_json $message;
                 print STDERR "ONA MESSAGE HASH =".Dumper($message_hash)."\n";
                 print STDERR "ONA MESSAGE ID =".Dumper($message_hash->{id})."\n";
