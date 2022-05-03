@@ -5,7 +5,7 @@ CXGN::Genotype::ParseUpload::Plugin::transposedVCF - plugin to load transposed V
 
 =head1 SYNOPSIS
 
- my $up = CXGN::Genotype::ParseUpload->new( { 
+ my $up = CXGN::Genotype::ParseUpload->new( {
     chado_schema => $schema,
     filename => $archived_filename_with_path,
     observation_unit_type_name => $obs_type,
@@ -15,7 +15,7 @@ CXGN::Genotype::ParseUpload::Plugin::transposedVCF - plugin to load transposed V
   });
 
   $up->load_plugin("transposedVCF");
-  if ($up->validate_with_plugin()) { 
+  if ($up->validate_with_plugin()) {
     $up->
 
 
@@ -60,13 +60,13 @@ sub _validate_with_plugin {
     my @fields;
 
     open($F, "<", $filename) || die "Can't open file $filename\n";
-    
+
     my @header_info;
 
     my $chroms;
-    while (<$F>) { 
+    while (<$F>) {
 	chomp;
-	if (m/\#\#/) { 
+	if (m/\#\#/) {
 	    print STDERR "Reading header line $_\n";
 	    push @header_info, $_;
 	}
@@ -85,7 +85,7 @@ sub _validate_with_plugin {
         }
     }
     $self->chroms(\@chroms);
-    
+
     my $pos = <$F>;
     chomp($pos);
     my @pos = split /\t/, $pos;
@@ -107,37 +107,37 @@ sub _validate_with_plugin {
     }
     $self->ids(\@ids);
     #print STDERR "IDS = ".Dumper(\@ids);
-    
+
     my $refs = <$F>;
     chomp($refs);
     my @refs = split /\t/, $refs;
     $self->refs(\@refs);
     #print STDERR "REFS = ".Dumper(\@refs);
-    
+
     my $alts = <$F>;
     chomp($alts);
     my @alts = split /\t/, $alts;
     $self->alts(\@alts);
     #print STDERR "ALTS = ".Dumper(\@alts);
-    
+
     my $qual = <$F>;
     chomp($qual);
     my @qual = split /\t/,$qual;
     $self->qual(\@qual);
     #print STDERR "QUAL = ".Dumper(\@qual);
-    
+
     my $filter = <$F>;
     chomp($filter);
     my @filter = split /\t/, $filter;
     $self->filter(\@filter);
     #print STDERR "FILTER = ".Dumper(\@filter);
-    
+
     my $info = <$F>;
     chomp($info);
     my @info = split /\t/, $info;
     $self->info(\@info);
     #print STDERR "INFO = ".Dumper(\@info);
-    
+
     my $format = <$F>;
     chomp($format);
     my @format = split /\t/, $format;
@@ -187,13 +187,13 @@ sub _validate_with_plugin {
 	$lines++;
 	if ($lines % 100 == 0) { print STDERR "Reading line $lines...        \r"; }
     }
-    
+
     #print STDERR "\n";
     close($F);
-    
+
     my $number_observation_units = scalar(@observation_unit_names);
     #print STDERR "Number of observation units: $number_observation_units\n";
-    
+
     my @observation_units_names_trim;
     if ($self->get_igd_numbers_included){
         foreach (@observation_unit_names) {
@@ -262,7 +262,7 @@ sub _validate_with_plugin {
 
     my $protocol_data = $self->extract_protocol_data();
     $self->protocol_data($protocol_data);
-   
+
     return 1; #returns true if validation is passed
 }
 
@@ -280,8 +280,8 @@ sub _parse_with_plugin {
 
     foreach (1..9) { my $trash = <$F>; } # remove first 9 lines
     $self->_fh($F);
-    
-    
+
+
 }
 
 sub extract_protocol_data {
@@ -290,7 +290,7 @@ sub extract_protocol_data {
     my $marker_name;
     my %protocolprop_info;
     my $marker_info_p8;
-    
+
 #    open(my $F, '<', $self->get_filename()) || die "Can't open file ".$self->get_filename()."\n";
 
     for (my $i=1; $i<@{$self->ids()}; $i++) {
@@ -329,20 +329,20 @@ sub extract_protocol_data {
 
 sub next_genotype {
     my $self = shift;
-    
+
     #print STDERR "Processing next genotype...\n";
     my @fields;
 
     my $genotypeprop = {}; # hashref
     my $observation_unit_name;
-    
+
     my $line;
 
     my $F = $self->_fh();
-    
-    if (! ($line = <$F>)) { 
-        print STDERR "No next genotype... Done!\n"; 
-        close($F); 
+
+    if (! ($line = <$F>)) {
+        print STDERR "No next genotype... Done!\n";
+        close($F);
         return ( [$observation_unit_name], $genotypeprop );
     }
     else {
@@ -381,10 +381,12 @@ sub next_genotype {
             my @fvalues = split /:/, $scores[$i-1];
             my %value;
             @value{@format} = @fvalues;
-            my $gt_dosage_val = 'NA';
-            my $gt_dosage = 0;
+            my $gt_dosage_alt_val = 'NA';
+            my $gt_dosage_alt = 0;
             if (exists($value{'GT'})) {
                 my $gt = $value{'GT'};
+                chomp($gt);
+
                 my $separator = '/';
                 my @alleles = split (/\//, $gt);
                 if (scalar(@alleles) <= 1){
@@ -397,10 +399,11 @@ sub next_genotype {
                 my @nucleotide_genotype;
                 my @ref_calls;
                 my @alt_calls;
+                my $has_calls = 0;
                 foreach (@alleles) {
                     if (looks_like_number($_)) {
-                        if ($_ eq '0' || $_ == 0) {
-                            $gt_dosage++;
+                        if ($_ ne '0') {
+                            $gt_dosage_alt++;
                         }
                         my $index = $_ + 0;
                         if ($index == 0) {
@@ -410,28 +413,34 @@ sub next_genotype {
                             push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
                             push @alt_calls, $separated_alts[$index-1];
                         }
-                        $gt_dosage_val = $gt_dosage;
+                        $has_calls = 1;
                     } else {
                         push @nucleotide_genotype, $_;
                     }
+                }
+                if ($has_calls) {
+                    $gt_dosage_alt_val = $gt_dosage_alt;
                 }
                 if ($separator eq '/') {
                     $separator = ',';
                     @nucleotide_genotype = (@ref_calls, @alt_calls);
                 }
                 $value{'NT'} = join $separator, @nucleotide_genotype;
+                $value{'GT'} = $gt;
             }
+            # If DS is provided in uploaded file and is a number, then this will be skipped
             if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
-                $value{'DS'} = $gt_dosage_val;
+                $value{'DS'} = $gt_dosage_alt_val;
             }
-            if (looks_like_number($value{'DS'})) {
-                my $rounded_ds = round($value{'DS'});
-                $value{'DS'} = "$rounded_ds";
-            }
+            # if (looks_like_number($value{'DS'})) {
+            #     my $rounded_ds = round($value{'DS'});
+            #     $value{'DS'} = "$rounded_ds";
+            # }
             $genotypeprop->{$chrom}->{$marker_name} = \%value;
         }
         $self->_is_first_line(0);
     }
+
     return ( [$observation_unit_name], { $observation_unit_name => $genotypeprop } );
 }
 

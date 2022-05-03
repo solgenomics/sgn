@@ -1,5 +1,6 @@
 <%args>
-$locations
+$trial_id => undef
+$trial_name => undef
 </%args>
 
 % my $cross_additional_info_string = $c->config->{cross_additional_info};
@@ -39,60 +40,64 @@ $locations
 
                         <&| /util/workflow.mas:step, title=> "Crossing experiment" &>
                             <& /page/page_title.mas, title=>"Select a crossing experiment for your crosses" &>
+                            <center><label style="color:DarkOliveGreen" class="col-sm-12 control-label">If you are uploading an Intercross file and using auto-generated cross unique IDs, please use manage Intercross section</label></center>
+                            <br>
+                            <br>
+                            <div id="manage_page_section_1" style="display:none">
+                                <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
+                                <center>
+                                    <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a new crossing experiment, click here</button><br/><br/>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">If you already have a crossing experiment, go to Next Step</button>
+                                </center>
+                            </div>
 
-                            <p>Crossing experiments are for grouping crosses together. The grouping is most often done for crosses derived from the same field trial, the same year, or for crosses that have the same breeding objective.</p>
-                            <!--
-                            <hr>
-                            <div class="form-group">
-                                <label class="col-sm-2 control-label">You can check your crossing experiment here: </label>
-                                <div class="col-sm-10">
-                                    <div id="upload_crosses_select_crossingtrial_1" name="upload_crosses_select_crossingtrial_1" >
+                            <div id="crossing_experiment_page_section_1" style="display:none">
+                                <center>
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">You are uploading crosses for crossing experiment: </label>
+                                        <div class="col-sm-6" >
+                                            <input class="form-control" name="experiment_name_1" id="experiment_name_1" disabled value="<% $trial_name %>">
+                                        </div>
                                     </div>
-                                </div>
-                            </div><br/><br/>
-                            <hr>
-                            -->
-                            <center>
-                                <button class="btn btn-info" name="create_crossingtrial_link">If you need to create a new crossing experiment, click here</button><br/><br/>
-                                <button class="btn btn-primary" onclick="Workflow.complete(this);">If you already have a crossing experiment, go to Next Step</button>
-                            </center>
-
+                                    <br/><br/><br/><br/>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
+                                </center>
+                            </div>
                         </&>
                         <&| /util/workflow.mas:step, title=> "Upload your crosses" &>
                             <& /page/page_title.mas, title=>"Enter basic information about the crosses and upload your file" &>
 
                             <br/>
-                                <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">Select a Crossing Experiment: </label>
-                                    <div class="col-sm-9">
-                                        <div id="upload_crosses_select_crossingtrial_2" name="upload_crosses_select_crossingtrial_2" >
+                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
+                                <div id="manage_page_section_2" style="display:none">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                                        <div class="col-sm-9" >
+                                            <div id="upload_crosses_breeding_program_select_div">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="manage_page_crossing_experiment" style="display:none">
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">Crossing Experiment: </label>
+                                            <div class="col-sm-9">
+                                                <div id="upload_crosses_crossing_experiment_select_div" name="upload_crosses_crossing_experiment_select_div" >
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <!--
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">Location of Crosses: </label>
-                                    <div class="col-sm-10">
-                                        <select class="form-control" id="cross_upload_location" name="cross_upload_location">
-                                            <option value="">Select Location</option>
-<%perl>
-    # foreach my $location (@locations) {
-    #     print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
-    # }
-    foreach my $location_hashref (@$locations) {
-        my $properties = exists($location_hashref->{'properties'}) ? $location_hashref->{properties} : "";
-        my $program = $properties->{'Program'};
-        my $name = $properties->{'Name'};
-        print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
-    }
-</%perl>
-                                        </select>
+                                <div id="crossing_experiment_page_section_2" style="display:none">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Crossing Experiment: </label>
+                                        <div class="col-sm-9" >
+                                            <input class="form-control" name="experiment_name" id="experiment_name" disabled value="<% $trial_name %>">
+                                            <input name="experiment_id" id="experiment_id" type="hidden" value="<% $trial_id %>">
+                                        </div>
                                     </div>
                                 </div>
-                                -->
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Select a File Format: </label>
+                                    <label class="col-sm-3 control-label">File Format: </label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="cross_file_format_option">
                                             <option value="">Select a file format that you want to upload</option>
@@ -209,10 +214,11 @@ $locations
                                 </div>
                                 -->
                             </form>
-
-                            <center>
-                                <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
-                            </center>
+                            <div id="submit_button_section" style="display:none">
+                                <center>
+                                    <button type="button" onclick="Workflow.complete(this, false);" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
+                                </center>
+                            </div>
 
                         </&>
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
@@ -238,31 +244,31 @@ $locations
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button name="upload_crosses_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 <div class="modal fade" id="upload_cross_error_display" name="upload_cross_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesErrorDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadCrossesErrorDialog">Upload Crosses File Error</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <table>
-    	  <tbody></tbody>
-  	  </table>
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadCrossesErrorDialog">Upload Crosses File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
     </div>
-  </div>
 </div>
 
 <div class="modal fade" id="cross_accession_info_dialog" name="cross_accession_info_dialog" tabindex="-1" role="dialog" aria-labelledby="crossAccessionInfoDialog">
@@ -513,3 +519,26 @@ $locations
         </div>
     </div>
 </div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#upload_new_crosses_link').click(function(){
+        jQuery('#upload_crosses_dialog').modal("show");
+
+        var trial_id = "<% $trial_id %>";
+        var trial_name = "<% $trial_name %>";
+        if (trial_id) {
+            jQuery('#crossing_experiment_page_section_1').modal("show");
+            jQuery('#manage_page_section_1').modal("hide");
+
+            jQuery('#crossing_experiment_page_section_2').modal("show");
+            jQuery('#manage_page_section_2').modal("hide");
+
+        }
+    });
+
+});
+
+</script>

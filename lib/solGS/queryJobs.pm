@@ -16,7 +16,9 @@ use Carp qw/ carp confess croak /;
 use SGN::Model::solGS::solGS;
 use SGN::Controller::solGS::solGS;
 use SGN::Controller::solGS::List;
-
+use Data::Dumper;
+use Bio::Chado::Schema;
+use CXGN::People::Schema;
 
 with 'MooseX::Getopt';
 with 'MooseX::Runnable';
@@ -28,6 +30,35 @@ has 'data_type' => (
     required => 1,
     );
 
+has 'dbname' => (isa => 'Str',
+is=>'rw',
+required=> 1
+
+);
+
+has 'dbhost' => (isa => 'Str',
+is=>'rw',
+required=> 1
+
+);
+
+has 'dbport' => (isa => 'Int',
+is=>'rw',
+default => 5432
+
+);
+
+has 'dbpass' => (isa => 'Str',
+is=>'rw',
+required=> 1
+
+);
+
+has 'dbuser' => (isa => 'Str',
+is=>'rw',
+required=> 1
+
+);
 
 has 'population_type' => (
     is       => 'ro',
@@ -202,10 +233,10 @@ sub dataset_genotype_data {
 
     my $args =  $self->get_args();
     my $dataset_id = $args->{dataset_id};
-
 	my $model = $self->get_model();
-	my $genotypes_ids = $model->get_genotypes_from_dataset ($dataset_id);
 
+	my $genotypes_ids = $model->get_genotypes_from_dataset ($dataset_id);
+    my $cnt = @$genotypes_ids;
 	if (@$genotypes_ids)
 	{
 		$self->genotypes_list_genotype_data($genotypes_ids);
@@ -225,8 +256,22 @@ sub dataset_genotype_data {
 sub get_model {
     my $self = shift;
 
-    my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context',
-					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
+    my $dbname = $self->dbname;
+    my $dbhost = $self->dbhost;
+
+    my $dbuser = $self->dbuser;
+    my $dbpass = $self->dbpass;
+
+    my $dsn = "dbi:Pg:database=$dbname;host=$dbhost";
+
+    my $bcs_schema = Bio::Chado::Schema->connect($dsn, $dbuser, $dbpass);
+    my $people_schema = CXGN::People::Schema->connect($dsn,  $dbuser, $dbpass, { on_connect_do => [ 'SET search_path TO sgn_people, public, sgn' ]});
+
+
+    my $model = SGN::Model::solGS::solGS->new({
+					       schema => $bcs_schema,
+                       people_schema =>$people_schema });
+
 
     return $model;
 

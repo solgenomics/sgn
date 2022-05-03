@@ -31,14 +31,10 @@ is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 
 my $trial_id = $schema->resultset('Project::Project')->find({name=>'Kasese solgs trial'})->project_id();
 
-
-
-
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/phenotypes?display=plots', "get phenotypes page for trial $trial_id");
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'data' => [['<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','25.01','16.30','39.90','5.06','20.24%',464,'32.95%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70741)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/cvterm/70666/view">fresh root weight|CO_334:0000012</a>','5.91','0.04','38.76','5.37','90.80%',469,'32.23%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70666)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/cvterm/70773/view">fresh shoot weight measurement in kg|CO_334:0000016</a>','13.23','0.50','83.00','10.70','80.88%',494,'28.61%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70773)"><span class="glyphicon glyphicon-stats"></span></a>']]}, "check trial detail page");
-
 
 		#	  '<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','26.02','15.00','500.00','22.61','86.89%',465,'32.8%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70741)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/cvterm/70666/view">fresh root weight|CO_334:0000012</a>','5.91','0.04','38.76','5.37','90.80%',469,'32.23%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70666)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/cvterm/70773/view">fresh shoot weight measurement in kg|CO_334:0000016</a>','14.33','0.50','555.00','26.62','185.78%',494,'28.61%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70773)"><span class="glyphicon glyphicon-stats"></span></a>']]}, "check trial detail page");
 
@@ -91,8 +87,6 @@ print STDERR "VALUES = ".join(",",@values)."\n";
 print STDERR "PHENO IDS: ".Dumper $response->{phenoID};
 is_deeply([ sort( @{$response->{phenoID}}) ], [ sort(@pheno_ids) ], "phenotype id check for heatmap");
 
-my $phenotype_id = $schema->resultset('Phenotype::Phenotype')->search({observable_id=> '70741' },{'order_by'=>'phenotype_id'})->first->phenotype_id();
-
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/trait_histogram/70741');
 $response = decode_json $mech->content;
 print STDERR "TRAIT HISTOGRAM DATA: ".Dumper $response;
@@ -105,18 +99,27 @@ print STDERR "EXP DATA = ".Dumper(\@sorted_expected);
 
 is_deeply(\@sorted_data, \@sorted_expected, "check histogram data");
 
+#Add phenotype to test deletion.
+#$mech->post_ok('http://localhost:3010/ajax/phenotype/plot_phenotype_upload', [ "plot_name"=> "KASESE_TP2013_1619", "trait_list_option"=> "dry matter content percentage|CO_334:0000092", "trait_value"=> "29" ]);
+$mech->post_ok('http://localhost:3010/ajax/phenotype/plot_phenotype_upload', [ "plot_name"=> "KASESE_TP2013_1619", "trait_list_option"=> "gari starch percentage|CO_334:0000238", "trait_value"=> "29" ]);
+
+$response = decode_json $mech->content;
+
+print STDERR "Add phenotype to test deletion response: ".Dumper $response;
+
+is($response->{'success'}, 1, "upload phenotype to test deletion");
+
+#my $phenotype_id = $schema->resultset('Phenotype::Phenotype')->search({observable_id=> '70741' },{'order_by'=>'phenotype_id'})->first->phenotype_id();
+my $phenotype_id = $schema->resultset('Phenotype::Phenotype')->search({observable_id=> '76848' },{'order_by'=>'phenotype_id'})->first->phenotype_id();
+
 my $pheno_id = encode_json [$phenotype_id];
+
+$ENV{DBIC_TRACE} = 1;
 print STDERR "PHENO ID: ".Dumper $pheno_id;
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/delete_single_trait?pheno_id='.$pheno_id);
 $response = decode_json $mech->content;
+
 is_deeply($response, {'success' =>1}, "check if successful");
-
-
-#Add phenotype that was deleted again so that tests pass downstream.
-$mech->post_ok('http://localhost:3010/ajax/phenotype/plot_phenotype_upload', [ "plot_name"=> "KASESE_TP2013_1619", "trait_list_option"=> "dry matter content percentage|CO_334:0000092", "trait_value"=> "29" ]);
-$response = decode_json $mech->content;
-print STDERR Dumper $response;
-is($response->{'success'}, 1, "re-upload deleted phenotypes to leave database in same state as before this test");
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/folder');
 $response = decode_json $mech->content;
@@ -132,7 +135,6 @@ print STDERR  "RETRIEVED PROJECT ID ".$row->get_column('parent_project_id');
 
 #is_deeply($response, {'folder' => [134,'Peru Yield Trial 2020-1']}, "folder test");
 is_deeply($response, {'folder' => [ $row->get_column('parent_project_id') , $prow->name() ]}, "folder test");
-
 
 $trial_id = $schema->resultset('Project::Project')->find({name=>'test_trial'})->project_id();
 
@@ -218,9 +220,9 @@ my $management_factor_date = $treatment_project->get_management_factor_date;
 is($management_factor_type, 'Fertilizer', "check management factors 3");
 is($management_factor_date, '2019-July-01', "check management factors 4");
 
+#$treatment_project->delete_field_layout();
+#$treatment_project->delete_project_entry();
 
-$treatment_project->delete_field_layout();
-$treatment_project->delete_project_entry();
-
+$f->clean_up_db();
 
 done_testing();

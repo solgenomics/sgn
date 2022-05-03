@@ -30,6 +30,7 @@ use CXGN::Genotype::DownloadFactory;
 use POSIX qw | !qsort !bsearch |;
 use CXGN::Phenotypes::StorePhenotypes;
 use Statistics::Descriptive::Full;
+use CXGN::TrialStatus;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -2008,6 +2009,31 @@ sub get_trial_additional_file_uploaded : Chained('trial') PathPart('get_uploaded
     $c->stash->{rest} = {success=>1, files=>$files};
 }
 
+sub obsolete_trial_additional_file_uploaded :Chained('trial') PathPart('obsolete_uploaded_additional_file') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $file_id = shift;
+
+    if (!$c->user) {
+	$c->stash->{rest} = { error => "You must be logged in to obsolete additional files!" };
+	$c->detach();
+    }
+
+    my $user_id = $c->user->get_object()->get_sp_person_id();
+
+    my @roles = $c->user->roles();
+    my $result = $c->stash->{trial}->obsolete_additional_uploaded_file($file_id, $user_id, $roles[0]);
+
+    if (exists($result->{errors})) {
+	$c->stash->{rest} = { error => $result->{errors} };
+    }
+    else {
+	$c->stash->{rest} = { success => 1 };
+    }
+
+}
+
+
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -2386,7 +2412,7 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
     my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
 
@@ -2432,6 +2458,21 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   }
 
   $c->stash->{rest} = { success => 1};
+}
+
+sub refresh_cache : Chained('trial') PathPart('refresh_cache') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->stash->{trial_id};
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+
+    my $refresh_fieldmap_cache = CXGN::Trial::FieldMap->new({
+        trial_id => $trial_id,
+        bcs_schema => $schema,
+    });
+
+    $refresh_fieldmap_cache->_regenerate_trial_layout_cache();
+    $c->stash->{rest} = { success => 1};
 }
 
 sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions') Args(0) {
@@ -2503,7 +2544,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
-    
+
     print "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotName: $old_plot_name, NewPlotName: $new_plot_name OldPlotId: $plot_id\n";
     $c->stash->{rest} = { success => 1};
 }
@@ -2971,9 +3012,6 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
       }
     }
 
-    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
-    $trial_layout->generate_and_cache_layout();
-
     if ($error_string){
         $c->stash->{rest} = {error_string => $error_string};
         $c->detach();
@@ -2981,8 +3019,10 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id, experiment_type => 'field_layout' });
+    $trial_layout->generate_and_cache_layout();
+    
     $c->stash->{rest} = {success => 1};
 }
 
@@ -3288,6 +3328,32 @@ sub cross_additional_info_trial : Chained('trial') PathPart('cross_additional_in
 }
 
 
+sub downloaded_intercross_file_metadata : Chained('trial') PathPart('downloaded_intercross_file_metadata') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $crosses = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id, file_type => 'intercross_download'});
+    my $result = $crosses->get_intercross_file_metadata();
+
+    $c->stash->{rest} = { data => $result };
+}
+
+
+sub uploaded_intercross_file_metadata : Chained('trial') PathPart('uploaded_intercross_file_metadata') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $crosses = CXGN::Cross->new({ schema => $schema, trial_id => $trial_id, file_type => 'intercross_upload'});
+    my $result = $crosses->get_intercross_file_metadata();
+
+    $c->stash->{rest} = { data => $result };
+}
+
+
 sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -3566,6 +3632,29 @@ sub genotyping_trial_from_field_trial : Chained('trial') PathPart('genotyping_tr
     my $field_trials_source_of_genotyping_trial = $c->stash->{trial}->get_field_trials_source_of_genotyping_trial();
 
     $c->stash->{rest} = {success => 1, genotyping_trials_from_field_trial => $genotyping_trials_from_field_trial, field_trials_source_of_genotyping_trial => $field_trials_source_of_genotyping_trial};
+}
+
+sub delete_genotyping_plate_from_field_trial_linkage : Chained('trial') PathPart('delete_genotyping_plate_from_field_trial_linkage') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $field_trial_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if (!$c->user) {
+        $c->stash->{rest} = { error => "You must be logged in to remove genotyping plate and field trial linkage!" };
+        $c->detach();
+    }
+
+    my @roles = $c->user->roles();
+    my $result = $c->stash->{trial}->delete_genotyping_plate_from_field_trial_linkage($field_trial_id, $roles[0]);
+
+    if (exists($result->{errors})) {
+        $c->stash->{rest} = { error => $result->{errors} };
+    }
+    else {
+        $c->stash->{rest} = { success => 1 };
+    }
+
 }
 
 sub crossing_trial_from_field_trial : Chained('trial') PathPart('crossing_trial_from_field_trial') Args(0) {
@@ -4565,7 +4654,7 @@ sub get_entry_numbers : Chained('trial') PathPart('entry_numbers') Args(0) {
     $c->stash->{rest} = { entry_numbers => \@entry_numbers };
 }
 
-# 
+#
 # Create an entry number template for the specified trials
 # query param: 'trial_ids' = comma separated list of trial ids
 # return: 'file' = path to tempfile of excel template
@@ -4593,7 +4682,7 @@ sub create_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/crea
     $c->stash->{rest} = { file => $tempfile };
 }
 
-# 
+#
 # Download an entry number template
 # query param: 'file' = path of entry number template tempfile to download
 # return: contents of excel file
@@ -4609,9 +4698,9 @@ sub download_entry_number_template : Path('/ajax/breeders/trial_entry_numbers/do
     $c->res->body($output);
 }
 
-# 
+#
 # Upload an entry number template
-# upload params: 
+# upload params:
 #   upload_entry_numbers_file: Excel file to validate and parse
 #   ignore_warnings: true to add processed data if warnings exist
 # return: validation errors and warnings or success = 1 if entry numbers sucessfully stored
@@ -4643,7 +4732,7 @@ sub upload_entry_number_template_POST : Args(0) {
         $c->stash->{rest} = { filename => $upload_original_name, error => \@errors };
         return;
     }
-    
+
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_role = $c->user->get_object->get_user_type();
 
@@ -4683,7 +4772,7 @@ sub upload_entry_number_template_POST : Args(0) {
         }
         $c->stash->{rest} = {
             filename => $upload_original_name,
-            error => $parse_errors->{'error_messages'}, 
+            error => $parse_errors->{'error_messages'},
             warning => $parse_warnings->{'warning_messages'},
             missing_accessions => $parse_errors->{'missing_accessions'},
             missing_trials => $parse_errors->{'missing_trials'}
@@ -4697,12 +4786,73 @@ sub upload_entry_number_template_POST : Args(0) {
         $trial->set_entry_numbers($parsed_data->{$trial_id});
     }
 
-    $c->stash->{rest} = { 
+    $c->stash->{rest} = {
         success => 1,
-        filename => $upload_original_name, 
-        warning => $parse_warnings->{'warning_messages'} 
+        filename => $upload_original_name,
+        warning => $parse_warnings->{'warning_messages'}
     };
     return;
 }
+
+
+sub update_trial_status : Chained('trial') PathPart('update_trial_status') : ActionClass('REST'){ }
+
+sub update_trial_status_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->stash->{trial_id};
+    my $trial_status = $c->req->param("trial_status");
+    my $user_name = $c->req->param("user_name");
+    my $activity_date = $c->req->param("activity_date");
+
+    if (!$c->user()) {
+        $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+    my $trial_status_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_status_json', 'project_property')->cvterm_id();
+    my $prop = $schema->resultset("Project::Projectprop")->find({project_id => $trial_id, type_id => $trial_status_type_id});
+    my $prop_id;
+    my %all_activities_hash;
+    if ($prop) {
+        $prop_id = $prop->projectprop_id();
+        my $status_json = $prop->value();
+        my $status_hash_ref = decode_json $status_json;
+        my $all_activities = $status_hash_ref->{'trial_activities'};
+        %all_activities_hash = %{$all_activities};
+    }
+
+    $all_activities_hash{$trial_status}{'user_id'} = $user_id;
+    $all_activities_hash{$trial_status}{'activity_date'} = $activity_date;
+
+    my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+    $trial_status_obj->trial_activities(\%all_activities_hash);
+    $trial_status_obj->parent_id($trial_id);
+    $trial_status_obj->prop_id($prop_id);
+    my $project_prop_id = $trial_status_obj->store();
+
+    $c->stash->{rest} = {success => 1 };
+    return;
+
+}
+
+
+sub get_all_trial_activities :Chained('trial') PathPart('all_trial_activities') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $trial_id = $c->stash->{trial_id};
+    my $activities = $c->config->{'trial_activities'};
+    my @activity_list = split ',', $activities;
+
+    my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $schema, people_schema => $people_schema, parent_id => $trial_id, activity_list => \@activity_list });
+    my $activity_info = $trial_status_obj->get_trial_activities();
+
+    $c->stash->{rest} = { data => $activity_info };
+}
+
 
 1;

@@ -255,9 +255,15 @@ $dataset_id => undef
                 <td colspan="12">
                   <span>Genomic Relationship Matrix (GRM) Download Format</span>
                   <select class="wizard-download-genotypes-grm-format form-control input-sm" >
-                      <!--option value="heatmap">Heatmap (.pdf)</option-->
-                      <option value="matrix">Matrix (.tsv)</option>
-                      <option value="three_column">3-Column Format (.tsv)</option>
+                      <option value="matrix_uniquenames">Matrix Stock Names (.tsv)</option>
+                      <option value="three_column_uniquenames">3-Column Stock Names (.tsv)</option>
+                      <option value="three_column_reciprocal_uniquenames">3-Column Reciprocal Stock Names (.tsv)</option>
+                      <option value="heatmap">Heatmap (.pdf)</option>
+                      <option value="matrix">Matrix Stock IDs (.tsv)</option>
+                      <option value="three_column">3-Column Stock IDs(.tsv)</option>
+                      <option value="three_column_stock_id_integer">3-Column Stock IDs Integer (.tsv)</option>
+                      <option value="three_column_reciprocal">3-Column Reciprocal Stock IDs (.tsv)</option>
+                      <option value="three_column_reciprocal_stock_id_integer">3-Column Reciprocal Stock IDs Integer (.tsv)</option>
                   </select>
                   <br/>
                     <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. Specify minor allele frequency (MAF), marker filter, and individuals filter. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. GRM can be downloaded in a matrix format (.tsv) and a three column format."></span>

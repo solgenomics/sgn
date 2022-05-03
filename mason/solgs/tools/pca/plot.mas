@@ -52,10 +52,9 @@ $pop_id = undef if $list_id || $combo_pops_id;
 
 <div id="pca_canvas">
 
-  <& /solgs/spinner.mas &>
-
     <div id="pca_message"  class="message"> </div>
-
+    <& /solgs/spinner.mas &>
+    
     <div id="pca_plot">
       <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
       <input type="hidden"  id="combo_pops_id" value="<% $combo_pops_id %>" />

@@ -14,6 +14,15 @@ use CXGN::List::Desynonymize;
 use CXGN::Cross;
 use JSON;
 
+use File::Slurp qw | read_file |;
+use File::Temp 'tempfile';
+use File::Basename;
+use File::Copy;
+use utf8;
+
+
+
+
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
 __PACKAGE__->config(
@@ -240,8 +249,11 @@ sub download_list :Path('/list/download') Args(0) {
     }
 
     $list = $self->retrieve_list($c, $list_id);
+    my ($name_ref) = $self->get_list_metadata($c, $list_id);
+    my $name = $name_ref->{name};
 
     $c->res->content_type("text/plain");
+    $c->res->header('Content-Disposition'=>"attachment; filename=$name.txt");
     $c->res->body(join "\n", map { $_->[1] }  @$list);
 }
 
@@ -626,13 +638,13 @@ sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
 
     my $list_ids_string = $c->req->param('list_ids');
     my $list_types_string = $c->req->param('list_types');
-    
+
     my @list_ids = split /\,/, $list_ids_string;
     my @list_types = split /\,/, $list_types_string;
 
     my @invalid_lists = ();
     for (my $n = 0; $n<@list_ids; $n++)  {
-	
+
 	my $list = $self->retrieve_list($c, $list_ids[$n]);
 
 	my @flat_list = map { $_->[1] } @$list;
@@ -643,7 +655,7 @@ sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
 
 
 	print STDERR "Return data = ".Dumper($data);
-	
+
 	if ($list_types[$n] eq "accessions" && $data->{valid} == 0) {
 	    print STDERR "list $list_ids[$n] is invalid! ($data->{valid}) \n";
 	    push @invalid_lists, [ $list_ids[$n], $list_types[$n] ];
@@ -651,7 +663,7 @@ sub validate_lists :Path('/ajax/list/validate_lists') Args(0) {
 	elsif ($list_types[$n] ne "accessions" && scalar(@{$data->{missing}}) > 0) {
 	    print STDERR "list $list_ids[$n] is invalid! (missing = ".scalar(@{$data->{missing}}).")\n";
 	    push @invalid_lists, [ $list_ids[$n], $list_types[$n] ];
-	    
+
 	}
 	else {
 	    print STDERR "List $list_ids[$n] of type $list_types[$n] is valid :-) \n";
@@ -1268,6 +1280,108 @@ sub adjust_synonyms :Path('/ajax/list/adjust_synonyms') Args(0) {
 	mapping => $data->{mapping},
     }
 }
+
+
+sub get_list_details :Path('/ajax/list/details') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $list = CXGN::List->new( { dbh=>$dbh, schema=>$schema, phenome_schema=>$phenome_schema, list_id=>$list_id });
+    my $type = $list->type();
+    my $items = $list->elements();
+
+    my $item_validator = CXGN::List::Validate->new();
+    my @items_missing = @{$item_validator->validate($schema, $type, $items)->{'missing'}};
+    if (scalar(@items_missing) > 0){
+        $c->stash->{rest} = {error => "The following items are not in the database: ".join(',',@items_missing)};
+        return;
+    }
+
+    my @list_details;
+    if ($type eq 'seedlots') {
+        my $result = $list->seedlot_list_details();
+        my @details = @$result;
+        foreach my $seedlot (@details) {
+            push @list_details, {
+                seedlot_id => $seedlot->[0],
+                seedlot_name => $seedlot->[1],
+                content_id => $seedlot->[2],
+                content_name => $seedlot->[3],
+                content_type => $seedlot->[4],
+                box_name => $seedlot->[5],
+                current_count => $seedlot->[6],
+                current_weight => $seedlot->[7],
+                quality => $seedlot->[8]
+            }
+        }
+    }
+
+    $c->stash->{rest} = {data => \@list_details};
+
+}
+
+
+sub download_list_details : Path('/list/download_details') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $list_id = $c->req->param("list_id");
+    my $list = CXGN::List->new( { dbh=>$dbh, schema=>$schema, phenome_schema=>$phenome_schema, list_id=>$list_id });
+    my $type = $list->type();
+    my $list_name = $list->name();
+    my @list_details;
+    my $header;
+
+    if ($type eq 'seedlots') {
+        my $result = $list->seedlot_list_details();
+        my @details = @$result;
+        foreach my $seedlot_ref (@details) {
+            my @seedlot = @$seedlot_ref;
+            push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\n";
+        }
+        $header = "Seedlot_Name\tContent_Name\tContent_type\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality";
+    }
+
+    my $dl_token = $c->req->param("list_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    print STDERR "Token is: $dl_token\n";
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "list_details_download_XXXXX", UNLINK=> 0);
+
+    open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
+    print $FILE $header."\n";
+    my $row = 0;
+    foreach my $each_row (@list_details) {
+        print $FILE $each_row;
+        $row++;
+    }
+    close $FILE;
+
+    $c->res->content_type("application/text");
+    $c->res->cookies->{$dl_cookie} = {
+        value => $dl_token,
+        expires => '+1m',
+    };
+
+    $c->res->header("Content-Disposition", qq[attachment; filename="$list_name.txt"]);
+    my $output = "";
+    open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
+    while (<$F>) {
+        $output .= $_;
+    }
+    close($F);
+
+    $c->res->body($output);
+}
+
+
 
 #########
 1;
