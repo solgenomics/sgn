@@ -3,6 +3,7 @@ export function init(dataset_id) {
         constructor() {
             this.datasets = {};
             this.data = [];
+            // store phenotype id, trait, value
             this.outliers = [];
             this.firstRefresh = true;
             this.stdDevMultiplier = document.getElementById("myRange").value;
@@ -147,53 +148,6 @@ export function init(dataset_id) {
                 return "red";
               }
           }
-          
-          //Read the data
-          // const data = [];
-          // for (let i = 0; i < 40; i++) {
-          //   data.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
-          // }
-          // data.push({unit: 100, value: 148});
-
-          // const data2 = [];
-          // for (let i = 0; i < 40; i++) {
-          //   data2.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
-          // }
-          // data2.push({unit: 100, value: 148});
-
-          // const data3 = [];
-          // for (let i = 0; i < 40; i++) {
-          //   data3.push({ unit: 5 * String(i+1), value: 100 * Math.random()})
-          // }
-          // data3.push({unit: 100, value: 148});
-
-          // if (this.firstRefresh) {
-          //   this.datasets["dataset_1"] = data;
-          //   this.datasets["dataset_2"] = data2;
-          //   this.datasets["dataset_3"] = data3;
-          // }
-          
-          // switch(this.selection) {
-          //   case "dataset_1":
-          //     this.data = this.datasets['dataset_1'];
-          //     break;
-          //   case "dataset_2":
-          //     this.data = this.datasets['dataset_2'];
-          //     break;
-          //   case "dataset_3":
-          //     this.data = this.datasets['dataset_3'];
-          //   default:
-          //     break;
-          // }
-          
-      
-          // let unitVals = [];
-          // for (let point of this.data) {
-          //     unitVals.push(point.value);
-          // }
-          console.log(this.xAxisData);
-          console.log(this.yAxisData);
-          
           const [mean, stdDev] = this.standardDeviation(this.yAxisData);
           this.outliers = [];
           // Add X axis
