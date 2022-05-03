@@ -175,6 +175,10 @@ sub submit_order_POST : Args(0) {
                 }
             }
             print STDERR "FORM ID =".Dumper($form_id)."\n";
+
+            my ($previous_order_temp_file, $previous_order_uri1) = $c->tempfile( TEMPLATE => 'download/previous_ona_order_infoXXXXX');
+            my $previous_order_temp_file_path = $previous_order_temp_file->filename;
+
             my $order_ona_id;
             my $server_endpoint_2 = "https://api.ona.io/api/v1/metadata?xform=".$form_id;
             my $resp_d = $ua->get($server_endpoint_2);
@@ -184,7 +188,7 @@ sub submit_order_POST : Args(0) {
                 foreach my $t (@$message_hash_d) {
                     if ($t->{'data_value'} eq $order_file_name) {
 #                        print STDERR "DELETE INFO =".Dumper($t)."\n";
-                        getstore($t->{media_url}, $order_file_name);
+                        getstore($t->{media_url}, $previous_order_temp_file_path);
                         $order_ona_id = $t->{id};
                         print STDERR "ORDER ONA ID=".Dumper($order_ona_id);
                     }
@@ -193,7 +197,7 @@ sub submit_order_POST : Args(0) {
             my @previous_order_rows;
             my @all_order_rows;
             if ($order_ona_id) {
-                open(my $fh, '<', $order_file_name)
+                open(my $fh, '<', $previous_order_temp_file_path)
                 or die "Could not open file!";
                 my $old_header_row = <$fh>;
                 while ( my $row = <$fh> ){
