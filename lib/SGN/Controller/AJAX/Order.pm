@@ -155,7 +155,8 @@ sub submit_order_POST : Args(0) {
             print STDERR "ORDER LOCATION =".Dumper($order_location)."\n";
             print STDERR "ALL NEW ROWS =".Dumper(\@all_new_rows)."\n";
 
-            my $order_file_name = 'test_orders.csv';
+            my $order_file_name = $order_location.'_orders.csv';
+            print STDERR "ORDER FILE NAME =".Dumper($order_file_name)."\n";
             my $id_string;
             my $form_id;
             my $ua = LWP::UserAgent->new;
@@ -169,155 +170,155 @@ sub submit_order_POST : Args(0) {
                 my $all_info = decode_json $message;
                 foreach my $info (@$all_info) {
                     my %info_hash = %{$info};
-                    if ($info_hash{'id_string'} eq 'OrderingSystemTest') {
+                    if ($info_hash{'id_string'} eq $order_location) {
                         $form_id = $info_hash{'id'};
                     }
                 }
             }
             print STDERR "FORM ID =".Dumper($form_id)."\n";
 
-            my ($previous_order_temp_file, $previous_order_uri1) = $c->tempfile( TEMPLATE => 'download/previous_ona_order_infoXXXXX');
-            my $previous_order_temp_file_path = $previous_order_temp_file->filename;
+            if ($form_id) {
+                my ($previous_order_temp_file, $previous_order_uri1) = $c->tempfile( TEMPLATE => 'download/previous_ona_order_infoXXXXX');
+                my $previous_order_temp_file_path = $previous_order_temp_file->filename;
 
-            my $order_ona_id;
-            my $server_endpoint_2 = "https://api.ona.io/api/v1/metadata?xform=".$form_id;
-            my $resp_d = $ua->get($server_endpoint_2);
-            if ($resp_d->is_success) {
-                my $message_d = $resp_d->decoded_content;
-                my $message_hash_d = decode_json $message_d;
-                foreach my $t (@$message_hash_d) {
-                    if ($t->{'data_value'} eq $order_file_name) {
+                my $order_ona_id;
+                my $server_endpoint_2 = "https://api.ona.io/api/v1/metadata?xform=".$form_id;
+                my $resp_d = $ua->get($server_endpoint_2);
+                if ($resp_d->is_success) {
+                    my $message_d = $resp_d->decoded_content;
+                    my $message_hash_d = decode_json $message_d;
+                    foreach my $t (@$message_hash_d) {
+                        if ($t->{'data_value'} eq $order_file_name) {
 #                        print STDERR "DELETE INFO =".Dumper($t)."\n";
-                        getstore($t->{media_url}, $previous_order_temp_file_path);
-                        $order_ona_id = $t->{id};
-                        print STDERR "ORDER ONA ID=".Dumper($order_ona_id);
+                            getstore($t->{media_url}, $previous_order_temp_file_path);
+                            $order_ona_id = $t->{id};
+                            print STDERR "ORDER ONA ID=".Dumper($order_ona_id);
+                        }
                     }
                 }
-            }
-            my @previous_order_rows;
-            my @all_order_rows;
-            if ($order_ona_id) {
-                open(my $fh, '<', $previous_order_temp_file_path)
-                or die "Could not open file!";
-                my $old_header_row = <$fh>;
-                while ( my $row = <$fh> ){
-                    chomp $row;
-                    push @previous_order_rows, [split ',', $row];
+                my @previous_order_rows;
+                my @all_order_rows;
+                if ($order_ona_id) {
+                    open(my $fh, '<', $previous_order_temp_file_path)
+                    or die "Could not open file!";
+                    my $old_header_row = <$fh>;
+                    while ( my $row = <$fh> ){
+                        chomp $row;
+                        push @previous_order_rows, [split ',', $row];
+                    }
+                    print STDERR "PREVIOUS ORDER INFO =".Dumper(\@previous_order_rows)."\n";
+                    push @all_order_rows, (@previous_order_rows);
                 }
-                print STDERR "PREVIOUS ORDER INFO =".Dumper(\@previous_order_rows)."\n";
-                push @all_order_rows, (@previous_order_rows);
-            }
 
-            push @all_order_rows, (@all_new_rows);
-            print STDERR "ALL ORDER ROWS =".Dumper(\@all_order_rows)."\n";
+                push @all_order_rows, (@all_new_rows);
+                print STDERR "ALL ORDER ROWS =".Dumper(\@all_order_rows)."\n";
 
-            my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
-#            my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate","initiationDate","initiatedBy","subcultureDate","numberOfCopies","rootingDate","numberInRooting","weaning1Date","numberInWeaning1","weaning2Date","numberInWeaning2","screenhouseTransferDate","numberInScreenhouse","hardeningDate","numberInHardening","currentStatus","percentageComplete"';
-            my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate"';
-#            my $template_file_name = 'ona_order_info';
-            my $template_file_name = 'test_orders';
-            my $user_id = $c->user()->get_object()->get_sp_person_id();
-            my $user_name = $c->user()->get_object()->get_username();
-            my $time = DateTime->now();
-            my $timestamp = $time->ymd()."_".$time->hms();
-            my $subdirectory_name = "ona_order_info";
-#           my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$template_file_name.".csv");
-            my $archived_file_name = catfile($user_id, $subdirectory_name,$template_file_name.".csv");
-            my $archive_path = $c->config->{archive_path};
-            my $file_destination =  catfile($archive_path, $archived_file_name);
-            my $dir = $c->tempfiles_subdir('/download');
-            my $rel_file = $c->tempfile( TEMPLATE => 'download/ona_order_infoXXXXX');
-            my $tempfile = $c->config->{basepath}."/".$rel_file.".csv";
-    #        print STDERR "TEMPFILE =".Dumper($tempfile)."\n";
-            open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
+                my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
+                my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate"';
+                my $template_file_name = $order_location.'_orders';
+                my $user_id = $c->user()->get_object()->get_sp_person_id();
+                my $user_name = $c->user()->get_object()->get_username();
+                my $time = DateTime->now();
+                my $timestamp = $time->ymd()."_".$time->hms();
+                my $subdirectory_name = "ona_order_info";
+                my $archived_file_name = catfile($user_id, $subdirectory_name,$template_file_name.".csv");
+                my $archive_path = $c->config->{archive_path};
+                my $file_destination =  catfile($archive_path, $archived_file_name);
+                my $dir = $c->tempfiles_subdir('/download');
+                my $rel_file = $c->tempfile( TEMPLATE => 'download/ona_order_infoXXXXX');
+                my $tempfile = $c->config->{basepath}."/".$rel_file.".csv";
+    #            print STDERR "TEMPFILE =".Dumper($tempfile)."\n";
+                open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
 
-            print $FILE $ona_header."\n";
-            my $order_row = 0;
-            foreach my $row (@all_order_rows) {
-                my @row_array = ();
-                @row_array = @$row;
-                my $csv_format = join(',',@row_array);
-                print $FILE $csv_format."\n";
-                $order_row++;
-            }
-            close $FILE;
+                print $FILE $ona_header."\n";
+                my $order_row = 0;
+                foreach my $row (@all_order_rows) {
+                    my @row_array = ();
+                    @row_array = @$row;
+                    my $csv_format = join(',',@row_array);
+                    print $FILE $csv_format."\n";
+                    $order_row++;
+                }
+                close $FILE;
 
-            open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
-            binmode $F;
-            my $md5 = Digest::MD5->new();
-            $md5->addfile($F);
-            close($F);
+                open(my $F, "<", $tempfile) || die "Can't open file ".$self->tempfile();
+                binmode $F;
+                my $md5 = Digest::MD5->new();
+                $md5->addfile($F);
+                close($F);
 
-            if (!-d $archive_path) {
-                mkdir $archive_path;
-            }
+                if (!-d $archive_path) {
+                    mkdir $archive_path;
+                }
 
-            if (! -d catfile($archive_path, $user_id)) {
-                mkdir (catfile($archive_path, $user_id));
-            }
+                if (! -d catfile($archive_path, $user_id)) {
+                    mkdir (catfile($archive_path, $user_id));
+                }
 
-            if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
-                mkdir (catfile($archive_path, $user_id, $subdirectory_name));
-            }
-            my $md_row = $metadata_schema->resultset("MdMetadata")->create({
-                create_person_id => $user_id,
-            });
-            $md_row->insert();
-            my $file_row = $metadata_schema->resultset("MdFiles")->create({
-                basename => basename($file_destination),
-                dirname => dirname($file_destination),
-                filetype => 'orders',
-                md5checksum => $md5->hexdigest(),
-                metadata_id => $md_row->metadata_id(),
-            });
-            $file_row->insert();
-            my $file_id = $file_row->file_id();
+                if (! -d catfile($archive_path, $user_id,$subdirectory_name)) {
+                    mkdir (catfile($archive_path, $user_id, $subdirectory_name));
+                }
+                my $md_row = $metadata_schema->resultset("MdMetadata")->create({
+                    create_person_id => $user_id,
+                });
+                $md_row->insert();
+                my $file_row = $metadata_schema->resultset("MdFiles")->create({
+                    basename => basename($file_destination),
+                    dirname => dirname($file_destination),
+                    filetype => 'orders',
+                    md5checksum => $md5->hexdigest(),
+                    metadata_id => $md_row->metadata_id(),
+                });
+                $file_row->insert();
+                my $file_id = $file_row->file_id();
 
-            move($tempfile,$file_destination);
-            unlink $tempfile;
-            print STDERR "FILE ID =".Dumper($file_id)."\n";
-            print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
+                move($tempfile,$file_destination);
+                unlink $tempfile;
+                print STDERR "FILE ID =".Dumper($file_id)."\n";
+                print STDERR "FILE DESTINATION =".Dumper($file_destination)."\n";
 
-            if ($order_ona_id) {
-                my $server_endpoint_3 = "https://api.ona.io/api/v1/metadata";
-                my $delete_resp = $ua->delete(
-                    $server_endpoint_3."/$order_ona_id"
+                if ($order_ona_id) {
+                    my $server_endpoint_3 = "https://api.ona.io/api/v1/metadata";
+                    my $delete_resp = $ua->delete(
+                        $server_endpoint_3."/$order_ona_id"
+                    );
+                    if ($delete_resp->is_success) {
+                        print STDERR "Deleted order file on ONA $order_ona_id.\n";
+                    } else {
+                        print STDERR "ERROR: Did not delete order file on ONA $order_ona_id.\n";
+                        #print STDERR Dumper $delete_resp;
+                    }
+                }
+
+                my $server_endpoint_4 = "https://api.ona.io/api/v1/metadata";
+                my $add_resp = $ua->post(
+                    $server_endpoint_4,
+                    Content_Type => 'form-data',
+                    Content => [
+                        data_file => [ $file_destination, $file_destination, Content_Type => 'text/plain', ],
+                        "xform"=>$form_id,
+                        "data_type"=>"media",
+                        "data_value"=>$file_destination
+                    ]
                 );
-                if ($delete_resp->is_success) {
-                    print STDERR "Deleted order file on ONA $order_ona_id.\n";
-                } else {
-                    print STDERR "ERROR: Did not delete order file on ONA $order_ona_id.\n";
-                    #print STDERR Dumper $delete_resp;
-                }
-            }
 
-            my $server_endpoint_4 = "https://api.ona.io/api/v1/metadata";
-            my $add_resp = $ua->post(
-                $server_endpoint_4,
-                Content_Type => 'form-data',
-                Content => [
-                    data_file => [ $file_destination, $file_destination, Content_Type => 'text/plain', ],
-                    "xform"=>$form_id,
-                    "data_type"=>"media",
-                    "data_value"=>$file_destination
-                ]
-            );
+                if ($add_resp->is_success) {
+                    my $message = $add_resp->decoded_content;
+                    my $message_hash = decode_json $message;
+                    print STDERR "ONA MESSAGE HASH =".Dumper($message_hash)."\n";
+                    print STDERR "ONA MESSAGE ID =".Dumper($message_hash->{id})."\n";
 
-            if ($add_resp->is_success) {
-                my $message = $add_resp->decoded_content;
-                my $message_hash = decode_json $message;
-                print STDERR "ONA MESSAGE HASH =".Dumper($message_hash)."\n";
-                print STDERR "ONA MESSAGE ID =".Dumper($message_hash->{id})."\n";
-
-#                if ($message_hash->{id}){
-#                    $c->stash->{rest}->{success} .= 'The order was sucessfully sent to the BANANA ORDERING SYSTEM. The progress of your order can be tracked on Musabase.';
-#                } else {
+#                    if ($message_hash->{id}){
+#                        $c->stash->{rest}->{success} .= 'The order was sucessfully sent to the BANANA ORDERING SYSTEM. The progress of your order can be tracked on Musabase.';
+#                    } else {
 #                        $c->stash->{rest}->{error} = 'Error sending your order to the BANANA ORDERING SYSTEM.';
+#                    } else {
+#                        print STDERR "ERROR RESPONSE =".Dumper($resp)."\n";
+#                        $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
 #                    }
-#                } else {
-#                    print STDERR "ERROR RESPONSE =".Dumper($resp)."\n";
-#                    $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
-#                }
+                }
+            } else {
+                $c->detach();
             }
         }
     }
