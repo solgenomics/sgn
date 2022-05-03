@@ -279,6 +279,36 @@ has 'exclude_phenotype_outlier' => (
     default => 0
 );
 
+=head2 outliers()
+
+=cut
+
+has 'outliers' => (
+    isa => 'Maybe[ArrayRef]',
+    is => 'rw',
+    default => sub { [] }
+);
+
+=head2 outlier_cutoff()
+
+=cut
+
+has 'outlier_cutoffs' => (
+    isa => 'Maybe[ArrayRef]',
+    is => 'rw',
+    default => sub { [] }
+);
+
+=head2 include_phenotype_primary_key()
+
+=cut
+
+has 'include_phenotype_primary_key' => (
+    isa => 'Bool|Undef',
+    is => 'ro',
+    default => 0
+);
+
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
 sub BUILD {
@@ -310,6 +340,8 @@ sub BUILD {
         $self->category_order($dataset->{category_order});
         $self->is_live($dataset->{is_live});
         $self->is_public($dataset->{is_public});
+        $self->outliers($dataset->{outliers});
+        $self->outlier_cutoffs($dataset->{outlier_cutoffs});
     }
     else { print STDERR "Creating empty dataset object\n"; }
 
@@ -522,6 +554,8 @@ sub get_dataset_data {
     $dataref->{categories}->{trial_types} = $self->trial_types() if $self->trial_types && scalar(@{$self->trial_types})>0;
     $dataref->{categories}->{locations} = $self->locations() if $self->locations && scalar(@{$self->locations})>0;
     $dataref->{category_order} = $self->category_order();
+    $dataref->{outliers} = $self->outliers() if $self->outliers;
+    $dataref->{outlier_cutoffs} = $self->outlier_cutoffs() if $self->outliers;
     return $dataref;
 }
 
@@ -653,7 +687,8 @@ sub retrieve_phenotypes {
         trait_list=>\@trait_ids,
         trial_list=>\@trial_ids,
         accession_list=>\@accession_ids,
-        exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
+        exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,
+        include_phenotype_primary_key=>$self->include_phenotype_primary_key,
     );
     my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;
@@ -667,18 +702,6 @@ retrieves phenotypes as a hashref representation
 
 sub retrieve_phenotypes_ref {
     my $self = shift;
-
-    my $plots = $self->retrieve_plots();
-    my @plot_ids;
-    foreach (@$plots) {
-        push @plot_ids, $_->[0];
-    }
-
-    my $plants = $self->retrieve_plants();
-    my @plant_ids;
-    foreach (@$plants) {
-        push @plant_ids, $_->[0];
-    }
 
     my $accessions = $self->retrieve_accessions();
     my @accession_ids;
@@ -705,8 +728,6 @@ sub retrieve_phenotypes_ref {
             data_level=>$self->data_level(),
             trait_list=>\@trait_ids,
             trial_list=>\@trial_ids,
-            plot_list=>\@plot_ids,
-            plant_list=>\@plant_ids,
             accession_list=>\@accession_ids,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier
         }
@@ -732,6 +753,7 @@ sub retrieve_high_dimensional_phenotypes {
     if (!$nd_protocol_id) {
         die "Must provide the protocol id!\n";
     }
+
     if (!$high_dimensional_phenotype_type) {
         die "Must provide the high dimensional phenotype type!\n";
     }
@@ -764,6 +786,7 @@ sub retrieve_high_dimensional_phenotypes {
         plot_list=>\@plot_ids,
         plant_list=>\@plant_ids,
     });
+
     my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
 
     return ($data_matrix, $identifier_metadata, $identifier_names);

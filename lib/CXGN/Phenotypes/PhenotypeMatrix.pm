@@ -269,6 +269,7 @@ sub get_phenotype_matrix {
 #            print STDERR "OBSERVATIONS =".Dumper($observations)."\n";
             my $include_timestamp = $self->include_timestamp;
             my %trait_observations;
+            my %phenotype_ids;
             foreach (@$observations){
                 my $collect_date = $_->{collect_date};
                 my $timestamp = $_->{timestamp};
@@ -282,11 +283,17 @@ sub get_phenotype_matrix {
                     $trait_observations{$_->{trait_name}} = $_->{value};
                 }
             }
+
+            if ($include_phenotype_primary_key) {
+                foreach (@$observations) {
+                    $phenotype_ids{$_->{trait_name}} = $_->{phenotype_id};
+                }
+            }
             foreach my $trait (@sorted_traits) {
                 push @line, $trait_observations{$trait};
-                # if ($include_phenotype_primary_key) {
-                #     push @line, $trait_observations{$trait->{phenotype_id}};
-                # }
+                if ($include_phenotype_primary_key) {
+                    push @line, $phenotype_ids{$trait};
+                }
             }
             push @line, $obs_unit->{notes};
 
