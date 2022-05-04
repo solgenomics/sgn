@@ -9,7 +9,7 @@ export function init(dataset_id) {
             this.stdDevMultiplier = document.getElementById("myRange").value;
             this.selection = "default";
             this.dataset_id = dataset_id;
-            this.phenotypes = {};
+            this.observations = {};
             this.traits = {};
             this.xAxisData = [];
             this.yAxisData = [];
@@ -19,9 +19,10 @@ export function init(dataset_id) {
           const LocalThis = this;
           this.firstRefresh = false;
           new jQuery.ajax({
-            url: '/ajax/dataset/retrieve/' + this.dataset_id + '/phenotypes/',
+            url: '/ajax/dataset/retrieve/' + this.dataset_id + '/phenotypes?include_phenotype_primary_key=1',
             success: function(response) {
-              LocalThis.phenotypes = response.phenotypes;
+              console.log(response);
+              LocalThis.observations = response.phenotypes;
               LocalThis.setDropDownTraits();
             },
             error: function(response) {
@@ -33,19 +34,26 @@ export function init(dataset_id) {
         }
 
         setDropDownTraits() {
-          const phenotypes = this.phenotypes;
-          const keys = phenotypes[0];
-          this.traits[keys[39]] = {};
-          this.traits[keys[40]] = {};
-          this.traits[keys[41]] = {};
-
+          const keys = this.observations[0];
+          console.log('keys', keys);
           // Construct trait object
-          for (let i = 1; i < phenotypes.length; i++) {
-            this.traits[keys[39]][phenotypes[i][25]] = phenotypes[i][39];
-            this.traits[keys[40]][phenotypes[i][25]] = phenotypes[i][40];
-            this.traits[keys[41]][phenotypes[i][25]] = phenotypes[i][41];
+          for (let i = 39; i < keys.length - 1; i++) {
+            if (i % 2 == 1 && i <= keys.length - 2) {
+              this.traits[keys[i]] = {};
+            }
           }
 
+          console.log('keys', this.traits);
+
+          for (let i = 1; i < this.observations.length; i++) {
+            // Goes through each observation, and populates the traits hash with each trait, using the phenotype id as the key, and the trait value as the value.
+            for (let j = 39; j < this.observations[i].length - 1; j++) {
+              if (j % 2 == 1) {
+                this.traits[keys[j]][this.observations[i][j+1]] = this.observations[i][j];
+              }
+            }
+          }
+          console.log(this.traits);
           // Use traits to set select options
           const select = document.getElementById("trait_selection");
           for (const traitName of Object.keys(this.traits)) {

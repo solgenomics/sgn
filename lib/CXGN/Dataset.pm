@@ -517,25 +517,25 @@ sub store {
 
     #print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
     if (!$self->has_sp_dataset_id()) {
-	#print STDERR "Creating new dataset row... ".$self->sp_dataset_id()."\n";
-	my $row = $self->people_schema()->resultset("SpDataset")->create($self->to_hashref());
-	$self->sp_dataset_id($row->sp_dataset_id());
-	return $row->sp_dataset_id();
+        #print STDERR "Creating new dataset row... ".$self->sp_dataset_id()."\n";
+        my $row = $self->people_schema()->resultset("SpDataset")->create($self->to_hashref());
+        $self->sp_dataset_id($row->sp_dataset_id());
+        return $row->sp_dataset_id();
     }
     else {
-	#print STDERR "Updating dataset row ".$self->sp_dataset_id()."\n";
-	my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
-	if ($row) {
-	    $row->name($self->name());
-	    $row->description($self->description());
-	    $row->dataset(JSON::Any->encode($self->to_hashref()));
-	    $row->sp_person_id($self->sp_person_id());
-	    $row->update();
-	    return $row->sp_dataset_id();
-	}
-	else {
-	    print STDERR "Weird... has ".$self->sp_dataset_id()." but no data in db\n";
-	}
+        #print STDERR "Updating dataset row ".$self->sp_dataset_id()."\n";
+        my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
+        if ($row) {
+            $row->name($self->name());
+            $row->description($self->description());
+            $row->dataset(JSON::Any->encode($self->to_hashref()));
+            $row->sp_person_id($self->sp_person_id());
+            $row->update();
+            return $row->sp_dataset_id();
+	    }
+        else {
+            print STDERR "Weird... has ".$self->sp_dataset_id()." but no data in db\n";
+        }
     }
 }
 
