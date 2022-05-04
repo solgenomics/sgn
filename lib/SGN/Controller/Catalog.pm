@@ -26,6 +26,9 @@ sub stock_catalog :Path('/catalog/view') :Args(0) {
     my $ordering_service_name = $c->config->{ordering_service_name};
     $c->stash->{ordering_service_name} = $ordering_service_name;
 
+    my $additional_order_info = $c->config->{additional_order_info};
+    $c->stash->{additional_order_info} = $additional_order_info;
+
     $c->stash->{template} = '/order/catalog.mas';
 
 }

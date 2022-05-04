@@ -2,6 +2,7 @@
 
 $check_vendor_role
 $ordering_service_name => undef
+$additional_order_info => undef
 
 </%args>
 
@@ -135,6 +136,8 @@ $ordering_service_name => undef
 
 jQuery(document).ready( function() {
 
+    var additional_order_info = "<% $additional_order_info %>";
+
     jQuery('#catalog_items_table').DataTable( {
         'autoWidth': false,
         'order': false,
@@ -148,7 +151,7 @@ jQuery(document).ready( function() {
             { title: "Material Source", "data": "material_source" },
             { title: "Breeding Program", "data": "breeding_program" },
             { title: "Availability", "data": "availability" },
-            { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+row.description+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
+            { title: "Add to Cart", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addToCart(\""+row.item_name+"\", \""+additional_order_info+"\")'><span class='glyphicon glyphicon-shopping-cart'></span></a>"; } },
         ],
     });
 
@@ -174,12 +177,22 @@ jQuery(document).ready( function() {
         if (!item_quantity) {
             item_quantity = '1';
         }
+
+        var item_additional_info = jQuery('#item_additional_info').val();
+        if (!item_additional_info) {
+            alert("Please select additional info")
+        }
+
         var item_comments = jQuery('#item_comments').val();
 
-        if (!item_comments) {
+        if (!item_comments && !item_additional_info) {
             var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity;
-        } else {
+        } else if ((!item_comments) && (item_additional_info)) {
+            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Additional Info:' + ' ' + item_additional_info;
+        } else if ((item_comments) && (!item_additional_info)) {
             var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Comments:' + ' ' + item_comments;
+        } else if (item_comments && item_additional_info) {
+            var item_string = item_name + ',' + ' ' + 'Quantity:' + ' ' + item_quantity + ',' + ' ' + 'Additional_info:' + ' ' + item_additional_info + ',' + ' ' + 'Comments:' + ' ' + item_comments;
         }
 
         var lo = new CXGN.List();
@@ -248,10 +261,18 @@ jQuery(document).ready( function() {
 
 });
 
-function addToCart(item_name){
+function addToCart(item_name, additional_order_info){
+    var additional_info = additional_order_info.split(",");
     var html = '';
     html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Item Name: </label><div class="col-sm-9" ><input class="form-control" id="cart_item_name" name="cart_item_name" value="'+item_name+'" disabled></div></div>';
     html = html + '<div class="form-group"><label class="col-sm-3 control-label">Quantity: </label><div class="col-sm-9" ><input class="form-control" id="item_quantity" name="item_quantity" placeholder=""></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-3 control-label">Additional Info: </label><div class="col-sm-9" ><select class="form-control" id="item_additional_info" name="item_additional_info"><option disabled value="" selected hidden>Please select a required clone stage</option>';
+    if (additional_info) {
+        for (var i=0; i<additional_info.length; i++) {
+            html = html + '<option value='+additional_info[i]+'>'+additional_info[i]+'</option>';
+        }
+    }
+    html = html + '</select></div></div>';
     html = html + '<div class="form-group"><label class="col-sm-3 control-label">Comments: </label><div class="col-sm-9" ><input class="form-control" id="item_comments" name="item_comments" placeholder="Optional"</div></div></form>';
 
     jQuery('#add_item_detail_div').html(html);
