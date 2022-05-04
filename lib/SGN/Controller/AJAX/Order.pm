@@ -98,9 +98,9 @@ sub submit_order_POST : Args(0) {
         }
     }
 
-    my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
-    my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
-
+    my $ordering_service_name = $c->config->{ordering_service_name};
+    my $ordering_service_url = $c->config->{ordering_service_url};
+    my $ona_new_id;
     my @item_list;
     my @contact_email_list;
     foreach my $contact_id (keys %group_by_contact_id) {
@@ -141,7 +141,7 @@ sub submit_order_POST : Args(0) {
         my $contact_email = $contact_person->get_contact_email();
         push @contact_email_list, $contact_email;
 
-        if ($odk_crossing_data_service_name eq 'ONA') {
+        if ($ordering_service_name eq 'ONA') {
             my $each_contact_id_ona = $group_by_contact_id{$contact_id}{'ona'};
             my $order_location;
             foreach my $item (keys %{$each_contact_id_ona}) {
@@ -160,7 +160,7 @@ sub submit_order_POST : Args(0) {
             my $id_string;
             my $form_id;
             my $ua = LWP::UserAgent->new;
-            $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
+            $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{ordering_service_username}, $c->config->{ordering_service_password} );
             my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
             my $server_endpoint_1 = "https://api.ona.io/api/v1/data";
             my $resp = $ua->get($server_endpoint_1);
@@ -306,16 +306,11 @@ sub submit_order_POST : Args(0) {
                     my $message = $add_resp->decoded_content;
                     my $message_hash = decode_json $message;
                     print STDERR "ONA MESSAGE HASH =".Dumper($message_hash)."\n";
-                    print STDERR "ONA MESSAGE ID =".Dumper($message_hash->{id})."\n";
-
-#                    if ($message_hash->{id}){
-#                        $c->stash->{rest}->{success} .= 'The order was sucessfully sent to the BANANA ORDERING SYSTEM. The progress of your order can be tracked on Musabase.';
-#                    } else {
-#                        $c->stash->{rest}->{error} = 'Error sending your order to the BANANA ORDERING SYSTEM.';
-#                    } else {
-#                        print STDERR "ERROR RESPONSE =".Dumper($resp)."\n";
-#                        $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
-#                    }
+                    $ona_new_id = $message_hash->{id};
+                    if (!$ona_new_id){
+                        $c->stash->{rest} = {error_string => "Error sending your order to BANANA ORDERING SYSTEM"};
+                        return;
+                    }
                 }
             } else {
                 $c->detach();
@@ -340,7 +335,11 @@ END_HEREDOC
         CXGN::Contact::send_email($subject,$body,$each_email);
     }
 
-    $c->stash->{rest} = {success => "1",};
+    if ($ona_new_id) {
+        $c->stash->{rest}->{success} .= 'Your order has been sent successfully to Banana Ordering System.';
+    } else {
+        $c->stash->{rest}->{success} .= 'Your order has been submitted successfully and the vendor has been notified.';
+    }
 
 }
 

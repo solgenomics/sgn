@@ -23,6 +23,9 @@ sub stock_catalog :Path('/catalog/view') :Args(0) {
         $c->stash->{check_vendor_role} = $check_vendor_role;
     }
 
+    my $ordering_service_name = $c->config->{ordering_service_name};
+    $c->stash->{ordering_service_name} = $ordering_service_name;
+
     $c->stash->{template} = '/order/catalog.mas';
 
 }
