@@ -296,5 +296,32 @@ sub run_model {
     }
 }
 
+=head2 make_R_variable_name
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub make_R_variable_name { 
+    my $name = shift;
+    $name =~ s/\s/\_/g;
+    $name =~ s/\//\_/g;
+    $name =~ tr/ /./;
+    $name =~ tr/\//./;
+    $name =~ s/\:/\_/g;
+    $name =~ s/\|/\_/g;
+    $name =~ s/\-/\_/g;
+    
+    return $name;
+}
+
+
+
+
 
 1;
