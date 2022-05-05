@@ -13,7 +13,7 @@ $trial_id => undef
                 </&>
                 <&| /page/info_section.mas, title=>"Upload progeny names that already EXIST in database", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="upload_progenies_existing_accessions_link">Upload</button>'&>
                 </&>
-                <&| /page/info_section.mas, title=>"Upload family names ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_family_names_link">Upload</button>'&>
+                <&| /page/info_section.mas, title=>"Upload family names ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="upload_family_names_link">Upload</button>'&>
                 </&>
             </&><!-- closes upload progenies and family names section -->
         </div>
@@ -547,8 +547,7 @@ jQuery(document).ready(function(){
         location.reload();
     });
 
-    jQuery("#upload_family_names_link").click(function(){
-
+    jQuery('[name="upload_family_names_link"]').click(function(){
         jQuery("#upload_family_name_spreadsheet_format_info").click(function(){
             jQuery("#upload_family_name_spreadsheet_info_dialog").modal("show");
         });
