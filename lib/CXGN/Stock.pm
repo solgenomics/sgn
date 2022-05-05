@@ -491,7 +491,7 @@ sub BUILD {
     }
     if (defined $stock && !$self->is_saving) {
         $self->organism_id($stock->organism_id);
-	my $organism_name = $self->schema()->resultset("Organism::Organism")->find( { organism_id => $stock->organism_id() })->name();
+	my $organism_name = $self->schema()->resultset("Organism::Organism")->find( { organism_id => $stock->organism_id() })->species();
 	$self->organism($organism_name);
         $self->name($stock->name);
         $self->uniquename($stock->uniquename);
