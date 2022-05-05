@@ -113,7 +113,7 @@
 
     <div class="container form-check form-switch">
       <h4>Choose engine</h4>
-      <input class="form-check-input" type="radio" id="select_engine" name="select_engine" value="lme4"> lme4</input> | 
+      <input class="form-check-input" type="radio" id="select_engine" name="select_engine" value="lme4" checked="1" > lme4</input> | 
       <input class="form-check-input" type="radio" id="select_engine" name="select_engine" value="sommer"> sommer</input>
 	<br /><br />
     </div>
