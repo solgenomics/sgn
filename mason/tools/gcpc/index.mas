@@ -14,42 +14,42 @@
 
 
 <& '/util/import_javascript.mas', classes => ['jquery', 'jqueryui', 'CXGN.Login', 'CXGN.List', 'd3.d3v4Min.js', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.SelectionIndex' ] &>
-  
+
   <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
-  
+
   <& /page/page_title.mas, title=>"GCPC" &>
-    
-    
+
+
     <&| /page/info_section.mas, id=>"input_dataset_section", title=>"Select Input Data", collapsible=>1, collapsed=>0, subtitle=>'<a class="btn btn-link pull-right" href="/help/solgwas" target="_blank">Help <span class="glyphicon glyphicon-question-sign"></span></a>' &>
       <input type="hidden" name="outformat" value="0" />
-      
-      
+
+
       <div class="form-group form-inline">
 	<label for="dataset_select">Available Datasets: </label><div id="dataset_select"></div>
 	<br>
-	
+
 	<button class="btn btn-primary" id="selectDataset" type="submit" name="selectDataset" value="selectDataset">Select Dataset</button>
 	<br>
 	<br>
-	
+
       </div>
       <div id="sin_list"></div>
-      
-      
+
+
       <center>
 	<div id="trait_histogram_plot">
 	</div>
       </center>
-      
+
       <br>
-      
+
       <div style="text-align: center">
 	<button class="btn btn-primary" id="runGCPC" type="submit" name="runGCPC" value="runGCPC">Run GCPC</button>
       </div>
       <br />
-      
+
       <div id="tempfile" style="display:none" >
       </div>
 </&>
@@ -67,7 +67,7 @@
       </table>
 
   <center>
-   
+
   </center>
   <br>
 
@@ -125,14 +125,14 @@ jQuery(document).ready(function() {
   jQuery('#sin_list_list_select').change(
       function() {
           load_sin();
-      });  
+      });
 
  //  jQuery('#method_btn').on('click', function() {
  //   var method_id = jQuery('#select_method').val();
  //   $.ajax({
  //       url: '/ajax/Stability/get_method',
  //       data: {'method_id': method_id  },
- //     }); // end .ajax    // }; // end else statement 
+ //     }); // end .ajax    // }; // end else statement
  //  });
 
 
@@ -187,7 +187,7 @@ jQuery(document).ready(function() {
 			      //if ($('#sin_list_list_select').val() != ""){
         // var method_id = $('#select_method').val();
 
-			      
+
   jQuery('#runGCPC').click( function () {
       $('#gcpc_files').empty();
 
@@ -197,7 +197,7 @@ jQuery(document).ready(function() {
           alert("Please select a selection index.")
           $('#gcpc_files').empty();
           return;
-      } 
+      }
         var dataset_id = get_dataset_id();
         var method_id = 1;
 
@@ -205,11 +205,11 @@ jQuery(document).ready(function() {
       $.ajax({
         'url': '/ajax/gcpc/generate_results?dataset_id='+dataset_id+'&amp;sin_list_id='+sin_list_id+'&amp;method_id='+method_id,
         'method': "GET",
-	'timeout': 60000000,		      
+	'timeout': 60000000,
         'contentType': 'application/json'
        }).done( function(data) {
           if (data.message) {
-          jQuery('#working_modal').modal('hide');	      
+          jQuery('#working_modal').modal('hide');
           alert(data.message);
         }
        if (data.error) {
@@ -220,23 +220,26 @@ jQuery(document).ready(function() {
       alert('Download link = '+data.download_link);
      if (data.download_link) {
       jQuery('#gcpc_results_download_link').html(data.download_link);
-      }			      
+      }
       //alert('JSON data retrieved: '+JSON.stringify(data));
 	jQuery('#working_modal').modal('hide');
         jQuery('#gcpc_output').DataTable( {
-	     'destroy': true,		      
-             'timeout': 6000000,			      
+	     'destroy': true,
+             'timeout': 6000000,
              'data' : data.data,
+             
+             "order": [[ 3, "desc" ]]
              //"columns": [
              //   { "data": "Cross #" },
              //   { "data": "Parent 1" },
              //   { "data": "Parent 2" },
              //   { "data": "Cross Predicted Merit" },
 	     //]
+
         });
      });
   });
-  
+
 function get_dataset_id() {
       var selected_datasets = [];
       jQuery('input[name="dataset_select_checkbox"]:checked').each(function() {
