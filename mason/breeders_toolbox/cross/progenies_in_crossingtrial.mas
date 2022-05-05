@@ -1,5 +1,5 @@
 <%args>
-$trial_id
+$trial_id => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -9,9 +9,9 @@ $trial_id
     <div class="panel panel-default">
         <div class="panel-body">
             <&| /page/info_section.mas, title=>"Upload Progenies or Family Names", is_subsection => 1, collapsible=>1, collapsed=>1, &>
-                <&| /page/info_section.mas, title=>"Upload progeny names that are NOT in database ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_progenies_new_accessions_link">Upload</button>'&>
+                <&| /page/info_section.mas, title=>"Upload progeny names that are NOT in database ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="upload_progenies_new_accessions_link">Upload</button>'&>
                 </&>
-                <&| /page/info_section.mas, title=>"Upload progeny names that already EXIST in database", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_progenies_existing_accessions_link">Upload</button>'&>
+                <&| /page/info_section.mas, title=>"Upload progeny names that already EXIST in database", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="upload_progenies_existing_accessions_link">Upload</button>'&>
                 </&>
                 <&| /page/info_section.mas, title=>"Upload family names ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_family_names_link">Upload</button>'&>
                 </&>
@@ -424,8 +424,7 @@ jQuery(document).ready(function(){
         });
     });
 
-    jQuery('#upload_progenies_new_accessions_link').click(function(){
-
+    jQuery('[name="upload_progenies_new_accessions_link"]').click(function(){
         jQuery('#upload_progenies_new_spreadsheet_format_info').click(function(){
             jQuery('#upload_progenies_new_spreadsheet_info_dialog').modal("show");
         });
@@ -467,8 +466,7 @@ jQuery(document).ready(function(){
         }
     });
 
-    jQuery('#upload_progenies_existing_accessions_link').click(function(){
-
+    jQuery('[name="upload_progenies_existing_accessions_link"]').click(function(){
         jQuery('#upload_progenies_exist_spreadsheet_format_info').click(function(){
             jQuery('#upload_progenies_exist_spreadsheet_info_dialog').modal("show");
         });
