@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test_docker_build]
     container:
-      image: breedbase/breedbase:v0.36
+      image: breedbase/breedbase:v0.46
       env:
         HOME: /root
         MODE: 'TESTING'

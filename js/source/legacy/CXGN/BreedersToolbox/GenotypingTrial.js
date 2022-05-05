@@ -365,7 +365,7 @@ jQuery(document).ready(function ($) {
                 url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
                 beforeSend: function(){
                     jQuery('#working_modal').modal("show");
-                    jQuery('#working_msg').html("Deleting genotyping experiment...<br />");
+                    jQuery('#working_msg').html("Deleting genotyping plate...<br />");
                 },
                 success: function(response) {
                     if (response.error) {

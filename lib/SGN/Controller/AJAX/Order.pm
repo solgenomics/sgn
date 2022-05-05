@@ -49,9 +49,8 @@ sub submit_order_POST : Args(0) {
     my %group_by_contact_id;
     my @all_items = @$items;
     foreach my $ordered_item (@all_items) {
-        my @ordered_item_split = split / /, $ordered_item;
+        my @ordered_item_split = split /,/, $ordered_item;
         my $item_name = $ordered_item_split[0];
-        print STDERR "ITEM NAME =".Dumper($item_name)."\n";
         my $item_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $item_name });
         my $item_id = $item_rs->stock_id();
 #        print STDERR "ITEM ID =".Dumper($item_id)."\n";

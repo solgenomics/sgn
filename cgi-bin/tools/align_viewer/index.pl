@@ -1,6 +1,6 @@
 use CatalystX::GlobalContext qw( $c );
 use strict;
-
+use CXGN::Tools::Text qw | sanitize_string |;
 use CXGN::Page;
 use CXGN::Page::FormattingHelpers qw/  page_title_html
                                        blue_section_html  /;
@@ -14,6 +14,18 @@ my ($seq_data, $id_data, $format, $title, $type,
     show_prot_example show_cds_example show_id_example
     temp_file maxiters/
 );
+
+$seq_data =~ s/[\<\{\}\;\"\']//g; # do not remove great than sign for fasta! 
+$id_data = sanitize_string($id_data);
+$format = sanitize_string($format);
+$title = sanitize_string($title);
+$type = sanitize_string($type);
+$show_prot_example = sanitize_string($show_prot_example);
+$show_cds_example = sanitize_string($show_cds_example);
+$show_id_example = sanitize_string($show_id_example);
+$temp_file = sanitize_string($temp_file);
+$maxiters = sanitize_string($maxiters);
+
 
 my ($intro_content, $input_content);
 
