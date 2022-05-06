@@ -86,7 +86,6 @@ sub submit_order_POST : Args(0) {
         $quantity =~ s/^\s+|\s+$//g;
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'quantity'} = $quantity;
 
-        $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
         my $ona_additional_info;
         if ($number_of_fields == 3) {
             my $optional_field = $ordered_item_split[2];
@@ -96,11 +95,13 @@ sub submit_order_POST : Args(0) {
             print STDERR "OPTIONAL TITLE =".Dumper($optional_title)."\n";
             my $optional_info = $optional_field_array[1];
             $optional_info =~ s/^\s+|\s+$//g;
+            print STDERR "OPTIONAL INFO =".Dumper($optional_info)."\n";
             if ($optional_title eq 'Comments') {
                 $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $optional_info;
-            } elsif ($optional_title eq 'Additonal Info') {
+            } elsif ($optional_title eq 'Additional Info') {
                 $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $optional_info;
                 $ona_additional_info = $optional_info;
+                print STDERR "ONA ADDITIONAL INFO =".Dumper($ona_additional_info)."\n";
             }
         } elsif ($number_of_fields == 4) {
             my $additional_info_field = $ordered_item_split[2];
@@ -108,6 +109,7 @@ sub submit_order_POST : Args(0) {
             my $additional_info = $additional_info_array[1];
             $additional_info =~ s/^\s+|\s+$//g;
             $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $additional_info;
+            $ona_additional_info = $additional_info;
             my $comments_field = $ordered_item_split[3];
             my @comments_array = split /:/, $comments_field;
             my $comments = $comments_array[1];
@@ -116,7 +118,7 @@ sub submit_order_POST : Args(0) {
         }
 
         @ona_info = ($item_source, $item_name, $quantity, $ona_additional_info, $request_date);
-
+        $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
     }
 
     my $ordering_service_name = $c->config->{ordering_service_name};
