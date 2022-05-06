@@ -259,23 +259,31 @@ sub search {
     my @where_clause;
     my @or_clause;
 
+
+    my @question_mark_values;
+    
     if ($stock_type){
         my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type, 'stock_type')->cvterm_id();
-        push @where_clause, "stock.type_id = $stock_type_cvterm_id";
+        push @where_clause, "stock.type_id = ?";
+	push @question_mark_values, $stock_type_cvterm_id;
+	
     }
 
     if ($image_id_list && scalar(@$image_id_list)>0) {
         my $sql = join ("," , @$image_id_list);
-        push @where_clause, "image.image_id in ($sql)";
+        push @where_clause, "image.image_id in (?)";
+	push @question_mark_values, $sql;
     }
     if ($image_name_list && scalar(@$image_name_list)>0) {
         if ($image_names_exact) {
             my $sql = join ("','" , @$image_name_list);
             my $name_sql = "'" . $sql . "'";
-            push @where_clause, "image.name in ($name_sql)";
+            push @where_clause, "image.name in (?)";
+	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$image_name_list) {
-                push @or_clause, "image.name ilike '%".$_."%'";
+                push @or_clause, "image.name ilike ?";
+		push @question_mark_values, $_;
             }
         }
     }
@@ -283,10 +291,12 @@ sub search {
         if ($original_filenames_exact) {
             my $sql = join ("','" , @$original_filename_list);
             my $name_sql = "'" . $sql . "'";
-            push @where_clause, "image.original_filename in ($name_sql)";
+            push @where_clause, "image.original_filename in (?)";
+	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$original_filename_list) {
-                push @or_clause, "image.original_filename ilike '%".$_."%'";
+                push @or_clause, "image.original_filename ilike ?";
+		push @question_mark_values, $_;
             }
         }
     }
@@ -294,10 +304,12 @@ sub search {
         if ($descriptions_exact) {
             my $sql = join ("','" , @$description_list);
             my $name_sql = "'" . $sql . "'";
-            push @where_clause, "image.description in ($name_sql)";
+            push @where_clause, "image.description in (?)";
+	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$description_list) {
-                push @or_clause, "image.description ilike '%".$_."%'";
+                push @or_clause, "image.description ilike ?";
+		push @question_mark_values, $_;
             }
         }
     }
@@ -305,10 +317,12 @@ sub search {
         if ($tag_list_exact) {
             my $sql = join ("','" , @$tag_list);
             my $name_sql = "'" . $sql . "'";
-            push @where_clause, "tags.name in ($name_sql)";
+            push @where_clause, "tags.name in (?)";
+	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$tag_list) {
-                push @or_clause, "tags.name ilike '%".$_."%'";
+                push @or_clause, "tags.name ilike ?";
+		push @question_mark_values, $_;
             }
         }
         if (!$include_obsolete_tags) {
@@ -322,10 +336,12 @@ sub search {
         if ($submitter_usernames_exact) {
             my $sql = join ("','" , @$submitter_username_list);
             my $name_sql = "'" . $sql . "'";
-            push @where_clause, "submitter.username in ($name_sql)";
+            push @where_clause, "submitter.username in (?)";
+	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$submitter_username_list) {
-                push @or_clause, "submitter.username ilike '%".$_."%'";
+                push @or_clause, "submitter.username ilike ?";
+		push @question_mark_values, $_;
             }
         }
     }
@@ -333,10 +349,12 @@ sub search {
         if ($submitter_first_names_exact) {
             my $sql = join ("','" , @$submitter_first_name_list);
             my $name_sql = "'" . $sql . "'";
-            push @where_clause, "submitter.first_name in ($name_sql)";
+            push @where_clause, "submitter.first_name in (?)";
+	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$submitter_first_name_list) {
-                push @or_clause, "submitter.first_name ilike '%".$_."%'";
+                push @or_clause, "submitter.first_name ilike ?";
+		push @question_mark_values, $_;
             }
         }
     }
@@ -344,44 +362,54 @@ sub search {
         if ($submitter_last_names_exact) {
             my $sql = join ("','" , @$submitter_last_name_list);
             my $name_sql = "'" . $sql . "'";
-            push @where_clause, "submitter.last_name in ($name_sql)";
+            push @where_clause, "submitter.last_name in (?)";
+	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$submitter_last_name_list) {
-                push @or_clause, "submitter.last_name ilike '%".$_."%'";
+                push @or_clause, "submitter.last_name ilike ?";
+		push @question_mark_values, $_;
             }
         }
     }
     if ($submitter_id_list && scalar(@$submitter_id_list)>0) {
         my $sql = join ("," , @$submitter_id_list);
-        push @where_clause, "submitter.sp_person_id in ($sql)";
+        push @where_clause, "submitter.sp_person_id in (?)";
+	push @question_mark_values, $sql;
+	
     }
     if ($stock_id_list && scalar(@$stock_id_list)>0) {
         my $sql = join ("," , @$stock_id_list);
-        push @where_clause, "stock.stock_id in ($sql)";
+        push @where_clause, "stock.stock_id in (?)";
+	push @question_mark_values, $sql;
     }
     if ($stock_name_list && scalar(@$stock_name_list)>0) {
         if ($stock_names_exact) {
             my $sql = join ("','" , @$stock_name_list);
             my $name_sql = "'" . $sql . "'";
-            push @where_clause, "stock.uniquename in ($name_sql)";
+            push @where_clause, "stock.uniquename in (?)";
+	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$stock_name_list) {
-                push @or_clause, "stock.uniquename ilike '%".$_."%'";
+                push @or_clause, "stock.uniquename ilike ?";
+		push @question_mark_values, $_;
             }
         }
     }
     if ($project_id_list && scalar(@$project_id_list)>0) {
         my $sql = join ("," , @$project_id_list);
-        push @where_clause, "project.project_id in ($sql)";
+        push @where_clause, "project.project_id in (?)";
+	push @question_mark_values, $sql;
     }
     if ($project_name_list && scalar(@$project_name_list)>0) {
         if ($project_names_exact) {
             my $sql = join ("','" , @$project_name_list);
             my $name_sql = "'" . $sql . "'";
-            push @where_clause, "project.name in ($name_sql)";
+            push @where_clause, "project.name in (?)";
+	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$project_name_list) {
-                push @or_clause, "project.name ilike '%".$_."%'";
+                push @or_clause, "project.name ilike ?";
+		push @question_mark_values, $_;
             }
         }
     }
@@ -389,10 +417,12 @@ sub search {
         if ($project_md_image_type_names_exact) {
             my $sql = join ("','" , @$project_md_image_type_name_list);
             my $name_sql = "'" . $sql . "'";
-            push @where_clause, "project_image_type.name in ($name_sql)";
+            push @where_clause, "project_image_type.name in (?)";
+	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$project_md_image_type_name_list) {
-                push @or_clause, "project_image_type.name ilike '%".$_."%'";
+                push @or_clause, "project_image_type.name ilike ?";
+		push @question_mark_values, $_;
             }
         }
     }
@@ -450,7 +480,8 @@ sub search {
 
     # print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
+    
+    $h->execute(@question_mark_values);
 
     my @result;
     my $total_count = 0;

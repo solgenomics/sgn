@@ -334,19 +334,19 @@ sub _parse_with_plugin {
                     my @gt_vcf_genotype;
                     my @ref_calls;
                     my @alt_calls;
-                    my $gt_dosage = 0;
+                    my $gt_dosage_alt = 0;
                     foreach my $a (@alleles){
                         if ($a eq $ref) {
                             push @gt_vcf_genotype, 0;
                             push @ref_calls, $a;
-                            $gt_dosage++;
                         }
                         elsif ($a eq $alt) {
                             push @gt_vcf_genotype, 1;
                             push @alt_calls, $a;
+                            $gt_dosage_alt++;
                         }
                         elsif ($a eq '?' || $a eq 'Uncallable') {
-                            $gt_dosage = 'NA';
+                            $gt_dosage_alt = 'NA';
                             push @gt_vcf_genotype, './.';
                             push @alt_calls, './.';
                         } else {
@@ -360,7 +360,7 @@ sub _parse_with_plugin {
                     $genotype_obj = {
                         'GT' => $vcf_gt_genotype_string,
                         'NT' => $vcf_genotype_string,
-                        'DS' => "$gt_dosage"
+                        'DS' => "$gt_dosage_alt"
                     };
                 } else {
                     die "There should always be a ref and alt according to validation above\n";

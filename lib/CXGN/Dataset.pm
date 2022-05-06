@@ -571,17 +571,13 @@ sub retrieve_genotypes {
     my $start_position = shift;
     my $end_position = shift;
     my $marker_name_list = shift || [];
+    # print STDERR "CXGN::Dataset retrieve_genotypes\n";
 
     my $accessions = $self->retrieve_accessions();
-
-    #print STDERR "ACCESSIONS: ".Dumper($accessions);
-
     my @accession_ids;
     foreach (@$accessions) {
         push @accession_ids, $_->[0];
     }
-
-    #print STDERR "ACCESSION IDS: ".Dumper(\@accession_ids);
 
     my $trials = $self->retrieve_trials();
     my @trial_ids;
@@ -589,14 +585,17 @@ sub retrieve_genotypes {
         push @trial_ids, $_->[0];
     }
 
-    my $genotyping_protocol_ref = $self->retrieve_genotyping_protocols();
     my @protocols;
-    foreach my $p (@$genotyping_protocol_ref) {
-	push @protocols, $p->[0];
-
+    if (!$protocol_id) {
+        my $genotyping_protocol_ref = $self->retrieve_genotyping_protocols();
+        foreach my $p (@$genotyping_protocol_ref) {
+            push @protocols, $p->[0];
+        }
+    } else {
+        @protocols = ($protocol_id);
     }
 
-    my $genotypes_search = CXGN::Genotype::Search->new(
+    my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema => $self->schema(),
         people_schema=>$self->people_schema,
         accession_list => \@accession_ids,
@@ -610,7 +609,7 @@ sub retrieve_genotypes {
         protocolprop_top_key_select=>$protocolprop_top_key_select, #THESE ARE THE KEYS AT THE TOP LEVEL OF THE PROTOCOLPROP OBJECT
         protocolprop_marker_hash_select=>$protocolprop_marker_hash_select, #THESE ARE THE KEYS IN THE MARKERS OBJECT IN THE PROTOCOLPROP OBJECT
         return_only_first_genotypeprop_for_stock=>$return_only_first_genotypeprop_for_stock #FOR MEMORY REASONS TO LIMIT DATA
-    );
+    });
     my ($total_count, $dataref) = $genotypes_search->get_genotype_info();
     return $dataref;
 }
