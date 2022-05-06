@@ -86,16 +86,37 @@ sub submit_order_POST : Args(0) {
         $quantity =~ s/^\s+|\s+$//g;
         $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'quantity'} = $quantity;
 
-        @ona_info = ($item_source, $item_name, $quantity, $request_date);
         $group_by_contact_id{$contact_person_id}{'ona'}{$item_name} = \@ona_info;
-
+        my $ona_additional_info;
         if ($number_of_fields == 3) {
-            my $comments = $ordered_item_split[2];
-            my @comment_info = split /:/, $comments;
-            my $comment_detail = $comment_info[1];
-            $comment_detail =~ s/^\s+|\s+$//g;
-            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $comment_detail;
+            my $optional_field = $ordered_item_split[2];
+            my @optional_field_array = split /:/, $optional_field;
+            my $optional_title = $optional_field_array[0];
+            $optional_title =~ s/^\s+|\s+$//g;
+            print STDERR "OPTIONAL TITLE =".Dumper($optional_title)."\n";
+            my $optional_info = $optional_field_array[1];
+            $optional_info =~ s/^\s+|\s+$//g;
+            if ($optional_title eq 'Comments') {
+                $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $optional_info;
+            } elsif ($optional_title eq 'Additonal Info') {
+                $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $optional_info;
+                $ona_additional_info = $optional_info;
+            }
+        } elsif ($number_of_fields == 4) {
+            my $additional_info_field = $ordered_item_split[2];
+            my @additional_info_array = split /:/, $additional_info_field;
+            my $additional_info = $additional_info_array[1];
+            $additional_info =~ s/^\s+|\s+$//g;
+            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $additional_info;
+            my $comments_field = $ordered_item_split[3];
+            my @comments_array = split /:/, $comments_field;
+            my $comments = $comments_array[1];
+            $comments =~ s/^\s+|\s+$//g;
+            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $comments;
         }
+
+        @ona_info = ($item_source, $item_name, $quantity, $ona_additional_info, $request_date);
+
     }
 
     my $ordering_service_name = $c->config->{ordering_service_name};
@@ -214,7 +235,7 @@ sub submit_order_POST : Args(0) {
                 print STDERR "ALL ORDER ROWS =".Dumper(\@all_order_rows)."\n";
 
                 my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
-                my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","requestDate"';
+                my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","additionalInfo","requestDate"';
                 my $template_file_name = $order_location.'_orders';
                 my $user_id = $c->user()->get_object()->get_sp_person_id();
                 my $user_name = $c->user()->get_object()->get_username();
