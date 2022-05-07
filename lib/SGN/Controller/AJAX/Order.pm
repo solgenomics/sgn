@@ -114,7 +114,7 @@ sub submit_order_POST : Args(0) {
             my @comments_array = split /:/, $comments_field;
             my $comments = $comments_array[1];
             $comments =~ s/^\s+|\s+$//g;
-            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'additional_info'} = $comments;
+            $group_by_contact_id{$contact_person_id}{'item_list'}{$item_name}{'comments'} = $comments;
         }
 
         @ona_info = ($item_source, $item_name, $quantity, $ona_additional_info, $request_date);
@@ -175,11 +175,8 @@ sub submit_order_POST : Args(0) {
                 splice @new_order_row, 1, 0, $order_id;
                 push @all_new_rows, [@new_order_row];
             }
-            print STDERR "ORDER LOCATION =".Dumper($order_location)."\n";
-            print STDERR "ALL NEW ROWS =".Dumper(\@all_new_rows)."\n";
 
             my $order_file_name = $order_location.'_orders.csv';
-            print STDERR "ORDER FILE NAME =".Dumper($order_file_name)."\n";
             my $id_string;
             my $form_id;
             my $ua = LWP::UserAgent->new;
@@ -198,7 +195,6 @@ sub submit_order_POST : Args(0) {
                     }
                 }
             }
-            print STDERR "FORM ID =".Dumper($form_id)."\n";
 
             if ($form_id) {
                 my ($previous_order_temp_file, $previous_order_uri1) = $c->tempfile( TEMPLATE => 'download/previous_ona_order_infoXXXXX');
@@ -215,7 +211,6 @@ sub submit_order_POST : Args(0) {
 #                        print STDERR "DELETE INFO =".Dumper($t)."\n";
                             getstore($t->{media_url}, $previous_order_temp_file_path);
                             $order_ona_id = $t->{id};
-                            print STDERR "ORDER ONA ID=".Dumper($order_ona_id);
                         }
                     }
                 }
@@ -229,12 +224,10 @@ sub submit_order_POST : Args(0) {
                         chomp $row;
                         push @previous_order_rows, [split ',', $row];
                     }
-                    print STDERR "PREVIOUS ORDER INFO =".Dumper(\@previous_order_rows)."\n";
                     push @all_order_rows, (@previous_order_rows);
                 }
 
                 push @all_order_rows, (@all_new_rows);
-                print STDERR "ALL ORDER ROWS =".Dumper(\@all_order_rows)."\n";
 
                 my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
                 my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","additionalInfo","requestDate"';
@@ -328,7 +321,6 @@ sub submit_order_POST : Args(0) {
                 if ($add_resp->is_success) {
                     my $message = $add_resp->decoded_content;
                     my $message_hash = decode_json $message;
-                    print STDERR "ONA MESSAGE HASH =".Dumper($message_hash)."\n";
                     $ona_new_id = $message_hash->{id};
                     if (!$ona_new_id){
                         $c->stash->{rest} = {error_string => "Error sending your order to BANANA ORDERING SYSTEM"};

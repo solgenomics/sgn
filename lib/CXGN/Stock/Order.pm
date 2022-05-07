@@ -101,16 +101,19 @@ sub get_orders_from_person_id {
                 my $item_name = (keys %$each_item)[0];
                 my $quantity = $each_item->{$item_name}->{'quantity'};
                 my $comments = $each_item->{$item_name}->{'comments'};
+                my $additional_info = $each_item->{$item_name}->{'additional_info'};
 
                 my $each_item_details;
-                if ($comments) {
-                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " " . "comments:" . $comments;
+                if ($additional_info && $comments) {
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
+                } elsif ($additional_info && (!$comments)){
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
+                } elsif ((!$additional_info) && $comments) {
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
                 } else {
                     $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
                 }
-
                 push @list, $each_item_details;
-
             }
             my @sort_list = sort @list;
             $item_list = join("<br>", @sort_list);
@@ -153,16 +156,19 @@ sub get_orders_to_person_id {
                 my $item_name = (keys %$each_item)[0];
                 my $quantity = $each_item->{$item_name}->{'quantity'};
                 my $comments = $each_item->{$item_name}->{'comments'};
+                my $additional_info = $each_item->{$item_name}->{'additional_info'};
 
                 my $each_item_details;
-                if ($comments) {
-                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " " . "comments:" . $comments;
+                if ($additional_info && $comments) {
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
+                } elsif ($additional_info && (!$comments)){
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
+                } elsif ((!$additional_info) && $comments) {
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
                 } else {
                     $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
                 }
-
                 push @list, $each_item_details;
-
             }
             my @sort_list = sort @list;
             $item_list = join("<br>", @sort_list);
@@ -214,16 +220,19 @@ sub get_order_details {
         my $item_name = (keys %$each_item)[0];
         my $quantity = $each_item->{$item_name}->{'quantity'};
         my $comments = $each_item->{$item_name}->{'comments'};
+        my $additional_info = $each_item->{$item_name}->{'additional_info'};
 
         my $each_item_details;
-        if ($comments) {
-            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " " . "comments:" . $comments;
+        if ($additional_info && $comments) {
+            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
+        } elsif ($additional_info && (!$comments)){
+            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
+        } elsif ((!$additional_info) && $comments) {
+            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
         } else {
             $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
         }
-
         push @list, $each_item_details;
-
     }
     my @sort_list = sort @list;
     my $item_list = join("<br>", @sort_list);
