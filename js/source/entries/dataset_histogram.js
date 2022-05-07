@@ -11,8 +11,10 @@ export function init(dataset_id) {
             this.dataset_id = dataset_id;
             this.observations = {};
             this.traits = {};
-            this.xAxisData = [];
-            this.yAxisData = [];
+            this.phenoIds = [];
+            this.traitVals
+            // this.xAxisData = [];
+            // this.yAxisData = [];
         }
 
         getPhenotypes() {
@@ -35,7 +37,6 @@ export function init(dataset_id) {
 
         setDropDownTraits() {
           const keys = this.observations[0];
-          console.log('keys', keys);
           // Construct trait object
           for (let i = 39; i < keys.length - 1; i++) {
             if (i % 2 == 1 && i <= keys.length - 2) {
@@ -43,17 +44,14 @@ export function init(dataset_id) {
             }
           }
 
-          console.log('keys', this.traits);
-
           for (let i = 1; i < this.observations.length; i++) {
-            // Goes through each observation, and populates the traits hash with each trait, using the phenotype id as the key, and the trait value as the value.
+            // Goes through each observation, and populates the traits hash with each trait, using the phenotype id as the key, and the traitValue as the value.
             for (let j = 39; j < this.observations[i].length - 1; j++) {
               if (j % 2 == 1) {
                 this.traits[keys[j]][this.observations[i][j+1]] = this.observations[i][j];
               }
             }
           }
-          console.log(this.traits);
           // Use traits to set select options
           const select = document.getElementById("trait_selection");
           for (const traitName of Object.keys(this.traits)) {
@@ -66,33 +64,43 @@ export function init(dataset_id) {
         }
 
         setData() {
-          this.xAxisData = Object.keys(this.traits[this.selection]).filter((plotNumber) => this.traits[this.selection][plotNumber] != null);
-          this.yAxisData = Object.values(this.traits[this.selection]).filter((value) => value != null).map(string => parseInt(string));
-          this.yAxisData.sort((a,b) => a - b);
+          // Gets a list of pheno ids, filters them so only the ones that have non null values are included and then sorts the ids by their value by looking up their values in traits hash.
+          this.phenoIds = Object.keys(this.traits[this.selection])
+            .filter((phenoId) => !isNaN(parseFloat(this.traits[this.selection][phenoId])))
+            .sort((a,b) => this.traits[this.selection][a] - this.traits[this.selection][b]);
+
+          console.log(this.phenoIds);
+          this.traitVals = this.phenoIds.map((id) => parseFloat(this.traits[this.selection][id]));
+          console.log(this.traitVals);
+          // console.log(this.traitVals);
+          // Debugging check: You should see a list of ids and the corresponding values, logs should be sorted by increasing values.
+          // for (let id of this.phenoIds) {
+          //   console.log(id, this.traits[this.selection][id].value);
+          // }
         }
 
-        standardDeviation(values){
-            function average(data){
-                var sum = data.reduce(function(sum, value){
-                  return sum + value;
-                }, 0);
-                            
-                var avg = sum / data.length;
-                return avg;
-              }
+        standardDeviation(values) {
+          function average(data) {
+            var sum = data.reduce(function(sum, value){
+              return sum + value;
+            }, 0);
             
-            var avg = average(values);
+            var avg = sum / data.length;
+            return avg;
+          }
             
-            var squareDiffs = values.map(function(value){
-              var diff = value - avg;
-              var sqrDiff = diff * diff;
-              return sqrDiff;
-            });
-            
-            var avgSquareDiff = average(squareDiffs);
+          var avg = average(values);
           
-            var stdDev = Math.sqrt(avgSquareDiff);
-            return [avg, stdDev];
+          var squareDiffs = values.map(function(value){
+            var diff = value - avg;
+            var sqrDiff = diff * diff;
+            return sqrDiff;
+          });
+          
+          var avgSquareDiff = average(squareDiffs);
+        
+          var stdDev = Math.sqrt(avgSquareDiff);
+          return [avg, stdDev];
         }
         
         addEventListeners() {
@@ -136,7 +144,7 @@ export function init(dataset_id) {
           const LocalThis = this;
 
           var margin = {top: 10, right: 30, bottom: 30, left: 60},
-              width = 1170 - margin.left - margin.right,
+              width = 1180 - margin.left - margin.right,
               height = 600 - margin.top - margin.bottom;
           
           var svg = d3.select("#trait_graph")
@@ -156,38 +164,91 @@ export function init(dataset_id) {
                 return "red";
               }
           }
-          const [mean, stdDev] = this.standardDeviation(this.yAxisData);
+          console.log('traitVals', this.traitVals);
+          const [mean, stdDev] = this.standardDeviation(this.traitVals);
           this.outliers = [];
           // Add X axis
           var x = d3.scaleLinear()
-          .domain([0, this.xAxisData.length])
+          .domain([0, this.phenoIds.length])
           .range([ 0, width]);
           svg.append("g")
           .style("font", "18px times")
           .attr("transform", "translate(0," + height + ")")
-          .call(d3.axisBottom(x));
       
           // Add Y axis
           var y = d3.scaleLinear()
-          .domain([Math.min(...this.yAxisData), Math.max(...this.yAxisData)])
+          .domain([Math.min(...this.traitVals), Math.max(...this.traitVals)])
           .range([ height, 0]);
           svg.append("g")
           .style("font", "18px times")
           .call(d3.axisLeft(y))
+
+          svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left)
+            .attr("x",0 - (height / 2))
+            .attr("dy", ".65em")
+            .style("text-anchor", "middle")
+            .style("font", "18px times")
+            .text("Trait Value");
+
       
           // Add dots
           if (this.selection != null) {
+
+            var tooltip = d3.select("#trait_graph")
+            .append("div")
+            .attr("id", "tooltip")
+            .attr("class", "tooltip")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("font-size", "15px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("opacity", 0);
+
+            var mouseover = function(d) {
+              tooltip
+                  .style("opacity", 1)
+                d3.select(this)
+                  .style("stroke", "black")
+                  .style("opacity", 1)
+            }
+            
+            var mousemove = function(d) {
+              tooltip
+                .html("id: " + LocalThis.phenoIds[d] + "<br>" + "val: " + LocalThis.traitVals[d])
+                .style("left", (d3.mouse(this)[0]+90) + "px")
+                .style("top", (d3.mouse(this)[1]+180) + "px")
+            }
+
+            var mouseleave = function(d) {
+              tooltip
+                .style("opacity", 0)
+              d3.select(this)
+                .style("stroke", "none")
+                .style("opacity", 0.8)
+            }
+            
+
+
             svg.append('g')
             .selectAll("dot")
-            .data([...Array(this.xAxisData.length).keys()])
+            .data([...Array(this.phenoIds.length).keys()])
             .enter()
             .append("circle")
               .attr("cx", function (d) { return x(d); } )
-              .attr("cy", function (d) { return y(LocalThis.yAxisData[d]); } )
-              .attr("r", 4)
-              .style("fill", function(d) {return isOutlier(LocalThis.xAxisData[d], LocalThis.yAxisData[d], mean, stdDev)})
-        
+              .attr("cy", function (d) { return y(LocalThis.traitVals[d]); } )
+              .attr("r", 6)
+              .style("fill", function(d) {return isOutlier(LocalThis.phenoIds[d], LocalThis.traitVals[d], mean, stdDev)})
+              .on("mouseover", mouseover)
+              .on("mousemove", mousemove)
+              .on("mouseleave", mouseleave);
+
           }
+
+
           
         }
     }
