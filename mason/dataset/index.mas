@@ -8,7 +8,7 @@ $dataset_description => ''
 
 
 <& /page/page_title.mas, title => "Dataset $dataset_name $dataset_id" &>
-<& /util/import_javascript.mas, entries => ['dataset_histogram'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
+<& /util/import_javascript.mas, entries => ['dataset_scatterplot'], classes => [ 'jqueryui.js', 'jquery.js', 'd3.d3v4Min', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
 
 
 <style>
@@ -49,18 +49,21 @@ $dataset_description => ''
 
   }
 
-  #trait_selection {
-  }
   #pagefooter {
     min-height: 150px !important;
+  }
+
+  #trait_selection {
+    font-size: 15px;
   }
   #trait_selections {
     float: left;
     max-width: 400px;
     height: 100px;
+    font-size: 15px;
   }
 
-  #get_outliers {
+  #store_outliers {
     float: right;
     padding: 5px;
   }
@@ -73,7 +76,7 @@ $dataset_description => ''
 
   #trait_graph {
 
-    width: 60%;
+    width: 65%;
   }
 
 </style>
@@ -96,8 +99,8 @@ $dataset_description => ''
       </select>
     </div>
 
-    <div id="get_outliers">
-      <button class="btn btn-primary" id="download_outliers">Download Outliers</button>
+    <div id="store-outliers">
+      <button class="btn btn-primary" id="store_outliers">Store Outliers</button>
     </div>
     
     <div id="dataset_slider">
@@ -106,9 +109,7 @@ $dataset_description => ''
   </div>
 
 
-  <div id="trait_graph">
-
-  </div>
+  <div id="trait_graph"></div>
 
 
   <div id="dataset_summary_table">
@@ -122,7 +123,7 @@ $dataset_description => ''
 
     jQuery(document).ready( function() {
       console.log('dataset id', '<% $dataset_name %>');
-      var DataSet = window.jsMod['dataset_histogram'].init(<% $dataset_id %>);
+      var DataSet = window.jsMod['dataset_scatterplot'].init(<% $dataset_id %>);
       DataSet.render(); 
     });  
 
