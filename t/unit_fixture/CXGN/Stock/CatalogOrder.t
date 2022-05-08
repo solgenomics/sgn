@@ -127,8 +127,8 @@ my $janedoe_id = CXGN::People::Person->get_person_by_username($dbh, 'janedoe');
 my $your_cart_id = CXGN::List::create_list($dbh, 'your_cart', 'test shopping cart', $janedoe_id);
 my $list = CXGN::List->new( { dbh => $dbh, list_id => $your_cart_id } );
 my $your_cart_type = $list->type('catalog_items');
-my $item1 = $list->add_element("UG120001 Quantity: 2");
-my $item2 = $list->add_element("UG120002 Quantity: 3");
+my $item1 = $list->add_element("UG120001,Quantity: 2");
+my $item2 = $list->add_element("UG120002,Quantity: 3");
 
 #test storing an order from janedoe, to johndoe
 my $new_order = CXGN::Stock::Order->new( { people_schema => $people_schema, dbh => $dbh});
@@ -141,21 +141,30 @@ ok(my $order_id = $new_order->store(), "check storing order");
 #test storing orderprop
 my $your_cart = CXGN::List->new( { dbh=>$dbh, list_id=>$your_cart_id });
 my $items = $list->elements();
-is_deeply($items, ['UG120001 Quantity: 2','UG120002 Quantity: 3'], 'check items');
+is_deeply($items, ['UG120001,Quantity: 2','UG120002,Quantity: 3'], 'check items');
 
 my @all_items = @$items;
-my $ordered_item_info = {};
+my @clone_list;
 foreach my $ordered_item (@all_items) {
-    $ordered_item_info->{$ordered_item} = 'single item';
+    my %item_hash;
+    my @ordered_item_split = split /,/, $ordered_item;
+    my $item_name = $ordered_item_split[0];
+
+    my $quantity_string = $ordered_item_split[1];
+    my @quantity_info = split /:/, $quantity_string;
+    my $quantity = $quantity_info[1];
+    $quantity =~ s/^\s+|\s+$//g;
+    $item_hash{$item_name}{'quantity'} = $quantity;
+    push @clone_list, \%item_hash;
 }
-my $order_list = encode_json $ordered_item_info;
+
 my @history;
 my $history_info = {};
 $history_info ->{'submitted'} = $timestamp;
 push @history, $history_info;
 
 my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
-$order_prop->clone_list($order_list);
+$order_prop->clone_list(\@clone_list);
 $order_prop->parent_id($order_id);
 $order_prop->history(\@history);
 ok(my $order_prop_id = $order_prop->store_sp_orderprop(), "check storing orderprop");
@@ -167,7 +176,7 @@ CXGN::List::delete_list($dbh, $your_cart_id);
 my $buyer_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $janedoe_id});
 my $buyer_orders= $buyer_order_obj->get_orders_from_person_id();
 is($buyer_orders->[0][0], '1');
-is($buyer_orders->[0][2], 'UG120001 Quantity: 2<br>UG120002 Quantity: 3');
+is($buyer_orders->[0][2], 'UG120001, quantity:2<br>UG120002, quantity:3');
 is($buyer_orders->[0][3], 'submitted');
 is($buyer_orders->[0][4], undef);
 is($buyer_orders->[0][5], 'John Doe');
@@ -178,7 +187,7 @@ my $vendor_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $
 my $vendor_orders = $vendor_order_obj->get_orders_to_person_id();
 my $order = $vendor_orders->[0];
 is($order->{'order_id'}, '1');
-is($order->{'item_list'}, 'UG120001 Quantity: 2<br>UG120002 Quantity: 3');
+is($order->{'item_list'}, 'UG120001, quantity:2<br>UG120002, quantity:3');
 is($order->{'order_status'}, 'submitted');
 is($order->{'order_from_name'}, 'Jane Doe');
 is($order->{'completion_date'}, undef);
