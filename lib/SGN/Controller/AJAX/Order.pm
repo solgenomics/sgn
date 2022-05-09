@@ -328,7 +328,8 @@ sub submit_order_POST : Args(0) {
                     }
                 }
             } else {
-                $c->detach();
+                $c->stash->{rest} = {error_string => "BANANA ORDERING SYSTEM hasn't been set up for $order_location. Please contact admin."};
+                return;
             }
         }
     }

@@ -50,7 +50,7 @@ my $stock_catalog = CXGN::Stock::Catalog->new({
 $stock_catalog->item_type('single item');
 $stock_catalog->category('released variety');
 $stock_catalog->description('test item');
-$stock_catalog->material_source('Arusha');
+$stock_catalog->material_source('Sendusu');
 $stock_catalog->breeding_program($program_id);
 $stock_catalog->availability('in stock');
 $stock_catalog->contact_person_id($johndoe_id);
