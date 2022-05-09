@@ -225,8 +225,10 @@ $design_types => ()
 <td>
 <a name="upload_crosses_link"><p>Upload Many New Crosses</p></a>
 <a name="create_cross_link"><p>Add A Cross</p></a>
-<a id="upload_progenies_existing_crosses"><p>Upload Progenies of Existing Crosses</p></a>
-<a id="upload_cross_info"><p>Upload Cross Info of Existing Crosses</p></a>
+<a name="upload_progenies_new_accessions_link"><p>Upload progeny names that are NOT in database</p></a>
+<a name="upload_progenies_existing_accessions_link"><p>Upload progeny names that already EXIST in database</p></a>
+<a name="upload_cross_info"><p>Upload Cross Info of Existing Crosses</p></a>
+<a name="upload_family_names_link"><p>Upload Family Names</p></a>
 </td>
 <td>
 <a href="/breeders/crosses"><p>Go To Manage Crosses Page</p></a>
@@ -242,7 +244,7 @@ $design_types => ()
 <& /breeders_toolbox/cross/add_cross_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
 <& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
 <& /breeders_toolbox/cross/upload_update_crosses.mas &>
-
+<& /breeders_toolbox/cross/progenies_in_crossingtrial.mas &>
 
 <div class="well well-sm">
 <h1>Phenotypes</h1><br/>
