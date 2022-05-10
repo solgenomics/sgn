@@ -209,7 +209,7 @@ sub generate_model_sommer {
     #
     my $mmer_fixed_factors = "";
     my $mmer_random_factors = "";
-    my $mmer_random_factors_interaction = "";
+    my $mmer_fixed_factors_interaction = "";
 
     if (scalar(@$dependent_variables) > 1) { die "Works only with one trait for now! :-("; }
     if (scalar(@$dependent_variables) > 0) {
@@ -220,26 +220,26 @@ sub generate_model_sommer {
 
 	if (scalar(@$random_factors)== 0) {$mmer_random_factors = "1"; }
 	else { $mmer_random_factors = join("+", @$random_factors);}
-	
-	if (scalar(@$random_factors_interaction)== 0) {$mmer_random_factors_interaction = "1"; }
-	if (scalar(@$random_factors_interaction) != 2) { $error = "Works only with one interaction for now! :-(";}
+
+	if (scalar(@$fixed_factors_interaction)== 0) {$mmer_fixed_factors_interaction = "1"; }
+	if (scalar(@$fixed_factors_interaction) != 2) { $error = "Works only with one interaction for now! :-(";}
 	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
-	else { $mmer_random_factors_interaction = join(":", @$random_factors_interaction);}
-	
-	$mmer_random_factors = " ~ ". $mmer_random_factors . "+" . $mmer_random_factors_interaction;
+	else { $mmer_fixed_factors_interaction = join(":", @$fixed_factors_interaction);}
+
+	$mmer_random_factors = " random = ~ ". $mmer_random_factors . "+" . $mmer_fixed_factors_interaction;
     }
 
     print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
     print STDERR "mmer_random_factors = $mmer_random_factors\n";
-    
+
     #my $data = { fixed_factors => $mmer_fixed_factors,
 	#	 random_factors => $mmer_random_factors,
     #};
 
-    my $model = "mmer( $mmer_fixed_factors, random=$mmer_random_factors";
-    
+    my $model = "$mmer_fixed_factors, random=$mmer_random_factors";
+
     print STDERR "Data returned from generate_model_sommer: ".Dumper($model);
-    
+
     return ($model, $error);
 }
 
@@ -307,7 +307,7 @@ sub run_model {
 
 =cut
 
-sub make_R_variable_name { 
+sub make_R_variable_name {
     my $name = shift;
     $name =~ s/\s/\_/g;
     $name =~ s/\//\_/g;
@@ -316,7 +316,7 @@ sub make_R_variable_name {
     $name =~ s/\:/\_/g;
     $name =~ s/\|/\_/g;
     $name =~ s/\-/\_/g;
-    
+
     return $name;
 }
 
