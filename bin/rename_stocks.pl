@@ -40,7 +40,7 @@ test mode, do not commit changes.
 
 =head1 DESCRIPTION
 
-This script rename stocks in bulk using an xls file as input with two columns: the first column is the stock uniquename as it is in the database, and in the second column is the new stock uniquename. There is no header line. Both stock.name and stock.uniquename fields will be changed to the new name.
+This script renames stocks in bulk using an xls file as input with two columns: the first column is the stock uniquename as it is in the database, and in the second column is the new stock uniquename. There is no header line. Both stock.name and stock.uniquename fields will be changed to the new name.
 
 The oldname will be stored as a synonym unless option -n is given.
 
