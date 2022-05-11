@@ -8,7 +8,6 @@
 <div class="row" id="search_form_1" >
     <div class="col-sm-1">
     </div>
-    <div class="col-sm-12 well">
         <div class="row">
             <div class="col-sm-11">
                 <div class="form-horizontal">
@@ -28,7 +27,6 @@
                 </div>
             </div>
         </div>
-    </div>
 </div>
 
 
@@ -41,6 +39,15 @@ jQuery(document).ready(function (){
     var lo = new CXGN.List();
 
     jQuery('#accession_list_select').html(lo.listSelect('accession_list_select', ['accessions'], 'Select a list of accessions', undefined, undefined));
+
+    jQuery("#search_parents").click(function(){
+        var accession_list_id = jQuery('#accession_list_select').val();
+        if (!accession_list_id) {
+            alert("Please select a list of accessions");
+            return;
+        }
+
+    });
 
 
 
