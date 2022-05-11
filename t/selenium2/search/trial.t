@@ -3,7 +3,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More;
+use Test::More 'tests' => 5;
 use SGN::Test::WWW::WebDriver;
 
 my $d = SGN::Test::WWW::WebDriver->new();
@@ -16,7 +16,7 @@ ok($d->driver->get_page_source()=~/Kasese/, "find trial search result content");
 
 ok($d->driver->get_page_source()=~/2014/, "find trial year in trial search results");
 
-my $trial_search_input = $d->find_element("//div[\@id=\"search_results_filter\"]/descendant::label/descendant::input", "xpath");
+my $trial_search_input = $d->find_element('input[aria-controls="trial_search_results"]', "css");
 
 $trial_search_input->send_keys("Kasese");
 

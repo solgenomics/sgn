@@ -2,7 +2,7 @@
 use strict;
 use lib 't/lib';
 
-use Test::More;
+use Test::More 'tests' => 6;
 use SGN::Test::WWW::WebDriver;
 
 my $d = SGN::Test::WWW::WebDriver->new();
