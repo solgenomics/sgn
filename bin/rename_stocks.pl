@@ -14,11 +14,12 @@ rename_stocks.pl - a script for renaming stocks
  -D database name (required) e.g. "cxgn_cassava"
  -i path to infile (required)
  -s stock type (default: accession)
+ -n don't store old name as a synonym
  -t test mode, do not commit changes.
 
 =head1 DESCRIPTION
 
-This script rename stocks in bulk. The infile provided has two columns, in the first column is the stock uniquename as it is in the database, and in the second column is the new stock uniquename. There is no header on the infile and the infile is .xls. The stock.name field is untouched.
+This script rename stocks in bulk. The infile provided has two columns, in the first column is the stock uniquename as it is in the database, and in the second column is the new stock uniquename. There is no header on the infile and the infile is .xls. The stock.name field is untouched. The oldname will be stored as a synonym unless option -n is given.
 
 =head1 AUTHOR
 
@@ -40,9 +41,9 @@ use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
 
-our ($opt_H, $opt_D, $opt_i, $opt_s, $opt_t);
+our ($opt_H, $opt_D, $opt_i, $opt_s, $opt_t, $opt_n);
 
-getopts('H:D:i:s:t');
+getopts('H:D:i:s:tn');
 
 if (!$opt_H || !$opt_D || !$opt_i) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file)\n");
@@ -82,14 +83,21 @@ my $coderef = sub {
         
 	print STDERR "$db_uniquename -> $new_uniquename\n";
 
-    	my $old_stock = $schema->resultset('Stock::Stock')->find({ uniquename => $db_uniquename, type_id => $stock_type_id });
+    	my $old_stock = $schema->resultset('Stock::Stock')->find({ name => $db_uniquename, uniquename => $db_uniquename, type_id => $stock_type_id });
 
 	if (!$old_stock) { 
 	    print STDERR "Warning! Stock with uniquename $db_uniquename was not found in the database.\n";
 	    next();
 	}
         my $new_stock = $old_stock->update({ name => $new_uniquename, uniquename => $new_uniquename});
-
+	if (! $opt_n) {
+	    my $synonym = { value => $db_uniquename,
+			    type_id => $synonym_id,
+			    stock_id => $new_stock->stock_id(),
+	    };
+	    
+	    $schema->resultset('Stock::Stockprop')->find_or_create($synonym);
+	}
     }
 };
 
