@@ -40,6 +40,7 @@ use Spreadsheet::ParseExcel;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
+use SGN::Model::Cvterm;
 
 our ($opt_H, $opt_D, $opt_i, $opt_s, $opt_t, $opt_n);
 
@@ -64,6 +65,7 @@ my $dbh = CXGN::DB::InsertDBH->new({
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 $dbh->do('SET search_path TO public,sgn');
 
+my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property'); 
 
 my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
 my ( $row_min, $row_max ) = $worksheet->row_range();
@@ -89,6 +91,7 @@ my $coderef = sub {
 	    print STDERR "Warning! Stock with uniquename $db_uniquename was not found in the database.\n";
 	    next();
 	}
+	
         my $new_stock = $old_stock->update({ name => $new_uniquename, uniquename => $new_uniquename});
 	if (! $opt_n) {
 	    my $synonym = { value => $db_uniquename,
