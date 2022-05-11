@@ -1,0 +1,50 @@
+<%args>
+
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<div class="row" id="search_form_1" >
+    <div class="col-sm-1">
+    </div>
+    <div class="col-sm-12 well">
+        <div class="row">
+            <div class="col-sm-11">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-sm-4">Select a list of accessions:</label>
+                        <div class="col-sm-8" >
+                            <div class="input-group">
+                                <select class="form-control" id="accession_list_select">
+                                    <option value="">Select a list of accessions</option>
+                                </select>
+                                <div class="input-group-btn">
+                                    <button class="btn btn-info" id="search_parents"><i class="glyphicon glyphicon-search"></i> Parents </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+
+
+jQuery(document).ready(function (){
+
+    var lo = new CXGN.List();
+
+    jQuery('#accession_list_select').html(lo.listSelect('accession_list_select', ['accessions'], 'Select a list of accessions', undefined, undefined));
+
+
+
+});
+
+
+</script>
