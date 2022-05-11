@@ -1,32 +1,58 @@
 #!/usr/bin/perl
 
-=head1
+=head1 NAME
 
 rename_stocks.pl - a script for renaming stocks
 
 =head1 SYNOPSIS
 
-    rename_stocks.pl -H [dbhost] -D [dbname] -i [infile]
+rename_stocks.pl -H [dbhost] -D [dbname] -i [infile]
 
-=head1 COMMAND-LINE OPTIONS
-  ARGUMENTS
- -H host name (required) e.g. "localhost"
- -D database name (required) e.g. "cxgn_cassava"
- -i path to infile (required)
- -s stock type (default: accession)
- -n don't store old name as a synonym
- -t test mode, do not commit changes.
+=head2 Command-line options
+
+=over 5
+
+=item -H 
+
+host name (required) e.g. "localhost"
+
+=item -D 
+
+database name (required) e.g. "cxgn_cassava"
+
+=item -i 
+
+path to infile (required)
+
+=item -s 
+
+stock type (default: accession)
+
+=item -n 
+
+don't store old name as a synonym
+
+=item -t 
+
+test mode, do not commit changes.
+
+=back
 
 =head1 DESCRIPTION
 
-This script rename stocks in bulk. The infile provided has two columns, in the first column is the stock uniquename as it is in the database, and in the second column is the new stock uniquename. There is no header on the infile and the infile is .xls. The stock.name field is untouched. The oldname will be stored as a synonym unless option -n is given.
+This script rename stocks in bulk using an xls file as input with two columns: the first column is the stock uniquename as it is in the database, and in the second column is the new stock uniquename. There is no header line. Both stock.name and stock.uniquename fields will be changed to the new name.
 
-=head1 AUTHOR
+The oldname will be stored as a synonym unless option -n is given.
 
- Guillaume Bauchet (gjb99@cornell.edu)
+=head1 AUTHORS
 
- Adapted from a cvterm renaming script by:
- Nicolas Morales (nm529@cornell.edu)
+Guillaume Bauchet (gjb99@cornell.edu)
+
+Lukas Mueller <lam87@cornell.edu> (added -n option)
+
+Adapted from a cvterm renaming script by:
+
+Nicolas Morales (nm529@cornell.edu)
 
 =cut
 
