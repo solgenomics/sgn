@@ -42,7 +42,7 @@ $t->while_logged_in_as("submitter", sub {
     
     $t->find_element_ok("add_accessions_link", "name", "find element add accessions link as submitter")->click();
 
-    $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("test_list");
+    $t->find_element_ok("list_div_list_select", "id", "select new list test")->send_keys("test_list");
 
     sleep(2);
 
@@ -59,25 +59,6 @@ $t->while_logged_in_as("submitter", sub {
     $review_found_matches->click();
 
     sleep(1);
-
-    my $review_fuzzy_matches = $t->find_element_ok("review_fuzzy_matches_hide", "id", "review fuzzy matches test");
-   
-    $review_fuzzy_matches->click();
-
-    sleep(1);
-
-    $t->driver->accept_alert();
-
-    $t->find_element_ok("species_name_input", "id", "input species name")->send_keys("Manihot esculenta");
-
-    sleep(1);
-
-    my $review_matches = $t->find_element_ok("review_absent_accessions_submit", "id", "review matches submit");
-   
-    $review_matches->click();
-
-    sleep(1);
-
     $t->driver->accept_alert();
 
     
@@ -90,7 +71,7 @@ $t->while_logged_in_as("submitter", sub {
     my $add_accessions_link = $t->find_element_ok("add_accessions_link", "name", "find element add accessions link as submitter")->click();
 
     #then try without fuzzy search.
-    $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("new_test_list_accessions");
+    $t->find_element_ok("list_div_list_select", "id", "select new list test")->send_keys("new_test_list_accessions");
 
     sleep(2);
 
@@ -110,16 +91,6 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("species_name_input", "id", "input species name")->send_keys("Manihot esculenta");
-
-    my $review_matches = $t->find_element_ok("review_absent_accessions_submit", "id", "review matches submit");
-   
-    $review_matches->click();
-
-    sleep(2);
-
-    $t->driver->accept_alert();
-
 
     #then we add new_test_list_accession again, not using fuzzy search to see if it sees them in the db.
 
@@ -130,7 +101,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("add_accessions_link", "name", "find element add accessions link as submitter")->click();
 
     #then try without fuzzy search.
-    $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("new_test_list_accessions");
+    $t->find_element_ok("list_div_list_select", "id", "select new list test")->send_keys("new_test_list_accessions");
 
     sleep(2);
 
@@ -159,7 +130,7 @@ $t->while_logged_in_as("submitter", sub {
 
     my $fuzzy = $t->find_element_ok("fuzzy_check", "id", "select fuzzy check test")->click();
 
-    $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("new_test_list_accessions");
+    $t->find_element_ok("list_div_list_select", "id", "select new list test")->send_keys("new_test_list_accessions");
 
     sleep(2);
 
@@ -172,28 +143,9 @@ $t->while_logged_in_as("submitter", sub {
     my $review_found_matches = $t->find_element_ok("review_found_matches_hide", "id", "review found matches test");
    
     $review_found_matches->click();
-
-    sleep(1);
-
-    my $review_fuzzy_matches = $t->find_element_ok("review_fuzzy_matches_hide", "id", "review fuzzy matches test");
-   
-    $review_fuzzy_matches->click();
-
-    sleep(1);
-
+    
     $t->driver->accept_alert();
 
-    $t->find_element_ok("species_name_input", "id", "input species name")->send_keys("Manihot esculenta");
-
-    sleep(1);
-
-    my $review_matches = $t->find_element_ok("review_absent_accessions_submit", "id", "review matches submit");
-   
-    $review_matches->click();
-
-    sleep(2);
-
-    $t->driver->accept_alert();
 
     sleep(1);
 
