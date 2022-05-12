@@ -29,6 +29,20 @@
         </div>
 </div>
 
+<&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
+
+    <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+    <table id="parent_search_results" width="100%" class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>Female Parent</th>
+                <th>Male Parent</th>
+                <th>Accessions</th>
+            </tr>
+        </thead>
+    </table>
+</&>
 
 
 <script>
@@ -46,6 +60,17 @@ jQuery(document).ready(function (){
             alert("Please select a list of accessions");
             return;
         }
+
+        var table = jQuery('#parent_search_results').DataTable({
+            'destroy' : true,
+            'ajax': { 'url':'/ajax/search/common_parents',
+                'data':{
+                    'accession_list_id': accession_list_id,
+                }
+            },
+
+
+        });
 
     });
 

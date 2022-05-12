@@ -5,6 +5,9 @@ package SGN::Controller::AJAX::Search::Cross;
 use Moose;
 use Data::Dumper;
 use CXGN::Cross;
+use CXGN::Stock;
+use CXGN::List::Validate;
+use CXGN::List;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -112,6 +115,44 @@ sub search_progenies : Path('/ajax/search/progenies') Args(0) {
     $c->stash->{rest}={ data=> \@progenies};
 
 }
+
+
+sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $accession_list_id = $c->req->param("accession_list_id");
+
+    my $accession_list = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $accession_list_id});
+    my $accession_items = $accession_list->retrieve_elements($accession_list_id);
+    my @accession_names = @$accession_items;
+    print STDERR "ACCESSION NAMES =".Dumper($accession_items)."\n";
+    my $accession_validator = CXGN::List::Validate->new();
+    my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames', $accession_items)->{'missing'}};
+
+    if (scalar(@accessions_missing) > 0) {
+        $c->stash->{rest} = {error_string => "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing)};
+        return;
+    }
+
+    my $accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+    my @results;
+    foreach my $name (@accession_names) {
+        my $accession_rs = $schema->resultset("Stock::Stock")->find ({ 'uniquename' => $name, 'type_id' => $accession_type_id });
+        my $accession_id = $accession_rs->stock_id();
+        my $stock = CXGN::Stock->new({schema => $schema, stock_id=>$accession_id});
+        my $parents = $stock->get_parents();
+        my $female_parent = $parents->{'mother'};
+        my $male_parent = $parents->{'father'};
+        push @results, [$female_parent, $male_parent, $name];
+    }
+
+
+    $c->stash->{rest}={ data=> \@results};
+
+}
+
 
 
 1;
