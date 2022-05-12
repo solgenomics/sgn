@@ -91,7 +91,8 @@ my $dbh = CXGN::DB::InsertDBH->new({
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 $dbh->do('SET search_path TO public,sgn');
 
-my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property'); 
+my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+
 
 my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
 my ( $row_min, $row_max ) = $worksheet->row_range();
@@ -109,7 +110,7 @@ my $coderef = sub {
     	my $db_uniquename = $worksheet->get_cell($row,0)->value();
     	my $new_uniquename = $worksheet->get_cell($row,1)->value();
         
-	print STDERR "$db_uniquename -> $new_uniquename\n";
+	print STDERR "processing row $row: $db_uniquename -> $new_uniquename\n";
 
     	my $old_stock = $schema->resultset('Stock::Stock')->find({ name => $db_uniquename, uniquename => $db_uniquename, type_id => $stock_type_id });
 
@@ -120,12 +121,15 @@ my $coderef = sub {
 	
         my $new_stock = $old_stock->update({ name => $new_uniquename, uniquename => $new_uniquename});
 	if (! $opt_n) {
+	    print STDERR "Storing old name ($db_uniquename) as synonym or stock with id ".$new_stock->stock_id()." and type_id $synonym_id...\n";
 	    my $synonym = { value => $db_uniquename,
 			    type_id => $synonym_id,
 			    stock_id => $new_stock->stock_id(),
 	    };
-	    
+
+	    print STDERR "find_or_create...\n";
 	    $schema->resultset('Stock::Stockprop')->find_or_create($synonym);
+	    print STDERR "Done.\n";
 	}
     }
 };
