@@ -122,7 +122,7 @@ $dataset_description => ''
   <script>
 
     jQuery(document).ready( function() {
-      console.log('dataset id', '<% $dataset_name %>');
+      console.log('dataset id', '<% $dataset_id %>');
       var DataSet = window.jsMod['dataset_scatterplot'].init(<% $dataset_id %>);
       DataSet.render(); 
     });  

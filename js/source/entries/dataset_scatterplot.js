@@ -1,14 +1,15 @@
-export function init(dataset_id) {
+export function init(datasetId, datasetName) {
     class Dataset {
         constructor() {
             this.datasets = {};
             this.data = [];
             // store phenotype id, trait, value
             this.outliers = [];
+            this.outlierCutoffs = new Set();
             this.firstRefresh = true;
             this.stdDevMultiplier = document.getElementById("myRange").value;
             this.selection = "default";
-            this.dataset_id = dataset_id;
+            this.datasetId = datasetId;
             this.observations = {};
             this.traits = {};
             this.phenoIds = [];
@@ -19,7 +20,7 @@ export function init(dataset_id) {
           const LocalThis = this;
           this.firstRefresh = false;
           new jQuery.ajax({
-            url: '/ajax/dataset/retrieve/' + this.dataset_id + '/phenotypes?include_phenotype_primary_key=1',
+            url: '/ajax/dataset/retrieve/' + this.datasetId + '/phenotypes?include_phenotype_primary_key=1',
             success: function(response) {
               LocalThis.observations = response.phenotypes;
               LocalThis.setDropDownTraits();
@@ -100,6 +101,7 @@ export function init(dataset_id) {
           return [avg, stdDev];
         }
         
+        
         addEventListeners() {
           let LocalThis = this;
           
@@ -107,6 +109,8 @@ export function init(dataset_id) {
           var slider = document.getElementById("myRange");
           slider.oninput = function() {
             LocalThis.stdDevMultiplier = this.value;
+            LocalThis.outliers = [];
+            LocalThis.outlierCutoffs = new Set();
             d3.select("svg").remove();
             LocalThis.render();
           }
@@ -117,20 +121,22 @@ export function init(dataset_id) {
             d3.select("svg").remove();
             LocalThis.selection = event.target.value;
             LocalThis.setData();
+            LocalThis.outliers = [];
+            LocalThis.outlierCutoffs = new Set();
             if (!this.firstRefresh) {
               LocalThis.render(); 
             }
           });
-
           let storeOutliersButton = document.getElementById("store_outliers");
           storeOutliersButton.onclick = function() {
-            console.log(LocalThis.outliers);
+            const stringOutliers = LocalThis.outliers.join(',');
+            const stringOutlierCutoffs = [...LocalThis.outlierCutoffs].join(',');
             new jQuery.ajax({
               type: 'POST',
-              url: '/ajax/dataset/store_outliers/' + LocalThis.dataset_id,
-              data: {outliers: LocalThis.outliers},
+              url: '/ajax/dataset/store_outliers/' + LocalThis.datasetId, 
+              data: {outliers: stringOutliers, outlier_cutoffs: stringOutlierCutoffs },
               success: function(response) {
-                console.log('outliers successfully stored!');
+                alert('outliers successfully stored!');
               },
               error: function(response) {
                 alert('Error');
@@ -160,9 +166,14 @@ export function init(dataset_id) {
 
             var isOutlier = function(id, value, mean, stdDev) {
                 let filter = (LocalThis.stdDevMultiplier - 1) / 2 ;
-                if (value >= mean - stdDev * filter && value <= mean + stdDev * filter) {
+                let leftCutoff = mean - stdDev * filter;
+                let rightCutoff = mean + stdDev * filter;
+                if (value >= leftCutoff && value <= rightCutoff) {
                   return "green";
                 } else {
+                  // if left cutoff is negative, don't include it.
+                  if (leftCutoff >= 0) {LocalThis.outlierCutoffs.add(leftCutoff)};
+                  LocalThis.outlierCutoffs.add(rightCutoff);
                   LocalThis.outliers.push(id);
                   return "red";
                 }
