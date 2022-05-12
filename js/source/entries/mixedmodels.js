@@ -16,6 +16,12 @@ export function init(main_div){
     
     jQuery('#mixed_model_analysis_prepare_button').removeClass('active').addClass('inactive');
 
+    $(document).on('click', 'input[name=select_engine]',  function(e) {
+	alert('clicked select engine!');
+	get_model_string();
+    });
+
+    
     $(document).on('click', '#open_store_adjusted_blups_dialog_button',  function(e) {
 	$('#generic_save_analysis_dialog').modal("show");
 	$('#generic_save_analysis_model_properties').val(model_properties);

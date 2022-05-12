@@ -221,12 +221,13 @@ sub generate_model_sommer {
 	if (scalar(@$random_factors)== 0) {$mmer_random_factors = "1"; }
 	else { $mmer_random_factors = join("+", @$random_factors);}
 
-	if (scalar(@$fixed_factors_interaction)== 0) {$mmer_fixed_factors_interaction = "1"; }
-	if (scalar(@$fixed_factors_interaction) != 2) { $error = "Works only with one interaction for now! :-(";}
+	if (scalar(@$fixed_factors_interaction)== 0) {$mmer_fixed_factors_interaction = ""; }
+	
+	elsif (scalar(@$fixed_factors_interaction) != 2) { $error = "Works only with one interaction for now! :-(";}
 	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
-	else { $mmer_fixed_factors_interaction = join(":", @$fixed_factors_interaction);}
+	else { $mmer_fixed_factors_interaction = " + ". join(":", @$fixed_factors_interaction);}
 
-	$mmer_random_factors = " random = ~ ". $mmer_random_factors . "+" . $mmer_fixed_factors_interaction;
+	$mmer_random_factors = " random = ~ ". $mmer_random_factors . $mmer_fixed_factors_interaction;
     }
 
     print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
@@ -236,7 +237,7 @@ sub generate_model_sommer {
 	#	 random_factors => $mmer_random_factors,
     #};
 
-    my $model = "$mmer_fixed_factors, random=$mmer_random_factors";
+    my $model = "$mmer_fixed_factors, $mmer_random_factors";
 
     print STDERR "Data returned from generate_model_sommer: ".Dumper($model);
 

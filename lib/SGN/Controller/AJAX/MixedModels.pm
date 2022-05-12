@@ -61,12 +61,18 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 
     my ($model, $error);
     if ($engine eq "sommer") {
+	print STDERR "Generating sommer model...\n";
 	($model, $error) = $mm->generate_model_sommer();
     }
-    else { 
+    elsif ($engine eq "lme4") { 
+	print STDERR "Generating lme4 model...\n";
 	($model, $error) =  $mm->generate_model();
     }
+    else {
+	die "Do not know what engine $engine is!\n";
+    }
 
+    print STDERR "MODEL $model. ERROR: $error.\n";
     $c->stash->{rest} = {
 	error => $error,
 	model => $model,
