@@ -68,16 +68,23 @@ sub store_outliers_in_dataset :Path('/ajax/dataset/store_outliers') Args(1) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = shift;
-    my $outliers = $c->req->param('outliers');
+    my $string_outliers = $c->req->param('outliers');
+    my $string_outlier_cutoffs = $c->req->param('outlier_cutoffs');
 
+    my @outliers = split(',',$string_outliers);
+    my @outlier_cutoffs = split(',', $string_outlier_cutoffs);
     my $dataset = CXGN::Dataset->new(
 	{
 	    schema => $c->dbic_schema("Bio::Chado::Schema"),
 	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
-	    sp_dataset_id=> $dataset_id,
-        outliers=> $outliers
-
+	    sp_dataset_id => $dataset_id,
+        outliers => \@outliers,
+        outlier_cutoffs => \@outlier_cutoffs
 	});
+
+
+    $dataset->store();
+    $c->stash->{rest} = { success => 1 };
     
 }
 
@@ -192,7 +199,6 @@ sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
     my $dataset_id = shift;
     my $dimension = shift;
     my $include_phenotype_primary_key = $c->req->param('include_phenotype_primary_key');
-    print STDERR "phenotype_primary_key: $include_phenotype_primary_key";
     
     my $dataset = CXGN::Dataset->new(
 	{
