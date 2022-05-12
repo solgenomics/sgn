@@ -90,8 +90,13 @@ has 'traits' => (is => 'rw', isa => 'Ref');
 =head2 levels()
 
 
+=head2 engine()
+
+sets the engine. Either sommer or lme4. Default: lme4.
 
 =cut
+
+has 'engine' => (is => 'rw', isa => 'Str', default => 'lme4' );
 
 has 'levels' => (is => 'rw', isa => 'HashRef' );
 
@@ -268,7 +273,17 @@ sub run_model {
     my $fixed_factors = '"'.join('","',@{$self->fixed_factors()}).'"';
     my $dependent_variables = '"'.join('","',@{$self->dependent_variables()}).'"';
 
-    my $model = $self->generate_model();
+    my $model;
+    my $executable;
+    if ($self->engine() eq "lme4") {
+	$model = $self->generate_model();
+	$executable = " R/mixed_models.R ";
+    }
+
+    elsif ($self->engine() eq "sommer") {
+	$model = $self->generate_model_sommer();
+	$executable = " R/mixed_models_sommer.R ";
+    }
 
     # generate params_file
     #
@@ -283,7 +298,8 @@ sub run_model {
 
     # run r script to create model
     #
-    my $cmd = "R CMD BATCH  '--args datafile=\"".$self->tempfile()."\" paramfile=\"".$self->tempfile().".params\"' " .  " R/mixed_models.R ".$self->tempfile().".out";
+    
+    my $cmd = "R CMD BATCH  '--args datafile=\"".$self->tempfile()."\" paramfile=\"".$self->tempfile().".params\"' $executable ". $self->tempfile().".out";
     print STDERR "running R command $cmd...\n";
 
     print STDERR "running R command ".$self->tempfile()."...\n";
