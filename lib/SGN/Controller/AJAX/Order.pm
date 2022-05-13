@@ -171,8 +171,11 @@ sub submit_order_POST : Args(0) {
                 my @new_order_row = ();
                 my $ona_ref = $each_contact_id_ona->{$item};
                 $order_location = $ona_ref->[0];
+                my $item_name = $ona_ref->[1];
+                my $order_identifier = $order_id.'_'.$item_name;
                 @new_order_row = @$ona_ref;
-                splice @new_order_row, 1, 0, $order_id;
+                unshift @new_order_row, $order_identifier;
+                splice @new_order_row, 2, 0, $order_id;
                 push @all_new_rows, [@new_order_row];
             }
 
@@ -230,7 +233,7 @@ sub submit_order_POST : Args(0) {
                 push @all_order_rows, (@all_new_rows);
 
                 my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
-                my $ona_header = '"location","orderNo","accessionName","requestedNumberOfClones","additionalInfo","requestDate"';
+                my $ona_header = '"orderIdentifier","location","orderNo","accessionName","requestedNumberOfClones","additionalInfo","requestDate"';
                 my $template_file_name = $order_location.'_orders';
                 my $user_id = $c->user()->get_object()->get_sp_person_id();
                 my $user_name = $c->user()->get_object()->get_username();
