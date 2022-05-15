@@ -1,0 +1,55 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Upload Progenies or Family Names", is_subsection => 1, collapsible=>1, collapsed=>1, &>
+                <&| /page/info_section.mas, title=>"Upload progeny names that are NOT in database ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="upload_progenies_new_accessions_link">Upload</button>'&>
+                </&>
+                <&| /page/info_section.mas, title=>"Upload progeny names that already EXIST in database", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="upload_progenies_existing_accessions_link">Upload</button>'&>
+                </&>
+                <&| /page/info_section.mas, title=>"Upload family names ", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" name="upload_family_names_link">Upload</button>'&>
+                </&>
+            </&><!-- closes upload progenies and family names section -->
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Progeny and Family Name Info", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+                <table class="table table-hover table-bordered" id="progenies_in_crossingtrial_table">
+                    <thead>
+                        <tr>
+                            <th>Cross Unique ID</th>
+                            <th>Cross Combination</th>
+                            <th>Number of Progenies</th>
+                            <th>Family Name</th>
+                        </tr>
+                    </thead>
+                </table>
+            </&><!-- closes progeny and family name info section -->
+        </div>
+    </div>
+</div>
+
+<& /breeders_toolbox/cross/add_progenies_dialogs.mas &>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#progenies_in_crossingtrial_section_onswitch').click(function(){
+        jQuery('#progenies_in_crossingtrial_table').DataTable({
+            'destroy': true,
+            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/cross_progenies_trial',
+        });
+    });
+
+});
+
+</script>
