@@ -780,7 +780,7 @@ sub build_accession_properties_info {
     push(@accession_rows, \@accession_headers);
 
     # Start query blocks
-    my $select = "SELECT stock.uniquename AS accession_name, organism.species AS species_name, string_agg(rs.uniquename, ', ') AS population_name";
+    my $select = "SELECT stock.uniquename AS accession_name, organism.species AS species_name, string_agg(distinct(rs.uniquename), ', ') AS population_name";
     my $from = "FROM public.stock";
     my $joins = "LEFT JOIN public.organism USING (organism_id)";
     $joins .= " LEFT JOIN public.stock_relationship ON (stock.stock_id = stock_relationship.subject_id)";
