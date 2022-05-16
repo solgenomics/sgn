@@ -23,7 +23,7 @@ jobs:
     services:
       breedbase_db:
         image: postgres:12.9
-        shm_size: 2g
+        shm_size: 2gb
         env:
           POSTGRES_PASSWORD: postgres
         # Set health checks to wait until postgres has started
