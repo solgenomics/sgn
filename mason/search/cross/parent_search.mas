@@ -34,14 +34,6 @@
     <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
     <table id="parent_search_results" width="100%" class="table table-hover table-striped">
-        <thead>
-            <tr>
-                <th>Female Parent</th>
-                <th>Male Parent</th>
-                <th>Number of Accessions</th>
-                <th>Accession Names</th>
-            </tr>
-        </thead>
     </table>
 </&>
 
@@ -69,7 +61,24 @@ jQuery(document).ready(function (){
                     'accession_list_id': accession_list_id,
                 }
             },
-
+            columns: [
+                {
+                    title: "Female Parent",
+                    data: "female_name",
+                },
+                {
+                    title: "Male Parent",
+                    data: "male_name",
+                },
+                {
+                    title: "Number of Accessions",
+                    data: "no_of_accessions",
+                },
+                {
+                    title: "Accession Names",
+                    data: "progenies",
+                },
+            ],
 
         });
 

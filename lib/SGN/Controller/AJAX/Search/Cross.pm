@@ -168,7 +168,13 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
             my $number_of_accessions = scalar @progenies;
             my @sort_progenies = sort @progenies;
             $progenies_string = join("<br>", @sort_progenies);
-            push @formatted_results, [$female, $male, $number_of_accessions, $progenies_string]
+#            push @formatted_results, [$female, $male, $number_of_accessions, $progenies_string]
+            push @formatted_results, {
+                female_name => $female,
+                male_name => $male,
+                no_of_accessions => $number_of_accessions,
+                progenies => $progenies_string
+            };
         }
     }
     print STDERR "FORMATTED RESULTS =".Dumper(\@formatted_results)."\n";
