@@ -38,7 +38,8 @@
             <tr>
                 <th>Female Parent</th>
                 <th>Male Parent</th>
-                <th>Accessions</th>
+                <th>Number of Accessions</th>
+                <th>Accession Names</th>
             </tr>
         </thead>
     </table>

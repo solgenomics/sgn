@@ -126,7 +126,7 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
     my $accession_list = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $accession_list_id});
     my $accession_items = $accession_list->retrieve_elements($accession_list_id);
     my @accession_names = @$accession_items;
-    print STDERR "ACCESSION NAMES =".Dumper($accession_items)."\n";
+
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames', $accession_items)->{'missing'}};
 
@@ -148,8 +148,31 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
         push @results, [$female_parent, $male_parent, $name];
     }
 
+    my %result_hash;
+    foreach my $each_set (@results) {
+        $result_hash{$each_set->[0]}{$each_set->[1]}{$each_set->[2]}++;
+    }
 
-    $c->stash->{rest}={ data=> \@results};
+    my @formatted_results;
+    foreach my $female (keys %result_hash) {
+        my $female_ref = $result_hash{$female};
+        my %female_hash = %{$female_ref};
+        foreach my $male (keys %female_hash) {
+            my @progenies = ();
+            my $progenies_string;
+            my $male_ref = $female_hash{$male};
+            my %male_hash = %{$male_ref};
+            foreach my $progeny (keys %male_hash) {
+                push @progenies, $progeny;
+            }
+            my $number_of_accessions = scalar @progenies;
+            my @sort_progenies = sort @progenies;
+            $progenies_string = join("<br>", @sort_progenies);
+            push @formatted_results, [$female, $male, $number_of_accessions, $progenies_string]
+        }
+    }
+    print STDERR "FORMATTED RESULTS =".Dumper(\@formatted_results)."\n";
+    $c->stash->{rest}={ data=> \@formatted_results};
 
 }
 
