@@ -1,25 +1,24 @@
-<%args>
-
-
-</%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<div class="row" id="search_form_1" >
-    <div class="col-sm-1">
-    </div>
-        <div class="row">
-            <div class="col-sm-11">
-                <div class="form-horizontal">
-                    <div class="form-group">
-                        <label class="control-label col-sm-4">Select a list of accessions:</label>
-                        <div class="col-sm-8" >
-                            <div class="input-group">
-                                <select class="form-control" id="accession_list_select">
-                                    <option value="">Select a list of accessions</option>
-                                </select>
-                                <div class="input-group-btn">
-                                    <button class="btn btn-info" id="search_parents"><i class="glyphicon glyphicon-search"></i> Parents </button>
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div class="col-sm-1">
+            </div>
+            <div class="row">
+                <div class="col-sm-11">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="control-label col-sm-4">Select a list of accessions:</label>
+                            <div class="col-sm-8" >
+                                <div class="input-group">
+                                    <select class="form-control" id="accession_list_select">
+                                        <option value="">Select a list of accessions</option>
+                                    </select>
+                                    <div class="input-group-btn">
+                                        <button class="btn btn-info" id="search_parents"><i class="glyphicon glyphicon-search"></i> Parents </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -27,16 +26,16 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title=>"Search Results", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+                <table class="table table-hover table-bordered" id="parent_search_results">
+                </table>
+            </&>
+        </div>
+    </div>
 </div>
-
-<&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
-
-    <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
-
-    <table id="parent_search_results" width="100%" class="table table-hover table-striped">
-    </table>
-</&>
-
 
 <script>
 
@@ -83,8 +82,6 @@ jQuery(document).ready(function (){
         });
 
     });
-
-
 
 });
 
