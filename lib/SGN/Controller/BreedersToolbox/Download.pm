@@ -811,7 +811,7 @@ sub build_accession_properties_info {
     my $h = $dbh->prepare($q);
     $h->execute(@params);
     while (my @results = $h->fetchrow_array()) {
-	print STDERR "RETRIEVED: ".join(",", @results)."\n";
+	# print STDERR "RETRIEVED: ".join(",", @results)."\n";
         push(@accession_rows, \@results);
     }
 
