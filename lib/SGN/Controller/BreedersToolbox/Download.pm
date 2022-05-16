@@ -794,7 +794,7 @@ sub build_accession_properties_info {
     foreach my $sp (@stock_props) {
         $count++;
         my $table = "sp" . $count;
-        $select .= ", string_agg($table.value, ', ') AS \"$sp\"";
+        $select .= ", string_agg(distinct($table.value), ', ') AS \"$sp\"";
         $joins .= " LEFT JOIN public.stockprop AS $table ON (stock.stock_id = $table.stock_id AND $table.type_id = (SELECT cvterm_id FROM cvterm WHERE name = '$sp' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_property')))";
     }
 
@@ -805,10 +805,13 @@ sub build_accession_properties_info {
     # Put query together
     my $q = "$select $from $joins $where $group $order";
 
+    print STDERR "QUERY = $q\n";
+    
     # Execute the query and add results to accession rows
     my $h = $dbh->prepare($q);
     $h->execute(@params);
     while (my @results = $h->fetchrow_array()) {
+	print STDERR "RETRIEVED: ".join(",", @results)."\n";
         push(@accession_rows, \@results);
     }
 
