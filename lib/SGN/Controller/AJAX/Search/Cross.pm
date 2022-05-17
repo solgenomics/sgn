@@ -144,7 +144,14 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
         my $stock = CXGN::Stock->new({schema => $schema, stock_id=>$accession_id});
         my $parents = $stock->get_parents();
         my $female_parent = $parents->{'mother'};
-        my $male_parent = $parents->{'father'};
+        my $male_name = $parents->{'father'};
+        my $male_parent;
+        if ($male_name) {
+            $male_parent = $male_name;
+        } else {
+            $male_parent = 'unspecified';
+        }
+
         $result_hash{$female_parent}{$male_parent}{$accession_name}++;
     }
 
@@ -155,8 +162,11 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
         my $female_ref = $result_hash{$female};
         my %female_hash = %{$female_ref};
         foreach my $male (keys %female_hash) {
-            my $male_rs = $schema->resultset("Stock::Stock")->find ({ 'uniquename' => $male, 'type_id' => $accession_type_id });
-            my $male_id = $male_rs->stock_id();
+            my $male_id;
+            if ($male ne 'unspecified') {
+                my $male_rs = $schema->resultset("Stock::Stock")->find ({ 'uniquename' => $male, 'type_id' => $accession_type_id });
+                $male_id = $male_rs->stock_id();
+            }
             my @progenies = ();
             my $progenies_string;
             my $male_ref = $female_hash{$male};

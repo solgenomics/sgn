@@ -69,7 +69,13 @@ jQuery(document).ready(function (){
                 {
                     title: "Male Parent",
                     data: null,
-                    render: function(data, type, row){return "<a href='/stock/"+row.male_id+"/view'>"+row.male_name+"</a>";}
+                    render: function(data, type, row){
+                        if (row.male_id === null) {
+                            return 'unspecified'
+                        } else {
+                            return "<a href='/stock/"+row.male_id+"/view'>"+row.male_name+"</a>"
+                        }
+                    }
                 },
                 {
                     title: "Number of Accessions",
