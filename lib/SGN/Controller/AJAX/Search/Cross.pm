@@ -138,13 +138,17 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
     my $accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
     my %result_hash;
+    my %accession_hash;
     foreach my $accession_name (@accession_names) {
         my $accession_rs = $schema->resultset("Stock::Stock")->find ({ 'uniquename' => $accession_name, 'type_id' => $accession_type_id });
         my $accession_id = $accession_rs->stock_id();
         my $stock = CXGN::Stock->new({schema => $schema, stock_id=>$accession_id});
         my $parents = $stock->get_parents();
         my $female_parent = $parents->{'mother'};
+        my $female_id = $parents->{'mother_id'};
+        $accession_hash{$female_parent} = $female_id;
         my $male_name = $parents->{'father'};
+        my $male_id = $parents->{'father_id'};
         my $male_parent;
         if ($male_name) {
             $male_parent = $male_name;
@@ -152,21 +156,17 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
             $male_parent = 'unspecified';
         }
 
+        $accession_hash{$male_parent} = $male_id;
         $result_hash{$female_parent}{$male_parent}{$accession_name}++;
     }
 
     my @formatted_results;
     foreach my $female (keys %result_hash) {
-        my $female_rs = $schema->resultset("Stock::Stock")->find ({ 'uniquename' => $female, 'type_id' => $accession_type_id });
-        my $female_id = $female_rs->stock_id();
+        my $female_id = $accession_hash{$female};
         my $female_ref = $result_hash{$female};
         my %female_hash = %{$female_ref};
         foreach my $male (keys %female_hash) {
-            my $male_id;
-            if ($male ne 'unspecified') {
-                my $male_rs = $schema->resultset("Stock::Stock")->find ({ 'uniquename' => $male, 'type_id' => $accession_type_id });
-                $male_id = $male_rs->stock_id();
-            }
+            my $male_id = $accession_hash{$male};
             my @progenies = ();
             my $progenies_string;
             my $male_ref = $female_hash{$male};
