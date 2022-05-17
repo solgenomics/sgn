@@ -53,6 +53,11 @@ jQuery(document).ready(function (){
             return;
         }
 
+        if (! lo.legacy_validate(accession_list_id, 'uniquenames', true)) {
+            alert('The accession list contains elements that are not accessions or are not uniquenames.');
+            return;
+        }
+
         var table = jQuery('#parent_search_results').DataTable({
             'destroy' : true,
             'ajax': { 'url':'/ajax/search/common_parents',

@@ -127,14 +127,6 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
     my $accession_items = $accession_list->retrieve_elements($accession_list_id);
     my @accession_names = @$accession_items;
 
-    my $accession_validator = CXGN::List::Validate->new();
-    my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames', $accession_items)->{'missing'}};
-
-    if (scalar(@accessions_missing) > 0) {
-        $c->stash->{rest} = {error_string => "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing)};
-        return;
-    }
-
     my $accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
     my %result_hash;
