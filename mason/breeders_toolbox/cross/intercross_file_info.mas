@@ -7,7 +7,7 @@ $trial_id
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title=>"Downloaded Intercross Files (Parents and Wishlist Files)", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+        <&| /page/info_section.mas, title=>"Downloaded Intercross Files (Parents and Wishlist Files)", is_subsection => 1, collapsible=>1, collapsed=>1 &>
             <table class="table table-hover table-bordered" id="downloaded_intercross_files_table">
             </table>
         </&>
@@ -15,7 +15,7 @@ $trial_id
 </div>
 <div class="panel panel-default">
     <div class="panel-body">
-        <&| /page/info_section.mas, title=>"Uploaded Intercross Files", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+        <&| /page/info_section.mas, title=>"Uploaded Intercross Files", is_subsection => 1, collapsible=>1, collapsed=>1 &>
             <table class="table table-hover table-bordered" id="uploaded_intercross_files_table">
             </table>
         </&>
@@ -30,6 +30,8 @@ jQuery(document).ready(function(){
 jQuery('#intercross_section_onswitch').click(function(){
 
     jQuery('#downloaded_intercross_files_table').DataTable({
+        'autoWidth': false,
+        'destroy': true,
         'ajax': { 'url': '/ajax/breeders/trial/<% $trial_id %>/downloaded_intercross_file_metadata' },
         columns: [
             { title: "Filename", "data": null, "render": function ( data, type, row ) { return row[4]; } },
@@ -41,6 +43,8 @@ jQuery('#intercross_section_onswitch').click(function(){
     });
 
     jQuery('#uploaded_intercross_files_table').DataTable({
+        'autoWidth': false,
+        'destroy': true,
         'ajax': { 'url': '/ajax/breeders/trial/<% $trial_id %>/uploaded_intercross_file_metadata' },
         columns: [
             { title: "Filename", "data": null, "render": function ( data, type, row ) { return row[4]; } },

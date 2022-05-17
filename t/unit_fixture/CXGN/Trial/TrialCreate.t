@@ -18,6 +18,8 @@ BEGIN {use_ok('CXGN::Trial::TrialLayout');}
 BEGIN {use_ok('CXGN::Trial::TrialDesign');}
 BEGIN {use_ok('CXGN::Trial::TrialLayoutDownload');}
 BEGIN {use_ok('CXGN::Trial::TrialLookup');}
+BEGIN {use_ok('CXGN::TrialStatus');}
+
 ok(my $chado_schema = $fix->bcs_schema);
 ok(my $phenome_schema = $fix->phenome_schema);
 ok(my $dbh = $fix->dbh);
@@ -107,6 +109,31 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
 
 my $save = $trial_create->save_trial();
 ok($save->{'trial_id'}, "save trial");
+
+
+# test adding trial activity when creating trial
+my %trial_activity;
+$trial_activity{'Trial Created'}{'user_id'} = '41';
+$trial_activity{'Trial Created'}{'activity_date'} = '2022-March-30';
+
+my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema });
+$trial_activity_obj->trial_activities(\%trial_activity);
+$trial_activity_obj->parent_id($save->{'trial_id'});
+ok($trial_activity_obj->store(), "added trial activity");
+
+# test retrieving trial activity
+my $people_schema = $fix->people_schema;
+my @activity_list = ("Started Phenotyping", "Phenotyping Completed", "Data Cleaning Completed", "Data Analysis Completed");
+my $trial_status_obj = CXGN::TrialStatus->new({ bcs_schema => $chado_schema, people_schema => $people_schema, parent_id => $save->{'trial_id'}, activity_list => \@activity_list});
+my $activity_info = $trial_status_obj->get_trial_activities();
+is_deeply($activity_info, [
+    ['Trial Created','2022-March-30','Jane Doe'],
+    ['Started Phenotyping','NA','NA'],
+    ['Phenotyping Completed','NA','NA'],
+    ['Data Cleaning Completed','NA','NA'],
+    ['Data Analysis Completed','NA','NA']
+]);
+
 
 ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
     schema => $chado_schema,
@@ -358,7 +385,7 @@ foreach my $acc (@$genotyping_accession_names) {
 my $mech = Test::WWW::Mechanize->new;
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$save->{'trial_id'}.'/design');
 my $response = decode_json $mech->content;
-print STDERR Dumper $response;
+#print STDERR Dumper $response;
 is(scalar(keys %{$response->{design}}), 11);
 
 #create westcott trial design_type

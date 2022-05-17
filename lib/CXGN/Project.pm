@@ -100,6 +100,7 @@ has 'additional_info' => (
     isa => 'Maybe[HashRef]'
 );
 
+
 sub BUILD {
     my $self = shift;
     my $args = shift;
@@ -3101,7 +3102,7 @@ sub create_plant_entities {
                     project_id => $_->[0],
                 });
 
-                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $treatment_cvterm })->single();
+                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $treatment_cvterm })->single();
                 $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
 
                 my $treatment_trial = CXGN::Project->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
@@ -5130,6 +5131,64 @@ sub cross_count {
     $h->execute($self->get_trial_id());
     my ($count) = $h->fetchrow_array();
     return $count;
+}
+
+
+
+=head2 delete_genotyping_plate_and_field_trial_linkage
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub delete_genotyping_plate_from_field_trial_linkage {
+    my $self = shift;
+    my $field_trial_id = shift;
+    my $role = shift;
+    my $plate_id = $self->get_trial_id();
+
+    my @errors;
+
+    #Make sure to have the right access to delete
+    if ($role ne "curator") {
+        push @errors, "Only a curator can delete this linkage.";
+        return { errors => \@errors };
+    }
+
+    my $genotyping_trial_from_field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_trial_from_field_trial', 'project_relationship')->cvterm_id();
+    # check ownership of that image
+    my $q = "SELECT project_relationship.project_relationship_id from project  join project_relationship on(project_id= subject_project_id)  join project as genotypeproject on (genotypeproject.project_id= project_relationship.object_project_id) where genotypeproject.project_id=? and project.project_id=? and project_relationship.type_id=?;";
+
+    my $dbh = $self->bcs_schema->storage()->dbh();
+    my $h = $dbh->prepare($q);
+
+    $h->execute($plate_id, $field_trial_id,$genotyping_trial_from_field_trial_cvterm_id);
+
+    if ($h->rows() == 1){
+        if (my ($project_relationship_id) = $h->fetchrow_array()) {
+            my $uq = "DELETE from project_relationship where project_relationship_id = ? and type_id = ? ";
+            my $uh = $dbh->prepare($uq);
+            $uh->execute($project_relationship_id,$genotyping_trial_from_field_trial_cvterm_id);
+        }
+        else {
+            push @errors, "An error occurred during deletion.";
+        }
+    } else {
+        push @errors, "Project relationship does not exists or has more than 1 occurrence.";
+    }
+ 
+    if (@errors >0) {
+    return { errors => \@errors };
+    }
+
+    return { success => 1 };
+        
+
 }
 
 1;

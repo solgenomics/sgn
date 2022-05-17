@@ -179,7 +179,7 @@ export function init() {
                 }
                 final_arr.push(...plot_arr);
             }
-            var csv = [planting_or_harvesting_order_layout == "planting_order_layout" ? 'Planting_Order': "Harvesting_Order", 'Plot_Number', 'Plot_Name', 'Accession_Name'].join(',');
+            var csv = [planting_or_harvesting_order_layout == "planting_order_layout" ? 'Planting_Order': "Harvesting_Order", 'plot_Number', 'plot_Name', 'accession_Name'].join(',');
             csv += "\n";
             final_arr = final_arr.filter(plot => plot !== undefined);
             let order_number = 1;
@@ -619,7 +619,7 @@ export function init() {
                     d3.select(this).style('fill', 'green').style('cursor', 'pointer');
                     tooltip.style('opacity', .9)
                     .style('left', (window.event.pageX - 420)+"px")
-                    .style('top', (window.event.pageY - 1000)+"px")
+                    .style('top', (window.event.pageY - 1200)+"px")
                     .text(get_plot_message(d))
                 }})
                 .on("mouseout", function(d) { 
