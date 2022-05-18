@@ -136,6 +136,7 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
         my $male_parent;
         my $accession_rs = $schema->resultset("Stock::Stock")->find ({ 'uniquename' => $accession_name, 'type_id' => $accession_type_id });
         my $accession_id = $accession_rs->stock_id();
+        $accession_hash{$accession_name} = $accession_id;
         my $stock = CXGN::Stock->new({schema => $schema, stock_id=>$accession_id});
         my $parents = $stock->get_parents();
         my $female_name = $parents->{'mother'};
@@ -170,12 +171,13 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
             my $progenies_string;
             my $male_ref = $female_hash{$male};
             my %male_hash = %{$male_ref};
-            foreach my $progeny (keys %male_hash) {
-                push @progenies, $progeny;
+            foreach my $progeny (sort keys %male_hash) {
+                my $progeny_id = $accession_hash{$progeny};
+                my $progeny_link = qq{<a href="/stock/$progeny_id/view">$progeny</a>};
+                push @progenies, $progeny_link;
             }
             my $number_of_accessions = scalar @progenies;
-            my @sort_progenies = sort @progenies;
-            $progenies_string = join("<br>", @sort_progenies);
+            $progenies_string = join("<br>", @progenies);
             push @formatted_results, {
                 female_name => $female,
                 female_id => $female_id,
