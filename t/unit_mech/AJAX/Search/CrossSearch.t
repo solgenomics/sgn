@@ -118,7 +118,7 @@ is($first_row->{'male_name'}, 'test_accession2');
 is($first_row->{'no_of_accessions'}, '1');
 
 is($second_row->{'female_name'}, 'test_accession3');
-is($second_row->{'male_name'}, 'unspecified');
+is($second_row->{'male_name'}, 'unknown');
 is($second_row->{'no_of_accessions'}, '1');
 
 is($third_row->{'female_name'}, 'test_accession4');
