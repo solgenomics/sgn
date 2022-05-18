@@ -78,7 +78,6 @@ correPhenoData <- c(0)
 
 if (length(refererQtl) == 0  ) {
     averagedPhenoData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
-
     allNames <- names(averagedPhenoData)
     nonTraitNames <- metaData
     allTraitNames <- allNames[! allNames %in% nonTraitNames]
@@ -96,32 +95,32 @@ if (length(refererQtl) == 0  ) {
 
 }
 
-if (!is.null(correPhenoData) && length(refererQtl) == 0) {
+# if (!is.null(correPhenoData) && length(refererQtl) == 0) {
 
-    for (i in allTraitNames) {
-      if (class(correPhenoData[, i]) != 'numeric') {
-          correPhenoData[, i] <- as.numeric(as.character(correPhenoData[, i]))
-      }
+#     for (i in allTraitNames) {
+#       if (class(correPhenoData[, i]) != 'numeric') {
+#           correPhenoData[, i] <- as.numeric(as.character(correPhenoData[, i]))
+#       }
 
-      if (all(is.nan(correPhenoData[, i]))) {
-          correPhenoData[, i] <- sapply(correPhenoData[, i], function(x) ifelse(is.numeric(x), x, NA))
-      }
+#       if (all(is.nan(correPhenoData[, i]))) {
+#           correPhenoData[, i] <- sapply(correPhenoData[, i], function(x) ifelse(is.numeric(x), x, NA))
+#       }
 
-      if (sum(is.na(correPhenoData[,i])) > (0.5 * nrow(correPhenoData))) {
-          correPhenoData$i <- NULL
-          naTraitNames <- c(naTraitNames, i)
-          message('dropped trait ', i, ' no of missing values: ', sum(is.na(correPhenoData[,i])))
-      }
-  }
-}
+#       if (sum(is.na(correPhenoData[,i])) > (0.5 * nrow(correPhenoData))) {
+#           correPhenoData$i <- NULL
+#           naTraitNames <- c(naTraitNames, i)
+#           message('dropped trait ', i, ' no of missing values: ', sum(is.na(correPhenoData[,i])))
+#       }
+#   }
+# }
 
-filteredTraits <- allTraitNames[!allTraitNames %in% naTraitNames]
+# correPhenoData <- correPhenoData[, colSums(is.na(correPhenoData)) < nrow(correPhenoData) ]
+# filteredTraits <- allTraitNames[!allTraitNames %in% naTraitNames]
 
 coefpvalues <- rcor.test(correPhenoData,
                          method="pearson",
                          use="pairwise"
                          )
-
 coefficients <- coefpvalues$cor.mat
 allcordata   <- coefpvalues$cor.mat
 

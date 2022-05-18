@@ -565,7 +565,7 @@ sub germplasm_mcpd {
             ancestralData=>$_->{pedigree},
             commonCropName=>$_->{common_name},
             instituteCode=>$_->{'institute code'},
-            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
+            biologicalStatusOfAccessionCode=>qq|$_->{'biological status of accession code'}| || "0",
             countryOfOrigin=>$_->{'country of origin'},
             storageTypeCodes=>\@type_of_germplasm_storage_codes,
             genus=>$_->{genus},

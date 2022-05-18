@@ -203,6 +203,7 @@ sub nirs_matrix {
 #	@protocol_id_array[0] = $nd_protocol_id;
 #	my $protocol_id_arrayref = \@protocol_id_array;
 my $high_dim_tissue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_type', 'stock_property')->cvterm_id();
+my $high_dim_accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
 #	my $high_dim_nirs_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
 if (! defined($stock_id_arrayref)) {
@@ -259,13 +260,13 @@ if (! defined($stock_id_arrayref)) {
 					push @nirs_project_ids, $nirs_project_id;
 				}
 
-				my $q = "SELECT project_id FROM nd_experiment_project WHERE nd_experiment_id=?;";
-				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-				$h->execute($nirs_nd_experiment_ids[0]);
-				my @nirs_project_ids;
-				while (my ($nirs_project_id) = $h->fetchrow_array()) {
-					push @nirs_project_ids, $nirs_project_id;
-				}
+#				my $q = "SELECT project_id FROM nd_experiment_project WHERE nd_experiment_id=?;";
+#				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+#				$h->execute($nirs_nd_experiment_ids[0]);
+#				my @nirs_project_ids;
+#				while (my ($nirs_project_id) = $h->fetchrow_array()) {
+#					push @nirs_project_ids, $nirs_project_id;
+#				}
 
 				my $q = "SELECT value FROM nd_protocol JOIN nd_experiment_protocol ON nd_protocol.nd_protocol_id = nd_experiment_protocol.nd_protocol_id JOIN nd_experiment_stock ON nd_experiment_protocol.nd_experiment_id=nd_experiment_stock.nd_experiment_id JOIN stockprop ON nd_experiment_stock.stock_id=stockprop.stock_id WHERE nd_protocol.nd_protocol_id = ? and stockprop.type_id = ? and stockprop.stock_id = ?;";
 				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
@@ -273,6 +274,22 @@ if (! defined($stock_id_arrayref)) {
 				my @stock_tissue_types;
 				while (my ($stock_tissue_type) = $h->fetchrow_array()) {
 					push @stock_tissue_types, $stock_tissue_type;
+				}
+
+				my $q = "SELECT acc.uniquename FROM stock AS acc JOIN stock_relationship ON acc.stock_id = stock_relationship.object_id JOIN stock AS tiss ON stock_relationship.subject_id = tiss.stock_id WHERE tiss.stock_id = ? AND acc.type_id = ?;";
+				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+				$h->execute($_,$high_dim_accession_cvterm_id);
+				my @stock_accession_names;
+				while (my ($stock_accession_name) = $h->fetchrow_array()) {
+					push @stock_accession_names, $stock_accession_name;
+				}
+
+				my $q = "SELECT acc.stock_id FROM stock AS acc JOIN stock_relationship ON acc.stock_id = stock_relationship.object_id JOIN stock AS tiss ON stock_relationship.subject_id = tiss.stock_id WHERE tiss.stock_id = ? AND acc.type_id = ?;";
+				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+				$h->execute($_,$high_dim_accession_cvterm_id);
+				my @stock_germplasm_dbids;
+				while (my ($stock_germplasm_dbid) = $h->fetchrow_array()) {
+					push @stock_germplasm_dbids, $stock_germplasm_dbid;
 				}
 
 if (defined($trial_id)) {
@@ -303,6 +320,8 @@ if (defined($trial_id)) {
 #				nd_experiment_id=>$nirs_nd_experiment_ids[0],
 				studyDbId=>$nirs_project_ids[0],
 				tissue_type=>@stock_tissue_types[0],
+				germplasmName=>@stock_accession_names[0],
+				germplasmDbId=>@stock_germplasm_dbids[0],
 				# ordered keys was only included for verifying consistent order
 	#			labels=>\@ordered_keys,
 				row=>\@current_row_values,
@@ -333,6 +352,8 @@ if (defined($trial_id)) {
 #				nd_experiment_id=>$nirs_nd_experiment_ids[0],
 			studyDbId=>$nirs_project_ids[0],
 			tissue_type=>@stock_tissue_types[0],
+			germplasmName=>@stock_accession_names[0],
+			germplasmDbId=>@stock_germplasm_dbids[0],
 			# ordered keys was only included for verifying consistent order
 #			labels=>\@ordered_keys,
 			row=>\@current_row_values,

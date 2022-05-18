@@ -75,9 +75,8 @@ $item_prop_id
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <select class="form-control" id="edit_item_material_source" value="<%$material_source%>">
-                                        <option value="Arusha">Arusha</option>
+                                        <option value="OrderingSystemTest">OrderingSystemTest</option>
                                         <option value="Sendusu">Sendusu</option>
-                                        <option value="Kawanda">Kawanda</option>
                                     </select>
                                 </div>
                             </div>
