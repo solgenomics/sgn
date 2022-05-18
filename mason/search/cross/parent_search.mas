@@ -69,14 +69,20 @@ jQuery(document).ready(function (){
                 {
                     title: "Female Parent",
                     data: null,
-                    render: function(data, type, row){return "<a href='/stock/"+row.female_id+"/view'>"+row.female_name+"</a>";}
+                    render: function(data, type, row){
+                        if (row.female_id === null) {
+                            return 'unknown'
+                        } else {
+                            return "<a href='/stock/"+row.female_id+"/view'>"+row.female_name+"</a>"
+                        }
+                    }
                 },
                 {
                     title: "Male Parent",
                     data: null,
                     render: function(data, type, row){
                         if (row.male_id === null) {
-                            return 'unspecified'
+                            return 'unknown'
                         } else {
                             return "<a href='/stock/"+row.male_id+"/view'>"+row.male_name+"</a>"
                         }
