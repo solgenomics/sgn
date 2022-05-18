@@ -208,8 +208,10 @@ sub search {
 		my $categories = $trait->categories;
 		my @brapi_categories = split '/', $categories;
         foreach (@$synonym){
-            $_ =~ s/ EXACT \[\]//;
-            $_ =~ s/\"//g;
+            if($_) {
+                $_ =~ s/ EXACT \[\]//;
+                $_ =~ s/\"//g;
+            }
         }
         my %ontologyReference = (
             ontologyDbId => qq|$db_id|,
