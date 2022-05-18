@@ -6,16 +6,23 @@ use lib 't/lib';
 use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
-
+use CXGN::List;
 use Data::Dumper;
 use JSON;
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
+my $dbh = $schema->storage->dbh;
 
 my $mech = Test::WWW::Mechanize->new;
 my $response;
+
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+my $response = decode_json $mech->content;
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+my $sgn_session_id = $response->{access_token};
+
 
 #test search male parents
 $mech->post_ok('http://localhost:3010/ajax/search/pedigree_male_parents',["pedigree_female_parent" => "test_accession4"] );
@@ -80,6 +87,46 @@ my $results = $response->{'data'};
 my @accessions_with_pedigree = @$results;
 my $number_of_accessions = scalar(@accessions_with_pedigree);
 is($number_of_accessions, 17);
+
+
+#create a list of accessions
+$mech->get_ok('http://localhost:3010/list/new?name=accession_list&desc=test');
+$response = decode_json $mech->content;
+my $accession_list_id = $response->{list_id};
+#print STDERR "ACCESSION LIST ID =".Dumper($accession_list_id)."\n";
+ok($accession_list_id);
+
+my @accessions = qw(new_test_crossP001 new_test_crossP002 new_test_crossP003 new_test_crossP004 new_test_crossP005 new_test_crossP006 test_accession4 test_accession5);
+
+my $accession_list = CXGN::List->new( { dbh=>$dbh, list_id => $accession_list_id });
+my $response = $accession_list->add_bulk(\@accessions);
+is($response->{'count'},8);
+
+#test searching common parents
+$mech->get_ok('http://localhost:3010/ajax/search/common_parents?accession_list_id='.$accession_list_id);
+$response = decode_json $mech->content;
+my $rows = $response->{'data'};
+my @data_array = @$rows;
+is(scalar @data_array, 3);
+
+my $first_row = $rows->[0];
+my $second_row = $rows->[1];
+my $third_row = $rows->[2];
+
+is($first_row->{'female_name'}, 'test_accession1');
+is($first_row->{'male_name'}, 'test_accession2');
+is($first_row->{'no_of_accessions'}, '1');
+
+is($second_row->{'female_name'}, 'test_accession3');
+is($second_row->{'male_name'}, 'unspecified');
+is($second_row->{'no_of_accessions'}, '1');
+
+is($third_row->{'female_name'}, 'test_accession4');
+is($third_row->{'male_name'}, 'test_accession5');
+is($third_row->{'no_of_accessions'}, '6');
+
+#Delete list
+CXGN::List::delete_list($schema->storage->dbh, $accession_list_id);
 
 
 done_testing();

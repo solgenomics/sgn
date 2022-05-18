@@ -153,11 +153,11 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
     }
 
     my @formatted_results;
-    foreach my $female (keys %result_hash) {
+    foreach my $female (sort keys %result_hash) {
         my $female_id = $accession_hash{$female};
         my $female_ref = $result_hash{$female};
         my %female_hash = %{$female_ref};
-        foreach my $male (keys %female_hash) {
+        foreach my $male (sort keys %female_hash) {
             my $male_id = $accession_hash{$male};
             my @progenies = ();
             my $progenies_string;
