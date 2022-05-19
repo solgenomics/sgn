@@ -39,9 +39,10 @@ source(paramfile)  # should give us dependent_variable and the model
 
 trait = dependent_variables
 pd$studyYear = as.factor(pd$studyYear)
-print(paste("MODEL :", model))
-print(paste("FIXED FACTORS: ", fixed_factors));
-print(paste("RANDOM FACTORS: ", random_factors));
+print(paste("FIXED MODEL :", fixed_model))
+print(paste("RANDOM MODEL: ", random_model))
+print(paste("FIXED FACTORS: ", fixed_factors))
+print(paste("RANDOM FACTORS: ", random_factors))
 print(head(pd))
 
 BLUE = as.data.frame(unique(pd$germplasmName))
@@ -63,18 +64,13 @@ for(i in 1:length(trait)){
 
     print(paste("Dependent variables : ", dependent_variables))
 
-    model_string = paste(model)
-
-    print(paste('MODEL STRING:', model_string));
-
-
-    genotypeEffectType = as.vector(str_match(model_string, '1|germplasmName'))
+    genotypeEffectType = as.vector(str_match(random_model, 'germplasmName'))
     genotypeEffectType = ifelse(is.na(genotypeEffectType), 'fixed', 'random')
     print(paste('modeling genotypes as: ', genotypeEffectType))
 
     if (genotypeEffectType=="random") {
 
-        mixmodel = mmer(as.formula(model_string), rcov= units, data=pd)
+        mixmodel = mmer(as.formula(fixed_model), random = as.formula(random_model), rcov = ~ units, data=pd)
 
         print("---------")
         print(mixmodel)
@@ -103,7 +99,7 @@ for(i in 1:length(trait)){
 
     } else {
 
-        mixmodel = mmer(as.formula(model_string), data=pd)
+        mixmodel = mmer(as.formula(model_string), random = as.formula(random_model), rcov = ~ units, data=pd)
 
         # compute adjusted blues
         #

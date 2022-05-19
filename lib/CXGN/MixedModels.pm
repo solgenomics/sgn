@@ -234,7 +234,7 @@ sub generate_model_sommer {
 	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
 	else { $mmer_fixed_factors_interaction = " + ". join(":", @$fixed_factors_interaction);}
 
-	$mmer_random_factors = " random = ~ ". $mmer_random_factors . $mmer_fixed_factors_interaction;
+	$mmer_random_factors = " ~ ".$mmer_random_factors ." ".$mmer_fixed_factors_interaction;
     }
 
     print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
@@ -244,7 +244,7 @@ sub generate_model_sommer {
 	#	 random_factors => $mmer_random_factors,
     #};
 
-    my $model = "$mmer_fixed_factors, $mmer_random_factors";
+    my $model = [ $mmer_fixed_factors, $mmer_random_factors ];
 
     print STDERR "Data returned from generate_model_sommer: ".Dumper($model);
 
@@ -298,7 +298,13 @@ sub run_model {
     print $F "random_factors <- c($random_factors)\n";
     print $F "fixed_factors <- c($fixed_factors)\n";
 
-    print $F "model <- \"$model\"\n";
+    if ($self->engine() eq "lme4") { 
+	print $F "model <- \"$model\"\n";
+    }
+    elsif ($self->engine() eq "sommer") {
+	print $F "fixed_model <- \"$model->[0]\"\n";
+	print $F "random_model <- \"$model->[1]\"\n";
+    }
     close($F);
 
     # run r script to create model
