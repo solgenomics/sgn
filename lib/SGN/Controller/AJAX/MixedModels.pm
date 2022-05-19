@@ -63,6 +63,7 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 	error => $error,
 	model => $model,
 	dependent_variables => $dependent_variables,
+	engine => $engine,
     };
 }
 
@@ -154,11 +155,18 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     if (!ref($fixed_factors)) {
 	$fixed_factors = [ $fixed_factors ];
     }
+
+    print STDERR "sub run: FIXED FACTORS: ".Dumper($fixed_factors)." RANDOM FACTORS: ".Dumper($random_factors)."\n";
+    my $engine = $params->{engine};
     
     my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
 
     $mm->dependent_variables($dependent_variables);
     $mm->random_factors($random_factors);
+
+    $mm->fixed_factors($fixed_factors);
+    $mm->engine($engine);
+
     $mm->run_model($c->config->{backend}, $c->config->{cluster_host});
 
     my $temppath = $c->config->{basepath}."/".$tempfile;

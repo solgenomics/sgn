@@ -181,7 +181,63 @@ sub generate_model {
     #}
     $model .= join(" + ", @addends);
 
-    return $model;
+
+    return ($model, $error);
+}
+
+sub generate_model_sommer {
+    my $self = shift;
+
+    my $tempfile = $self->tempfile();
+    my $dependent_variables = $self->dependent_variables();
+    my $fixed_factors = $self->fixed_factors();
+    my $fixed_factors_interaction = $self->fixed_factors_interaction();
+    my $random_factors_interaction = $self->random_factors_interaction();
+    my $variable_slope_intersects = $self->variable_slope_intersects();
+    my $random_factors = $self->random_factors();
+
+    print STDERR "FIXED FACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($fixed_factors);
+    
+    my $error;
+
+    ## generate the fixed factor formula
+    #
+    my $mmer_fixed_factors = "";
+    my $mmer_random_factors = "";
+    my $mmer_fixed_factors_interaction = "";
+
+    if (scalar(@$dependent_variables) > 1) { die "Works only with one trait for now! :-("; }
+    if (scalar(@$dependent_variables) > 0) {
+	if (scalar(@$fixed_factors) == 0) { $mmer_fixed_factors = "1"; }
+	else { $mmer_fixed_factors = join(" + ", @$fixed_factors); }
+
+	$mmer_fixed_factors = $dependent_variables->[0] ." ~ ". $mmer_fixed_factors;
+
+	if (scalar(@$random_factors)== 0) {$mmer_random_factors = "1"; }
+	else { $mmer_random_factors = join("+", @$random_factors);}
+
+	if (scalar(@$fixed_factors_interaction)== 0) {$mmer_fixed_factors_interaction = ""; }
+	
+	elsif (scalar(@$fixed_factors_interaction) != 2) { $error = "Works only with one interaction for now! :-(";}
+	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
+	else { $mmer_fixed_factors_interaction = " + ". join(":", @$fixed_factors_interaction);}
+
+	$mmer_random_factors = " ~ ".$mmer_random_factors ." ".$mmer_fixed_factors_interaction;
+    }
+
+    print STDERR "mmer_fixed_factors = $mmer_fixed_factors\n";
+    print STDERR "mmer_random_factors = $mmer_random_factors\n";
+
+    #my $data = { fixed_factors => $mmer_fixed_factors,
+	#	 random_factors => $mmer_random_factors,
+    #};
+
+    my $model = [ $mmer_fixed_factors, $mmer_random_factors ];
+
+    print STDERR "Data returned from generate_model_sommer: ".Dumper($model);
+
+    return ($model, $error);
+
 }
 
 
@@ -218,7 +274,13 @@ sub run_model {
     print $F "random_factors <- c($random_factors)\n";
     print $F "fixed_factors <- c($fixed_factors)\n";
 
-    print $F "model <- \"$model\"\n";
+    if ($self->engine() eq "lme4") { 
+	print $F "model <- \"$model\"\n";
+    }
+    elsif ($self->engine() eq "sommer") {
+	print $F "fixed_model <- \"$model->[0]\"\n";
+	print $F "random_model <- \"$model->[1]\"\n";
+    }
     close($F);
 
     # run r script to create model

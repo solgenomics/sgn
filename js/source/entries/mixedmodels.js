@@ -519,8 +519,14 @@ function get_model_string() {
 		alert(error);
 	    }
 	    else {
-		//alert(r.model);
-		jQuery('#model_string').text(r.model);
+
+		console.log("ENGINE AGAIN: "+r.engine+" "+JSON.stringify(r));
+		if (r.engine == 'sommer') {
+		    jQuery('#model_string').text(r.model[0]+" , random = " + r.model[1]);
+		}
+                else {
+		    jQuery('#model_string').text(r.model);
+		}
 	    }
 	}
     });
