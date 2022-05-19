@@ -15,9 +15,11 @@ ok($page_source =~ /search accessions/, "Search page title presence");
 
 ok($page_source =~ /project location/, "Search options present");
 
+sleep(2);
+
 $d->find_element_ok("any_name", "id", "find any_name html input element")->send_keys("test_accession1");
 
-$d->find_element_ok("stock_type_select", "id", "find stock type input element")->send_keys("accession");
+$d->find_element("//select[\@id=\"stock_type_select\"]/option[text()='accession']", "xpath","select stock type")->click();
 
 $d->find_element_ok("submit_stock_search", "id", "submit search")->click();
 sleep(5);
@@ -25,5 +27,3 @@ $d->find_element_ok("test_accession1", "partial_link_text", "verify search")->cl
 
 $d->driver->quit();
 done_testing();
-
-
