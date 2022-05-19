@@ -34,6 +34,7 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     my $engine = $params->{engine};
     print STDERR "ENGINE: $engine\n";
     my $fixed_factors = $params->{fixed_factors};
+    print STDERR "FIXED FACTORS IN MODEL STRING: ".Dumper($fixed_factors)."\n";
 
     my $fixed_factors_interaction = $params->{fixed_factors_interaction};
 
@@ -101,9 +102,35 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
     $ds->retrieve_phenotypes();
 
+
+    open(my $PF, "<", $temppath."_phenotype.txt") || die "Can't open pheno file $temppath"."_phenotype.txt";
+    open(my $CLEAN, ">", $temppath."_phenotype.txt.clean") || die "Can't open pheno_filepath clean for writing";
+    
+    my $header = <$PF>;
+    chomp($header);
+
+    my @fields = split /\t/, $header;
+
+    my @file_traits = @fields[ 39 .. @fields-1 ];
+    my @other_headers = @fields[ 0 .. 38 ];
+
+    print STDERR "FIELDS: ".Dumper(\@file_traits);
+
+    foreach my $t (@file_traits) {
+	$t = make_R_trait_name($t);
+    }
+
+    print STDERR "FILE TRAITS: ".Dumper(\@file_traits);
+
+    my @new_header = (@other_headers, @file_traits);
+    print $CLEAN join("\t", @new_header)."\n";
+
+    while(<$PF>) {
+	print $CLEAN $_;
+    }
     
 
-    my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
+    my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt.clean" });
 
     my @factor_select;
 
@@ -135,14 +162,14 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 
         #$c->stash->{rest} = { select => $html };
 
-  $c->stash->{rest} = {
-
-       dependent_variable => $trait_html,
-
+    $c->stash->{rest} = {
+	
+	dependent_variable => $trait_html,
+	
 	factors => \@factor_select,
-	tempfile => $tempfile."_phenotype.txt",
-    };
-
+	tempfile => $tempfile."_phenotype.txt.clean",
+     };
+    
     if (!@factor_select) {
 	$c->stash->{rest}->{error} = "There are no factors with multiple levels in this dataset.";
     }
@@ -168,11 +195,14 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     if (!ref($fixed_factors)) {
 	$fixed_factors = [ $fixed_factors ];
     }
+
+    my $engine = $params->{engine};
     
     my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
 
     $mm->dependent_variables($dependent_variables);
     $mm->random_factors($random_factors);
+    $mm->engine($engine);
     $mm->run_model($c->config->{backend}, $c->config->{cluster_host});
 
     my $temppath = $c->config->{basepath}."/".$tempfile;
@@ -330,6 +360,18 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
 }
 
 
+sub make_R_trait_name { 
+    my $trait = shift;
+    $trait =~ s/\s/\_/g;
+    $trait =~ s/\//\_/g;
+    $trait =~ tr/ /./;
+    $trait =~ tr/\//./;
+    $trait =~ s/\:/\_/g;
+    $trait =~ s/\|/\_/g;
+    $trait =~ s/\-/\_/g;
+    
+    return $trait;
+}
 
 
 1;

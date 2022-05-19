@@ -122,7 +122,7 @@ sub BUILD {
 
 }
 
-=head2 generate_models()
+=head2 generate_model()
 
 generates the model string, in lme4 format, from the current parameters
 
@@ -208,6 +208,8 @@ sub generate_model_sommer {
     my $variable_slope_intersects = $self->variable_slope_intersects();
     my $random_factors = $self->random_factors();
 
+    print STDERR "FIXED FACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($fixed_factors);
+    
     my $error;
 
     ## generate the fixed factor formula
@@ -274,22 +276,25 @@ sub run_model {
     my $dependent_variables = '"'.join('","',@{$self->dependent_variables()}).'"';
 
     my $model;
+    my $error;
     my $executable;
     if ($self->engine() eq "lme4") {
-	$model = $self->generate_model();
+	($model, $error) = $self->generate_model();
 	$executable = " R/mixed_models.R ";
     }
 
     elsif ($self->engine() eq "sommer") {
-	$model = $self->generate_model_sommer();
+	($model, $error) = $self->generate_model_sommer();
 	$executable = " R/mixed_models_sommer.R ";
     }
 
+    my $dependent_variables_R = make_R_variable_name($dependent_variables);
+    
     # generate params_file
     #
     my $param_file = $self->tempfile().".params";
     open(my $F, ">", $param_file) || die "Can't open $param_file for writing.";
-    print $F "dependent_variables <- c($dependent_variables)\n";
+    print $F "dependent_variables <- c($dependent_variables_R)\n";
     print $F "random_factors <- c($random_factors)\n";
     print $F "fixed_factors <- c($fixed_factors)\n";
 

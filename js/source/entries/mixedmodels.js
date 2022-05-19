@@ -304,8 +304,10 @@ export function init(main_div){
     $('#run_mixed_model_button').click( function() {
         var model = $('#model_string').text();
 	var fixed_factors = parse_simple_factors("fixed_factors");
-	var random_factors = parse_simple_factors("random_factors");;
-	
+	alert("FIXED FACTORS: "+fixed_factors);
+	var random_factors = parse_simple_factors("random_factors");
+	var engine = $('input[name="select_engine"]:checked').val();
+	alert("Engine is "+engine);
 	var tempfile = $('#tempfile').text();
 
 	var dependent_variables = [];
@@ -323,7 +325,8 @@ export function init(main_div){
 		"tempfile" : tempfile,
 		"dependent_variables": dependent_variables,
 		"fixed_factors" : fixed_factors,
-		"random_factors" : random_factors
+		"random_factors" : random_factors,
+		"engine" : engine
 	    },
             "success": function(r) {
 		$('#working_modal').modal("hide");
