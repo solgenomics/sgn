@@ -71,6 +71,8 @@ is("germplasmName + (1|replicate)", $model_string, "model string test for BLUEs"
 
 $mm->run_model();
 
+sleep(10);
+
 ok( -e $mm->tempfile().".adjustedBLUEs", "check existence of adjustedBLUEs result file");
 ok( -e $mm->tempfile().".BLUEs", "check existence of BLUEs result file");
 is( scalar(my @a = read_file($mm->tempfile().".adjustedBLUEs")), 413, "check number of lines in adjustedBLUPs file...");
