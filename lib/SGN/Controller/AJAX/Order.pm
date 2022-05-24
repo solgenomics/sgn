@@ -550,8 +550,85 @@ sub update_order :Path('/ajax/order/update') :Args(0) {
 
     $c->stash->{rest} = {success => "1",};
 
+}
+
+
+sub get_ona_order_status : Path('/ajax/order/get_ona_order_status') : ActionClass('REST') { }
+
+sub get_ona_order_status_GET {
+    my $self = shift;
+    my $c = shift;
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to request ODK crossing data import!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to import ONA order status!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $id_string;
+    my $form_id;
+    my $ua = LWP::UserAgent->new;
+    $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{ordering_service_username}, $c->config->{ordering_service_password} );
+    my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
+    my $server_endpoint_1 = "https://api.ona.io/api/v1/data";
+    my $resp = $ua->get($server_endpoint_1);
+
+    my $order_location = "Sendusu";
+    if ($resp->is_success) {
+        my $message = $resp->decoded_content;
+        my $all_info = decode_json $message;
+        foreach my $info (@$all_info) {
+            my %info_hash = %{$info};
+            if ($info_hash{'id_string'} eq $order_location) {
+                $form_id = $info_hash{'id'};
+            }
+        }
+    }
+
+#    my $server_endpoint2 = "https://api.ona.io/api/v1/metadata?xform=".$form_id;
+#    my $resp2 = $ua->get($server_endpoint2);
+
+#    if ($resp2->is_success) {
+#        my $message2 = $resp2->decoded_content;
+#        my $message_hash2 = decode_json $message2;
+#        print STDERR "MESSAGE HASH FROM SENDUSU =".Dumper($message_hash2)."\n";
+#    }
+
+    my $server_endpoint = "https://api.ona.io/api/v1/data/$form_id";
+#    print STDERR $server_endpoint."\n";
+    my $resp1 = $ua->get($server_endpoint);
+
+    if ($resp1->is_success) {
+        my $message1 = $resp1->decoded_content;
+        my $message_hash1 = decode_json $message1;
+#        print STDERR "DATA FROM SENDUSU =".Dumper($message_hash1)."\n";
+    }
+
+
+
+
+    $c->stash->{rest} = {success => "1",};
 
 }
+
 
 
 1;
