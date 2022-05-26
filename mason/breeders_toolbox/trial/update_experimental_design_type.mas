@@ -2,34 +2,54 @@
 
 $trial_id
 $trial_name
-$user_name
-
+$design_name
 
 </%args>
+% my $design_types = $c->config->{'design_types'};
+% my @design_types= split ',',$design_types;
 
-% my $activities = $c->config->{'trial_activities'};
-% my @all_activities = ('Please select a status');
-% my @activity_list= split ',',$activities;
-% push @all_activities, @activity_list;
 
-<div class="modal fade" id="update_trial_design_type_dialog" name="update_trial_design_type_dialog" tabindex="-1" role="dialog" aria-labelledby="updateTrialStatusDialog">
+<div class="modal fade" id="update_trial_design_type_dialog" name="update_trial_design_type_dialog" tabindex="-1" role="dialog" aria-labelledby="updateTrialDesignTypeDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updateTrialStatusDialog">Update <% $trial_name %> Design Type</h4>
+                <h4 class="modal-title" id="updateTrialDesignTypeDialog">Update <% $trial_name %> Experimental Design Type</h4>
             </div>
             <div class="modal-body">
+                <div>
+                    <label class="col-sm-4 control-label">Current Experimental Design type: <% $design_name %></label>
+                </div>
                 <div class="container-fluid">
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Trial Status: </label>
+                            <label class="col-sm-4 control-label">Change to Experimental DEsign Type: </label>
                             <div class="col-sm-6" >
-                                <select class="form-control" id="trial_status_select">
-% foreach my $activity(@all_activities){
-                                    <option value="<%$activity%>"><%$activity%></option>
+                                        <select class="form-control" id="select_design_method" name="select_design_method">
+% foreach my $type(@design_types){
+%    my $method;
+%    if ($type eq 'Completely Randomized'){
+%        $method = 'CRD';
+%    } elsif ($type eq 'Complete Block'){
+%        $method = 'RCBD';
+%    } elsif ($type eq 'Resolvable Row-Column'){
+%        $method = 'RRC';
+%    } elsif ($type eq 'Alpha Lattice'){
+%        $method = 'Alpha';
+%    } elsif ($type eq 'Modified Augmented Design'){
+%        $method = 'MAD';
+%    } elsif ($type eq 'Nursery/Greenhouse'){
+%        $method = 'greenhouse';
+%    } elsif ($type eq 'Split Plot'){
+%        $method = 'splitplot';
+%    } elsif ($type eq 'Partially Replicated'){
+%        $method = 'p-rep';
+%    } else {
+%        $method = $type;
+%    }
+                                                <option value="<%$method%>"><%$type%></option>
 %}
-                                </select>
+                                        </select>
                             </div>
                         </div>
                     </form>
@@ -43,12 +63,12 @@ $user_name
     </div>
 </div>
 
-<div class="modal fade" id="update_trial_design_type_message" name="update_trial_design_type_message" tabindex="-1" role="dialog" aria-labelledby="updateTrialStatusMessage">
+<div class="modal fade" id="update_trial_design_type_message" name="update_trial_design_type_message" tabindex="-1" role="dialog" aria-labelledby="updateTrialDesignTypeMessage">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="updateTrialStatusMessage">Success</h4>
+                <h4 class="modal-title" id="updateTrialDesignTypeMessage">Success</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -69,45 +89,14 @@ $user_name
 
 jQuery(document).ready(function(){
 
-    jQuery("#update_experimental_design_type_button").click( function () {
-        show_available_columns_TrialLayout('plots');
-        var lo = new CXGN.List();
-        jQuery('#create_fieldbook_with_trait_list_TrialLayout').html(lo.listSelect('create_fieldbook_with_trait_list_select_TrialLayout', [ 'traits' ], 'select', undefined, undefined));
-        jQuery('#accession_average_performance').css("display", "inline-block");
-        jQuery('#selected_columns_well').css("display", "inline-block");
-        jQuery('#management_factore').css("display", "inline-block");
-        jQuery('#create_fieldbook_dialog_TrialLayout').modal('show');
-        show_fieldbook_treatments_TrialLayout();
-    });
-
-
-    jQuery("#update_trial_design_type_link").click(function(){
+    jQuery("#update_experimental_design_type_button").click(function(){
         jQuery("#update_trial_design_type_dialog").modal("show");
-
-        var trial_activity_date_element = jQuery("#trial_activity_date");
-        set_daterangepicker_default (trial_activity_date_element);
-        trial_activity_date_element.daterangepicker(
-            {
-                "singleDatePicker": true,
-                "showDropdowns": true,
-                "autoUpdateInput": false,
-            },
-            function(start){
-                trial_activity_date_element.val(start.format('YYYY-MMMM-DD'));
-            }
-        );
     });
 
     jQuery("#update_trial_design_type_submit").click(function() {
-        var trial_status = jQuery("#trial_status_select").val();
-        if (trial_status == 'Please select a status') {
-            alert("Please select a status");
-            return;
-        }
-
-        var activity_date = jQuery("#trial_activity_date").val();
-        if (activity_date == '') {
-            alert("Please select a date");
+        var trial_design_type = jQuery("#select_design_method").val();
+        if (trial_design_type == 'Please select a design method') {
+            alert("Please select a design method");
             return;
         }
 
@@ -116,10 +105,7 @@ jQuery(document).ready(function(){
             dataType: "json",
             type: 'POST',
             data : {
-                'trial_id': "<% $trial_id %>",
-                'trial_status': trial_status,
-                'user_name': "<% $user_name %>",
-                'activity_date': activity_date
+                'trial_design_type': trial_design_type
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
