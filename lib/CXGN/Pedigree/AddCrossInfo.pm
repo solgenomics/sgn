@@ -38,7 +38,7 @@ has 'chado_schema' => (
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
 has 'key' => (isa =>'Str', is => 'rw', predicate => 'has_key',);
 has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value',);
-has 'data_type' => (isa =>'Str', is => 'rw', predicate => 'has_type',);
+has 'data_type' => (isa =>'Str', is => 'rw', predicate => 'has_type', required => 1,);
 
 sub add_info {
     my $self = shift;
