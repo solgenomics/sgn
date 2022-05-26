@@ -17,13 +17,12 @@ $design_name
                 <h4 class="modal-title" id="updateTrialDesignTypeDialog">Update <% $trial_name %> Experimental Design Type</h4>
             </div>
             <div class="modal-body">
-                <div>
-                    <label class="col-sm-4 control-label">Current Experimental Design type: <% $design_name %></label>
-                </div>
                 <div class="container-fluid">
+                    <div class="form-group">
+                    <label class="control-label">Current Experimental Design type: <% $design_name %></label><br></div>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Change to Experimental DEsign Type: </label>
+                            <label class="col-sm-4 control-label">Change to Experimental Design Type: </label>
                             <div class="col-sm-6" >
                                         <select class="form-control" id="select_design_method" name="select_design_method">
 % foreach my $type(@design_types){
@@ -79,7 +78,7 @@ $design_name
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="dismiss_update_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+                <button id="dismiss_update_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
