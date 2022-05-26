@@ -6,7 +6,7 @@ CXGN::Pedigree::AddCrossInfo - a module to add cross information such as date of
 
 =head1 USAGE
 
-my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name, key => $info_type, value => $value} );
+my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name, key => $info_type, value => $value, data_type => $data_type} );
 $cross_add_info->add_info();
 
 =head1 DESCRIPTION
@@ -36,8 +36,8 @@ has 'chado_schema' => (
 		required => 1,
 	);
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
-has 'key' => (isa =>'Str', is => 'rw', predicate => 'has_key',);
-has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value',);
+has 'key' => (isa =>'Str', is => 'rw', predicate => 'has_key', required => 1,);
+has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value', required => 1,);
 has 'data_type' => (isa =>'Str', is => 'rw', predicate => 'has_type', required => 1,);
 
 sub add_info {
