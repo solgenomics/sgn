@@ -591,6 +591,7 @@ sub seasons : Chained('brapi') PathPart('seasons') Args(0) : ActionClass('REST')
 sub seasons_POST {
 	my $self = shift;
 	my $c = shift;
+	my ($auth, $user_id) = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $postedData = $clean_inputs;
 	my @data;
