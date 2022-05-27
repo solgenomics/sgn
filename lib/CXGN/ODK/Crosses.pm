@@ -862,6 +862,7 @@ sub save_ona_cross_info {
                             cross_name => $cross_name_key,
                             key => $info_type,
                             value => $value,
+                            data_type => 'crossing_metadata_json'
                         });
                         $cross_add_info->add_info();
                     }
