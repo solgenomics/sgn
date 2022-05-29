@@ -76,7 +76,7 @@ for(i in 1:length(trait)){
         print(mixmodel)
         print("---------")
 
-        res <- (ranef(mixmodel)$germplasmName)
+        res <- (randef(mixmodel)$germplasmName)
 
         blup <- res%>%mutate("germplasmName" = rownames(res))
         names(blup)[1] = trait[i]
