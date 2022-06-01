@@ -184,13 +184,6 @@ sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
 }
 
 
-
-
-#generates descriptive stat for a trait phenotype data
-
-
-
-
 sub save_single_trial_traits {
     my ($self, $c, $pop_id) = @_;
 
@@ -334,12 +327,6 @@ sub traits_acronym_table {
 }
 
 
-=head2 end
-
-Attempt to render a view, if needed.
-
-=cut
-
 sub begin : Private {
     my ($self, $c) = @_;
 
@@ -347,18 +334,6 @@ sub begin : Private {
 
 }
 
-
-
-=head1 AUTHOR
-
-Isaak Y Tecle <iyt2@cornell.edu>
-
-=head1 LICENSE
-
-This library is free software. You can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-=cut
 
 __PACKAGE__->meta->make_immutable;
 
