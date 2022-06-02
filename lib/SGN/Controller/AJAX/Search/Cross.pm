@@ -194,5 +194,18 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
 }
 
 
+sub search_all_cross_entries : Path('/ajax/search/all_cross_entries') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $crosses = CXGN::Cross->new({schema => $schema});
+    my $result = $crosses->get_all_cross_entries();
+
+    $c->stash->{rest}={ data=> $result};
+}
+
+
+
 
 1;
