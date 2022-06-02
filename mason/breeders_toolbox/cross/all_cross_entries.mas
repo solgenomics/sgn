@@ -1,0 +1,25 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="all_cross_entries_table">
+        <thead>
+            <tr>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+
+});
+
+</script>
