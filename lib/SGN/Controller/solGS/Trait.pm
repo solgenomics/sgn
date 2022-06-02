@@ -111,41 +111,6 @@ sub get_trait_details_of_trait_abbr {
 }
 
 
-sub traits_with_valid_models {
-    my ($self, $c) = @_;
-
-    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
-
-    $c->controller('solGS::Gebvs')->training_pop_analyzed_traits($c);
-
-    my @analyzed_traits = @{$c->stash->{training_pop_analyzed_traits}};
-    my @filtered_analyzed_traits;
-    my @valid_traits_ids;
-
-    foreach my $analyzed_trait (@analyzed_traits)
-    {
-        $c->controller('solGS::modelAccuracy')->get_model_accuracy_value($c, $pop_id, $analyzed_trait);
-        my $av = $c->stash->{accuracy_value};
-        if ($av && $av =~ m/\d+/ && $av > 0)
-        {
-            push @filtered_analyzed_traits, $analyzed_trait;
-
-
-	    $c->stash->{trait_abbr} = $analyzed_trait;
-	    $self->get_trait_details_of_trait_abbr($c);
-	    push @valid_traits_ids, $c->stash->{trait_id};
-        }
-    }
-
-    @filtered_analyzed_traits = uniq(@filtered_analyzed_traits);
-    @valid_traits_ids = uniq(@valid_traits_ids);
-
-    $c->stash->{traits_with_valid_models} = \@filtered_analyzed_traits;
-    $c->stash->{traits_ids_with_valid_models} = \@valid_traits_ids;
-
-}
-
-
 sub phenotype_graph :Path('/solgs/phenotype/graph') Args(0) {
     my ($self, $c) = @_;
 
