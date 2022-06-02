@@ -71,7 +71,7 @@ sub get_regression_data_files {
 sub get_heritability {
     my ($self, $c, $pop_id, $trait_id) = @_;
 
-    $c->controller(solGS::Trait)->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $c->controller('solGS::Files')->variance_components_file($c);
     my $var_comp_file = $c->stash->{variance_components_file};
@@ -88,7 +88,7 @@ sub get_heritability {
 sub get_additive_variance {
     my ($self, $c, $pop_id, $trait_id) = @_;
 
-    $c->controller(solGS::Trait)->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $c->controller('solGS::Files')->variance_components_file($c);
     my $var_comp_file = $c->stash->{variance_components_file};
