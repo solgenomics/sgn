@@ -68,7 +68,7 @@ sub kinship_run_analysis :Path('/kinship/run/analysis') Args() {
 
     if ($trait_id)
     {
-	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	$c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     }
 
     $self->run_kinship($c);
@@ -128,7 +128,7 @@ sub kinship_result :Path('/solgs/kinship/result/') Args() {
 
     if ($trait_id)
     {
-	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	$c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     }
 
     my $kinship_files = $self->get_kinship_coef_files($c, $kinship_pop_id, $protocol_id, $trait_id);
@@ -182,7 +182,7 @@ sub get_kinship_coef_files {
 
     if ($trait_id)
     {
-    	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    	$c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     }
 
     $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);

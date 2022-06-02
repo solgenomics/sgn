@@ -21,7 +21,7 @@ sub download_validation :Path('/solgs/download/validation/pop') Args() {
     $c->stash->{training_pop_id} = $pop_id;
     $c->stash->{genotyping_protocol_id} = $protocol_id;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
     $c->controller('solGS::Files')->validation_file($c);
@@ -153,7 +153,7 @@ sub create_model_summary {
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
+    $c->controller(solGS::Trait)->get_trait_details($c, $trait_id);
     my $tr_abbr = $c->stash->{trait_abbr};
 
     my $path = $c->req->path;

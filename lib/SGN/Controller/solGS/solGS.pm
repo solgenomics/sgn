@@ -248,7 +248,7 @@ sub selection_trait :Path('/solgs/selection/') Args() {
         $model_key, $training_pop_id,
         $trait_key, $trait_id, $gp, $protocol_id) = @_;
 
-    $self->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 	my $trait_abbr = $c->stash->{trait_abbr};
 
     $c->stash->{training_pop_id} = $training_pop_id;
@@ -387,7 +387,7 @@ sub build_single_trait_model {
     my ($self, $c)  = @_;
 
     my $trait_id =  $c->stash->{trait_id};
-    $self->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $self->get_rrblup_output($c);
 
@@ -441,7 +441,7 @@ sub trait :Path('/solgs/trait') Args() {
 	}
 	else
 	{
-	    $self->get_trait_details($c, $trait_id);
+	    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 	    $self->gs_modeling_files($c);
 	    $c->controller('solGS::modelAccuracy')->cross_validation_stat($c, $pop_id, $c->stash->{trait_abbr});
 	    $c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
@@ -705,7 +705,7 @@ sub predict_selection_pop_single_pop_model {
     my $selection_pop_id = $c->stash->{selection_pop_id};
     my $protocol_id       = $c->stash->{genotyping_protocol_id};
 
-    $self->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
     $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);
@@ -806,7 +806,7 @@ sub selection_prediction :Path('/solgs/model') Args() {
         foreach my $trait_abbr (@traits_abbrs)
         {
 		    $c->stash->{trait_abbr} = $trait_abbr;
-		    $self->get_trait_details_of_trait_abbr($c);
+		    $c->controller('solGS::Trait')->get_trait_details_of_trait_abbr($c);
 		    $c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
 		}
 
@@ -1058,7 +1058,7 @@ sub traits_with_valid_models {
 
 
 	    $c->stash->{trait_abbr} = $analyzed_trait;
-	    $self->get_trait_details_of_trait_abbr($c);
+	    $c->controller('solGS::Trait')->get_trait_details_of_trait_abbr($c);
 	    push @valid_traits_ids, $c->stash->{trait_id};
         }
     }
@@ -1478,7 +1478,7 @@ sub run_rrblup_trait {
     $trait_id = $c->stash->{trait_id} if !$trait_id;
 
     $c->stash->{trait_id} = $trait_id;
-    $self->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     my $training_pop_id = $c->stash->{training_pop_id} || $c->stash->{pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};

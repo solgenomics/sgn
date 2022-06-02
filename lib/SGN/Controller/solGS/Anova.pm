@@ -230,7 +230,7 @@ sub anova_analyis :Path('/anova/analysis/') Args(0) {
 	    # 	if (!$tr->{$k})
 	    # 	{
 
-	    # 	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	    # 	    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 	    # 	    my $trait_abbr = $c->stash->{trait_abbr};
 	    # 	    print STDERR "\nanova analysis : trait id: $trait_id -- tr abbr: $trait_abbr\n";
 	    # 	}

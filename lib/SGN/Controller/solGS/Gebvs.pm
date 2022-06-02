@@ -43,7 +43,7 @@ sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{selectiion_pop_id} = $selection_pop_id;
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     my $gebvs_file;
     my $page = $c->req->referer();
@@ -347,7 +347,7 @@ sub training_pop_analyzed_traits {
     foreach my $trait_id (@selected_analyzed_traits)
     {
 	    $c->stash->{trait_id} = $trait_id;
-	    $c->controller('solGS::solGS')->get_trait_details($c);
+	    $c->controller('solGS::Trait')->get_trait_details($c);
 	    my $trait = $c->stash->{trait_abbr};
 
             $c->controller('solGS::modelAccuracy')->get_model_accuracy_value($c, $training_pop_id, $trait);
@@ -400,7 +400,7 @@ sub selection_pop_analyzed_traits {
 	foreach my $trait_id (@selected_analyzed_traits)
 	{
 	    $c->stash->{trait_id} = $trait_id;
-	    $c->controller('solGS::solGS')->get_trait_details($c);
+	    $c->controller('solGS::Trait')->get_trait_details($c);
 	    push @selected_trait_abbrs, $c->stash->{trait_abbr};
 
 	    $c->controller('solGS::Files')->rrblup_selection_gebvs_file($c, $training_pop_id, $selection_pop_id, $trait_id);

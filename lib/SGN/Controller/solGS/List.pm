@@ -373,7 +373,7 @@ sub predict_list_selection_pop_single_pop_model {
 	$self->user_selection_population_file($c, $selection_pop_id, $protocol_id);
 
 	$c->stash->{pop_id} = $c->stash->{training_pop_id};
-	$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	$c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 	$c->controller('solGS::solGS')->get_rrblup_output($c);
 	$c->stash->{status} = 'success';
     }
@@ -400,7 +400,7 @@ sub predict_list_selection_pop_multi_traits {
     foreach my $trait_abbr (@traits_with_valid_models)
     {
 	$c->stash->{trait_abbr} = $trait_abbr;
-	$c->controller('solGS::solGS')->get_trait_details_of_trait_abbr($c);
+	$c->controller('solGS::Trait')->get_trait_details_of_trait_abbr($c);
 	$self->predict_list_selection_pop_single_pop_model($c);
     }
 
@@ -427,7 +427,7 @@ sub predict_list_selection_pop_combined_pops_model {
 
     if (!-s $rrblup_selection_gebvs_file)
     {
-	$c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
+	$c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
 	$c->controller("solGS::combinedTrials")->cache_combined_pops_data($c);
 
@@ -471,7 +471,7 @@ sub predict_list_selection_gebvs {
 	foreach my $trait_abbr (@traits_with_valid_models)
 	{
 	    $c->stash->{trait_abbr} = $trait_abbr;
-	    $c->controller("solGS::solGS")->get_trait_details_of_trait_abbr($c);
+	    $c->controller('solGS::Trait')->get_trait_details_of_trait_abbr($c);
 
 	    $self->predict_list_selection_pop_combined_pops_model($c);
 	}

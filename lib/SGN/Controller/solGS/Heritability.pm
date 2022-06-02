@@ -27,7 +27,7 @@ sub check_regression_data :Path('/heritability/check/data/') Args(0) {
     $c->stash->{pop_id} = $pop_id;
     $c->stash->{training_pop_id} = $pop_id;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $self->get_regression_data_files($c);
 
@@ -71,7 +71,7 @@ sub get_regression_data_files {
 sub get_heritability {
     my ($self, $c, $pop_id, $trait_id) = @_;
 
-    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
+    $c->controller(solGS::Trait)->get_trait_details($c, $trait_id);
 
     $c->controller('solGS::Files')->variance_components_file($c);
     my $var_comp_file = $c->stash->{variance_components_file};
@@ -88,7 +88,7 @@ sub get_heritability {
 sub get_additive_variance {
     my ($self, $c, $pop_id, $trait_id) = @_;
 
-    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
+    $c->controller(solGS::Trait)->get_trait_details($c, $trait_id);
 
     $c->controller('solGS::Files')->variance_components_file($c);
     my $var_comp_file = $c->stash->{variance_components_file};
@@ -118,7 +118,7 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
     $c->stash->{data_set_type} = 'combined populations' if $combo_pops_id;
     $c->stash->{combo_pops_id} = $combo_pops_id;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $self->get_regression_data_files($c);
 
