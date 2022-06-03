@@ -201,8 +201,29 @@ sub search_all_cross_entries : Path('/ajax/search/all_cross_entries') :Args(0) {
 
     my $crosses = CXGN::Cross->new({schema => $schema});
     my $result = $crosses->get_all_cross_entries();
+    my @all_crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $male_id, $male_name, $male_ploidy, $pollination_date, $number_of_seeds, $progeny_count, $project_id, $project_name ) =@$r;
+        push @all_crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+            cross_type => $cross_type,
+            female_id => $female_id,
+            female_name => $female_name,
+            female_ploidy => $female_ploidy,
+            male_id => $male_id,
+            male_name => $male_name,
+            male_ploidy => $male_ploidy,
+            pollination_date => $pollination_date,
+            number_of_seeds => $number_of_seeds,
+            progeny_count => $progeny_count,
+            project_id => $project_id,
+            project_name => $project_name
+        };
+    }
 
-    $c->stash->{rest}={ data=> $result};
+    $c->stash->{rest} = { data => \@all_crosses };
+
 }
 
 

@@ -7,24 +7,6 @@
 
 <div style="overflow:scroll">
     <table class="table table-hover table-bordered" id="all_cross_entries_table">
-        <thead>
-            <tr>
-            <th>1</th>
-            <th>2</th>
-            <th>3</th>
-            <th>4</th>
-            <th>5</th>
-            <th>6</th>
-            <th>7</th>
-            <th>8</th>
-            <th>9</th>
-            <th>10</th>
-            <th>11</th>
-            <th>12</th>
-            <th>13</th>
-            <th>14</th>
-            </tr>
-        </thead>
     </table>
 </div>
 
@@ -37,6 +19,24 @@ jQuery(document).ready(function(){
         jQuery('#all_cross_entries_table').DataTable({
             'destroy': true,
             'ajax':'/ajax/search/all_cross_entries',
+            columns: [
+                { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: "Cross Type", "data": "cross_type" },
+                { title: "Female Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_id+"/view'>"+row.female_name+"</a>"; } },
+                { title: "Female Ploidy", "data": "female_ploidy" },
+                { title: "Male Parent", "data": null, "render": function ( data, type, row ) {
+                    if (row.male_parent_id === null){
+                        return 'NA';
+                    } else {
+                        return "<a href='/stock/"+row.male_id+"/view'>"+row.male_name+"</a>";
+                    }
+                }},
+                { title: "Male Ploidy", "data": "male_ploidy" },
+                { title: "Pollination Date", "data": "pollination_date" },
+                { title: "Number of Seeds", "data": "number_of_seeds" },
+                { title: "Number of Progenies", "data": "progeny_count" },
+                { title: "Crossing Experiment", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/trial/"+row.project_id+"'>"+row.project_name+"</a>"; } },
+            ],
         });
     });
 
