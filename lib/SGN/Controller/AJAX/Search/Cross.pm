@@ -5,6 +5,9 @@ package SGN::Controller::AJAX::Search::Cross;
 use Moose;
 use Data::Dumper;
 use CXGN::Cross;
+use CXGN::Stock;
+use CXGN::List::Validate;
+use CXGN::List;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -112,6 +115,84 @@ sub search_progenies : Path('/ajax/search/progenies') Args(0) {
     $c->stash->{rest}={ data=> \@progenies};
 
 }
+
+
+sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $accession_list_id = $c->req->param("accession_list_id");
+
+    my $accession_list = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $accession_list_id});
+    my $accession_items = $accession_list->retrieve_elements($accession_list_id);
+    my @accession_names = @$accession_items;
+
+    my $accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+    my %result_hash;
+    my %accession_hash;
+    foreach my $accession_name (@accession_names) {
+        my $female_parent;
+        my $male_parent;
+        my $accession_rs = $schema->resultset("Stock::Stock")->find ({ 'uniquename' => $accession_name, 'type_id' => $accession_type_id });
+        my $accession_id = $accession_rs->stock_id();
+        $accession_hash{$accession_name} = $accession_id;
+        my $stock = CXGN::Stock->new({schema => $schema, stock_id=>$accession_id});
+        my $parents = $stock->get_parents();
+        my $female_name = $parents->{'mother'};
+        my $female_id = $parents->{'mother_id'};
+        if ($female_name) {
+            $female_parent = $female_name;
+        } else {
+            $female_parent = 'unknown';
+        }
+        $accession_hash{$female_parent} = $female_id;
+
+        my $male_name = $parents->{'father'};
+        my $male_id = $parents->{'father_id'};
+        if ($male_name) {
+            $male_parent = $male_name;
+        } else {
+            $male_parent = 'unknown';
+        }
+
+        $accession_hash{$male_parent} = $male_id;
+        $result_hash{$female_parent}{$male_parent}{$accession_name}++;
+    }
+
+    my @formatted_results;
+    foreach my $female (sort keys %result_hash) {
+        my $female_id = $accession_hash{$female};
+        my $female_ref = $result_hash{$female};
+        my %female_hash = %{$female_ref};
+        foreach my $male (sort keys %female_hash) {
+            my $male_id = $accession_hash{$male};
+            my @progenies = ();
+            my $progenies_string;
+            my $male_ref = $female_hash{$male};
+            my %male_hash = %{$male_ref};
+            foreach my $progeny (sort keys %male_hash) {
+                my $progeny_id = $accession_hash{$progeny};
+                my $progeny_link = qq{<a href="/stock/$progeny_id/view">$progeny</a>};
+                push @progenies, $progeny_link;
+            }
+            my $number_of_accessions = scalar @progenies;
+            $progenies_string = join("<br>", @progenies);
+            push @formatted_results, {
+                female_name => $female,
+                female_id => $female_id,
+                male_name => $male,
+                male_id => $male_id,
+                no_of_accessions => $number_of_accessions,
+                progenies => $progenies_string
+            };
+        }
+    }
+
+    $c->stash->{rest}={ data=> \@formatted_results};
+
+}
+
 
 
 1;

@@ -5,8 +5,9 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title=>'Search Progenies and Crosses' &>
+<& /page/page_title.mas, title=>'Search Progenies, Parents and Crosses' &>
 
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Search Progenies</h4>", info_section_subtitle => 'Search progenies of female or male parents.', icon_class => "glyphicon glyphicon-random", info_section_id => "progeny_search_section" &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Search Parents</h4>", info_section_subtitle => 'Search common parents by using a list of accessions.', icon_class => "glyphicon glyphicon-menu-up", info_section_id => "parent_search_section" &>
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Search Crosses</h4>", info_section_subtitle => 'Search cross details of female or male parents.', icon_class => "glyphicon glyphicon-move", info_section_id => "cross_search_section" &>
