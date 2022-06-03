@@ -1454,8 +1454,30 @@ sub get_all_cross_entries {
     $h->execute($cross_experiment_type_id, $cross_type_id, $female_parent_type_id, $ploidy_level_type_id, $male_parent_type_id, $ploidy_level_type_id, $cross_props_type_id, $offspring_of_type_id, $cross_type_id);
 
     my @cross_data = ();
-    while(my ($cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $male_id, $male_name, $male_ploidy, $project_id, $project_name, $field_info, $progeny_number) = $h->fetchrow_array()){
-        push @cross_data, [$cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $male_id, $male_name, $male_ploidy, $project_id, $project_name, $field_info, $progeny_number];
+    while(my ($cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $male_id, $male_name, $male_ploidy, $project_id, $project_name, $progeny_count, $field_info) = $h->fetchrow_array()){
+        my $pollination_date;
+        my $number_of_seeds;
+        if ($field_info){
+            my $field_info_hash = decode_json $field_info;
+            my $pollination_date_data = $field_info_hash->{'Pollination Date'};
+            if ($pollination_date_data) {
+                $pollination_date = $pollination_date_data;
+            } else {
+                $pollination_date = 'NA';
+            }
+
+            my $seed_data = $field_info_hash->{'Number of Seeds'};
+            if ($seed_data) {
+                $number_of_seeds = $seed_data;
+            } else {
+                $number_of_seeds = 'NA';
+            }
+        } else {
+            $pollination_date = 'NA';
+            $number_of_seeds = 'NA';
+        }
+
+        push @cross_data, [$cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $male_id, $male_name, $male_ploidy, $pollination_date, $number_of_seeds, $progeny_count, $project_id, $project_name];
     }
 
     return \@cross_data;
