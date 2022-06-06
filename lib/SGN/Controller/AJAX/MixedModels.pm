@@ -21,7 +21,7 @@ __PACKAGE__->config(
     map => { 'application/json' => 'JSON' },
    );
 
-	
+
 select(STDERR);
 $| = 1;
 
@@ -65,7 +65,7 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 	print STDERR "Generating sommer model...\n";
 	($model, $error) = $mm->generate_model_sommer();
     }
-    elsif ($engine eq "lme4") { 
+    elsif ($engine eq "lme4") {
 	print STDERR "Generating lme4 model...\n";
 	($model, $error) =  $mm->generate_model();
     }
@@ -73,7 +73,8 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
 	die "Do not know what engine $engine is!\n";
     }
 
-    print STDERR "MODEL $model. ERROR: $error.\n";
+    print STDERR "MODEL: $model\n";
+    
     $c->stash->{rest} = {
 	error => $error,
 	model => $model,
@@ -106,7 +107,7 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 
     open(my $PF, "<", $temppath."_phenotype.txt") || die "Can't open pheno file $temppath"."_phenotype.txt";
     open(my $CLEAN, ">", $temppath."_phenotype.txt.clean") || die "Can't open pheno_filepath clean for writing";
-    
+
     my $header = <$PF>;
     chomp($header);
 
@@ -129,7 +130,7 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     while(<$PF>) {
 	print $CLEAN $_;
     }
-    
+
 
     my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt.clean" });
 
@@ -164,13 +165,13 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
         #$c->stash->{rest} = { select => $html };
 
     $c->stash->{rest} = {
-	
+
 	dependent_variable => $trait_html,
-	
+
 	factors => \@factor_select,
 	tempfile => $tempfile."_phenotype.txt.clean",
      };
-    
+
     if (!@factor_select) {
 	$c->stash->{rest}->{error} = "There are no factors with multiple levels in this dataset.";
     }
@@ -199,7 +200,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 
     print STDERR "sub run: FIXED FACTORS: ".Dumper($fixed_factors)." RANDOM FACTORS: ".Dumper($random_factors)."\n";
     my $engine = $params->{engine};
-    
+
     my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
 
     $mm->dependent_variables($dependent_variables);
@@ -218,7 +219,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $varcompfile = $temppath.".varcomp";
     my $error;
     my $lines;
-    
+
     my $accession_names;
 
     my $adjusted_blups_html;
@@ -230,7 +231,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $traits;
 
     my $method;
-    
+
     # we need either a blup or blue result file. Check for these and otherwise return an error!
     #
     if ( -e $adjusted_blups_file) {
@@ -241,7 +242,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	$method = "fixed";
 	($adjusted_blues_data, $adjusted_blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $adjusted_blues_file);
     }
-    else { 
+    else {
 	$error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters.";
 	$c->stash->{rest} = { error => $error };
 	return;
@@ -258,7 +259,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $blues_html;
     my $blues_data;
     if (-e $bluefile) {
-	($blues_data, $blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $bluefile);	
+	($blues_data, $blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $bluefile);
     }
 
     my $response = {
@@ -296,13 +297,13 @@ sub result_file_to_hash {
     my $timestamp = $now->ymd()."T".$now->hms();
 
     my $operator = $c->user()->get_object()->get_first_name()." ".$c->user()->get_object()->get_last_name();
-    
+
     my @fields;
     my @accession_names;
     my %analysis_data;
-    
+
     my $html = qq | <style> th, td { padding: 10px;} </style> \n <table cellpadding="20" cellspacing="20"> |;
-    
+
     foreach my $line (@lines) {
 	my ($accession_name, @values) = split /\t/, $line;
 	push @accession_names, $accession_name;
@@ -310,14 +311,14 @@ sub result_file_to_hash {
 	for(my $n=0; $n<@values; $n++) {
 	    print STDERR "Building hash for accession $accession_name and trait $trait_cols[$n]\n";
 	    $analysis_data{$accession_name}->{$trait_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
-	    
+
 	}
-	
+
     }
     $html .= "</table>";
 
     print STDERR "Analysis data formatted: ".Dumper(\%analysis_data);
-    
+
     return (\%analysis_data, $html, \@accession_names, \@trait_cols);
 }
 
@@ -363,7 +364,7 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
 }
 
 
-sub make_R_trait_name { 
+sub make_R_trait_name {
     my $trait = shift;
     $trait =~ s/\s/\_/g;
     $trait =~ s/\//\_/g;
@@ -372,7 +373,7 @@ sub make_R_trait_name {
     $trait =~ s/\:/\_/g;
     $trait =~ s/\|/\_/g;
     $trait =~ s/\-/\_/g;
-    
+
     return $trait;
 }
 

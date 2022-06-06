@@ -58,11 +58,12 @@ for(i in 1:length(userResponse)){
   
    fixedArg <- paste(userResponse[i], " ~ ", "1 +", userID,")", sep = "")
    
-   randArg <- paste("~", R, "+", C, "+ spl2Da(",col,"," ,row ,")", sep = "")
+   randArg <- paste("~vs(", R, ")+vs(", C, ")+ spl2Da(",col,"," ,row ,")", sep = "")
    
    
    m2.sommer <- mmer(fixed = as.formula(fixedArg),
                      random = as.formula(randArg),
+                     rcov= ~units,
                      data=userPheno, verbose = FALSE)
    
    
@@ -82,10 +83,17 @@ for(i in 1:length(userModels)){
   
   m2.sommer <- userModels[[i]]
   
-  Variance_Components <- summary(m2.sommer)$varcomp
+  #Variance_Components <- summary(m2.sommer)$varcomp
   
-  outputFile= paste(userID, " Spatial Variance Components", ".out", sep="")
+ # outputFile= paste(userID, " Spatial Variance Components", ".out", sep="")
   
   write.csv(Variance_Components, outputFile)
+  
+  res <- (randef(m2.sommer)$`u:variety`)
+  BLUP <- as.data.frame(res)
+  
+ # adj = coef(m2.sommer)$Trait
+  outfile_blup = paste(phenotypeFile, ".BLUPs", sep="");
+  write.table(BLUP, outfile_blup)
   
 }
