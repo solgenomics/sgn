@@ -5,6 +5,9 @@
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
+<a href="/search/download_cross_entries" class="btn btn-sm btn-default">Download All Cross Entries</a>
+</br>
+</br>
 <div style="overflow:scroll">
     <table class="table table-hover table-bordered" id="all_cross_entries_table">
     </table>

@@ -1,0 +1,70 @@
+package CXGN::Trial::Download::Plugin::CrossEntriesXLS;
+
+=head1 NAME
+
+CXGN::Trial::Download::Plugin::CrossEntriesXLS
+
+=head1 SYNOPSIS
+
+This plugin module is loaded from CXGN::Trial::Download
+
+
+=head1 AUTHORS
+
+=cut
+
+use Moose::Role;
+use Data::Dumper;
+use Spreadsheet::WriteExcel;
+use CXGN::Cross;
+
+sub verify {
+    return 1;
+}
+
+sub download {
+    my $self = shift;
+
+    my $ss = Spreadsheet::WriteExcel->new($self->filename());
+    my $ws = $ss->add_worksheet();
+
+    my @header = ('Cross Unique ID', 'Cross Type', 'Female Parent', 'Female Ploidy', 'Male Parent', 'Male Ploidy', 'Pollination Date', "Number of Seeds", 'Number of Progenies', 'Crossing Experiment');
+
+    my $col_count = 0;
+    foreach (@header){
+        $ws->write(0, $col_count, $_);
+        $col_count++;
+    }
+
+    my $row_count = 1;
+    my $crosses = CXGN::Cross->new( {schema => $self->bcs_schema});
+    my $cross_entries_ref = $crosses->get_all_cross_entries();
+    my @cross_entries = @$cross_entries_ref;
+
+    my @all_cross_entries = ();
+    foreach my $each_cross (@cross_entries){
+        my $cross_unique_id = $each_cross->[1];
+        my $cross_type = $each_cross->[2];
+        my $female_parent = $each_cross->[4];
+        my $female_ploidy = $each_cross->[5];
+        my $male_parent = $each_cross->[7];
+        my $male_ploidy = $each_cross->[8];
+        my $pollination_date = $each_cross->[9];
+        my $number_of_seeds = $each_cross->[10];
+        my $number_of_progenies = $each_cross->[11];
+        my $crossing_experiment_name = $each_cross->[13];
+
+        push @all_cross_entries, [$cross_unique_id, $cross_type, $female_parent, $female_ploidy, $male_parent, $male_ploidy, $pollination_date, $number_of_seeds, $number_of_progenies, $crossing_experiment_name];
+    }
+#    print STDERR "CROSSES ENTRIES =".Dumper(\@all_cross_entries)."\n";
+
+    for my $k (0 .. $#all_cross_entries) {
+        for my $l (0 .. $#header) {
+            $ws->write($row_count, $l, $all_cross_entries[$k][$l]);
+        }
+        $row_count++;
+    }
+
+}
+
+1;

@@ -1459,24 +1459,10 @@ sub get_all_cross_entries {
         my $number_of_seeds;
         if ($field_info){
             my $field_info_hash = decode_json $field_info;
-            my $pollination_date_data = $field_info_hash->{'Pollination Date'};
-            if ($pollination_date_data) {
-                $pollination_date = $pollination_date_data;
-            } else {
-                $pollination_date = 'NA';
-            }
+            $pollination_date = $field_info_hash->{'Pollination Date'};
 
-            my $seed_data = $field_info_hash->{'Number of Seeds'};
-            if ($seed_data) {
-                $number_of_seeds = $seed_data;
-            } else {
-                $number_of_seeds = 'NA';
-            }
-        } else {
-            $pollination_date = 'NA';
-            $number_of_seeds = 'NA';
+            $number_of_seeds = $field_info_hash->{'Number of Seeds'};
         }
-
         push @cross_data, [$cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $male_id, $male_name, $male_ploidy, $pollination_date, $number_of_seeds, $progeny_count, $project_id, $project_name];
     }
 
