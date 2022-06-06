@@ -198,3 +198,4 @@ sub make_R_trait_name {
 
     return $trait;
 }
+}
