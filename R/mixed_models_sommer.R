@@ -43,7 +43,7 @@ print(paste("FIXED MODEL :", fixed_model))
 print(paste("RANDOM MODEL: ", random_model))
 print(paste("FIXED FACTORS: ", fixed_factors))
 print(paste("RANDOM FACTORS: ", random_factors))
-print(head(pd))
+#print(head(pd))
 
 BLUE = as.data.frame(unique(pd$germplasmName))
 colnames(BLUE) = "germplasmName"
@@ -54,7 +54,7 @@ adjusted_means = BLUE
 
 for(i in 1:length(trait)){
 
-    print(paste("processing trait", trait[i]))
+    #print(paste("processing trait", trait[i]))
     dependent_variables = trait[i]
     dependent_variables = gsub(" ", "\\.", dependent_variables) # replace space with "." in variable name
     dependent_variables = gsub("\\|", "\\.", dependent_variables) # replace | with .
@@ -72,6 +72,8 @@ for(i in 1:length(trait)){
 
         mixmodel = mmer(as.formula(fixed_model), random = as.formula(random_model), rcov = ~ units, data=pd)
 
+	summary(mixmodel)
+	
         print("---------")
         print(mixmodel)
         print("---------")
@@ -89,6 +91,7 @@ for(i in 1:length(trait)){
     } else {
 
         mixmodel = mmer(as.formula(model_string), random = as.formula(random_model), rcov = ~ units, data=pd)
+        summary(mixmodel)
 
         # compute adjusted blues
 
