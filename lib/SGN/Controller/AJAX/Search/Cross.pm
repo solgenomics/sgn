@@ -198,8 +198,22 @@ sub search_all_cross_entries : Path('/ajax/search/all_cross_entries') :Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $pollination_date_key;
+    my $number_of_seeds_key;
 
-    my $crosses = CXGN::Cross->new({schema => $schema});
+    my $database = $c->config->{add_comp_root};
+    if ($database eq '/home/vagrant/cxgn/musabase/mason') {
+        $pollination_date_key = 'First Pollination Date';
+        $number_of_seeds_key = 'Number of Seeds Extracted';
+    } elsif ($database eq '/home/vagrant/cxgn/yambase/mason') {
+        $pollination_date_key = 'Pollination Date';
+        $number_of_seeds_key = 'Number of Seeds Harvested';
+    } else {
+        $pollination_date_key = 'Pollination Date';
+        $number_of_seeds_key = 'Number of Seeds';
+    }
+
+    my $crosses = CXGN::Cross->new({schema => $schema, pollination_date_key => $pollination_date_key, number_of_seeds_key => $number_of_seeds_key });
     my $result = $crosses->get_all_cross_entries();
     my @all_crosses;
     foreach my $r (@$result){

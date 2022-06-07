@@ -75,6 +75,15 @@ has 'file_type' => (isa => 'Str',
     required => 0,
 );
 
+has 'pollination_date_key' => (isa => 'Str',
+    is => 'rw',
+    required => 0,
+);
+
+has 'number_of_seeds_key' => (isa => 'Str',
+    is => 'rw',
+    required => 0,
+);
 
 
 sub BUILD {
@@ -1416,6 +1425,8 @@ sub get_intercross_file_metadata {
 sub get_all_cross_entries {
     my $self = shift;
     my $schema = $self->schema;
+    my $pollination_date_key = $self->pollination_date_key();
+    my $number_of_seeds_key = $self->number_of_seeds_key();
 
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
@@ -1469,9 +1480,9 @@ sub get_all_cross_entries {
         my $number_of_seeds;
         if ($field_info){
             my $field_info_hash = decode_json $field_info;
-            $pollination_date = $field_info_hash->{'Pollination Date'};
+            $pollination_date = $field_info_hash->{$pollination_date_key};
 
-            $number_of_seeds = $field_info_hash->{'Number of Seeds'};
+            $number_of_seeds = $field_info_hash->{$number_of_seeds_key};
         }
         push @cross_data, [$cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $female_genome_structure, $male_id, $male_name, $male_ploidy, $male_genome_structure, $pollination_date, $number_of_seeds, $progeny_count, $project_id, $project_name, $project_description, $project_location];
     }

@@ -15,6 +15,12 @@ sub search_page : Path('/search/cross') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    my $user = $c->user();
+    if (!$user) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
     $c->stash->{template} = '/search/cross.mas';
 
 }
