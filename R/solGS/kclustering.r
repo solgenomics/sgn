@@ -166,14 +166,13 @@ if (grepl("genotype", dataType, ignore.case = TRUE)) {
         }
     }
 
+    clusterData <- clusterData[, apply(clusterData, 2, var) != 0 ]
     clusterDataNotScaled <- na.omit(clusterData)
-
     clusterData <- scale(clusterDataNotScaled, center = TRUE, scale = TRUE)
     clusterData <- round(clusterData, 3)
     reportNotes <- paste0(reportNotes, "Note: Data was standardized before clustering.",
         "\n")
 }
-
 sIndexFile <- grep("selection_index", inputFiles, value = TRUE)
 selectedIndexGenotypes <- c()
 

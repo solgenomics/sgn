@@ -228,8 +228,7 @@
 
 jQuery(document).ready(function(){
 
-    jQuery("#upload_cross_info").click(function(){
-
+    jQuery('[name="upload_cross_info"]').click(function(){
         jQuery("#update_crossinfo_spreadsheet_format").click(function(){
             jQuery("#update_crossinfo_spreadsheet_info_dialog").modal("show");
         });

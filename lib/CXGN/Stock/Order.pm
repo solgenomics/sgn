@@ -93,12 +93,28 @@ sub get_orders_from_person_id {
 
         my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
         while (my $item_result = $orderprop_rs->next()){
+            my @list;
             my $item_json = $item_result->value();
             my $item_hash = JSON::Any->jsonToObj($item_json);
-            my $item_list_string = $item_hash->{'clone_list'};
-            my $item_list_ref = decode_json $item_list_string;
-            my %list_hash = %{$item_list_ref};
-            my @list = keys %list_hash;
+            my $all_items = $item_hash->{'clone_list'};
+            foreach my $each_item (@$all_items) {
+                my $item_name = (keys %$each_item)[0];
+                my $quantity = $each_item->{$item_name}->{'quantity'};
+                my $comments = $each_item->{$item_name}->{'comments'};
+                my $additional_info = $each_item->{$item_name}->{'additional_info'};
+
+                my $each_item_details;
+                if ($additional_info && $comments) {
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
+                } elsif ($additional_info && (!$comments)){
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
+                } elsif ((!$additional_info) && $comments) {
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
+                } else {
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
+                }
+                push @list, $each_item_details;
+            }
             my @sort_list = sort @list;
             $item_list = join("<br>", @sort_list);
         }
@@ -132,12 +148,28 @@ sub get_orders_to_person_id {
 
         my $orderprop_rs = $people_schema->resultset('SpOrderprop')->search( { sp_order_id => $order_id } );
         while (my $item_result = $orderprop_rs->next()){
+            my @list;
             my $item_json = $item_result->value();
             my $item_hash = JSON::Any->jsonToObj($item_json);
-            my $item_list_string = $item_hash->{'clone_list'};
-            my $item_list_ref = decode_json $item_list_string;
-            my %list_hash = %{$item_list_ref};
-            my @list = keys %list_hash;
+            my $all_items = $item_hash->{'clone_list'};
+            foreach my $each_item (@$all_items) {
+                my $item_name = (keys %$each_item)[0];
+                my $quantity = $each_item->{$item_name}->{'quantity'};
+                my $comments = $each_item->{$item_name}->{'comments'};
+                my $additional_info = $each_item->{$item_name}->{'additional_info'};
+
+                my $each_item_details;
+                if ($additional_info && $comments) {
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
+                } elsif ($additional_info && (!$comments)){
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
+                } elsif ((!$additional_info) && $comments) {
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
+                } else {
+                    $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
+                }
+                push @list, $each_item_details;
+            }
             my @sort_list = sort @list;
             $item_list = join("<br>", @sort_list);
         }
@@ -182,10 +214,26 @@ sub get_order_details {
     my $orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_id } );
     my $item_json = $orderprop_rs->value();
     my $item_hash = JSON::Any->jsonToObj($item_json);
-    my $item_list_string = $item_hash->{'clone_list'};
-    my $item_list_ref = decode_json $item_list_string;
-    my %list_hash = %{$item_list_ref};
-    my @list = keys %list_hash;
+    my $all_items = $item_hash->{'clone_list'};
+    my @list;
+    foreach my $each_item (@$all_items) {
+        my $item_name = (keys %$each_item)[0];
+        my $quantity = $each_item->{$item_name}->{'quantity'};
+        my $comments = $each_item->{$item_name}->{'comments'};
+        my $additional_info = $each_item->{$item_name}->{'additional_info'};
+
+        my $each_item_details;
+        if ($additional_info && $comments) {
+            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info. "," . " " . "comments:" . $comments;
+        } elsif ($additional_info && (!$comments)){
+            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . ",". " "."additional info:". $additional_info;
+        } elsif ((!$additional_info) && $comments) {
+            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity . "," . " "."comments:" . $comments;
+        } else {
+            $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
+        }
+        push @list, $each_item_details;
+    }
     my @sort_list = sort @list;
     my $item_list = join("<br>", @sort_list);
 

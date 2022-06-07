@@ -124,6 +124,7 @@ sub abbreviate_term {
     $term =~ s/-/_/g;
     $term =~ s/\%/percent/g;
     $term =~ s/\((\w+\s*\w*)\)/_$2 $1/g;
+    $term =~ s/"|\://g;
 
     my @words = split(/\s/, $term);
 
@@ -218,7 +219,8 @@ sub clean_traits {
     $terms =~ s/(\|\w+:\d+)//g;
     $terms =~ s/\|/ /g;
     $terms =~ s/^\s+|\s+$//g;
-
+    $terms =~ s/"|\://g;
+    
     return $terms;
 }
 

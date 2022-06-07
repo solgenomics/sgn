@@ -50,9 +50,8 @@ $timestamp => localtime()
                             <div class="col-sm-9">
                                 <select class="form-control" id="item_material_source">
                                     <option value="">Select a material source</option>
-                                    <option value="Arusha">Arusha</option>
+                                    <option value="OrderingSystemTest">OrderingSystemTest</option>
                                     <option value="Sendusu">Sendusu</option>
-                                    <option value="Kawanda">Kawanda</option>
                                 </select>
                             </div>
                         </div>
