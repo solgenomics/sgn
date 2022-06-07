@@ -7,6 +7,7 @@ use File::Basename;
 use File::Slurp qw | read_file |;
 use URI::FromHash 'uri';
 use CXGN::Trial::Download;
+use DateTime;
 
 
 BEGIN { extends 'Catalyst::Controller' };
@@ -75,6 +76,8 @@ sub download_cross_entries : Path('/search/download_cross_entries') Args(0) {
 
     my $file_format = "xls";
 
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd();
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = "cross_entries". "XXXX";
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
@@ -91,7 +94,8 @@ sub download_cross_entries : Path('/search/download_cross_entries') Args(0) {
     });
 
     my $error = $download->download();
-    my $file_name = "cross_entries" . ".$file_format";
+
+    my $file_name = "cross_entries" . "_" . "$timestamp" . ".$file_format";
     $c->res->content_type('Application/'.$file_format);
     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
