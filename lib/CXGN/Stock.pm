@@ -491,6 +491,7 @@ sub BUILD {
     }
     if (defined $stock && !$self->is_saving) {
         $self->organism_id($stock->organism_id);
+
         $self->name($stock->name);
         $self->uniquename($stock->uniquename);
         $self->description($stock->description() || '');
