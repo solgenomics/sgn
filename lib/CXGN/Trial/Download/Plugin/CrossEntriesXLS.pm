@@ -28,7 +28,7 @@ sub download {
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
 
-    my @header = ('Cross Unique ID', 'Cross Type', 'Female Parent', 'Female Ploidy', 'Male Parent', 'Male Ploidy', 'Pollination Date', "Number of Seeds", 'Number of Progenies', 'Crossing Experiment');
+    my @header = ('Cross Unique ID', 'Cross Type', 'Female Parent', 'Female Ploidy', 'Female Genome Structure', 'Male Parent', 'Male Ploidy', 'Male Genome Structure', 'Pollination Date', "Number of Seeds", 'Number of Progenies', 'Crossing Experiment', 'Description', 'Location');
 
     my $col_count = 0;
     foreach (@header){
@@ -47,14 +47,18 @@ sub download {
         my $cross_type = $each_cross->[2];
         my $female_parent = $each_cross->[4];
         my $female_ploidy = $each_cross->[5];
-        my $male_parent = $each_cross->[7];
-        my $male_ploidy = $each_cross->[8];
-        my $pollination_date = $each_cross->[9];
-        my $number_of_seeds = $each_cross->[10];
-        my $number_of_progenies = $each_cross->[11];
-        my $crossing_experiment_name = $each_cross->[13];
+        my $female_genome_structure = $each_cross->[6];
+        my $male_parent = $each_cross->[8];
+        my $male_ploidy = $each_cross->[9];
+        my $male_genome_structure = $each_cross->[10];
+        my $pollination_date = $each_cross->[11];
+        my $number_of_seeds = $each_cross->[12];
+        my $number_of_progenies = $each_cross->[13];
+        my $crossing_experiment_name = $each_cross->[15];
+        my $description = $each_cross->[16];
+        my $location = $each_cross->[17];
 
-        push @all_cross_entries, [$cross_unique_id, $cross_type, $female_parent, $female_ploidy, $male_parent, $male_ploidy, $pollination_date, $number_of_seeds, $number_of_progenies, $crossing_experiment_name];
+        push @all_cross_entries, [$cross_unique_id, $cross_type, $female_parent, $female_ploidy, $female_genome_structure, $male_parent, $male_ploidy, $male_genome_structure, $pollination_date, $number_of_seeds, $number_of_progenies, $crossing_experiment_name, $description, $location];
     }
 #    print STDERR "CROSSES ENTRIES =".Dumper(\@all_cross_entries)."\n";
 
