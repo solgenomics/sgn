@@ -201,19 +201,9 @@ sub search_all_cross_entries : Path('/ajax/search/all_cross_entries') :Args(0) {
     my $pollination_date_key;
     my $number_of_seeds_key;
 
-    my $database = $c->config->{add_comp_root};
-    if ($database eq '/home/vagrant/cxgn/musabase/mason') {
-        $pollination_date_key = 'First Pollination Date';
-        $number_of_seeds_key = 'Number of Seeds Extracted';
-    } elsif ($database eq '/home/vagrant/cxgn/yambase/mason') {
-        $pollination_date_key = 'Pollination Date';
-        $number_of_seeds_key = 'Number of Seeds Harvested';
-    } else {
-        $pollination_date_key = 'Pollination Date';
-        $number_of_seeds_key = 'Number of Seeds';
-    }
+    my $cross_property_db = $c->config->{cross_property_db};
 
-    my $crosses = CXGN::Cross->new({schema => $schema, pollination_date_key => $pollination_date_key, number_of_seeds_key => $number_of_seeds_key });
+    my $crosses = CXGN::Cross->new({schema => $schema, cross_property_db => $cross_property_db });
     my $result = $crosses->get_all_cross_entries();
     my @all_crosses;
     foreach my $r (@$result){

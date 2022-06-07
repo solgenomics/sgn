@@ -75,12 +75,7 @@ has 'file_type' => (isa => 'Str',
     required => 0,
 );
 
-has 'pollination_date_key' => (isa => 'Str',
-    is => 'rw',
-    required => 0,
-);
-
-has 'number_of_seeds_key' => (isa => 'Str',
+has 'cross_property_db' => (isa => 'Str',
     is => 'rw',
     required => 0,
 );
@@ -1425,8 +1420,7 @@ sub get_intercross_file_metadata {
 sub get_all_cross_entries {
     my $self = shift;
     my $schema = $self->schema;
-    my $pollination_date_key = $self->pollination_date_key();
-    my $number_of_seeds_key = $self->number_of_seeds_key();
+    my $cross_property_db = $self->cross_property_db();
 
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
@@ -1439,6 +1433,18 @@ sub get_all_cross_entries {
     my $cross_props_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "crossing_metadata_json", "stock_property")->cvterm_id();
     my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
 
+    my $pollination_date_key;
+    my $number_of_seeds_key;
+    if ($cross_property_db eq 'musabase') {
+        $pollination_date_key = 'First Pollination Date';
+        $number_of_seeds_key = 'Number of Seeds Extracted';
+    } elsif ($cross_property_db eq 'yambase') {
+        $pollination_date_key = 'Pollination Date';
+        $number_of_seeds_key = 'Number of Seeds Harvested';
+    } else {
+        $pollination_date_key = 'Pollination Date';
+        $number_of_seeds_key = 'Number of Seeds';
+    }
 
     my $q = "SELECT cross_table.cross_id, cross_table.cross_name, cross_table.cross_type, cross_table.female_id, cross_table.female_name, cross_table.female_ploidy, cross_table.female_genome_structure,
         cross_table.male_id, cross_table.male_name, cross_table.male_ploidy, cross_table.male_genome_structure, cross_table.crossing_experiment_id, cross_table.crossing_experiment_name, cross_table.crossing_experiment_description,

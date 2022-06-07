@@ -37,7 +37,7 @@ sub download {
     }
 
     my $row_count = 1;
-    my $crosses = CXGN::Cross->new( {schema => $self->bcs_schema});
+    my $crosses = CXGN::Cross->new( {schema => $self->bcs_schema, cross_property_db => $self->cross_property_db()});
     my $cross_entries_ref = $crosses->get_all_cross_entries();
     my @cross_entries = @$cross_entries_ref;
 
