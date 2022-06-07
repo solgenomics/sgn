@@ -85,6 +85,9 @@ has 'traits' => (is => 'rw', isa => 'Ref');
 
 =cut
 
+
+has 'engine' => (is => 'rw', isa => 'Maybe[Str]', default => 'lme4' );
+
 has 'levels' => (is => 'rw', isa => 'HashRef' );
 
 has 'phenotype_file' => (is => 'rw', isa => 'CXGN::Phenotypes::File|Undef');
@@ -197,7 +200,7 @@ sub generate_model_sommer {
     my $random_factors = $self->random_factors();
 
     print STDERR "FIXED FACTORS FED TO GENERATE MODEL SOMMER: ".Dumper($fixed_factors);
-    
+
     my $error;
 
     ## generate the fixed factor formula
@@ -217,7 +220,7 @@ sub generate_model_sommer {
 	else { $mmer_random_factors = join("+", @$random_factors);}
 
 	if (scalar(@$fixed_factors_interaction)== 0) {$mmer_fixed_factors_interaction = ""; }
-	
+
 	elsif (scalar(@$fixed_factors_interaction) != 2) { $error = "Works only with one interaction for now! :-(";}
 	#if (scalar(@$random_factors_interaction)== 1) { $error .= "Works only with one interaction for now! :-(";}
 	else { $mmer_fixed_factors_interaction = " + ". join(":", @$fixed_factors_interaction);}
@@ -259,13 +262,26 @@ sub run_model {
     my $self = shift;
     my $backend = shift || 'Slurm';
     my $cluster_host = shift || "localhost";
+    my $cluster_shared_tempdir = shift;
 
     my $random_factors = '"'.join('","', @{$self->random_factors()}).'"';
     my $fixed_factors = '"'.join('","',@{$self->fixed_factors()}).'"';
     my $dependent_variables = '"'.join('","',@{$self->dependent_variables()}).'"';
+    my $model;
+    my $error;
+    my $executable;
+    if ($self->engine() eq "lme4") {
+	($model, $error) = $self->generate_model();
+	$executable = " R/mixed_models.R ";
+    }
 
-    my $model = $self->generate_model();
-    
+    elsif ($self->engine() eq "sommer") {
+	($model, $error) = $self->generate_model_sommer();
+	$executable = " R/mixed_models_sommer.R ";
+    }
+
+    my $dependent_variables_R = make_R_variable_name($dependent_variables);
+
     # generate params_file
     #
     my $param_file = $self->tempfile().".params";
@@ -274,7 +290,7 @@ sub run_model {
     print $F "random_factors <- c($random_factors)\n";
     print $F "fixed_factors <- c($fixed_factors)\n";
 
-    if ($self->engine() eq "lme4") { 
+    if ($self->engine() eq "lme4") {
 	print $F "model <- \"$model\"\n";
     }
     elsif ($self->engine() eq "sommer") {
@@ -285,12 +301,15 @@ sub run_model {
 
     # run r script to create model
     #
-    my $cmd = "R CMD BATCH  '--args datafile=\"".$self->tempfile()."\" paramfile=\"".$self->tempfile().".params\"' " .  " R/mixed_models.R ".$self->tempfile().".out";
+
+    my $cmd = "R CMD BATCH  '--args datafile=\"".$self->tempfile()."\" paramfile=\"".$self->tempfile().".params\"' $executable ". $self->tempfile().".out";
+
     print STDERR "running R command $cmd...\n";
 
     print STDERR "running R command ".$self->tempfile()."...\n";
 
-    my $ctr = CXGN::Tools::Run->new( { backend => $backend, working_dir => dirname($self->tempfile()), backend => $backend, submit_host => $cluster_host } );
+    my $ctr = CXGN::Tools::Run->new( { backend => $backend, working_dir => dirname($self->tempfile()), submit_host => $cluster_host } );
+
 
     $ctr->run_cluster($cmd);
 
