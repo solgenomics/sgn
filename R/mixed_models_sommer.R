@@ -76,56 +76,38 @@ for(i in 1:length(trait)){
         print(mixmodel)
         print("---------")
 
-        res <- (randef(mixmodel)$germplasmName)
+        ##BLUPS
+        res <- (randef(mixmodel)$`u:germplasmName`) ##obtain the blups
+        BLUP <- as.data.frame(res)
 
-        blup <- res%>%mutate("germplasmName" = rownames(res))
-        names(blup)[1] = trait[i]
-        blup <- blup[,c("germplasmName",trait[i])]
-
-        blup <- as.data.frame(blup)
-
-        BLUP <- merge(x = BLUP, y = blup, by ="germplasmName", all=TRUE)
-
-        adj = coef(mixmodel)$germplasmName
-
+        ##ajusted means
+        adj = predict(mixmodel, classify="germplasmName")
         print(paste("adj", adj));
+        adjusted_means = as.data.frame(adj)
 
-        adj = adj[1]  # keep only one column
-        adj_means = adj%>%mutate("germplasmName" = rownames(adj))
-        names(adj_means)[1] = trait[i]
-        adj_means = as.data.frame(adj_means)
-
-        adjusted_means =  merge(x = adjusted_means, y = adj_means, by ="germplasmName", all=TRUE)
 
     } else {
 
         mixmodel = mmer(as.formula(model_string), random = as.formula(random_model), rcov = ~ units, data=pd)
 
         # compute adjusted blues
-        #
-        adj <- summary(lsmeans(mixmodel, "germplasmName"))
-        blue <- adj[c("germplasmName", "lsmean")]
-        colnames(blue)[2] = trait[i]
-        blueadj = as.data.frame(blue)
-        adjustedBLUE =  merge(x = adjustedBLUE, y = blueadj, by ="germplasmName", all=TRUE)
+
+        adj = predict(mixmodel, classify="germplasmName")
+        print(paste("adj", adj));
+        adjustedBLUE = as.data.frame(adj)
+
 
         #Computing fixed effects
-        #feff <- (fixef(mixmodel)$germplasmName)
-        feff<-data.frame(coef(summary(mixmodel))[ , "Estimate"])
-        rownames(feff) <- blue$germplasmName
-        colnames(feff) <- trait[i]
 
-        fixedeff <- feff%>%mutate("germplasmName" = rownames(feff))
-        fixedeff<- fixedeff[,c("germplasmName", trait[i])]
-        fixedeff<-as.data.frame(fixedeff)
+        blue = summary(mixmodel)$beta
 
-        #file with fixed effect
-        print(fixedeff)
+        BLUE<-as.data.frame(blue)
+
 
         #file with blues
-        print(blue)
+        print(BLUE)
 
-        BLUE = merge(x = BLUE, y = fixedeff, by="germplasmName", all=TRUE)
+        #BLUE = merge(x = BLUE, y = fixedeff, by="germplasmName", all=TRUE)
 
 
     }
