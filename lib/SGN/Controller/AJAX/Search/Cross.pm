@@ -203,7 +203,7 @@ sub search_all_cross_entries : Path('/ajax/search/all_cross_entries') :Args(0) {
     my $result = $crosses->get_all_cross_entries();
     my @all_crosses;
     foreach my $r (@$result){
-        my ($cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $male_id, $male_name, $male_ploidy, $pollination_date, $number_of_seeds, $progeny_count, $project_id, $project_name ) =@$r;
+        my ($cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $female_genome_structure, $male_id, $male_name, $male_ploidy, $male_genome_structure, $pollination_date, $number_of_seeds, $progeny_count, $project_id, $project_name, $project_description, $project_location ) =@$r;
         push @all_crosses, {
             cross_id => $cross_id,
             cross_name => $cross_name,
@@ -211,14 +211,18 @@ sub search_all_cross_entries : Path('/ajax/search/all_cross_entries') :Args(0) {
             female_id => $female_id,
             female_name => $female_name,
             female_ploidy => $female_ploidy,
+            female_genome_structure => $female_genome_structure,
             male_id => $male_id,
             male_name => $male_name,
             male_ploidy => $male_ploidy,
+            male_genome_structure => $male_genome_structure,
             pollination_date => $pollination_date,
             number_of_seeds => $number_of_seeds,
             progeny_count => $progeny_count,
             project_id => $project_id,
-            project_name => $project_name
+            project_name => $project_name,
+            project_description => $project_description,
+            project_location => $project_location
         };
     }
 

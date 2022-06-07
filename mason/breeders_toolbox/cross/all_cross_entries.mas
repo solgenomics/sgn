@@ -27,6 +27,7 @@ jQuery(document).ready(function(){
                 { title: "Cross Type", "data": "cross_type" },
                 { title: "Female Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_id+"/view'>"+row.female_name+"</a>"; } },
                 { title: "Female Ploidy", "data": "female_ploidy" },
+                { title: "Female Genome Structure", "data": "female_genome_structure" },
                 { title: "Male Parent", "data": null, "render": function ( data, type, row ) {
                     if (row.male_parent_id === null){
                         return 'NA';
@@ -35,10 +36,13 @@ jQuery(document).ready(function(){
                     }
                 }},
                 { title: "Male Ploidy", "data": "male_ploidy" },
+                { title: "Male Genome Structure", "data": "male_genome_structure" },
                 { title: "Pollination Date", "data": "pollination_date" },
                 { title: "Number of Seeds", "data": "number_of_seeds" },
                 { title: "Number of Progenies", "data": "progeny_count" },
                 { title: "Crossing Experiment", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/trial/"+row.project_id+"'>"+row.project_name+"</a>"; } },
+                { title: "Description", "data": "project_description" },
+                { title: "Location", "data": "project_location" },
             ],
         });
     });

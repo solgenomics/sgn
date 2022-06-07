@@ -1421,27 +1421,37 @@ sub get_all_cross_entries {
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $ploidy_level_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'ploidy_level', 'stock_property')->cvterm_id();
+    my $genome_structure_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genome_structure', 'stock_property')->cvterm_id();
     my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
     my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
     my $offspring_of_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
     my $cross_props_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "crossing_metadata_json", "stock_property")->cvterm_id();
+    my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
 
-    my $q = "SELECT cross_table.cross_id, cross_table.cross_name, cross_table.cross_type, cross_table.female_id, cross_table.female_name, cross_table.female_ploidy,
-        cross_table.male_id, cross_table.male_name, cross_table.male_ploidy, cross_table.crossing_experiment_id, cross_table.crossing_experiment_name, progeny_table.progeny_number, cross_table.field_info
+
+    my $q = "SELECT cross_table.cross_id, cross_table.cross_name, cross_table.cross_type, cross_table.female_id, cross_table.female_name, cross_table.female_ploidy, cross_table.female_genome_structure,
+        cross_table.male_id, cross_table.male_name, cross_table.male_ploidy, cross_table.male_genome_structure, cross_table.crossing_experiment_id, cross_table.crossing_experiment_name, cross_table.crossing_experiment_description,
+        cross_table.location_name, progeny_table.progeny_number, cross_table.field_info
         FROM
-        (SELECT stock1.stock_id AS cross_id, stock1.uniquename AS cross_name, stock_relationship1.value AS cross_type, stock2.stock_id AS female_id,
-        stock2.uniquename AS female_name, stockprop2.value AS female_ploidy, stock3.stock_id AS male_id, stock3.uniquename AS male_name, stockprop3.value AS male_ploidy, project.project_id AS crossing_experiment_id, project.name AS crossing_experiment_name,
-        stockprop4.value AS field_info
+        (SELECT cross_stock.stock_id AS cross_id, cross_stock.uniquename AS cross_name, female_relationship.value AS cross_type, female_stock.stock_id AS female_id,
+        female_stock.uniquename AS female_name, ploidy1.value AS female_ploidy, genome_structure1.value AS female_genome_structure, male_stock.stock_id AS male_id,
+        male_stock.uniquename AS male_name, ploidy2.value AS male_ploidy, genome_structure2.value AS male_genome_structure,
+        project.project_id AS crossing_experiment_id, project.name AS crossing_experiment_name, project.description AS crossing_experiment_description, nd_geolocation.description AS location_name,
+        cross_info.value AS field_info
         FROM project JOIN nd_experiment_project ON (project.project_id = nd_experiment_project.project_id)
+        JOIN projectprop ON (project.project_id = projectprop.project_id) AND projectprop.type_id = ?
+        JOIN nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id)
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
-        JOIN stock AS stock1 ON (nd_experiment_stock.stock_id = stock1.stock_id) AND stock1.type_id = ?
-        JOIN stock_relationship AS stock_relationship1 ON (stock1.stock_id = stock_relationship1.object_id) AND stock_relationship1.type_id = ?
-        JOIN stock AS stock2 ON (stock_relationship1.subject_id = stock2.stock_id)
-        LEFT JOIN stockprop AS stockprop2 ON (stock2.stock_id = stockprop2.stock_id) AND stockprop2.type_id = ?
-        LEFT JOIN stock_relationship AS stock_relationship2 ON (stock1.stock_id = stock_relationship2.object_id) AND stock_relationship2.type_id = ?
-        LEFT JOIN stock AS stock3 ON (stock_relationship2.subject_id = stock3.stock_id)
-        LEFT JOIN stockprop AS stockprop3 ON (stock3.stock_id = stockprop3.stock_id) AND stockprop3.type_id = ?
-        LEFT JOIN stockprop AS stockprop4 ON (stock1.stock_id = stockprop4.stock_id) AND stockprop4.type_id = ?) AS cross_table
+        JOIN stock AS cross_stock ON (nd_experiment_stock.stock_id = cross_stock.stock_id) AND cross_stock.type_id = ?
+        JOIN stock_relationship AS female_relationship ON (cross_stock.stock_id = female_relationship.object_id) AND female_relationship.type_id = ?
+        JOIN stock AS female_stock ON (female_relationship.subject_id = female_stock.stock_id)
+        LEFT JOIN stockprop AS ploidy1 ON (female_stock.stock_id = ploidy1.stock_id) AND ploidy1.type_id = ?
+        LEFT JOIN stockprop AS genome_structure1 ON (female_stock.stock_id = genome_structure1.stock_id) AND genome_structure1.type_id = ?
+        LEFT JOIN stock_relationship AS male_relationship ON (cross_stock.stock_id = male_relationship.object_id) AND male_relationship.type_id = ?
+        LEFT JOIN stock AS male_stock ON (male_relationship.subject_id = male_stock.stock_id)
+        LEFT JOIN stockprop AS ploidy2 ON (male_stock.stock_id = ploidy2.stock_id) AND ploidy2.type_id = ?
+        LEFT JOIN stockprop AS genome_structure2 ON (male_stock.stock_id = genome_structure2.stock_id) AND genome_structure2.type_id = ?
+        LEFT JOIN stockprop AS cross_info ON (cross_stock.stock_id = cross_info.stock_id) AND cross_info.type_id = ?) AS cross_table
         LEFT JOIN
         (SELECT DISTINCT stock.stock_id AS cross_id, COUNT (stock_relationship.subject_id) AS progeny_number
         FROM stock
@@ -1451,10 +1461,10 @@ sub get_all_cross_entries {
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($cross_experiment_type_id, $cross_type_id, $female_parent_type_id, $ploidy_level_type_id, $male_parent_type_id, $ploidy_level_type_id, $cross_props_type_id, $offspring_of_type_id, $cross_type_id);
+    $h->execute($geolocation_type_id, $cross_experiment_type_id, $cross_type_id, $female_parent_type_id, $ploidy_level_type_id, $genome_structure_type_id, $male_parent_type_id, $ploidy_level_type_id, $genome_structure_type_id, $cross_props_type_id, $offspring_of_type_id, $cross_type_id);
 
     my @cross_data = ();
-    while(my ($cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $male_id, $male_name, $male_ploidy, $project_id, $project_name, $progeny_count, $field_info) = $h->fetchrow_array()){
+    while(my ($cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $female_genome_structure, $male_id, $male_name, $male_ploidy, $male_genome_structure, $project_id, $project_name, $project_description, $project_location, $progeny_count, $field_info) = $h->fetchrow_array()){
         my $pollination_date;
         my $number_of_seeds;
         if ($field_info){
@@ -1463,7 +1473,7 @@ sub get_all_cross_entries {
 
             $number_of_seeds = $field_info_hash->{'Number of Seeds'};
         }
-        push @cross_data, [$cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $male_id, $male_name, $male_ploidy, $pollination_date, $number_of_seeds, $progeny_count, $project_id, $project_name];
+        push @cross_data, [$cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $female_genome_structure, $male_id, $male_name, $male_ploidy, $male_genome_structure, $pollination_date, $number_of_seeds, $progeny_count, $project_id, $project_name, $project_description, $project_location];
     }
 
     return \@cross_data;
