@@ -84,9 +84,7 @@ sub download_cross_entries : Path('/search/download_cross_entries') Args(0) {
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     $rel_file = $rel_file . ".$file_format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
-    print STDERR "TEMPFILE : $tempfile\n";
-
-    my $plugin = "CrossingExperimentXLS";
+#    print STDERR "TEMPFILE : $tempfile\n";
 
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
