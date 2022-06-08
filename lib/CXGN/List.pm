@@ -73,12 +73,16 @@ has 'phenome_schema' => (isa => 'CXGN::Phenome::Schema',is => 'rw');
 # class method: Use like so: CXGN::List::create_list
 sub create_list {
     my $dbh = shift;
+		my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    print STDERR $timestamp;
     my ($name, $desc, $owner) = @_;
     my $new_list_id;
     eval {
-    my $q = "INSERT INTO sgn_people.list (name, description, owner) VALUES (?, ?, ?) RETURNING list_id";
+    my $q = "INSERT INTO sgn_people.list (name, description, owner, timestamp) VALUES (?, ?, ?, ?) RETURNING list_id";
     my $h = $dbh->prepare($q);
-    $h->execute($name, $desc, $owner);
+    $h->execute($name, $desc, $owner, $timestamp);
     ($new_list_id) = $h->fetchrow_array();
     print STDERR "NEW LIST using returning = $new_list_id\n";
 
@@ -143,19 +147,19 @@ sub available_public_lists {
     my $dbh = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, sp_person.username FROM sgn_people.list LEFT JOIN sgn_people.sp_person AS sp_person ON (sgn_people.list.owner=sp_person.sp_person_id) LEFT JOIN sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name, sp_person.username ORDER BY list.name";
+    my $q = "SELECT list_id, list.name, description, timestamp, count(distinct(list_item_id)), type_id, cvterm.name, sp_person.username FROM sgn_people.list LEFT JOIN sgn_people.sp_person AS sp_person ON (sgn_people.list.owner=sp_person.sp_person_id) LEFT JOIN sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name, sp_person.username ORDER BY list.name";
     my $h = $dbh->prepare($q);
     $h->execute();
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type, $username) = $h->fetchrow_array()) {
+    while (my ($id, $name, $desc, $timestamp, $item_count, $type_id, $type, $username) = $h->fetchrow_array()) {
         if ($requested_type) {
             if ($type && ($type eq $requested_type)) {
-                push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username ];
+                push @lists, [ $id, $name, $desc, $timestamp, $item_count, $type_id, $type, $username ];
             }
         }
         else {
-            push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $username ];
+            push @lists, [ $id, $name, $desc, $timestamp, $item_count, $type_id, $type, $username ];
         }
     }
     return \@lists;
