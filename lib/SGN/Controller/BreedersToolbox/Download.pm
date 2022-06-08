@@ -806,7 +806,7 @@ sub build_accession_properties_info {
     my $q = "$select $from $joins $where $group $order";
 
     #print STDERR "QUERY = $q\n";
-    
+
     # Execute the query and add results to accession rows
     my $h = $dbh->prepare($q);
     $h->execute(@params);
