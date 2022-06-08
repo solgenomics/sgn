@@ -783,7 +783,7 @@ sub build_accession_properties_info {
     my $select = "SELECT stock.uniquename AS accession_name, organism.species AS species_name, string_agg(distinct(rs.uniquename), ', ') AS population_name";
     my $from = "FROM public.stock";
     my $joins = "LEFT JOIN public.organism USING (organism_id)";
-    $joins .= " LEFT JOIN public.stock_relationship ON (stock.stock_id = stock_relationship.subject_id)";
+    $joins .= " LEFT JOIN public.stock_relationship ON (stock.stock_id = stock_relationship.subject_id AND stock_relationship.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'member_of' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_relationship')))";
     $joins .= " LEFT JOIN public.stock AS rs ON (stock_relationship.object_id = rs.stock_id)";
     my $group = "GROUP BY stock.stock_id, organism.species";
     my $order = "ORDER BY stock.uniquename ASC;";
@@ -811,7 +811,7 @@ sub build_accession_properties_info {
     my $h = $dbh->prepare($q);
     $h->execute(@params);
     while (my @results = $h->fetchrow_array()) {
-	# print STDERR "RETRIEVED: ".join(",", @results)."\n";
+        # print STDERR "RETRIEVED: ".join(",", @results)."\n";
         push(@accession_rows, \@results);
     }
 
