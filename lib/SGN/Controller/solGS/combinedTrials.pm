@@ -163,8 +163,8 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     {
 		$self->save_common_traits_acronyms($c);
 
-		$c->controller('solGS::solGS')->get_all_traits($c, $combo_pops_id);
-		$c->controller('solGS::solGS')->get_acronym_pairs($c, $combo_pops_id);
+		$c->controller('solGS::Trait')->get_all_traits($c, $combo_pops_id);
+		$c->controller('solGS::Trait')->get_acronym_pairs($c, $combo_pops_id);
 
 		$self->combined_pops_summary($c);
 		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
@@ -283,7 +283,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 
 	$c->stash->{model_data} = \@training_pop_data;
 
-	$c->controller('solGS::solGS')->get_acronym_pairs($c, $combo_pops_id);
+	$c->controller('solGS::Trait')->get_acronym_pairs($c, $combo_pops_id);
 	$c->stash->{template} = '/solgs/population/multiple_traits_output.mas';
     }
 }

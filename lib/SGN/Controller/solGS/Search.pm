@@ -178,8 +178,8 @@ sub load_acronyms: Path('/solgs/load/trait/acronyms') Args() {
     my ($self, $c) = @_;
 
    my $id = $c->req->param('id');
-   $c->controller('solGS::solGS')->get_all_traits($c, $id);
-   my $acronyms = $c->controller('solGS::solGS')->get_acronym_pairs($c, $id);
+   $c->controller('solGS::Trait')->get_all_traits($c, $id);
+   my $acronyms = $c->controller('solGS::Trait')->get_acronym_pairs($c, $id);
 
    my $ret->{acronyms}  = $acronyms;
    my $json = JSON->new();

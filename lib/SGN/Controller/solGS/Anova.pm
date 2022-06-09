@@ -182,7 +182,7 @@ sub get_traits_abbrs {
     my $traits_ids = $c->stash->{traits_ids};
 
     $c->stash->{pop_id} = $trial_id;
-    $c->controller('solGS::solGS')->get_all_traits($c, $trial_id);
+    $c->controller('solGS::Trait')->get_all_traits($c, $trial_id);
     $c->controller('solGS::Files')->all_traits_file($c, $trial_id);
     my $traits_file = $c->stash->{all_traits_file};
 

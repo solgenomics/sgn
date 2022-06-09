@@ -449,7 +449,7 @@ sub trait :Path('/solgs/trait') Args() {
 
 	    if (!-e $acronym_file || !-s $acronym_file)
 	    {
-		$self->get_all_traits($c);
+		$c->controller('solGS::Trait')->get_all_traits($c, $pop_id);
 	    }
 
 	    $self->model_phenotype_stat($c);
@@ -1029,7 +1029,7 @@ sub all_traits_output :Path('/solgs/traits/all/population') Args() {
 	 $c->stash->{training_pop_url} = $training_pop_page;
      $c->stash->{training_traits_code} = $traits_selection_id;
 
-	 $self->get_acronym_pairs($c, $training_pop_id);
+	 $c->controller('solGS::Trait')->get_acronym_pairs($c, $training_pop_id);
 
 	 $c->stash->{template} = '/solgs/population/multiple_traits_output.mas';
      }
@@ -1266,7 +1266,7 @@ sub phenotype_file {
 	}
     }
 
-    $self->get_all_traits($c);
+    $c->controller('solGS::Trait')->get_all_traits($c, $pop_id);
 
     $c->stash->{phenotype_file} = $pheno_file;
 
@@ -1412,7 +1412,7 @@ sub get_rrblup_output {
 
         foreach my $tr (@traits)
         {
-            my $acronym_pairs = $self->get_acronym_pairs($c);
+            my $acronym_pairs = $c->controller('solGS::Trait')->get_acronym_pairs($c);
             my $trait_name;
             if ($acronym_pairs)
             {
