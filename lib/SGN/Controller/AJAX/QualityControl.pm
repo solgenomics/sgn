@@ -90,7 +90,7 @@ sub qualityControl_phenotype_data :Path('/qualityControl/phenotype/data/') Args(
 sub trait_acronyms {
     my ($self, $c) = @_;
 
-    my $pop_id = $c->stash->{pop_id}
+    my $pop_id = $c->stash->{pop_id};
     $c->controller('solGS::Trait')->get_all_traits($c, $pop_id);
     $c->controller('solGS::Trait')->get_acronym_pairs($c, $pop_id);
 
