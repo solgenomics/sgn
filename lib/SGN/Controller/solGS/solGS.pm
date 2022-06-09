@@ -88,7 +88,7 @@ sub population : Path('/solgs/population') Args() {
     else
     {
 		$c->controller('solGS::Utils')->save_metadata($c);
-	    $self->get_all_traits($c, $pop_id);
+	    $c->controller('solGS::Trait')->get_all_traits($c, $pop_id);
 
 		$c->controller('solGS::Search')->project_description($c, $pop_id);
 
