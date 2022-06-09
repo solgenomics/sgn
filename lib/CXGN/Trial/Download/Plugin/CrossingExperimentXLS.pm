@@ -114,7 +114,7 @@ sub download {
 
     my @cross_ids = keys %cross_id_hash;
     my @all_rows;
-    foreach my $cross_id (keys %cross_id_hash) {
+    foreach my $cross_id (sort keys %cross_id_hash) {
         my @each_row = ();
         my $parents = $cross_id_hash{$cross_id}{'parent_info'};
         push @each_row, @$parents;

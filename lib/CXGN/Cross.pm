@@ -1474,7 +1474,7 @@ sub get_all_cross_entries {
         FROM stock
         LEFT JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ? WHERE stock.type_id = ?
         GROUP BY cross_id) AS progeny_table
-        ON (cross_table.cross_id = progeny_table.cross_id) ";
+        ON (cross_table.cross_id = progeny_table.cross_id) ORDER BY cross_table.cross_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
