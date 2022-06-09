@@ -2538,8 +2538,8 @@ class BrAPINode extends ThreadNode {
                             initialResult.metadata.currentPage = [initialResult.metadata.currentPage];
                             furtherResults.forEach(function(furtherResponse){
                                 Array.prototype.push.apply(
-                                    initialResult.result.data,
-                                    furtherResponse.result.data
+                                    initialResult.result,
+                                    furtherResponse.result
                                 );
                                 initialResult.metadata.currentPage.push(
                                     furtherResponse.metadata.currentPage

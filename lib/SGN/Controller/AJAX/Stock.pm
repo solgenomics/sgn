@@ -1794,7 +1794,7 @@ sub get_pedigree_string_ :Chained('/stock/get_stock') PathPart('pedigreestring')
     my $c = shift;
     my $level = $c->req->param("level");
     my $stock_id = $c->stash->{stock}->get_stock_id();
-    my $stock_name = $c->stash->{stock}->get_name();
+    my $stock_name = $c->stash->{stock}->get_uniquename();
 
     my $pedigree_string;
 
