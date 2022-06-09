@@ -90,8 +90,11 @@ sub download_cross_entries : Path('/search/download_cross_entries') Args(0) {
         bcs_schema => $schema,
         filename => $tempfile,
         format => 'CrossEntriesXLS',
-        cross_property_db => $cross_property_db,
     });
+
+    if ($cross_property_db) {
+        $download->set_cross_property_db($cross_property_db);
+    }
 
     my $error = $download->download();
 

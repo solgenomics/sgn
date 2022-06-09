@@ -203,7 +203,12 @@ sub search_all_cross_entries : Path('/ajax/search/all_cross_entries') :Args(0) {
 
     my $cross_property_db = $c->config->{cross_property_db};
 
-    my $crosses = CXGN::Cross->new({schema => $schema, cross_property_db => $cross_property_db });
+    my $crosses = CXGN::Cross->new({schema => $schema});
+
+    if ($cross_property_db) {
+        $crosses->set_cross_property_db($cross_property_db);
+    }
+
     my $result = $crosses->get_all_cross_entries();
     my @all_crosses;
     foreach my $r (@$result){
