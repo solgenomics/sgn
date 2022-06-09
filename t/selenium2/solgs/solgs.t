@@ -300,12 +300,19 @@ $d->while_logged_in_as("submitter", sub {
     sleep(150);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
+
+#####################
+	# $d->get('/solgs/population/139/gp/1');
+	# sleep(5);
+#####################
+
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
     sleep(1);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
     sleep(1);
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(5);
+
 
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(2);
@@ -344,6 +351,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(250);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
+    sleep(2);
     $d->find_element_ok('//select[@id="list_type_selection_pops_list_select"]/option[text()="' . $accessions_list_name. '"]',  'xpath', 'list sl page')->click();
     sleep(5);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
