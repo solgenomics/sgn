@@ -201,13 +201,15 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     print STDERR "sub run: FIXED FACTORS: ".Dumper($fixed_factors)." RANDOM FACTORS: ".Dumper($random_factors)."\n";
     my $engine = $params->{engine};
 
+    print STDERR "ENGINE = $engine\n";
+    
     my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
 
     $mm->dependent_variables($dependent_variables);
     $mm->random_factors($random_factors);
     $mm->fixed_factors($fixed_factors);
     $mm->engine($engine);
-    $mm->run_model($c->config->{backend}, $c->config->{cluster_shared_tempdir} . "/gcpc_files", $c->config->{cluster_host});
+    $mm->run_model($c->config->{backend}, $c->config->{cluster_shared_tempdir} . "/mixed_models", $c->config->{cluster_host});
 
 
     my $temppath = $c->config->{basepath}."/".$tempfile;
