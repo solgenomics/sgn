@@ -421,7 +421,6 @@ CXGN.List.prototype = {
             html += '<td><a title="Copy to Your Lists" id="copy_public_list_'+lists[i][1]+'" href="javascript:copyPublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-plus"></span></a></td>';
             html += '<td>'+lists[i][6]+'</td>';
             html += '<td><a title="Make Private" href="javascript:togglePublicList('+lists[i][0]+')"><span class="glyphicon glyphicon-ban-circle"></span></a></td>';
-          //  html += '<td>'+lists[i][7]+'</td>';
             html += '</tr>';
         }
         html = html + '</tbody></table>';

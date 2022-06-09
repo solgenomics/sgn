@@ -73,10 +73,9 @@ has 'phenome_schema' => (isa => 'CXGN::Phenome::Schema',is => 'rw');
 # class method: Use like so: CXGN::List::create_list
 sub create_list {
     my $dbh = shift;
-		my $time = DateTime->now();
+    my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    print STDERR $timestamp;
     my ($name, $desc, $owner) = @_;
     my $new_list_id;
     eval {
