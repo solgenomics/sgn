@@ -1,31 +1,58 @@
 #!/usr/bin/perl
 
-=head1
+=head1 NAME
 
 rename_stocks.pl - a script for renaming stocks
 
 =head1 SYNOPSIS
 
-    rename_stocks.pl -H [dbhost] -D [dbname] -i [infile]
+rename_stocks.pl -H [dbhost] -D [dbname] -i [infile]
 
-=head1 COMMAND-LINE OPTIONS
-  ARGUMENTS
- -H host name (required) e.g. "localhost"
- -D database name (required) e.g. "cxgn_cassava"
- -i path to infile (required)
- -s stock type (default: accession)
- -t test mode, do not commit changes.
+=head2 Command-line options
+
+=over 5
+
+=item -H 
+
+host name (required) e.g. "localhost"
+
+=item -D 
+
+database name (required) e.g. "cxgn_cassava"
+
+=item -i 
+
+path to infile (required)
+
+=item -s 
+
+stock type (default: accession)
+
+=item -n 
+
+don't store old name as a synonym
+
+=item -t 
+
+test mode, do not commit changes.
+
+=back
 
 =head1 DESCRIPTION
 
-This script rename stocks in bulk. The infile provided has two columns, in the first column is the stock uniquename as it is in the database, and in the second column is the new stock uniquename. There is no header on the infile and the infile is .xls. The stock.name field is untouched.
+This script renames stocks in bulk using an xls file as input with two columns: the first column is the stock uniquename as it is in the database, and in the second column is the new stock uniquename. There is no header line. Both stock.name and stock.uniquename fields will be changed to the new name.
 
-=head1 AUTHOR
+The oldname will be stored as a synonym unless option -n is given.
 
- Guillaume Bauchet (gjb99@cornell.edu)
+=head1 AUTHORS
 
- Adapted from a cvterm renaming script by:
- Nicolas Morales (nm529@cornell.edu)
+Guillaume Bauchet (gjb99@cornell.edu)
+
+Lukas Mueller <lam87@cornell.edu> (added -n option)
+
+Adapted from a cvterm renaming script by:
+
+Nicolas Morales (nm529@cornell.edu)
 
 =cut
 
@@ -39,10 +66,11 @@ use Spreadsheet::ParseExcel;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use Try::Tiny;
+use SGN::Model::Cvterm;
 
-our ($opt_H, $opt_D, $opt_i, $opt_s, $opt_t);
+our ($opt_H, $opt_D, $opt_i, $opt_s, $opt_t, $opt_n);
 
-getopts('H:D:i:s:t');
+getopts('H:D:i:s:tn');
 
 if (!$opt_H || !$opt_D || !$opt_i) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file)\n");
@@ -63,6 +91,8 @@ my $dbh = CXGN::DB::InsertDBH->new({
 my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 $dbh->do('SET search_path TO public,sgn');
 
+my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+
 
 my $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
 my ( $row_min, $row_max ) = $worksheet->row_range();
@@ -80,16 +110,27 @@ my $coderef = sub {
     	my $db_uniquename = $worksheet->get_cell($row,0)->value();
     	my $new_uniquename = $worksheet->get_cell($row,1)->value();
         
-	print STDERR "$db_uniquename -> $new_uniquename\n";
+	print STDERR "processing row $row: $db_uniquename -> $new_uniquename\n";
 
-    	my $old_stock = $schema->resultset('Stock::Stock')->find({ uniquename => $db_uniquename, type_id => $stock_type_id });
+    	my $old_stock = $schema->resultset('Stock::Stock')->find({ name => $db_uniquename, uniquename => $db_uniquename, type_id => $stock_type_id });
 
 	if (!$old_stock) { 
 	    print STDERR "Warning! Stock with uniquename $db_uniquename was not found in the database.\n";
 	    next();
 	}
+	
         my $new_stock = $old_stock->update({ name => $new_uniquename, uniquename => $new_uniquename});
+	if (! $opt_n) {
+	    print STDERR "Storing old name ($db_uniquename) as synonym or stock with id ".$new_stock->stock_id()." and type_id $synonym_id...\n";
+	    my $synonym = { value => $db_uniquename,
+			    type_id => $synonym_id,
+			    stock_id => $new_stock->stock_id(),
+	    };
 
+	    print STDERR "find_or_create...\n";
+	    $schema->resultset('Stock::Stockprop')->find_or_create($synonym);
+	    print STDERR "Done.\n";
+	}
     }
 };
 
