@@ -144,7 +144,7 @@ CXGN.List.prototype = {
         });
     },
 
-// test!!!
+
     allListTypes: function() {
         var types;
         jQuery.ajax( {
