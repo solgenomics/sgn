@@ -201,13 +201,10 @@ sub search_all_cross_entries : Path('/ajax/search/all_cross_entries') :Args(0) {
     my $pollination_date_key;
     my $number_of_seeds_key;
 
-    my $cross_property_db = $c->config->{cross_property_db};
+    my $cross_properties_string = $c->config->{cross_properties};
+    my @cross_properties = split ',', $cross_properties_string;
 
-    my $crosses = CXGN::Cross->new({schema => $schema});
-
-    if ($cross_property_db) {
-        $crosses->set_cross_property_db($cross_property_db);
-    }
+    my $crosses = CXGN::Cross->new({schema => $schema, field_crossing_data_order => \@cross_properties});
 
     my $result = $crosses->get_all_cross_entries();
     my @all_crosses;

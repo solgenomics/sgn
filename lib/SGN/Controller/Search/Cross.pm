@@ -74,7 +74,8 @@ sub download_cross_entries : Path('/search/download_cross_entries') Args(0) {
         return;
     }
 
-    my $cross_property_db = $c->config->{cross_property_db};
+    my $cross_properties_string = $c->config->{cross_properties};
+    my @cross_properties = split ',', $cross_properties_string;
     my $file_format = "xls";
 
     my $time = DateTime->now();
@@ -90,11 +91,8 @@ sub download_cross_entries : Path('/search/download_cross_entries') Args(0) {
         bcs_schema => $schema,
         filename => $tempfile,
         format => 'CrossEntriesXLS',
+        field_crossing_data_order => \@cross_properties
     });
-
-    if ($cross_property_db) {
-        $download->set_cross_property_db($cross_property_db);
-    }
 
     my $error = $download->download();
 

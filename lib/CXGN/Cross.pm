@@ -75,10 +75,12 @@ has 'file_type' => (isa => 'Str',
     required => 0,
 );
 
-has 'cross_property_db' => (isa => 'Str',
+has 'field_crossing_data_order' => (isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
+    predicate => 'has_field_crossing_data_order',
     required => 0,
 );
+
 
 
 sub BUILD {
@@ -1420,7 +1422,7 @@ sub get_intercross_file_metadata {
 sub get_all_cross_entries {
     my $self = shift;
     my $schema = $self->schema;
-    my $cross_property_db = $self->cross_property_db();
+    my $cross_properties_ref = $self->field_crossing_data_order();
 
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
@@ -1435,12 +1437,21 @@ sub get_all_cross_entries {
 
     my $pollination_date_key;
     my $number_of_seeds_key;
-    if ($cross_property_db eq 'musabase') {
-        $pollination_date_key = 'First Pollination Date';
-        $number_of_seeds_key = 'Number of Seeds Extracted';
-    } elsif ($cross_property_db eq 'yambase') {
-        $pollination_date_key = 'Pollination Date';
-        $number_of_seeds_key = 'Number of Seeds Harvested';
+
+    if ($cross_properties_ref) {
+        my @cross_properties = @$cross_properties_ref;
+
+        if ('First Pollination Date' ~~ @cross_properties) {
+            $pollination_date_key = 'First Pollination Date';
+        } else {
+            $pollination_date_key = 'Pollination Date';
+        }
+
+        if ('Number of Seeds Extracted' ~~ @cross_properties) {
+            $number_of_seeds_key = 'Number of Seeds Extracted';
+        } else {
+            $number_of_seeds_key = 'Number of Seeds'
+        }
     } else {
         $pollination_date_key = 'Pollination Date';
         $number_of_seeds_key = 'Number of Seeds';
