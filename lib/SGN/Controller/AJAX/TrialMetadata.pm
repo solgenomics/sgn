@@ -4854,5 +4854,35 @@ sub get_all_trial_activities :Chained('trial') PathPart('all_trial_activities') 
     $c->stash->{rest} = { data => $activity_info };
 }
 
+sub update_trial_design_type : Chained('trial') PathPart('update_trial_design_type') : ActionClass('REST'){ }
+
+sub update_trial_design_type_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_design_type = $c->req->param("trial_design_type");
+
+    if (!$c->user()) {
+        $c->stash->{rest} = {error_string => "You must be logged in to update trial status." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $curator     = $c->user()->check_roles('curator') if $user_id;
+
+    if (!$curator == 1) {
+        $c->stash->{rest} = {error_string => "You must be curator to change experimental design type." };
+        return;
+    }
+
+    my $trial = $c->stash->{trial};
+
+    $trial->set_design_type($trial_design_type); 
+
+    $c->stash->{rest} = {success => 1 };
+    
+    return;
+
+}
+
 
 1;
