@@ -67,50 +67,72 @@ sub download {
         $col_count++;
     }
 
+    my %cross_id_hash;
     my $row_count = 1;
     foreach my $id(@trial_ids) {
         my $crosses = CXGN::Cross->new( {schema => $self->bcs_schema, trial_id => $id });
-        my $cross_info_ref = $crosses->get_crosses_and_details_in_crossingtrial();
-        my @cross_info = @$cross_info_ref;
-        my $progeny_info_ref = $crosses->get_cross_progenies_trial();
-        my @progeny_info = @$progeny_info_ref;
+        my $cross_parent_info_ref = $crosses->get_crosses_and_details_in_crossingtrial();
+        my @cross_parent_info = @$cross_parent_info_ref;
+        foreach my $each_parent_info (@cross_parent_info) {
+            my @each_row_parent_info = ();
+            my $parent_cross_id = $each_parent_info->[0];
+            @each_row_parent_info = ($each_parent_info->[1], $each_parent_info->[2], $each_parent_info->[3], $each_parent_info->[5], $each_parent_info->[6], $each_parent_info->[8], $each_parent_info->[9], $each_parent_info->[11], $each_parent_info->[13], $each_parent_info->[15], $each_parent_info->[17]);
+            $cross_id_hash{$parent_cross_id}{'parent_info'} = \@each_row_parent_info;
+        }
+
         my $seedlot_info_ref = $crosses->get_seedlots_from_crossingtrial();
         my @seedlot_info = @$seedlot_info_ref;
+        foreach my $each_seedlot_info (@seedlot_info) {
+            my @each_row_seedlot_info = ();
+            my $seedlot_cross_id = $each_seedlot_info->[0];
+            @each_row_seedlot_info = ($each_seedlot_info->[3]);
+            $cross_id_hash{$seedlot_cross_id}{'seedlot_info'} = \@each_row_seedlot_info;
+        }
+
+        my $progeny_info_ref = $crosses->get_cross_progenies_trial();
+        my @progeny_info = @$progeny_info_ref;
+        foreach my $each_progeny_info (@progeny_info) {
+            my @each_row_progeny_info = ();
+            my $progeny_cross_id = $each_progeny_info->[0];
+            @each_row_progeny_info = ($each_progeny_info->[4], $each_progeny_info->[5]);
+            $cross_id_hash{$progeny_cross_id}{'progeny_info'} = \@each_row_progeny_info;
+        }
+
         my @all_field_data;
-        my $crossing_data = $crosses->get_cross_properties_trial();
-
-        foreach my $cross (@$crossing_data){
-            my @row = ();
-            my $field_crossing_data_hash = $cross->[3];
-            foreach my $cross_prop (@field_crossing_data_header) {
-                push @row, $field_crossing_data_hash->{$cross_prop};
+        my $field_info_ref = $crosses->get_cross_properties_trial();
+        my @field_info = @$field_info_ref;
+        foreach my $each_field_info (@field_info){
+            my @each_row_field_info = ();
+            my $field_info_cross_id = $each_field_info->[0];
+            my $field_info_hash = $each_field_info->[3];
+            foreach my $field_info_key (@field_crossing_data_header) {
+                push @each_row_field_info, $field_info_hash->{$field_info_key};
             }
-            push @all_field_data, \@row;
+            $cross_id_hash{$field_info_cross_id}{'field_info'} = \@each_row_field_info
         }
-#        print STDERR "CROSSES IN EXPERIMENT =".Dumper(\@cross_info)."\n";
-#        print STDERR "PROGENIES IN EXPERIMENT =".Dumper(\@progeny_info)."\n";
-#        print STDERR "SEEDLOT IN EXPERIMENT =".Dumper(\@seedlot_info)."\n";
-#        print STDERR "CROSSING DATA IN EXPERIMENT =".Dumper($crossing_data)."\n";
+    }
 
-        my @all_rows;
-        for my $i (0 .. $#cross_info) {
-            my @each_row = ();
-            push @each_row, ($cross_info[$i][1], $cross_info[$i][2], $cross_info[$i][3], $cross_info[$i][5], $cross_info[$i][6], $cross_info[$i][8], $cross_info[$i][9], $cross_info[$i][11], $cross_info[$i][13], $cross_info[$i][15], $cross_info[$i][17], $seedlot_info[$i][3], $progeny_info[$i][4], $progeny_info[$i][5]);
-            my $each_cross_id_data_ref = $all_field_data[$i];
-            my @each_cross_id_data = @$each_cross_id_data_ref;
-            for my $j (0 .. $#each_cross_id_data) {
-                push @each_row, $all_field_data[$i][$j];
-            }
-            push @all_rows, \@each_row;
-        }
-#        print STDERR "ALL ROWS =".Dumper(\@all_rows)."\n";
+    my @cross_ids = keys %cross_id_hash;
+    my @all_rows;
+    foreach my $cross_id (sort keys %cross_id_hash) {
+        my @each_row = ();
+        my $parents = $cross_id_hash{$cross_id}{'parent_info'};
+        push @each_row, @$parents;
+        my $seedlots = $cross_id_hash{$cross_id}{'seedlot_info'};
+        push @each_row, @$seedlots;
+        my $progenies = $cross_id_hash{$cross_id}{'progeny_info'};
+        push @each_row, @$progenies;
+        my $field_info = $cross_id_hash{$cross_id}{'field_info'};
+        push @each_row, @$field_info;
 
-        for my $k (0 .. $#cross_info) {
-            for my $l (0 .. $#header) {
-                $ws->write($row_count, $l, $all_rows[$k][$l]);
-            }
-            $row_count++;
+        push @all_rows, [@each_row];
+    }
+
+    for my $k (0 .. $#cross_ids) {
+        for my $l (0 .. $#header) {
+            $ws->write($row_count, $l, $all_rows[$k][$l]);
         }
+        $row_count++;
     }
 
 }
