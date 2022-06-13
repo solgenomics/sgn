@@ -24,8 +24,9 @@ print STDERR Dumper \@lists_sorted;
             '5',
             '76451',
             'accessions',
-	    '0'
-          ], 
+	           '0',
+             undef
+          ],
           [
             '5',
             'accessions_for_solgs_tests',
@@ -33,7 +34,8 @@ print STDERR Dumper \@lists_sorted;
             '374',
             '76451',
             'accessions',
-	    '0'
+	           '0',
+             undef
           ],
           [
             '6',
@@ -42,7 +44,8 @@ print STDERR Dumper \@lists_sorted;
             '307',
             '76451',
             'accessions',
-	    '0'
+	          '0',
+            undef
           ],
           [
             '7',
@@ -51,7 +54,8 @@ print STDERR Dumper \@lists_sorted;
             '20',
             undef,
             undef,
-	    '0'
+	          '0',
+            undef
           ],
           [
             12,
@@ -60,7 +64,8 @@ print STDERR Dumper \@lists_sorted;
             6,
             76451,
             'accessions',
-            0
+            0,
+            undef
           ],
           [
             13,
@@ -69,7 +74,8 @@ print STDERR Dumper \@lists_sorted;
             10,
             76455,
             'traits',
-            0
+            0,
+            undef
           ],
 	  [
             '809',
@@ -78,7 +84,8 @@ print STDERR Dumper \@lists_sorted;
             '2',
             undef,
             undef,
-	    '1'
+	          '1',
+            undef
           ],
 	  [
             '811',
@@ -87,7 +94,8 @@ print STDERR Dumper \@lists_sorted;
             '2',
             undef,
             undef,
-	    '0'
+	          '0',
+            undef
           ],
 	   ], "check available lists initially");
 
@@ -151,6 +159,8 @@ foreach (@lists_sorted){
     push @lists_minus_ids, $_;
 }
 print STDERR Dumper \@lists_minus_ids;
+print STDERR Dumper $lists_minus_ids[6][6];
+my $timestamp = $lists_minus_ids[6][6];
 is_deeply(\@lists_minus_ids, [
           [
             'test_stocks',
@@ -158,7 +168,8 @@ is_deeply(\@lists_minus_ids, [
             5,
             76451,
             'accessions',
-            0
+            0,
+            undef
           ],
           [
             'accessions_for_solgs_tests',
@@ -166,7 +177,8 @@ is_deeply(\@lists_minus_ids, [
             374,
             76451,
             'accessions',
-            0
+            0,
+            undef
           ],
           [
             'accessions_for_trial2',
@@ -174,7 +186,8 @@ is_deeply(\@lists_minus_ids, [
             307,
             76451,
             'accessions',
-            0
+            0,
+            undef
           ],
           [
             'selection_acc',
@@ -182,7 +195,8 @@ is_deeply(\@lists_minus_ids, [
             20,
             undef,
             undef,
-            0
+            0,
+            undef
           ],
           [
             'desynonymize_test_list',
@@ -190,7 +204,8 @@ is_deeply(\@lists_minus_ids, [
             6,
             76451,
             'accessions',
-            0
+            0,
+            undef
           ],
           [
             'traits',
@@ -198,7 +213,8 @@ is_deeply(\@lists_minus_ids, [
             10,
             76455,
             'traits',
-            0
+            0,
+            undef
           ],
           [
             'new_test_name',
@@ -206,7 +222,8 @@ is_deeply(\@lists_minus_ids, [
             1,
             76451,
             'accessions',
-            0
+            0,
+            $timestamp
           ],
           [
             'janedoe_1_public',
@@ -214,7 +231,8 @@ is_deeply(\@lists_minus_ids, [
             2,
             undef,
             undef,
-            1
+            1,
+            undef
           ],
           [
             'janedoe_1_private',
@@ -222,7 +240,8 @@ is_deeply(\@lists_minus_ids, [
             2,
             undef,
             undef,
-            0
+            0,
+            undef
           ]
         ],
         "check available lists after additions");
@@ -250,7 +269,8 @@ is_deeply(\@lists_minus_ids, [
             5,
             76451,
             'accessions',
-            0
+            0,
+            undef
           ],
           [
             'accessions_for_trial2',
@@ -258,7 +278,8 @@ is_deeply(\@lists_minus_ids, [
             307,
             76451,
             'accessions',
-            0
+            0,
+            undef
           ],
           [
             'selection_acc',
@@ -266,7 +287,8 @@ is_deeply(\@lists_minus_ids, [
             20,
             undef,
             undef,
-            0
+            0,
+            undef
           ],
           [
             'desynonymize_test_list',
@@ -274,7 +296,8 @@ is_deeply(\@lists_minus_ids, [
             6,
             76451,
             'accessions',
-            0
+            0,
+            undef
           ],
           [
             'traits',
@@ -282,7 +305,8 @@ is_deeply(\@lists_minus_ids, [
             10,
             76455,
             'traits',
-            0
+            0,
+            undef
           ],
           [
             'new_test_name',
@@ -290,7 +314,8 @@ is_deeply(\@lists_minus_ids, [
             1,
             76451,
             'accessions',
-            0
+            0,
+            $timestamp
           ],
           [
             'janedoe_1_public',
@@ -298,7 +323,8 @@ is_deeply(\@lists_minus_ids, [
             2,
             undef,
             undef,
-            1
+            1,
+            undef
           ],
           [
             'janedoe_1_private',
@@ -306,7 +332,8 @@ is_deeply(\@lists_minus_ids, [
             2,
             undef,
             undef,
-            0
+            0,
+            undef
           ]
         ]
 	  , "check available lists after deletion");
@@ -342,7 +369,7 @@ ok($list->exists_element("bla3"), 'remove trailing and leading spaces element ch
 ok(!$list->exists_element(" bla3 "), 'trailing and leading spaces removed from element');
 
 my $space4 = $list->add_element("    ");
-ok($space4 eq "Empty list elements are not allowed", 'element with only spaces cannot be added'); 
+ok($space4 eq "Empty list elements are not allowed", 'element with only spaces cannot be added');
 
 #test sort
 my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id } );
