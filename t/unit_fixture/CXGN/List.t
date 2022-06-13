@@ -25,6 +25,7 @@ print STDERR Dumper \@lists_sorted;
             '76451',
             'accessions',
 	           '0',
+             undef,
              undef
           ],
           [
@@ -35,6 +36,7 @@ print STDERR Dumper \@lists_sorted;
             '76451',
             'accessions',
 	           '0',
+             undef,
              undef
           ],
           [
@@ -45,6 +47,7 @@ print STDERR Dumper \@lists_sorted;
             '76451',
             'accessions',
 	          '0',
+            undef,
             undef
           ],
           [
@@ -55,6 +58,7 @@ print STDERR Dumper \@lists_sorted;
             undef,
             undef,
 	          '0',
+            undef,
             undef
           ],
           [
@@ -65,6 +69,7 @@ print STDERR Dumper \@lists_sorted;
             76451,
             'accessions',
             0,
+            undef,
             undef
           ],
           [
@@ -75,6 +80,7 @@ print STDERR Dumper \@lists_sorted;
             76455,
             'traits',
             0,
+            undef,
             undef
           ],
 	  [
@@ -85,6 +91,7 @@ print STDERR Dumper \@lists_sorted;
             undef,
             undef,
 	          '1',
+            undef,
             undef
           ],
 	  [
@@ -95,6 +102,7 @@ print STDERR Dumper \@lists_sorted;
             undef,
             undef,
 	          '0',
+            undef,
             undef
           ],
 	   ], "check available lists initially");
@@ -169,6 +177,7 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
+            undef,
             undef
           ],
           [
@@ -178,6 +187,7 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
+            undef,
             undef
           ],
           [
@@ -187,6 +197,7 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
+            undef,
             undef
           ],
           [
@@ -196,6 +207,7 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             0,
+            undef,
             undef
           ],
           [
@@ -205,6 +217,7 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
+            undef,
             undef
           ],
           [
@@ -214,6 +227,7 @@ is_deeply(\@lists_minus_ids, [
             76455,
             'traits',
             0,
+            undef,
             undef
           ],
           [
@@ -223,7 +237,8 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
-            $timestamp
+            $timestamp,
+            undef
           ],
           [
             'janedoe_1_public',
@@ -232,6 +247,7 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             1,
+            undef,
             undef
           ],
           [
@@ -241,6 +257,7 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             0,
+            undef,
             undef
           ]
         ],
@@ -270,6 +287,7 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
+            undef,
             undef
           ],
           [
@@ -279,6 +297,7 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
+            undef,
             undef
           ],
           [
@@ -288,6 +307,7 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             0,
+            undef,
             undef
           ],
           [
@@ -297,6 +317,7 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
+            undef,
             undef
           ],
           [
@@ -306,6 +327,7 @@ is_deeply(\@lists_minus_ids, [
             76455,
             'traits',
             0,
+            undef,
             undef
           ],
           [
@@ -315,7 +337,8 @@ is_deeply(\@lists_minus_ids, [
             76451,
             'accessions',
             0,
-            $timestamp
+            $timestamp,
+            undef
           ],
           [
             'janedoe_1_public',
@@ -324,6 +347,7 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             1,
+            undef,
             undef
           ],
           [
@@ -333,6 +357,7 @@ is_deeply(\@lists_minus_ids, [
             undef,
             undef,
             0,
+            undef,
             undef
           ]
         ]
