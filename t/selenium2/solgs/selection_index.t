@@ -152,6 +152,7 @@ $d->while_logged_in_as("submitter", sub {
     # sleep(2);
 
     $d->driver->refresh();
+    sleep(2);
 
     my $cor = $d->find_element('selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
@@ -297,7 +298,8 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
 
     $d->driver->refresh();
-
+    sleep(2);
+    
     my $cor = $d->find_element('selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
     sleep(5);
