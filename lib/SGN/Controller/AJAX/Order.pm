@@ -558,12 +558,14 @@ sub get_ona_order_status : Path('/ajax/order/get_ona_order_status') : ActionClas
 sub get_ona_order_status_GET {
     my $self = shift;
     my $c = shift;
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
     my $session_id = $c->req->param("sgn_session_id");
     my $user_id;
     my $user_name;
     my $user_role;
     if ($session_id){
-        my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]){
             $c->stash->{rest} = {error=>'You must be logged in to request ODK crossing data import!'};
@@ -582,6 +584,21 @@ sub get_ona_order_status_GET {
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
     }
+
+    my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
+    my $all_orders_ref = $orders->get_orders_from_person_id();
+    my @current_orders;
+    my @all_orders = @$all_orders_ref;
+    my @all_identifiers;
+    foreach my $order (@all_orders) {
+        my @item_identifiers_array = ();
+        if (($order->[3]) ne 'completed') {
+            my $item_identifiers = $order->[7];
+            @item_identifiers_array = @$item_identifiers;
+            push @all_identifiers, @item_identifiers_array;
+        }
+    }
+    print STDERR "ALL IDENTIFIERS =".Dumper(\@all_identifiers)."\n";
 
     my $id_string;
     my $form_id;
@@ -619,7 +636,7 @@ sub get_ona_order_status_GET {
     if ($resp1->is_success) {
         my $message1 = $resp1->decoded_content;
         my $message_hash1 = decode_json $message1;
-#        print STDERR "DATA FROM SENDUSU =".Dumper($message_hash1)."\n";
+        print STDERR "DATA FROM SENDUSU =".Dumper($message_hash1)."\n";
     }
 
 

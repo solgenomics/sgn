@@ -82,6 +82,7 @@ sub get_orders_from_person_id {
     my @orders;
     while (my $result = $order_rs->next()){
         my $item_list;
+        my @item_identifiers = ();
         my $order_id = $result->sp_order_id();
         my $order_to_id = $result->order_to_id();
         my $order_status = $result->order_status();
@@ -114,12 +115,16 @@ sub get_orders_from_person_id {
                     $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
                 }
                 push @list, $each_item_details;
+
+                my $each_item_identifier = $order_id."_".$item_name;
+                push @item_identifiers, $each_item_identifier;
+
             }
             my @sort_list = sort @list;
             $item_list = join("<br>", @sort_list);
         }
-
-        push @orders, [$order_id, $create_date, $item_list, $order_status, $completion_date, $order_to_name, $comments ];
+#        print STDERR "ITEM IDENTIFIERS =".Dumper(\@item_identifiers)."\n";
+        push @orders, [$order_id, $create_date, $item_list, $order_status, $completion_date, $order_to_name, $comments, \@item_identifiers ];
     }
 
     return \@orders;
@@ -136,6 +141,7 @@ sub get_orders_to_person_id {
     my @orders;
     while (my $result = $order_rs->next()){
         my $item_list;
+        my @item_identifiers = ();
         my $order_id = $result->sp_order_id();
         my $order_from_id = $result->order_from_id();
 #        my $order_to_id = $result->order_to_id();
@@ -169,11 +175,15 @@ sub get_orders_to_person_id {
                     $each_item_details = $item_name . "," . " " . "quantity:" . $quantity;
                 }
                 push @list, $each_item_details;
+
+                my $each_item_identifier = $order_id."_".$item_name;
+                push @item_identifiers, $each_item_identifier;
+
             }
             my @sort_list = sort @list;
             $item_list = join("<br>", @sort_list);
         }
-
+#        print STDERR "ITEM IDENTIFIERS =".Dumper(\@item_identifiers)."\n";
         push @orders, {
             order_id => $order_id,
             order_from_name => $order_from_name,
@@ -181,7 +191,8 @@ sub get_orders_to_person_id {
             item_list => $item_list,
             order_status => $order_status,
             completion_date => $completion_date,
-            contact_person_comments => $comments
+            contact_person_comments => $comments,
+            item_identifiers => \@item_identifiers
         }
     }
 #    print STDERR "ORDERS =".Dumper(\@orders)."\n";

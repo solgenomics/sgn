@@ -13,6 +13,9 @@ $check_vendor_role
     <a href="/catalog/view"><p>Go to Catalog Page</p></a>
 </td>
 
+<button class="btn btn-sm btn-default" style="margin:3px" id="update_ona_order_progress_button">Update Progress</button>
+<br/>
+<br/>
 <br/>
 % if ($check_vendor_role == 1) {
     <&| /page/info_section.mas, title => 'Manage Current Orders', collapsible=>1, collapsed=>0 &>
@@ -257,12 +260,8 @@ $(window).ready( function() {
     });
 
     jQuery("#update_ona_order_progress_button").click(function(){
-
         jQuery.ajax({
             url: '/ajax/order/get_ona_order_status',
-            data : {
-
-            },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
             },
