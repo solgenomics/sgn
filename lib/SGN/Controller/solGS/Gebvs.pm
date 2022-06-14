@@ -30,17 +30,14 @@ sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
     my $selection_pop_id  = $c->stash->{selection_pop_id};
     my $trait_id = $c->stash->{trait_id};
     my $combo_pops_id = $c->stash->{combo_pops_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     if ($combo_pops_id)
     {
         $c->controller('solGS::combinedTrials')->get_combined_pops_list($c, $combo_pops_id);
         $c->stash->{data_set_type} = 'combined populations';
-        $training_pop_id = $combo_pops_id;
     }
 
-    $c->stash->{pop_id} = $training_pop_id;
-    $c->stash->{training_pop_id} = $training_pop_id;
-    $c->stash->{selectiion_pop_id} = $selection_pop_id;
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
@@ -54,7 +51,7 @@ sub gebvs_data :Path('/solgs/trait/gebvs/data') Args(0) {
     }
     else
     {
-        $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
+        $c->controller('solGS::Files')->rrblup_training_gebvs_file($c,$training_pop_id, $trait_id);
         $gebvs_file = $c->stash->{rrblup_training_gebvs_file};
     }
 
