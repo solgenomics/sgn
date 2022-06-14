@@ -38,7 +38,8 @@ sub _validate_with_plugin {
     my @observation_unit_names;
     open($F, "<", $filename) || die "Can't open file $filename\n";
         while (<$F>) {
-            chomp;
+	    $_ =~ s/\r//g;
+	    chomp;
             #print STDERR Dumper $_;
 
             if ($_ =~ m/^##/){
@@ -69,6 +70,7 @@ sub _validate_with_plugin {
         my @formats;
         my $line_count = 1;
         while (<$F>) {
+            $_ =~ s/\r//g;
             chomp;
 
             if ($_ =~ m/^##/){

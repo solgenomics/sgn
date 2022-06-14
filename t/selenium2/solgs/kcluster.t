@@ -198,14 +198,14 @@ $d->while_logged_in_as(
         )->click();
         sleep(3);
         $d->find_element_ok( 'no_queue', 'id', 'no job queueing' )->click();
-        sleep(120);
+        sleep(145);
 
         my $sel_pops = $d->find_element( '//*[contains(text(), "Select a")]',
             'xpath', 'scroll up' );
         my $elem = $d->driver->execute_script(
             "arguments[0].scrollIntoView(true);window.scrollBy(0, -10);",
             $sel_pops );
-
+        sleep(5);
         $d->find_element_ok(
             '//img[@id="k-means-plot-'
               . $trials_list_id

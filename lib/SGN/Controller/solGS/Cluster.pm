@@ -766,7 +766,7 @@ sub save_cluster_opts {
 
     if ($traits_ids) {
         foreach my $trait_id (@$traits_ids) {
-            $c->controller('solGS::solGS')->get_trait_details( $c, $trait_id );
+            $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
             push @traits_abbrs, $c->stash->{trait_abbr};
         }
 

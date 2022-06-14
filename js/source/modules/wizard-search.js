@@ -272,7 +272,9 @@ export function Wizard(main_id,col_number){
       var search_txt = s ? s.property("value").replace(/\s+/g, "").toLowerCase() : undefined;
       d.items.forEach(i=>{
           var val = i.name.replace(/\s+/g, "").toLowerCase();
-          i.selected = search_txt ? val.indexOf(search_txt) != -1 : true;
+          if (!i.selected) {
+              i.selected = search_txt ? val.indexOf(search_txt) != -1 : true;
+          }
       });
       reflow(d.index,true);
   })

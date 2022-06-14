@@ -26,7 +26,7 @@ sub download_validation :Path('/solgs/download/validation/pop') Args() {
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{genotyping_protocol_id} = $protocol_id;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
     $c->controller('solGS::Files')->validation_file($c);
@@ -60,7 +60,7 @@ sub download_gebvs :Path('/solgs/download/gebvs/pop') Args() {
 	my $selection_pop_id = $pops_ids[1];
 
     $c->stash->{genotyping_protocol_id} = $protocol_id;
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
 	my $gebvs_file;
 	if ($selection_pop_id)
@@ -91,7 +91,7 @@ sub download_marker_effects :Path('/solgs/download/marker/pop') Args() {
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{genotyping_protocol_id} = $protocol_id;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
     $c->controller('solGS::Files')->marker_effects_file($c);
@@ -222,7 +222,7 @@ sub selection_prediction_download_urls {
 		{
 			$url_args->{trait_id} = $trait_id;
 
-		    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+		    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 		    my $trait_abbr = $c->stash->{trait_abbr};
 
 			$sel_pop_page =  $c->controller('solGS::Path')->selection_page_url($url_args);

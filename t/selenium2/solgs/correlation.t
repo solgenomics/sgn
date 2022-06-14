@@ -129,10 +129,10 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
 
     # # # ###############################################################
-    #     $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
-    #     sleep(15);
-    # # # ######################################################################
-    # #
+    #   $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
+    #   sleep(15);
+    # # ######################################################################
+    #
     $d->find_element_ok('population_search_entry', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
@@ -163,7 +163,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->driver->refresh();
-
+    sleep(2);
     my $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $cor);
     sleep(5);
@@ -325,7 +325,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->driver->refresh();
-
+    sleep(2);
     my $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $cor);
     sleep(5);

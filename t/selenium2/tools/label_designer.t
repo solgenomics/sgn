@@ -14,11 +14,19 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(3);
 
-    $t->driver->find_element("//button[\@title='Select a data source']")->click();
+    $t->driver->find_element("//button[\@title='Select a list, crossing exp, trial, or GT plate']")->click();
 
-    sleep(1);
+    sleep(3);
 
     $t->driver->find_element("//li[\@data-original-index='5']")->click();
+
+    sleep(15);
+
+    $t->find_element_ok("label_designer_data_level","id", "select a data level")->send_keys('Plot');
+
+    sleep(12);
+
+    $t->driver->find_element("select_datasource_button","id", "click next")->click();
 
     sleep(12);
 
@@ -28,7 +36,11 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("label_format", "id", "select a label format")->send_keys('1" x 2 5/8"');
 
-    sleep(1);
+    sleep(10);
+
+    $t->driver->find_element("select_layout_button","id", "click next")->click();
+
+    sleep(3);
 
     #add text
 
@@ -38,7 +50,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->find_element("//select[\@id='d3-add-field-input']")->click();
 
-    sleep(1);
+    sleep(3);
 
     $t->find_element_ok("d3-add-field-input", "id", "select a text element field")->send_keys('accession_name');
 
@@ -130,17 +142,20 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("element2", "id", "click on new custom element")->click();
 
-    sleep(1);
+    sleep(12);
 
     #save to list, reload page
+    $t->find_element_ok("design_label_button", "id", "click on next")->click();
+
+    sleep(1);
 
     $t->find_element_ok("save_design_name", "id", "enter list name")->send_keys('test_label');
 
-    sleep(1);
+    sleep(3);
 
     $t->find_element_ok("d3-save-button", "id", "save test label")->click();
 
-    sleep(1);
+    sleep(3);
 
     $t->driver->accept_alert();
 
@@ -150,26 +165,33 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(3);
 
-    $t->driver->find_element("//button[\@title='Select a data source']")->click();
+    $t->driver->find_element("//button[\@title='Select a list, crossing exp, trial, or GT plate']")->click();
 
-    sleep(1);
+    sleep(3);
 
     $t->driver->find_element("//li[\@data-original-index='5']")->click();
 
     sleep(12);
 
-    $t->find_element_ok("design_list_list_select", "id", "select saved list")->send_keys('test_label');
+    $t->find_element_ok("label_designer_data_level","id", "select a data level")->send_keys('Plot');
+
+    sleep(6);
+
+    $t->driver->find_element("select_datasource_button","id", "click next")->click();
 
     sleep(3);
 
+    $t->find_element("//input[\@value='saved']")->click();
 
-    $t->find_element_ok("element0", "id", "check for first element")->click();
+    sleep(12);
 
-    sleep(1);
+    $t->driver->find_element("design_list_list_select","id", "click on saved options")->click();
 
-    $t->find_element_ok("element1", "id", "check for second element")->click();
+    sleep(6);
 
-    sleep(1);
+    $t->find_element_ok("design_list_list_select","id", "click on saved test label option")->send_keys('test_label');
+
+    sleep(12);
 
     }
 
