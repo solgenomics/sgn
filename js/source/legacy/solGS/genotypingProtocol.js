@@ -8,7 +8,8 @@ var solGS = solGS || function solGS() {};
 
 solGS.genotypingProtocol = {
   setGenotypingProtocol: function (divPlace, arg) {
-    var msg = "You are using genotyping protocol: <b>" + arg.protocol_name + "</b>.";
+    var protocolName = arg.name || arg.protocol_name;
+    var msg = "You are using genotyping protocol: <b>" + protocolName + "</b>.";
     divPlace = this.formatDivId(divPlace);
 
     jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_message").val(arg.protocol_id);
