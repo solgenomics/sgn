@@ -250,7 +250,7 @@ sub create_itemized_prediction_log_entries {
 
     my $entries;
     foreach my $trait_id (@$trait_ids) {
-        $c->controller('solGS::solGS')->get_trait_details( $c, $trait_id );
+        $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
         my $trait_abbr = $c->stash->{trait_abbr};
         $url_args->{trait_id} = $trait_id;
 
@@ -655,7 +655,7 @@ sub structure_training_modeling_output {
 
         $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
 
-        $c->controller('solGS::solGS')->get_trait_details( $c, $trait_id );
+        $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
         $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
 
         my $trait_abbr = $c->stash->{trait_abbr};
@@ -897,7 +897,7 @@ sub structure_selection_prediction_output {
     my %output_details = ();
 
     foreach my $trait_id (@traits_ids) {
-        $c->controller('solGS::solGS')->get_trait_details( $c, $trait_id );
+        $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
         my $trait_id   = $c->stash->{trait_id};
         my $trait_abbr = $c->stash->{trait_abbr};
         my $trait_name = $c->stash->{trait_name};

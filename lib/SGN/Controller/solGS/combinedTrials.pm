@@ -163,8 +163,8 @@ sub combined_trials_page :Path('/solgs/populations/combined') Args() {
     {
 		$self->save_common_traits_acronyms($c);
 
-		$c->controller('solGS::solGS')->get_all_traits($c, $combo_pops_id);
-		$c->controller('solGS::solGS')->get_acronym_pairs($c, $combo_pops_id);
+		$c->controller('solGS::Trait')->get_all_traits($c, $combo_pops_id);
+		$c->controller('solGS::Trait')->get_acronym_pairs($c, $combo_pops_id);
 
 		$self->combined_pops_summary($c);
 		$c->stash->{template} = $c->controller('solGS::Files')->template('/population/combined/combined.mas');
@@ -283,7 +283,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args() {
 
 	$c->stash->{model_data} = \@training_pop_data;
 
-	$c->controller('solGS::solGS')->get_acronym_pairs($c, $combo_pops_id);
+	$c->controller('solGS::Trait')->get_acronym_pairs($c, $combo_pops_id);
 	$c->stash->{template} = '/solgs/population/multiple_traits_output.mas';
     }
 }
@@ -334,7 +334,7 @@ sub display_combined_pops_result :Path('/solgs/model/combined/trials/') Args() {
 	        $c->stash->{trait_combo_pops} = $c->stash->{combined_pops_list};
 	    }
 
-	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
 	    $self->combined_pops_summary($c);
 
@@ -368,7 +368,7 @@ sub selection_combined_pops_trait :Path('/solgs/combined/model/') Args() {
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 	my $trait_abbr = $c->stash->{trait_abbr};
 
     if ($selection_pop_id =~ /list/)
@@ -452,7 +452,7 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args() {
         $ids = $c->req->param($trait_id);
         @pop_ids = split(/,/, $ids);
 
-        $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+        $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     }
 
     my $combo_pops_id;
@@ -1089,7 +1089,7 @@ sub combine_data_build_model {
     my ($self, $c) = @_;
 
     my $trait_id = $c->stash->{trait_id};
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 
     $c->stash->{prerequisite_type} = 'combine_populations';
 
@@ -1163,7 +1163,7 @@ sub get_combine_populations_args_file {
     foreach my $trait_id (@$traits)
     {
 		$c->stash->{trait_id} = $trait_id;
-		$c->controller('solGS::solGS')->get_trait_details($c);
+		$c->controller('solGS::Trait')->get_trait_details($c);
 		$self->r_combine_populations_args($c);
 		push @$combine_jobs,  $c->stash->{combine_populations_args};
     }

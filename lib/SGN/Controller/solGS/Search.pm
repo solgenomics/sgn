@@ -110,7 +110,7 @@ sub search_trials : Path('/solgs/search/trials') Args() {
 sub search_trials_trait : Path('/solgs/search/trials/trait') Args() {
     my ($self, $c, $trait_id, $gp, $protocol_id) = @_;
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     $c->stash->{genotyping_protocol_id} = $protocol_id;
 
     $c->stash->{template} = $c->controller('solGS::Files')->template('/search/trials/trait.mas');
@@ -178,8 +178,8 @@ sub load_acronyms: Path('/solgs/load/trait/acronyms') Args() {
     my ($self, $c) = @_;
 
    my $id = $c->req->param('id');
-   $c->controller('solGS::solGS')->get_all_traits($c, $id);
-   my $acronyms = $c->controller('solGS::solGS')->get_acronym_pairs($c, $id);
+   $c->controller('solGS::Trait')->get_all_traits($c, $id);
+   my $acronyms = $c->controller('solGS::Trait')->get_acronym_pairs($c, $id);
 
    my $ret->{acronyms}  = $acronyms;
    my $json = JSON->new();
@@ -207,7 +207,7 @@ sub gs_traits : Path('/solgs/traits') Args(1) {
     $self->hyperlink_traits($c, $trait);
     my $trait_url = $c->stash->{traits_urls};
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait);
     push @traits_list, [$trait_url, $c->stash->{trait_def}];
     }
 

@@ -641,6 +641,21 @@ is_deeply($contents->[1]->{'cell'}->[4], [
     'TMEB419'
 ], "check column 4");
 
+
+# test retrieving all cross entries
+my $crosses = CXGN::Cross->new({schema => $schema});
+my $result = $crosses->get_all_cross_entries();
+my @all_cross_entries = @$result;
+my $first_cross = $all_cross_entries[0];
+is(scalar @all_cross_entries, 10);
+is($first_cross->[1],'test_add_cross');
+is($first_cross->[2],'biparental');
+is($first_cross->[4],'UG120001');
+is($first_cross->[8],'UG120002');
+is($first_cross->[11],'2017/02/02' );
+is($first_cross->[13],8);
+is($first_cross->[15],'test_crossingtrial');
+
 #test deleting crossing
 my $before_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id})->count();
 my $before_deleting_accessions = $schema->resultset("Stock::Stock")->search({ type_id => $accession_type_id})->count();

@@ -180,7 +180,7 @@ sub get_training_pop_gebv_file {
     my $pop_id   = $c->stash->{training_pop_id};
     my $trait_id = $c->stash->{trait_id};
 
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
 
     my $gebv_file;

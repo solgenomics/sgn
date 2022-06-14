@@ -166,7 +166,7 @@ if (grepl("genotype", dataType, ignore.case = TRUE)) {
         }
     }
 
-    clusterData <- clusterData[, apply(clusterData, 2, var) != 0 ]
+    clusterData <- clusterData[, apply(clusterData, 2, function(x) var(x, na.rm=TRUE)) != 0]
     clusterDataNotScaled <- na.omit(clusterData)
     clusterData <- scale(clusterDataNotScaled, center = TRUE, scale = TRUE)
     clusterData <- round(clusterData, 3)

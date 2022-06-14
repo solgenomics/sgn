@@ -65,6 +65,7 @@ sub _validate_with_plugin {
 
     my $chroms;
     while (<$F>) {
+	$_ =~ s/\r//g;
 	chomp;
 	if (m/\#\#/) {
 	    print STDERR "Reading header line $_\n";
@@ -346,6 +347,7 @@ sub next_genotype {
         return ( [$observation_unit_name], $genotypeprop );
     }
     else {
+	$line =~ s/\r//g;
         chomp($line);
 
         LABEL: if ($line =~ m/^\#/) {
@@ -361,6 +363,7 @@ sub next_genotype {
                 # print STDERR Dumper $line;
             }
         }
+	$line =~ s/\r//g;
         chomp($line);
 
         my @fields = split /\t/, $line;
