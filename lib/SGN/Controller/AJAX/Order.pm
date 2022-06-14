@@ -586,19 +586,9 @@ sub get_ona_order_status_GET {
     }
 
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
-    my $all_orders_ref = $orders->get_orders_from_person_id();
-    my @current_orders;
-    my @all_orders = @$all_orders_ref;
-    my @all_identifiers;
-    foreach my $order (@all_orders) {
-        my @item_identifiers_array = ();
-        if (($order->[3]) ne 'completed') {
-            my $item_identifiers = $order->[7];
-            @item_identifiers_array = @$item_identifiers;
-            push @all_identifiers, @item_identifiers_array;
-        }
-    }
-    print STDERR "ALL IDENTIFIERS =".Dumper(\@all_identifiers)."\n";
+    my $identifiers_ref = $orders->get_tracking_identifiers_from_person_id();
+    my %tracking_identifiers = %{$identifiers_ref};
+    print STDERR "ALL IDENTIFIERS =".Dumper(\%tracking_identifiers)."\n";
 
     my $id_string;
     my $form_id;
@@ -632,14 +622,23 @@ sub get_ona_order_status_GET {
     my $server_endpoint = "https://api.ona.io/api/v1/data/$form_id";
 #    print STDERR $server_endpoint."\n";
     my $resp1 = $ua->get($server_endpoint);
-
     if ($resp1->is_success) {
         my $message1 = $resp1->decoded_content;
         my $message_hash1 = decode_json $message1;
         print STDERR "DATA FROM SENDUSU =".Dumper($message_hash1)."\n";
+        my @status_info = @$message_hash1;
+        my %item_status;
+        foreach my $info_hash (@status_info)  {
+            if ($info_hash->{'subculture/sub_orderNo'}) {
+                my $item_identifier = $info_hash->{'subculture/sub_orderNo'};
+                my $subculture_date = $info_hash->{'subculture/subcultureDate'};
+                my $subculture_copies = $info_hash->{'subculture/copies'};
+                $item_status{$item_identifier}{'subculture'}{$subculture_date} = $subculture_copies;
+            }
+        }
+        print STDERR "ITEM STATUS =".Dumper(\%item_status)."\n";
+
     }
-
-
 
 
     $c->stash->{rest} = {success => "1",};
