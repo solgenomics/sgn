@@ -169,6 +169,7 @@ foreach (@lists_sorted){
 print STDERR Dumper \@lists_minus_ids;
 print STDERR Dumper $lists_minus_ids[6][6];
 my $timestamp = $lists_minus_ids[6][6];
+my $timestamp_mod = $lists_minus_ids[6][7];
 is_deeply(\@lists_minus_ids, [
           [
             'test_stocks',
@@ -238,7 +239,7 @@ is_deeply(\@lists_minus_ids, [
             'accessions',
             0,
             $timestamp,
-            undef
+            $timestamp_mod
           ],
           [
             'janedoe_1_public',
@@ -278,6 +279,7 @@ foreach (@lists_sorted){
     shift(@$_);
     push @lists_minus_ids, $_;
 }
+$timestamp_mod = $lists_minus_ids[5][7];
 print STDERR Dumper \@lists_minus_ids;
 is_deeply(\@lists_minus_ids, [
           [
@@ -338,7 +340,7 @@ is_deeply(\@lists_minus_ids, [
             'accessions',
             0,
             $timestamp,
-            undef
+            $timestamp_mod
           ],
           [
             'janedoe_1_public',
