@@ -24,6 +24,7 @@ $trial_stock_type => undef
         <& /breeders_toolbox/trial/trial_stocks.mas, trial_id => $trial_id &>
     </&>
 
+    <& /breeders_toolbox/trial/trial_seedlots_count.mas, trial_id => $trial_id &>
     <&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots", is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_seedlots.mas, trial_id => $trial_id &>
     </&>
