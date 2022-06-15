@@ -589,9 +589,24 @@ sub observation_levels_GET {
 sub seasons : Chained('brapi') PathPart('seasons') Args(0) : ActionClass('REST') { }
 
 sub seasons_POST {
-    my $self = shift;
-    my $c = shift;
-    seasons_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	my ($auth, $user_id) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $postedData = $clean_inputs;
+	my @data;
+	foreach my $season (values %{$postedData}) {
+		push @data, {
+			seasonDbId=>$season->{year},
+			season=>undef,
+			year=>$season->{year}
+		}
+	}
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response(scalar(@data), scalar(@data), 1);
+	my %result = (data=>\@data);
+	my @data_files;
+	my $status;
+	_standard_response_construction($c, CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, "Season created successfully"));
 }
 
 sub seasons_GET {
