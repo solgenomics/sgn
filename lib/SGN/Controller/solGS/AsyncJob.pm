@@ -691,7 +691,7 @@ sub modeling_jobs {
 	foreach my $trait_id (@$modeling_traits)
 	{
 	    $c->stash->{trait_id} = $trait_id;
-	    $c->controller('solGS::solGS')->get_trait_details($c);
+	    $c->controller('solGS::Trait')->get_trait_details($c);
 
 	    $c->controller('solGS::solGS')->input_files($c);
 	    $c->controller('solGS::solGS')->output_files($c);

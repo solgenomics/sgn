@@ -235,7 +235,7 @@ sub extended_trait_name {
 
 	my $schema = $self->schema($c);
 	# foreach my $tr_id (@$trait_ids) {
-		#$c->controller('solGS::solGS')->get_trait_details($c, $tr_id);
+		#$c->controller('solGS::Trait')->get_trait_details($c, $tr_id);
 		my $extended_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_id, 'extended');
 		# push @trait_names, $extended_name;
 	# }

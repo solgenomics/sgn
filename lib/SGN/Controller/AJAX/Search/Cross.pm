@@ -194,5 +194,49 @@ sub search_common_parents : Path('/ajax/search/common_parents') Args(0) {
 }
 
 
+sub search_all_cross_entries : Path('/ajax/search/all_cross_entries') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $pollination_date_key;
+    my $number_of_seeds_key;
+
+    my $cross_properties_string = $c->config->{cross_properties};
+    my @cross_properties = split ',', $cross_properties_string;
+
+    my $crosses = CXGN::Cross->new({schema => $schema, field_crossing_data_order => \@cross_properties});
+
+    my $result = $crosses->get_all_cross_entries();
+    my @all_crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $cross_type, $female_id, $female_name, $female_ploidy, $female_genome_structure, $male_id, $male_name, $male_ploidy, $male_genome_structure, $pollination_date, $number_of_seeds, $progeny_count, $project_id, $project_name, $project_description, $project_location ) =@$r;
+        push @all_crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+            cross_type => $cross_type,
+            female_id => $female_id,
+            female_name => $female_name,
+            female_ploidy => $female_ploidy,
+            female_genome_structure => $female_genome_structure,
+            male_id => $male_id,
+            male_name => $male_name,
+            male_ploidy => $male_ploidy,
+            male_genome_structure => $male_genome_structure,
+            pollination_date => $pollination_date,
+            number_of_seeds => $number_of_seeds,
+            progeny_count => $progeny_count,
+            project_id => $project_id,
+            project_name => $project_name,
+            project_description => $project_description,
+            project_location => $project_location
+        };
+    }
+
+    $c->stash->{rest} = { data => \@all_crosses };
+
+}
+
+
+
 
 1;

@@ -1,0 +1,135 @@
+<%args>
+
+$trial_id
+$trial_name
+$design_name
+
+</%args>
+% my $design_types = $c->config->{'design_types'};
+% my @design_types= split ',',$design_types;
+
+
+<div class="modal fade" id="update_trial_design_type_dialog" name="update_trial_design_type_dialog" tabindex="-1" role="dialog" aria-labelledby="updateTrialDesignTypeDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateTrialDesignTypeDialog">Update <% $trial_name %> Experimental Design Type</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="form-group">
+                    <label class="control-label">Current Experimental Design type: <% $design_name %></label><br></div>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Change to Experimental Design Type: </label>
+                            <div class="col-sm-6" >
+                                        <select class="form-control" id="select_design_method" name="select_design_method">
+% foreach my $type(@design_types){
+%    my $method;
+%    if ($type eq 'Completely Randomized'){
+%        $method = 'CRD';
+%    } elsif ($type eq 'Complete Block'){
+%        $method = 'RCBD';
+%    } elsif ($type eq 'Resolvable Row-Column'){
+%        $method = 'RRC';
+%    } elsif ($type eq 'Alpha Lattice'){
+%        $method = 'Alpha';
+%    } elsif ($type eq 'Modified Augmented Design'){
+%        $method = 'MAD';
+%    } elsif ($type eq 'Nursery/Greenhouse'){
+%        $method = 'greenhouse';
+%    } elsif ($type eq 'Split Plot'){
+%        $method = 'splitplot';
+%    } elsif ($type eq 'Partially Replicated'){
+%        $method = 'p-rep';
+%    } else {
+%        $method = $type;
+%    }
+                                                <option value="<%$method%>"><%$type%></option>
+%}
+                                        </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trial_set_phenotypes_fully_loaded_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="update_trial_design_type_submit" id="update_trial_design_type_submit" >Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="update_trial_design_type_message" name="update_trial_design_type_message" tabindex="-1" role="dialog" aria-labelledby="updateTrialDesignTypeMessage">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updateTrialDesignTypeMessage">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Trial Design Type was updated successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_update_message_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery("#update_experimental_design_type_button").click(function(){
+        jQuery("#update_trial_design_type_dialog").modal("show");
+    });
+
+    jQuery("#update_trial_design_type_submit").click(function() {
+        var trial_design_type = jQuery("#select_design_method").val();
+        if (trial_design_type == 'Please select a design method') {
+            alert("Please select a design method");
+            return;
+        }
+
+        jQuery.ajax({
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/update_trial_design_type',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'trial_design_type': trial_design_type
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#update_trial_design_type_dialog').modal('hide');
+                    jQuery('#update_trial_design_type_message').modal("show");
+                }
+                if (response.error_string) {
+                    alert(response.error_string);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating trial status');
+            }
+        });
+    });
+
+    jQuery("#dismiss_update_message_dialog").click(function(){
+        location.reload();
+    });
+
+});
+
+</script>

@@ -433,6 +433,10 @@ $analytics_protocol_result_summary => {}
                                 <& /search/cross/parent_search.mas &>
 %} #End parent_search_section
 
+% if ($info_section_id eq 'all_cross_entries_section'){
+                                <& /breeders_toolbox/cross/all_cross_entries.mas &>
+%} #End all_cross_entries_section
+
 % if ($info_section_id eq 'manage_nirs_main'){
                                 <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations, sampling_facilities=>$sampling_facilities &>
 % } #End manage_nirs_main
