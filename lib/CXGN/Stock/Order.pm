@@ -4,6 +4,7 @@ package CXGN::Stock::Order;
 use Moose;
 use Data::Dumper;
 use CXGN::Stock::OrderBatch;
+use CXGN::Stock::OrderStatusDetails;
 use CXGN::People::Person;
 use JSON;
 
@@ -26,6 +27,10 @@ has 'create_date' => ( isa => 'Str', is => 'rw');
 has 'completion_date' => ( isa => 'Str', is => 'rw');
 
 has 'batches' => ( isa => 'Ref', is => 'rw', default => sub { return []; } );
+
+has 'order_status_details' => (isa => 'HashRef', is => 'rw');
+
+has 'bcs_schema' => ( isa => 'Ref', is => 'rw');
 
 
 sub BUILD {
@@ -274,6 +279,26 @@ sub get_tracking_identifiers_from_person_id {
     }
 
     return \%tracking_identifiers
+}
+
+
+sub update_order_status_details {
+    my $self = shift;
+    my $people_schema = $self->people_schema();
+    my $schema = $self->bcs_schema();
+    my $dbh = $self->dbh();
+
+    my $order_id = $self->sp_order_id();
+    my $order_status_details = $self->order_status_details();
+    print STDERR "ORDER ID =".Dumper($order_id)."\n";
+    print STDERR "ORDER STATUS DETAILS =".Dumper($order_status_details)."\n";
+    my $order_prop = CXGN::Stock::OrderStatusDetails->new({ bcs_schema => $schema, people_schema => $people_schema});
+    $order_prop->parent_id($order_id);
+    $order_prop->order_status_details($order_status_details);
+    my $updated_orderprop = $order_prop->store_sp_orderprop();
+
+
+
 }
 
 

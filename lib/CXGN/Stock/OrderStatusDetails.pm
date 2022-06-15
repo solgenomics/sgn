@@ -4,7 +4,7 @@ use Moose;
 
 extends 'CXGN::JSONProp';
 
-has 'item_status' => (is => 'rw', isa => 'HashRef');
+has 'order_status_details' => (is => 'rw', isa => 'HashRef');
 
 sub BUILD {
     my $self = shift;
@@ -15,7 +15,7 @@ sub BUILD {
     $self->prop_primary_key('sp_orderprop_id');
     $self->prop_type('order_progress_json');
     $self->cv_name('sp_order_property');
-    $self->allowed_fields( [ qw | item_status | ] );
+    $self->allowed_fields( [ qw | order_status_details | ] );
     $self->parent_table('sp_order');
     $self->parent_primary_key('sp_order_id');
 

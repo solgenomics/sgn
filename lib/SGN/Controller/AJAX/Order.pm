@@ -588,7 +588,7 @@ sub get_ona_order_status_GET {
     my $orders = CXGN::Stock::Order->new({ dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
     my $identifiers_ref = $orders->get_tracking_identifiers_from_person_id();
     my %tracking_identifiers = %{$identifiers_ref};
-    print STDERR "ALL IDENTIFIERS =".Dumper(\%tracking_identifiers)."\n";
+#    print STDERR "ALL IDENTIFIERS =".Dumper(\%tracking_identifiers)."\n";
 
     my $id_string;
     my $form_id;
@@ -625,7 +625,7 @@ sub get_ona_order_status_GET {
     if ($resp1->is_success) {
         my $message1 = $resp1->decoded_content;
         my $message_hash1 = decode_json $message1;
-        print STDERR "DATA FROM SENDUSU =".Dumper($message_hash1)."\n";
+#        print STDERR "DATA FROM SENDUSU =".Dumper($message_hash1)."\n";
         my @status_info = @$message_hash1;
         my %item_status;
         foreach my $info_hash (@status_info)  {
@@ -636,8 +636,30 @@ sub get_ona_order_status_GET {
                 $item_status{$item_identifier}{'subculture'}{$subculture_date} = $subculture_copies;
             }
         }
-        print STDERR "ITEM STATUS =".Dumper(\%item_status)."\n";
+#        print STDERR "ITEM STATUS =".Dumper(\%item_status)."\n";
+        my %update_status;
+        foreach my $order_id (keys %tracking_identifiers) {
+            my @order_items = ();
+            my $order_item_identifiers_ref = $tracking_identifiers{$order_id};
+            my %order_hash = %{$order_item_identifiers_ref};
+            @order_items = keys %order_hash;
+            foreach my $item_identifier (keys %item_status) {
+                if ($item_identifier ~~ @order_items) {
+                    $update_status{$order_id}{$item_identifier} = $item_status{$item_identifier};
+                }
+            }
 
+            my $update_info = $update_status{$order_id};
+#            print STDERR "UPDATE INFO =".Dumper($update_info)."\n";
+            if ($update_info) {
+                my $order = CXGN::Stock::Order->new( { bcs_schema => $schema, people_schema => $people_schema, dbh => $dbh});
+                $order->sp_order_id($order_id);
+                $order->order_status_details($update_info);
+                my $order_id = $order->update_order_status_details();
+            }
+
+#            print STDERR "UPDATE STATUS HASH =".Dumper(\%update_status)."\n";
+        }
     }
 
 
