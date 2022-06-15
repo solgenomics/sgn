@@ -16,8 +16,10 @@ $trial_stock_type => undef
 % } elsif ($trial_stock_type eq 'cross') {
 %     $stock_label = 'Cross Unique IDs';
 % } else {
-%     $stock_label = 'Accessions'
+%     $stock_label = 'Accessions';
+
 % }
+    <& /breeders_toolbox/trial/trial_stocks_count.mas, trial_id => $trial_id &>
     <&| /page/info_section.mas, id => "trial_stocks", title=> $stock_label, is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_stocks.mas, trial_id => $trial_id &>
     </&>
@@ -68,7 +70,7 @@ $trial_stock_type => undef
            <button class="btn btn-default" id="upload_plant_entries_subplots_button">Upload plant entries using plant_name</button>
            <button class="btn btn-default" id="upload_plant_entries_with_index_number_subplots_button">Upload plant entries using plant index number</button>
            <button class="btn btn-default" id="trial_upload_plants_with_num_plants_subplots_button">Upload plant entries using number of plants per subplot</button>
-% }           
+% }
 % } else {
             <& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id &>
 % }
