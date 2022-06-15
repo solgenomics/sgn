@@ -1,0 +1,52 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<a href="/search/download_cross_entries" class="btn btn-sm btn-default">Download All Cross Entries</a>
+</br>
+</br>
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="all_cross_entries_table">
+    </table>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#all_cross_entries_section_onswitch').click(function(){
+        jQuery('#all_cross_entries_table').DataTable({
+            'destroy': true,
+            'ajax':'/ajax/search/all_cross_entries',
+            columns: [
+                { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: "Cross Type", "data": "cross_type" },
+                { title: "Female Parent", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.female_id+"/view'>"+row.female_name+"</a>"; } },
+                { title: "Female Ploidy", "data": "female_ploidy" },
+                { title: "Female Genome Structure", "data": "female_genome_structure" },
+                { title: "Male Parent", "data": null, "render": function ( data, type, row ) {
+                    if (row.male_parent_id === null){
+                        return 'NA';
+                    } else {
+                        return "<a href='/stock/"+row.male_id+"/view'>"+row.male_name+"</a>";
+                    }
+                }},
+                { title: "Male Ploidy", "data": "male_ploidy" },
+                { title: "Male Genome Structure", "data": "male_genome_structure" },
+                { title: "Pollination Date", "data": "pollination_date" },
+                { title: "Number of Seeds", "data": "number_of_seeds" },
+                { title: "Number of Progenies", "data": "progeny_count" },
+                { title: "Crossing Experiment", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/trial/"+row.project_id+"'>"+row.project_name+"</a>"; } },
+                { title: "Description", "data": "project_description" },
+                { title: "Location", "data": "project_location" },
+            ],
+        });
+    });
+
+});
+
+</script>

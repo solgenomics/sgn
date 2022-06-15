@@ -1,0 +1,989 @@
+
+<style>
+@media (min-width: 768px) {
+  .modal-xl {
+    width: 90%;
+   max-width:1200px;
+  }
+}
+</style>
+
+<div class="modal fade" id="create_cross_wishlist_dialog" name="create_cross_wishlist_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossWishlistDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createCrossWishlistDialog">Create Cross Wishlist</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="well">
+                        <form class="form-horizontal" id="cross_wishlist_create_select_form_id" name="cross_wishlist_create_select_form_id">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">Select An ODK Form on ONA: </label>
+                                <div class="col-sm-8" >
+                                    <div id="cross_wishlist_create_select_form_id_div">LOADING...</div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <ul class="nav nav-pills nav-justified" id="cross_wishlist_tab_select">
+                        <li id="cross_wishlist_list_tab"><a data-toggle="tab" href="#with_lists">Using Accession Lists</a></li>
+                        <li class="active" id="cross_wishlist_no_list_tab"><a data-toggle="tab" href="#not_with_lists">Using Crossing Blocks</a></li>
+                        <li id="cross_wishlist_upload_tab"><a data-toggle="tab" href="#upload_wishlist">Uploading Cross Combinations</a></li>
+                    </ul>
+
+                    <div class="tab-content">
+
+                        <div id="with_lists" class="tab-pane fade">
+                            <hr>
+                            <form class="form-horizontal" >
+                                <div class="form-group" style="display:none" <!-- location name is coming from the trial they select --> >
+                                    <label class="col-sm-3 control-label">Location Name (Optional): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_location_select_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Female's Trial Name: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_female_trial_select_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Male's Trial Name: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_male_trial_select_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="well well-sm">
+                                    <div class="form-group">
+                                        <label class="col-sm-6 control-label">Cross plan will be added to the cross wishlist named: </label>
+                                        <div class="col-sm-6" >
+                                            <div id="cross_wishlist_trial_select_list_cross_wishlist_name_div">
+                                                <input class="form-control" type="text" disabled value="Please Select a Trial First" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Female Accession List: </label>
+                                    <div class="col-sm-9" id="female_accession_list_div" name="female_accession_list_div">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Male Accession List: </label>
+                                    <div class="col-sm-9" id="male_accession_list_div" name="male_accession_list_div">
+                                    </div>
+                                </div>
+                            </form>
+                            <br/>
+                            <div id="cross_wishlist_cross_grid_div"></div>
+                        </div>
+
+                        <div id="not_with_lists" class="tab-pane fade in active">
+                            <hr>
+
+                            <form class="form-horizontal" >
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Female's Trial Name: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_female_trial_select_no_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Male's Trial Name: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_male_trial_select_no_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="well well-sm">
+                                    <div class="form-group">
+                                        <label class="col-sm-6 control-label">Cross plan will be added to the cross wishlist named: </label>
+                                        <div class="col-sm-6" >
+                                            <div id="cross_wishlist_trial_select_no_list_cross_wishlist_name_div">
+                                                <input class="form-control" type="text" disabled value="Please Select a Trial First" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Female Accession Name(s):</label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_female_accession_select_div">
+                                            <p>First Select A Trial</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id ="cross_wishlist_male_parent_div">
+                                </div>
+                            </form>
+                        </div>
+
+                        <div id="upload_wishlist" class="tab-pane fade">
+                            <hr>
+                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_wishlist_form" name="upload_wishlist_form">
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Female's Trial Name: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_female_trial_select_upload_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Male's Trial Name: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_male_trial_select_upload_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="well well-sm">
+                                    <div class="form-group">
+                                        <label class="col-sm-6 control-label">Cross plan will be added to the cross wishlist named: </label>
+                                        <div class="col-sm-6" >
+                                            <div id="cross_wishlist_trial_select_upload_cross_wishlist_name_div">
+                                                <input class="form-control" type="text" disabled value="Please Select a Trial First" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="well well-sm">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <&| /page/explanation.mas, title=>'Template information' &>
+                                                <p>
+                                                    <b>File format information</b>
+                                                    <br>
+                                                    <a id="wishlist_format">Spreadsheet format</a>
+                                                </p>
+                                            </&>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <br/>
+                                            <div class="panel panel-default">
+                                                <div class="panel-body">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-6 control-label">Select an XLS File: </label>
+                                                        <div class="col-sm-6">
+                                                            <input type="file" name="wishlist_file" id="wishlist_file" encoding="multipart/form-data" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="wishlist_lists_footer">
+                <div class="modal-footer">
+                    <button class="btn btn-info" id="show_cross_wishlists_select_submits" name="show_cross_wishlists_select_submits">Available Cross Wishlist(s) for ODK Use</button>
+                    <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits">Next</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            <div id="wishlist_upload_footer" style="display:none">
+                <div class="modal-footer">
+                    <button class="btn btn-info" id="upload_show_cross_wishlists_select_submits" name="upload_show_cross_wishlists_select_submits">Available Cross Wishlist(s) for ODK Use</button>
+                    <button class="btn btn-primary" id="wishlist_upload_submit" name="wishlist_upload_submit">Upload File</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="create_cross_wishlist_select_dialog" name="create_cross_wishlist_select_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossWishlistSelectDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createCrossWishlistSelectDialog">Select Plots for Cross Wishlist</h4>
+                <h4>Female Plots are in <span class="bg-primary">Blue</span><!-- and Male Plots are in <span class="bg-success">Green</span>.--></h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="cross_wishlist_cross_select_div"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="cross_wishlist_select_submits" name="cross_wishlist_select_submits">Create Wishlist</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="create_cross_wishlist_response_dialog" name="create_cross_wishlist_response_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossWishlistResponseDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createCrossWishlistResponseDialog">Cross Wishlist</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="cross_wishlist_response_div"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="show_cross_wishlists_response_dialog" name="show_cross_wishlists_response_dialog" tabindex="-1" role="dialog" aria-labelledby="showCrossWishlistsResponseDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="showCrossWishlistsResponseDialog">Cross Wishlists Previously Created</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="show_cross_wishlists_response_div"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_wishlist_error_display" name="upload_wishlist_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadWishlistErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadWishlistErrorDialog">Upload Wishlist File Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_wishlist_spreadsheet_info_dialog" name="upload_wishlist_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadWishlistInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadWishlistInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Cross wishlist may be uploaded in an Excel file (.xls)
+                    </b>
+                    <br>
+                        (.xlsx format not supported)
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>female_accession</td>
+                                <td>male_accession</td>
+                                <td>priority</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Required columns:
+                    </b>
+                    <ul>
+                        <li><b>female_accession</b> (accession names must exist as <b>uniquenames</b> in the database and are in the selected female trial. Wishlist will include all of the female plots in the trial.)</li>
+                        <li><b>male_accession</b> (accession names must exist as <b>uniquenames</b> in the database)</li>
+                        <li><b>priority</b> (1 is the most important) </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+var lo = new CXGN.List();
+
+function draw_cross_grid(female_accessions, male_accessions){
+    console.log("draw cross grid");
+    var cross_grid_html = '<h3>Set Cross Priorities: 1 is highest and 60 is lowest</h3><h4>Female Accessions Are in First Column and Male Accessions Are in Header</h4><table class="table table-bordered"><thead><tr><th>Female Accessions</th>';
+    for(var i=0; i<male_accessions.length; i++){
+        cross_grid_html = cross_grid_html + '<th>' + male_accessions[i] + '</th>';
+    }
+    cross_grid_html = cross_grid_html + '</tr></thead><tbody>';
+    for(var i=0; i<female_accessions.length; i++){
+        cross_grid_html = cross_grid_html + '<tr><td>' + female_accessions[i] + '</td>';
+        for(var j=0; j<male_accessions.length; j++){
+            cross_grid_html = cross_grid_html + '<td><input type="text" name="cross_wishlist_cross_grid_inputs" class="form-control" data-female="'+female_accessions[i]+'" data-male="'+male_accessions[j]+'"/></td>';
+        }
+        cross_grid_html = cross_grid_html + '</tr>';
+    }
+    cross_grid_html = cross_grid_html + '</tbody></table>';
+    jQuery('#cross_wishlist_cross_grid_div').html(cross_grid_html);
+}
+
+jQuery(document).ready(function($) {
+
+    jQuery('#show_cross_wishlists_select_submits').click(function(){
+        jQuery('#show_cross_wishlists_response_dialog').modal('show');
+
+        jQuery.ajax({
+            url: '/ajax/cross/list_cross_wishlists',
+            dataType:'json',
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
+                var html = '';
+                if(response.success){
+                    html += "<table class='table table-bordered table-hover'><thead><tr><th>File</th><th>Updated By</th><th>Date</th></tr></thead><tbody>";
+                    for(var i=0; i<response.files.length; i++){
+                        html += "<tr><td><a href='/breeders/phenotyping/download/"+response.files[i][0]+"' >"+response.files[i][1]+"</a></td><td><a href='/solpeople/personal-info.pl?sp_person_id="+response.files[i][6]+"' >"+response.files[i][7]+" "+response.files[i][8]+"</a></td><td>"+response.files[i][5]+"</td></tr>";
+                    }
+                    html += "</tbody></table>";
+                } else {
+                    html = 'Something went wrong here.'
+                }
+                jQuery('#show_cross_wishlists_response_div').html(html);
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert("An error occurred getting cross wishlists");
+            }
+        });
+
+    });
+
+    jQuery("#create_cross_wishlist").click(function() {
+        jQuery("#create_cross_wishlist_dialog").modal("show");
+        jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"], "Please select list with < 60 accessions", undefined, undefined ));
+        jQuery("#male_accession_list_div").html(lo.listSelect('male_accession_list_div', ["accessions"], "Please select list with < 60 accessions", undefined, undefined ));
+        var female_accessions;
+        var male_accessions
+        if (jQuery('#female_accession_list_div_list_select').val() != '' && jQuery('#male_accession_list_div_list_select').val() != '' ) {
+            female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
+            male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
+        }
+        jQuery.ajax ({
+            url : '/ajax/odk/get_crossing_available_forms',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                if (response.error){
+                    alert(response.error);
+                }
+                if (response.success){
+
+
+                    jQuery.ajax ({
+                        url : '/ajax/odk/get_crossing_saved_ona_forms',
+                        success: function(response_forms){
+                            console.log(response_forms);
+
+                            if (response_forms.error){
+                                alert(response.error);
+                            }
+                            if (response_forms.success){
+
+                                var form_dropdown_select_html = '<select class="form-control" id="cross_wishlist_availabe_odk_crossing_forms"><option value="">Not Using ONA</option>';
+                                var allowed_forms = response_forms.odk_ona_forms;
+                                allowed_forms.push('<% $c->config->{odk_crossing_data_test_form_name} %>');
+                                for(var i=0; i<response.forms.length; i++){
+                                    if (jQuery.inArray(response.forms[i].id_string, allowed_forms) != -1){
+                                        form_dropdown_select_html = form_dropdown_select_html + '<option value="'+response.forms[i].id+'">'+response.forms[i].id_string+'</option>';
+                                    }
+                                }
+                                form_dropdown_select_html = form_dropdown_select_html + '</select>';
+                                jQuery('#cross_wishlist_create_select_form_id_div').html(form_dropdown_select_html);
+
+                            }
+                        },
+                        error: function(response_forms){
+                            alert("Error retrieving saved ODK ONA forms");
+                        }
+                    });
+
+                }
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving available ODK crossing forms");
+            }
+        });
+
+        if (jQuery('#female_accession_list_div_list_select').val() != '' && jQuery('#male_accession_list_div_list_select').val() != '' ) {
+            draw_cross_grid(female_accessions, male_accessions);
+        }
+    });
+
+//    jQuery(document).on('change', '#female_accession_list_div_list_select', function(){
+//        if (jQuery('#female_accession_list_div_list_select').val() != '' && jQuery('#male_accession_list_div_list_select').val() != '' ) {
+//            var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
+//            var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
+//            draw_cross_grid(female_accessions, male_accessions);
+//        }
+//    });
+
+    jQuery(document).on('change', '#male_accession_list_div_list_select', function(){
+        if (jQuery('#female_accession_list_div_list_select').val() != '' && jQuery('#male_accession_list_div_list_select').val() != '' ) {
+            var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
+            var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
+            var female_accession_list_id = $('#female_accession_list_div_list_select').val();
+            var male_accession_list_id = $('#male_accession_list_div_list_select').val();
+            var female_trial_id = jQuery('#cross_wishlist_list_female_trial_id').val();
+            if (! lo.legacy_validate(female_accession_list_id, 'accessions', true)) {
+                alert('The female accession list contains elements that are not accessions.');
+                return;
+            }
+            if (! lo.legacy_validate(male_accession_list_id, 'accessions', true)) {
+                alert('The male accession list contains elements that are not accessions.');
+                return;
+            }
+
+            check_trial_accessions(female_trial_id, female_accession_list_id, female_accessions, male_accessions);
+        }
+    });
+
+    get_select_box('locations', 'cross_wishlist_location_select_list_div', { 'name' : 'cross_wishlist_location_id', 'id' : 'cross_wishlist_location_id', 'empty':1 });
+    get_select_box('trials', 'cross_wishlist_female_trial_select_no_list_div', { 'name' : 'cross_wishlist_female_trial_id', 'id' : 'cross_wishlist_female_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'cross_wishlist_male_trial_select_no_list_div', { 'name' : 'cross_wishlist_male_trial_id', 'id' : 'cross_wishlist_male_trial_id', 'empty':1, 'multiple':0 });
+
+    get_select_box('trials', 'cross_wishlist_female_trial_select_list_div', { 'name' : 'cross_wishlist_list_female_trial_id', 'id' : 'cross_wishlist_list_female_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'cross_wishlist_male_trial_select_list_div', { 'name' : 'cross_wishlist_list_male_trial_id', 'id' : 'cross_wishlist_list_male_trial_id', 'empty':1, 'multiple':0 });
+
+    get_select_box('trials', 'cross_wishlist_female_trial_select_upload_div', { 'name' : 'cross_wishlist_upload_female_trial_id', 'id' : 'cross_wishlist_upload_female_trial_id', 'empty':1, 'multiple':0 });
+    get_select_box('trials', 'cross_wishlist_male_trial_select_upload_div', { 'name' : 'cross_wishlist_upload_male_trial_id', 'id' : 'cross_wishlist_upload_male_trial_id', 'empty':1, 'multiple':0 });
+
+    jQuery(document).on('change', "#cross_wishlist_list_female_trial_id", function() {
+        cross_wishlist_change_trials_lists();
+    });
+
+    jQuery(document).on('change', "#cross_wishlist_female_trial_id", function() {
+        cross_wishlist_change_trials();
+    });
+
+    jQuery(document).on('change', "#cross_wishlist_upload_female_trial_id", function() {
+        cross_wishlist_change_trials_upload();
+    });
+
+    var female_trial_id;
+    var male_trial_id;
+    var cross_data = [];
+    var female_male_tracker = {};
+    var selected_plot_ids = [];
+    jQuery('.nav-pills a').on('shown.bs.tab', function(event){
+        cross_data = [];
+        female_male_tracker = {};
+        selected_plot_ids = [];
+        female_trial_id;
+        male_trial_id;
+    });
+
+    var female_trial_ids_array = [];
+    var male_trial_ids_array = [];
+    function cross_wishlist_change_trials () {
+        var female_trial_ids = jQuery('#cross_wishlist_female_trial_id').val();
+        var female_trial_ids_string = '';
+        if ( jQuery.isArray(female_trial_ids) ) {
+            female_trial_ids_array = female_trial_ids;
+            trial_ids_string = female_trial_ids.join();
+        } else {
+            female_trial_ids_array = [female_trial_ids];
+            female_trial_ids_string = female_trial_ids;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/breeders/trial/'+female_trial_ids_array[0]+'/location',
+            success: function(response) {
+                //console.log(response);
+                var cross_wishlist_name;
+                if ('<% $c->config->{odk_crossing_data_test_form_name} %>' == jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()){
+                    cross_wishlist_name = 'cross_wishlist_test.csv';
+                } else if ('<% $c->config->{odk_crossing_data_separate_wishlist_by_location} %>' == '1') {
+                    cross_wishlist_name = 'cross_wishlist_'+response.location[1]+'.csv'
+                } else {
+                    cross_wishlist_name = 'cross_wishlist_<% $c->config->{project_name} %>.csv';
+                }
+                jQuery('#cross_wishlist_trial_select_no_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="'+cross_wishlist_name+'" />');
+            },
+            error: function(response) {
+                alert("An error occurred getting trial location");
+            }
+        });
+
+        get_select_box('stocks', 'cross_wishlist_female_accession_select_div', { 'name' : 'cross_wishlist_female_accession_ids', 'id' : 'cross_wishlist_female_accession_ids', 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':female_trial_ids_array, 'names_as_select':1 });
+    };
+
+    function cross_wishlist_change_trials_lists () {
+        var female_trial_ids = jQuery('#cross_wishlist_list_female_trial_id').val();
+        var female_trial_ids_string = '';
+        if ( jQuery.isArray(female_trial_ids) ) {
+            female_trial_ids_array = female_trial_ids;
+            female_trial_ids_string = female_trial_ids.join();
+        } else {
+            female_trial_ids_array = [female_trial_ids];
+            female_trial_ids_string = female_trial_ids;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/breeders/trial/'+female_trial_ids_array[0]+'/location',
+            success: function(response) {
+                //console.log(response);
+                var cross_wishlist_name;
+                if ('<% $c->config->{odk_crossing_data_test_form_name} %>' == jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()){
+                    cross_wishlist_name = 'cross_wishlist_test.csv';
+                } else if ('<% $c->config->{odk_crossing_data_separate_wishlist_by_location} %>' == '1') {
+                    cross_wishlist_name = 'cross_wishlist_'+response.location[1]+'.csv'
+                } else {
+                    cross_wishlist_name = 'cross_wishlist_<% $c->config->{project_name} %>.csv';
+                }
+                jQuery('#cross_wishlist_trial_select_list_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="'+cross_wishlist_name+'" />');
+            },
+            error: function(response) {
+                alert("An error occurred getting trial location");
+            }
+        });
+    };
+
+    function cross_wishlist_change_trials_upload () {
+        var female_trial_ids = jQuery('#cross_wishlist_upload_female_trial_id').val();
+        var female_trial_ids_string = '';
+        if ( jQuery.isArray(female_trial_ids) ) {
+            female_trial_ids_array = female_trial_ids;
+            female_trial_ids_string = female_trial_ids.join();
+        } else {
+            female_trial_ids_array = [female_trial_ids];
+            female_trial_ids_string = female_trial_ids;
+        }
+
+        jQuery.ajax({
+            url: '/ajax/breeders/trial/'+female_trial_ids_array[0]+'/location',
+            success: function(response) {
+                //console.log(response);
+                var cross_wishlist_name;
+                if ('<% $c->config->{odk_crossing_data_test_form_name} %>' == jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()){
+                    cross_wishlist_name = 'cross_wishlist_test.csv';
+                } else if ('<% $c->config->{odk_crossing_data_separate_wishlist_by_location} %>' == '1') {
+                    cross_wishlist_name = 'cross_wishlist_'+response.location[1]+'.csv'
+                } else {
+                    cross_wishlist_name = 'cross_wishlist_<% $c->config->{project_name} %>.csv';
+                }
+                jQuery('#cross_wishlist_trial_select_upload_cross_wishlist_name_div').html('<input type="text" class="form-control" disabled value="'+cross_wishlist_name+'" />');
+            },
+            error: function(response) {
+                alert("An error occurred getting trial location");
+            }
+        });
+    };
+
+    jQuery(document).on('change', "#cross_wishlist_female_accession_ids", function() {
+        cross_wishlist_select_females();
+    });
+
+    function cross_wishlist_select_females () {
+
+        var male_trial_ids = jQuery('#cross_wishlist_male_trial_id').val();
+        var male_trial_ids_string = '';
+        if ( jQuery.isArray(male_trial_ids) ) {
+            male_trial_ids_array = male_trial_ids;
+            male_trial_ids_string = male_trial_ids.join();
+        } else {
+            male_trial_ids_array = [male_trial_ids];
+            male_trial_ids_string = male_trial_ids;
+        }
+        if (male_trial_ids.length == 0){
+            alert('Please select a male trial first!');
+            return;
+        }
+
+        var female_accession_ids = jQuery('#cross_wishlist_female_accession_ids').val();
+        var html = '<table class="table table-bordered" id="cross_wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Priority ( 1 : highest, 60 : lowest )</th></tr></thead><tbody>';
+        for(var i=0; i<female_accession_ids.length; i++){
+            html = html + '<tr><td>' + female_accession_ids[i] + '</td><td><div name="cross_wishlist_male_selects" id="cross_wishlist_male_select_' +i+ '"></div></td><td><span id="cross_wishlist_male_accession_id_'+ i +'_priority" data-related="'+encodeURI(female_accession_ids[i])+'" >Select Male(s)</span></td></tr>';
+        };
+        html = html + '</tbody></table>';
+        jQuery('#cross_wishlist_male_parent_div').html(html);
+
+        var cross_wishlist_male_parents = jQuery('#cross_wishlist_male_select_table')
+             .find("div")
+             .map(function() { return this.id; })
+             .get();
+        //console.log(cross_wishlist_male_parents);
+        for(var i=0; i<cross_wishlist_male_parents.length; i++){
+            var female_id = jQuery('#cross_wishlist_male_accession_id_'+ i +'_priority').data('related');
+            get_select_box('stocks', cross_wishlist_male_parents[i], { 'name' : 'cross_wishlist_male_accession_id_select', 'id' : 'cross_wishlist_male_accession_id_'+i, 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':male_trial_ids_array, 'names_as_select':1, 'data-related':female_id });
+        };
+    };
+
+    jQuery(document).on('change', "select[name='cross_wishlist_male_accession_id_select']", function() {
+        var div_id = '#' + this.id;
+        var male_ids = jQuery(div_id).val();
+        if (male_ids.length > 0){
+            cross_wishlist_change_males(div_id, div_id + '_priority');
+        }
+    });
+
+    function cross_wishlist_change_males(div_id, select_id){
+        var female_accession_ids = jQuery('#cross_wishlist_female_accession_ids').val();
+        var male_ids = jQuery(div_id).val();
+        var female_id = jQuery(div_id).data('related');
+        var html = '<table class="table table-bordered" div="' + div_id +'_table"><thead><tr><th>Male Parent</th><th>Priority</th></tr></thead><tbody>';
+        for (var i=0; i<male_ids.length; i++){
+            html = html + '<tr><td>' + male_ids[i] + '</td><td><input class="form-control" male_id="' + male_ids[i] + '" female_id="' + female_id + '" name ="cross_wishlist_final_priority" id="cross_wishlist_male_priority_'+ i +'" value="1" placeholder="1"/></td></tr>';
+        };
+        html = html + '</tbody></table>';
+        jQuery(select_id).html(html);
+    };
+
+
+    jQuery('#cross_wishlist_submit').click(function(e){
+        e.preventDefault();
+        var active_tab = jQuery('ul#cross_wishlist_tab_select li.active').attr('id');
+        //console.log(active_tab);
+        cross_data = [];
+        female_male_tracker = {};
+        selected_plot_ids = [];
+        female_trial_id;
+        male_trial_id;
+
+        var male_accession_limit = 60;
+        if (active_tab == 'cross_wishlist_no_list_tab'){
+            jQuery('input[name="cross_wishlist_final_priority"]').each(function() {
+                value = this.value;
+                var male_id = jQuery(this).attr('male_id');
+                var female_id = jQuery(this).attr('female_id');
+                cross_data.push({ 'female_id':female_id, 'male_id':male_id, 'priority':value });
+                if (female_id in female_male_tracker){
+                    female_male_tracker[female_id].push(male_id);
+                } else {
+                    female_male_tracker[female_id] = [male_id];
+                }
+            });
+            female_trial_id = jQuery('#cross_wishlist_female_trial_id').val();
+            male_trial_id = jQuery('#cross_wishlist_male_trial_id').val();
+        }
+        if (active_tab == 'cross_wishlist_list_tab'){
+            jQuery('input[name="cross_wishlist_cross_grid_inputs"]').each(function() {
+                value = this.value;
+                if (value){
+                    var male_id = jQuery(this).data('male');
+                    var female_id = jQuery(this).data('female');
+                    cross_data.push({ 'female_id':female_id, 'male_id':male_id, 'priority':value });
+                    if (female_id in female_male_tracker){
+                        female_male_tracker[female_id].push(male_id);
+                    } else {
+                        female_male_tracker[female_id] = [male_id];
+                    }
+                }
+            });
+            female_trial_id = jQuery('#cross_wishlist_list_female_trial_id').val();
+            male_trial_id = jQuery('#cross_wishlist_list_male_trial_id').val();
+        }
+        //console.log(cross_data);
+        //console.log(trial_id);
+        //console.log(female_male_tracker);
+        if(!female_trial_id){
+            alert('You must select a female trial!');
+            return;
+        }
+        if(!male_trial_id){
+            alert('You must select a male trial! It can be the same trial as the female trial.');
+            return;
+        }
+        for (f in female_male_tracker){
+            var male_array = female_male_tracker[f];
+            if (male_array.length > male_accession_limit){
+                alert('A maximum of 60 male accessions can be selected for each cross!');
+                return;
+            }
+        }
+        jQuery.ajax({
+            url: '/ajax/cross/create_cross_wishlist',
+            method: 'POST',
+            data: {
+                'crosses': JSON.stringify(cross_data),
+                'female_trial_id': female_trial_id,
+                'male_trial_id': male_trial_id
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
+                if (response.error){
+                    alert(response.error);
+                } else {
+                    jQuery('#cross_wishlist_cross_select_div').html(response.data);
+                    jQuery('#create_cross_wishlist_select_dialog').modal('show');
+                }
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert("An error occurred submitting plots for cross wishlist");
+            }
+        });
+    });
+
+    jQuery('#cross_wishlist_select_submits').click(function(){
+        var male_plot_limit = 60;
+        female_male_tracker = {};
+        selected_plot_ids = [];
+
+        jQuery('input[name="cross_wishlist_plot_select_female_input"]').each(function() {
+            if (this.checked){
+                selected_plot_ids.push({
+                    'cross_female_accession_name' : jQuery(this).data('female_accession_name'),
+                    'female_plot_id' : jQuery(this).val(),
+                    'male_genotypes_string' : jQuery(this).data('male_genotypes_string')
+                });
+            }
+        });
+        jQuery('input[name="cross_wishlist_plot_select_male_input"]').each(function() {
+            if (this.checked){
+                selected_plot_ids.push({
+                    'cross_female_accession_name' : jQuery(this).data('female_accession_name'),
+                    'male_plot_id' : jQuery(this).val()
+                });
+                if (jQuery(this).data('female_accession_name') in female_male_tracker){
+                    female_male_tracker[jQuery(this).data('female_accession_name')].push(jQuery(this).val());
+                } else {
+                    female_male_tracker[jQuery(this).data('female_accession_name')] = [jQuery(this).val()];
+                }
+            }
+        });
+        //console.log(selected_plot_ids);
+        //console.log(female_male_tracker);
+        for (f in female_male_tracker){
+            var male_array = female_male_tracker[f];
+            if (male_array.length > male_plot_limit){
+                alert('A maximum of 60 male plots can be selected for each cross!');
+                return;
+            }
+        }
+
+        jQuery.ajax({
+            url: '/ajax/cross/create_cross_wishlist_submit',
+            method: 'POST',
+            data: {
+                'crosses': JSON.stringify(cross_data),
+                'selected_plot_ids': JSON.stringify(selected_plot_ids),
+                'female_trial_id': female_trial_id,
+                'male_trial_id': male_trial_id,
+                'form_id': jQuery('#cross_wishlist_availabe_odk_crossing_forms').val(),
+                'form_name': jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery('#working_msg').html('Creating cross wishlist files and sending information to ONA... This can take time...');
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                //console.log(response);
+                jQuery('#working_msg').html('');
+                jQuery('#working_modal').modal('hide');
+                if (response.filename) {
+                    window.location.href = "/download/"+response.filename;
+                }
+                if (response.error) {
+                    jQuery('#cross_wishlist_response_div').html(response.error);
+                }
+                if (response.success){
+                    jQuery('#cross_wishlist_response_div').html(response.success);
+                }
+                jQuery('#create_cross_wishlist_response_dialog').modal('show');
+            },
+            error: function(response) {
+                jQuery('#working_msg').html('');
+                jQuery('#working_modal').modal('hide');
+                alert("An error occurred creating cross wishlist");
+            }
+        });
+    });
+
+    jQuery('#cross_wishlist_female_trial_select_upload_div').change(function(){
+        jQuery('#wishlist_lists_footer').hide();
+        jQuery('#wishlist_upload_footer').show();
+    });
+
+    jQuery('#wishlist_format').click(function() {
+        jQuery('#upload_wishlist_spreadsheet_info_dialog').modal("show");
+    });
+
+    jQuery('#wishlist_upload_submit').click(function() {
+        upload_wishlist_file();
+    });
+
+    function upload_wishlist_file() {
+        var female_trial_id = $('#cross_wishlist_upload_female_trial_id').val();
+        if (!female_trial_id) {
+            alert('A female trial is required');
+            return;
+        }
+
+        var male_trial_id = $('#cross_wishlist_upload_male_trial_id').val();
+        if (!male_trial_id) {
+            alert('A male trial is required');
+            return;
+        }
+
+        var uploadFile = $("#wishlist_file").val();
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery('#upload_wishlist_form').attr("action", "/ajax/cross/create_wishlist_by_uploading");
+
+        jQuery("#upload_wishlist_form").submit();
+
+    }
+
+    jQuery('#upload_wishlist_form').iframePostForm({
+        json: true,
+        post: function() {
+            var uploadFile = $('#wishlist_file').val();
+            if (uploadFile === '') {
+                alert("No file selected");
+            }
+            jQuery('#working_msg').html('Creating cross wishlist files and sending information to ONA... This can take time...');
+            jQuery('#working_modal').modal('show');
+        },
+        complete: function(response) {
+            if (response.error_string) {
+                jQuery('#working_modal').modal('hide');
+                jQuery('#upload_wishlist_error_display tbody').html('');
+                jQuery('#upload_wishlist_error_display tbody').append(response.error_string);
+                jQuery('#upload_wishlist_error_display').modal("show");
+                return;
+            }
+            if (response.error) {
+                jQuery('#working_modal').modal('hide');
+                alert(response.error);
+                return;
+            }
+            if ((response.selected_plot_ids) && (response.cross_combinations)) {
+                var selected_plot_ids = JSON.stringify(response.selected_plot_ids);
+                var cross_combinations = JSON.stringify(response.cross_combinations);
+                var female_trial_id = jQuery('#cross_wishlist_upload_female_trial_id').val();
+                var male_trial_id = jQuery('#cross_wishlist_upload_male_trial_id').val();
+                var form_id = jQuery('#cross_wishlist_availabe_odk_crossing_forms').val();
+                var form_name = jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text();
+
+                jQuery.ajax({
+                    url: '/ajax/cross/create_cross_wishlist_submit',
+                    method: 'POST',
+                    data: {
+                        'crosses': cross_combinations,
+                        'selected_plot_ids': selected_plot_ids,
+                        'female_trial_id': female_trial_id,
+                        'male_trial_id': male_trial_id,
+                        'form_id': form_id,
+                        'form_name': form_name
+                    },
+                    dataType:'json',
+                    success: function(response) {
+                        //console.log(response);
+                        jQuery('#working_msg').html('');
+                        jQuery('#working_modal').modal('hide');
+                        if (response.filename) {
+                            window.location.href = "/download/"+response.filename;
+                        }
+                        if (response.error) {
+                            jQuery('#cross_wishlist_response_div').html(response.error);
+                        }
+                        if (response.success){
+                            jQuery('#cross_wishlist_response_div').html(response.success);
+                        }
+                        jQuery('#create_cross_wishlist_response_dialog').modal('show');
+                    },
+                    error: function(response) {
+                        jQuery('#working_msg').html('');
+                        jQuery('#working_modal').modal('hide');
+                        alert("An error occurred creating cross wishlist");
+                    }
+                });
+            }
+        }
+    });
+
+    function check_trial_accessions(female_trial_id, female_accession_list_id, female_accessions, male_accessions) {
+        jQuery.ajax({
+            url: '/ajax/cross/check_wishlist_accessions',
+            method: 'POST',
+            data: {
+                'female_trial_id': female_trial_id,
+                'female_list_id': female_accession_list_id
+            },
+            beforeSend: function() {
+            jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
+                if (response.error_string){
+                    alert(response.error_string);
+                } else {
+                    draw_cross_grid(female_accessions, male_accessions);
+                }
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert("An error occurred checking accession list");
+            }
+        });
+
+    }
+
+
+});
+
+
+</script>

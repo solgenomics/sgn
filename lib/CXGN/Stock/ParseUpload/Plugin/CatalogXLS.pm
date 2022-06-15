@@ -32,9 +32,8 @@ sub _validate_with_plugin {
     $supported_categories{'pathogen assay'} = 1;
     $supported_categories{'control'} = 1;
 
-    $supported_material_sources{'Arusha'} = 1;
+    $supported_material_sources{'OrderingSystemTest'} = 1;
     $supported_material_sources{'Sendusu'} = 1;
-    $supported_material_sources{'Kawanda'} = 1;
 
     $supported_availability{'in stock'} = 1;
     $supported_availability{'out of stock'} = 1;

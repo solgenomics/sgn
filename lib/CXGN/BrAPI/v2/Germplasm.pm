@@ -346,8 +346,6 @@ sub germplasm_pedigree {
                 };
             }
             $cross_plan = $cross_type;
-            $mother = $female_parent_name ? $female_parent_name : "NA";
-            $father = $male_parent_name ? $male_parent_name : "NA";
         }
 
         #Cross information
@@ -380,18 +378,24 @@ sub germplasm_pedigree {
             }
         }
 
-        my $parent = [
-            {
-                germplasmDbId=>qq|$female_parent_stock_id|,
+        #Add parents:
+        my $parent = [];
+        if ($female_parent_stock_id){
+            push @$parent, {
+                germplasmDbId=>$female_parent_stock_id ? qq|$female_parent_stock_id| : $female_parent_stock_id ,
                 germplasmName=>$mother,
                 parentType=>'FEMALE',
-            },
-            {
-                germplasmDbId=>qq|$male_parent_stock_id|,
+            };
+        }
+        if ($male_parent_stock_id){
+            push @$parent, {
+                germplasmDbId=>$male_parent_stock_id ? qq|$male_parent_stock_id| : $male_parent_stock_id,
                 germplasmName=>$father,
                 parentType=>'MALE',
-            },
-            ];
+            }
+
+        }
+
         %result = (
             crossingProjectDbId=>$membership_info[0][0],
             crossingYear=>$membership_info[0][5],
@@ -561,7 +565,7 @@ sub germplasm_mcpd {
             ancestralData=>$_->{pedigree},
             commonCropName=>$_->{common_name},
             instituteCode=>$_->{'institute code'},
-            biologicalStatusOfAccessionCode=>$_->{'biological status of accession code'} || 0,
+            biologicalStatusOfAccessionCode=>qq|$_->{'biological status of accession code'}| || "0",
             countryOfOrigin=>$_->{'country of origin'},
             storageTypeCodes=>\@type_of_germplasm_storage_codes,
             genus=>$_->{genus},

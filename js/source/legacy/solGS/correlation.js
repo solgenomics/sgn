@@ -37,7 +37,7 @@ solGS.correlation = {
 	var trainingPopIdName = JSON.stringify(modelData);
 
 	var  popsList =  '<dl id="corre_selected_population" class="corre_dropdown">'
-            + '<dt> <a href="#"><span>Choose a population</span></a></dt>'
+            + '<dt> <a href="#"><span>Select a population</span></a></dt>'
             + '<dd>'
             + '<ul>'
             + '<li>'

@@ -154,6 +154,8 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
 
     my @filter_input;
     while (my ($stock_name, $o) = each %parsed_data) {
+        my $device_id = $o->{nirs}->{device_id};
+        my $comments = $o->{nirs}->{comments};
         my $spectras = $o->{nirs}->{spectra};
         foreach my $spectra (@$spectras) {
             push @filter_input, {
@@ -363,6 +365,8 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
 
     my @filter_input;
     while (my ($stock_name, $o) = each %parsed_data) {
+        my $device_id = $o->{nirs}->{device_id};
+        my $comments = $o->{nirs}->{comments};
         my $spectras = $o->{nirs}->{spectra};
         foreach my $spectra (@$spectras) {
             push @filter_input, {
@@ -471,10 +475,14 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
 
     my %parsed_data_agg_coalesced;
     while (my ($stock_name, $o) = each %parsed_data_agg) {
-       my $spectras = $o->{nirs}->{spectra};
-       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{protocol_id} = $protocol_id;
-       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{device_type} = $protocol_device_type;
-       $parsed_data_agg_coalesced{$stock_name}->{nirs}->{spectra} = $spectras->[0];
+        my $device_id = $o->{nirs}->{device_id};
+        my $comments = $o->{nirs}->{comments};
+        my $spectras = $o->{nirs}->{spectra};
+        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{protocol_id} = $protocol_id;
+        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{device_type} = $protocol_device_type;
+        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{device_id} = $device_id;
+        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{comments} = $comments;
+        $parsed_data_agg_coalesced{$stock_name}->{nirs}->{spectra} = $spectras->[0];
     }
 
     ## Set metadata
@@ -487,6 +495,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $pheno_dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
+    # print STDERR Dumper \%parsed_data_agg_coalesced;
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
@@ -868,9 +877,13 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
 
     my %parsed_data_agg_coalesced;
     while (my ($stock_name, $o) = each %parsed_data) {
+        my $device_id = $o->{transcriptomics}->{device_id};
+        my $comments = $o->{transcriptomics}->{comments};
         my $spectras = $o->{transcriptomics}->{transcripts};
         $parsed_data_agg_coalesced{$stock_name}->{transcriptomics} = $spectras->[0];
         $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{protocol_id} = $protocol_id;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{device_id} = $device_id;
+        $parsed_data_agg_coalesced{$stock_name}->{transcriptomics}->{comments} = $comments;
     }
 
     ## Set metadata
@@ -1304,9 +1317,13 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
 
     my %parsed_data_agg;
     while (my ($stock_name, $o) = each %parsed_data) {
+        my $device_id = $o->{metabolomics}->{device_id};
+        my $comments = $o->{metabolomics}->{comments};
         my $spectras = $o->{metabolomics}->{metabolites};
         $parsed_data_agg{$stock_name}->{metabolomics} = $spectras->[0];
         $parsed_data_agg{$stock_name}->{metabolomics}->{protocol_id} = $protocol_id;
+        $parsed_data_agg{$stock_name}->{metabolomics}->{device_id} = $device_id;
+        $parsed_data_agg{$stock_name}->{metabolomics}->{comments} = $comments;
     }
 
     ## Set metadata

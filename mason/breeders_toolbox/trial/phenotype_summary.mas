@@ -318,7 +318,7 @@ function trait_summary_hist_display_change(value) {
 function trait_summary_hist_change(value) {
     jQuery("#trial_summary_hist_dropdown").val(value);
     jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
-    console.log("value",value);
+    // console.log("value",value);
     jQuery.ajax( {
         url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+value+'&display='+jQuery('#display_trial_phenosummary_hist').val(),
         type: 'POST',

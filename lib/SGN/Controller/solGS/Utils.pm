@@ -124,6 +124,7 @@ sub abbreviate_term {
     $term =~ s/-/_/g;
     $term =~ s/\%/percent/g;
     $term =~ s/\((\w+\s*\w*)\)/_$2 $1/g;
+    $term =~ s/"|\://g;
 
     my @words = split(/\s/, $term);
 
@@ -218,7 +219,8 @@ sub clean_traits {
     $terms =~ s/(\|\w+:\d+)//g;
     $terms =~ s/\|/ /g;
     $terms =~ s/^\s+|\s+$//g;
-
+    $terms =~ s/"|\://g;
+    
     return $terms;
 }
 
@@ -245,7 +247,7 @@ sub remove_ontology {
 sub get_clean_trial_trait_names {
     my ($self, $c, $trial_id) = @_;
 
-    my $traits = $c->model('solGS::solGS')->trial_traits($trial_id);
+    my $traits = $c->controller('solGS::Search')->model($c)->trial_traits($trial_id);
     my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($traits);
     my @trait_names;
 
@@ -266,7 +268,7 @@ sub save_metadata {
 
     if (!-s $metadata_file)
     {
-	my $metadata   = $c->model('solGS::solGS')->trial_metadata();
+	my $metadata   = $c->controller('solGS::Search')->model($c)->trial_metadata();
 	write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
     }
 

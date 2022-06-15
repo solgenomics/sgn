@@ -51,8 +51,8 @@ sub validate_design {
     my $error = '';
 
     if (defined $design_type){
-        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
-            $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, MAD, p-rep, greenhouse, Westcott or splitplot";
+        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'RRC' && $design_type ne 'DRRC' && $design_type ne 'ARC' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
+            $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, RRC, DRRC, ARC, MAD, p-rep, greenhouse, Westcott or splitplot";
             return $error;
         }
     }
@@ -174,7 +174,7 @@ sub validate_design {
     my $trial_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_layout_json', 'project_property')->cvterm_id();
     my $plot_number_select = "select projectprop.value from project " .
         "join projectprop on projectprop.project_id = project.project_id " .
-        "where type_id = $trial_layout_cvterm_id and project.project_id = ?";
+        "where projectprop.type_id = $trial_layout_cvterm_id and project.project_id = ?";
     my $sth = $chado_schema->storage->dbh->prepare($plot_number_select);
     $sth->execute($self->get_trial_id());
     while (my ($trial_layout_json) = $sth->fetchrow_array()) {

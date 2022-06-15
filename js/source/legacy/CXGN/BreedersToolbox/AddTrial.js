@@ -171,7 +171,7 @@ jQuery(document).ready(function ($) {
         if ($('#list_of_cross_checks_section_list_select').val()) {
             check_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
             check_cross_list = JSON.stringify(list.getList(check_cross_list_id));
-            verify_cross_list(check_cross_list);
+            verify_stock_list(check_cross_list);
         }
     });
 
@@ -179,7 +179,7 @@ jQuery(document).ready(function ($) {
         if ($('#list_of_family_name_checks_section_list_select').val()) {
             check_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
             check_family_name_list = JSON.stringify(list.getList(check_family_name_list_id));
-            verify_family_name_list(check_family_name_list);
+            verify_stock_list(check_family_name_list);
         }
     });
 
@@ -200,7 +200,7 @@ jQuery(document).ready(function ($) {
         if ($('#crbd_list_of_cross_checks_section_list_select').val()) {
             crbd_check_cross_list_id = $('#crbd_list_of_cross_checks_section_list_select').val();
             crbd_check_cross_list = JSON.stringify(list.getList(crbd_check_cross_list_id));
-            verify_cross_list(crbd_check_cross_list);
+            verify_stock_list(crbd_check_cross_list);
         }
     });
 
@@ -208,7 +208,7 @@ jQuery(document).ready(function ($) {
         if ($('#crbd_list_of_family_name_checks_section_list_select').val()) {
             crbd_check_family_name_list_id = $('#crbd_list_of_family_name_checks_section_list_select').val();
             crbd_check_family_name_list = JSON.stringify(list.getList(crbd_check_family_name_list_id));
-            verify_family_name_list(crbd_check_family_name_list);
+            verify_stock_list(crbd_check_family_name_list);
         }
     });
 
@@ -271,7 +271,7 @@ jQuery(document).ready(function ($) {
     });
 
     $(document).on('focusout', '#select_seedlot_list_list_select', function() {
-        if ($('#select_seedlot_list_list_select').val() != '') {
+        if ($('#select_seedlot_list_list_select').val() ) {
             seedlot_list_id = $('#select_seedlot_list_list_select').val();
             seedlot_list = JSON.stringify(list.getList(seedlot_list_id));
             if(stock_list && seedlot_list){
@@ -498,79 +498,47 @@ jQuery(document).ready(function ($) {
         var col_number=$('#col_number').val();
        // alert(row_number);
 
-        var accession_list_id = '';
-        var control_accession_list_id = '';
-        var control_accession_list_id_crbd = '';
-        var cross_list_id = '';
-        var control_cross_list_id = '';
-        var control_cross_list_id_crbd = '';
-        var family_name_list_id = '';
-        var control_family_name_list_id = '';
-        var control_family_name_list_id_crbd = '';
-        var replicated_accession_list_id = '';
-        var unreplicated_accession_list_id = '';
-        var replicated_cross_list_id = '';
-        var unreplicated_cross_list_id = '';
-        var replicated_family_name_list_id = '';
-        var unreplicated_family_name_list_id = '';
+        var stock_list_id;
+        var control_stock_list_id;
+        var control_stock_list_id_crbd;
+        var replicated_stock_list_id;
+        var unreplicated_stock_list_id;
 
         if (trial_stock_type == "accession"){
-            accession_list_id = $('#select_list_list_select').val();
-            control_accession_list_id = $('#list_of_checks_section_list_select').val();
-            control_accession_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
-            replicated_accession_list_id = $('#list_of_rep_accession_list_select').val();
-            unreplicated_accession_list_id = $('#list_of_unrep_accession_list_select').val();
+            stock_list_id = $('#select_list_list_select').val();
+            control_stock_list_id = $('#list_of_checks_section_list_select').val();
+            control_stock_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
+            replicated_stock_list_id = $('#list_of_rep_accession_list_select').val();
+            unreplicated_stock_list_id = $('#list_of_unrep_accession_list_select').val();
         } else if (trial_stock_type == "cross") {
-            cross_list_id = $('#select_cross_list_list_select').val();
-            control_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
-            control_cross_list_id_crbd = $('#crbd_list_of_cross_checks_section_list_select').val();
-            replicated_cross_list_id = $('#list_of_rep_cross_list_select').val();
-            unreplicated_cross_list_id = $('#list_of_unrep_cross_list_select').val();
+            stock_list_id = $('#select_cross_list_list_select').val();
+            control_stock_list_id = $('#list_of_cross_checks_section_list_select').val();
+            control_stock_list_id_crbd = $('#crbd_list_of_cross_checks_section_list_select').val();
+            replicated_stock_list_id = $('#list_of_rep_cross_list_select').val();
+            unreplicated_stock_list_id = $('#list_of_unrep_cross_list_select').val();
         } else if (trial_stock_type == "family_name") {
-            family_name_list_id = $('#select_family_name_list_list_select').val();
-            control_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
-            control_family_name_list_id_crbd = $('#crbd_list_of_family_name_checks_section_list_select').val();
-            replicated_family_name_list_id = $('#list_of_rep_family_name_list_select').val();
-            unreplicated_family_name_list_id = $('#list_of_unrep_family_name_list_select').val();
+            stock_list_id = $('#select_family_name_list_list_select').val();
+            control_stock_list_id = $('#list_of_family_name_checks_section_list_select').val();
+            control_stock_list_id_crbd = $('#crbd_list_of_family_name_checks_section_list_select').val();
+            replicated_stock_list_id = $('#list_of_rep_family_name_list_select').val();
+            unreplicated_stock_list_id = $('#list_of_unrep_family_name_list_select').val();
         }
 
-        var stock_list;
-        var stock_list_array;
-
-        if (accession_list_id != "") {
-            stock_list_array = list.getList(accession_list_id);
-            stock_list = JSON.stringify(stock_list_array);
-        } else if (cross_list_id != "") {
-            stock_list_array = list.getList(cross_list_id);
-            stock_list = JSON.stringify(stock_list_array);
-        } else if (family_name_list_id != "") {
-            stock_list_array = list.getList(family_name_list_id);
-            stock_list = JSON.stringify(stock_list_array);
-        }
+        var stock_list_array = list.getList(stock_list_id);
+        var stock_list = JSON.stringify(stock_list_array);
 
         var control_list;
         var control_list_array;
-        if (control_accession_list_id != '') {
-            control_list_array = list.getList(control_accession_list_id);
-            control_list = JSON.stringify(control_list_array);
-        } else if (control_cross_list_id != '') {
-            control_list_array = list.getList(control_cross_list_id);
-            control_list = JSON.stringify(control_list_array);
-        } else if (control_family_name_list_id != '') {
-            control_list_array = list.getList(control_family_name_list_id);
+        if(control_stock_list_id) {
+            control_list_array = list.getList(control_stock_list_id);
             control_list = JSON.stringify(control_list_array);
         }
 
         var control_list_crbd;
         var control_list_crbd_array;
-        if (control_accession_list_id_crbd != '') {
-            control_list_crbd_array = list.getList(control_accession_list_id_crbd);
-            control_list_crbd = JSON.stringify(control_list_crbd_array);
-        } else if (control_cross_list_id_crbd != '') {
-            control_list_crbd_array = list.getList(control_cross_list_id_crbd);
-            control_list_crbd = JSON.stringify(control_list_crbd_array);
-        } else if (control_family_name_list_id_crbd != '') {
-            control_list_crbd_array = list.getList(control_family_name_list_id_crbd);
+
+        if (control_stock_list_id_crbd) {
+            control_list_crbd_array = list.getList(control_stock_list_id_crbd);
             control_list_crbd = JSON.stringify(control_list_crbd_array);
         }
 
@@ -614,21 +582,13 @@ jQuery(document).ready(function ($) {
         }
 
         var unreplicated_stock_list;
-        if (unreplicated_accession_list_id != "") {
-            unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_accession_list_id));
-        } else if (unreplicated_cross_list_id != "") {
-            unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_cross_list_id));
-        } else if (unreplicated_family_name_list_id != "") {
-            unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_family_name_list_id));
+        if (unreplicated_stock_list_id) {
+            unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_stock_list_id));
         }
 
         var replicated_stock_list;
-        if (replicated_accession_list_id != "") {
-            replicated_stock_list = JSON.stringify(list.getList(replicated_accession_list_id));
-        } else if (replicated_cross_list_id != "") {
-            replicated_stock_list = JSON.stringify(list.getList(replicated_cross_list_id));
-        } else if (replicated_family_name_list_id != "") {
-            replicated_stock_list = JSON.stringify(list.getList(replicated_family_name_list_id));
+        if (replicated_stock_list_id) {
+            replicated_stock_list = JSON.stringify(list.getList(replicated_stock_list_id));
         }
 
         var treatments = []
@@ -653,7 +613,7 @@ jQuery(document).ready(function ($) {
         }
 
         var greenhouse_num_plants = [];
-        if (stock_list_id != "" && design_type == 'greenhouse') {
+        if (stock_list_id && design_type == 'greenhouse') {
             for (var i=0; i<stock_list_array.length; i++) {
                 var value = jQuery("input#greenhouse_num_plants_input_" + i).val();
                 if (value == '') {
@@ -958,6 +918,7 @@ jQuery(document).ready(function ($) {
             alert('Year and description are required.');
             return;
         }
+
         if (stock_list_verified == 1 && seedlot_list_verified == 1){
             generate_experimental_design();
         } else if (cross_list_verified == 1 && stock_list_verified == 0 && family_name_list_verified == 0){
@@ -976,21 +937,21 @@ jQuery(document).ready(function ($) {
 
         //add lists to the list select and list of checks select dropdowns based on stock type.
         if (stock_type == "accession"){
-            document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], 'select a list', 'refresh', undefined);
             document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh', undefined);
-            document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], 'select optional check list', 'refresh', undefined);
             document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
             document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh', undefined);
             document.getElementById("list_of_rep_accession").innerHTML = list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh', undefined);
         } else if (stock_type == "cross") {
-            document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], '', 'refresh', undefined);
-            document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("select_cross_list").innerHTML = list.listSelect("select_cross_list", [ 'crosses' ], 'select a list', 'refresh', undefined);
+            document.getElementById("list_of_cross_checks_section").innerHTML = list.listSelect("list_of_cross_checks_section", [ 'accessions' ], 'select optional check list', 'refresh', undefined);
             document.getElementById("crbd_list_of_cross_checks_section").innerHTML = list.listSelect("crbd_list_of_cross_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
             document.getElementById("list_of_unrep_cross").innerHTML = list.listSelect("list_of_unrep_cross", [ 'crosses' ], "Required: e.g. 200", 'refresh', undefined);
             document.getElementById("list_of_rep_cross").innerHTML = list.listSelect("list_of_rep_cross", [ 'crosses' ], "Required: e.g. 119", 'refresh', undefined);
         } else if (stock_type == "family_name") {
-            document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_family_name_list", [ 'family_names' ], '', 'refresh', undefined);
-            document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'accessions' ], '', 'refresh', undefined);
+            document.getElementById("select_family_name_list").innerHTML = list.listSelect("select_family_name_list", [ 'family_names' ], 'select a list', 'refresh', undefined);
+            document.getElementById("list_of_family_name_checks_section").innerHTML = list.listSelect("list_of_family_name_checks_section", [ 'accessions' ], 'select optional check list', 'refresh', undefined);
             document.getElementById("crbd_list_of_family_name_checks_section").innerHTML = list.listSelect("crbd_list_of_family_name_checks_section", [ 'accessions' ], "select optional check list", 'refresh', undefined);
             document.getElementById("list_of_unrep_family_name").innerHTML = list.listSelect("list_of_unrep_family_name", [ 'family_names' ], "Required: e.g. 200", 'refresh', undefined);
             document.getElementById("list_of_rep_family_name").innerHTML = list.listSelect("list_of_rep_family_name", [ 'family_names' ], "Required: e.g. 119", 'refresh', undefined);
@@ -1004,15 +965,17 @@ jQuery(document).ready(function ($) {
         var stock_type = jQuery('#select_stock_type').val();
 
         if (design_method == "CRD"){
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates completely a randomized design with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Completely Randomized design (CRD) with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
         } else if (design_method == "RCBD") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates Randomized Complete Block Design, using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Randomized Complete Block design (RCBD), using the methods of random number generation in R. Creates plot entities in the database.</p></div>');
+        } else if (design_method == "RRC") {
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a Resolvable Row-Column design (RRC), using the blocksdesign package in R. In addition to the one-way blocks it adds a constraint that no treatment may appear more than once in each row (latinization). Each row becomes an incomplete block.</p></div>');
         } else if (design_method == "Alpha") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Alpha design starting from design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Lattice") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>SIMPLE and TRIPLE lattice designs. It randomizes treatments in K x K lattice. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates SIMPLE and TRIPLE lattice designs using the design.lattice function from the agricolae R package. Randomizes treatments in K x K lattice. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Augmented") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates an Augmented design. Some treatments (checks) are replicated r times and other treatments (new) are replicated once. Creates plot entities in the database.</p></div>');
         } else if (design_method == "MAD") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Adjustments are calculated using data from all checks. Creates plot entities in the database.</p></div>');
         } else if (design_method == "greenhouse") {
@@ -1020,9 +983,9 @@ jQuery(document).ready(function ($) {
         } else if (design_method == "splitplot") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment(s) distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database.</p></div>');
         } else if (design_method == "p-rep") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Has some treatments that are unreplicated and relies on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Westcott") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates fieldplan for an unreplicated design with genotypes randomly allocated on a field with checks following the method described on Westcott (1981).</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Generates a fieldplan for an unreplicated design with genotypes randomly allocated within a field with checks following the method described by Westcott (1981).</p></div>');
         } else {
             jQuery('#create_trial_design_description_div').html('');
         }
@@ -1107,6 +1070,84 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
         } else if (design_method == "RCBD") {
+            if (stock_type == "accession") {
+                $("#show_list_of_accession_section").show();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").show();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "cross") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").show();
+                $("#show_list_of_family_name_section").hide();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").show();
+                $("#crbd_show_list_of_family_name_checks_section").hide();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            } else if (stock_type == "family_name") {
+                $("#show_list_of_accession_section").hide();
+                $("#show_list_of_cross_section").hide();
+                $("#show_list_of_family_name_section").show();
+                $("#show_list_of_checks_section").hide();
+                $("#show_list_of_cross_checks_section").hide();
+                $("#show_list_of_family_name_checks_section").hide();
+                $("#crbd_show_list_of_checks_section").hide();
+                $("#crbd_show_list_of_cross_checks_section").hide();
+                $("#crbd_show_list_of_family_name_checks_section").show();
+                $("#show_list_of_unrep_accession").hide();
+                $("#show_list_of_rep_accession").hide();
+                $("#show_list_of_unrep_cross").hide();
+                $("#show_list_of_rep_cross").hide();
+                $("#show_list_of_unrep_family_name").hide();
+                $("#show_list_of_rep_family_name").hide();
+            }
+            $("#trial_multi-design_more_info").show();
+            $("#FieldMap").show();
+            $("#prephelp").hide();
+            $("#show_no_of_row_in_design").hide();
+            $("#show_no_of_col_in_design").hide();
+            $("#show_no_of_rep_times").hide();
+            $("#show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
+            $("#rep_count_section").hide();
+            $("#block_number_section").show();
+            $("#block_size_section").hide();
+            $("#max_block_size_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
+            $("#design_info").show();
+            $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
+            $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
+            $("#westcott_num_col_section").hide();
+            $("#westcott_num_col_between_check_section").hide();
+            $("#westcott_check_1_section").hide();
+            $("#westcott_check_2_section").hide();
+            $("#FieldMap_westcott").hide();
+        } else if (design_method == "RRC") {
             if (stock_type == "accession") {
                 $("#show_list_of_accession_section").show();
                 $("#show_list_of_cross_section").hide();
@@ -1631,7 +1672,6 @@ jQuery(document).ready(function ($) {
             $("#westcott_check_1_section").hide();
             $("#westcott_check_2_section").hide();
             $("#FieldMap_westcott").hide();
-            greenhouse_show_num_plants_section();
         }
         else if (design_method == 'splitplot') {
             if (stock_type == "accession") {
@@ -1977,20 +2017,20 @@ jQuery(document).ready(function ($) {
         var stock_list_id = jQuery('#select_list_list_select').val();
         var control_list_id = jQuery('#list_of_checks_section_list_select').val();
         var stock_list;
-        if (stock_list_id != "") {
+        if (stock_list_id) {
             stock_list_array = list.getList(stock_list_id);
             stock_list = JSON.stringify(list.getList(stock_list_id));
         }
         var control_list;
-        if (control_list_id != "") {
+        if (control_list_id) {
            control_list = JSON.stringify(list.getList(control_list_id));
         }
         var design_type = jQuery('#select_design_method').val();
-        if (design_type == "") {
+        if (design_type == "undefined") {
             var design_type = jQuery('#select_multi-design_method').val();
         }
         var greenhouse_num_plants = [];
-        if (stock_list_id != "" && design_type == 'greenhouse') {
+        if (stock_list_id && design_type == 'greenhouse') {
             for (var i=0; i<stock_list_array.length; i++) {
                 var value = jQuery("input#greenhouse_num_plants_input_" + i).val();
                 if (value == '') {
@@ -2251,6 +2291,7 @@ jQuery(document).ready(function ($) {
 
     jQuery('#new_trial_add_treatments_submit').click(function(){
         var new_treatment_year = jQuery('#new_treatment_year').val();
+        var new_treatment_description = jQuery('#new_treatment_description').val();
         var new_treatment_date = jQuery('#new_treatment_date').val();
         var new_treatment_type = jQuery('#new_treatment_type').val();
         new_treatment_date = moment(new_treatment_date).format('YYYY/MM/DD HH:mm:ss')
@@ -2283,6 +2324,7 @@ jQuery(document).ready(function ($) {
                     trial[trial_treatment]["new_treatment_type"] = new_treatment_type;
                     trial[trial_treatment]["new_treatment_date"] = new_treatment_date;
                     trial[trial_treatment]["new_treatment_year"] = new_treatment_year;
+                    trial[trial_treatment]["new_treatment_description"] = new_treatment_description;
 
                     trial_treatments[trial_index] = trial;
                 } else {
@@ -2348,7 +2390,7 @@ function greenhouse_show_num_plants_section(){
     var family_name_list_id = jQuery('#select_family_name_list_list_select').val();
 
     var default_num = jQuery('#greenhouse_default_num_plants_per_accession_val').val();
-    if (accession_list_id != "") {
+        if (accession_list_id) {
         var accession_list = list.getList(accession_list_id);
         var html = '<form class="form-horizontal">';
         for (var i=0; i<accession_list.length; i++){
@@ -2356,7 +2398,7 @@ function greenhouse_show_num_plants_section(){
         }
         html = html + '</form>';
         jQuery("#greenhouse_num_plants_per_accession").empty().html(html);
-    } else if (cross_list_id != "") {
+    } else if (cross_list_id) {
         var cross_list = list.getList(cross_list_id);
         var html = '<form class="form-horizontal">';
         for (var i=0; i<cross_list.length; i++){
@@ -2364,7 +2406,7 @@ function greenhouse_show_num_plants_section(){
         }
         html = html + '</form>';
         jQuery("#greenhouse_num_plants_per_accession").empty().html(html);
-    } else if (family_name_list_id != "") {
+    } else if (family_name_list_id) {
         var family_name_list = list.getList(family_name_list_id);
         var html = '<form class="form-horizontal">';
         for (var i=0; i<family_name_list.length; i++){

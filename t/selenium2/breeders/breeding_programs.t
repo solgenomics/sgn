@@ -1,5 +1,3 @@
-
-
 use lib 't/lib';
 
 use Test::More;
@@ -28,41 +26,46 @@ $t->while_logged_in_as("curator", sub {
 
     my $ok_button = $t->find_element_ok('new_breeding_program_submit', 'id', 'find add breeding program button');
 
-
     $ok_button->click();
 
     print STDERR "\n\nCLICKED OK... so far so good...\n\n";
 
-    $t->driver()->accept_alert();
+    sleep(2);
+
+    $t->driver->accept_alert();
 
     sleep(2); # wait until page is re-loaded
 
     $t->get_ok('/breeders/manage_programs');
+
     sleep(2);
 
     ok($t->driver->get_page_source() =~ m/WEBTEST/, "breeding program addition successful");
 
 #    print STDERR $t->driver->get_page_source();
 
+    sleep(2);
+
     my $delete_link = $t->find_element_ok('delete_breeding_program_link_WEBTEST', 'id', 'find breeding program delete link');
 
     sleep(2); 
 
-     $delete_link->click();
+    $delete_link->click();
 
     sleep(2);
     
-    $t->driver()->accept_alert();
-    
+    $t->driver->accept_alert();
+
+    sleep(2);
+
     $t->get_ok('/breeders/manage_programs');
     
-    
-    print STDERR "Marker 4\n";
+#    print STDERR "Marker 4\n";
 
-#    sleep(2);
+    sleep(2);
 
-#  ok($t->driver->get_page_source() !~ m/WEBTEST/, "breeding program deletion successful");
+    ok($t->driver->get_page_source() !~ m/WEBTEST/, "breeding program deletion successful");
 
     done_testing();
-		       
-		       });
+
+});

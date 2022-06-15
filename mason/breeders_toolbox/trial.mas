@@ -54,6 +54,7 @@ $trial_stock_type => undef
 $trial_stock_count => undef
 $management_factor_types => ()
 $trial_owner => undef
+$latest_trial_activity => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -63,7 +64,9 @@ $trial_owner => undef
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Trial Details</h4>", info_section_subtitle => 'View and edit basic information about the experiment.', buttons_html => '<button class="btn btn-primary btn-sm" id="edit_trial_details" style="margin:3px">Edit Trial Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "trial_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, country_name => $country_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, plot_width => $plot_width, plot_length => $plot_length, field_size => $field_size, field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross, folder_name => $folder_name, folder_id => $folder_id, identifier_prefix => $identifier_prefix, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner &>
+<& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Trial Details</h4>", info_section_subtitle => 'View and edit basic information about the experiment.', buttons_html => '<button class="btn btn-primary btn-sm" id="edit_trial_details" style="margin:3px">Edit Trial Details</button>', icon_class => "glyphicon glyphicon-dashboard", info_section_id => "trial_details", trial_name => $trial_name, breeding_program_name => $breeding_program_name, breeding_program_id => $breeding_program_id, location_name => $location_name, country_name => $country_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, plot_width => $plot_width, plot_length => $plot_length, field_size => $field_size, field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross, folder_name => $folder_name, folder_id => $folder_id, identifier_prefix => $identifier_prefix, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner, latest_trial_activity => $latest_trial_activity &>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, location_name => $location_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, folder_id => $folder_id, design_name => $design_name, has_plant_entries => $has_plant_entries, phenotypes_fully_uploaded => $phenotypes_fully_uploaded, user_can_modify => $user_can_modify, user_name => $user_name, info_section_title => "<h4 style='display:inline'>Trial Status</h4>", info_section_subtitle => 'View progress of this trial.', icon_class => "glyphicon glyphicon-forward", info_section_id => "trial_status_section" &>
 
 % my $barcode_section_title = '';
 % if ($trial_stock_type eq 'family_name') {
@@ -92,7 +95,7 @@ $trial_owner => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Management Factor</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Management Factor</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary Statistics</h4>", info_section_subtitle => 'View and download uploaded phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Trial Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", has_expression_atlas => $has_expression_atlas, trial_name => $trial_name, expression_atlas_url => $expression_atlas_url, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
 
@@ -115,8 +118,8 @@ $trial_owner => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Data Agreement License</h4>", info_section_subtitle => 'View and edit the public data agreement on this experiment.', icon_class => "glyphicon glyphicon-inbox", info_section_id => "trial_data_agreement_section", buttons_html => $data_agreement_link &>
 
-<& /breeders_toolbox/folder/folder_set.mas, project_type => 'Trial', breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
-<& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
+<& /breeders_toolbox/folder/folder_set.mas, project_type => 'field_trial', breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
+<& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, project_type => 'field_trial' &>
 <& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program_id, location => $location_id, year => $year, trial_type => $trial_type, trial_type_id => $trial_type_id, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description, field_size => $field_size, plot_width => $plot_width, plot_length => $plot_length, field_trial_is_planned_to_be_genotyped => $field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross => $field_trial_is_planned_to_cross &>
 
 <& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", trial_stock_type => $trial_stock_type &>
@@ -132,6 +135,7 @@ $trial_owner => undef
 <& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas, management_factor_types => $management_factor_types &>
 <& /breeders_toolbox/trial/change_plot_accessions_dialogs.mas, trial_id => $trial_id &>
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id, dialog_name => $trial_name, dialog_type => 'Trial' &>
+<& /breeders_toolbox/trial/update_experimental_design_type.mas, trial_id => $trial_id, trial_name => $trial_name, design_name => $design_name &>
 
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
@@ -144,102 +148,10 @@ $trial_owner => undef
 
 <& /breeders_toolbox/add_data_agreement_dialogs.mas, trial_id => $trial_id &>
 
-
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
 </div>
 
-<&| /page/info_section.mas, title=>"Trial Status", is_subsection => 0, collapsible=>1, collapsed=>1  &>
-
-<div data-offset-top="0" style="max-height: 100%; overflow-y: auto;">
-    <div class="panel panel-info">
-        <div class="panel-heading">Completion</div>
-        <div class="panel-body">
-
-<&| /page/info_section.mas, title=>"Trial Info", collapsible=>1, collapsed=>0 &>
-%  if ($trial_name) {
-            <p class="text-success" title="This trial has a name saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a name. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($breeding_program_name) {
-            <p class="text-success" title="This trial has a breeding program saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a breeding program. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($location_name) {
-            <p class="text-success" title="This trial has a location saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a location. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($year) {
-            <p class="text-success" title="This trial has a year saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a year. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($trial_type) {
-            <p class="text-success" title="This trial has a trial type saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a trial type. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($planting_date) {
-            <p class="text-success" title="This trial has a planting date saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a planting date. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($harvest_date) {
-            <p class="text-success" title="This trial has a harvest date saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a harvest date. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($trial_description) {
-            <p class="text-success" title="This trial has a description saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a description. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($folder_id) {
-            <p class="text-success" title="This trial is saved in a folder or breeding program. You can change this by clicking [Change] in the Folder section on this page."><small>In Folder&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-info" title="This trial is not in a folder! If this happens please contact us because this should not happen. A trial should always be in a folder or breeding program."><small>Not In Folder&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
-%  }
-</&>
-
-<&| /page/info_section.mas, id=>"trial_completion_layout_section", title=>"Field Design", collapsible=>1, collapsed=>1 &>
-%  if ($design_name) {
-            <p class="text-success" title="This trial has a design type saved. You can view and download this information in the Design section on this page."><small>Has Field Design&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger" title="This trial does not have a design type saved! If this happens please contact us because this should not happen!"><small>No Field Design&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-
-            <div id="trial_completion_layout_section_div">
-                <div class="well well-sm">LOADING...</div>
-            </div>
-
-%  if ($has_plant_entries) {
-            <p class="text-success" title="This trial has plot and plant entries saved. This means that phenotypes can be recorded on the plot and plant level."><small>Has Plots<br/>And Plants&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-info" title="This trial has plot entries saved, but no plant entries. Plant entries are needed for plant level phenotyping. You can create plant entries in Design->Plant Entries section on this page."><small>Has Plots<br/>No Plants&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
-%  }
-</&>
-
-<&| /page/info_section.mas, id=>"trial_completion_phenotype_section", title=>"Phenotyping", collapsible=>1, collapsed=>1 &>
-
-            <div id="trial_completion_phenotype_section_div">
-                <div class="well well-sm">LOADING...</div>
-            </div>
-
-%  if ($phenotypes_fully_uploaded) {
-            <p class="text-success" title="All recorded phenotypes for this trial are saved in the database. You can change this by clicking [Phenotypes Fully Uploaded?] in the Files section on this page."><small>Phenotyping<br/>Complete&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-info" title="Once phenotypes are fully uploaded for a trial, you can click [Phenotypes Fully Uploaded?] in the Files section on this page."><small>Phenotyping<br/>Incomplete&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
-%  }
-</&>
-
-        </div>
-    </div>
-</div>
-
-</&>
 
 <script defer="defer">
 
@@ -275,63 +187,6 @@ jQuery(document).ready(function () {
 		}
 	    });
 	}
-    });
-
-    jQuery('#trial_completion_layout_section_onswitch').click( function() {
-        jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/trial_completion_layout_section',
-            success: function(response){
-                var html = '';
-                if (response.has_layout == 1){
-                    html += '<p class="text-success" title="This trial has plots and their layout information saved in the database. All relationships between accessions, plots, seedlots, plants, and subplots are consistent. You can view and download this information in the Design section on this page."><small>Has Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
-                } else {
-                    html += '<p class="text-danger" title="There is something wrong with the layout! If this occurs please contact us because this should not occur! (click here for more info)"><span id="layout_error_button"><small>Bad Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></span></p>';
-                }
-                if (response.has_physical_map == 1){
-                    html += '<p class="text-success" title="This trial has a physical map saved. You can view and edit the physical map in the Physical Trial Layout section on this page."><small>Has Physial Map&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
-                } else {
-                    html += '<p class="text-info" title="This trial does not have physical map information. This means the map will not appear in the Physical Trial Layout section. You can add physical map info by clicking [Upload Trial Coordinates] in the Physical Trial Layout section on this page. (click here for more info)"><span id="physical_map_error_button"><small>No Physical Map&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></span></p>';
-                }
-                if (response.has_seedlots == 1){
-                    html += '<p class="text-success" title="This trial has seedlots linked to plots (and the accessions are in sync). This allows us to track breeding material on the seedlots detail page. You can view this data and navigate to the seedlots on the Design section of this page."><small>Has Seedlots&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
-                } else {
-                    html += '<p class="text-info" title="This trial does not have seedlots saved. This means we cannot track your breeding material using seedlots. You can upload this information by clicking [Upload Seedlots Planted in Trial] in the Design section on this page. (click here for more info)"><span id="seedlot_error_button"><small>No Seedlot Info&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></span></p>';
-                }
-                jQuery(document).on('click', 'span[id="layout_error_button"]', function(){
-                    alert(response.layout_errors);
-                });
-                jQuery(document).on('click', 'span[id="physical_map_error_button"]', function(){
-                    alert(response.physical_map_errors);
-                });
-                jQuery(document).on('click', 'span[id="seedlot_error_button"]', function(){
-                    alert(response.seedlot_errors);
-                });
-                jQuery('#trial_completion_layout_section_div').html(html);
-            },
-            error: function(response){
-                alert('Error retrieving trial completion layout section');
-            }
-
-        });
-    });
-
-    jQuery('#trial_completion_phenotype_section_onswitch').click( function() {
-        jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/trial_completion_phenotype_section',
-            success: function(response){
-                var html = '';
-                if (response.has_phenotypes == 1){
-                    html = '<p class="text-success" title="This trial has phenotypes saved. You can view and download this data in the Traits Assayed section on this page."><small>Has Phenotypes&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
-                } else {
-                    html = '<p class="text-info" title="This trial does not have any phenotypes stored. You can upload phenotypes in the Files section on this page."><small>No Phenotypes&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>';
-                }
-                jQuery('#trial_completion_phenotype_section_div').html(html);
-            },
-            error: function(response){
-                alert('Error retrieving trial completion phenotype section');
-            }
-
-        });
     });
 
     jQuery('#custom_barcode').click(function () {

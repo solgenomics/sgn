@@ -28,18 +28,17 @@ sub get_terms {
       my $self = shift;
       my $cv_id = shift;
 
-      my $query = "SELECT cvterm_id, dbxref.accession, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
+      my $query = "SELECT distinct(cvterm_id), dbxref.accession, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
                   FROM cvterm
                   JOIN dbxref USING(dbxref_id)
                   JOIN db USING(db_id)
-                  LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
-                  LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
-                  WHERE cv_id = ?
+                  JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
+                  WHERE cv_id = ? AND is_obsolete = ?
                   GROUP BY 1,2,3
-                  ORDER BY 2,1";
+                  ORDER BY 3";
 
       my $h = $self->schema->storage->dbh->prepare($query);
-      $h->execute($cv_id);
+      $h->execute($cv_id, '0');
 
       my @results;
       while (my ($id, $accession, $name) = $h->fetchrow_array()) {
@@ -230,7 +229,7 @@ sub store_ontology_identifier {
         $schema->txn_do($coderef);
     } catch {
         return {
-            error => $@
+            error => $_
         };
     };
 }
@@ -308,7 +307,7 @@ sub store_observation_variable_trait_method_scale {
         $parent_observation_variable_cvterm_sth->execute();
         my ($parent_observation_variable_cvterm_id, $parent_observation_variable_cvterm_name) = $parent_observation_variable_cvterm_sth->fetchrow_array();
 
-        my $new_term_observation_variable_dbxref = $schema->resultset("General::Dbxref")->create({
+        my $new_term_observation_variable_dbxref = $schema->resultset("General::Dbxref")->find_or_create({
             db_id => $selected_observation_variable_db_id,
             accession => $observation_variable_new_accession
         });
@@ -479,7 +478,7 @@ sub store_observation_variable_trait_method_scale {
         $schema->txn_do($coderef);
     } catch {
         return {
-            error => $@
+            error => $_
         };
     };
 }

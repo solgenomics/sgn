@@ -35,7 +35,7 @@ sub solgs_trait_search_autocomplete_GET :Args(0) {
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
 
-    my $traits = $c->model("solGS::solGS")->search_trait($term);
+    my $traits = $c->controller('solGS::Search')->model($c)->search_trait($term);
 
     $c->{stash}->{rest} = $traits;
 
@@ -52,7 +52,7 @@ sub solgs_population_search_autocomplete_GET :Args() {
     $term =~ s/\s+/ /g;
 
     my @response_list;
-    my $rs = $c->model("solGS::solGS")->project_details_by_name($term);
+    my $rs = $c->controller('solGS::Search')->model($c)->project_details_by_name($term);
 
     while (my $row = $rs->next)
     {

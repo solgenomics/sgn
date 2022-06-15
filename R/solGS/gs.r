@@ -211,10 +211,10 @@ if (datasetInfo == 'combined populations') {
      }
 
      keepMetaCols <- c('observationUnitName', 'germplasmName', 'studyDbId', 'locationName',
-                    'studyYear', 'replicate', 'blockNumber')
+                    'studyYear', 'replicate', 'blockNumber', traitAbbr)
 
       traitRawPhenoData <- phenoData %>%
-                                          select(c(keepMetaCols, traitAbbr))
+                                          select(all_of(keepMetaCols))
 
 
 }
@@ -599,7 +599,7 @@ if (length(selectionData) != 0) {
 
     selectionPopGEBVSE <- inner_join(selectionPopGEBVs, selectionPopSE, by="genotypes")
 
-    sortVar <- parse_quosure(traitAbbr)
+    sortVar <- parse_expr(traitAbbr)
     selectionPopGEBVs <- selectionPopGEBVs %>% arrange(desc((!!sortVar)))
     selectionPopGEBVs <- column_to_rownames(selectionPopGEBVs, var="genotypes")
 

@@ -1,11 +1,11 @@
 (function(exports){
-  
+
   //check for d3 and check to use d3v4
   var d3 = typeof d3v4 !== 'undefined'? d3v4 : d3;
   if (typeof d3 === 'undefined'){
     throw "d3 not imported";
   }
-  
+
   /**
   * Draws a Histogram from a phenotype matrix of observations containing a single trait.
   * @param {Array} data - a 2D array containing a single-trait phenotype matrix where data[0] is the header row and all following rows are plot/plant matrix rows stored as a list.
@@ -36,7 +36,7 @@
     var histLoc = d3.select(loc);
     var header = data[0];
     var traitName = header[header.length-(header[header.length-1]!="notes"?1:2)];
-    
+
     var observations = data.slice(1).map(function(d){
       var o = {};
       header.forEach(function(h,i){
@@ -47,7 +47,7 @@
       return (!!o.value || o.value === 0 || o.value === -0.0) && (!isNaN(o.value));
     });
     if (observations.length<3){
-      histLoc.html("<center><h4>There is not enough numeric data to plot.</h4></center>");
+      histLoc.html("<center><h4>This trait is not numeric, or there are fewer than 3 values. Unable to draw a histogram.</h4></center>");
       return;
     } else {
       histLoc.selectAll(function(s){return this.children;})
@@ -56,13 +56,19 @@
     var allValues = observations.map(function(d){
       return d.value;
     });
+
+    if (allValues.every( (val, i, arr) => val === arr[0] )){
+      histLoc.html("<center><h4>All values are the same ("+allValues[0]+") for this trait. Unable to draw a histogram.</h4></center>");
+      return;
+    }
+
     var accessions = {};
     var emptyBlocks = {};
     observations.forEach(function(observation){
       accessions[observation.germplasmDbId] = observation.germplasmName;
       emptyBlocks[observation.germplasmDbId] = 0;
     })
-    
+
     var extent = d3.extent(allValues);
     var x = d3.scaleLinear()
       .domain(extent)
@@ -75,7 +81,7 @@
       .value(function(d){
         return d.value;
       });
-    
+
     var bins = binner(observations).map(function(bin){
       var blocks = accNest
         .rollup(function(v){return v.length})
@@ -83,20 +89,20 @@
       var empty = Object.assign({"bin":bin},emptyBlocks);
       return Object.assign(empty,blocks);
     });
-    
+
     var ymax = d3.max(bins,function(d){
       return d.bin.length;
     });
-    
+
     var y_digits = Math.log(ymax) * Math.LOG10E + 1 | 0;
     layout.margin.left = layout.margin.left || layout.margin["left_base"]+layout.margin["left_per_digit"]*y_digits;
     x.range([layout.margin.left,layout.width-layout.margin.right]);
-    
+
     var y = d3.scaleLinear()
       .domain([0,ymax])
       .range([layout.height-layout.margin.bottom, layout.margin.top]);
     var yaxis = d3.axisLeft(y).ticks(ymax<6?ymax:6);
-        
+
     var stacker = d3.stack()
       .keys(Object.keys(accessions))
       .order(function(series){
@@ -116,7 +122,7 @@
         return sort1.map(function(d){return d[1];});
       })
       .offset(d3.stackOffsetNone);
-    
+
     var series = stacker(bins);
     series.forEach(function(s){
       s.forEach(function(b,i){
@@ -126,10 +132,10 @@
     series.sort(function(a,b){
       return d3.ascending(a.sortVal,b.sortVal);
     });
-    
+
     var color = d3.scaleSequential(d3.interpolateViridis)
       .domain([0,series.length]);
-        
+
     histLoc.style("overflow-x","auto");
     var hist = histLoc.selectAll(".histogram").data([series]);
     newHist = hist.enter()
@@ -144,7 +150,7 @@
     newHist.append("g").classed("xaxis",true);
     newHist.append("g").classed("yaxis",true);
     hist = hist.merge(newHist);
-    
+
     hist.select(".xaxis")
       .attr('transform', 'translate(0,' + (layout.height-layout.margin.bottom) + ')')
       .call(xaxis)
@@ -156,14 +162,14 @@
 
     hist.select("#ylabel").remove();
     hist.select("#xlabel").remove();
-    hist.append("text")   
-      .attr("id","xlabel")       
+    hist.append("text")
+      .attr("id","xlabel")
       .attr("transform", "translate(" + (layout.width/2) + "," + (layout.height + layout.margin.top - 7 ) + ")")
       .style("text-anchor", "middle")
       .text(traitName);
 
-    hist.append("text")   
-      .attr("id","ylabel") 
+    hist.append("text")
+      .attr("id","ylabel")
       .attr("transform", "rotate(-90)")
       .attr("y", -10)
       .attr("x",0 - (layout.height / 2))
@@ -171,7 +177,7 @@
       .style("text-anchor", "middle")
       .text("Frequency (Count)");
 
-    
+
     var groups = hist.select(".series-groups").selectAll(".series")
       .data(function(d){return d;},function(d){return d.key;});
     groups.exit().remove();
@@ -187,7 +193,7 @@
         d3.select(this)
           .style("fill",c);
       });
-    
+
     var bits = allGroups.selectAll(".bit").data(function(d){return d;});
     bits.exit().remove()
     var newBits = bits.enter().append("rect").classed("bit",true);
@@ -203,7 +209,7 @@
         drawToolTip(hist,x,y,accessions);
       });
   }
-  
+
   var accNest = d3.nest().key(function(d){
     return d.germplasmDbId;
   }).rollup(function(observations){
@@ -211,7 +217,7 @@
       return d.value;
     });
   });
-  
+
   function drawToolTip(field,x,y,accessions,d){
     var tt = field.selectAll(".ttip").data(d?[d]:[]);
     var newtt = tt.enter().append("g").classed("ttip",true);

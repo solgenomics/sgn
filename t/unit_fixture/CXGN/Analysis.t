@@ -8,6 +8,7 @@ use CXGN::Dataset;
 use CXGN::Analysis;
 use CXGN::Analysis::AnalysisCreate;
 use CXGN::AnalysisModel::GetModel;
+use CXGN::BreederSearch;
 use JSON;
 use Test::WWW::Mechanize;
 use File::Basename;
@@ -170,12 +171,16 @@ my $m = CXGN::Analysis::AnalysisCreate->new({
     user_name=>'janedoe',
     user_role=>'curator'
 });
+
+print STDERR "Storing Analysis...\n";
 my $saved_analysis_object = $m->store();
+
+
 print STDERR Dumper $saved_analysis_object;
 is_deeply($saved_analysis_object, {
           'model_id' => 3,
           'success' => 1,
-          'analysis_id' => 166
+          'analysis_id' => 166,
         });
 print STDERR "End add analysis...\n";
 
@@ -253,6 +258,8 @@ my $message_hash_uploaded_analysis = decode_json $message_uploaded_analysis;
 print STDERR Dumper $message_hash_uploaded_analysis;
 ok($message_hash_uploaded_analysis->{analysis_id});
 
+print STDERR "ANALYSIS IDS: $message_hash_uploaded_analysis->{analysis_id} $saved_analysis_object->{analysis_id}\n";
+
 sleep(5);
 my $a = CXGN::Analysis->new({
     bcs_schema => $schema,
@@ -265,9 +272,46 @@ my $stored_analysis_phenotypes = $a->get_phenotype_matrix();
 print STDERR Dumper $stored_analysis_phenotypes;
 is(scalar(@$stored_analysis_phenotypes), 6);
 
+print STDERR "DELETE ANALYSIS & DATASET...\n";
+
+$a->delete_phenotype_metadata($metadata_schema, $phenome_schema);
+
+$a->delete_phenotype_data($t->config->{basepath}, $t->config->{dbhost}, $t->config->{dbname}, $t->config->{dbuser}, $t->config->{dbpass}, $t->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete");
+
+$a->delete_field_layout();
+
+$a->delete_project_entry();
+
+
+my $b = CXGN::Analysis->new({
+    bcs_schema => $schema,
+    people_schema => $people_schema,
+    metadata_schema => $metadata_schema,
+    phenome_schema => $phenome_schema,
+    trial_id => $saved_analysis_object->{analysis_id}
+});
+
+$b->delete_phenotype_metadata($metadata_schema, $phenome_schema);
+
+$b->delete_phenotype_data($t->config->{basepath}, $t->config->{dbhost}, $t->config->{dbname}, $t->config->{dbuser}, $t->config->{dbpass}, $t->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete");
+
+$b->delete_field_layout();
+
+$b->delete_project_entry();
+
+
+
+
+$ds->delete();
+
+print STDERR "REFRESHING MATVIEWS...\n";
+
+CXGN::BreederSearch->new( { dbh => $dbh })->refresh_matviews($t->config->{dbhost}, $t->config->{dbname},  $t->config->{dbuser}, $t->config->{dbpass}, 'fullview', 'basic', $t->config->{basepath});
+
+CXGN::BreederSearch->new( { dbh => $dbh })->refresh_matviews($t->config->{dbhost}, $t->config->{dbname},  $t->config->{dbuser}, $t->config->{dbpass}, 'stockprops', 'basic', $t->config->{basepath});
+
 print STDERR "Rolling back...\n";
 $dbh->rollback();
-
 
 done_testing();
 

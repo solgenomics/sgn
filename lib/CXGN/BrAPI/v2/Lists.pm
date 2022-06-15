@@ -4,6 +4,7 @@ use Moose;
 use Data::Dumper;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
+use CXGN::TimeUtils;
 
 extends 'CXGN::BrAPI::v2::Common';
 
@@ -80,7 +81,7 @@ sub search {
 		if ($counter >= $start_index && $counter <= $end_index) {
 			push @data , {
 				additionalInfo      => {},
-				dateCreated         => CXGN::BrAPI::TimeUtils::db_time_to_iso_utc($create_date),
+				dateCreated         => CXGN::TimeUtils::db_time_to_iso_utc($create_date),
 				dateModified        => undef,
 				listDbId            => qq|$id|,
 				listDescription     => $_->[2],

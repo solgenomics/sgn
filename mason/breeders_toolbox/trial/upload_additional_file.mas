@@ -128,6 +128,11 @@ jQuery(document).ready(function(){
         }
     });
 
+
+ 
+
+
+
     function display_trial_additional_upload_files (){
         jQuery.ajax ({
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_uploaded_additional_file',
@@ -138,7 +143,7 @@ jQuery(document).ready(function(){
                 //console.log(response);
                 var html = "<table class='table table-hover table-condensed table-bordered' id='trial_additional_uploaded_files_table'><thead><tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>Options</th></tr></thead><tbody>";
                 for (i=0; i<response.files.length; i++) {
-                    html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">Download</a></td></tr>';
+                    html = html + '<tr><td>'+response.files[i][4]+'</td><td>'+response.files[i][1]+'</td><td><a href="/solpeople/profile/'+response.files[i][2]+'">'+response.files[i][3]+'</a></td><td><a href="/breeders/phenotyping/download/'+response.files[i][0]+'">Download</a> | <a href="javascript:obsolete_additional_file('+<% $trial_id %>+', '+response.files[i][0]+')">Remove</a></td></tr>';
                 }
                 html = html + "</tbody></table>";
                 jQuery('#trial_additional_uploaded_files_div').html(html);
@@ -147,9 +152,32 @@ jQuery(document).ready(function(){
             error: function(response){
                 alert("Error retrieving additional uploaded files.");
             }
-        });
-    }
+       });
+   
+    }						   
+   
 
-});
+ 
+
+});						 
+
+						   
+ function obsolete_additional_file(trial_id, file_id) {
+       var yes = confirm('Are you sure you want to obsolete this file? This operation cannot be undone.');
+       if (yes) {
+          jQuery.ajax({
+              url: '/ajax/breeders/trial/'+trial_id+'/obsolete_uploaded_additional_file/'+file_id,
+	      success: function(r) {
+	          if (r.error) { alert(r.error); }
+						   else {
+						    jQuery('#trial_additional_uploaded_files_table').DataTable().clear().draw();
+	              alert("The file has been obsoleted.");
+		  }
+	       },
+	       error: function(r) {  alert("An error occurred!") }
+	  });
+	}
+   }
+
 
 </script>

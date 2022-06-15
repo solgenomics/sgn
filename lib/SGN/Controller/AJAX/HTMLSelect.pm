@@ -83,13 +83,13 @@ sub get_breeding_program_select : Path('/ajax/html/select/breeding_programs') Ar
     my $breeding_programs = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_breeding_programs();
 
     my $default = $c->req->param("default") || @$breeding_programs[0]->[0];
-    if ($empty) { unshift @$breeding_programs, [ "", "please select" ]; }
+    if ($empty) { unshift @$breeding_programs, [ "", "Please select a program" ]; }
 
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
       choices => $breeding_programs,
-      selected => $default
+#      selected => $default
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -277,7 +277,14 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
         }
     }
 
-    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
+#    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }
+    if ($empty) {
+        if ($get_crossing_trials) {
+            unshift @projects, [ "", "Please select a crossing experiment" ];
+        } else {
+            unshift @projects, [ "", "Please select a trial" ];
+        }
+    }
 
     my $html = simple_selectbox_html(
       multiple => $multiple,
@@ -315,8 +322,10 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $multiple = $c->req->param("multiple") || 0;
     my $live_search = $c->req->param("live_search") || 0;
     my $include_location_year = $c->req->param("include_location_year");
+    my $include_lists = $c->req->param("include_lists") || 0;
 
     my @trials;
+    if ($include_lists) { push @trials, [ "", "----INDIVIDUAL TRIALS----" ]; }
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
       foreach (@$field_trials) {
@@ -339,6 +348,36 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
         @trials = @trials_redef;
     }
     @trials = sort { $a->[1] cmp $b->[1] } @trials;
+
+    if ($include_lists) {
+        my $lists = CXGN::List::available_lists($c->dbc->dbh(), $c->user()->get_sp_person_id());
+        my $public_lists = CXGN::List::available_public_lists($c->dbc->dbh());
+        my $lt = CXGN::List::Transform->new();
+
+        push @trials, ["", "----YOUR LISTS OF TRIALS----"];
+        foreach my $item (@$lists) {
+            if ( @$item[5] eq "trials" ) {
+                my $list = CXGN::List->new({ dbh=>$c->dbc->dbh(), list_id => @$item[0] });
+                my $list_elements = $list->retrieve_elements_with_ids(@$item[0]);
+                my @list_element_names = map { $_->[1] } @$list_elements;
+                my $transform = $lt->transform($schema, 'projects_2_project_ids', \@list_element_names);
+                my @trial_ids = @{$transform->{transform}};
+                push @trials, [join(',', @trial_ids), @$item[1] . ' (' . @$item[3] . ' trials)'];
+            }
+        }
+
+        push @trials, ["", "----PUBLIC LISTS OF TRIALS----"];
+        foreach my $item (@$public_lists) {
+            if ( @$item[5] eq "trials" ) {
+                my $list = CXGN::List->new({ dbh=>$c->dbc->dbh(), list_id => @$item[0] });
+                my $list_elements = $list->retrieve_elements_with_ids(@$item[0]);
+                my @list_element_names = map { $_->[1] } @$list_elements;
+                my $transform = $lt->transform($schema, 'projects_2_project_ids', \@list_element_names);
+                my @trial_ids = @{$transform->{transform}};
+                push @trials, [join(',', @trial_ids), @$item[1] . ' (' . @$item[3] . ' trials)'];
+            }
+        }
+    }
 
     if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
 
@@ -785,7 +824,7 @@ sub get_sequence_metadata_protocols : Path('/ajax/html/select/sequence_metadata_
     my $checkbox_name = $c->req->param('checkbox_name');
     my $data_type_cvterm_id = $c->req->param('sequence_metadata_data_type_id');
     my $include_query_link = $c->req->param('include_query_link');
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $protocol_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'sequence_metadata_protocol', 'protocol_type')->cvterm_id();
@@ -2084,6 +2123,33 @@ sub get_drone_imagery_drone_run_band : Path('/ajax/html/select/drone_imagery_dro
     $c->stash->{rest} = { select => $html };
 }
 
+
+sub get_items_select : Path('/ajax/html/select/items') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $params = _clean_inputs($c->req->params);
+    my $items = $params->{list_items},
+    my $size = $params->{size};
+    my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
+    my $data_related = $c->req->param("data-related") || "";
+    my $names_as_select = $params->{names_as_select}->[0] || 0;
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+
+    my $html = simple_selectbox_html(
+        multiple => $multiple,
+        choices => $items,
+        size => $size,
+        data_related => $data_related,
+        id => $id,
+        name => $name
+    );
+
+    $c->stash->{rest} = { select => $html };
+
+}
+
+
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
@@ -2104,5 +2170,6 @@ sub _clean_inputs {
 	}
 	return $params;
 }
+
 
 1;

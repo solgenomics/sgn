@@ -223,6 +223,12 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
     </&>
 
+    <&| /page/info_section.mas, title => 'Search Accessions Using Genotypes', collapsible=>1, collapsed=>1 &>
+        <div class="row">
+            <a href="/search/stocks_using_genotypes"><p>Go to Search Accessions Using Genotypes Page.</p></a>
+        </div>
+    </&>
+
     </&> <!-- closes advanced search -->
 
     <center>
@@ -247,7 +253,7 @@ my $breeding_programs_select = simple_selectbox_html(
               <div class="input-group">
                 <span class="input-group-btn">
                   <select class="form-control" id="editable_stockprop_view_column_term" name="editable_stockprop_view_column_term">
-%  foreach my $stockprop (@$editable_stock_props){
+%  foreach my $stockprop (sort { "\L$a" cmp "\L$b" } @$editable_stock_props){
                     <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
 %  }
                   </select>
@@ -409,7 +415,7 @@ jQuery(document).ready(function () {
         _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
     });
 
-    parseArgs();
+    parseArgs(editable_stockprops_search);
     _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
 
     jQuery('#stock_search_results').on( 'draw.dt', function () {
@@ -499,11 +505,21 @@ jQuery(document).ready(function () {
 
 });
 
-function parseArgs() {
+function parseArgs(editable_stockprops_search) {
   const params = new URLSearchParams(window.location.search);
   if ( params.has('any_name') ) {
     jQuery('#any_name').val(params.get('any_name'));
     jQuery('#stock_type_select').val(0);
+  }
+  if ( params.has('stock_type') ) {
+    var type = params.get('stock_type');
+    var value =  jQuery("#stock_type_select option[title="+ type +"]").val();
+    jQuery('#stock_type_select').val(value);
+
+  }
+  if ( params.has('prop') & params.has('value') ) {
+    editable_stockprops_search[params.get('prop')] = {"matchtype": "exactly"};
+    editable_stockprops_search[params.get('prop')]["value"] = params.get('value');
   }
 }
 

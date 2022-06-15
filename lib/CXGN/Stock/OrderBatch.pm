@@ -5,8 +5,7 @@ use Moose;
 
 extends 'CXGN::JSONProp';
 
-#has 'clone_list' => (is => 'rw', isa => 'ArrayRef[HashRef]' );
-has 'clone_list' => (is => 'rw', isa => 'Str' );
+has 'clone_list' => (is => 'rw', isa => 'ArrayRef[HashRef]');
 
 has 'type' => ( is => 'rw', isa => 'Str' );
 

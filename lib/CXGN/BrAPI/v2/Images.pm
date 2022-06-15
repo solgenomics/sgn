@@ -63,6 +63,12 @@ sub search {
         %mimetypes_arrayref = map { $_ => 1} @$mimetypes_arrayref;
     }
 
+    my $start_index = $page*$page_size;
+    my $end_index = $page*$page_size + $page_size;
+
+    my $limit = $end_index-$start_index;
+    my $offset = $start_index;
+
     my $image_search = CXGN::Image::Search->new({
         bcs_schema=>$self->bcs_schema(),
         people_schema=>$self->people_schema(),
@@ -76,6 +82,8 @@ sub search {
         # imagefile_names_list =>$imagefile_names_arrayref,
         # image_location_list =>$image_location_arrayref,
         # mimetypes_list =>$mimetypes_arrayref
+        limit=>$limit,
+        offset=>$offset
     });
     my ($result, $total_count) = $image_search->search();
 
@@ -85,11 +93,11 @@ sub search {
     my $counter = 0;
 
     foreach (@$result) {
-        my $mimetype = _get_mimetype($_->{'image_file_ext'}); 
+        my $mimetype = _get_mimetype($_->{'image_file_ext'});
         if ( (%mimetypes_arrayref && !exists($mimetypes_arrayref{$mimetype}))) { next; }
         if ( (%imagefile_names_arrayref && !exists($imagefile_names_arrayref{$_->{'image_original_filename'}}))) { next; }
-        if ( $image_timestamp_start && _to_comparable($_->{'image_modified_date'}) lt _to_comparable($image_timestamp_start) ) {  next; } 
-        if ( $image_timestamp_end && _to_comparable($_->{'image_modified_date'}) gt _to_comparable($image_timestamp_end) ) { next; } 
+        if ( $image_timestamp_start && _to_comparable($_->{'image_modified_date'}) lt _to_comparable($image_timestamp_start) ) {  next; }
+        if ( $image_timestamp_end && _to_comparable($_->{'image_modified_date'}) gt _to_comparable($image_timestamp_end) ) { next; }
 
         my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $_->{'image_id'});
         my @cvterms = $image->get_cvterms();
@@ -97,13 +105,13 @@ sub search {
         my $filename = $image->get_filename();
         my $size = (stat($filename))[7];
         my ($width, $height) = imgsize($filename);
-        
-        if ( $imagefile_size_max && $size > $imagefile_size_max ) { next; } 
-        if ( $imagefile_size_min && $size < $imagefile_size_min + 1 ) { next; } 
-        if ( $image_height_max && $height > $image_height_max ) { next; } 
-        if ( $image_height_min && $height < $image_height_min + 1 ) { next; } 
-        if ( $image_width_max && $width > $image_width_max ) { next; } 
-        if ( $image_width_min && $width < $image_width_min + 1 ) { next; } 
+
+        if ( $imagefile_size_max && $size > $imagefile_size_max ) { next; }
+        if ( $imagefile_size_min && $size < $imagefile_size_min + 1 ) { next; }
+        if ( $image_height_max && $height > $image_height_max ) { next; }
+        if ( $image_height_min && $height < $image_height_min + 1 ) { next; }
+        if ( $image_width_max && $width > $image_width_max ) { next; }
+        if ( $image_width_min && $width < $image_width_min + 1 ) { next; }
 
         # Process cvterms
         my @cvterm_names;
@@ -120,36 +128,45 @@ sub search {
             push @observationDbIds, $observationDbId
         }
 
+        my %unique_tags;
+        foreach (@{$_->{'tags_array'}}) {
+            $unique_tags{$_->{tag_id}} = $_;
+        }
+        my @sorted_tags;
+        foreach my $tag_id (sort keys %unique_tags) {
+            push @sorted_tags, $unique_tags{$tag_id};
+        }
+
         if ($counter >= $start_index && $counter <= $end_index) {
             push @data, {
-                additionalInfo => {
-                    observationLevel => $_->{'stock_type_name'},
+                additionalInfo           => {
+                    observationLevel    => $_->{'stock_type_name'},
                     observationUnitName => $_->{'stock_uniquename'},
-                    #tags =>  $_->{'tags_array'},
+                    tags                => \@sorted_tags,
                 },
-                copyright => $_->{'image_username'} . " " . substr($_->{'image_modified_date'},0,4),
-                description => $_->{'image_description'},
+                copyright                => $_->{'image_username'} . " " . substr($_->{'image_modified_date'}, 0, 4),
+                description              => $_->{'image_description'},
                 descriptiveOntologyTerms => \@cvterm_names,
-                externalReferences => [],
-                imageDbId => qq|$_->{'image_id'}|,
-                imageFileName => $_->{'image_original_filename'},
-                imageFileSize => $size,
-                imageHeight => $height,
-                imageWidth => $width,
-                imageName => $_->{'image_name'},
-                imageTimeStamp => $_->{'image_modified_date'},
-                imageURL => $url,
-                mimeType => _get_mimetype($_->{'image_file_ext'}),
-                observationUnitDbId => qq|$_->{'stock_id'}|,
+                externalReferences       => [],
+                imageDbId                => qq|$_->{'image_id'}|,
+                imageFileName            => $_->{'image_original_filename'},
+                imageFileSize            => $size,
+                imageHeight              => $height,
+                imageWidth               => $width,
+                imageName                => $_->{'image_name'},
+                imageTimeStamp           => $_->{'image_modified_date'},
+                imageURL                 => $url,
+                mimeType                 => _get_mimetype($_->{'image_file_ext'}),
+                observationUnitDbId      => qq|$_->{'stock_id'}|,
                 # location and linked phenotypes are not yet available for images in the db
-                #imageLocation => {
-                #    geometry => {
-                #        coordinates => [],
-                #        type=> '',
-                #    },
-                #    type => '',
-                #},
-                observationDbIds => [@observationDbIds],
+                imageLocation            => {
+                    geometry => {
+                        coordinates => [],
+                        type        => '',
+                    },
+                    type     => '',
+                },
+                observationDbIds         => [ @observationDbIds ],
             };
         }
         $counter++;
@@ -265,6 +282,7 @@ sub image_metadata_store {
         my $imageName = $params->{imageName} ? $params->{imageName} : "";
         my $description = $params->{description} ? $params->{description} : "";
         my $imageFileName = $params->{imageFileName} ? $params->{imageFileName} : "";
+        print STDERR "Image filename in metadata store is: $imageFileName\n";
         my $mimeType = $params->{mimeType} ? $params->{mimeType} : undef;
         my $observationUnitDbId = $params->{observationUnitDbId} ? $params->{observationUnitDbId} : undef;
         my $descriptiveOntologyTerms_arrayref = $params->{descriptiveOntologyTerms} || ();
@@ -401,14 +419,15 @@ sub image_metadata_store {
     my $counter = 0;
 
     foreach (@$result) {
-        my $mimetype = _get_mimetype($_->{'image_file_ext'}); 
+        my $mimetype = _get_mimetype($_->{'image_file_ext'});
         my $image = SGN::Image->new($self->bcs_schema()->storage->dbh(), $_->{'image_id'});
         my @cvterms = $image->get_cvterms();
-        my $url = $hostname . $image->get_image_url('medium');
-        my $filename = $image->get_filename();
-        my $size = (stat($filename))[7];
-        my ($width, $height) = imgsize($filename);
-        
+
+        # my $url = $hostname . $image->get_image_url('medium');
+        # my $filename = $image->get_filename();
+        # my $size = (stat($filename))[7];
+        # my ($width, $height) = imgsize($filename);
+
         # Process cvterms
         my @cvterm_names;
         foreach (@cvterms) {
@@ -436,12 +455,12 @@ sub image_metadata_store {
             externalReferences => [],
             imageDbId => qq|$_->{'image_id'}|,
             imageFileName => $_->{'image_original_filename'},
-            imageFileSize => $size,
-            imageHeight => $height,
-            imageWidth => $width,
+            # imageFileSize => $size,
+            # imageHeight => $height,
+            # imageWidth => $width,
             imageName => $_->{'image_name'},
             imageTimeStamp => $_->{'image_modified_date'},
-            imageURL => $url,
+            # imageURL => $url,
             mimeType => _get_mimetype($_->{'image_file_ext'}),
             observationUnitDbId => qq|$_->{'stock_id'}|,
             # location and linked phenotypes are not yet available for images in the db
@@ -490,23 +509,27 @@ sub image_data_store {
 
     my ($search_result, $total_count) = $image_search->search();
     my $file_extension = @$search_result[0]->{'image_file_ext'};
+    my $original_filename = @$search_result[0]->{'image_original_filename'};
 
     if (! defined $file_extension) {
         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Unsupported image type, %s', $file_extension));
     }
 
     my $tempfile = $inputs->filename();
-    my $file_with_extension = $tempfile.$file_extension;
-    rename($tempfile, $file_with_extension);
+    my ($filename, $tempdir, $extension) = fileparse($tempfile);
 
-    print STDERR "TEMP FILE : $tempfile\n";
+    my $updated_tempfile_name = $tempdir . $original_filename;
+
+    print STDERR "\n\n Updated tempfile name is $updated_tempfile_name\n";
+
+    rename($tempfile, $updated_tempfile_name);
 
     # process image data through CXGN::Image...
     #
     my $cxgn_img = CXGN::Image->new(dbh=>$self->bcs_schema()->storage()->dbh(), image_dir => $image_dir, image_id => $image_id);
 
     eval {
-        $cxgn_img->process_image($file_with_extension);
+        $cxgn_img->process_image($updated_tempfile_name);
     };
 
     if ($@) {
@@ -570,7 +593,7 @@ sub image_data_store {
 }
 
 sub _get_mimetype {
-    my $extension = shift;
+    my $extension = shift || '';
     my %mimetypes = (
         '.jpg' => 'image/jpeg',
         '.JPG' => 'image/jpeg',

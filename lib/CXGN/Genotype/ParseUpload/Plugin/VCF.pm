@@ -38,7 +38,8 @@ sub _validate_with_plugin {
     my @observation_unit_names;
     open($F, "<", $filename) || die "Can't open file $filename\n";
         while (<$F>) {
-            chomp;
+	    $_ =~ s/\r//g;
+	    chomp;
             #print STDERR Dumper $_;
 
             if ($_ =~ m/^##/){
@@ -69,6 +70,7 @@ sub _validate_with_plugin {
         my @formats;
         my $line_count = 1;
         while (<$F>) {
+            $_ =~ s/\r//g;
             chomp;
 
             if ($_ =~ m/^##/){
@@ -298,7 +300,7 @@ sub next_genotype {
     my $self = shift;
     my %genotypeprop_observation_units;
     my $observation_unit_names = $self->observation_unit_names;
-    
+
     my $line;
     my $F = $self->_fh();
 
@@ -340,10 +342,12 @@ sub next_genotype {
                 my @fvalues = split /:/, $values[$i];
                 my %value;
                 @value{@format} = @fvalues;
-                my $gt_dosage_val = 'NA';
-                my $gt_dosage = 0;
+                my $gt_dosage_alt_val = 'NA';
+                my $gt_dosage_alt = 0;
                 if (exists($value{'GT'})) {
                     my $gt = $value{'GT'};
+                    chomp($gt);
+
                     my $separator = '/';
                     my @alleles = split (/\//, $gt);
                     if (scalar(@alleles) <= 1){
@@ -356,10 +360,11 @@ sub next_genotype {
                     my @nucleotide_genotype;
                     my @ref_calls;
                     my @alt_calls;
+                    my $has_calls = 0;
                     foreach (@alleles) {
                         if (looks_like_number($_)) {
-                            if ($_ eq '0' || $_ == 0) {
-                                $gt_dosage++;
+                            if ($_ ne '0') {
+                                $gt_dosage_alt++;
                             }
                             my $index = $_ + 0;
                             if ($index == 0) {
@@ -369,24 +374,29 @@ sub next_genotype {
                                 push @nucleotide_genotype, $separated_alts[$index-1]; #Using Alternate Allele
                                 push @alt_calls, $separated_alts[$index-1];
                             }
-                            $gt_dosage_val = $gt_dosage;
+                            $has_calls = 1;
                         } else {
                             push @nucleotide_genotype, $_;
                         }
+                    }
+                    if ($has_calls) {
+                        $gt_dosage_alt_val = $gt_dosage_alt;
                     }
                     if ($separator eq '/') {
                         $separator = ',';
                         @nucleotide_genotype = (@ref_calls, @alt_calls);
                     }
                     $value{'NT'} = join $separator, @nucleotide_genotype;
+                    $value{'GT'} = $gt;
                 }
+                # If DS is provided in uploaded file and is a number, then this will be skipped
                 if (exists($value{'GT'}) && !looks_like_number($value{'DS'})) {
-                    $value{'DS'} = $gt_dosage_val;
+                    $value{'DS'} = $gt_dosage_alt_val;
                 }
-                if (looks_like_number($value{'DS'})) {
-                    my $rounded_ds = round($value{'DS'});
-                    $value{'DS'} = "$rounded_ds";
-                }
+                # if (looks_like_number($value{'DS'})) {
+                    # my $rounded_ds = round($value{'DS'});
+                    # $value{'DS'} = "$rounded_ds";
+                # }
                 $genotypeprop_observation_units{$observation_unit_names->[$i]}->{$chrom}->{$marker_name} = \%value;
             }
         }

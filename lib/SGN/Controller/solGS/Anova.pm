@@ -84,7 +84,7 @@ sub anova_traits {
 
      my $trial_id = $c->stash->{trial_id};
 
-     my $traits = $c->model('solGS::solGS')->trial_traits($trial_id);
+     my $traits = $c->controller('solGS::Search')->model($c)->trial_traits($trial_id);
      my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($traits);
 
      $c->stash->{rest}{anova_traits} = $clean_traits;
@@ -182,7 +182,7 @@ sub get_traits_abbrs {
     my $traits_ids = $c->stash->{traits_ids};
 
     $c->stash->{pop_id} = $trial_id;
-    $c->controller('solGS::solGS')->get_all_traits($c, $trial_id);
+    $c->controller('solGS::Trait')->get_all_traits($c, $trial_id);
     $c->controller('solGS::Files')->all_traits_file($c, $trial_id);
     my $traits_file = $c->stash->{all_traits_file};
 
@@ -230,7 +230,7 @@ sub anova_analyis :Path('/anova/analysis/') Args(0) {
 	    # 	if (!$tr->{$k})
 	    # 	{
 
-	    # 	    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
+	    # 	    $c->controller('solGS::Trait')->get_trait_details($c, $trait_id);
 	    # 	    my $trait_abbr = $c->stash->{trait_abbr};
 	    # 	    print STDERR "\nanova analysis : trait id: $trait_id -- tr abbr: $trait_abbr\n";
 	    # 	}
