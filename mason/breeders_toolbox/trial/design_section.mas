@@ -29,10 +29,12 @@ $trial_stock_type => undef
         <& /breeders_toolbox/trial/trial_seedlots.mas, trial_id => $trial_id &>
     </&>
 
+    <& /breeders_toolbox/trial/trial_controls_count.mas, trial_id => $trial_id &>
     <&| /page/info_section.mas, id => "trial_controls", title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>
     </&>
 
+    <& /breeders_toolbox/trial/trial_plots_count.mas, trial_id => $trial_id &>
     <&| /page/info_section.mas, id => "trial_plots", title=>"Plots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
     </&>
