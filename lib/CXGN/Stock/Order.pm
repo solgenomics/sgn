@@ -289,12 +289,32 @@ sub update_order_status_details {
     my $dbh = $self->dbh();
 
     my $order_id = $self->sp_order_id();
-    my $order_status_details = $self->order_status_details();
+    my $new_order_status_details = $self->order_status_details();
     print STDERR "ORDER ID =".Dumper($order_id)."\n";
-    print STDERR "ORDER STATUS DETAILS =".Dumper($order_status_details)."\n";
+    print STDERR "ORDER STATUS DETAILS =".Dumper($new_order_status_details)."\n";
+
+    my $prop_id;
+    my %current_status;
+    my $order_progress_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'order_progress_json', 'sp_order_property')->cvterm_id();
+    my $previous_orderprop_rs = $people_schema->resultset('SpOrderprop')->find( { sp_order_id => $order_id, type_id => $order_progress_cvterm_id } );
+    print STDERR "PREVIOUS RS =".Dumper($previous_orderprop_rs)."\n";
+    if ($previous_orderprop_rs) {
+        $prop_id = $previous_orderprop_rs->sp_orderprop_id();
+        my $value_json = $previous_orderprop_rs->value();
+        my $value_hash = JSON::Any->jsonToObj($value_json);
+        print STDERR "PREVIOUS PROGRESS HASH =".Dumper($value_hash)."\n";
+        $value_hash->{'order_status_details'} = $new_order_status_details;
+        my $all_status_details = $value_hash->{'order_status_details'};
+        %current_status = %{$all_status_details};
+    } else {
+        %current_status = %{$new_order_status_details};
+    }
+
+    print STDERR "CURRENT PROGRESS =".Dumper(\%current_status)."\n";
     my $order_prop = CXGN::Stock::OrderStatusDetails->new({ bcs_schema => $schema, people_schema => $people_schema});
     $order_prop->parent_id($order_id);
-    $order_prop->order_status_details($order_status_details);
+    $order_prop->prop_id($prop_id);
+    $order_prop->order_status_details(\%current_status);
     my $updated_orderprop = $order_prop->store_sp_orderprop();
 
 
