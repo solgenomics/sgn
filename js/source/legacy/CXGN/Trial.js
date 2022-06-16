@@ -494,6 +494,13 @@ buttons: {
 
 });
 
+    jQuery('#calculate_spatial_correction').click(function() {
+
+	confirm("You are about to calculate a spatial correction for the field layout. Continue?");
+
+    });
+
+    
 jQuery("#update_field_map_dialog_message").dialog({
 autoOpen: false,
 modal: true,

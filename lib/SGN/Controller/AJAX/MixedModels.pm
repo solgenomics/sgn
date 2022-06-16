@@ -40,6 +40,8 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     my $random_factors = $params->{random_factors};
     my $dependent_variables = $params->{dependent_variables};
 
+    my $engine = $params->{engine};
+    
     my $mm = CXGN::MixedModels->new();
     if ($dependent_variables) {
 	$mm->dependent_variables($dependent_variables);
