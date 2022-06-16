@@ -66,6 +66,7 @@ sub search {
         if($reference_source eq 'DOI') {
             $reference_id = ($url) ? "$url$accession" : "doi:$accession";
         } else {
+            $url = ($url) ? $url : "";
             $reference_id = ($accession) ? "$url$accession" : $url;
         }
 
