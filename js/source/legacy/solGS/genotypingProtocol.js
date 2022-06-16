@@ -12,8 +12,8 @@ solGS.genotypingProtocol = {
     var msg = "You are using genotyping protocol: <b>" + protocolName + "</b>.";
     divPlace = this.formatDivId(divPlace);
 
-    jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_message").val(arg.protocol_id);
-    jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_message").html(msg);
+    jQuery(divPlace + " #genotyping_protocol #genotyping_protocol_message").val(arg.protocol_id);
+    jQuery(divPlace + " #genotyping_protocol #genotyping_protocol_message").html(msg);
 
     var page = document.URL;
     var host = window.location.protocol + "//" + window.location.host;
@@ -111,7 +111,10 @@ solGS.genotypingProtocol = {
   },
 
   formatDivId: function (divPlace) {
-    divPlace = divPlace ? "#" + divPlace : " ";
+    if (!divPlace.match(/#/)) {
+      divPlace = divPlace ? "#" + divPlace : "";
+    }
+
     return divPlace;
   },
 
