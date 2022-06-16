@@ -27,11 +27,11 @@ solGS.genotypingProtocol = {
 
     if (popType.filter((item) => item.match(/page/))) {
       console.log("setting selection pop genotype pop...");
-      jQuery(divPlace + "#genotyping_protocol #selection_pop_genotyping_protocol_id").val(
+      jQuery(divPlace + " #genotyping_protocol #selection_pop_genotyping_protocol_id").val(
         arg.protocol_id
       );
     } else {
-      jQuery(divPlace + "#genotyping_protocol #genotyping_protocol_id").val(arg.protocol_id);
+      jQuery(divPlace + " #genotyping_protocol #genotyping_protocol_id").val(arg.protocol_id);
     }
   },
 
@@ -90,7 +90,7 @@ solGS.genotypingProtocol = {
     var divPlace = sessionStorage.getItem("selection_pop_genotyping_protocol_div");
 
     console.log(
-      "session storage protocol id" +
+      "session storage protocol id " +
         selPopProtocolId +
         " name " +
         selPopProtocolName +
@@ -111,8 +111,10 @@ solGS.genotypingProtocol = {
   },
 
   formatDivId: function (divPlace) {
-    if (!divPlace.match(/#/)) {
-      divPlace = divPlace ? "#" + divPlace : "";
+    if (divPlace && !divPlace.match(/#/)) {
+      divPlace = "#" + divPlace;
+    } else {
+      divPlace = "";
     }
 
     return divPlace;
